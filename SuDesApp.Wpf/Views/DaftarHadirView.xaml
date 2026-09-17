@@ -1,0 +1,266 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.DaftarHadirView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource WindowBackgroundBrush}"
+             FontSize="13"
+             SnapsToDevicePixels="True"
+             UseLayoutRounding="True">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#x1F4CB;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Daftar Hadir" Style="{StaticResource HeaderTitle}"
+                               AutomationProperties.Name="DAFTAR HADIR"/>
+                    <TextBlock Text="Cetak daftar hadir rapat/kegiatan lengkap dengan kop surat desa"
+                               Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Form -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- JUDUL SURAT -->
+                <Border Style="{StaticResource CardStyle}" Padding="18" Margin="0,0,0,14">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="JUDUL SURAT" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextBrush}" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Judul yang dicetak"
+                                       Style="{StaticResource FieldLabel}" Margin="0,6" VerticalAlignment="Top"/>
+                            <StackPanel Grid.Row="0" Grid.Column="1">
+                                <TextBox Style="{StaticResource FieldBox}"
+                                         Text="{Binding JudulSurat, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True" TextWrapping="Wrap"
+                                         VerticalContentAlignment="Top"
+                                         VerticalScrollBarVisibility="Auto"
+                                         MinHeight="72"
+                                         ToolTip="Bisa diganti sesuai keperluan. Tekan Enter untuk membuat judul dua baris atau lebih."/>
+                                <TextBlock Text="Tekan Enter untuk judul dua baris atau lebih."
+                                           FontSize="11" Margin="0,2,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Hari / Tanggal"
+                                       Style="{StaticResource FieldLabel}" Margin="0,6"/>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,6">
+                                <TextBox Style="{StaticResource FieldBox}" MaxWidth="260" MinWidth="200"
+                                         Text="{Binding HariTanggal, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Terisi tanggal hari ini, tetapi boleh diubah. Kosongkan bila baris Hari/Tanggal tidak perlu dicetak."/>
+                                <Button Content="Hari ini" Margin="8,0,0,0" Height="30" MinWidth="80"
+                                        Command="{Binding HariIniCommand}"
+                                        Style="{StaticResource SecondaryButton}"
+                                        ToolTip="Kembalikan ke tanggal hari ini"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Pukul"
+                                       Style="{StaticResource FieldLabel}" Margin="0,6"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FieldBox}" MaxWidth="260"
+                                     HorizontalAlignment="Left" MinWidth="200"
+                                     Text="{Binding Pukul, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Waktu kegiatan, mis. 09.00 WIB s/d Selesai. Kosongkan bila tidak perlu dicetak."/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Tempat"
+                                       Style="{StaticResource FieldLabel}" Margin="0,6"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FieldBox}"
+                                     Text="{Binding Tempat, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Tempat kegiatan, mis. Aula Kantor Desa Sumberjaya (otomatis mengikuti nama desa di Pengaturan Surat). Kosongkan bila tidak perlu dicetak."/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="1"
+                                       FontSize="11" Margin="0,0,0,4"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"
+                                       Text="Hari/Tanggal, Pukul, dan Tempat bisa diubah bebas; baris yang dikosongkan tidak ikut dicetak."/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- PILIHAN KOLOM -->
+                <Border Style="{StaticResource CardStyle}" Padding="18" Margin="0,0,0,14">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="KOLOM YANG DICETAK" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextBrush}" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Centang kolom yang ingin ditampilkan pada dokumen. No., Nama, dan Tanda Tangan wajib ada sehingga tercentang dan terkunci."
+                                   FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                        <WrapPanel Orientation="Horizontal">
+                            <CheckBox Content="No." Margin="0,0,28,10" MinWidth="90"
+                                      IsEnabled="False" Cursor="Arrow"
+                                      IsChecked="{Binding TampilkanNo, Mode=OneWay}"
+                                      ToolTip="Wajib ada pada dokumen — tidak dapat dihilangkan"/>
+                            <CheckBox Content="Nama" Margin="0,0,28,10" MinWidth="120"
+                                      IsEnabled="False" Cursor="Arrow"
+                                      IsChecked="{Binding TampilkanNama, Mode=OneWay}"
+                                      ToolTip="Wajib ada pada dokumen — tidak dapat dihilangkan"/>
+                            <CheckBox Content="Jenis Kelamin (L/P)" Margin="0,0,28,10" MinWidth="170"
+                                      IsChecked="{Binding TampilkanJenisKelamin, Mode=TwoWay}"
+                                      ToolTip="Kolom jenis kelamin singkat L atau P"/>
+                            <CheckBox Content="Jabatan" Margin="0,0,28,10" MinWidth="120"
+                                      IsChecked="{Binding TampilkanJabatan, Mode=TwoWay}"/>
+                            <CheckBox Content="Tanda Tangan" Margin="0,0,28,10" MinWidth="140"
+                                      IsEnabled="False" Cursor="Arrow"
+                                      IsChecked="{Binding TampilkanTandaTangan, Mode=OneWay}"
+                                      ToolTip="Wajib ada: menyediakan kolom kosong untuk tanda tangan peserta"/>
+                            <CheckBox Content="NIP" Margin="0,0,28,10" MinWidth="120"
+                                      IsChecked="{Binding TampilkanNip, Mode=TwoWay}"/>
+                            <CheckBox Content="NIK" Margin="0,0,28,10" MinWidth="120"
+                                      IsChecked="{Binding TampilkanNik, Mode=TwoWay}"/>
+                            <CheckBox Content="No. Handphone" Margin="0,0,28,10" MinWidth="150"
+                                      IsChecked="{Binding TampilkanNoHp, Mode=TwoWay}"
+                                      ToolTip="Nomor telepon/WhatsApp peserta"/>
+                            <CheckBox Content="Alamat" Margin="0,0,28,10" MinWidth="120"
+                                      IsChecked="{Binding TampilkanAlamat, Mode=TwoWay}"/>
+                            <CheckBox Content="Keterangan" Margin="0,0,28,10" MinWidth="120"
+                                      IsChecked="{Binding TampilkanKeterangan, Mode=TwoWay}"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- BAGIAN BAWAH -->
+                <Border Style="{StaticResource CardStyle}" Padding="18" Margin="0,0,0,14">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="BAGIAN BAWAH DOKUMEN" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextBrush}" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <CheckBox Content="Tampilkan footer tanda tangan Kepala Desa"
+                                  IsChecked="{Binding TampilkanFooterKepalaDesa, Mode=TwoWay}"
+                                  ToolTip="Hilangkan centang bila dokumen tidak memerlukan tanda tangan Kepala Desa"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- PESERTA -->
+                <Border Style="{StaticResource CardStyle}" Padding="18">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="PESERTA / PENERIMA" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextBrush}" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <DockPanel Margin="0,0,0,10">
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                <Button Content="+ Tambah" Padding="10,2" Height="30" MinWidth="100"
+                                        Command="{Binding TambahPesertaCommand}"
+                                        ToolTip="Tambah baris peserta"/>
+                                <Button Content="Hapus" Padding="10,2" Height="30" MinWidth="70" Margin="6,0,0,0"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding HapusPesertaCommand}"
+                                        ToolTip="Hapus baris peserta yang dipilih"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource FieldLabel}" VerticalAlignment="Center" TextWrapping="Wrap"
+                                       Text="Klik sel untuk mengedit. Baris yang dibiarkan kosong tidak dicetak sebagai data."/>
+                        </DockPanel>
+
+                        <DataGrid ItemsSource="{Binding Peserta}"
+                                  SelectedItem="{Binding SelectedPeserta, Mode=TwoWay}"
+                                  Style="{StaticResource EditableDataGrid}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  CanUserReorderColumns="False"
+                                  SelectionMode="Single"
+                                  HeadersVisibility="Column"
+                                  MinHeight="180"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="No." Binding="{Binding No}" Width="50" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Nama" Width="2*" MinWidth="140"
+                                                    Binding="{Binding Nama, UpdateSourceTrigger=PropertyChanged}"/>
+                                <!-- DataGridComboBoxColumn tidak dipakai: kolom grid ada di luar visual tree
+                                     sehingga ItemsSource dari ViewModel gagal diam-diam (dropdown kosong). -->
+                                <DataGridTemplateColumn Header="L/P" Width="70" MinWidth="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding JenisKelamin}" VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center" Margin="2,0"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.JenisKelaminOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      SelectedItem="{Binding JenisKelamin, UpdateSourceTrigger=PropertyChanged}"
+                                                      VerticalContentAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Jabatan" Width="2*" MinWidth="120"
+                                                    Binding="{Binding Jabatan, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="NIP" Width="1.2*" MinWidth="100"
+                                                    Binding="{Binding Nip, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="NIK" Width="1.5*" MinWidth="120"
+                                                    Binding="{Binding Nik, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="No. Handphone" Width="1.4*" MinWidth="120"
+                                                    Binding="{Binding NoHp, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="Alamat" Width="3*" MinWidth="140"
+                                                    Binding="{Binding Alamat, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="Keterangan" Width="2*" MinWidth="110"
+                                                    Binding="{Binding Keterangan, UpdateSourceTrigger=PropertyChanged}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Panel bawah: aksi -->
+        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" Padding="14,10"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button Content="Cetak PDF" Width="130" Height="34" Margin="0,0,8,0"
+                            Command="{Binding CetakCommand}"
+                            Style="{StaticResource SuccessButton}"/>
+                    <Button Content="Batal" Width="110" Height="34"
+                            Command="{Binding BatalCommand}"
+                            Style="{StaticResource OutlineButton}"/>
+                </StackPanel>
+                <ProgressBar Width="140" Height="8" IsIndeterminate="True"
+                             VerticalAlignment="Center" HorizontalAlignment="Left"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

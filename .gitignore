@@ -1,0 +1,29 @@
+# ===== Build & publish =====
+[Bb]in/
+[Oo]bj/
+bin-verify/
+bin-*/
+obj-verify/
+*-verify/
+artifacts/
+
+# ===== Kredensial — JANGAN pernah di-commit =====
+Resources/sudesapp.json
+**/sudesapp.json
+GoogleClientCredentials.bin
+
+# ===== Data / hasil runtime =====
+desa.db
+desa.db-*
+TempPDF/
+Output/
+logs/
+pdf-gallery/
+
+# ===== IDE / OS =====
+.vs/
+.freebuff/
+*.user
+*.suo
+Thumbs.db
+desktop.ini

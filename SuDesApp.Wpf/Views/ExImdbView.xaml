@@ -1,0 +1,75 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.ExImdbView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+            <!-- Header (tetap, tidak ikut scroll) -->
+            <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+                <StackPanel Orientation="Horizontal">
+                    <Border Style="{StaticResource HeaderIconChip}">
+                        <TextBlock Text="&#x1F4BE;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}" AutomationProperties.Name="DATABASE"/>
+                        <TextBlock Text="{Binding Subtitle}" Style="{StaticResource HeaderSubtitle}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+        <!-- Konten -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Form (lebar penuh agar kotak lokasi file memanjang) -->
+                <Border Style="{StaticResource CardStyle}" Padding="20">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="LOKASI FILE" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"
+                                       FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding InfoText}" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" Margin="0,0,0,14"/>
+
+                        <DockPanel Margin="0,0,0,16">
+                            <Button Content="Cari Lokasi..." Command="{Binding BrowseCommand}" DockPanel.Dock="Right"
+                                    Width="120" Height="34" Margin="12,0,0,0" Style="{StaticResource SecondaryButton}"/>
+                            <TextBox Text="{Binding SelectedPath, UpdateSourceTrigger=PropertyChanged}" Height="34"
+                                     VerticalContentAlignment="Center"/>
+                        </DockPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="{Binding ActionLabel}" Command="{Binding ExecuteCommand}"
+                                    Width="140" Height="36" Margin="0,0,8,0" Style="{StaticResource PrimaryButton}"/>
+                            <ProgressBar Width="120" Height="6" IsIndeterminate="True"
+                                         VerticalAlignment="Center" Margin="0,0,8,0"
+                                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"
+                                         Foreground="{DynamicResource AccentBrush}"/>
+                        </StackPanel>
+
+                        <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,10,0,0"
+                                   TextAlignment="Right">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="Text" Value="Sedang diproses..."/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

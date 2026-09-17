@@ -1,0 +1,170 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.RekeningKoranView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource WindowBackgroundBrush}"
+             FontSize="13"
+             SnapsToDevicePixels="True"
+             UseLayoutRounding="True">
+
+	<UserControl.Resources>
+		<BooleanToVisibilityConverter x:Key="BoolToVis"/>
+	</UserControl.Resources>
+
+	<Grid Margin="20">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<!-- Header -->
+		<Border Grid.Row="0" Style="{StaticResource PageHeader}">
+			<StackPanel Orientation="Horizontal">
+				<Border Style="{StaticResource HeaderIconChip}">
+					<TextBlock Text="&#x1F4B3;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Border>
+				<StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+					<TextBlock Text="Permohonan Rekening Koran" Style="{StaticResource HeaderTitle}"
+                               AutomationProperties.Name="PERMOHONAN REKENING KORAN"/>
+					<TextBlock Text="Surat permohonan cetak rekening koran desa (PDF otomatis)" Style="{StaticResource HeaderSubtitle}"/>
+				</StackPanel>
+			</StackPanel>
+		</Border>
+
+		<!-- Form -->
+		<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+			<StackPanel>
+
+				<!-- DATA PEJABAT -->
+				<Border Style="{StaticResource CardStyle}" Padding="18" Margin="0,0,0,14">
+					<StackPanel>
+						<StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+							<Border Style="{StaticResource AccentSectionBar}"/>
+							<TextBlock Text="DATA PEJABAT PENANDATANGAN" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextBrush}" FontSize="14" VerticalAlignment="Center"/>
+						</StackPanel>
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="160"/>
+								<ColumnDefinition Width="*"/>
+							</Grid.ColumnDefinitions>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+							</Grid.RowDefinitions>
+
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Nomor Surat *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
+                                     Text="{Binding NomorSurat, UpdateSourceTrigger=PropertyChanged}"/>
+
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Nama Kepala Desa *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
+                                     Text="{Binding NamaKades, UpdateSourceTrigger=PropertyChanged}"/>
+
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Jabatan *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FieldBox}"
+                                     Text="{Binding Jabatan, UpdateSourceTrigger=PropertyChanged}"/>
+
+							<TextBlock Grid.Row="3" Grid.Column="0" Text="Alamat Pejabat *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FieldBox}"
+                                     Text="{Binding AlamatKades, UpdateSourceTrigger=PropertyChanged}"/>
+						</Grid>
+					</StackPanel>
+				</Border>
+
+				<!-- DATA REKENING -->
+				<Border Style="{StaticResource CardStyle}" Padding="18">
+					<StackPanel>
+						<StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+							<Border Style="{StaticResource AccentSectionBar}"/>
+							<TextBlock Text="DATA REKENING" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextBrush}" FontSize="14" VerticalAlignment="Center"/>
+						</StackPanel>
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="160"/>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="14"/>
+								<ColumnDefinition Width="160"/>
+								<ColumnDefinition Width="*"/>
+							</Grid.ColumnDefinitions>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+							</Grid.RowDefinitions>
+
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Nama Pemegang Rekening *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
+                                     Text="{Binding NamaRekening, UpdateSourceTrigger=PropertyChanged}"/>
+
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Nomor Rekening *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
+                                     Text="{Binding NomorRekening, UpdateSourceTrigger=PropertyChanged}"/>
+
+							<TextBlock Grid.Row="0" Grid.Column="3" Text="Bank *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<TextBox Grid.Row="0" Grid.Column="4" Style="{StaticResource FieldBox}"
+                                     Text="{Binding Bank, UpdateSourceTrigger=PropertyChanged}"/>
+
+							<TextBlock Grid.Row="1" Grid.Column="3" Text="KCP *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<TextBox Grid.Row="1" Grid.Column="4" Style="{StaticResource FieldBox}"
+                                     Text="{Binding KCP, UpdateSourceTrigger=PropertyChanged}"/>
+
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="Periode Mulai *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<DatePicker Grid.Row="2" Grid.Column="1" SelectedDate="{Binding TanggalMulai, Mode=TwoWay}" Margin="0,6"/>
+
+							<TextBlock Grid.Row="2" Grid.Column="3" Text="Periode Akhir *" VerticalAlignment="Center" Margin="0,6"
+                                       Foreground="{DynamicResource TextBrush}"/>
+							<DatePicker Grid.Row="2" Grid.Column="4" SelectedDate="{Binding TanggalSelesai, Mode=TwoWay}" Margin="0,6"/>
+						</Grid>
+					</StackPanel>
+				</Border>
+
+				<Grid Height="16"/>
+
+				<!-- Informasi kecil -->
+				<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+					<Border Style="{StaticResource StatusBadgeStyle}" Background="{DynamicResource AccentSubtleBrush}"
+                            BorderBrush="{DynamicResource AccentBrush}" Padding="12,6">
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="&#x1F4C5;" FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0"/>
+							<TextBlock Text="Periode surat otomatis menggunakan tanggal saat PDF dibuat."
+                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"/>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+			</StackPanel>
+		</ScrollViewer>
+
+		<!-- Panel bawah: aksi -->
+		<Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" Padding="14,10"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+			<DockPanel>
+				<StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+					<Button Content="Buat PDF" Width="120" Height="34" Margin="0,0,8,0"
+                            Command="{Binding SaveCommand}"
+                            Style="{StaticResource SuccessButton}"/>
+					<Button Content="Batal" Width="110" Height="34"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource OutlineButton}"/>
+				</StackPanel>
+				<ProgressBar Width="140" Height="8" IsIndeterminate="True"
+                             VerticalAlignment="Center" HorizontalAlignment="Left"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+			</DockPanel>
+		</Border>
+	</Grid>
+</UserControl>

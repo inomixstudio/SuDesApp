@@ -1,0 +1,81 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.GoogleLoginView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#x1F50D;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="LOGIN GOOGLE" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Text="Hubungkan akun Google untuk mengarsipkan surat di Google Drive"
+                               Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Kartu status -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="28"
+                HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
+            <StackPanel>
+                <!-- Logo Google resmi di lingkaran putih (gaya tombol Google Sign-In) -->
+                <Border Width="72" Height="72" CornerRadius="36" Background="White"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        HorizontalAlignment="Center" Margin="0,0,0,18">
+                    <ContentControl ContentTemplate="{StaticResource GoogleGLogo}"
+                                    Width="40" Height="40"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <TextBlock Text="{Binding InfoText}" TextWrapping="Wrap" TextAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"
+                           LineHeight="22" Margin="0,0,0,4"/>
+
+                <!-- Busy indicator -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsBusy}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <ProgressBar Width="120" Height="6" IsIndeterminate="True" VerticalAlignment="Center"
+                                 Foreground="{DynamicResource AccentBrush}" Margin="0,0,10,0"/>
+                    <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                               Text="Menghubungkan ke Google..." VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Tombol aksi -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,22,0,0">
+                    <Button Content="{Binding ActionLabel}" Command="{Binding MasukCommand}"
+                            Width="180" Height="36" Margin="0,0,8,0"
+                            Style="{StaticResource PrimaryButton}"/>
+                    <Button Content="Ganti Akun" Command="{Binding GantiAkunCommand}"
+                            Width="110" Height="36" Margin="0,0,8,0"
+                            Style="{StaticResource SecondaryButton}"/>
+                    <Button Content="Batal" Command="{Binding BatalCommand}"
+                            Width="80" Height="36" Style="{StaticResource OutlineButton}"/>
+                </StackPanel>
+
+                <TextBlock Text="SuDesApp • Google Drive • Arsip Surat Desa"
+                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextAlignment="Center" Margin="0,20,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

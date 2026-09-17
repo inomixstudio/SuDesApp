@@ -1,0 +1,329 @@
+<Window x:Class="SuDesApp.Wpf.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Login Surat Desa"
+        Icon="pack://application:,,,/Resources/AppIcon.ico"
+        Width="460" Height="660"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="True"
+        FontFamily="{DynamicResource AppFontFamily}">
+
+    <!--
+        Tema & style diwarisi dari App.xaml (ThemeStyles.xaml + dictionary tema aktif).
+        Kartu login memakai radius 6 (CardCornerRadius) dan brush umum yang sama
+        dengan halaman utama, sehingga selalu serasi di semua tema.
+
+        Dua jalur login:
+        1. Bila ada akun Google yang pernah login (token tersimpan), overlay
+           progres "Masuk sebagai {email}" + foto profil tampil otomatis dan
+           menganggap pengguna setara admin/admin.
+        2. Bila tidak ada akun Google, form username/password biasa ditampilkan.
+    -->
+    <Border CornerRadius="6" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="24" ShadowDepth="3" Opacity="0.35" Color="Black"/>
+        </Border.Effect>
+
+        <Grid>
+            <!-- ================= Konten utama (form manual) ================= -->
+            <Grid x:Name="MainContent">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsGoogleLogin}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Setter Property="Opacity" Value="0.35"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="190"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- ===== Header (PrimaryBrush, padanan header sidebar/DataGrid) ===== -->
+                <Border x:Name="HeaderBorder" Grid.Row="0" Background="{DynamicResource PrimaryBrush}" CornerRadius="6,6,0,0"
+                        ClipToBounds="True"
+                        MouseLeftButtonDown="HeaderBorder_MouseLeftButtonDown">
+                    <Grid>
+                        <!-- Aksen dekoratif lembut agar header tidak datar -->
+                        <Ellipse Width="200" Height="200" Fill="White" Opacity="0.07"
+                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-70,-90,0,0"/>
+                        <Ellipse Width="150" Height="150" Fill="White" Opacity="0.07"
+                                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-55,-75"/>
+                        <StackPanel VerticalAlignment="Center" Margin="0,24,0,24">
+                            <!-- Logo = ikon aplikasi baru (amplop + segel) — identitas visual konsisten -->
+                            <Border Width="64" Height="64" CornerRadius="14"
+                                    Background="Transparent" HorizontalAlignment="Center" Margin="0,0,0,14">
+                                <Image Source="pack://application:,,,/Resources/AppIcon-256.png" Stretch="Uniform"/>
+                            </Border>
+                            <TextBlock Text="SURAT DESA" Foreground="{DynamicResource HeaderTextBrush}"
+                                       FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Sistem Cetak Surat Desa" Foreground="{DynamicResource HeaderSubtitleBrush}"
+                                       FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <!-- Tombol tutup untuk window tanpa border -->
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Margin="0,8,10,0" Padding="8,4"
+                                Click="Cancel_Click" ToolTip="Tutup">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                        CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource ToggleHoverBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <TextBlock Text="&#10005;" FontSize="15" FontWeight="Bold"
+                                       Foreground="{DynamicResource HeaderTextBrush}"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- ===== Form login ===== -->
+                <Grid Grid.Row="1" Margin="40,20,40,10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Error message -->
+                    <Border Grid.Row="0" Background="{DynamicResource ErrorOverlayBrush}" CornerRadius="6"
+                            Padding="10,8" Margin="0,0,0,12"
+                            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorBrush}"
+                                   FontSize="12" TextWrapping="Wrap"/>
+                    </Border>
+
+                    <!-- Username -->
+                    <TextBlock Grid.Row="1" Text="Username" FontWeight="SemiBold" FontSize="12"
+                               Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6"/>
+                    <TextBox x:Name="UsernameBox" Grid.Row="2"
+                             Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="14" Padding="10,9" VerticalContentAlignment="Center"/>
+
+                    <!-- Password -->
+                    <TextBlock Grid.Row="3" Text="Kata Sandi" FontWeight="SemiBold" FontSize="12"
+                               Foreground="{DynamicResource TextBrush}" Margin="0,12,0,6"/>
+                    <Grid Grid.Row="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <PasswordBox x:Name="PasswordBox"
+                                         FontSize="14" Padding="10,9" VerticalContentAlignment="Center"
+                                         PasswordChanged="PasswordBox_PasswordChanged"/>
+
+                            <TextBox x:Name="RevealBox" FontSize="14" Padding="10,9"
+                                     VerticalContentAlignment="Center" Visibility="Collapsed"
+                                     TextChanged="RevealBox_TextChanged"/>
+                        </Grid>
+
+                        <!-- Tampilkan sandi: di BAWAH kotak sandi, rata kiri -->
+                        <CheckBox x:Name="ShowPassCheck" Grid.Row="1" Margin="0,8,0,0"
+                                  HorizontalAlignment="Left" Checked="ShowPass_Changed" Unchecked="ShowPass_Changed">
+                            <CheckBox.Content>
+                                <TextBlock Text="Lihat sandi" FontSize="11.5"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </CheckBox.Content>
+                        </CheckBox>
+                    </Grid>
+
+                    <!-- Login button (style global: PrimaryBrush + OnPrimaryTextBrush) -->
+                    <Button Grid.Row="6" Content="Masuk" Click="Login_Click"
+                            FontSize="15" FontWeight="Bold" Padding="0,13" Margin="0,14,0,0" IsDefault="True">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsGoogleLogin}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <!-- Pemisah "atau" antara login sandi dan Google -->
+                    <Grid Grid.Row="7" Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Rectangle Grid.Column="0" Height="1" Fill="{DynamicResource BorderBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="atau" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Margin="10,0" VerticalAlignment="Center"/>
+                        <Rectangle Grid.Column="2" Height="1" Fill="{DynamicResource BorderBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Alternatif: masuk dengan akun Google (dipakai bila belum ada token / token gagal) -->
+                    <Button Grid.Row="8" Command="{Binding GoogleLoginNowCommand}"
+                            FontSize="13" FontWeight="SemiBold" Padding="0,12" Margin="0,16,0,0" Cursor="Hand"
+                            Background="{DynamicResource SurfaceBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+                            Foreground="{DynamicResource TextBrush}" ToolTip="Masuk memakai akun Google — setara login admin">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                    CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <ContentControl ContentTemplate="{StaticResource GoogleGLogo}"
+                                                                    Width="18" Height="18" Margin="0,0,10,0"
+                                                                    VerticalAlignment="Center"/>
+                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Opacity" Value="0.5"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="Masuk dengan Google" Foreground="{DynamicResource TextBrush}"/>
+                    </Button>
+
+                    <!-- Batal: tautan sekunder di bagian bawah -->
+                    <Button Grid.Row="9" Content="Batal" Click="Cancel_Click" IsCancel="True"
+                            FontSize="12" Padding="0,8" Margin="0,10,0,0" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                    CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+
+                <!-- ===== Teks versi ===== -->
+                <TextBlock Grid.Row="2" Text="Surat Desa V.2.1.2  •  Sumberjaya Dev."
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="9"
+                           HorizontalAlignment="Center" Margin="0,0,0,14"/>
+            </Grid>
+
+            <!-- ================= Overlay login Google (progres + profil) ================= -->
+            <Border Grid.RowSpan="3" CornerRadius="6" Background="{DynamicResource SurfaceBrush}"
+                    Visibility="{Binding IsGoogleLogin, Converter={StaticResource BoolToVis}}">
+                <StackPanel VerticalAlignment="Center" Margin="44,0">
+                    <!-- Foto profil; bila belum termuat, huruf G tampil sebagai fallback -->
+                    <Border Width="92" Height="92" CornerRadius="46" HorizontalAlignment="Center" Margin="0,0,0,18"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            Background="{DynamicResource PanelBrush}">
+                        <Grid>
+                            <ContentControl ContentTemplate="{StaticResource GoogleGLogo}"
+                                            Width="42" Height="42"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Image Source="{Binding GooglePhotoBytes, Converter={StaticResource ByteArrayToImage}}"
+                                   Stretch="Uniform" Margin="2"/>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Text="Masuk sebagai" FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding GoogleEmail}" FontSize="15" FontWeight="Bold"
+                               Foreground="{DynamicResource TextBrush}"
+                               HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap" Margin="0,6,0,0"
+                               ToolTip="{Binding GoogleEmail}"/>
+                    <TextBlock Text="Menyiapkan sesi admin..." FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               HorizontalAlignment="Center" Margin="0,4,0,0"/>
+
+                    <ProgressBar IsIndeterminate="True" Height="6" Margin="0,18,0,0"/>
+
+                    <Button Content="Batalkan" Command="{Binding CancelGoogleLoginCommand}"
+                            FontSize="13" Padding="0,10" Margin="0,18,0,0">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                    CornerRadius="4" Padding="{TemplateBinding Padding}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

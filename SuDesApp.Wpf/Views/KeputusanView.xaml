@@ -1,0 +1,149 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.KeputusanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header + toggle SK/PERDES/PERKADES -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Border Style="{StaticResource HeaderIconChip}">
+                        <TextBlock Text="&#128220;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
+                        <TextBlock Text="Buku Surat Keputusan, Peraturan Desa, dan Peraturan Kepala Desa (arsip Excel ArsipKeputusan.xlsx)"
+                                   Style="{StaticResource HeaderSubtitle}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="SK" Command="{Binding SetSkCommand}" Width="80" Height="32" Margin="0,0,6,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSk}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource ToggleHoverBrush}"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Content="PERDES" Command="{Binding SetPerdesCommand}" Width="80" Height="32" Margin="0,0,6,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPerdes}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource ToggleHoverBrush}"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Content="PERKADES" Command="{Binding SetPerkadesCommand}" Width="80" Height="32" Margin="0,0,6,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPerkades}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource ToggleHoverBrush}"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Toolbar: filter tahun + aksi -->
+        <Border Grid.Row="1" Style="{StaticResource ToolbarCard}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <TextBlock Text="Tahun" Foreground="{DynamicResource TextBrush}"/>
+                    <TextBlock Text=":" Foreground="{DynamicResource TextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ComboBox ItemsSource="{Binding TahunOptions}" SelectedItem="{Binding SelectedTahun}"
+                              Width="110" Height="30" Margin="0,0,12,0"/>
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Width="220" Height="30" VerticalContentAlignment="Center"
+                             ToolTip="Cari nomor, tentang, keterangan, atau tahun..."/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="2" Text="{Binding StatusInfo}" VerticalAlignment="Center" Margin="12,0,0,0"
+                           FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Segarkan" Command="{Binding SegarkanCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,6,0"/>
+                    <Button Content="Tambah" Command="{Binding TambahCommand}" Style="{StaticResource PrimaryButton}" Height="32" Margin="0,0,6,0"/>
+                    <Button Content="Edit" Command="{Binding EditCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,6,0"/>
+                    <Button Content="Hapus" Command="{Binding HapusCommand}" Style="{StaticResource DangerButton}" Height="32" Margin="0,0,6,0"/>
+                    <Button Content="Cetak" Command="{Binding CetakCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,6,0"/>
+                    <Button Content="Batal" Command="{Binding BatalCommand}" Style="{StaticResource OutlineButton}" Height="32"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Grid data -->
+        <Border Grid.Row="2" Style="{StaticResource GridHostCard}" Padding="1">
+            <DataGrid x:Name="DataGridKeputusan" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
+                      AutoGenerateColumns="False" IsReadOnly="True"
+                      SelectionMode="Single" SelectionUnit="FullRow"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                      BorderThickness="0" RowHeight="28"
+                      MouseDoubleClick="DataGridKeputusan_MouseDoubleClick"
+                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="No." Binding="{Binding No}" Width="45"/>
+                    <DataGridTextColumn Header="Nomor" Binding="{Binding Nomor}" Width="1.5*"/>
+                    <DataGridTextColumn Header="Tanggal" Binding="{Binding Tanggal}" Width="1*"/>
+                    <DataGridTextColumn Header="Tentang" Binding="{Binding Tentang}" Width="3*"/>
+                    <DataGridTextColumn Header="Keterangan" Binding="{Binding Keterangan}" Width="2*"/>
+                    <DataGridTemplateColumn Header="File Lampiran" Width="1.2*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding FileWord}" VerticalAlignment="Center" FontSize="12"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0"/>
+                                    <Button Content="Buka" Width="55" Height="24" Padding="4,0"
+                                            Command="{Binding DataContext.OpenWordFileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding FileWord, Converter={StaticResource StringToBoolConverter}}"
+                                            ToolTip="Buka berkas lampiran (Word/PDF)"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>

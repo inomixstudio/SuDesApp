@@ -1,0 +1,101 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.RiwayatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#128337;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Toolbar: pencarian + aksi -->
+        <Border Grid.Row="1" Style="{StaticResource ToolbarCard}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                         FontSize="13" Padding="8,6" VerticalContentAlignment="Center"
+                         ToolTip="Cari pengguna, jenis surat, nomor, aksi, atau detail">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Style.Resources>
+                                <VisualBrush x:Key="HintBrush" Stretch="None" AlignmentX="Left">
+                                    <VisualBrush.Visual>
+                                        <TextBlock Text="Cari: pengguna, jenis, nomor, aksi..." Margin="4,0,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+                                    </VisualBrush.Visual>
+                                </VisualBrush>
+                            </Style.Resources>
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="">
+                                    <Setter Property="Background" Value="{StaticResource HintBrush}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+                <Button Grid.Column="1" Content="Segarkan" Command="{Binding RefreshCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0"/>
+                <Button Grid.Column="2" Content="Bersihkan Riwayat" Command="{Binding ClearCommand}" Style="{StaticResource DangerButton}" Height="32" Margin="8,0,0,0"
+                        ToolTip="Hapus seluruh riwayat aktivitas (tidak dapat dibatalkan)"/>
+                <Button Grid.Column="3" Content="Batal" Command="{Binding BatalCommand}" Style="{StaticResource OutlineButton}" Height="32" Margin="8,0,0,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Daftar riwayat -->
+        <Border Grid.Row="2" Style="{StaticResource GridHostCard}">
+            <DataGrid ItemsSource="{Binding Items}"
+                      AutoGenerateColumns="False" IsReadOnly="True"
+                      SelectionMode="Single" SelectionUnit="FullRow"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                      BorderThickness="0" RowHeight="28">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Waktu" Binding="{Binding WaktuDisplay}" Width="150"/>
+                    <DataGridTextColumn Header="Pengguna" Binding="{Binding Pengguna}" Width="2*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="ToolTip" Value="{Binding Pengguna}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Jenis" Binding="{Binding JenisDokumen}" Width="150"/>
+                    <DataGridTextColumn Header="Dokumen" Binding="{Binding Dokumen}" Width="2*"/>
+                    <DataGridTextColumn Header="Aksi" Binding="{Binding Aksi}" Width="100"/>
+                    <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="3*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding Detail}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Status -->
+        <TextBlock Grid.Row="3" Text="{Binding StatusText}" Foreground="{DynamicResource TextSecondaryBrush}"
+                   FontSize="12" Margin="0,8,0,0"/>
+    </Grid>
+</UserControl>

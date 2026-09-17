@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SuDesApp.Core/SuDesApp.Core.csproj" />
+  <Project Path="SuDesApp.Wpf/SuDesApp.Wpf.csproj" />
+</Solution>

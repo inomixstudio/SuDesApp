@@ -1,0 +1,9 @@
+# Whitelist pemeriksa resource (Tools/check-resources.ps1)
+#
+# File yang SENGAJA tidak dirujuk csproj maupun kode, sehingga tidak
+# dilaporkan sebagai ORPHAN. Satu pola per baris, relatif terhadap root
+# repo (pakai garis miring /), wildcard * boleh.
+# Baris kosong dan baris yang diawali # diabaikan.
+#
+# Contoh:
+# Tools/icon-preview/preview.html

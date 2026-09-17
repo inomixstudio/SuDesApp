@@ -1,0 +1,63 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="SuDesApp.Wpf.Views.UbahSandiView"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True" d:DesignWidth="335.049">
+	<Grid Margin="20">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<!-- Header -->
+		<Border Grid.Row="0" Style="{StaticResource PageHeader}">
+			<StackPanel Orientation="Horizontal">
+				<Border Style="{StaticResource HeaderIconChip}">
+					<TextBlock Text="&#x1F511;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+							   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Border>
+				<StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+					<TextBlock Text="Ubah Password" Style="{StaticResource HeaderTitle}" AutomationProperties.Name="UBAH PASSWORD"/>
+					<TextBlock Text="Ganti password login aplikasi" Style="{StaticResource HeaderSubtitle}"/>
+				</StackPanel>
+			</StackPanel>
+		</Border>
+
+		<!-- Form -->
+		<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+			<Border Style="{StaticResource CardStyle}" Padding="24" MaxWidth="400" HorizontalAlignment="Left" VerticalAlignment="Top">
+				<StackPanel>
+					<StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+						<TextBlock Text="Password Lama" Foreground="{DynamicResource TextBrush}" FontWeight="Medium"/>
+						<TextBlock Text=" *" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold"/>
+					</StackPanel>
+					<PasswordBox x:Name="txtLama" Margin="0,0,0,14"/>
+
+					<StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+						<TextBlock Text="Password Baru" Foreground="{DynamicResource TextBrush}" FontWeight="Medium"/>
+						<TextBlock Text=" *" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold"/>
+					</StackPanel>
+					<PasswordBox x:Name="txtBaru" Margin="0,0,0,4"/>
+
+					<TextBlock Text="Minimal 8 karakter" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,14"/>
+
+					<StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+						<TextBlock Text="Konfirmasi Password Baru" Foreground="{DynamicResource TextBrush}" FontWeight="Medium"/>
+						<TextBlock Text=" *" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold"/>
+					</StackPanel>
+					<PasswordBox x:Name="txtKonfirmasi" Margin="0,0,0,14"/>
+
+					<CheckBox Content="Tampilkan password" IsChecked="{Binding TampilkanPassword}" Margin="0,0,0,16"/>
+
+					<Button Content="Simpan" Command="{Binding SaveCommand}" Height="36"
+							Style="{StaticResource PrimaryButton}"/>
+
+					<TextBlock Text="{Binding StatusMessage}" Margin="0,16,0,0"
+							   Foreground="{Binding StatusColor}"
+							   TextWrapping="Wrap" FontWeight="Medium"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
+			</Border>
+		</ScrollViewer>
+	</Grid>
+</UserControl>

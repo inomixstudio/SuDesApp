@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  resource-check:
+    name: Deteksi resource csproj hilang / yatim
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pemeriksaan resource (csproj vs disk vs kode)
+        shell: pwsh
+        run: ./Tools/check-resources.ps1

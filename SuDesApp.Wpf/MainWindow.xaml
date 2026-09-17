@@ -1,0 +1,587 @@
+<Window x:Class="SuDesApp.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:ctrl="clr-namespace:SuDesApp.Wpf.Controls"
+        xmlns:vm="clr-namespace:SuDesApp.Wpf.ViewModels"
+        xmlns:views="clr-namespace:SuDesApp.Wpf.Views"
+        Icon="pack://application:,,,/Resources/AppIcon.ico"
+        Title="SuDesApp"
+        Width="1280" Height="800"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        WindowStyle="None"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        MinWidth="1024" MinHeight="640">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="32" ResizeBorderThickness="6" CornerRadius="0"
+                      UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Template: label section (BUAT SURAT / FORMULIR / PENGATURAN / BANTUAN).
+             Bullet aksen di kiri menandai awal seksi; garis tipis memanjang ke
+             kanan memberi kesan "kategori" yang lebih modern daripada label polos. -->
+        <DataTemplate x:Key="SectionHeaderTemplate">
+            <Grid Margin="6,16,8,7">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Width="5" Height="5" CornerRadius="2.5"
+                        Background="{DynamicResource SidebarAccentBrush}"
+                        VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Grid.Column="1" Text="{Binding Title}"
+                           FontSize="10.5" FontWeight="Bold"
+                           Foreground="{DynamicResource SidebarAccentBrush}"
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                <Border Grid.Column="2" Width="30" Height="1"
+                        Background="{DynamicResource SidebarAccentBrush}"
+                        Opacity="0.3" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </Grid>
+        </DataTemplate>
+
+        <!-- Template: accordion yang memiliki children (accordion/cabang) -->
+        <!-- Animasi halus: chevron '❯' berputar 90° (menjadi arah bawah)
+             dengan CubicEase saat expand/collapse. Tinggi konten dianimasikan
+             dari code-behind (MainWindow.OnAccordionExpanded) karena Expander
+             bawaan tidak menganimasikan area kontennya. -->
+        <DataTemplate x:Key="AccordionTemplate">
+            <Expander Foreground="{DynamicResource SidebarTextBrush}"
+                      Background="Transparent"
+                      IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                      Margin="3,1"
+                      BorderThickness="0"
+                      AutomationProperties.Name="{Binding Title}">
+                <!-- Template tanpa panah bawaan: WPF menampilkan toggle arrow default
+                     di KIRI header; itu menghasilkan dua tanda bersama chevron kustom
+                     di kanan. Template ini hanya header + konten — satu-satunya
+                     indikator buka/tutup adalah chevron kanan yang berputar. -->
+                <Expander.Template>
+                    <ControlTemplate TargetType="Expander">
+                        <StackPanel>
+                            <!-- Header: latar pill halus saat hover / saat terbuka.
+                                 Triggers IsMouseOver & IsChecked pada ToggleButton
+                                 memberi umpan balik visual yang jelas untuk item grup. -->
+                            <ToggleButton IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                          FocusVisualStyle="{x:Null}"
+                                          Background="Transparent"
+                                          Cursor="Hand">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="bd" Background="Transparent"
+                                                CornerRadius="7" Margin="0,1"
+                                                Padding="6,3" SnapsToDevicePixels="True">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarHoverBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarPressedBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                                <ContentPresenter Content="{TemplateBinding Header}"
+                                                  RecognizesAccessKey="True"/>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ExpandSite" Visibility="Collapsed"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Expander.Template>
+                <Expander.Header>
+                    <Grid Margin="2,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Chip ikon: bentuk persegi membulat agar header grup terasa
+                             "kartu" dan lebih terstruktur daripada emoji mentah. -->
+                        <Border Grid.Column="0" Width="26" Height="26" CornerRadius="7"
+                                Background="{DynamicResource SidebarHoverBrush}"
+                                Margin="0,0,10,0" VerticalAlignment="Center">
+                            <TextBlock Text="&#x1F4C1;" FontSize="12"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock x:Name="ChevronIcon" Grid.Column="2" Text="&#x276F;" FontSize="10"
+                                   Foreground="{DynamicResource SidebarAccentBrush}" Opacity="0.7"
+                                   VerticalAlignment="Center" Margin="8,0,2,0">
+                            <TextBlock.RenderTransform>
+                                <RotateTransform Angle="0" CenterX="5" CenterY="6"/>
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </Grid>
+                </Expander.Header>
+                <Expander.Triggers>
+                    <EventTrigger RoutedEvent="Expander.Expanded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="ChevronIcon"
+                                                 Storyboard.TargetProperty="(TextBlock.RenderTransform).(RotateTransform.Angle)"
+                                                 To="90" Duration="0:0:0.22">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <!-- Konten slide-fade masuk: turun -8px → 0 sambil fade in -->
+                                <DoubleAnimation Storyboard.TargetName="AccordionContent"
+                                                 Storyboard.TargetProperty="Opacity"
+                                                 From="0" To="1" Duration="0:0:0.24">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetName="AccordionContent"
+                                                 Storyboard.TargetProperty="(StackPanel.RenderTransform).(TranslateTransform.Y)"
+                                                 From="-8" To="0" Duration="0:0:0.24">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                    <EventTrigger RoutedEvent="Expander.Collapsed">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="ChevronIcon"
+                                                 Storyboard.TargetProperty="(TextBlock.RenderTransform).(RotateTransform.Angle)"
+                                                 To="0" Duration="0:0:0.18">
+                                    <DoubleAnimation.EasingFunction>
+                                        <CubicEase EasingMode="EaseOut"/>
+                                    </DoubleAnimation.EasingFunction>
+                                </DoubleAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Expander.Triggers>
+                <StackPanel x:Name="AccordionContent" Margin="12,0,2,2" RenderTransformOrigin="0,0">
+                    <StackPanel.RenderTransform>
+                        <TranslateTransform Y="0"/>
+                    </StackPanel.RenderTransform>
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Garis penghubung vertikal (tree guide): memperjelas bahwa
+                             anak-anak berada dalam satu cabang. -->
+                        <Border Grid.Column="0" Width="1" HorizontalAlignment="Left"
+                                Margin="11,2,0,5"
+                                Background="{DynamicResource SidebarAccentBrush}"
+                                Opacity="0.25"/>
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Children}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding Title}"
+                                            Command="{Binding Action}"
+                                            Tag="{Binding Icon}"
+                                            Style="{StaticResource SidebarChildButton}"
+                                            AutomationProperties.Name="{Binding Title}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </StackPanel>
+            </Expander>
+        </DataTemplate>
+
+        <!-- Template: tombol langsung (Surat Masuk, Register Surat, dll.) -->
+        <DataTemplate x:Key="ButtonTemplate">
+            <Button Content="{Binding Title}"
+                    Command="{Binding Action}"
+                    Margin="3,1"
+                    Padding="0"
+                    HorizontalContentAlignment="Stretch"
+                    Background="Transparent"
+                    FocusVisualStyle="{x:Null}"
+                    AutomationProperties.Name="{Binding Title}">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <!-- Pill aksen kiri: muncul saat hover/tekan -->
+                            <Border x:Name="AccentPill" Width="3" HorizontalAlignment="Left"
+                                    CornerRadius="1.5" Margin="0,7"
+                                    Background="{DynamicResource SidebarAccentBrush}"
+                                    Opacity="0"/>
+                            <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                    CornerRadius="7" Padding="10,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Icon}"
+                                               Foreground="{DynamicResource SidebarAccentBrush}" Opacity="0.9"
+                                               Margin="0,0,10,0" FontSize="14" Width="18"
+                                               TextAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Title}"
+                                               Foreground="{DynamicResource SidebarTextBrush}"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    <!-- Chevron halus muncul saat hover: memberi petunjuk
+                                         bahwa item dapat diklik dan dinavigasi. -->
+                                    <TextBlock x:Name="HoverChevron" Grid.Column="2" Text="&#x276F;" FontSize="9"
+                                               Foreground="{DynamicResource SidebarAccentBrush}"
+                                               VerticalAlignment="Center" Margin="8,0,2,0"
+                                               Opacity="0">
+                                        <TextBlock.RenderTransform>
+                                            <TranslateTransform X="-4"/>
+                                        </TextBlock.RenderTransform>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarHoverBrush}"/>
+                                <Setter TargetName="AccentPill" Property="Opacity" Value="1"/>
+                                <Setter TargetName="HoverChevron" Property="Opacity" Value="0.9"/>
+                                <Setter TargetName="HoverChevron" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <TranslateTransform X="0"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarPressedBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </DataTemplate>
+
+        <!-- Selector: pilih template sesuai jenis item -->
+        <views:SidebarItemTemplateSelector x:Key="SidebarSelector"
+                                           SectionHeaderTemplate="{StaticResource SectionHeaderTemplate}"
+                                           AccordionTemplate="{StaticResource AccordionTemplate}"
+                                           ButtonTemplate="{StaticResource ButtonTemplate}"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="28"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Title bar bertema (baris layout sendiri — konten tidak tertutup) ===== -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                Background="{DynamicResource SidebarBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                MouseLeftButtonDown="CaptionBorder_MouseLeftButtonDown">
+            <DockPanel LastChildFill="False">
+                <Image DockPanel.Dock="Left" Source="pack://application:,,,/Resources/AppIcon-256.png"
+                       Width="16" Height="16" Stretch="Uniform" Margin="10,0,0,0"
+                       VerticalAlignment="Center"/>
+                <TextBlock DockPanel.Dock="Left" Text="SuDesApp" Style="{StaticResource WindowTitleText}"
+                           FontWeight="SemiBold"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource CloseCaptionButton}"
+                        Command="{x:Static ctrl:AppChromeCommands.Close}"
+                        ToolTip="Tutup (Alt+F4)">
+                    <Path Data="M 0 0 L 8 8 M 8 0 L 0 8" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          StrokeThickness="1"/>
+                </Button>
+                <Button DockPanel.Dock="Right"
+                        Command="{x:Static ctrl:AppChromeCommands.MaximizeRestore}"
+                        ToolTip="Maksimalkan / Pulihkan">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+                            <Setter Property="Content">
+                                <Setter.Value>
+                                    <Rectangle Width="9" Height="9" StrokeThickness="1"
+                                               Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Path=(ctrl:ChromeWindowBehavior.IsMaximized), RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <Grid Width="10" Height="10">
+                                                <Rectangle Width="7" Height="7" StrokeThickness="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                                           Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                                <Rectangle Width="7" Height="7" StrokeThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                                           Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                            </Grid>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button DockPanel.Dock="Right" Style="{StaticResource CaptionButton}"
+                        Command="{x:Static ctrl:AppChromeCommands.Minimize}"
+                        ToolTip="Minimalkan">
+                    <Rectangle Width="9" Height="1" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                </Button>
+            </DockPanel>
+        </Border>
+
+        <!-- ===== Sidebar ===== -->
+        <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource SidebarBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- Header aplikasi: logo dalam "kartu" transparan berlapis + strip
+                     aksen tipis di dasar header sebagai penanda brand yang halus. -->
+                <Border DockPanel.Dock="Top" Height="88" Background="{DynamicResource PrimaryBrush}">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                            <Border Width="46" Height="46" CornerRadius="11" Background="#18FFFFFF">
+                                <Border Width="38" Height="38" CornerRadius="9" Background="#28FFFFFF"
+                                        VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <Image Source="Resources/AppIcon-256.png" Stretch="Uniform" Margin="5"/>
+                                </Border>
+                            </Border>
+                            <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="SuDesApp" Foreground="{DynamicResource HeaderTextBrush}" FontSize="18" FontWeight="Bold"/>
+                                <TextBlock Text="Sistem Surat Desa" Foreground="{DynamicResource HeaderSubtitleBrush}" FontSize="11" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <Border Height="2" Background="{DynamicResource AccentBrush}"
+                                Opacity="0.85" VerticalAlignment="Bottom"/>
+                    </Grid>
+                </Border>
+
+                <!-- Menu navigasi -->
+                <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto" Padding="0,6">
+                    <ItemsControl ItemsSource="{Binding MenuItems}" Margin="10,0"
+                                  ItemTemplateSelector="{StaticResource SidebarSelector}">
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Setter Property="Margin" Value="0,1"/>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- ===== Content host utama ===== -->
+        <Grid Grid.Row="1" Grid.Column="1">
+            <ContentControl x:Name="MainContent"
+                            Content="{Binding CurrentView, Mode=OneWay}"
+                            Focusable="True"/>
+        </Grid>
+
+        <!-- ===== Status bar ===== -->
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                Background="{DynamicResource StatusBarBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+            <DockPanel Margin="10,0">
+                <!-- Ikon lonceng notifikasi (kanan) — ala Visual Studio -->
+                <Border x:Name="NotificationBell"
+                        DockPanel.Dock="Right" Margin="8,0,0,0"
+                        Background="Transparent" CornerRadius="4" Padding="6,3"
+                        Cursor="Hand" MouseLeftButtonUp="NotificationBell_Click"
+                        ToolTip="Notifikasi">
+                    <Grid>
+                        <!-- Lonceng (karakter emoji aman lintas tema); pivot di bawah
+                             ikon agar animasi berayun terasa seperti lonceng menggantung -->
+                        <TextBlock x:Name="NotificationBellIcon" Text="🔔" FontSize="14" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource StatusBarTextBrush}"
+                                   RenderTransformOrigin="0.5,0.85">
+                            <TextBlock.RenderTransform>
+                                <RotateTransform Angle="0"/>
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                        <!-- Badge angka (tersembunyi bila tidak ada notifikasi belum dibaca) -->
+                        <Border Background="{DynamicResource ErrorBrush}" CornerRadius="7"
+                                MinWidth="14" Height="14" Padding="3,0"
+                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Margin="0,-3,-4,0"
+                                Visibility="{Binding Notifications.HasUnread, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding Notifications.UnreadCountText}"
+                                       FontSize="9" FontWeight="Bold" Foreground="White"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       TextAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Chip status gateway WhatsApp (kanan, bisa diklik → Pengaturan) -->
+                <Border DockPanel.Dock="Right" Background="{DynamicResource AccentSubtleBrush}"
+                        CornerRadius="9" Padding="9,2" VerticalAlignment="Center"
+                        Cursor="Hand"
+                        ToolTip="{Binding WaGatewayStatusTooltip}">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding WaChipClickCommand}"/>
+                    </Border.InputBindings>
+                    <TextBlock Text="{Binding WaGatewayStatus}"
+                               FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WaGatewayStatus}" Value="WA: Token belum diisi">
+                                            <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WaGatewayStatus}" Value="WA: Terhubung (Cloud API)">
+                                            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                </Border>
+
+                <!-- Chip kesehatan mode tautan Google Sheet (kanan, bisa diklik → Pengaturan) -->
+                <Border DockPanel.Dock="Right" Background="{DynamicResource AccentSubtleBrush}"
+                        CornerRadius="9" Padding="9,2" VerticalAlignment="Center"
+                        Cursor="Hand"
+                        ToolTip="{Binding WaSheetStatusTooltip}"
+                        Visibility="{Binding WaSheetChipVisible, Converter={StaticResource BoolToVis}}">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SheetChipClickCommand}"/>
+                    </Border.InputBindings>
+                    <TextBlock Text="{Binding WaSheetStatus}"
+                               FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding WaSheetStatus}" Value="Sheet: Siap">
+                                        <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WaSheetStatus}" Value="Sheet: Memeriksa…">
+                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WaSheetStatus}" Value="Sheet: URL belum diisi">
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WaSheetStatus}" Value="Sheet: Google belum terhubung">
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WaSheetStatus}" Value="Sheet: Login belum dikonfigurasi">
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WaSheetStatus}" Value="Sheet: API belum aktif">
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WaSheetStatus}" Value="Sheet: Tidak terhubung">
+                                        <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+
+                <!-- Chip resolusi layar (kanan) — diisi ScreenResolutionService -->
+                <Border DockPanel.Dock="Right" Background="{DynamicResource AccentSubtleBrush}"
+                        CornerRadius="9" Padding="9,2" VerticalAlignment="Center"
+                        ToolTip="Resolusi &amp; skala layar terdeteksi">
+                    <TextBlock Text="{Binding ScreenInfo}"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               FontSize="10.5" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="{Binding VillageInfo}"
+                           Foreground="{DynamicResource StatusBarTextBrush}"
+                           FontSize="11" VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+
+        <!-- Popup daftar notifikasi (flyout lonceng, ala Visual Studio) -->
+        <Popup x:Name="NotificationFlyout" PlacementTarget="{Binding ElementName=NotificationBell}"
+               Placement="Top" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Width="360">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header popup -->
+                    <Border Grid.Row="0" Background="{DynamicResource PrimaryBrush}"
+                            CornerRadius="8,8,0,0" Padding="12,8">
+                        <Grid>
+                            <TextBlock Text="NOTIFIKASI" FontWeight="Bold" FontSize="12"
+                                       Foreground="{DynamicResource HeaderTextBrush}"/>
+                            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Hyperlink Foreground="{DynamicResource HeaderSubtitleBrush}"
+                                           Click="NotificationClear_Click">
+                                    <Run Text="Bersihkan" FontSize="11"/>
+                                </Hyperlink>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+
+                    <!-- Daftar notifikasi (terbaru di atas). ListBox + VirtualizingStackPanel:
+                         hanya baris terlihat yang dirender — tetap ringan walau isinya banyak.
+                         Teks pesan dirender multi-line (tanpa scroll di dalam teks). -->
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Notifications.Items}"
+                             MaxHeight="360" BorderThickness="0" Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.VirtualizationMode="Recycling">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="10,8" BorderThickness="0,0,0,1"
+                                        BorderBrush="{DynamicResource BorderBrush}">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Icon}" FontWeight="Bold" Margin="0,0,6,0"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                        </StackPanel>
+                                        <!-- Multi-line: tiap baris pesan jadi satu TextBlock -->
+                                        <ItemsControl ItemsSource="{Binding MessageLines}" Margin="0,4,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}" TextWrapping="Wrap"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               FontSize="11.5"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <TextBlock Text="{Binding TimeDisplay}" FontSize="10"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Empty state -->
+                    <TextBlock Grid.Row="1" Text="Tidak ada notifikasi"
+                               HorizontalAlignment="Center" Margin="0,30"
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Notifications.Items.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Border>
+        </Popup>
+    </Grid>
+</Window>

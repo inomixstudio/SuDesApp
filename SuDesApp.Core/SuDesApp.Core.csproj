@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SuDesApp</RootNamespace>
+    <AssemblyName>SuDesApp.Core</AssemblyName>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    <!-- Mencegah namespace yang bentrok dengan antarmuka UI saat migrasi -->
+    <NoWarn>$(NoWarn);CS8618;CS0108;CS8625;CS8600;CS8604;CS8602;CS8622;CS1717;CS8601;CS8603;CS4014;CS8620;CS0414;CS8765;CS0168;CS8629;CS0067;CS8767;CS0618;CS0114;CS8619;CS8714</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.79" />
+    <PackageReference Include="EPPlus" Version="8.7.0" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.76.0.4261" />
+    <!-- Sheets API untuk mode layanan online Google Sheet/Form (baca jawaban + tulis status). -->
+    <!-- Versi terakhir yang diterbitkan: 1.75.0.4178; aman dipakai bersama Drive.v3 1.76 (Google.Apis diunify). -->
+    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.75.0.4178" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.12" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="QuestPDF" Version="2026.8.0" />
+    <!-- DPAPI utk kredensial klien OAuth Google (GoogleClientCredentials) -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- File yang sengaja dikecualikan (sama seperti proyek utama) -->
+    <Compile Remove="GeneratorPdf\NonClosingStreamWrapper.cs" />
+    <Compile Remove="Configuration\DapperExtensions.cs" />
+    <Compile Remove="db\DatabaseMigrator.cs" />
+  </ItemGroup>
+
+</Project>

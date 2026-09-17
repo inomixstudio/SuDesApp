@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Preview Ikon Aplikasi — SuDesApp 2.0</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: #0f172a; color: #e2e8f0;
+    min-height: 100vh; padding: 40px 24px;
+  }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: #94a3b8; font-size: 13px; margin-bottom: 32px; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .08em; color: #6ee7b7; margin: 36px 0 14px; }
+
+  .hero { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
+  .hero img.big {
+    width: 200px; height: 200px; border-radius: 44px;
+    box-shadow: 0 24px 60px rgba(16,185,129,.35);
+  }
+  .scale { display: flex; align-items: flex-end; gap: 22px; }
+  .scale .cell { text-align: center; }
+  .scale img { display: block; margin: 0 auto 8px; }
+  .scale span { font-size: 11px; color: #94a3b8; }
+
+  .contexts { display: flex; gap: 24px; flex-wrap: wrap; }
+  .context { border-radius: 12px; padding: 16px 20px; min-width: 260px; }
+  .context.desktop { background: linear-gradient(135deg,#1e293b,#0ea56b33); border: 1px solid #334155; }
+  .context.explorer { background: #ffffff; color: #1e293b; }
+  .context.explorer .row { border-bottom: 1px solid #e2e8f0; }
+  .context .row { display: flex; align-items: center; gap: 10px; padding: 8px 2px; font-size: 13px; }
+  .context.taskbar { background: rgba(15,23,42,.92); border: 1px solid #334155; }
+  .context.taskbar .app { display:flex; align-items:center; gap:8px; background:#1e293b; padding:6px 14px; border-radius:8px; font-size:12px; }
+  .context .label { font-size: 11px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .06em; }
+  .context.explorer .label { color: #64748b; }
+
+  .palette { display: flex; gap: 10px; flex-wrap: wrap; }
+  .swatch { width: 120px; border-radius: 10px; overflow: hidden; border: 1px solid #334155; font-size: 11px; }
+  .swatch .c { height: 52px; } .swatch .t { padding: 6px 8px; background:#1e293b; color:#cbd5e1; }
+</style>
+</head>
+<body>
+  <h1>🖥️ Ikon Aplikasi SuDesApp — Surat Desa v2.0</h1>
+  <div class="sub">Vector art → WPF render → multi-size .ico (256 / 64 / 48 / 32 / 24 / 16 px) • Tools/generate-app-icon.ps1</div>
+
+  <div class="hero">
+    <img class="big" src="%%ICON256%%" alt="Ikon SuDesApp 256px">
+    <div>
+      <h2 style="margin-top:0">Skala render</h2>
+      <div class="scale">
+        <div class="cell"><img src="%%ICON256%%" width="64" height="64" style="border-radius:14px"><span>64</span></div>
+        <div class="cell"><img src="%%ICON32%%" width="32" height="32" style="border-radius:7px"><span>32</span></div>
+        <div class="cell"><img src="%%ICON16%%" width="16" height="16" style="border-radius:4px"><span>16</span></div>
+      </div>
+      <p style="margin-top:14px;font-size:12px;color:#94a3b8;max-width:340px;line-height:1.6">
+        Setiap ukuran dirender ulang langsung dari vektor (bukan di-shrink dari bitmap) —
+        detail lipatan amplop &amp; ring segel tetap terbaca di 16px. Teks "SD" pada segel
+        hanya digambar untuk ukuran ≥ 32px.
+      </p>
+    </div>
+  </div>
+
+  <h2>Simulasi konteks</h2>
+  <div class="contexts">
+    <div class="context desktop">
+      <div class="label">Desktop</div>
+      <div style="display:flex;gap:26px;flex-wrap:wrap">
+        <div style="text-align:center"><img src="%%ICON256%%" width="56" height="56" style="border-radius:12px"><div style="font-size:11px;margin-top:4px">SuDesApp</div></div>
+        <div style="text-align:center"><img src="%%ICON32%%" width="40" height="40" style="border-radius:9px"><div style="font-size:11px;margin-top:4px">Shortcut</div></div>
+      </div>
+    </div>
+    <div class="context taskbar">
+      <div class="label">Taskbar</div>
+      <div class="app"><img src="%%ICON32%%" width="20" height="20" style="border-radius:5px"> SuDesApp — Register Surat</div>
+    </div>
+    <div class="context explorer">
+      <div class="label">Explorer (tema terang)</div>
+      <div class="row"><img src="%%ICON32%%" width="24" height="24" style="border-radius:6px"> SuDesApp.exe</div>
+      <div class="row"><img src="%%ICON16%%" width="16" height="16" style="border-radius:4px"> Detail view 16px</div>
+    </div>
+  </div>
+
+  <h2>Palet desain</h2>
+  <div class="palette">
+    <div class="swatch"><div class="c" style="background:linear-gradient(135deg,#10B981,#047857)"></div><div class="t">Emerald gradient<br>#10B981 → #047857</div></div>
+    <div class="swatch"><div class="c" style="background:#F7FCFA"></div><div class="t">Amplop<br>#F7FCFA</div></div>
+    <div class="swatch"><div class="c" style="background:#B91C1C"></div><div class="t">Segel lilin<br>#B91C1C</div></div>
+    <div class="swatch"><div class="c" style="background:#F5C06B"></div><div class="t">Ring emas<br>#F5C06B</div></div>
+  </div>
+</body>
+</html>

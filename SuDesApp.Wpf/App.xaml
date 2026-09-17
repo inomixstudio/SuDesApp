@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application x:Class="SuDesApp.Wpf.App"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:views="clr-namespace:SuDesApp.Wpf.Views"
+              xmlns:vm="clr-namespace:SuDesApp.Wpf.ViewModels"
+              xmlns:local="clr-namespace:SuDesApp.Wpf.Converters"
+              ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/ThemeStyles.xaml"/>
+                <ResourceDictionary Source="Themes/EmeraldTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <local:StringToBoolConverter x:Key="StringToBoolConverter"/>
+            <local:ByteArrayToImageConverter x:Key="ByteArrayToImage"/>
+
+            <!-- Logo Google "G" resmi (4 warna) sebagai vektor — dipakai bersama
+                 di LoginWindow, GoogleLoginView, GoogleDriveView. Viewbox menskalakan
+                 komposisi 48x48 SECARA UTUH; jangan beri Stretch per-Path. -->
+            <DataTemplate x:Key="GoogleGLogo">
+                <Viewbox Stretch="Uniform">
+                    <Grid Width="48" Height="48">
+                        <Path Data="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z" Fill="#4285F4"/>
+                        <Path Data="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z" Fill="#34A853"/>
+                        <Path Data="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z" Fill="#FBBC05"/>
+                        <Path Data="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z" Fill="#EA4335"/>
+                    </Grid>
+                </Viewbox>
+            </DataTemplate>
+
+                        <!-- LinkButton style for clickable links -->
+<Style x:Key="HyperlinkStyle" TargetType="TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="TextDecorations" Value="Underline"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Style.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Trigger>
+    </Style.Triggers>
+</Style>
+
+<Style x:Key="LinkButton" TargetType="Button">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="Button">
+                <TextBlock Text="{TemplateBinding Content}"
+                           Foreground="{TemplateBinding Foreground}"
+                           TextDecorations="Underline"/>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Trigger>
+    </Style.Triggers>
+</Style>
+            
+            <!-- DataTemplates untuk navigasi View ke ViewModel -->
+            <DataTemplate DataType="{x:Type vm:RegisterSuratViewModel}">
+                <views:RegisterSuratView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:SetelanViewModel}">
+                <views:SetelanView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:PengaturanAplikasiViewModel}">
+                <views:PengaturanAplikasiView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:FormulirViewModel}">
+                <views:FormulirView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:InputWindowViewModel}">
+                <views:InputSuratHostView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:RekeningKoranViewModel}">
+                <views:RekeningKoranView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:FormulirPdfViewModel}">
+                <views:PdfPreviewView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:PdfPreviewViewModel}">
+                <views:PdfPreviewView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AgendaSuratViewModel}">
+                <views:AgendaSuratView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:RiwayatViewModel}">
+                <views:RiwayatView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:KeputusanViewModel}">
+                <views:KeputusanView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:DaftarHadirViewModel}">
+                <views:DaftarHadirView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:WaPanelViewModel}">
+                <views:WaPanelView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:PanduanWaViewModel}">
+                <views:PanduanWaView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ExImdbViewModel}">
+                <views:ExImdbView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:GoogleLoginViewModel}">
+                <views:GoogleLoginView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:GoogleDriveViewModel}">
+                <views:GoogleDriveView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:UbahSandiViewModel}">
+                <views:UbahSandiView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:TodoViewModel}">
+                <views:TodoView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:PembaruanViewModel}">
+                <views:PembaruanView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:CatatanRilisViewModel}">
+                <views:CatatanRilisView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AboutViewModel}">
+                <views:AboutView/>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

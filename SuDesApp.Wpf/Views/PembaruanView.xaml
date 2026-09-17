@@ -1,0 +1,77 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.PembaruanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#x1F504;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="PEMBARUAN APLIKASI" Style="{StaticResource HeaderTitle}"
+                               AutomationProperties.Name="PEMBARUAN APLIKASI"/>
+                    <TextBlock Text="Periksa dan download versi terbaru dari Google Drive"
+                               Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Konten -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="28"
+                HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
+            <StackPanel>
+                <!-- Ikon status -->
+                <Border Width="72" Height="72" CornerRadius="36" Background="{DynamicResource AccentSubtleBrush}"
+                        HorizontalAlignment="Center" Margin="0,0,0,18">
+                    <TextBlock Text="&#x1F4E6;" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <TextBlock Text="{Binding CurrentVersionText}"
+                           FontSize="14" FontWeight="Medium"
+                           Foreground="{DynamicResource TextBrush}"
+                           HorizontalAlignment="Center" Margin="0,0,0,10"
+                           AutomationProperties.Name="Versi Saat Ini:"/>
+
+                <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="14,10" Margin="0,0,0,10">
+                    <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" TextAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"
+                               LineHeight="22"/>
+                </Border>
+
+                <!-- Progress bar -->
+                <ProgressBar Height="10" Margin="0,4,0,4"
+                             Minimum="0" Maximum="100" Value="{Binding DownloadPercent, Mode=OneWay}"
+                             Visibility="{Binding ProgressVisible, Converter={StaticResource BoolToVis}}"
+                             Foreground="{DynamicResource AccentBrush}"/>
+
+                <!-- Tombol aksi -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+                    <Button Content="Periksa Pembaruan" Command="{Binding CheckCommand}"
+                            Width="160" Height="36" Margin="0,0,8,0"
+                            Style="{StaticResource PrimaryButton}"
+                            AutomationProperties.Name="Periksa Pembaruan"/>
+                    <Button Content="Batal" Command="{Binding BatalCommand}"
+                            Width="90" Height="36"
+                            Style="{StaticResource OutlineButton}"
+                            Visibility="{Binding IsChecking, Converter={StaticResource BoolToVis}}"/>
+                    <Button Content="Batal" Command="{Binding BatalCommand}"
+                            Width="90" Height="36" Margin="8,0,0,0"
+                            Style="{StaticResource OutlineButton}"
+                            Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
+
+                <TextBlock Text="SuDesApp • Pembaruan via Google Drive"
+                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextAlignment="Center" Margin="0,18,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
