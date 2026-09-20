@@ -1,6 +1,6 @@
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
-using SuDesApp.Controllers.Interfaces;
+using SuDesApp.Interfaces;
 using SuDesApp.Data.Models;
 
 namespace SuDesApp.Wpf.Input
@@ -61,13 +61,13 @@ namespace SuDesApp.Wpf.Input
                 case SuratConstants.AHLI_WARIS:
                     return CreateView<AhliWarisInputViewModel, Views.AhliWarisInputView>();
 
-                case SuratConstants.NTCR_N1:
-                case SuratConstants.NTCR_N2:
-                case SuratConstants.NTCR_N3:
-                case SuratConstants.NTCR_N4:
-                    return CreateNtcrView(templateName.ToUpperInvariant());
-
                 default:
+                    // Seluruh formulir NTCR (blanko N1-N6 + surat numpang nikah N8)
+                    // memakai satu View + ViewModel yang
+                    // menampilkan kolom sesuai blanko terpilih (NamaJenis di-set di bawah).
+                    if (SuratConstants.IsNtcr(templateName))
+                        return CreateNtcrView(templateName.ToUpperInvariant());
+
                     throw new NotSupportedException(
                         $"Template '{templateName}' belum dikenal sistem.");
             }

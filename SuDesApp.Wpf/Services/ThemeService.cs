@@ -8,7 +8,7 @@ namespace SuDesApp.Wpf.Services
 {
     /// <summary>
     /// Pengatur tema WPF — padanan penuh ThemeManager (WinForms).
-    /// Mendukung 7 tema: Light, Dark, Blue, Green, Pink, Slate, Auto.
+    /// Mendukung 6 tema: Light, Dark, Blue, Green, Pink, Slate, Auto.
     /// Menukar ResourceDictionary warna tema global (styles tetap di
     /// Themes/ThemeStyles.xaml) dan menyimpan pilihan ke
     /// %APPDATA%\SuDesApp\theme.config — format yang sama dengan WinForms
@@ -22,11 +22,10 @@ namespace SuDesApp.Wpf.Services
         public const string Green = "Green";
         public const string Pink = "Pink";
         public const string Slate = "Slate";
-        public const string Emerald = "Emerald";
         public const string Auto = "Auto";
 
-        /// <summary>Tema default — modern emerald gelap untuk tampilan profesional.</summary>
-        public const string DefaultTheme = Emerald;
+        /// <summary>Tema default — hijau segar khas desa, terang dan profesional.</summary>
+        public const string DefaultTheme = Green;
 
         private static readonly Uri LightUri = new("pack://application:,,,/Themes/LightTheme.xaml");
         private static readonly Uri DarkUri = new("pack://application:,,,/Themes/DarkTheme.xaml");
@@ -34,7 +33,6 @@ namespace SuDesApp.Wpf.Services
         private static readonly Uri GreenUri = new("pack://application:,,,/Themes/GreenTheme.xaml");
         private static readonly Uri PinkUri = new("pack://application:,,,/Themes/PinkTheme.xaml");
         private static readonly Uri SlateUri = new("pack://application:,,,/Themes/SlateTheme.xaml");
-        private static readonly Uri EmeraldUri = new("pack://application:,,,/Themes/EmeraldTheme.xaml");
 
         private readonly ILogger<ThemeService> _logger;
         private string _current = DefaultTheme;
@@ -55,7 +53,7 @@ namespace SuDesApp.Wpf.Services
         /// <summary>Daftar tema yang tersedia (padanan GetAvailableThemes WinForms).</summary>
         public static string[] GetAvailableThemes() => new[]
         {
-            Light, Dark, Blue, Green, Pink, Slate, Emerald, Auto
+            Light, Dark, Blue, Green, Pink, Slate, Auto
         };
 
         /// <summary>Nama tampilan tema (padanan GetThemeDisplayName WinForms).</summary>
@@ -67,7 +65,6 @@ namespace SuDesApp.Wpf.Services
             Green => "Hijau",
             Pink => "Pink",
             Slate => "Abu-abu",
-            Emerald => "Emerald",
             Auto => "Otomatis",
             _ => theme
         };
@@ -108,6 +105,8 @@ namespace SuDesApp.Wpf.Services
                 if (File.Exists(ConfigPath))
                 {
                     var saved = File.ReadAllText(ConfigPath).Trim();
+                    // Nama tema lama (mis. "Emerald" atau "Google") tidak lagi dikenali
+                    // dan otomatis jatuh ke tema default di bawah ini.
                     if (IsValidTheme(saved))
                     {
                         ApplyCore(saved);
@@ -154,7 +153,6 @@ namespace SuDesApp.Wpf.Services
             Green.Equals(theme, StringComparison.OrdinalIgnoreCase) ||
             Pink.Equals(theme, StringComparison.OrdinalIgnoreCase) ||
             Slate.Equals(theme, StringComparison.OrdinalIgnoreCase) ||
-            Emerald.Equals(theme, StringComparison.OrdinalIgnoreCase) ||
             Auto.Equals(theme, StringComparison.OrdinalIgnoreCase));
 
         private void ApplyCore(string theme)
@@ -179,7 +177,6 @@ namespace SuDesApp.Wpf.Services
                     Green => GreenUri,
                     Pink => PinkUri,
                     Slate => SlateUri,
-                    Emerald => EmeraldUri,
                     _ => LightUri
                 };
 

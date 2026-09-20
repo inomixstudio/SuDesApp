@@ -77,6 +77,59 @@ jobs:
           if (!(Test-Path $iscc)) { $iscc = (Get-Command ISCC.exe).Source }
           & $iscc "/DAppVersion=$env:VERSION" "installer\SuDesApp.iss"
 
+      # Pembaruan kecil: bandingkan dengan hasil publish rilis sebelumnya supaya
+      # pengguna yang sudah terpasang cukup mengunduh berkas yang berubah saja.
+      - name: Paket pembaruan kecil (tambalan)
+        shell: pwsh
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $headers = @{ 'User-Agent' = 'SuDesApp-CI'; 'Accept' = 'application/vnd.github+json' }
+          if ($env:GITHUB_TOKEN) { $headers['Authorization'] = "Bearer $env:GITHUB_TOKEN" }
+
+          $rilis = Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/${{ github.repository }}/releases?per_page=10"
+          $sebelum = $rilis | Where-Object { $_.tag_name -notlike "*$env:VERSION*" -and -not $_.draft } | Select-Object -First 1
+          if (-not $sebelum) { Write-Host 'Belum ada rilis sebelumnya - tambalan dilewati.'; exit 0 }
+
+          $versiLama = $sebelum.tag_name.TrimStart('v', 'V')
+          $zip = $sebelum.assets | Where-Object { $_.name -like 'SuDesApp_*_win-x64.zip' } | Select-Object -First 1
+          if (-not $zip) { Write-Host 'Rilis sebelumnya tanpa zip portable - tambalan dilewati.'; exit 0 }
+
+          Write-Host "Membandingkan dengan rilis $versiLama"
+          Invoke-WebRequest -Headers $headers -Uri $zip.browser_download_url -OutFile artifacts/portable-lama.zip
+          Expand-Archive -Path artifacts/portable-lama.zip -DestinationPath artifacts/publish-lama -Force
+
+          # Ringkasan perbaikan untuk notifikasi di aplikasi: judul commit sejak tag lama.
+          git fetch --tags --depth=200 2>$null
+          $commit = git log --pretty=format:%s "v$versiLama..HEAD" 2>$null
+          if (-not $commit) { $commit = git log -n 15 --pretty=format:%s }
+          @($commit | Where-Object { $_ -and $_.Trim().Length -gt 0 } | Select-Object -First 20) |
+            Set-Content -Path artifacts/RINGKASAN.txt -Encoding UTF8
+
+          ./Tools/Buat-Tambalan.ps1 -Versi $env:VERSION -VersiLama $versiLama `
+            -PublishBaru artifacts/publish -PublishLama artifacts/publish-lama `
+            -Ringkasan artifacts/RINGKASAN.txt -Keluaran artifacts
+
+      # Aset patch.json harus selalu ada: bila pembuatan tambalan dilewati/gagal,
+      # manifest kecil ini memberi tahu aplikasi bahwa rilis memakai installer penuh.
+      - name: Pastikan patch.json tersedia
+        shell: pwsh
+        run: |
+          if (-not (Test-Path artifacts/patch.json)) {
+            @{
+              versi = $env:VERSION
+              dariVersi = @()
+              jenis = 'besar'
+              ringkasan = @()
+              berkasPatch = ''
+              sha256Patch = ''
+              berkas = @()
+              berkasDihapus = @()
+              catatan = 'Rilis ini memakai installer penuh.'
+            } | ConvertTo-Json -Depth 5 | Set-Content -Path artifacts/patch.json -Encoding UTF8
+          }
+
       - name: Catatan rilis + SHA-256
         shell: pwsh
         run: |
@@ -104,3 +157,5 @@ jobs:
           files: |
             artifacts/installer/*.exe
             artifacts/*.zip
+            artifacts/patch.json
+            artifacts/patch.json

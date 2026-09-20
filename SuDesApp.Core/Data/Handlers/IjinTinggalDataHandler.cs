@@ -153,14 +153,14 @@ namespace SuDesApp.Data.Handlers
 
         private class IjinTinggalRow
         {
-            public string DusunTujuan { get; set; }
-            public string DesaTujuan { get; set; }
-            public string KecamatanTujuan { get; set; }
-            public string KabupatenTujuan { get; set; }
-            public string NikPenanggungJawab { get; set; }
-            public string NamaPenanggungJawab { get; set; }
-            public string TglLahirPenanggungJawab { get; set; }
-            public string PekerjaanPenanggungJawab { get; set; }
+            public string ?DusunTujuan { get; set; }
+            public string ?DesaTujuan { get; set; }
+            public string ?KecamatanTujuan { get; set; }
+            public string ?KabupatenTujuan { get; set; }
+            public string ?NikPenanggungJawab { get; set; }
+            public string ?NamaPenanggungJawab { get; set; }
+            public string ?TglLahirPenanggungJawab { get; set; }
+            public string ?PekerjaanPenanggungJawab { get; set; }
         }
     }
 }

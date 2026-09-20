@@ -14,7 +14,7 @@ namespace SuDesApp.Data.Queries
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<T> ExecuteWithLogging<T>(Func<Task<T>> queryFunc, string queryName, object parameters = null)
+        public async Task<T> ExecuteWithLogging<T>(Func<Task<T>> queryFunc, string queryName, object? parameters = null)
         {
             var stopwatch = Stopwatch.StartNew();
             var timeout = queryName.Contains("GetAll") || queryName.Contains("Report") ? _defaultTimeout : _fastQueryTimeout;

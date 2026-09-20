@@ -27,7 +27,7 @@ namespace SuDesApp.GeneratorPdf
         protected override string JudulSurat => "SURAT KETERANGAN BEDA DATA";
         protected override bool ShowPemohonInFooter => false;
 
-        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             try
             {
@@ -106,7 +106,7 @@ namespace SuDesApp.GeneratorPdf
                 ]);
 
                 // Keterangan
-                string keteranganFinal = suratData.Keterangan;
+                string? keteranganFinal = suratData.Keterangan;
                 if (string.IsNullOrWhiteSpace(keteranganFinal))
                 {
                     _logger.LogWarning("Keterangan is null or empty. Generating default keterangan.");

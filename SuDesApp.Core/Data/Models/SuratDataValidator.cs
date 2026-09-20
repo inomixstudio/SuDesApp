@@ -42,13 +42,24 @@ namespace SuDesApp.Data.Models
             ValidateStatus(errors); // ? VALIDASI STATUS BARU
             await ValidateDesaAsync(errors);
 
-            if (_suratData.NamaJenis != SuratConstants.INSTANSI)
+            if (_suratData.NamaJenis == SuratConstants.INSTANSI)
             {
-                await ValidateWargaAsync(errors);
+                ValidateInstansi(errors);
+            }
+            else if (_suratData.NamaJenis == SuratConstants.REKENING_KORAN)
+            {
+                // Permohonan rekening koran ditandatangani atas nama pemerintah desa
+                // (bukan perorangan), jadi data warga tidak diwajibkan.
+            }
+            else if (_suratData.NamaJenis == SuratConstants.TEMPLATE_SURAT)
+            {
+                // Surat dari Template Surat memuat seluruh isiannya pada payload surat;
+                // kolom warga hanya menyimpan nama penerima surat sebagai penanda,
+                // sehingga tidak diwajibkan lengkap.
             }
             else
             {
-                ValidateInstansi(errors);
+                await ValidateWargaAsync(errors);
             }
 
             ValidateSubmodels(errors);
@@ -93,7 +104,7 @@ namespace SuDesApp.Data.Models
 
         private async Task ValidateDesaAsync(List<string> errors)
         {
-            if (!_suratData.IsDesaDataValid(_suratData.Desa))
+            if (!_suratData.IsDesaDataValid(_suratData.Desa!))
             {
                 try
                 {
@@ -151,6 +162,9 @@ namespace SuDesApp.Data.Models
                 case SuratConstants.NTCR_N2:
                 case SuratConstants.NTCR_N3:
                 case SuratConstants.NTCR_N4:
+                case SuratConstants.NTCR_N5:
+                case SuratConstants.NTCR_N6:
+                case SuratConstants.NTCR_N8:
                     ValidateNtcr(errors);
                     break;
             }
@@ -177,41 +191,142 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        // ? VALIDASI NTCR BARU (N1-N4)
+        // ? VALIDASI NTCR (blanko N1-N6 + surat numpang nikah N8)
         private void ValidateNtcr(List<string> errors)
         {
-            if (_suratData.Ntcr == null)
+            var ntcr = _suratData.Ntcr;
+            if (ntcr == null)
             {
-                errors.Add("Data calon mempelai tidak boleh kosong untuk surat NTCR.");
+                errors.Add("Data calon mempelai tidak boleh kosong untuk formulir NTCR.");
                 return;
             }
 
-            // Calon istri wajib diisi
-            if (string.IsNullOrWhiteSpace(_suratData.Ntcr.NamaIstri))
+            string jenis = _suratData.NamaJenis?.ToUpperInvariant() ?? string.Empty;
+
+            // N3 (permohonan pencatatan isbat) jarang dipakai dan biasanya diketik tangan
+            // di KUA: validasinya sengaja longgar — semua isian boleh dikosongkan dan
+            // blanko dicetak seperti template (titik-titik) untuk diisi manual.
+            if (jenis == SuratConstants.NTCR_N3)
+            {
+                return;
+            }
+
+            // Calon istri (pihak kedua) wajib terisi di seluruh blanko NTCR
+            if (string.IsNullOrWhiteSpace(ntcr.NamaIstri))
             {
                 errors.Add("Nama calon istri wajib diisi.");
             }
 
-            if (string.IsNullOrWhiteSpace(_suratData.Ntcr.NikIstri) ||
-                _suratData.Ntcr.NikIstri.Length != 16 ||
-                !_suratData.Ntcr.NikIstri.All(char.IsDigit))
+            // NIK calon istri tidak tercetak pada surat numpang nikah (N8), jadi hanya
+            // diwajibkan pada blanko Kepdirjen N1–N6.
+            if (jenis != SuratConstants.NTCR_N8 &&
+                (string.IsNullOrWhiteSpace(ntcr.NikIstri) ||
+                 ntcr.NikIstri.Trim().Length != 16 ||
+                 !ntcr.NikIstri.Trim().All(char.IsDigit)))
             {
                 errors.Add("NIK calon istri harus 16 digit angka.");
             }
 
-            // Nama orang tua calon mempelai untuk N1/N3/N4
-            if (_suratData.NamaJenis?.ToUpperInvariant() is SuratConstants.NTCR_N1 or SuratConstants.NTCR_N3 or SuratConstants.NTCR_N4)
+            // N1 — Surat Pengantar Nikah: orang tua pihak yang diterangkan wajib terisi
+            if (jenis == SuratConstants.NTCR_N1)
             {
-                if (string.IsNullOrWhiteSpace(_suratData.Ntcr.NamaAyahCalonSuami))
+                var (ayah, ibu, sebutan) = PihakDiterangkanN1(ntcr);
+                if (string.IsNullOrWhiteSpace(ayah.Nama))
                 {
-                    errors.Add("Nama ayah calon suami wajib diisi.");
+                    errors.Add($"Nama ayah {sebutan} wajib diisi (blanko N1).");
                 }
 
-                if (string.IsNullOrWhiteSpace(_suratData.Ntcr.NamaAyahCalonIstri))
+                if (string.IsNullOrWhiteSpace(ibu.Nama))
                 {
-                    errors.Add("Nama ayah calon istri wajib diisi.");
+                    errors.Add($"Nama ibu {sebutan} wajib diisi (blanko N1).");
                 }
             }
+
+            // N2 — Permohonan Kehendak Nikah: rencana akad & KUA tujuan wajib terisi
+            if (jenis == SuratConstants.NTCR_N2)
+            {
+                if (string.IsNullOrWhiteSpace(ntcr.TujuanKua))
+                {
+                    errors.Add("KUA/PPN tujuan surat wajib diisi (blanko N2).");
+                }
+
+                if (string.IsNullOrWhiteSpace(ntcr.HariTanggalJamAkad))
+                {
+                    errors.Add("Hari/tanggal/jam akad nikah wajib diisi (blanko N2).");
+                }
+
+                if (string.IsNullOrWhiteSpace(ntcr.TempatAkad))
+                {
+                    errors.Add("Tempat akad nikah wajib diisi (blanko N2).");
+                }
+            }
+
+            // N5 — Surat Izin Orang Tua: ayah & ibu (pihak anak) wajib terisi
+            if (jenis == SuratConstants.NTCR_N5)
+            {
+                var (ayah, ibu, sebutan) = PihakAnakN5(ntcr);
+                if (string.IsNullOrWhiteSpace(ayah.Nama))
+                {
+                    errors.Add($"Nama ayah/wali {sebutan} wajib diisi (blanko N5).");
+                }
+
+                if (string.IsNullOrWhiteSpace(ibu.Nama))
+                {
+                    errors.Add($"Nama ibu/wali {sebutan} wajib diisi (blanko N5).");
+                }
+            }
+
+            // N6 — Surat Keterangan Kematian Suami/Istri
+            if (jenis == SuratConstants.NTCR_N6)
+            {
+                if (string.IsNullOrWhiteSpace(ntcr.TanggalMeninggal))
+                {
+                    errors.Add("Tanggal meninggal dunia wajib diisi (blanko N6).");
+                }
+
+                if (string.IsNullOrWhiteSpace(ntcr.TempatMeninggal))
+                {
+                    errors.Add("Tempat meninggal dunia wajib diisi (blanko N6).");
+                }
+            }
+
+            // N8 — Surat Keterangan Numpang Nikah: tujuan numpang nikah wajib jelas,
+            // karena itulah inti suratnya (calon istri wajib terisi di atas).
+            if (jenis == SuratConstants.NTCR_N8)
+            {
+                if (string.IsNullOrWhiteSpace(ntcr.DesaNumpang))
+                {
+                    errors.Add("Desa/kelurahan tempat numpang nikah wajib diisi (N8).");
+                }
+
+                if (string.IsNullOrWhiteSpace(ntcr.KecamatanNumpang))
+                {
+                    errors.Add("Kecamatan tempat numpang nikah wajib diisi (N8).");
+                }
+
+                if (string.IsNullOrWhiteSpace(ntcr.KabupatenNumpang))
+                {
+                    errors.Add("Kabupaten/kota tempat numpang nikah wajib diisi (N8).");
+                }
+            }
+        }
+
+        /// <summary>Pasangan orang tua dari pihak yang diterangkan pada blanko N1.</summary>
+        private static (NtcrOrangTua Ayah, NtcrOrangTua Ibu, string Sebutan) PihakDiterangkanN1(NtcrData ntcr)
+        {
+            bool istri = string.Equals(ntcr.PihakDiterangkanN1, "Istri", StringComparison.OrdinalIgnoreCase);
+            return istri
+                ? (ntcr.AyahCalonIstri, ntcr.IbuCalonIstri, "calon istri")
+                : (ntcr.AyahCalonSuami, ntcr.IbuCalonSuami, "calon suami");
+        }
+
+        /// <summary>Pasangan orang tua dari anak yang diberi izin pada blanko N5.</summary>
+        private static (NtcrOrangTua Ayah, NtcrOrangTua Ibu, string Sebutan) PihakAnakN5(NtcrData ntcr)
+        {
+            bool istri = string.Equals(ntcr.PihakAnakIzinOrtu, "Istri", StringComparison.OrdinalIgnoreCase);
+            return istri
+                ? (ntcr.AyahCalonIstri, ntcr.IbuCalonIstri, "calon istri")
+                : (ntcr.AyahCalonSuami, ntcr.IbuCalonSuami, "calon suami");
         }
 
         private void ValidateInstansi(List<string> errors)

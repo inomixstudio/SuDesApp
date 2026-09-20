@@ -84,6 +84,9 @@ namespace SuDesApp.WhatsApp
             (new[] { "ntcr n2", "ntcr 2", "formulir n2" }, SuratConstants.NTCR_N2),
             (new[] { "ntcr n3", "ntcr 3", "formulir n3" }, SuratConstants.NTCR_N3),
             (new[] { "ntcr n4", "ntcr 4", "formulir n4" }, SuratConstants.NTCR_N4),
+            (new[] { "ntcr n5", "ntcr 5", "formulir n5" }, SuratConstants.NTCR_N5),
+            (new[] { "ntcr n6", "ntcr 6", "formulir n6" }, SuratConstants.NTCR_N6),
+            // N1..N6 saja: Model N7 sudah dihapus karena diterbitkan KUA.
             (new[] { "ntcr", "surat pernikahan", "persyaratan pernikahan" }, SuratConstants.NTCR_N1)
         };
 
@@ -100,7 +103,9 @@ namespace SuDesApp.WhatsApp
             SuratConstants.NTCR_N1,
             SuratConstants.NTCR_N2,
             SuratConstants.NTCR_N3,
-            SuratConstants.NTCR_N4
+            SuratConstants.NTCR_N4,
+            SuratConstants.NTCR_N5,
+            SuratConstants.NTCR_N6
         };
 
         /// <summary>
@@ -387,6 +392,7 @@ namespace SuDesApp.WhatsApp
                 "sejak" or "sejaktahun" => "sejaktahun",
                 "negaratujuan" or "tujuan" => "negaratujuan",
                 "namapt" or "pt" or "perusahaan" => "namapt",
+                "keperluan" => "keterangan",
                 "tujuantinggal" => "tujuantinggal",
                 "alamatasal" => "alamatasal",
                 "sumberkoreksi" or "sumberdatakoreksi" => "sumberkoreksi",

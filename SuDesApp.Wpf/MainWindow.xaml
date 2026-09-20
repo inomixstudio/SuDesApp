@@ -13,7 +13,7 @@
         WindowStyle="None"
         FontFamily="{DynamicResource AppFontFamily}"
         Background="{DynamicResource WindowBackgroundBrush}"
-        MinWidth="1024" MinHeight="640">
+        MinWidth="900" MinHeight="600">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="32" ResizeBorderThickness="6" CornerRadius="0"
                       UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
@@ -26,22 +26,76 @@
              Bullet aksen di kiri menandai awal seksi; garis tipis memanjang ke
              kanan memberi kesan "kategori" yang lebih modern daripada label polos. -->
         <DataTemplate x:Key="SectionHeaderTemplate">
-            <Grid Margin="6,16,8,7">
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Margin" Value="6,16,8,7"/>
+                        <Style.Triggers>
+                            <!-- Mode ciut: label tidak muat; seksi ditandai garis pemisah
+                                 pendek di tengah agar tetap terasa terpisah, tidak terpotong. -->
+                            <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="Margin" Value="0,10,0,4"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Width="5" Height="5" CornerRadius="2.5"
-                        Background="{DynamicResource SidebarAccentBrush}"
-                        VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <Border Grid.Column="0" VerticalAlignment="Center">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Width" Value="5"/>
+                            <Setter Property="Height" Value="5"/>
+                            <Setter Property="CornerRadius" Value="2.5"/>
+                            <Setter Property="Background" Value="{DynamicResource SidebarAccentBrush}"/>
+                            <Setter Property="Margin" Value="0,0,8,0"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                </Border>
                 <TextBlock Grid.Column="1" Text="{Binding Title}"
                            FontSize="10.5" FontWeight="Bold"
                            Foreground="{DynamicResource SidebarAccentBrush}"
-                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                <Border Grid.Column="2" Width="30" Height="1"
-                        Background="{DynamicResource SidebarAccentBrush}"
-                        Opacity="0.3" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <Border Grid.Column="2">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Width" Value="30"/>
+                            <Setter Property="Height" Value="1"/>
+                            <Setter Property="Background" Value="{DynamicResource SidebarAccentBrush}"/>
+                            <Setter Property="Opacity" Value="0.3"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="8,0,0,0"/>
+                            <Style.Triggers>
+                                <!-- Mode ciut: pemisah tipis di tengah sebagai pengganti label -->
+                                <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                    <Setter Property="Grid.ColumnSpan" Value="3"/>
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="Width" Value="20"/>
+                                    <Setter Property="Opacity" Value="0.45"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                </Border>
             </Grid>
         </DataTemplate>
 
@@ -70,20 +124,53 @@
                             <ToggleButton IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                           FocusVisualStyle="{x:Null}"
                                           Background="Transparent"
-                                          Cursor="Hand">
+                                          Cursor="Hand"
+                                          Click="AccordionHeader_Click">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
-                                        <Border x:Name="bd" Background="Transparent"
-                                                CornerRadius="7" Margin="0,1"
-                                                Padding="6,3" SnapsToDevicePixels="True">
-                                            <ContentPresenter/>
-                                        </Border>
+                                        <Grid Margin="0,1">
+                                            <Border x:Name="bd" Background="Transparent"
+                                                    CornerRadius="7"
+                                                    Padding="6,3" SnapsToDevicePixels="True">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <!-- Sorotan hover beranimasi (memudar, tidak berkedip) -->
+                                            <Border x:Name="HoverOverlay" CornerRadius="7"
+                                                    IsHitTestVisible="False"
+                                                    Background="{DynamicResource SidebarHoverBrush}" Opacity="0"/>
+                                            <Border x:Name="OpenOverlay" CornerRadius="7"
+                                                    IsHitTestVisible="False"
+                                                    Background="{DynamicResource SidebarPressedBrush}" Opacity="0"/>
+                                        </Grid>
                                         <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarHoverBrush}"/>
-                                            </Trigger>
+                                            <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                                         Storyboard.TargetProperty="Opacity"
+                                                                         To="1" Duration="0:0:0.16">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <CubicEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                            <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                                         Storyboard.TargetProperty="Opacity"
+                                                                         To="0" Duration="0:0:0.22">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <CubicEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
                                             <Trigger Property="IsChecked" Value="True">
-                                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarPressedBrush}"/>
+                                                <Setter TargetName="OpenOverlay" Property="Opacity" Value="1"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -97,29 +184,79 @@
                             <Trigger Property="IsExpanded" Value="True">
                                 <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible"/>
                             </Trigger>
+                            <!-- Mode ciut (hanya ikon): daftar anak disembunyikan; klik
+                                 header akan melebarkan sidebar lagi (lihat kode-behind). -->
+                            <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter TargetName="ExpandSite" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Expander.Template>
                 <Expander.Header>
                     <Grid Margin="2,4">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="ToolTip" Value="{Binding Description}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Description}" Value="">
+                                        <Setter Property="ToolTip" Value="{x:Null}"/>
+                                    </DataTrigger>
+                                    <!-- Mode ciut: judul grup tidak terlihat, jadi nama grup
+                                         dipindah ke tooltip supaya tetap bisa dikenali. -->
+                                    <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                        <Setter Property="ToolTip" Value="{Binding Title}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <!-- Chip ikon: bentuk persegi membulat agar header grup terasa
-                             "kartu" dan lebih terstruktur daripada emoji mentah. -->
-                        <Border Grid.Column="0" Width="26" Height="26" CornerRadius="7"
-                                Background="{DynamicResource SidebarHoverBrush}"
-                                Margin="0,0,10,0" VerticalAlignment="Center">
-                            <TextBlock Text="&#x1F4C1;" FontSize="12"
+                             "kartu" dan lebih terstruktur daripada emoji mentah.
+                             Ikon mengikuti GroupIcon (default folder). -->
+                        <Border x:Name="ChipIcon" Grid.Column="0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Width" Value="26"/>
+                                    <Setter Property="Height" Value="26"/>
+                                    <Setter Property="CornerRadius" Value="7"/>
+                                    <Setter Property="Background" Value="{DynamicResource SidebarHoverBrush}"/>
+                                    <Setter Property="Margin" Value="0,0,10,0"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Style.Triggers>
+                                        <!-- Mode ciut: chip ikon grup dipusatkan di tengah pill -->
+                                        <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="Grid.ColumnSpan" Value="3"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding GroupIcon}" FontSize="13"
+                                       FontFamily="{StaticResource AppIconFont}"
+                                       Foreground="{DynamicResource SidebarAccentBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock x:Name="GroupTitle" Grid.Column="1" Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
                                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                         <TextBlock x:Name="ChevronIcon" Grid.Column="2" Text="&#x276F;" FontSize="10"
                                    Foreground="{DynamicResource SidebarAccentBrush}" Opacity="0.7"
                                    VerticalAlignment="Center" Margin="8,0,2,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <!-- Mode ciut: tidak ada daftar anak untuk dibuka,
+                                             jadi chevron dihilangkan agar chip ikon tepat di tengah. -->
+                                        <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
                             <TextBlock.RenderTransform>
                                 <RotateTransform Angle="0" CenterX="5" CenterY="6"/>
                             </TextBlock.RenderTransform>
@@ -133,21 +270,6 @@
                                 <DoubleAnimation Storyboard.TargetName="ChevronIcon"
                                                  Storyboard.TargetProperty="(TextBlock.RenderTransform).(RotateTransform.Angle)"
                                                  To="90" Duration="0:0:0.22">
-                                    <DoubleAnimation.EasingFunction>
-                                        <CubicEase EasingMode="EaseOut"/>
-                                    </DoubleAnimation.EasingFunction>
-                                </DoubleAnimation>
-                                <!-- Konten slide-fade masuk: turun -8px → 0 sambil fade in -->
-                                <DoubleAnimation Storyboard.TargetName="AccordionContent"
-                                                 Storyboard.TargetProperty="Opacity"
-                                                 From="0" To="1" Duration="0:0:0.24">
-                                    <DoubleAnimation.EasingFunction>
-                                        <CubicEase EasingMode="EaseOut"/>
-                                    </DoubleAnimation.EasingFunction>
-                                </DoubleAnimation>
-                                <DoubleAnimation Storyboard.TargetName="AccordionContent"
-                                                 Storyboard.TargetProperty="(StackPanel.RenderTransform).(TranslateTransform.Y)"
-                                                 From="-8" To="0" Duration="0:0:0.24">
                                     <DoubleAnimation.EasingFunction>
                                         <CubicEase EasingMode="EaseOut"/>
                                     </DoubleAnimation.EasingFunction>
@@ -169,7 +291,10 @@
                         </BeginStoryboard>
                     </EventTrigger>
                 </Expander.Triggers>
-                <StackPanel x:Name="AccordionContent" Margin="12,0,2,2" RenderTransformOrigin="0,0">
+                <!-- ClipToBounds: tinggi konten dianimasikan dari kode-behind, dan
+                     tanpa ini isi bisa "bocor" ke luar selama animasi berjalan. -->
+                <StackPanel x:Name="AccordionContent" Margin="12,0,2,2" ClipToBounds="True"
+                            Visibility="Collapsed" RenderTransformOrigin="0,0">
                     <StackPanel.RenderTransform>
                         <TranslateTransform Y="0"/>
                     </StackPanel.RenderTransform>
@@ -190,8 +315,18 @@
                                     <Button Content="{Binding Title}"
                                             Command="{Binding Action}"
                                             Tag="{Binding Icon}"
-                                            Style="{StaticResource SidebarChildButton}"
-                                            AutomationProperties.Name="{Binding Title}"/>
+                                            AutomationProperties.Name="{Binding Title}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource SidebarChildButton}">
+                                                <Setter Property="ToolTip" Value="{Binding Description}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Description}" Value="">
+                                                        <Setter Property="ToolTip" Value="{x:Null}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -210,27 +345,40 @@
                     Background="Transparent"
                     FocusVisualStyle="{x:Null}"
                     AutomationProperties.Name="{Binding Title}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="ToolTip" Value="{Binding Description}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Description}" Value="">
+                                <Setter Property="ToolTip" Value="{x:Null}"/>
+                            </DataTrigger>
+                            <!-- Saat sidebar ciut, label hilang sehingga tooltip judul
+                                 menjadi satu-satunya penanda item. -->
+                            <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter Property="ToolTip" Value="{Binding Title}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Grid>
-                            <!-- Pill aksen kiri: muncul saat hover/tekan -->
-                            <Border x:Name="AccentPill" Width="3" HorizontalAlignment="Left"
-                                    CornerRadius="1.5" Margin="0,7"
-                                    Background="{DynamicResource SidebarAccentBrush}"
-                                    Opacity="0"/>
                             <Border x:Name="bd" Background="{TemplateBinding Background}"
                                     CornerRadius="7" Padding="10,8">
-                                <Grid>
+                                <Grid x:Name="MainGrid">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding Icon}"
+                                    <!-- Ikon memakai font ikon monokrom: warnanya mengikuti
+                                         tema lewat SidebarAccentBrush. -->
+                                    <TextBlock x:Name="IconText" Grid.Column="0" Text="{Binding Icon}"
+                                               FontFamily="{StaticResource AppIconFont}"
                                                Foreground="{DynamicResource SidebarAccentBrush}" Opacity="0.9"
                                                Margin="0,0,10,0" FontSize="14" Width="18"
                                                TextAlignment="Center" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Title}"
+                                    <TextBlock x:Name="TitleText" Grid.Column="1" Text="{Binding Title}"
                                                Foreground="{DynamicResource SidebarTextBrush}"
                                                VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     <!-- Chevron halus muncul saat hover: memberi petunjuk
@@ -243,23 +391,126 @@
                                             <TranslateTransform X="-4"/>
                                         </TextBlock.RenderTransform>
                                     </TextBlock>
+                                    <!-- Ikon khusus mode ciut: dipusatkan di tengah pill -->
+                                    <TextBlock x:Name="IconCenter" Grid.ColumnSpan="3" Text="{Binding Icon}"
+                                               FontFamily="{StaticResource AppIconFont}"
+                                               Foreground="{DynamicResource SidebarAccentBrush}"
+                                               FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="Collapsed"/>
                                 </Grid>
                             </Border>
+                            <!-- Sorotan hover/aktif sebagai lapisan beranimasi: perubahan
+                                 warna memudar halus, bukan berkedip seketika. -->
+                            <Border x:Name="HoverOverlay" CornerRadius="7" IsHitTestVisible="False"
+                                    Background="{DynamicResource SidebarHoverBrush}" Opacity="0"/>
+                            <Border x:Name="ActiveOverlay" CornerRadius="7" IsHitTestVisible="False"
+                                    Background="{DynamicResource SidebarHoverBrush}" Opacity="0"/>
+                            <!-- Pill aksen kiri: muncul saat hover/tekan/menjadi halaman aktif -->
+                            <Border x:Name="AccentPill" Width="3" HorizontalAlignment="Left"
+                                    CornerRadius="1.5" Margin="0,7"
+                                    Background="{DynamicResource SidebarAccentBrush}"
+                                    Opacity="0"/>
                         </Grid>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarHoverBrush}"/>
-                                <Setter TargetName="AccentPill" Property="Opacity" Value="1"/>
-                                <Setter TargetName="HoverChevron" Property="Opacity" Value="0.9"/>
-                                <Setter TargetName="HoverChevron" Property="RenderTransform">
-                                    <Setter.Value>
-                                        <TranslateTransform X="0"/>
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
+                            <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.16">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <!-- Chevron masuk: geser dari -4px sambil fade -->
+                                        <DoubleAnimation Storyboard.TargetName="HoverChevron"
+                                                         Storyboard.TargetProperty="(TextBlock.RenderTransform).(TranslateTransform.X)"
+                                                         To="0" Duration="0:0:0.16">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="HoverChevron"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.9" Duration="0:0:0.16">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                            <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.22">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="HoverChevron"
+                                                         Storyboard.TargetProperty="(TextBlock.RenderTransform).(TranslateTransform.X)"
+                                                         To="-4" Duration="0:0:0.22">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="HoverChevron"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.22">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarPressedBrush}"/>
                             </Trigger>
+                            <!-- Halaman yang sedang dibuka: pill aksen menyala (fade halus),
+                                 latar lebih tegas, dan judulnya dicetak semi-tebal. -->
+                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="AccentPill"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             To="1" Duration="0:0:0.22">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="AccentPill"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             To="0" Duration="0:0:0.18">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                                <Setter TargetName="ActiveOverlay" Property="Opacity" Value="1"/>
+                                <Setter TargetName="TitleText" Property="FontWeight" Value="SemiBold"/>
+                                <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource SidebarAccentBrush}"/>
+                            </DataTrigger>
+                            <!-- Mode ciut: sembunyikan label & chevron, pusatkan ikon -->
+                            <DataTrigger Binding="{Binding DataContext.SidebarCiut, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter TargetName="TitleText" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="HoverChevron" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="IconText" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="IconCenter" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="bd" Property="Padding" Value="0,8"/>
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Button.Template>
@@ -273,7 +524,7 @@
                                            ButtonTemplate="{StaticResource ButtonTemplate}"/>
     </Window.Resources>
 
-    <Grid>
+    <Grid x:Name="LayoutGrid" UseLayoutRounding="True" SnapsToDevicePixels="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="*"/>
@@ -281,12 +532,13 @@
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="Auto" MinWidth="60" MaxWidth="320"/>
+            <ColumnDefinition Width="4"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <!-- ===== Title bar bertema (baris layout sendiri — konten tidak tertutup) ===== -->
-        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
                 Background="{DynamicResource SidebarBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                 MouseLeftButtonDown="CaptionBorder_MouseLeftButtonDown">
@@ -296,6 +548,12 @@
                        VerticalAlignment="Center"/>
                 <TextBlock DockPanel.Dock="Left" Text="SuDesApp" Style="{StaticResource WindowTitleText}"
                            FontWeight="SemiBold"/>
+                <!-- Nama halaman yang sedang dibuka (mis. SuDesApp — Beranda) -->
+                <TextBlock DockPanel.Dock="Left" Text="—" Style="{StaticResource WindowTitleText}"
+                           Opacity="0.45" Margin="2,0,2,0"/>
+                <TextBlock DockPanel.Dock="Left" Text="{Binding HalamanAktif}"
+                           Style="{StaticResource WindowTitleText}"
+                           Foreground="{DynamicResource SidebarAccentBrush}" FontWeight="SemiBold"/>
                 <Button DockPanel.Dock="Right" Style="{StaticResource CloseCaptionButton}"
                         Command="{x:Static ctrl:AppChromeCommands.Close}"
                         ToolTip="Tutup (Alt+F4)">
@@ -340,33 +598,155 @@
 
         <!-- ===== Sidebar ===== -->
         <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource SidebarBackgroundBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0" x:Name="SidebarBorder">
             <DockPanel>
-                <!-- Header aplikasi: logo dalam "kartu" transparan berlapis + strip
-                     aksen tipis di dasar header sebagai penanda brand yang halus. -->
-                <Border DockPanel.Dock="Top" Height="88" Background="{DynamicResource PrimaryBrush}">
-                    <Grid>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
-                            <Border Width="46" Height="46" CornerRadius="11" Background="#18FFFFFF">
-                                <Border Width="38" Height="38" CornerRadius="9" Background="#28FFFFFF"
-                                        VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <Image Source="Resources/AppIcon-256.png" Stretch="Uniform" Margin="5"/>
-                                </Border>
-                            </Border>
-                            <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="SuDesApp" Foreground="{DynamicResource HeaderTextBrush}" FontSize="18" FontWeight="Bold"/>
-                                <TextBlock Text="Sistem Surat Desa" Foreground="{DynamicResource HeaderSubtitleBrush}" FontSize="11" Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </StackPanel>
-                        <Border Height="2" Background="{DynamicResource AccentBrush}"
-                                Opacity="0.85" VerticalAlignment="Bottom"/>
-                    </Grid>
-                </Border>
+<!-- Header aplikasi: logo dalam "kartu" transparan berlapis + strip
+                      aksen tipis di dasar header sebagai penanda brand yang halus. -->
+                 <Border DockPanel.Dock="Top" SnapsToDevicePixels="True">
+                     <Border.Background>
+                         <!-- Latar gradien Primary → Secondary: memberi kedalaman visual
+                              pada header tanpa mengubah warna tema (keduanya dari palet). -->
+                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                             <GradientStop Color="{DynamicResource PrimaryColor}" Offset="0"/>
+                             <GradientStop Color="{DynamicResource SecondaryColor}" Offset="1"/>
+                         </LinearGradientBrush>
+                     </Border.Background>
+                     <Border.Style>
+                         <Style TargetType="Border">
+                             <Setter Property="Height" Value="88"/>
+                             <Style.Triggers>
+                                 <DataTrigger Binding="{Binding SidebarCiut}" Value="True">
+                                     <Setter Property="Height" Value="96"/>
+                                 </DataTrigger>
+                             </Style.Triggers>
+                         </Style>
+                     </Border.Style>
+                     <Grid>
+                         <!-- Sheen diagonal halus: kesan "glass" yang menyala di sisi kiri atas,
+                              kembali ke proporsi visual yang tenang di sisi kanan bawah. -->
+                         <Border IsHitTestVisible="False" Opacity="0.5">
+                             <Border.Background>
+                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                     <GradientStop Color="#38FFFFFF" Offset="0"/>
+                                     <GradientStop Color="#00FFFFFF" Offset="0.55"/>
+                                 </LinearGradientBrush>
+                             </Border.Background>
+                         </Border>
+                         <!-- Mode normal: logo + nama aplikasi sebaris.
+                              Mode ciut: keduanya bertumpuk tegak & terpusat, dengan
+                              tombol buka/tutup di bawah — bukan terpotong ke tepi. -->
+                         <StackPanel x:Name="HeaderBrandPanel">
+                             <StackPanel.Style>
+                                 <Style TargetType="StackPanel">
+                                     <Setter Property="Orientation" Value="Horizontal"/>
+                                     <Setter Property="VerticalAlignment" Value="Center"/>
+                                     <Setter Property="Margin" Value="16,0"/>
+                                     <Style.Triggers>
+                                         <DataTrigger Binding="{Binding SidebarCiut}" Value="True">
+                                             <Setter Property="Orientation" Value="Vertical"/>
+                                             <Setter Property="VerticalAlignment" Value="Top"/>
+                                             <Setter Property="HorizontalAlignment" Value="Center"/>
+                                             <Setter Property="Margin" Value="0,14,0,0"/>
+                                         </DataTrigger>
+                                     </Style.Triggers>
+                                 </Style>
+                             </StackPanel.Style>
+                             <Border x:Name="LogoKartuLuar">
+                                 <Border.Style>
+                                     <Style TargetType="Border">
+                                         <Setter Property="Width" Value="46"/>
+                                         <Setter Property="Height" Value="46"/>
+                                         <Setter Property="CornerRadius" Value="11"/>
+                                         <Setter Property="Background" Value="#18FFFFFF"/>
+                                         <Style.Triggers>
+                                             <DataTrigger Binding="{Binding SidebarCiut}" Value="True">
+                                                 <Setter Property="Width" Value="34"/>
+                                                 <Setter Property="Height" Value="34"/>
+                                                 <Setter Property="CornerRadius" Value="9"/>
+                                             </DataTrigger>
+                                         </Style.Triggers>
+                                     </Style>
+                                 </Border.Style>
+                                 <Border x:Name="LogoKartuDalam">
+                                     <Border.Style>
+                                         <Style TargetType="Border">
+                                             <Setter Property="Width" Value="38"/>
+                                             <Setter Property="Height" Value="38"/>
+                                             <Setter Property="CornerRadius" Value="9"/>
+                                             <Setter Property="Background" Value="#28FFFFFF"/>
+                                             <Setter Property="VerticalAlignment" Value="Center"/>
+                                             <Setter Property="HorizontalAlignment" Value="Center"/>
+                                             <Style.Triggers>
+                                                 <DataTrigger Binding="{Binding SidebarCiut}" Value="True">
+                                                     <Setter Property="Width" Value="28"/>
+                                                     <Setter Property="Height" Value="28"/>
+                                                     <Setter Property="CornerRadius" Value="7"/>
+                                                 </DataTrigger>
+                                             </Style.Triggers>
+                                         </Style>
+                                     </Border.Style>
+                                     <Image Source="Resources/AppIcon-256.png" Stretch="Uniform" Margin="5"/>
+                                 </Border>
+                             </Border>
+                             <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
+                                 <StackPanel.Style>
+                                     <Style TargetType="StackPanel">
+                                         <Style.Triggers>
+                                             <DataTrigger Binding="{Binding SidebarCiut}" Value="True">
+                                                 <Setter Property="Visibility" Value="Collapsed"/>
+                                             </DataTrigger>
+                                         </Style.Triggers>
+                                     </Style>
+                                 </StackPanel.Style>
+                                 <TextBlock Text="SuDesApp" Foreground="{DynamicResource HeaderTextBrush}" FontSize="18" FontWeight="Bold"/>
+                                 <TextBlock Text="Sistem Surat Desa" Foreground="{DynamicResource HeaderSubtitleBrush}" FontSize="11" Margin="0,2,0,0"/>
+                             </StackPanel>
+                         </StackPanel>
+                         <!-- Toggle sidebar collapse/expand -->
+                         <Button x:Name="SidebarToggleButton"
+                                 ToolTip="Sembunyikan sidebar navigasi"
+                                 Click="SidebarToggle_Click">
+                             <Button.Style>
+                                 <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                     <Setter Property="Width" Value="28"/>
+                                     <Setter Property="Height" Value="28"/>
+                                     <Setter Property="HorizontalAlignment" Value="Right"/>
+                                     <Setter Property="VerticalAlignment" Value="Top"/>
+                                     <Setter Property="Margin" Value="0,8,8,0"/>
+                                     <Style.Triggers>
+                                         <DataTrigger Binding="{Binding SidebarCiut}" Value="True">
+                                             <Setter Property="HorizontalAlignment" Value="Center"/>
+                                             <Setter Property="VerticalAlignment" Value="Bottom"/>
+                                             <Setter Property="Margin" Value="0,0,0,10"/>
+                                             <Setter Property="Width" Value="26"/>
+                                             <Setter Property="Height" Value="26"/>
+                                         </DataTrigger>
+                                     </Style.Triggers>
+                                 </Style>
+                             </Button.Style>
+                             <TextBlock x:Name="SidebarToggleIcon" Text="&#xE00E;" FontFamily="Segoe MDL2 Assets"
+                                        FontSize="14" Foreground="{DynamicResource HeaderTextBrush}"/>
+                         </Button>
+                         <Border Height="2" Background="{DynamicResource AccentBrush}"
+                                 Opacity="0.85" VerticalAlignment="Bottom"/>
+                     </Grid>
+                 </Border>
 
                 <!-- Menu navigasi -->
                 <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto" Padding="0,6">
-                    <ItemsControl ItemsSource="{Binding MenuItems}" Margin="10,0"
+                    <ItemsControl ItemsSource="{Binding MenuItems}"
                                   ItemTemplateSelector="{StaticResource SidebarSelector}">
+                        <ItemsControl.Style>
+                            <Style TargetType="ItemsControl">
+                                <Setter Property="Margin" Value="10,0"/>
+                                <Style.Triggers>
+                                    <!-- Mode ciut: margin dikecilkan agar pill selebar sidebar -->
+                                    <DataTrigger Binding="{Binding SidebarCiut}" Value="True">
+                                        <Setter Property="Margin" Value="6,0"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
                         <ItemsControl.ItemContainerStyle>
                             <Style TargetType="ContentPresenter">
                                 <Setter Property="Margin" Value="0,1"/>
@@ -378,17 +758,37 @@
         </Border>
 
         <!-- ===== Content host utama ===== -->
-        <Grid Grid.Row="1" Grid.Column="1">
+        <Grid Grid.Row="1" Grid.Column="2">
             <ContentControl x:Name="MainContent"
                             Content="{Binding CurrentView, Mode=OneWay}"
                             Focusable="True"/>
         </Grid>
 
         <!-- ===== Status bar ===== -->
-        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
                 Background="{DynamicResource StatusBarBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
             <DockPanel Margin="10,0">
+                <!-- Chip indikator pembaruan otomatis saat ditutup — tersembunyi
+                     kecuali saat proses pembaruan latar sedang berjalan -->
+                <Border x:Name="AutoUpdateChip"
+                        DockPanel.Dock="Right" Margin="0,0,8,0"
+                        Background="{DynamicResource AccentSubtleBrush}"
+                        CornerRadius="9" Padding="9,2" VerticalAlignment="Center"
+                        Visibility="Collapsed"
+                        ToolTip="Aplikasi sedang menyiapkan pembaruan kecil; berkas akan diganti setelah aplikasi tertutup.">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="AutoUpdateSpin" Text="◐" FontSize="11" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,5,0">
+                            <TextBlock.RenderTransform>
+                                <RotateTransform Angle="0"/>
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                        <TextBlock x:Name="AutoUpdateChipText" Text="Memeriksa pembaruan…" FontSize="10.5" FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
                 <!-- Ikon lonceng notifikasi (kanan) — ala Visual Studio -->
                 <Border x:Name="NotificationBell"
                         DockPanel.Dock="Right" Margin="8,0,0,0"
@@ -396,9 +796,11 @@
                         Cursor="Hand" MouseLeftButtonUp="NotificationBell_Click"
                         ToolTip="Notifikasi">
                     <Grid>
-                        <!-- Lonceng (karakter emoji aman lintas tema); pivot di bawah
-                             ikon agar animasi berayun terasa seperti lonceng menggantung -->
-                        <TextBlock x:Name="NotificationBellIcon" Text="🔔" FontSize="14" VerticalAlignment="Center"
+                        <!-- Lonceng memakai font ikon (bukan emoji berwarna) supaya
+                             warnanya ikut tema seperti ikon sidebar; pivot di bawah ikon
+                             agar animasi berayun terasa seperti lonceng menggantung -->
+                        <TextBlock x:Name="NotificationBellIcon" Text="&#xE7ED;"
+                                   FontFamily="{StaticResource AppIconFont}" FontSize="13" VerticalAlignment="Center"
                                    Foreground="{DynamicResource StatusBarTextBrush}"
                                    RenderTransformOrigin="0.5,0.85">
                             <TextBlock.RenderTransform>
@@ -501,9 +903,38 @@
             </DockPanel>
         </Border>
 
+        <!-- Toast notifikasi kritis (Warning/Error): muncul sebentar di pojok kanan
+             bawah di atas status bar supaya gagal penting tidak terlewat. Klik = buka flyout. -->
+        <Border x:Name="NotificationToast" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,14,44" MaxWidth="390" CornerRadius="8"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
+                Padding="12,9" Cursor="Hand" Visibility="Collapsed"
+                MouseLeftButtonUp="NotificationToast_Click"
+                ToolTip="Klik untuk membuka daftar notifikasi">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.35"/>
+            </Border.Effect>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="ToastIcon" Text="⚠" FontWeight="Bold" Margin="0,0,8,0"
+                               Foreground="{DynamicResource WarningTextBrush}"/>
+                    <TextBlock x:Name="ToastTitle" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                               MaxWidth="300" Foreground="{DynamicResource TextBrush}"/>
+                    <Button Content="✕" Width="22" Height="22" Margin="8,0,0,0" Padding="0"
+                            Click="NotificationToastClose_Click" ToolTip="Tutup"
+                            Style="{StaticResource IconButton}"/>
+                </StackPanel>
+                <TextBlock x:Name="ToastMessage" FontSize="11.5" Margin="0,4,0,0"
+                           TextWrapping="Wrap" MaxHeight="58" TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </StackPanel>
+        </Border>
+
         <!-- Popup daftar notifikasi (flyout lonceng, ala Visual Studio) -->
         <Popup x:Name="NotificationFlyout" PlacementTarget="{Binding ElementName=NotificationBell}"
-               Placement="Top" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
+               Placement="Top" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade"
+               Closed="NotificationFlyout_Closed">
             <Border Background="{DynamicResource SurfaceBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                     CornerRadius="8" Width="360">
@@ -531,35 +962,112 @@
                     <!-- Daftar notifikasi (terbaru di atas). ListBox + VirtualizingStackPanel:
                          hanya baris terlihat yang dirender — tetap ringan walau isinya banyak.
                          Teks pesan dirender multi-line (tanpa scroll di dalam teks). -->
-                    <ListBox Grid.Row="1" ItemsSource="{Binding Notifications.Items}"
+                    <ListBox x:Name="NotificationList" Grid.Row="1" ItemsSource="{Binding Notifications.Items}"
                              MaxHeight="360" BorderThickness="0" Background="Transparent"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              VirtualizingPanel.IsVirtualizing="True"
-                             VirtualizingPanel.VirtualizationMode="Recycling">
+                             VirtualizingPanel.VirtualizationMode="Recycling"
+                             SelectionChanged="NotificationList_SelectionChanged">
+                        <!-- Baris polos: tanpa sorotan biru bawaan, hover halus saja.
+                             Klik baris = pilih (SelectionChanged → navigasi tujuan). -->
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                                    SnapsToDevicePixels="True">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Border Padding="10,8" BorderThickness="0,0,0,1"
                                         BorderBrush="{DynamicResource BorderBrush}">
-                                    <StackPanel>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding Icon}" FontWeight="Bold" Margin="0,0,6,0"
-                                                       Foreground="{DynamicResource TextBrush}"/>
-                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextBrush}"/>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding BisaDiklik}" Value="True">
+                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <!-- Ikon berwarna sesuai jenis notifikasi -->
+                                                <TextBlock Text="{Binding Icon}" FontWeight="Bold" Margin="0,0,6,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Success">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Warning">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Error">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Info">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                                                <!-- Titik belum dibaca (hilang setelah flyout ditutup) -->
+                                                <Ellipse Width="7" Height="7" Margin="6,0,0,0" VerticalAlignment="Center"
+                                                         Fill="{DynamicResource PrimaryBrush}">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsRead}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                            </StackPanel>
+                                            <!-- Multi-line: tiap baris pesan jadi satu TextBlock -->
+                                            <ItemsControl ItemsSource="{Binding MessageLines}" Margin="0,4,0,0">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding}" TextWrapping="Wrap"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                   FontSize="11.5"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <TextBlock Text="{Binding TimeDisplay}" FontSize="10"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
                                         </StackPanel>
-                                        <!-- Multi-line: tiap baris pesan jadi satu TextBlock -->
-                                        <ItemsControl ItemsSource="{Binding MessageLines}" Margin="0,4,0,0">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding}" TextWrapping="Wrap"
-                                                               Foreground="{DynamicResource TextSecondaryBrush}"
-                                                               FontSize="11.5"/>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                        <TextBlock Text="{Binding TimeDisplay}" FontSize="10"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
-                                    </StackPanel>
+                                        <Button Grid.Column="1" Content="✕" Width="22" Height="22" Padding="0"
+                                                VerticalAlignment="Top" Margin="6,0,0,0"
+                                                Click="NotificationItemDelete_Click"
+                                                Style="{StaticResource IconButton}"
+                                                ToolTip="Hapus notifikasi ini"/>
+                                    </Grid>
                                 </Border>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

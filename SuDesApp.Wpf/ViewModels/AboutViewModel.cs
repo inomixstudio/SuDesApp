@@ -41,22 +41,40 @@ namespace SuDesApp.Wpf.ViewModels
             AssemblyDescription =
                 "SuDesApp adalah aplikasi administrasi dan surat-menyurat desa yang membantu " +
                 "pemerintah desa menyusun surat resmi secara cepat, akurat, dan konsisten. " +
-                "Dilengkapi pembuatan surat otomatis berformat PDF, layanan permintaan surat " +
-                "daring via WhatsApp (WhatsApp Cloud API + Google Form/Sheet), manajemen formulir " +
-                "administrasi kependudukan, arsip dan agenda digital, buku SK/Perdes/Perkades dengan " +
-                "lampiran, pencadangan data otomatis ke Google Drive, serta ekspor ke Excel, CSV, dan JSON.";
+                "Dilengkapi pembuatan surat otomatis berformat PDF — termasuk blanko persyaratan " +
+                "pernikahan (NTCR N1–N6) yang dapat dibuat sekali isi lalu dicetak sebagai satu " +
+                "berkas gabungan siap cetak — surat keterangan numpang nikah, dan Template Surat " +
+                "untuk menyusun sendiri jenis surat yang belum tersedia, lengkap dengan contoh " +
+                "siap pakai yang tinggal dipasang — layanan " +
+                "permintaan surat daring via WhatsApp (WhatsApp Cloud API + Google Form/Sheet), " +
+                "manajemen formulir administrasi kependudukan, register surat desa dan register " +
+                "NTCR yang terpisah, arsip dan agenda digital (buku agenda surat masuk/keluar " +
+                "dengan lampiran PDF/gambar), buku SK/Perdes/Perkades dengan " +
+                "lampiran, pencadangan data otomatis ke Google Drive, serta ekspor ke Excel, CSV, dan JSON. " +
+                "Kredensial Google disimpan terenkripsi di komputer. Pembaruan aplikasi diunduh dari " +
+                "GitHub Releases dengan verifikasi SHA-256: perbaikan kecil datang sebagai pembaruan " +
+                "tambalan yang hanya mengganti berkas yang berubah (tanpa installer, data dan pengaturan " +
+                "pengguna tidak tersentuh), sedangkan perubahan besar memakai installer penuh.";
 
             Features = new List<string>
             {
                 "Pembuatan surat resmi desa dengan PDF otomatis dari template terstandar",
+                "Blanko persyaratan pernikahan NTCR (N1–N6): sekali isi data satu pasangan, seluruh blanko tersimpan sekaligus dan tercetak dalam satu PDF gabungan siap cetak",
+                "Surat keterangan numpang nikah (N8) beserta register NTCR yang terpisah dari register surat desa umum",
+                "Template Surat: menyusun sendiri jenis surat baru lewat wizard (kop, judul, nomor, teks bebas, kolom isian dengan grid, tanda tangan, dan teks kaki), lengkap dengan pratinjau dan penomoran otomatis per template",
+                "Surat dari Template Surat tercatat otomatis di Register Surat — dapat dicari (nomor, nama penerima, NIK, atau isi surat), dibuka lagi untuk diperbaiki, dan dicetak ulang kapan saja",
+                "Contoh Template Surat siap pakai (pengantar RT/RW, izin keramaian, keterangan penghasilan, belum menikah, undangan rapat, dan pengumuman warga) yang dapat dipasang sekali klik, dijadikan dasar template baru, atau dicetak sebagai contoh",
                 "Manajemen formulir administrasi kependudukan (\u2265 20 formulir resmi desa)",
                 "Manajemen data kependudukan dan arsip digital register surat",
-                "Buku agenda surat masuk dan keluar",
+                "Buku agenda surat masuk dan keluar dengan lampiran berkas PDF atau gambar pada tiap surat",
                 "Buku SK, Perdes, dan Perkades beserta lampiran Word/PDF",
                 "Layanan permintaan surat daring via WhatsApp yang diproses otomatis",
                 "Pencadangan database dan formulir otomatis ke Google Drive",
+                "Kredensial Google tersimpan terenkripsi di komputer tanpa berkas kunci pada instalasi",
+                "Pembaruan aplikasi dari GitHub Releases: perbaikan kecil dipasang sebagai pembaruan tambalan (hanya berkas yang berubah, tanpa installer) dan diperiksa otomatis saat aplikasi dibuka, sedangkan perubahan besar memakai installer penuh — seluruhnya dengan verifikasi SHA-256",
                 "Ekspor data ke Excel, CSV, dan JSON",
-                "Multi-temakan modern (Emerald, Light, Dark, Blue, Green, Pink, Slate)",
+                "Pengaturan aplikasi bernavigasi antar bagian, termasuk pengaturan penomoran surat: awalan nomor tiap jenis surat dapat diganti sendiri (mis. SKD 470 → 471) dan langsung berlaku tanpa menutup aplikasi",
+                "Multi-temakan modern (Light, Biru Office, Dark, Green, Pink, Slate)",
                 "Manajemen status surat dan riwayat aktivitas terpusat"
             };
 

@@ -13,9 +13,9 @@ namespace SuDesApp.Data.Repositories
     public interface IWargaRepository
     {
         Task InitializeWargaTableAsync();
-        Task<int> AddOrUpdateWargaAsync(WargaData wargaData, SqliteConnection existingConnection = null, IDbTransaction existingTransaction = null);
+        Task<int> AddOrUpdateWargaAsync(WargaData wargaData, SqliteConnection? existingConnection = null, IDbTransaction existingTransaction = null);
         Task<WargaData> GetWargaByIdAsync(int idWarga);
-        Task<WargaData> GetWargaByNikAsync(string nik, SqliteConnection connection = null, IDbTransaction transaction = null);
+        Task<WargaData> GetWargaByNikAsync(string nik, SqliteConnection? connection = null, IDbTransaction transaction = null);
         Task<IEnumerable<WargaData>> GetAllWargaAsync();
         Task<IEnumerable<WargaData>> SearchWargaAsync(string searchTerm);
         Task<bool> DeleteWargaAsync(int id);
@@ -203,8 +203,8 @@ namespace SuDesApp.Data.Repositories
 
         public async Task<int> AddOrUpdateWargaAsync(
             WargaData wargaData,
-            SqliteConnection existingConnection = null,
-            IDbTransaction existingTransaction = null)
+            SqliteConnection? existingConnection = null,
+            IDbTransaction? existingTransaction = null)
         {
             if (wargaData == null)
                 throw new ArgumentNullException(nameof(wargaData));
@@ -230,16 +230,16 @@ namespace SuDesApp.Data.Repositories
                 if (existingWarga != null)
                 {
                     idWarga = existingWarga.ID_Warga;
-                    await UpdateWargaInternalAsync(idWarga, wargaData, connection, transaction);
+                    await UpdateWargaInternalAsync(idWarga, wargaData, connection, transaction!);
                 }
                 else
                 {
-                    idWarga = await InsertWargaInternalAsync(wargaData, connection, transaction);
+                    idWarga = await InsertWargaInternalAsync(wargaData, connection, transaction!);
                 }
 
-                if (!IsDummyNik(wargaData.NIK))
+                if (!IsDummyNik(wargaData.NIK!))
                 {
-                    await CacheWargaAsync(wargaData.NIK, idWarga, wargaData);
+                    await CacheWargaAsync(wargaData.NIK!, idWarga, wargaData);
                 }
 
                 return idWarga;
@@ -329,7 +329,7 @@ namespace SuDesApp.Data.Repositories
 
             var rowsAffected = await connection.ExecuteAsync(query, updateData, transaction);
 
-            if (rowsAffected > 0 && !IsDummyNik(wargaData.NIK))
+            if (rowsAffected > 0 && !IsDummyNik(wargaData.NIK!))
             {
                 wargaData.ID_Warga = idWarga;
                 wargaData.AlamatLengkap = BuildAlamatLengkap(wargaData);
@@ -361,12 +361,12 @@ namespace SuDesApp.Data.Repositories
             await _cacheService.SetAsync($"Warga_Id_{idWarga}", wargaData, cacheOptions);
         }
 
-        public async Task<WargaData> GetWargaByNikAsync(string nik, SqliteConnection connection = null, IDbTransaction transaction = null)
+        public async Task<WargaData> GetWargaByNikAsync(string nik, SqliteConnection? connection = null, IDbTransaction transaction = null)
         {
             if (string.IsNullOrWhiteSpace(nik))
             {
                 _logger.LogWarning("GetWargaByNikAsync called with null or empty NIK.");
-                return null;
+                return null!;
             }
 
             string cacheKey = $"Warga_{nik}";
@@ -410,7 +410,7 @@ namespace SuDesApp.Data.Repositories
                     _logger.LogInformation("No Warga data found for NIK: {NIK}", nik);
                 }
 
-                return result;
+                return result!;
             }
             catch (Exception ex)
             {
@@ -424,7 +424,7 @@ namespace SuDesApp.Data.Repositories
             if (idWarga <= 0)
             {
                 _logger.LogWarning("GetWargaByIdAsync called with invalid ID: {ID}", idWarga);
-                return null;
+                return null!;
             }
 
             string cacheKey = $"Warga_Id_{idWarga}";
@@ -448,7 +448,7 @@ namespace SuDesApp.Data.Repositories
                 {
                     result.AlamatLengkap = BuildAlamatLengkap(result);
 
-                    if (!IsDummyNik(result.NIK))
+                    if (!IsDummyNik(result.NIK!))
                     {
                         await _cacheService.SetAsync(cacheKey, result, new MemoryCacheEntryOptions
                         {
@@ -463,7 +463,7 @@ namespace SuDesApp.Data.Repositories
                     }
                 }
 
-                return result;
+                return result!;
             }
             catch (Exception ex)
             {
@@ -500,7 +500,7 @@ namespace SuDesApp.Data.Repositories
                 {
                     warga.AlamatLengkap = BuildAlamatLengkap(warga);
 
-                    if (!IsDummyNik(warga.NIK))
+                    if (!IsDummyNik(warga.NIK!))
                     {
                         await _cacheService.SetAsync($"Warga_{warga.NIK}", warga, new MemoryCacheEntryOptions
                         {
@@ -559,7 +559,7 @@ namespace SuDesApp.Data.Repositories
                 {
                     warga.AlamatLengkap = BuildAlamatLengkap(warga);
 
-                    if (!IsDummyNik(warga.NIK))
+                    if (!IsDummyNik(warga.NIK!))
                     {
                         await _cacheService.SetAsync($"Warga_{warga.NIK}", warga, new MemoryCacheEntryOptions
                         {
@@ -608,7 +608,7 @@ namespace SuDesApp.Data.Repositories
                 if (rowsAffected > 0)
                 {
                     await _cacheService.RemoveAsync<WargaData>($"Warga_Id_{id}");
-                    if (!IsDummyNik(warga.NIK))
+                    if (!IsDummyNik(warga.NIK!))
                     {
                         await _cacheService.RemoveAsync<WargaData>($"Warga_{warga.NIK}");
                         await _cacheService.RemoveAsync<WargaData>($"Warga_{warga.NIK}");
@@ -630,7 +630,7 @@ namespace SuDesApp.Data.Repositories
         public async Task<string> GetAlamatByNikAsync(string nik)
         {
             var warga = await GetWargaByNikAsync(nik);
-            return warga != null ? BuildAlamatLengkap(warga) : null;
+            return warga != null ? BuildAlamatLengkap(warga) : null!;
         }
 
         private bool IsDummyNik(string nik) => nik == DummyNikKematian || nik == DummyNikInstansi;

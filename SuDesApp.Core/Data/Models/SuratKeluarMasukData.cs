@@ -11,5 +11,8 @@ namespace SuDesApp.Data.Models
         public string Perihal { get; set; } = string.Empty;
         public string IsiRingkas { get; set; } = string.Empty;
         public string Keterangan { get; set; } = string.Empty;
+
+        /// <summary>Nama berkas lampiran (PDF/gambar) yang disalin ke folder ArsipSuratFiles.</summary>
+        public string? FileLampiran { get; set; }
     }
 }

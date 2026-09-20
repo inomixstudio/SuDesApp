@@ -25,8 +25,8 @@ namespace SuDesApp.Wpf.ViewModels
 {
     public class SuratDisplayModel : ObservableObject
     {
-        private string _statusDisplay;
-        private string _status;
+        private string ?_statusDisplay;
+        private string ?_status;
 
         public int ID_Surat { get; set; }
         public DateTime TanggalSurat { get; set; }
@@ -40,9 +40,6 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>Label jenis surat yang ramah baca (mis. "N1 - Surat Pengantar Nikah").</summary>
         public string JenisSuratLabel { get; set; } = string.Empty;
-
-        /// <summary>Nama pasangan untuk register NTCR (kosong di register umum).</summary>
-        public string PasanganDisplay { get; set; } = string.Empty;
         public string Status
         {
             get => _status;
@@ -55,13 +52,13 @@ namespace SuDesApp.Wpf.ViewModels
         }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public SuratData OriginalSuratData { get; set; }
+        public SuratData ?OriginalSuratData { get; set; }
     }
 
     public class FilterItem : ObservableObject
     {
-        private string _displayName;
-        private string _filterValue;
+        private string ?_displayName;
+        private string ?_filterValue;
 
         public string DisplayName
         {
@@ -81,14 +78,14 @@ namespace SuDesApp.Wpf.ViewModels
 
     public class RegisterSuratViewModel : ObservableObject
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<RegisterSuratViewModel> _logger;
+        protected readonly IUnitOfWork _unitOfWork;
+        protected readonly ILogger _logger;
         private readonly SettingsManager _settingsManager;
         private readonly AppConfig _appConfig;
         private readonly FileService _fileService;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IMessageService _messageService;
-        private readonly IServiceProvider _serviceProvider;
+        protected readonly IServiceProvider _serviceProvider;
         private readonly NavigationService _navigation;
         private readonly Func<string, string, int?, PdfPreviewViewModel> _previewFactory;
         private readonly PdfPrintService _pdfPrintService;
@@ -99,17 +96,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// harus lewat lock ini.</summary>
         private readonly SemaphoreSlim _dbGate = new(1, 1);
 
-        private readonly bool _ntcrOnly;
-
         private const int PageSize = 50;
         private const string AllTypesFilterValue = "ALL_TYPES";
         private const string AllStatusFilterValue = "ALL_STATUS";
         private const string GroupKeteranganDesaFilterValue = "GROUP_KETERANGAN_DESA";
-        private const string GroupNtcrFilterValue = "GROUP_NTCR";
         private const string DisplayNameSemuaJenis = "Semua Jenis";
         private const string DisplayNameSemuaStatus = "Semua Status";
         private const string DisplayNameSuratKeteranganDesa = "Surat Keterangan Desa";
-        private const string DisplayNameSemuaNtcr = "Semua NTCR";
 
         private int _currentPage = 1;
         private int _totalRecords = 0;
@@ -124,30 +117,29 @@ namespace SuDesApp.Wpf.ViewModels
 
         public RegisterSuratViewModel(
             IUnitOfWork unitOfWork,
-            ILogger<RegisterSuratViewModel> logger,
+            ILoggerFactory loggerFactory,
             SettingsManager settingsManager,
             AppConfig appConfig,
             FileService fileService,
-            ILoggerFactory loggerFactory,
             IMessageService messageService,
             IServiceProvider serviceProvider,
             NavigationService navigation,
             Func<string, string, int?, PdfPreviewViewModel> previewFactory,
-            PdfPrintService pdfPrintService,
-            bool ntcrOnly = false)
+            PdfPrintService pdfPrintService)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            // Kategori log mengikuti kelas register yang sebenarnya dipakai, sehingga
+            // aksi Register NTCR tidak tercatat seolah-olah Register Surat.
+            _logger = _loggerFactory.CreateLogger(GetType());
             _settingsManager = settingsManager ?? throw new ArgumentNullException(nameof(settingsManager));
             _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
-            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
             _pdfPrintService = pdfPrintService ?? throw new ArgumentNullException(nameof(pdfPrintService));
-            _ntcrOnly = ntcrOnly;
 
             SuratItems = new ObservableCollection<SuratDisplayModel>();
             JenisSuratItems = new ObservableCollection<FilterItem>();
@@ -184,11 +176,22 @@ namespace SuDesApp.Wpf.ViewModels
         public ObservableCollection<FilterItem> StatusItems { get; }
         public ObservableCollection<string> TahunItems { get; }
 
-        /// <summary>Judul halaman register (Register Surat / Register NTCR).</summary>
-        public string PageTitle => _ntcrOnly ? "Register NTCR" : "Register Surat";
+        /// <summary>
+        /// Judul halaman register. Register Surat adalah register surat desa umum;
+        /// <see cref="RegisterNtcrViewModel"/> punya register sendiri dengan judul
+        /// dan kolomnya sendiri.
+        /// </summary>
+        public virtual string PageTitle => "Register Surat";
 
-        /// <summary>Apakah register ini Register NTCR (menampilkan kolom Calon Mempelai).</summary>
-        public bool IsNtcrRegister => _ntcrOnly;
+        /// <summary>Nama dasar berkas ekspor/cetak register (tanpa stamp waktu).</summary>
+        protected virtual string RegisterFileBaseName => "RegisterSurat";
+
+        /// <summary>
+        /// Jenis surat yang tidak pernah tampil di register ini. Register Surat umum
+        /// menyembunyikan blanko NTCR (punya register sendiri); Register NTCR
+        /// mengoverride menjadi null karena seluruh isinya memang NTCR.
+        /// </summary>
+        protected virtual IReadOnlyList<string>? ExcludedJenisNames => SuratConstants.NtcrSemua;
 
         public ICommand LoadCommand { get; }
         public ICommand PreviousPageCommand { get; }
@@ -382,57 +385,10 @@ namespace SuDesApp.Wpf.ViewModels
                 _logger.LogInformation("Loading jenis surat to ComboBox...");
                 JenisSuratItems.Clear();
 
-                if (_ntcrOnly)
+                foreach (var item in await BuildJenisFilterItemsAsync())
                 {
-                    JenisSuratItems.Add(new FilterItem { DisplayName = DisplayNameSemuaNtcr, FilterValue = GroupNtcrFilterValue });
-                    var ntcrNames = new[]
-                    {
-                        SuratConstants.NTCR_N1,
-                        SuratConstants.NTCR_N2,
-                        SuratConstants.NTCR_N3,
-                        SuratConstants.NTCR_N4
-                    };
-                    var displayNames = await _unitOfWork.JenisSuratRepository.GetJenisSuratDisplayNamesAsync();
-                    foreach (var namaJenis in ntcrNames)
-                    {
-                        var displayName = displayNames.TryGetValue(namaJenis, out var name) && !string.IsNullOrWhiteSpace(name)
-                            ? name
-                            : namaJenis.Replace("_", " ");
-                        JenisSuratItems.Add(new FilterItem { DisplayName = displayName, FilterValue = namaJenis.ToUpperInvariant() });
-                    }
-
-                    SelectedJenisSurat = JenisSuratItems.FirstOrDefault();
-                    _logger.LogInformation("Loaded {Count} NTCR jenis surat", JenisSuratItems.Count);
-                    return;
-                }
-
-                var items = new List<FilterItem>
-                {
-                    new FilterItem { DisplayName = DisplayNameSemuaJenis, FilterValue = AllTypesFilterValue },
-                    new FilterItem { DisplayName = DisplayNameSuratKeteranganDesa, FilterValue = GroupKeteranganDesaFilterValue }
-                };
-
-                var allJenis = await _unitOfWork.JenisSuratRepository.GetAllJenisSuratAsync();
-                var allDisplayNames = await _unitOfWork.JenisSuratRepository.GetJenisSuratDisplayNamesAsync();
-
-                var ntcrSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    SuratConstants.NTCR_N1,
-                    SuratConstants.NTCR_N2,
-                    SuratConstants.NTCR_N3,
-                    SuratConstants.NTCR_N4
-                };
-
-                foreach (var jenis in allJenis.Where(j => j?.NamaJenis != null && !ntcrSet.Contains(j.NamaJenis)))
-                {
-                    var displayName = allDisplayNames.TryGetValue(jenis.NamaJenis, out var name) && !string.IsNullOrWhiteSpace(name)
-                        ? name
-                        : System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(jenis.NamaJenis.Replace("_", " ").ToLower());
-                    items.Add(new FilterItem { DisplayName = displayName, FilterValue = jenis.NamaJenis.ToUpperInvariant() });
-                }
-
-                foreach (var item in items)
                     JenisSuratItems.Add(item);
+                }
 
                 SelectedJenisSurat = JenisSuratItems.FirstOrDefault();
                 _logger.LogInformation("Loaded {Count} jenis surat", JenisSuratItems.Count);
@@ -441,6 +397,35 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 _logger.LogError(ex, "Failed to load jenis surat");
             }
+        }
+
+        /// <summary>
+        /// Susun pilihan filter jenis surat untuk register ini. Register Surat umum
+        /// memuat semua jenis surat desa kecuali blanko NTCR; Register NTCR
+        /// mengoverride-nya dengan daftar blanko N1–N8 saja.
+        /// </summary>
+        protected virtual async Task<List<FilterItem>> BuildJenisFilterItemsAsync()
+        {
+            var items = new List<FilterItem>
+            {
+                new FilterItem { DisplayName = DisplayNameSemuaJenis, FilterValue = AllTypesFilterValue },
+                new FilterItem { DisplayName = DisplayNameSuratKeteranganDesa, FilterValue = GroupKeteranganDesaFilterValue }
+            };
+
+            var allJenis = await _unitOfWork.JenisSuratRepository.GetAllJenisSuratAsync();
+            var allDisplayNames = await _unitOfWork.JenisSuratRepository.GetJenisSuratDisplayNamesAsync();
+
+            var ntcrSet = new HashSet<string>(SuratConstants.NtcrSemua, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var jenis in allJenis.Where(j => j?.NamaJenis != null && !ntcrSet.Contains(j.NamaJenis)))
+            {
+                var displayName = allDisplayNames.TryGetValue(jenis.NamaJenis!, out var name) && !string.IsNullOrWhiteSpace(name)
+                    ? name
+                    : System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(jenis.NamaJenis.Replace("_", " ").ToLower());
+                items.Add(new FilterItem { DisplayName = displayName, FilterValue = jenis.NamaJenis.ToUpperInvariant() });
+            }
+
+            return items;
         }
 
         private async Task LoadStatusKeComboBoxAsync()
@@ -617,16 +602,12 @@ namespace SuDesApp.Wpf.ViewModels
                     filters.JenisSurat = selectedJenis.FilterValue;
                 }
 
-                // Register Surat utama memisahkan NTCR: jenis NTCR tidak tampil di daftar umum.
-                if (!_ntcrOnly)
+                // Register Surat umum memisahkan NTCR: jenis NTCR tidak tampil di
+                // daftar umum (di Register NTCR justru hanya NTCR yang tampil).
+                var excluded = ExcludedJenisNames;
+                if (excluded != null && excluded.Count > 0)
                 {
-                    filters.ExcludeJenisNames = new List<string>
-                    {
-                        SuratConstants.NTCR_N1,
-                        SuratConstants.NTCR_N2,
-                        SuratConstants.NTCR_N3,
-                        SuratConstants.NTCR_N4
-                    };
+                    filters.ExcludeJenisNames = new List<string>(excluded);
                 }
 
                 var selectedStatus = SelectedStatus;
@@ -666,31 +647,49 @@ namespace SuDesApp.Wpf.ViewModels
             foreach (var surat in _currentDisplayData)
             {
                 var statusValue = string.IsNullOrWhiteSpace(surat.Status) ? "Draft" : surat.Status;
-                SuratItems.Add(new SuratDisplayModel
-                {
-                    ID_Surat = surat.ID_Surat,
-                    TanggalSurat = surat.TanggalSurat,
-                    NomorSurat = surat.NomorSurat ?? "-",
-                    NamaDisplay = GetNamaDisplay(surat),
-                    TTLDisplay = GetTTLDisplay(surat),
-                    JenisKelaminDisplay = GetJenisKelaminDisplay(surat),
-                    AlamatDisplay = GetAlamatDisplay(surat),
-                    Keperluan = surat.Keperluan ?? "-",
-                    NamaJenis = surat.NamaJenis ?? "-",
-                    JenisSuratLabel = GetJenisSuratLabel(surat),
-                    PasanganDisplay = surat.Ntcr != null && !string.IsNullOrWhiteSpace(surat.Ntcr.NamaIstri)
-                        ? surat.Ntcr.NamaIstri
-                        : "-",
-                    Status = statusValue,
-                    StatusDisplay = GetStatusDisplayName(statusValue),
-                    CreatedAt = surat.CreatedAt == default ? DateTime.Now : surat.CreatedAt,
-                    UpdatedAt = surat.UpdatedAt,
-                    OriginalSuratData = surat
-                });
+                var model = NewDisplayModel();
+                model.ID_Surat = surat.ID_Surat;
+                model.TanggalSurat = surat.TanggalSurat;
+                model.NomorSurat = surat.NomorSurat ?? "-";
+                model.NamaDisplay = GetNamaDisplay(surat);
+                model.TTLDisplay = GetTTLDisplay(surat);
+                model.JenisKelaminDisplay = GetJenisKelaminDisplay(surat);
+                model.AlamatDisplay = GetAlamatDisplay(surat);
+                model.Keperluan = surat.Keperluan ?? "-";
+                model.NamaJenis = surat.NamaJenis ?? "-";
+                model.JenisSuratLabel = GetJenisSuratLabel(surat);
+                model.Status = statusValue;
+                model.StatusDisplay = GetStatusDisplayName(statusValue);
+                model.CreatedAt = surat.CreatedAt == default ? DateTime.Now : surat.CreatedAt;
+                model.UpdatedAt = surat.UpdatedAt;
+                model.OriginalSuratData = surat;
+
+                // Register turunan (mis. Register NTCR) menambah kolomnya sendiri.
+                FillDisplayModelExtras(model, surat);
+
+                SuratItems.Add(model);
             }
 
             UpdatePagingControls();
         }
+
+        /// <summary>Buat model baris register. Register NTCR memakai modelnya sendiri.</summary>
+        protected virtual SuratDisplayModel NewDisplayModel() => new SuratDisplayModel();
+
+        /// <summary>
+        /// Isi kolom tambahan yang hanya ada di register turunan. Register Surat umum
+        /// tidak menambahkan apa pun.
+        /// </summary>
+        protected virtual void FillDisplayModelExtras(SuratDisplayModel model, SuratData surat)
+        {
+        }
+
+        /// <summary>
+        /// Register yang dibuka kembali setelah form edit ditutup — Register Surat
+        /// kembali ke Register Surat, Register NTCR kembali ke Register NTCR.
+        /// </summary>
+        protected virtual object CreateRegisterForReturn() =>
+            _serviceProvider.CreateScope().ServiceProvider.GetRequiredService<RegisterSuratViewModel>();
 
         private void UpdatePagingControls()
         {
@@ -789,7 +788,7 @@ namespace SuDesApp.Wpf.ViewModels
             _suppressFilterEvents = true;
             try
             {
-                SelectedStatus = IsDraftFilterActive
+                SelectedStatus = IsDraftFilterActive!
                     ? StatusItems.FirstOrDefault(i => i.FilterValue == AllStatusFilterValue)
                     : StatusItems.FirstOrDefault(i => string.Equals(i.FilterValue, "Draft", StringComparison.OrdinalIgnoreCase))
                       ?? StatusItems.FirstOrDefault();
@@ -909,9 +908,9 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 var sfd = new SaveFileDialog
                 {
-                    Title = "Ekspor Data Register Surat",
+                    Title = $"Ekspor Data {PageTitle}",
                     Filter = "Microsoft Excel (*.xlsx)|*.xlsx|CSV UTF-8 (*.csv)|*.csv|JSON Data (*.json)|*.json",
-                    FileName = $"{(_ntcrOnly ? "RegisterNtcr" : "RegisterSurat")}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx",
+                    FileName = $"{RegisterFileBaseName}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx",
                     DefaultExt = ".xlsx"
                 };
 
@@ -933,7 +932,7 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
                     using var package = new ExcelPackage();
-                    var ws = package.Workbook.Worksheets.Add("Register Surat");
+                    var ws = package.Workbook.Worksheets.Add(PageTitle);
 
                     string[] headers = { "No", "ID Surat", "Tanggal Surat", "Nomor Surat", "Nama Pemohon / Instansi", "TTL", "JK", "Alamat", "Keperluan", "Jenis Surat", "Status", "Waktu Dibuat" };
                     for (int col = 0; col < headers.Length; col++)
@@ -1073,7 +1072,7 @@ namespace SuDesApp.Wpf.ViewModels
                 var generator = _serviceProvider.GetRequiredService<SuDesApp.GeneratorPdf.SuratRegisterGenerator>();
                 var tempFolder = _appConfig.TempPdfFolder;
                 Directory.CreateDirectory(tempFolder);
-                var tempPdfPath = Path.Combine(tempFolder, $"{(_ntcrOnly ? "RegisterNtcr" : "RegisterSurat")}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+                var tempPdfPath = Path.Combine(tempFolder, $"{RegisterFileBaseName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
                 using (var fs = File.Create(tempPdfPath))
                 {
@@ -1282,7 +1281,10 @@ namespace SuDesApp.Wpf.ViewModels
                 var full = await _unitOfWork.SuratRepository.GetByIdAsync(suratData.ID_Surat);
                 if (full != null) suratData = full;
 
+                // Surat instansi dan surat dari Template Surat tidak mewakili perorangan
+                // (isinya disimpan sendiri oleh suratnya), jadi tidak perlu data warga.
                 if (!string.Equals(suratData.NamaJenis, "INSTANSI", StringComparison.OrdinalIgnoreCase) &&
+                    !TemplateSuratTercatat.DariTemplateSurat(suratData) &&
                     suratData.Warga == null)
                 {
                     await _messageService.ShowWarningAsync("Data warga tidak ditemukan untuk surat ini.");
@@ -1336,13 +1338,37 @@ namespace SuDesApp.Wpf.ViewModels
 
             try
             {
+                // Permohonan rekening koran diisi lewat formnya sendiri (bukan form input
+                // surat warga), jadi edit diarahkan ke halaman itu dengan data surat lama.
+                if (string.Equals(model.OriginalSuratData.NamaJenis, SuratConstants.REKENING_KORAN, StringComparison.OrdinalIgnoreCase))
+                {
+                    var scopeRk = _serviceProvider.CreateScope();
+                    var rekeningVm = scopeRk.ServiceProvider.GetRequiredService<RekeningKoranViewModel>();
+                    rekeningVm.RequestClose += () => _navigation.Navigate(CreateRegisterForReturn());
+                    await rekeningVm.ConfigureForEditAsync(model.ID_Surat);
+                    _navigation.Navigate(rekeningVm);
+                    return;
+                }
+
+                // Surat dari Template Surat diperbaiki lewat formulir pengisian template
+                // (mode edit): definisi & isian dibaca dari payload surat, nomor lamanya
+                // dipertahankan, dan Simpan memperbarui baris register yang sama.
+                if (string.Equals(model.OriginalSuratData.NamaJenis, SuratConstants.TEMPLATE_SURAT, StringComparison.OrdinalIgnoreCase))
+                {
+                    var scopeTemplate = _serviceProvider.CreateScope();
+                    var isiVm = scopeTemplate.ServiceProvider.GetRequiredService<IsiTemplateSuratViewModel>();
+                    isiVm.SebelumBatal = () => _navigation.Navigate(CreateRegisterForReturn());
+                    await isiVm.ConfigureForEditAsync(model.ID_Surat);
+                    _navigation.Navigate(isiVm);
+                    return;
+                }
+
                 // Form edit ditampilkan di content host utama (bukan modal): navigasi ke
                 // InputWindowViewModel, muat data surat, lalu kunci nomor. Saat dibatalkan,
                 // kembali ke daftar Register Surat yang disegarkan.
                 var scope = _serviceProvider.CreateScope();
                 var vm = scope.ServiceProvider.GetRequiredService<InputWindowViewModel>();
-                vm.RequestClose += () => _navigation.Navigate(
-                    _serviceProvider.CreateScope().ServiceProvider.GetRequiredService<RegisterSuratViewModel>());
+                vm.RequestClose += () => _navigation.Navigate(CreateRegisterForReturn());
                 await vm.ConfigureForEditAsync(model.ID_Surat);
                 _navigation.Navigate(vm);
             }
@@ -1414,6 +1440,14 @@ namespace SuDesApp.Wpf.ViewModels
         {
             if (surat.Instansi != null && !string.IsNullOrEmpty(surat.Instansi.NamaInstansi))
                 return surat.Instansi.NamaInstansi;
+            // Surat dari Template Surat tidak memakai data kependudukan: nama penerimanya
+            // dibaca dari isian surat itu sendiri (mis. kolom "Nama" atau "Ditujukan Kepada").
+            if (TemplateSuratTercatat.DariTemplateSurat(surat))
+            {
+                string namaTemplate = TemplateSuratTercatat.NamaPenerimaTampil(surat);
+                return namaTemplate.Length > 0 ? namaTemplate : "-";
+            }
+
             if (surat.Warga != null && !string.IsNullOrEmpty(surat.Warga.Nama))
                 return surat.Warga.Nama;
             return "-";
@@ -1421,18 +1455,39 @@ namespace SuDesApp.Wpf.ViewModels
 
         private string GetTTLDisplay(SuratData surat)
         {
+            // Surat dari Template Surat: TTL datang dari kolom isian templatenya.
+            if (TemplateSuratTercatat.DariTemplateSurat(surat))
+            {
+                string ttlTemplate = TemplateSuratTercatat.TempatTanggalLahirTampil(surat);
+                return ttlTemplate.Length > 0 ? ttlTemplate : "-";
+            }
+
             if (surat.Warga == null) return "-";
             return $"{surat.Warga.TempatLahir ?? "-"}, {surat.Warga.TanggalLahir ?? "-"}";
         }
 
         private string GetJenisKelaminDisplay(SuratData surat)
         {
+            if (TemplateSuratTercatat.DariTemplateSurat(surat))
+            {
+                string jkTemplate = TemplateSuratTercatat.JenisKelaminTampil(surat);
+                return jkTemplate.Length > 0 ? jkTemplate : "-";
+            }
+
             if (surat.Warga == null || string.IsNullOrEmpty(surat.Warga.JenisKelamin)) return "-";
             return surat.Warga.JenisKelamin.Substring(0, 1).ToUpper();
         }
 
         private string GetAlamatDisplay(SuratData surat)
         {
+            // Surat dari Template Surat menyimpan alamat bebas (bukan dusun/desa/
+            // kecamatan) di dalam isian suratnya.
+            if (TemplateSuratTercatat.DariTemplateSurat(surat))
+            {
+                string alamatTemplate = TemplateSuratTercatat.AlamatPenerimaTampil(surat);
+                return alamatTemplate.Length > 0 ? alamatTemplate : "-";
+            }
+
             if (surat.Warga == null)
                 return surat.Instansi?.AlamatInstansi ?? "-";
 
@@ -1452,9 +1507,14 @@ namespace SuDesApp.Wpf.ViewModels
             return surat.NamaJenis?.ToUpperInvariant() switch
             {
                 "NTCR_N1" => "N1 - Surat Pengantar Nikah",
-                "NTCR_N2" => "N2 - Surat Ket. Untuk Nikah",
-                "NTCR_N3" => "N3 - Surat Persetujuan Calon Mempelai",
-                "NTCR_N4" => "N4 - Surat Ket. Orang Tua",
+                "NTCR_N2" => "N2 - Permohonan Kehendak Nikah",
+                "NTCR_N3" => "N3 - Permohonan Pencatatan Isbat",
+                "NTCR_N4" => "N4 - Persetujuan Calon Pengantin",
+                "NTCR_N5" => "N5 - Surat Izin Orang Tua",
+                "NTCR_N6" => "N6 - Ket. Kematian Suami/Istri",
+                "NTCR_N8" => "N8 - Ket. Numpang Nikah",
+                "REKENING_KORAN" => "Permohonan Rekening Koran",
+                "TEMPLATE_SURAT" => GetLabelTemplateSurat(surat),
                 "BEDANAMA" => "Surat Ket. Beda Data",
                 "SKD_UMUM" => "SKD Umum",
                 "DOMISILI_WARGA" => "Domisili Warga",
@@ -1467,6 +1527,18 @@ namespace SuDesApp.Wpf.ViewModels
                 "SKTM" => "SKTM (Surat Ket. Tidak Mampu)",
                 _ => surat.NamaJenis?.Replace("_", " ") ?? "-"
             };
+        }
+
+        /// <summary>
+        /// Label jenis surat untuk surat dari Template Surat: menyebut nama templatenya
+        /// (dibaca dari payload surat) supaya daftar register tetap informatif.
+        /// </summary>
+        private static string GetLabelTemplateSurat(SuratData surat)
+        {
+            var payload = TemplateSuratTercatat.FromJson(surat?.AdditionalData);
+            string nama = payload?.NamaTemplate?.Trim() ?? string.Empty;
+
+            return nama.Length == 0 ? "Template Surat" : $"Template: {nama}";
         }
 
         private void UpdateCommandStates()

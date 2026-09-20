@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using SuDesApp.Wpf.ViewModels;
 
 namespace SuDesApp.Wpf.Views
@@ -12,13 +11,31 @@ namespace SuDesApp.Wpf.Views
             InitializeComponent();
         }
 
-        private void DataGridKeputusan_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (sender is DataGrid dataGrid && dataGrid.SelectedItem is KeputusanRow selectedRow)
+            bool hasText = !string.IsNullOrEmpty(SearchBox.Text);
+            if (SearchWatermark != null)
             {
-                if (DataContext is KeputusanViewModel vm && vm.OpenWordFileCommand.CanExecute(selectedRow))
+                SearchWatermark.Visibility = hasText ? Visibility.Collapsed : Visibility.Visible;
+            }
+            if (ClearSearchBtn != null)
+            {
+                ClearSearchBtn.Visibility = hasText ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void ClearSearch_Click(object sender, RoutedEventArgs e)
+        {
+            SearchBox.Clear();
+        }
+
+        private void DataGridKeputusan_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is DataGrid dataGrid && dataGrid.SelectedItem is KeputusanRow)
+            {
+                if (DataContext is KeputusanViewModel vm && vm.EditCommand.CanExecute(null))
                 {
-                    vm.OpenWordFileCommand.Execute(selectedRow);
+                    vm.EditCommand.Execute(null);
                 }
             }
         }

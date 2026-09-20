@@ -193,7 +193,8 @@ namespace SuDesApp.Wpf.Services
                         _notifications.Warning(
                             "Gagal Kirim PDF Otomatis",
                             permintaan.KodePermintaan + " — PDF dibuat (" + hasil.NomorSurat +
-                            ") tetapi gagal dikirim.\nSilakan kirim ulang dari panel Layanan Online.");
+                            ") tetapi gagal dikirim.\nSilakan kirim ulang dari panel Layanan Online.",
+                            "layanan-online");
                         return false;
                     }
 
@@ -215,7 +216,8 @@ namespace SuDesApp.Wpf.Services
                         WaFormatParser.TampilanJenis(permintaan.NamaJenis) +
                         ".\nNomor surat: " + hasil.NomorSurat +
                         "\n" + char.ToUpperInvariant(cara[0]) + cara[1..] +
-                        " ke " + permintaan.NomorWA + ".");
+                        " ke " + permintaan.NomorWA + ".",
+                        "layanan-online");
                     return true;
                 }
 
@@ -233,7 +235,8 @@ namespace SuDesApp.Wpf.Services
                 _notifications.Warning(
                     "PDF Gagal Dibuat",
                     permintaan.KodePermintaan + " — surat " + hasil.NomorSurat +
-                    " sudah ada tetapi PDF gagal dibuat.\nBisa dicetak manual dari Register Surat.");
+                    " sudah ada tetapi PDF gagal dibuat.\nBisa dicetak manual dari Register Surat.",
+                    "layanan-online");
                 return false;
             }
             catch (Exception ex)
@@ -259,7 +262,8 @@ namespace SuDesApp.Wpf.Services
                 _notifications.Error(
                     "Proses Otomatis Gagal",
                     "Permintaan gagal diproses otomatis.\n" +
-                    "Menunggu perbaikan operator di panel Layanan Online.");
+                    "Menunggu perbaikan operator di panel Layanan Online.",
+                    "layanan-online");
                 return false;
             }
         }

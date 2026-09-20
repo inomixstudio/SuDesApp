@@ -51,12 +51,12 @@
         </Border>
 
         <!-- Pratinjau PDF (PDFium) -->
-        <Border Grid.Row="1" Background="White" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+        <Border Grid.Row="1" Background="#525659" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="8" ClipToBounds="True">
             <Grid>
                 <ScrollViewer x:Name="ScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                              Background="White">
-                    <StackPanel x:Name="PagesPanel" Margin="16" VerticalAlignment="Top">
+                              Background="#525659">
+                    <StackPanel x:Name="PagesPanel" Margin="20,16,20,24" VerticalAlignment="Top">
                     </StackPanel>
                 </ScrollViewer>
 

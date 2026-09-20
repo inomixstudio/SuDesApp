@@ -38,7 +38,7 @@ namespace SuDesApp.GeneratorPdf
             judul.Blok(c => SuratRenderer.JudulDanNomor(c, JudulSurat, nomor, leadingJudul: 13f, leadingNomor: 10f));
         }
 
-        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             // Validasi jenis surat, lebih ketat menggunakan enum
             if (suratData.Jenis != SuratData.JenisSuratEnum.IzinOrtu)
@@ -101,7 +101,7 @@ namespace SuDesApp.GeneratorPdf
             });
 
             // Menggunakan suratData.Keterangan yang sudah di-generate oleh IzinOrtuInput
-            string narasiIzin = suratData.Keterangan;
+            string? narasiIzin = suratData.Keterangan;
             if (string.IsNullOrWhiteSpace(narasiIzin))
             {
                 _logger.LogWarning("suratData.Keterangan is null or empty for IzinOrtu ID_Surat={ID_Surat}. Using generic fallback narasi.", suratData.ID_Surat);

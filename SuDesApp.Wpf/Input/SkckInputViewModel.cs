@@ -52,7 +52,7 @@ namespace SuDesApp.Wpf.Input
                 ? DefaultKeteranganSkck
                 : suratData.Keterangan;
 
-            Kewarganegaraan = suratData.Warga != null &&
+            Kewarganegaraan = suratData.Warga != null &&!
                               ValidKewarganegaraanOptions.Contains(suratData.Warga.Kewarganegaraan?.Trim() ?? string.Empty, StringComparer.OrdinalIgnoreCase)
                 ? suratData.Warga.Kewarganegaraan
                 : "WNI";

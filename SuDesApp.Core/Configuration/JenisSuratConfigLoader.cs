@@ -256,6 +256,7 @@ namespace SuDesApp.Configuration
                     throw new InvalidOperationException("Configuration file is empty or invalid");
                 }
 
+                TerapkanPenyesuaianPenomoran(configs);
                 ValidateAndSyncConfig(configs);
                 CacheIndividualConfigs(configs);
 
@@ -319,6 +320,32 @@ namespace SuDesApp.Configuration
             }
 
             throw new IOException($"Failed to read configuration file after {maxRetries} attempts");
+        }
+
+        /// <summary>
+        /// Tempelkan penyesuaian penomoran milik pengguna (halaman Pengaturan
+        /// Aplikasi — mis. awalan SKD 470 → 471) di atas nilai bawaan berkas.
+        /// Berkas bawaan tetap menjadi daftar jenis surat; penyesuaian hanya
+        /// mengganti format nomor jenis yang diubah pengguna.
+        /// </summary>
+        private void TerapkanPenyesuaianPenomoran(List<JenisSuratConfig> configs)
+        {
+            var penyesuaian = PenomoranOverrideStore.Muat();
+            if (penyesuaian.Count == 0) return;
+
+            int diterapkan = 0;
+            foreach (var config in configs)
+            {
+                if (penyesuaian.TryGetValue(config.NamaJenis, out var format) &&
+                    !string.IsNullOrWhiteSpace(format))
+                {
+                    config.NomorFormat = format;
+                    diterapkan++;
+                }
+            }
+
+            if (diterapkan > 0)
+                _logger.LogInformation("Penyesuaian penomoran pengguna diterapkan pada {Count} jenis surat", diterapkan);
         }
 
         private void ValidateAndSyncConfig(List<JenisSuratConfig> configs)

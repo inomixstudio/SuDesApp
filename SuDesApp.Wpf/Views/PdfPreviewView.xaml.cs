@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using PdfiumViewer;
 using SuDesApp.Wpf.ViewModels;
@@ -67,7 +69,7 @@ namespace SuDesApp.Wpf.Views
             {
                 try
                 {
-                    var info = new FileInfo(viewModel.PdfPath);
+                    var info = new FileInfo(viewModel.PdfPath!);
                     if (_cachedLength == info.Length && _cachedLastWrite == info.LastWriteTimeUtc)
                     {
                         return;
@@ -171,15 +173,44 @@ namespace SuDesApp.Wpf.Views
                 int h = Math.Max(1, (int)(size.Height * _scale));
 
                 using var bmp = (System.Drawing.Bitmap)_document.Render(i, w, h, 96f, 96f, PdfRenderFlags.LcdText);
-                var image = new Image
+
+                var card = new Border
+                {
+                    Background = Brushes.White,
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(0xC9, 0xCD, 0xD4)),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(3),
+                    Padding = new Thickness(7),
+                    Margin = new Thickness(0, 0, 0, 16),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Effect = new DropShadowEffect
+                    {
+                        Color = Colors.Black,
+                        BlurRadius = 16,
+                        ShadowDepth = 2,
+                        Opacity = 0.3
+                    }
+                };
+
+                var pageStack = new StackPanel();
+                pageStack.Children.Add(new Image
                 {
                     Source = ToBitmapSource(bmp),
                     Width = w,
                     Height = h,
-                    Stretch = System.Windows.Media.Stretch.Uniform,
-                    Margin = new Thickness(0, 0, 0, 8)
-                };
-                PagesPanel.Children.Add(image);
+                    Stretch = Stretch.Uniform
+                });
+                pageStack.Children.Add(new TextBlock
+                {
+                    Text = $"Halaman {i + 1} dari {_document.PageCount}",
+                    FontSize = 11,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0x6B, 0x70, 0x77)),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 7, 0, 0)
+                });
+
+                card.Child = pageStack;
+                PagesPanel.Children.Add(card);
             }
 
             ZoomText.Text = $"{_scale * 100.0:0}%";

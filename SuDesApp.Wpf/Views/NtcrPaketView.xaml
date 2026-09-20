@@ -1,0 +1,141 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.NtcrPaketView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views"
+             mc:Ignorable="d"
+             d:DesignHeight="900" d:DesignWidth="1000"
+             FontSize="13"
+             SnapsToDevicePixels="True"
+             UseLayoutRounding="True">
+
+    <!--
+        Paket NTCR: sekali isi data satu pasangan → seluruh blanko yang dicentang
+        (N1–N6) disimpan sekaligus dan dicetak dalam SATU berkas PDF (satu blanko
+        per halaman). Formulir isian di bawah memakai kontrol NTCR yang sama dengan
+        kontrol input surat, sehingga blok yang tampil mengikuti blanko yang dicentang.
+        Blanko yang tersedia hanya Model N1–N6; Model N7 sudah dihapus karena
+        diterbitkan KUA, bukan kantor desa.
+    -->
+    <DockPanel Background="{DynamicResource WindowBackgroundBrush}">
+
+        <!-- Kop halaman -->
+        <Border DockPanel.Dock="Top" Style="{StaticResource PageHeader}" Margin="20,20,20,10">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Text="{Binding Subtitle}" Style="{StaticResource HeaderSubtitle}"
+                               MaxWidth="820" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Panel aksi bawah -->
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource ToolbarCard}" Margin="20,0,20,20">
+            <!-- Grid 2 kolom: status memakai * (terpotong rapi dengan elipsis) dan tombol
+                 memakai Auto sehingga selalu tampil utuh walau jendela sempit. -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusText}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           Margin="0,0,12,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Batal" Width="110" Height="34" Margin="0,0,8,0"
+                            Command="{Binding BatalCommand}"
+                            Style="{StaticResource OutlineButton}"/>
+                    <Button Content="Simpan &amp; Cetak Paket" Width="190" Height="34"
+                            Command="{Binding SimpanCommand}"
+                            IsEnabled="{Binding TidakSibuk}"
+                            Style="{StaticResource PrimaryButton}"
+                            ToolTip="Simpan seluruh blanko terpilih sekaligus lalu cetak satu berkas PDF gabungan"
+                            AutomationProperties.Name="Simpan dan cetak paket NTCR"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="20,0,20,0">
+
+                <!-- Pilihan blanko -->
+                <Border Style="{StaticResource FormCard}">
+                    <StackPanel>
+                        <!-- Judul + tombol dalam Grid 2 kolom agar tombol tidak terpotong
+                             saat jendela sempit. -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Style="{StaticResource FormSectionHeaderPanel}" Margin="0">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="Blanko yang akan dibuat &amp; dicetak"
+                                           Style="{StaticResource FormSectionTitle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="Paket standar (N1–N5)" Height="28" Padding="12,0" Margin="0,0,8,0"
+                                        Command="{Binding PilihPaketStandarCommand}"
+                                        Style="{StaticResource OutlineButton}"
+                                        ToolTip="Centang blanko yang dipakai satu paket pernikahan: N1 sampai N5"/>
+                                <Button Content="Semua (N1–N6)" Height="28" Padding="12,0"
+                                        Command="{Binding PilihSemuaCommand}"
+                                        Style="{StaticResource OutlineButton}"
+                                        ToolTip="Centang seluruh blanko termasuk N6 (keterangan kematian suami/istri)"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{Binding Blanko}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding Terpilih, Mode=TwoWay}"
+                                              Margin="0,4,18,4"
+                                              AutomationProperties.Name="{Binding Judul}">
+                                        <StackPanel Margin="0,1,0,0" MaxWidth="300">
+                                            <TextBlock Text="{Binding Judul}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Keterangan}" FontSize="11" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="{Binding RingkasanPaket}" Margin="0,8,0,0" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                        <!-- Nomor surat otomatis: satu nomor per blanko yang dicentang -->
+                        <TextBlock Text="{Binding NomorSuratRingkasan}" Margin="0,2,0,0" FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   ToolTip="Nomor surat diisi otomatis sesuai penomoran jenis surat di register"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Keterangan alur -->
+                <Border Style="{StaticResource FormCard}">
+                    <TextBlock TextWrapping="Wrap" FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               Text="Isi data satu pasangan satu kali saja: identitas pemohon (calon suami), calon istri, orang tua/wali, lalu kolom khusus tiap blanko. Semua blanko yang dicentang dibuat dari data yang sama — masing-masing mendapat nomor surat sendiri dan tercatat di Register NTCR — kemudian dicetak berurutan N1 → N6 dalam satu berkas PDF siap cetak."/>
+                </Border>
+
+                <!-- Form NTCR yang dipakai ulang dari alur per blanko -->
+                <views:NtcrInputView/>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

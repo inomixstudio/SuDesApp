@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.Data.Repositories;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text.Json.Serialization;
@@ -36,15 +37,15 @@ namespace SuDesApp.Data.Models
             }
         }
         [Required] public int ID_Jenis { get; set; }
-        [Required] public string NomorSurat { get; set; }
+        [Required] public string? NomorSurat { get; set; }
         [Required] public DateTime TanggalSurat { get; set; }
-        public string Keterangan { get; set; }
-        public string Keperluan { get; set; }
-        public string KodeJenis { get; set; }
-        public string AdditionalData { get; set; }
+        public string? Keterangan { get; set; }
+        public string? Keperluan { get; set; }
+        public string? KodeJenis { get; set; }
+        public string? AdditionalData { get; set; }
 
         // ? KOLOM STATUS BARU
-        public string Status { get; set; } = "Draft"; // Draft, Active, Cancelled
+        public string? Status { get; set; } = "Draft"; // Draft, Active, Cancelled
 
         // ? TIMESTAMP KOLOM BARU
         public DateTime CreatedAt { get; set; } = DateTime.Now;
@@ -64,29 +65,29 @@ namespace SuDesApp.Data.Models
 
 
         // ? MODEL PROPERTIES YANG DIUPDATE
-        public WargaData Warga { get; set; }
-        public KematianData Kematian { get; set; }
-        public SKUData SKU { get; set; }
-        public SKTMData SKTM { get; set; } // ? BARU: Model SKTM terpisah
-        public IzinOrtuData IzinOrtu { get; set; }
-        public IjinTinggalData IjinTinggal { get; set; } // ? BARU: Model IjinTinggal
-        public NtcrData Ntcr { get; set; } // ? BARU: Model NTCR (persyaratan pernikahan N1-N4)
-        public GarapanData Garapan { get; set; }
-        public Instansi Instansi { get; set; }
-        public DesaData Desa { get; set; }
-        public KenalLahirData KenalLahir { get; set; }
-        public BedaNamaData BedaNama { get; set; }
-        public AhliWaris AhliWaris { get; set; }
-        public AhliWarisData AhliWarisData { get; set; }
+        public WargaData? Warga { get; set; }
+        public KematianData? Kematian { get; set; }
+        public SKUData? SKU { get; set; }
+        public SKTMData? SKTM { get; set; } // ? BARU: Model SKTM terpisah
+        public IzinOrtuData? IzinOrtu { get; set; }
+        public IjinTinggalData? IjinTinggal { get; set; } // ? BARU: Model IjinTinggal
+        public NtcrData? Ntcr { get; set; } // ? BARU: Model NTCR (persyaratan pernikahan N1-N4)
+        public GarapanData? Garapan { get; set; }
+        public Instansi? Instansi { get; set; }
+        public DesaData? Desa { get; set; }
+        public KenalLahirData? KenalLahir { get; set; }
+        public BedaNamaData? BedaNama { get; set; }
+        public AhliWaris? AhliWaris { get; set; }
+        public AhliWarisData? AhliWarisData { get; set; }
         public JenisSuratEnum Jenis { get; set; }
-        public JenisSuratKelas JenisSurat { get; set; }
+        public JenisSuratKelas? JenisSurat { get; set; }
 
         public List<GarapanData> RincianGarapans { get; set; }
-        public string PejabatPenandatangan { get; set; }
-        public string NamaPejabatPenandatangan { get; set; }
-        public WargaData WargaKK { get; set; }
-        public string DataSource1 { get; set; }
-        public string DataSource2 { get; set; }
+        public string? PejabatPenandatangan { get; set; }
+        public string? NamaPejabatPenandatangan { get; set; }
+        public WargaData? WargaKK { get; set; }
+        public string? DataSource1 { get; set; }
+        public string? DataSource2 { get; set; }
 
         public enum JenisSuratEnum
         {
@@ -101,33 +102,35 @@ namespace SuDesApp.Data.Models
             KenalLahir,
             AhliWaris,
             IjinTinggal, // ? BARU
+            RekeningKoran, // surat keluar desa ke bank (bukan surat warga)
+            TemplateSurat, // surat dari Template Surat buatan pengguna sendiri
             Ntcr // ? BARU: NTCR (persyaratan pernikahan N1-N4)
         }
 
         public SuratData() : this(null, null, null, null) { }
 
         public SuratData(
-            ISuratRepository suratRepository = null,
-            IWargaRepository wargaRepository = null,
-            IDesaRepository desaRepository = null,
-            IJenisSuratRepository jenisSuratRepository = null,
-            ILogger<SuratData> logger = null)
+            ISuratRepository? suratRepository = null,
+            IWargaRepository? wargaRepository = null,
+            IDesaRepository? desaRepository = null,
+            IJenisSuratRepository? jenisSuratRepository = null,
+            ILogger<SuratData>? logger = null)
         {
             _logger = logger ?? NullLogger<SuratData>.Instance;
-            _suratRepository = suratRepository;
-            _wargaRepository = wargaRepository;
-            _desaRepository = desaRepository;
-            _jenisSuratRepository = jenisSuratRepository;
+            _suratRepository = suratRepository!;
+            _wargaRepository = wargaRepository!;
+            _desaRepository = desaRepository!;
+            _jenisSuratRepository = jenisSuratRepository!;
 
             InitializeSubmodels();
         }
 
         public SuratData(
             int idSurat, int idJenis, string namaJenis, string nomorSurat, DateTime tanggalSurat,
-            string keterangan, int idWarga, string kodeJenis = null,
-            ISuratRepository suratRepository = null, IWargaRepository wargaRepository = null,
-            IDesaRepository desaRepository = null, IJenisSuratRepository jenisSuratRepository = null,
-            ILogger<SuratData> logger = null)
+            string keterangan, int idWarga, string? kodeJenis = null,
+            ISuratRepository? suratRepository = null, IWargaRepository? wargaRepository = null,
+            IDesaRepository? desaRepository = null, IJenisSuratRepository? jenisSuratRepository = null,
+            ILogger<SuratData>? logger = null)
             : this(suratRepository, wargaRepository, desaRepository, jenisSuratRepository, logger)
         {
             ID_Surat = idSurat;
@@ -143,9 +146,9 @@ namespace SuDesApp.Data.Models
 
         public SuratData(
             string namaJenis, string nomorSurat, string tanggalSurat, string keterangan, int idWarga,
-            string kodeJenis = null, ISuratRepository suratRepository = null, IWargaRepository wargaRepository = null,
-            IDesaRepository desaRepository = null, IJenisSuratRepository jenisSuratRepository = null,
-            ILogger<SuratData> logger = null)
+            string? kodeJenis = null, ISuratRepository? suratRepository = null, IWargaRepository? wargaRepository = null,
+            IDesaRepository? desaRepository = null, IJenisSuratRepository? jenisSuratRepository = null,
+            ILogger<SuratData>? logger = null)
             : this(suratRepository, wargaRepository, desaRepository, jenisSuratRepository, logger)
         {
             NamaJenis = namaJenis;
@@ -220,10 +223,15 @@ namespace SuDesApp.Data.Models
                 case SuratConstants.KENAL_LAHIR: jenis = JenisSuratEnum.KenalLahir; return true;
                 case SuratConstants.AHLI_WARIS: jenis = JenisSuratEnum.AhliWaris; return true;
                 case SuratConstants.IJIN_TINGGAL: jenis = JenisSuratEnum.IjinTinggal; return true; // ? BARU
+                case SuratConstants.REKENING_KORAN: jenis = JenisSuratEnum.RekeningKoran; return true;
+                case SuratConstants.TEMPLATE_SURAT: jenis = JenisSuratEnum.TemplateSurat; return true;
                 case SuratConstants.NTCR_N1: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
                 case SuratConstants.NTCR_N2: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
                 case SuratConstants.NTCR_N3: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
                 case SuratConstants.NTCR_N4: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
+                case SuratConstants.NTCR_N5: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
+                case SuratConstants.NTCR_N6: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
+                case SuratConstants.NTCR_N8: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
                 default: jenis = default; return false;
             }
         }
@@ -266,7 +274,7 @@ namespace SuDesApp.Data.Models
         public async Task EnsureDesaDataLoadedAsync(IDesaRepository? desaRepository = null)
         {
             // Cek apakah data desa sudah valid
-            if (IsDesaDataValid(Desa) && !string.IsNullOrWhiteSpace(Desa.Alamat))
+            if (IsDesaDataValid(Desa!) && !string.IsNullOrWhiteSpace(Desa.Alamat))
             {
                 _logger.LogInformation("Data desa sudah valid: NamaDesa={NamaDesa}", Desa.NamaDesa);
                 return;
@@ -330,10 +338,10 @@ namespace SuDesApp.Data.Models
 
             var requiredFields = new Dictionary<string, string>
             {
-                { nameof(desa.NamaDesa), desa.NamaDesa },
-                { nameof(desa.Kecamatan), desa.Kecamatan },
-                { nameof(desa.Kabupaten), desa.Kabupaten },
-                { nameof(desa.KepalaDesa), desa.KepalaDesa }
+                { nameof(desa.NamaDesa), desa.NamaDesa! },
+                { nameof(desa.Kecamatan), desa.Kecamatan! },
+                { nameof(desa.Kabupaten), desa.Kabupaten! },
+                { nameof(desa.KepalaDesa), desa.KepalaDesa! }
             };
 
             var missingFields = requiredFields
@@ -354,9 +362,9 @@ namespace SuDesApp.Data.Models
     public class JenisSuratKelas
     {
         public int ID_Jenis { get; set; }
-        public string KodeJenis { get; set; }
-        public string NamaJenis { get; set; }
-        public string Deskripsi { get; set; } // ? KOLOM BARU
+        public string? KodeJenis { get; set; }
+        public string? NamaJenis { get; set; }
+        public string? Deskripsi { get; set; } // ? KOLOM BARU
         public bool IsActive { get; set; } = true; // ? KOLOM BARU
     }
 
@@ -374,52 +382,52 @@ namespace SuDesApp.Data.Models
 
         [Required]
         [StringLength(16, MinimumLength = 16)]
-        public string NIK { get; set; }
+        public string? NIK { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string Nama { get; set; }
+        public string? Nama { get; set; }
 
         [StringLength(100)]
-        public string TempatLahir { get; set; }
-        public string TanggalLahir { get; set; }
-        public string JenisKelamin { get; set; }
-        public string Agama { get; set; }
-        public string StatusPerkawinan { get; set; }
+        public string? TempatLahir { get; set; }
+        public string? TanggalLahir { get; set; }
+        public string? JenisKelamin { get; set; }
+        public string? Agama { get; set; }
+        public string? StatusPerkawinan { get; set; }
 
         [StringLength(100)]
-        public string Pekerjaan { get; set; }
+        public string? Pekerjaan { get; set; }
 
         [StringLength(100)]
-        public string Dusun { get; set; }
+        public string? Dusun { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string Desa { get; set; }
+        public string? Desa { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string Kecamatan { get; set; }
+        public string? Kecamatan { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string Kabupaten { get; set; }
+        public string? Kabupaten { get; set; }
 
-        public string AlamatLengkap { get; set; }
+        public string? AlamatLengkap { get; set; }
 
         // ? LEGACY COMPATIBILITY: Alamat property for legacy code
         public string Alamat 
         { 
-            get => AlamatLengkap; 
+            get => AlamatLengkap!; 
             set => AlamatLengkap = value; 
         }
 
         [StringLength(100)]
-        public string Pendidikan { get; set; }
+        public string? Pendidikan { get; set; }
 
         [StringLength(100)]
-        public string Kewarganegaraan { get; set; }
-        public string NamaJenis { get; set; }
+        public string? Kewarganegaraan { get; set; }
+        public string? NamaJenis { get; set; }
 
         // ? TIMESTAMP KOLOM BARU
         public DateTime CreatedAt { get; set; } = DateTime.Now;
@@ -604,28 +612,28 @@ public bool isForInstansi
         [Required]
         public int ID_Warga_Pelapor { get; set; }
 
-        public string NIKPelapor { get; set; }
-        public string NamaPelapor { get; set; }
-        public string AgamaPelapor { get; set; }
-        public string UmurPelapor { get; set; }
-        public string PekerjaanPelapor { get; set; }
-        public string AlamatPelapor { get; set; }
-        public string TanggalKematian { get; set; }
-        public string HariKematian { get; set; }
-        public string PukulKematian { get; set; }
+        public string? NIKPelapor { get; set; }
+        public string? NamaPelapor { get; set; }
+        public string? AgamaPelapor { get; set; }
+        public string? UmurPelapor { get; set; }
+        public string? PekerjaanPelapor { get; set; }
+        public string? AlamatPelapor { get; set; }
+        public string? TanggalKematian { get; set; }
+        public string? HariKematian { get; set; }
+        public string? PukulKematian { get; set; }
 
         [Required]
-        public string PenyebabKematian { get; set; }
+        public string? PenyebabKematian { get; set; }
 
         // ? KOLOM BARU
-        public string TempatKematian { get; set; }
+        public string? TempatKematian { get; set; }
 
         [Required]
-        public string HubunganPelapor { get; set; }
+        public string? HubunganPelapor { get; set; }
 
         // Data tambahan untuk tampilan (tidak disimpan di database)
-        public WargaData WargaMeninggal { get; set; }
-        public WargaData WargaPelapor { get; set; }
+        public WargaData? WargaMeninggal { get; set; }
+        public WargaData? WargaPelapor { get; set; }
 
         public bool IsValid()
         {
@@ -642,12 +650,12 @@ public bool isForInstansi
     {
         [Required]
         [StringLength(100)]
-        public string BidangUsaha { get; set; }
+        public string? BidangUsaha { get; set; }
 
         [Required]
         public int SejakTahun { get; set; }
 
-        public string LokasiUsaha { get; set; }
+        public string? LokasiUsaha { get; set; }
 
         public bool IsValid()
         {
@@ -663,7 +671,7 @@ public bool isForInstansi
     // ==============================================
     public class SKTMData
     {
-        public string KeteranganKemiskinan { get; set; }
+        public string? KeteranganKemiskinan { get; set; }
 
         // ? KOLOM BARU
         public decimal? PenghasilanPerBulan { get; set; }
@@ -684,12 +692,12 @@ public bool isForInstansi
     {
         public int ID_Penjamin { get; set; }
 
-        public string AlamatAsal { get; set; }
+        public string? AlamatAsal { get; set; }
 
         public DateTime? TanggalMulai { get; set; }
         public DateTime? TanggalSelesai { get; set; }
 
-        public string TujuanTinggal { get; set; }
+        public string? TujuanTinggal { get; set; }
 
         public bool IsValid()
         {
@@ -700,45 +708,182 @@ public bool isForInstansi
     }
 
     // ==============================================
-    // NTCR DATA (BARU) — N1, N2, N3, N4
-    // Data calon mempelai dan orang tua untuk surat
-    // persyaratan pendaftaran pernikahan (NTCR).
+    // NTCR DATA — Model N1..N6
+    // Blanko persyaratan pendaftaran pernikahan sesuai
+    // Keputusan Dirjen Bimas Islam No. 473 Tahun 2020:
+    //   N1 Surat Pengantar Nikah      N2 Permohonan Kehendak Nikah
+    //   N3 Permohonan Pencatatan Isbat N4 Persetujuan Calon Pengantin
+    //   N5 Surat Izin Orang Tua        N6 Ket. Kematian Suami/Istri
+    // Data calon suami (pemohon) ada di WargaData; calon istri, orang tua,
+    // dan kolom khusus tiap blanko ada di sini.
     // ==============================================
     public class NtcrData
     {
         public int ID_CalonIstri { get; set; }
 
-        // Calon istri
-        public string NikIstri { get; set; }
-        public string NamaIstri { get; set; }
-        public string TempatLahirIstri { get; set; }
-        public string TanggalLahirIstri { get; set; }
-        public string AgamaIstri { get; set; }
-        public string PekerjaanIstri { get; set; }
-        public string AlamatIstri { get; set; }
+        // ===== Calon istri (pihak kedua) =====
+        public string? NikIstri { get; set; }
+        public string? NamaIstri { get; set; }
+        public string? TempatLahirIstri { get; set; }
+        public string? TanggalLahirIstri { get; set; }
+        public string? AgamaIstri { get; set; }
+        public string? PekerjaanIstri { get; set; }
+        public string? AlamatIstri { get; set; }
 
-        // Ayah & ibu calon suami (pemohon)
-        public string NamaAyahCalonSuami { get; set; }
-        public string NamaIbuCalonSuami { get; set; }
+        /// <summary>Status perkawinan calon istri ("Belum Kawin", "Kawin", …).</summary>
+        public string? StatusPerkawinanIstri { get; set; }
 
-        // Ayah & ibu calon istri
-        public string NamaAyahCalonIstri { get; set; }
-        public string NamaIbuCalonIstri { get; set; }
+        /// <summary>Kewarganegaraan calon istri (blanko N1, N4, N5).</summary>
+        public string? KewarganegaraanIstri { get; set; } = "WNI";
 
-        // Status perkawinan calon istri (penting untuk N2 — sumber temuan)
-        public string StatusPerkawinanIstri { get; set; }
+        // ===== Kolom khusus tiap model blanko =====
 
-        // Kolom temuan (N2): dasar keterangan janda/duda, mis. "Akta Kematian No. 123/2020"
-        public string KeteranganTemuan { get; set; }
+        /// <summary>N1: pihak yang diterangkan — "Suami" (pemohon) atau "Istri".</summary>
+        public string? PihakDiterangkanN1 { get; set; } = "Suami";
 
-        // Tujuan surat (N3): kepentingan pendaftaran pernikahan di KUA/Kemenag
-        public string TujuanSurat { get; set; }
+        /// <summary>N2/N3: KUA/PPN LN tujuan surat ("Kecamatan …").</summary>
+        public string? TujuanKua { get; set; }
+
+        /// <summary>N2: hari, tanggal, dan jam rencana akad nikah.</summary>
+        public string? HariTanggalJamAkad { get; set; }
+
+        /// <summary>N2: tempat akad nikah.</summary>
+        public string? TempatAkad { get; set; }
+
+        /// <summary>N3: tanggal penetapan/pengesahan Pengadilan Agama.</summary>
+        public string? TanggalPenetapanIsbat { get; set; }
+
+        /// <summary>N3: Pengadilan Agama yang menetapkan isbat.</summary>
+        public string? PengadilanAgama { get; set; }
+
+        /// <summary>
+        /// N2/N3: butir lampiran tambahan (satu per baris) di luar daftar baku.
+        /// Disimpan hanya untuk kompatibilitas data lama — tidak dicetak lagi karena
+        /// butir lampiran di luar daftar baku dibiarkan titik-titik agar diisi tangan.
+        /// </summary>
+        public string? LampiranTambahan { get; set; }
+
+        /// <summary>N2/N3: tanggal berkas diterima KUA (diisi petugas KUA).</summary>
+        public string? TanggalDiterima { get; set; }
+
+        /// <summary>N5: anak kami yang diberi izin — "Suami" atau "Istri".</summary>
+        public string? PihakAnakIzinOrtu { get; set; } = "Suami";
+
+        /// <summary>N6: pihak yang meninggal — "Suami" atau "Istri".</summary>
+        public string? PihakMeninggal { get; set; } = "Suami";
+
+        /// <summary>N6: tanggal meninggal dunia.</summary>
+        public string? TanggalMeninggal { get; set; }
+
+        /// <summary>N6: tempat meninggal dunia.</summary>
+        public string? TempatMeninggal { get; set; }
+
+        // ===== Surat Numpang Nikah (N8) =====
+
+        /// <summary>N8: desa/kelurahan tempat akan melangsungkan akad nikah (numpang nikah).</summary>
+        public string? DesaNumpang { get; set; }
+
+        /// <summary>N8: kecamatan tempat numpang nikah.</summary>
+        public string? KecamatanNumpang { get; set; }
+
+        /// <summary>N8: kabupaten/kota tempat numpang nikah.</summary>
+        public string? KabupatenNumpang { get; set; }
+
+        /// <summary>N8: kecamatan tempat tinggal calon istri (baris tersendiri pada surat).</summary>
+        public string? KecamatanIstri { get; set; }
+
+        /// <summary>N8: kabupaten/kota tempat tinggal calon istri.</summary>
+        public string? KabupatenIstri { get; set; }
+
+        // ===== Data orang tua/wali (identitas lengkap ala blanko N1 & N5) =====
+        public NtcrOrangTua? AyahCalonSuami { get; set; } = new NtcrOrangTua();
+        public NtcrOrangTua? IbuCalonSuami { get; set; } = new NtcrOrangTua();
+        public NtcrOrangTua? AyahCalonIstri { get; set; } = new NtcrOrangTua();
+        public NtcrOrangTua? IbuCalonIstri { get; set; } = new NtcrOrangTua();
+
+        // ===== Warisan skema lama (tetap disimpan agar surat lama tidak kehilangan data) =====
+
+        /// <summary>Kolom temuan surat N2 versi lama (dasar keterangan janda/duda).</summary>
+        public string? KeteranganTemuan { get; set; }
+
+        /// <summary>Tujuan surat versi lama (kini memakai <see cref="TujuanKua"/>).</summary>
+        public string? TujuanSurat { get; set; }
+
+        // === Nama orang tua tetap dapat diakses lewat properti lama (kolom DB lama) ===
+        public string NamaAyahCalonSuami { get => AyahCalonSuami.Nama; set => AyahCalonSuami.Nama = value; }
+        public string NamaIbuCalonSuami { get => IbuCalonSuami.Nama; set => IbuCalonSuami.Nama = value; }
+        public string NamaAyahCalonIstri { get => AyahCalonIstri.Nama; set => AyahCalonIstri.Nama = value; }
+        public string NamaIbuCalonIstri { get => IbuCalonIstri.Nama; set => IbuCalonIstri.Nama = value; }
 
         public bool IsValid()
         {
             return !string.IsNullOrWhiteSpace(NamaIstri) ||
                    !string.IsNullOrWhiteSpace(NamaAyahCalonSuami) ||
                    !string.IsNullOrWhiteSpace(NamaAyahCalonIstri);
+        }
+    }
+
+    /// <summary>
+    /// Identitas satu orang tua/wali calon mempelai pada blanko NTCR.
+    /// Dipakai di N1 (orang tua pihak yang diterangkan), N5 (ayah &amp; ibu/wali
+    /// yang memberi izin), dan N6 (identitas kedua pihak).
+    /// </summary>
+    public class NtcrOrangTua : INotifyPropertyChanged
+    {
+        private string? _nama;
+        private string? _binBinti;
+        private string? _nik;
+        private string? _tempatLahir;
+        private string? _tanggalLahir;
+        private string _kewarganegaraan = "WNI";
+        private string? _agama;
+        private string? _pekerjaan;
+        private string? _alamat;
+
+        public string Nama { get => _nama; set { _nama = value; OnPropertyChanged(nameof(Nama)); } }
+
+        /// <summary>Bin (untuk ayah) atau Binti (untuk ibu) — nama ayah orang tersebut.</summary>
+        public string BinBinti { get => _binBinti; set { _binBinti = value; OnPropertyChanged(nameof(BinBinti)); } }
+
+        public string Nik { get => _nik; set { _nik = value; OnPropertyChanged(nameof(Nik)); } }
+        public string TempatLahir { get => _tempatLahir; set { _tempatLahir = value; OnPropertyChanged(nameof(TempatLahir)); } }
+        public string TanggalLahir { get => _tanggalLahir; set { _tanggalLahir = value; OnPropertyChanged(nameof(TanggalLahir)); } }
+        public string Kewarganegaraan { get => _kewarganegaraan; set { _kewarganegaraan = value; OnPropertyChanged(nameof(Kewarganegaraan)); } }
+        public string Agama { get => _agama; set { _agama = value; OnPropertyChanged(nameof(Agama)); } }
+        public string Pekerjaan { get => _pekerjaan; set { _pekerjaan = value; OnPropertyChanged(nameof(Pekerjaan)); } }
+        public string Alamat { get => _alamat; set { _alamat = value; OnPropertyChanged(nameof(Alamat)); } }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        private void OnPropertyChanged(string nama) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nama));
+
+        public NtcrOrangTua Clone() => new()
+        {
+            Nama = Nama,
+            BinBinti = BinBinti,
+            Nik = Nik,
+            TempatLahir = TempatLahir,
+            TanggalLahir = TanggalLahir,
+            Kewarganegaraan = Kewarganegaraan,
+            Agama = Agama,
+            Pekerjaan = Pekerjaan,
+            Alamat = Alamat
+        };
+
+        /// <summary>Salin isi dari objek lain (dipakai VM saat memuat/mengosongkan form).</summary>
+        public void CopyFrom(NtcrOrangTua lain)
+        {
+            if (lain == null) return;
+            Nama = lain.Nama;
+            BinBinti = lain.BinBinti;
+            Nik = lain.Nik;
+            TempatLahir = lain.TempatLahir;
+            TanggalLahir = lain.TanggalLahir;
+            Kewarganegaraan = lain.Kewarganegaraan;
+            Agama = lain.Agama;
+            Pekerjaan = lain.Pekerjaan;
+            Alamat = lain.Alamat;
         }
     }
 
@@ -762,21 +907,21 @@ public bool isForInstansi
 
         [Required]
         [StringLength(100)]
-        public string NegaraTujuan { get; set; }
+        public string? NegaraTujuan { get; set; }
 
         [StringLength(100)]
-        public string NamaPT { get; set; }
+        public string? NamaPT { get; set; }
 
         // Data anak untuk tampilan (tidak disimpan di database)
-        public string NamaAnak { get; set; }
-        public string NIKAnak { get; set; }
-        public string TempatLahirAnak { get; set; }
-        public string TanggalLahirAnak { get; set; }
-        public string JenisKelaminAnak { get; set; }
-        public string AgamaAnak { get; set; }
-        public string StatusPerkawinanAnak { get; set; }
-        public string AlamatAnak { get; set; }
-        public string PekerjaanAnak { get; set; }
+        public string? NamaAnak { get; set; }
+        public string? NIKAnak { get; set; }
+        public string? TempatLahirAnak { get; set; }
+        public string? TanggalLahirAnak { get; set; }
+        public string? JenisKelaminAnak { get; set; }
+        public string? AgamaAnak { get; set; }
+        public string? StatusPerkawinanAnak { get; set; }
+        public string? AlamatAnak { get; set; }
+        public string? PekerjaanAnak { get; set; }
     }
 
     // ==============================================
@@ -786,14 +931,14 @@ public bool isForInstansi
     {
         [Required]
         [StringLength(100)]
-        public string NamaInstansi { get; set; }
+        public string? NamaInstansi { get; set; }
 
         [Required]
         [StringLength(200)]
-        public string AlamatInstansi { get; set; }
+        public string? AlamatInstansi { get; set; }
 
         // ? KOLOM BARU
-        public string PimpinanInstansi { get; set; }
+        public string? PimpinanInstansi { get; set; }
 
 
              public bool IsValid()
@@ -812,27 +957,27 @@ public bool isForInstansi
         public int ID_Warga { get; set; } // ? DIPERBAIKI: Hanya satu ID_Warga
 
         [Required]
-        public string SumberDataKoreksi { get; set; }
+        public string? SumberDataKoreksi { get; set; }
 
         [Required]
-        public string SumberDataKeliru { get; set; }
+        public string? SumberDataKeliru { get; set; }
 
         // ? KOLOM BARU
-        public string AlasanPerbedaan { get; set; }
+        public string? AlasanPerbedaan { get; set; }
 
         // Data tambahan untuk tampilan
-        public WargaData Warga { get; set; }
+        public WargaData? Warga { get; set; }
 
         // Warga kedua (perbandingan data), disimpan denormalized
-        public string NIK2 { get; set; }
-        public string Nama2 { get; set; }
-        public string TempatLahir2 { get; set; }
-        public string TanggalLahir2 { get; set; }
-        public string JenisKelamin2 { get; set; }
-        public string Dusun2 { get; set; }
-        public string Desa2 { get; set; }
-        public string Kecamatan2 { get; set; }
-        public string Kabupaten2 { get; set; }
+        public string? NIK2 { get; set; }
+        public string? Nama2 { get; set; }
+        public string? TempatLahir2 { get; set; }
+        public string? TanggalLahir2 { get; set; }
+        public string? JenisKelamin2 { get; set; }
+        public string? Dusun2 { get; set; }
+        public string? Desa2 { get; set; }
+        public string? Kecamatan2 { get; set; }
+        public string? Kabupaten2 { get; set; }
 
         public bool IsValid()
         {
@@ -852,18 +997,18 @@ public bool isForInstansi
 
         [Required]
         [StringLength(200)]
-        public string Lokasi { get; set; }
+        public string? Lokasi { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string PemilikTanah { get; set; }
+        public string? PemilikTanah { get; set; }
 
         [StringLength(50)]
-        public string NomorPersil { get; set; }
+        public string? NomorPersil { get; set; }
 
         [Required]
         [StringLength(50)]
-        public string KeteranganGarapan { get; set; }
+        public string? KeteranganGarapan { get; set; }
 
         public bool IsValid()
         {
@@ -877,21 +1022,21 @@ public bool isForInstansi
     public class DesaData
     {
         [Required]
-        public string NamaDesa { get; set; }
+        public string? NamaDesa { get; set; }
         [Required]
-        public string Kecamatan { get; set; }
+        public string? Kecamatan { get; set; }
         [Required]
-        public string Kabupaten { get; set; }
+        public string? Kabupaten { get; set; }
         [Required]
-        public string Alamat { get; set; }
+        public string? Alamat { get; set; }
         [Required]
-        public string Kodepos { get; set; }
+        public string? Kodepos { get; set; }
         [Required]
-        public string KepalaDesa { get; set; }
+        public string? KepalaDesa { get; set; }
         [Required]
-        public string SekretarisDesa { get; set; }
-        public string NamaCamat { get; set; }
-        public string NipCamat { get; set; }
-        public string GolCamat { get; set; }
+        public string? SekretarisDesa { get; set; }
+        public string? NamaCamat { get; set; }
+        public string? NipCamat { get; set; }
+        public string? GolCamat { get; set; }
     }
 }

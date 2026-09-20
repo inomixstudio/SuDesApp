@@ -396,7 +396,10 @@ namespace SuDesApp.Data.Repositories
             }
         }
 
-        // PERBAIKAN: Gunakan konfigurasi dinamis untuk menentukan grup shared numbering
+        // PERBAIKAN: Gunakan konfigurasi dinamis untuk menentukan grup shared numbering.
+        // Deret bersama (IsSharedNumbering) dihitung dari seluruh jenis dalam grup tanpa
+        // melihat awalan, sehingga mengganti awalan grup tidak memutus urutannya; deret
+        // sendiri (else) dihitung per awalan seperti dijelaskan pada cabang tersebut.
         private async Task<int> GetNextDocumentNumberAsync(JenisSuratConfig config, bool isInGroup, string currentYear)
         {
             string sql;
@@ -438,6 +441,12 @@ namespace SuDesApp.Data.Repositories
             }
             else
             {
+                // Jenis surat berderet sendiri: hitungannya diambil per KODE AWALAN,
+                // bukan hanya per KodeJenis. Jadi jenis yang pindah ke awalan baru
+                // (mis. Permohonan Rekening Koran 470 → 130) mulai dari 001 dan tidak
+                // meneruskan hitungan deret awalan lama.
+                var awalan = SuDesApp.Services.PenomoranSuratService.AmbilAwalan(config.NomorFormat);
+
                 sql = $@"
                     SELECT 
                         COALESCE(MAX(
@@ -453,12 +462,14 @@ namespace SuDesApp.Data.Repositories
                     INNER JOIN JenisSurat js ON s.ID_Jenis = js.ID_Jenis
                     WHERE js.KodeJenis = @Filter
                       AND s.NomorSurat LIKE '%/Ds/' || @Tahun
+                      AND SUBSTR(TRIM(s.NomorSurat), 1, LENGTH(@Awalan)) = @Awalan
                       AND LENGTH(TRIM(s.NomorSurat)) > 0";
 
                 parameters = new
                 {
                     Filter = config.KodeJenis,
-                    Tahun = currentYear
+                    Tahun = currentYear,
+                    Awalan = awalan
                 };
             }
 

@@ -48,12 +48,12 @@ namespace SuDesApp.GeneratorPdf
         /// Tiga halaman dalam satu dokumen: halaman 1 ber-kop, halaman 2 dan 3
         /// hanya judul halaman (tanpa kop).
         /// </summary>
-        protected override void ComposeHalaman(BadanSurat halaman, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeHalaman(BadanSurat halaman, SuratData suratData, string? keteranganTextBox = null)
         {
             var desa = suratData.Desa;
             string logoPath = CariLogoPath();
 
-            halaman.Blok(c => SuratRenderer.Kop(c, desa, logoPath));
+            halaman.Blok(c => SuratRenderer.Kop(c, desa!, logoPath));
             ComposeJudul(halaman, suratData);
 
             // Halaman 1: Surat Keterangan Ahli Waris

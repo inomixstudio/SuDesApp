@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Wpf.Mvvm;
 
@@ -26,6 +27,16 @@ namespace SuDesApp.Wpf.Services
         public string Title { get; }
         public string Message { get; }
         public DateTime CreatedAt { get; }
+
+        /// <summary>
+        /// Kunci halaman tujuan bila notifikasi diklik (mis. "pembaruan",
+        /// "layanan-online"). Kosong = tidak bisa diklik untuk navigasi.
+        /// Dipetakan oleh MainWindowViewModel.BukaTujuanNotifikasiAsync.
+        /// </summary>
+        public string TujuanMenu { get; }
+
+        /// <summary>True bila mengklik notifikasi ini membuka halaman terkait.</summary>
+        public bool BisaDiklik => !string.IsNullOrEmpty(TujuanMenu);
 
         public bool IsRead
         {
@@ -58,13 +69,14 @@ namespace SuDesApp.Wpf.Services
                 .SkipWhile(l => l.Trim().Length == 0)
                 .ToArray();
 
-        public NotificationItem(NotificationType type, string title, string message)
+        public NotificationItem(NotificationType type, string title, string message, string? tujuanMenu = null)
         {
             Type = type;
             Title = title;
             Message = message;
             CreatedAt = DateTime.Now;
             IsRead = false;
+            TujuanMenu = tujuanMenu ?? string.Empty;
 
             Icon = type switch
             {
@@ -74,6 +86,9 @@ namespace SuDesApp.Wpf.Services
                 _ => "\u2139"                            // ℹ
             };
         }
+
+        /// <summary>Segarkan tampilan waktu relatif (dipanggil timer layanan).</summary>
+        public void SegarkanWaktu() => OnPropertyChanged(nameof(TimeDisplay));
     }
 
     /// <summary>
@@ -96,10 +111,11 @@ namespace SuDesApp.Wpf.Services
         public ObservableCollection<NotificationItem> Items { get; } = new();
 
         /// <summary>
-        /// Dibangkitkan setiap ada notifikasi baru (di UI thread) — dipakai
-        /// MainWindow untuk menganimasikan lonceng status bar berayun.
+        /// Dibangkitkan setiap ada notifikasi baru (di UI thread) membawa itemnya —
+        /// dipakai MainWindow untuk menganimasikan lonceng berayun dan menampilkan
+        /// toast untuk jenis Warning/Error.
         /// </summary>
-        public event EventHandler? NotificationAdded;
+        public event EventHandler<NotificationItem>? NotificationAdded;
 
         private int _unreadCount;
 
@@ -122,14 +138,44 @@ namespace SuDesApp.Wpf.Services
         /// <summary>Teks badge: kosong bila tidak ada, angka bila ada (99+ bila lebih).</summary>
         public string UnreadCountText => UnreadCount > 99 ? "99+" : UnreadCount > 0 ? UnreadCount.ToString() : "";
 
+        private DispatcherTimer? _timerWaktu;
+
+        /// <summary>
+        /// Timer 30 detik yang menyegarkan waktu relatif ("baru saja", "5 mnt lalu")
+        /// pada seluruh item — tanpa ini teks waktu membeku pada nilai saat dibuat.
+        /// Berhenti sendiri saat daftar kosong.
+        /// </summary>
+        private void PastikanTimerWaktu()
+        {
+            if (_timerWaktu != null)
+            {
+                if (!_timerWaktu.IsEnabled) _timerWaktu.Start();
+                return;
+            }
+
+            _timerWaktu = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+            _timerWaktu.Tick += (_, _) =>
+            {
+                foreach (var item in Items)
+                {
+                    item.SegarkanWaktu();
+                }
+
+                if (Items.Count == 0) _timerWaktu.Stop();
+            };
+            _timerWaktu.Start();
+        }
+
         /// <summary>
         /// Tambah notifikasi baru ke puncak daftar. Aman dipanggil dari thread
         /// mana pun (polling WA, auto-proses) — pekerjaan UI dijadwalkan dengan
         /// BeginInvoke sehingga pemanggil tidak pernah menunggu UI (ringan).
+        /// <paramref name="tujuanMenu"/> opsional: kunci halaman yang dibuka saat
+        /// notifikasi diklik (lihat MainWindowViewModel.BukaTujuanNotifikasiAsync).
         /// </summary>
-        public void Add(NotificationType type, string title, string message)
+        public void Add(NotificationType type, string title, string message, string? tujuanMenu = null)
         {
-            var item = new NotificationItem(type, title, message);
+            var item = new NotificationItem(type, title, message, tujuanMenu);
             var dispatcher = Application.Current?.Dispatcher;
             if (dispatcher == null || dispatcher.CheckAccess())
             {
@@ -146,6 +192,8 @@ namespace SuDesApp.Wpf.Services
 
         private void AddCore(NotificationItem item)
         {
+            PastikanTimerWaktu();
+
             var removedUnread = false;
             Items.Insert(0, item);
             if (Items.Count > MaxItems)
@@ -158,17 +206,32 @@ namespace SuDesApp.Wpf.Services
             // Inkremental: jumlah belum-baca dihitung tanpa memindai seluruh daftar.
             if (!removedUnread) UnreadCount++;
 
-            NotificationAdded?.Invoke(this, EventArgs.Empty);
+            NotificationAdded?.Invoke(this, item);
         }
 
-        public void Info(string title, string message) => Add(NotificationType.Info, title, message);
-        public void Success(string title, string message) => Add(NotificationType.Success, title, message);
-        public void Warning(string title, string message) => Add(NotificationType.Warning, title, message);
-        public void Error(string title, string message) => Add(NotificationType.Error, title, message);
+        public void Info(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Info, title, message, tujuanMenu);
+        public void Success(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Success, title, message, tujuanMenu);
+        public void Warning(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Warning, title, message, tujuanMenu);
+        public void Error(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Error, title, message, tujuanMenu);
+
+        /// <summary>Hapus satu notifikasi dari daftar (tombol ✕ per item).</summary>
+        public void Hapus(NotificationItem item)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                if (Items.Remove(item) && !item.IsRead)
+                {
+                    UnreadCount--;
+                }
+
+                if (Items.Count == 0) _timerWaktu?.Stop();
+            });
+        }
 
         /// <summary>
         /// Tandai seluruh notifikasi sudah dibaca (badge lonceng kembali kosong).
-        /// Dipanggil otomatis saat popup lonceng dibuka.
+        /// Dipanggil saat flyout DITUTUP — selama flyout terbuka titik belum-baca
+        /// tetap terlihat sehingga pengguna tahu mana yang baru.
         /// </summary>
         public void MarkAllRead()
         {
@@ -190,6 +253,7 @@ namespace SuDesApp.Wpf.Services
             {
                 Items.Clear();
                 UnreadCount = 0;
+                _timerWaktu?.Stop();
             });
         }
     }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
-using SuDesApp.Controllers.Interfaces;
+using SuDesApp.Interfaces;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Input;
@@ -97,6 +97,22 @@ namespace SuDesApp.Wpf.ViewModels
         public AsyncRelayCommand SaveCommand { get; }
         public AsyncRelayCommand CancelCommand { get; }
 
+        /// <summary>
+        /// Nama tampilan untuk judul host: label blanko NTCR yang ramah ("N1 — Surat
+        /// Pengantar Nikah") bila template-nya blanko NTCR; selain itu nama template
+        /// huruf biasa.
+        /// </summary>
+        private static string FriendlyTypeName(string templateName)
+        {
+            var blanko = NtcrKatalog.Cari(templateName);
+            if (blanko != null)
+            {
+                return blanko.Judul;
+            }
+
+            return string.IsNullOrWhiteSpace(templateName) ? templateName : templateName.Replace('_', ' ');
+        }
+
         /// <summary>Konfigurasi form untuk surat baru.</summary>
         public void Configure(string templateName)
         {
@@ -106,7 +122,7 @@ namespace SuDesApp.Wpf.ViewModels
             _editOriginalNomor = string.Empty;
             (_input, var view) = _inputFactory.Create(templateName);
             InputView = view;
-            Title = $"Input Surat — {templateName}";
+            Title = $"Input Surat — {FriendlyTypeName(templateName)}";
             OnPropertyChanged(nameof(SaveButtonText));
 
             if (_input is BaseSuratInputViewModel baseVm)
@@ -133,7 +149,7 @@ namespace SuDesApp.Wpf.ViewModels
 
             (_input, var view) = _inputFactory.Create(_templateName);
             InputView = view;
-            Title = $"Edit Surat — {_templateName} (No. {_editOriginalNomor})";
+            Title = $"Edit Surat — {FriendlyTypeName(_templateName)} (No. {_editOriginalNomor})";
             OnPropertyChanged(nameof(SaveButtonText));
 
             if (_input is BaseSuratInputViewModel baseVm)
@@ -163,7 +179,7 @@ namespace SuDesApp.Wpf.ViewModels
                 var jenis = await _unitOfWork.JenisSuratRepository.GetJenisSuratByNamaAsync(_templateName);
                 if (jenis != null)
                 {
-                    var nomor = await _unitOfWork.JenisSuratRepository.GenerateNomorSuratAsync(jenis.KodeJenis);
+                    var nomor = await _unitOfWork.JenisSuratRepository.GenerateNomorSuratAsync(jenis.KodeJenis!);
                     baseVm.SetNomorSurat(nomor);
                 }
             }
@@ -345,7 +361,7 @@ namespace SuDesApp.Wpf.ViewModels
             }
 
             // Deteksi isian: NIK atau Nama sudah diisi pada form aktif.
-            string nik = null, nama = null;
+            string? nik = null, nama = null;
             if (_input is BaseSuratInputViewModel baseVm)
             {
                 nik = baseVm.Nik?.Trim();

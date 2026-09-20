@@ -1,0 +1,262 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.BerandaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <UserControl.Resources>
+        <!-- Kartu statistik: angka besar + label kecil -->
+        <Style x:Key="StatCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="14,12"/>
+            <Setter Property="Margin" Value="0,0,12,12"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <!-- Tombol pintasan jenis surat: kartu klik-able -->
+        <Style x:Key="PintasanCard" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd"
+                                Background="{DynamicResource PanelBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="11,9">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header halaman -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#x1F3E0;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="BERANDA" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Style="{StaticResource HeaderSubtitle}">
+                        <Run Text="{Binding Sapaan, Mode=OneWay}"/>
+                        <Run Text="  •  "/>
+                        <Run Text="{Binding TanggalTeks, Mode=OneWay}"/>
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- ===== Kartu statistik ===== -->
+                <UniformGrid Columns="4" Margin="0,0,-12,0">
+                    <Border Style="{StaticResource StatCard}">
+                        <StackPanel>
+                            <TextBlock Text="SURAT HARI INI" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding SuratHariIni}" FontSize="26" FontWeight="Bold"
+                                       Foreground="{DynamicResource PrimaryBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource StatCard}">
+                        <StackPanel>
+                            <TextBlock Text="SURAT BULAN INI" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding SuratBulanIni}" FontSize="26" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource StatCard}">
+                        <StackPanel>
+                            <TextBlock Text="TOTAL REGISTER" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalSurat}" FontSize="26" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource StatCard}">
+                        <StackPanel>
+                            <TextBlock Text="WARGA TERDATA" FontSize="10.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalWarga}" FontSize="26" FontWeight="Bold"
+                                       Foreground="{DynamicResource SuccessTextBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- ===== Pintasan cepat ===== -->
+                <Border Style="{StaticResource CardStyle}" Padding="18" Margin="0,0,0,14">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="PINTASAN CEPAT" FontWeight="Bold" FontSize="14"
+                                       Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text=" — jenis surat yang paling sering dipakai"
+                                       FontSize="11.5" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <ItemsControl ItemsSource="{Binding Pintasan}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource PintasanCard}" Margin="0,0,10,10"
+                                            Command="{Binding Buka}" CommandParameter="{Binding Nama}"
+                                            AutomationProperties.Name="{Binding Nama}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Ikon}" FontSize="16"
+                                                       Width="24" TextAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                                <TextBlock Text="{Binding Nama}" FontWeight="SemiBold" FontSize="12.5"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource TextBrush}"/>
+                                                <TextBlock Text="{Binding JumlahTeks}" FontSize="10.5"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== Aktivitas terbaru + aksi cepat ===== -->
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="320"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Aktivitas terbaru -->
+                    <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="18">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="AKTIVITAS TERBARU" FontWeight="Bold" FontSize="14"
+                                           Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <TextBlock Text="Belum ada surat pada register — surat yang Anda buat akan tercatat di sini."
+                                       TextWrapping="Wrap" FontSize="11.5"
+                                       Foreground="{DynamicResource TextSecondaryBrush}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Terbaru.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <ItemsControl ItemsSource="{Binding Terbaru}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderBrush}"
+                                                Padding="0,9" SnapsToDevicePixels="True">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="92"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding TanggalSurat, StringFormat='{}{0:dd/MM/yyyy}'}"
+                                                           FontSize="11" VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding JenisSurat}" FontWeight="SemiBold"
+                                                               FontSize="12.5" TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource TextBrush}"/>
+                                                    <TextBlock FontSize="11" TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}">
+                                                        <Run Text="{Binding NomorSurat, Mode=OneWay}"/>
+                                                        <Run Text="  •  "/>
+                                                        <Run Text="{Binding Perihal, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Aksi cepat -->
+                    <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="18">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="AKSI CEPAT" FontWeight="Bold" FontSize="14"
+                                           Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <Button Content="Register Surat" Height="34" Margin="0,0,0,8"
+                                    Style="{StaticResource OutlineButton}"
+                                    Command="{Binding BukaHalamanCommand}" CommandParameter="REGISTER"/>
+                            <Button Content="Riwayat Aktivitas" Height="34" Margin="0,0,0,8"
+                                    Style="{StaticResource OutlineButton}"
+                                    Command="{Binding BukaHalamanCommand}" CommandParameter="RIWAYAT"/>
+                            <Button Content="Pengaturan Surat" Height="34" Margin="0,0,0,8"
+                                    Style="{StaticResource OutlineButton}"
+                                    Command="{Binding BukaHalamanCommand}" CommandParameter="PENGATURAN"/>
+                            <Button Content="Template Surat" Height="34" Margin="0,0,0,8"
+                                    Style="{StaticResource OutlineButton}"
+                                    Command="{Binding BukaHalamanCommand}" CommandParameter="TEMPLATE"/>
+                            <Button Content="Muat Ulang Ringkasan" Height="34"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Command="{Binding MuatUlangCommand}"/>
+
+                            <TextBlock TextWrapping="Wrap" FontSize="11" Margin="0,12,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Text="Tip: klik jenis surat pada Pintasan Cepat untuk langsung membuka form pengisian."/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Statusbar halaman: status ringkasan (kiri) + identitas aplikasi (kanan) -->
+        <c:AppStatusBar Grid.Row="2" Margin="0,12,0,0" StatusText="{Binding PesanStatus, Mode=OneWay}"/>
+    </Grid>
+</UserControl>

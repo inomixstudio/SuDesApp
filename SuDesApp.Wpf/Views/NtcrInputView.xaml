@@ -4,307 +4,531 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="900"
+             d:DesignHeight="900" d:DesignWidth="900"
              FontSize="13"
              SnapsToDevicePixels="True"
-             UseLayoutRounding="True">
+             UseLayoutRounding="True"
+            >
 
+    <!--
+        Form input jenis NTCR: blanko Model N1-N6 (Keputusan Dirjen Bimas Islam
+        No. 473 Tahun 2020) dan surat keterangan numpang nikah N8. Kolom yang tampil
+        mengikuti jenis yang sedang dibuat (NamaJenis di-set oleh alur paket atau
+        InputControlFactory): blok orang tua hanya untuk N1 & N5, blok permohonan KUA
+        untuk N2 & N3, kolom isbat untuk N3, kolom kematian untuk N6, dan tujuan
+        numpang nikah untuk N8.
+    -->
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <Style x:Key="GroupHeader" TargetType="TextBlock">
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
-        </Style>
+
+        <!-- Satu blok identitas orang tua/wali (dipakai ayah & ibu, kedua pihak). -->
+        <DataTemplate x:Key="OrangTuaTemplate">
+            <Grid IsSharedSizeScope="True">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" MinWidth="110" MaxWidth="170" SharedSizeGroup="NtcrParentLabel"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Nama lengkap"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                         Text="{Binding Nama, UpdateSourceTrigger=PropertyChanged}"
+                         CharacterCasing="Upper"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Bin / Binti"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                         Text="{Binding BinBinti, UpdateSourceTrigger=PropertyChanged}"
+                         CharacterCasing="Upper"
+                         ToolTip="Nama ayah orang tersebut (Bin untuk ayah, Binti untuk ibu)"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FormLabel}" Text="NIK"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
+                         Text="{Binding Nik, UpdateSourceTrigger=PropertyChanged}"
+                         MaxLength="16"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Tempat lahir"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"
+                         Text="{Binding TempatLahir, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Tgl. lahir"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormField}"
+                         Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}"
+                         ToolTip="Format: DD-MM-YYYY"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Kewarganegaraan"/>
+                <ComboBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormCombo}"
+                          ItemsSource="{Binding DataContext.KewarganegaraanOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          SelectedItem="{Binding Kewarganegaraan, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Agama"/>
+                <ComboBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FormCombo}"
+                          ItemsSource="{Binding DataContext.AgamaOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          SelectedItem="{Binding Agama, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Grid.Row="7" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Pekerjaan"/>
+                <TextBox Grid.Row="7" Grid.Column="1" Style="{StaticResource FormField}"
+                         Text="{Binding Pekerjaan, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Grid.Row="8" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Alamat"/>
+                <TextBox Grid.Row="8" Grid.Column="1" Style="{StaticResource FormField}"
+                         Text="{Binding Alamat, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True" TextWrapping="Wrap" Height="48"/>
+            </Grid>
+        </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="12"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <Grid IsSharedSizeScope="True">
+        <StackPanel>
 
-        <!--
-              BAR ATAS | Nomor Surat (memanjang penuh)
-        -->
-        <GroupBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Padding="10" Header="Nomor Surat">
-            <TextBox Style="{StaticResource FieldBox}"
-                     IsEnabled="{Binding NomorSuratEnabled}"
-                     Text="{Binding NomorSurat, UpdateSourceTrigger=PropertyChanged}"
-                     ToolTip="Nomor surat (otomatis jika dikelola register)"/>
-        </GroupBox>
+            <!-- NOMOR SURAT -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="NOMOR SURAT" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Nomor Surat *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Column="1" Style="{StaticResource FormField}"
+                                 IsEnabled="{Binding NomorSuratEnabled}"
+                                 Text="{Binding NomorSurat, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="{Binding NomorSuratTooltip}"/>
+                    </Grid>
 
-        <!--
-        -->
-        <GroupBox Grid.Row="2" Grid.Column="0" Padding="10" Header="Calon Mempelai Pria (Pemohon)">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="130"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="NIK *"/>
-                <TextBox  Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Name="Nik"
-                          LostFocus="OnNikLostFocus"
-                          Text="{Binding Nik, UpdateSourceTrigger=PropertyChanged}"
-                          MaxLength="16" ToolTip="NIK calon mempelai pria (16 digit angka)"/>
-
-                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Nama *"/>
-                <TextBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding Nama, UpdateSourceTrigger=PropertyChanged}"
-                          CharacterCasing="Upper"/>
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tempat Lahir *"/>
-                <TextBox  Grid.Row="2" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding TempatLahir, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tgl. Lahir *"/>
-                <TextBox  Grid.Row="3" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}"
-                          ToolTip="Format: DD-MM-YYYY"/>
-
-                <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Jenis Kelamin *"/>
-                <ComboBox  Grid.Row="4" Grid.Column="1" Style="{StaticResource DropDown}"
-                           ItemsSource="{Binding JenisKelaminOptions}"
-                           SelectedItem="{Binding JenisKelamin, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Agama *"/>
-                <ComboBox  Grid.Row="5" Grid.Column="1" Style="{StaticResource DropDown}"
-                           ItemsSource="{Binding AgamaOptions}"
-                           SelectedItem="{Binding Agama, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Status Perkawinan *"/>
-                <ComboBox  Grid.Row="6" Grid.Column="1" Style="{StaticResource DropDown}"
-                           ItemsSource="{Binding StatusPerkawinanOptions}"
-                           SelectedItem="{Binding StatusPerkawinan, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <TextBlock Grid.Row="7" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Pekerjaan *"/>
-                <TextBox  Grid.Row="7" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding Pekerjaan, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <TextBlock Grid.Row="8" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Dusun/Jalan *"/>
-                <TextBox  Grid.Row="8" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding Dusun, UpdateSourceTrigger=LostFocus}"
-                          ToolTip="Alamat (dusun/jalan) calon mempelai pria"/>
-
-                <TextBlock Grid.Row="9" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Desa *"/>
-                <TextBox  Grid.Row="9" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding Desa, UpdateSourceTrigger=LostFocus}"/>
-
-                <TextBlock Grid.Row="10" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Kecamatan *"/>
-                <TextBox  Grid.Row="10" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding Kecamatan, UpdateSourceTrigger=LostFocus}"/>
-
-                <TextBlock Grid.Row="11" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Kabupaten *"/>
-                <TextBox  Grid.Row="11" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding Kabupaten, UpdateSourceTrigger=LostFocus}"/>
-            </Grid>
-        </GroupBox>
-
-        <!--
-        -->
-        <GroupBox Grid.Row="2" Grid.Column="2" Padding="10" Header="Calon Mempelai Wanita">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="130"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="NIK *"/>
-                <TextBox  Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Name="NikIstri"
-                          LostFocus="OnNikIstriLostFocus"
-                          Text="{Binding NikIstri, UpdateSourceTrigger=PropertyChanged}"
-                          MaxLength="16" ToolTip="NIK calon mempelai wanita (16 digit angka)"/>
-
-                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Nama *"/>
-                <TextBox  Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding NamaIstri, UpdateSourceTrigger=PropertyChanged}"
-                          CharacterCasing="Upper"/>
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tempat Lahir *"/>
-                <TextBox  Grid.Row="2" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding TempatLahirIstri, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tgl. Lahir *"/>
-                <TextBox  Grid.Row="3" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding TanggalLahirIstri, UpdateSourceTrigger=LostFocus}"
-                          ToolTip="Format: DD-MM-YYYY"/>
-
-                <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Agama *"/>
-                <ComboBox  Grid.Row="4" Grid.Column="1" Style="{StaticResource DropDown}"
-                           ItemsSource="{Binding AgamaOptions}"
-                           SelectedItem="{Binding AgamaIstri, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Pekerjaan *"/>
-                <TextBox  Grid.Row="5" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding PekerjaanIstri, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Alamat *"/>
-                <TextBox  Grid.Row="6" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding AlamatIstri, UpdateSourceTrigger=PropertyChanged}"
-                          AcceptsReturn="True" TextWrapping="Wrap" Height="56"
-                          ToolTip="Alamat lengkap calon mempelai wanita (dusun, desa, kecamatan, kabupaten)"/>
-
-                <TextBlock Grid.Row="7" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Status Kawin *"
-                           Visibility="{Binding IsN2, Converter={StaticResource BoolToVis}}"/>
-                <ComboBox  Grid.Row="7" Grid.Column="1" Style="{StaticResource DropDown}"
-                           ItemsSource="{Binding StatusPerkawinanIstriOptions}"
-                           SelectedItem="{Binding StatusPerkawinanIstri, UpdateSourceTrigger=PropertyChanged}"
-                           Visibility="{Binding IsN2, Converter={StaticResource BoolToVis}}"
-                           ToolTip="Status perkawinan calon mempelai wanita (khusus Surat N2)"/>
-
-                <TextBlock Grid.Row="8" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Temuan (jika ada)"
-                           Visibility="{Binding IsN2, Converter={StaticResource BoolToVis}}"/>
-                <TextBox  Grid.Row="8" Grid.Column="1" Style="{StaticResource FieldBox}"
-                          Text="{Binding KeteranganTemuan, UpdateSourceTrigger=PropertyChanged}"
-                          Visibility="{Binding IsN2, Converter={StaticResource BoolToVis}}"
-                          ToolTip="Dasar keterangan bila calon istri janda/duda, mis. Akta Kematian suami No. 123 tahun 2020"/>
-            </Grid>
-        </GroupBox>
-
-        <!--
-        -->
-        <GroupBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Padding="10" Header="Nama Orang Tua">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Row="0" Grid.Column="0">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="Ayah Calon Pria *"/>
-                    <TextBox Style="{StaticResource FieldBox}"
-                             Text="{Binding NamaAyahCalonSuami, UpdateSourceTrigger=PropertyChanged}"
-                             CharacterCasing="Upper"/>
                 </StackPanel>
+            </Border>
 
-                <StackPanel Grid.Row="0" Grid.Column="2">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="Ibu Calon Pria"/>
-                    <TextBox Style="{StaticResource FieldBox}"
-                             Text="{Binding NamaIbuCalonSuami, UpdateSourceTrigger=PropertyChanged}"
-                             CharacterCasing="Upper"/>
+            <!-- CALON MEMPELAI PRIA (PEMOHON) -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="CALON MEMPELAI PRIA (PEMOHON)" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="NIK *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Name="Nik" LostFocus="OnNikLostFocus"
+                                 Text="{Binding Nik, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="16" ToolTip="NIK calon mempelai pria (16 digit angka)"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Nama *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Nama, UpdateSourceTrigger=PropertyChanged}"
+                                 CharacterCasing="Upper"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Tempat Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding TempatLahir, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}"
+                                 ToolTip="Format: DD-MM-YYYY"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Jenis Kelamin *" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding JenisKelaminOptions}"
+                                  SelectedItem="{Binding JenisKelamin, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Kewarganegaraan" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding KewarganegaraanOptions}"
+                                  SelectedItem="{Binding Kewarganegaraan, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Agama *" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding AgamaOptions}"
+                                  SelectedItem="{Binding Agama, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Status Perkawinan *" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="7" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding StatusPerkawinanOptions}"
+                                  SelectedItem="{Binding StatusPerkawinan, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Pekerjaan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="8" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Pekerjaan, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Dusun/Jalan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="9" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Dusun, UpdateSourceTrigger=LostFocus}"
+                                 ToolTip="Alamat (dusun/jalan) calon mempelai pria"/>
+
+                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Desa *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="10" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Desa, UpdateSourceTrigger=LostFocus}"/>
+
+                        <TextBlock Grid.Row="11" Grid.Column="0" Text="Kecamatan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="11" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Kecamatan, UpdateSourceTrigger=LostFocus}"/>
+                    </Grid>
+
                 </StackPanel>
+            </Border>
 
-                <StackPanel Grid.Row="0" Grid.Column="4">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="Ayah Calon Wanita *"/>
-                    <TextBox Style="{StaticResource FieldBox}"
-                             Text="{Binding NamaAyahCalonIstri, UpdateSourceTrigger=PropertyChanged}"
-                             CharacterCasing="Upper"/>
+            <!-- CALON MEMPELAI WANITA -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="CALON MEMPELAI WANITA" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="NIK *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Name="NikIstri" LostFocus="OnNikIstriLostFocus"
+                                 Text="{Binding NikIstri, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="16" ToolTip="NIK calon mempelai wanita (16 digit angka)"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Nama *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding NamaIstri, UpdateSourceTrigger=PropertyChanged}"
+                                 CharacterCasing="Upper"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Bin/Binti" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding AyahCalonIstri.Nama, UpdateSourceTrigger=PropertyChanged}"
+                                 CharacterCasing="Upper"
+                                 ToolTip="Nama ayah calon mempelai wanita — tercetak sebagai Binti pada blanko N4"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Tempat Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding TempatLahirIstri, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding TanggalLahirIstri, UpdateSourceTrigger=LostFocus}"
+                                 ToolTip="Format: DD-MM-YYYY"/>
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Kewarganegaraan" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding KewarganegaraanOptions}"
+                                  SelectedItem="{Binding KewarganegaraanIstri, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Agama *" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding AgamaOptions}"
+                                  SelectedItem="{Binding AgamaIstri, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Status Kawin" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="7" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding StatusPerkawinanIstriOptions}"
+                                  SelectedItem="{Binding StatusPerkawinanIstri, UpdateSourceTrigger=PropertyChanged}"
+                                  ToolTip="Status perkawinan calon mempelai wanita (tercetak pada blanko N1 bila wanita yang diterangkan)"/>
+
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Pekerjaan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="8" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding PekerjaanIstri, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Alamat *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="9" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding AlamatIstri, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" Height="48"
+                                 ToolTip="Alamat lengkap calon mempelai wanita (dusun, desa, kecamatan, kabupaten)"/>
+                    </Grid>
+
                 </StackPanel>
+            </Border>
 
-                <StackPanel Grid.Row="0" Grid.Column="6">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="Ibu Calon Wanita"/>
-                    <TextBox Style="{StaticResource FieldBox}"
-                             Text="{Binding NamaIbuCalonIstri, UpdateSourceTrigger=PropertyChanged}"
-                             CharacterCasing="Upper"/>
+            <!-- DATA ORANG TUA / WALI — hanya blanko N1 & N5 -->
+            <Border Style="{StaticResource FormCard}"
+                    Visibility="{Binding ButuhDataOrangTua, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="DATA ORANG TUA / WALI (WAJIB UNTUK BLANKO N1 &amp; N5)"
+                                   Style="{StaticResource FormSectionTitle}" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Dua kolom memakai * supaya selalu muat lebar kartu. -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="14"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <GroupBox Grid.Row="0" Grid.Column="0" Padding="8" Header="Ayah Calon Mempelai Pria">
+                            <ContentControl Content="{Binding AyahCalonSuami}"
+                                            ContentTemplate="{StaticResource OrangTuaTemplate}"/>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="0" Grid.Column="2" Padding="8" Header="Ibu Calon Mempelai Pria">
+                            <ContentControl Content="{Binding IbuCalonSuami}"
+                                            ContentTemplate="{StaticResource OrangTuaTemplate}"/>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="2" Grid.Column="0" Padding="8" Header="Ayah Calon Mempelai Wanita">
+                            <ContentControl Content="{Binding AyahCalonIstri}"
+                                            ContentTemplate="{StaticResource OrangTuaTemplate}"/>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="2" Grid.Column="2" Padding="8" Header="Ibu Calon Mempelai Wanita">
+                            <ContentControl Content="{Binding IbuCalonIstri}"
+                                            ContentTemplate="{StaticResource OrangTuaTemplate}"/>
+                        </GroupBox>
+                    </Grid>
                 </StackPanel>
-            </Grid>
-        </GroupBox>
+            </Border>
 
-        <!--
-        -->
-        <GroupBox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Padding="10" Header="Keterangan">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+            <!-- KOLOM KHUSUS BLANKO TERPILIH -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="KOLOM KHUSUS BLANKO TERPILIH" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <!-- N1: Surat Pengantar Nikah -->
+                        <StackPanel Visibility="{Binding IsN1, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2"
+                                       Text="Pihak yang diterangkan pada blanko N1 *"/>
+                            <ComboBox Width="260" HorizontalAlignment="Left" Style="{StaticResource FormCombo}"
+                                      ItemsSource="{Binding PihakPilihanOptions}"
+                                      SelectedItem="{Binding PihakDiterangkanN1, UpdateSourceTrigger=PropertyChanged}"
+                                      ToolTip="Surat pengantar nikah dibuat per orang — pilih pihak yang diterangkan"/>
+                        </StackPanel>
 
-                <!-- Khusus N2: kolom Temuan (dasar keterangan janda/duda) -->
-                <StackPanel Grid.Row="0" Visibility="{Binding IsN2, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Style="{StaticResource FieldLabel}"
-                               Text="Temuan (wajib bila calon istri Sudah Kawin)"/>
-                    <TextBox Style="{StaticResource FieldBox}"
-                             Text="{Binding KeteranganTemuan, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Dasar keterangan bila calon istri janda/duda, mis. Akta Kematian suami No. 123 tahun 2020"/>
+                        <!-- N2 & N3: surat permohonan kepada KUA/PPN LN -->
+                        <StackPanel Margin="0,8,0,0"
+                                    Visibility="{Binding IsSuratPermohonanKua, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2"
+                                       Text="Kepada KUA / PPN Luar Negeri di (wajib untuk N2)"/>
+                            <TextBox Style="{StaticResource FormField}"
+                                     Text="{Binding TujuanKua, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Contoh: Kecamatan Tempuran — wajib diisi pada blanko N2"/>
+                        </StackPanel>
+
+                        <!-- N2: rencana akad nikah -->
+                        <StackPanel Margin="0,8,0,0" Visibility="{Binding IsN2, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2" Text="Hari / tanggal / jam akad nikah *"/>
+                            <TextBox Style="{StaticResource FormField}"
+                                     Text="{Binding HariTanggalJamAkad, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Contoh: Jumat, 12-10-2026 / 09.00 WIB"/>
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,8,0,2" Text="Tempat akad nikah *"/>
+                            <TextBox Style="{StaticResource FormField}"
+                                     Text="{Binding TempatAkad, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <!-- N3: data penetapan isbat -->
+                        <StackPanel Margin="0,8,0,0" Visibility="{Binding IsN3, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2" Text="Tanggal penetapan isbat (opsional)"/>
+                            <TextBox Style="{StaticResource FormField}"
+                                     Text="{Binding TanggalPenetapanIsbat, UpdateSourceTrigger=LostFocus}"
+                                     ToolTip="Format: DD-MM-YYYY"/>
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,8,0,2" Text="Pengadilan Agama (opsional)"/>
+                            <TextBox Style="{StaticResource FormField}"
+                                     Text="{Binding PengadilanAgama, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Contoh: Pengadilan Agama Karawang"/>
+                            <TextBlock Text="Blanko N3 tidak wajib diisi: yang kosong tercetak sebagai titik-titik pada surat agar bisa ditulis tangan."
+                                       TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <!-- N2 & N3: tanggal diterima KUA -->
+                        <StackPanel Margin="0,8,0,0"
+                                    Visibility="{Binding IsSuratPermohonanKua, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2" Text="Diterima tanggal (diisi KUA, opsional)"/>
+                            <TextBox Style="{StaticResource FormField}"
+                                     Text="{Binding TanggalDiterima, UpdateSourceTrigger=LostFocus}"
+                                     ToolTip="Format: DD-MM-YYYY"/>
+                            <TextBlock Text="Daftar &#x201C;surat yang diperlukan untuk diperiksa&#x201D; sudah tercetak baku; butir 7 &amp; 8 pada N2 (dan sisa butir N3) dibiarkan titik-titik untuk diisi tangan."
+                                       TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <!-- N5: pihak anak yang diberi izin -->
+                        <StackPanel Margin="0,8,0,0" Visibility="{Binding IsN5, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2"
+                                       Text="Anak kami yang diberi izin pada blanko N5 *"/>
+                            <ComboBox Width="260" HorizontalAlignment="Left" Style="{StaticResource FormCombo}"
+                                      ItemsSource="{Binding PihakPilihanOptions}"
+                                      SelectedItem="{Binding PihakAnakIzinOrtu, UpdateSourceTrigger=PropertyChanged}"
+                                      ToolTip="Menentukan orang tua siapa yang menandatangani surat izin"/>
+                        </StackPanel>
+
+                        <!-- N6: keterangan kematian suami/istri -->
+                        <StackPanel Margin="0,8,0,0" Visibility="{Binding IsN6, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2" Text="Pihak yang meninggal dunia *"/>
+                            <ComboBox Width="260" HorizontalAlignment="Left" Style="{StaticResource FormCombo}"
+                                      ItemsSource="{Binding PihakPilihanOptions}"
+                                      SelectedItem="{Binding PihakMeninggal, UpdateSourceTrigger=PropertyChanged}"
+                                      ToolTip="Data almarhum/ah diambil dari identitas calon mempelai yang dipilih"/>
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,8,0,2" Text="Tanggal meninggal dunia *"/>
+                            <TextBox Style="{StaticResource FormField}"
+                                     Text="{Binding TanggalMeninggal, UpdateSourceTrigger=LostFocus}"
+                                     ToolTip="Format: DD-MM-YYYY"/>
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,8,0,2" Text="Tempat meninggal dunia *"/>
+                            <TextBox Style="{StaticResource FormField}"
+                                     Text="{Binding TempatMeninggal, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+
+                        <!-- N8: surat keterangan numpang nikah -->
+                        <StackPanel Margin="0,8,0,0" Visibility="{Binding IsN8, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2" FontWeight="SemiBold"
+                                       Text="Tempat akan melangsungkan akad nikah (numpang nikah)"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Desa/Kelurahan *" Style="{StaticResource FormLabel}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                         Text="{Binding DesaNumpang, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Desa/kelurahan tempat akad nikah dilangsungkan"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Kecamatan *" Style="{StaticResource FormLabel}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                                         Text="{Binding KecamatanNumpang, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Kabupaten/Kota *" Style="{StaticResource FormLabel}"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
+                                         Text="{Binding KabupatenNumpang, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+
+
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,12,0,2" FontWeight="SemiBold"
+                                       Text="Tempat tinggal calon mempelai wanita (tercetak pada baris alamat)"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Kecamatan" Style="{StaticResource FormLabel}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                         Text="{Binding KecamatanIstri, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Kabupaten/Kota" Style="{StaticResource FormLabel}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                                         Text="{Binding KabupatenIstri, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+
+
+                            <TextBlock Style="{StaticResource FormLabel}" Margin="0,8,0,0" Opacity="0.75" TextWrapping="Wrap"
+                                       Text="Surat numpang nikah hanya memuat identitas pokok calon mempelai wanita (nama, tempat/tanggal lahir, alamat): NIK, agama, pekerjaan, dan status kawin tidak wajib diisi."/>
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
+            </Border>
 
-                <!-- Khusus N3: tujuan surat (kepentingan pendaftaran di KUA/Kemenag) -->
-                <StackPanel Grid.Row="1" Visibility="{Binding IsN3, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Style="{StaticResource FieldLabel}"
-                               Text="Surat ini dibuat untuk keperluan (Tujuan Surat)"/>
-                    <TextBox Style="{StaticResource FieldBox}"
-                             Text="{Binding TujuanSurat, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Keperluan surat persetujuan, mis. pendaftaran keperluan pernikahan di KUA Kecamatan ..."/>
+            <!-- KETERANGAN SURAT -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="KETERANGAN SURAT" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Keterangan" Style="{StaticResource FormLabel}" VerticalAlignment="Top"/>
+                        <TextBox Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Keterangan, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" Height="70"
+                                 VerticalScrollBarVisibility="Auto"
+                                 ToolTip="Keterangan surat (tambahan, opsional)"/>
+                    </Grid>
+
                 </StackPanel>
+            </Border>
 
-                <TextBox Grid.Row="3" Style="{StaticResource FieldBox}"
-                         Text="{Binding Keterangan, UpdateSourceTrigger=PropertyChanged}"
-                         AcceptsReturn="True" TextWrapping="Wrap" Height="70"
-                         ToolTip="Keterangan surat (tambahan, opsional)"/>
-            </Grid>
-        </GroupBox>
+            <!-- PEJABAT PENANDATANGAN -->
+            <Border Style="{StaticResource FormCard}"
+                    Visibility="{Binding ButuhPejabatDesa, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="PEJABAT PENANDATANGAN" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Pejabat" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding PejabatPenandatanganOptions}"
+                                  SelectedItem="{Binding SelectedPejabat, Mode=TwoWay}"
+                                  ToolTip="Pejabat penandatangan sesuai kop surat desa"/>
+                    </Grid>
 
-        <!--
-        -->
-        <GroupBox Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" Padding="10" Header="Pejabat Yang Menandatangani">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Style="{StaticResource FieldLabel}" Text="Pejabat"
-                           VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox Width="220" Style="{StaticResource DropDown}"
-                          ItemsSource="{Binding PejabatPenandatanganOptions}"
-                          SelectedItem="{Binding SelectedPejabat, Mode=TwoWay}"
-                          ToolTip="Pejabat penandatangan sesuai kop surat desa"/>
-            </StackPanel>
-        </GroupBox>
+                </StackPanel>
+            </Border>
 
-        <!--
-        -->
-        <TextBlock Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="3"
-                   FontSize="11" Foreground="#777" Margin="4,0,0,0"
-                   Text="Petunjuk: Data calon mempelai pria (pemohon) diisi di form dasar. N2 wajib mengisi Status Kawin calon wanita (bila Sudah Kawin, isi kolom Temuan). N3 wajib mengisi tujuan surat. Nama ayah/ibu wajib untuk N1, N3, dan N4."/>
+            <TextBlock FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}"
+                       FontSize="11" Margin="2,0,0,4" TextWrapping="Wrap"
+                       Text="Petunjuk: N1 (Surat Pengantar Nikah) &amp; N6 (Ket. Kematian Suami/Istri) ditandatangani Kepala Desa/Sekretaris Desa. N2 dan N3 ditujukan kepada KUA/PPN LN (ditandatangani pemohon). N4 ditandatangani kedua calon pengantin, N5 oleh ayah &amp; ibu/wali. Blok orang tua wajib untuk N1 dan N5 dengan nama ayah &amp; ibu pada pihak yang dipilih."/>
+        </StackPanel>
     </Grid>
 </UserControl>

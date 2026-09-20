@@ -6,11 +6,13 @@ using System.Windows.Media;
 namespace SuDesApp.Wpf.Views
 {
     /// <summary>
-    /// Halaman Pengaturan Aplikasi. Mendukung permintaan fokus seksi (mis. dari
-    /// chip status WhatsApp/Sheet di statusbar): saat DataContext di-set dengan
-    /// <see cref="ViewModels.PengaturanAplikasiViewModel.FocusSection"/>,
-    /// halaman menggulir ScrollViewer ke kartu pengaturan yang diminta dan
-    /// memberi highlight lembut pada kartu tersebut.
+    /// Halaman Pengaturan Aplikasi.
+    ///
+    /// Isinya dipisah menjadi beberapa bagian yang dipilih lewat daftar navigasi
+    /// di sisi kiri (hanya bagian terpilih yang ditampilkan). Bila halaman dibuka
+    /// dengan permintaan fokus (mis. dari chip status WhatsApp/Sheet di statusbar),
+    /// bagian yang memuat kartu tersebut langsung dipilih, lalu kartunya diberi
+    /// highlight lembut.
     /// </summary>
     public partial class PengaturanAplikasiView : UserControl
     {
@@ -22,6 +24,10 @@ namespace SuDesApp.Wpf.Views
         {
             InitializeComponent();
             DataContextChanged += OnDataContextChanged;
+
+            // Pindah bagian → isi dimulai dari atas, supaya bagian baru tidak
+            // terbuka di tengah (posisi gulir bagian sebelumnya tidak terbawa).
+            DaftarBagian.SelectionChanged += (_, _) => IsiPengaturan?.ScrollToTop();
         }
 
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -43,7 +49,11 @@ namespace SuDesApp.Wpf.Views
                 vm.GoogleClientSecret = GoogleSecretBox.Password ?? string.Empty;
         }
 
-        /// <summary>Menggulir halaman ke kartu pengaturan dengan kunci yang diberikan.</summary>
+        /// <summary>
+        /// Menggulir area isi ke kartu pengaturan dengan kunci yang diberikan.
+        /// Kartu tersebut berada di bagian yang sudah dipilih pembaca
+        /// <c>FocusSection</c> pada ViewModel.
+        /// </summary>
         public void ScrollToSection(string sectionKey)
         {
             var target = FindChildWithTag(this, sectionKey);
@@ -51,13 +61,11 @@ namespace SuDesApp.Wpf.Views
 
             HighlightCard(target);
 
-            var scroll = FindChild<ScrollViewer>(this);
-            if (scroll != null)
-            {
-                var transform = target.TransformToAncestor(this);
-                var topLeft = transform.Transform(new Point(0, 0));
-                scroll.ScrollToVerticalOffset(Math.Max(0, topLeft.Y - 24));
-            }
+            if (IsiPengaturan == null) return;
+
+            var transform = target.TransformToAncestor(IsiPengaturan);
+            var topLeft = transform.Transform(new Point(0, 0));
+            IsiPengaturan.ScrollToVerticalOffset(Math.Max(0, topLeft.Y - 24));
         }
 
         /// <summary>
@@ -75,7 +83,7 @@ namespace SuDesApp.Wpf.Views
             var endColor = (targetBorder.TryFindResource("BorderBrush") as SolidColorBrush)?.Color
                            ?? Color.FromRgb(0x80, 0x80, 0x80);
 
-            var animated = new SolidColorBrush(Color.FromRgb(0x2F, 0xD1, 0x78)); // aksen Emerald
+            var animated = new SolidColorBrush(Color.FromRgb(0x1A, 0x73, 0xE8)); // biru Google
             targetBorder.BorderBrush = animated;
 
             var fade = new System.Windows.Media.Animation.ColorAnimation(

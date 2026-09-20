@@ -212,6 +212,10 @@ CREATE TABLE IF NOT EXISTS "NTCR" (
     "StatusPerkawinanIstri" TEXT,
     "KeteranganTemuan" TEXT,
     "TujuanSurat" TEXT,
+    -- Kolom khusus tiap blanko NTCR (Model N1-N6) + identitas orang tua,
+    -- disimpan sebagai JSON. Database lama ditambal otomatis oleh
+    -- NtcrDataHandler.EnsureNtcrColumnsAsync saat pertama kali dipakai.
+    "DetailJson" TEXT,
     FOREIGN KEY("ID_Surat") REFERENCES "Surat"("ID_Surat") ON DELETE CASCADE
 );
 COMMIT;

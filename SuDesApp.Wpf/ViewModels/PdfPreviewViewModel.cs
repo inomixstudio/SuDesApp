@@ -35,9 +35,14 @@ namespace SuDesApp.Wpf.ViewModels
         public ICommand ExportCommand { get; }
         public ICommand EditCommand { get; }
 
+        /// <param name="batalKembali">
+        /// Aksi tombol Batal. Kosong = kembali ke tampilan awal (bawaan). Dipakai
+        /// pratinjau di dalam wizard yang perlu kembali ke langkah sebelumnya,
+        /// bukan menutup halaman utama.
+        /// </param>
         public PdfPreviewViewModel(string title, string? pdfPath, NavigationService navigation,
             int? suratId = null, Func<int, InputWindowViewModel>? editViewModelFactory = null,
-            IMessageService? messageService = null)
+            IMessageService? messageService = null, Action? batalKembali = null)
         {
             Title = title;
             PdfPath = pdfPath;
@@ -46,7 +51,7 @@ namespace SuDesApp.Wpf.ViewModels
             _suratId = suratId;
             _editViewModelFactory = editViewModelFactory;
             _messageService = messageService;
-            BatalCommand = new RelayCommand(() => _navigation.ShowDefault());
+            BatalCommand = new RelayCommand(batalKembali ?? (() => _navigation.ShowDefault()));
             ExportCommand = new RelayCommand(ExportAs);
             EditCommand = new RelayCommand(EditSurat, () => CanEdit);
         }

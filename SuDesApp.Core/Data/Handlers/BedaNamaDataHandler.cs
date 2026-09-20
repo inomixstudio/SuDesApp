@@ -136,7 +136,7 @@ namespace SuDesApp.Data.Handlers
                         Kecamatan = result.Kecamatan2,
                         Kabupaten = result.Kabupaten2
                     };
-                    wargaKK.AlamatLengkap = BuildAlamatLengkap(wargaKK.Dusun, wargaKK.Desa, wargaKK.Kecamatan, wargaKK.Kabupaten);
+                    wargaKK.AlamatLengkap = BuildAlamatLengkap(wargaKK.Dusun!, wargaKK.Desa!, wargaKK.Kecamatan!, wargaKK.Kabupaten!);
                     suratData.WargaKK = wargaKK;
 
                     // Source labels untuk PDF ("Data di: ...")

@@ -266,7 +266,7 @@ namespace SuDesApp.GeneratorPdf
                     row.ConstantItem(KopSurat.LebarLogoUntuk(skalaJudul)).Element(logoContainer =>
                     {
                         // Gambar kop mengikuti Pengaturan Surat (bisa diganti pengguna).
-                        string logoPath = PengaturanCetak.JalurLogoEfektif(_config.LogoPath);
+                        string? logoPath = PengaturanCetak.JalurLogoEfektif(_config.LogoPath);
                         if (logoPath != null)
                         {
                             logoContainer.Image(logoPath).FitArea();

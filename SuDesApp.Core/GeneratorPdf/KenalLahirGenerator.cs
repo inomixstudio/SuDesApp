@@ -29,7 +29,7 @@ namespace SuDesApp.GeneratorPdf
         protected override string JudulSurat => "SURAT KETERANGAN KENAL LAHIR";
         protected override bool ShowPemohonInFooter => false;
 
-        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             var desa = suratData.Desa;
             var kenalLahir = suratData.KenalLahir;
@@ -48,8 +48,8 @@ namespace SuDesApp.GeneratorPdf
             DateTime? tanggalLahirAnak = GetTanggalLahirAnak(kenalLahir);
             string tempatLahirAnak = GetTempatLahirAnak(kenalLahir);
             int anakKe = kenalLahir.AnakKe;
-            string lahirDi = kenalLahir.LahirDi;
-            string alamatAnak = kenalLahir.AlamatLengkapAnak;
+            string? lahirDi = kenalLahir.LahirDi;
+            string? alamatAnak = kenalLahir.AlamatLengkapAnak;
 
             // Validasi data anak minimal
             if (string.IsNullOrWhiteSpace(namaAnak))
@@ -96,16 +96,16 @@ namespace SuDesApp.GeneratorPdf
         protected override void ComposeTandaTangan(BadanSurat kaki, SuratData suratData)
         {
             var data = DataKakiSurat(suratData, "Pelapor,");
-            string namaPelapor = suratData.KenalLahir?.Ayah?.Nama;
+            string? namaPelapor = suratData.KenalLahir?.Ayah?.Nama;
 
             kaki.Blok(c => SuratRenderer.TandaTangan(
-                c, !string.IsNullOrWhiteSpace(namaPelapor), namaPelapor, data.NamaDesa, data.TanggalTerformat,
+                c, !string.IsNullOrWhiteSpace(namaPelapor), namaPelapor!, data.NamaDesa, data.TanggalTerformat,
                 data.Jabatan, data.NamaPejabat, data.LabelPemohon));
         }
 
         private static List<(string Label, string? Value)> CreateWargaData(WargaData warga)
         {
-            string tglLahir = FormatTanggal(warga.TanggalLahir);
+            string tglLahir = FormatTanggal(warga.TanggalLahir!);
             return new List<(string, string?)>
             {
                 ("Nama", warga.Nama ?? "[Nama]"),
@@ -151,7 +151,7 @@ namespace SuDesApp.GeneratorPdf
             if (kenalLahir.TanggalLahirAnak.HasValue)
                 return kenalLahir.TanggalLahirAnak;
 
-            string tanggalLahirString = kenalLahir.Anak?.TanggalLahir;
+            string? tanggalLahirString = kenalLahir.Anak?.TanggalLahir;
             if (!string.IsNullOrWhiteSpace(tanggalLahirString))
             {
                 if (DateTime.TryParseExact(tanggalLahirString, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var t))

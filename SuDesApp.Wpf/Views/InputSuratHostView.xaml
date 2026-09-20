@@ -25,12 +25,19 @@
 
         <!-- Panel bawah: kartu aksi seragam (ToolbarCard) -->
         <Border DockPanel.Dock="Bottom" Style="{StaticResource ToolbarCard}" Margin="20,0,20,20">
-            <DockPanel>
-                <TextBlock DockPanel.Dock="Left"
+            <!-- Grid 2 kolom: teks info memakai * (terpotong rapi) dan tombol Auto,
+                 supaya tombol Simpan/Batal selalu utuh walau jendela sempit. -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
                            Text="Nomor surat otomatis terisi (bisa diedit)."
                            Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
-                           VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           Margin="0,0,12,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="Batal" Width="110" Height="34" Margin="0,0,8,0"
                             Command="{Binding CancelCommand}" IsCancel="True"
                             Style="{StaticResource OutlineButton}"/>
@@ -39,14 +46,20 @@
                             Style="{StaticResource PrimaryButton}"
                             AutomationProperties.Name="Simpan surat"/>
                 </StackPanel>
-            </DockPanel>
+            </Grid>
         </Border>
 
-        <!-- Area konten: view input spesifik surat.
-             Margin 10 + margin root view input 10 = 20px, seragam dengan halaman lain. -->
+<!-- Area konten: form input surat.
+              HANYA scroll vertikal (HorizontalScrollBarVisibility=Disabled):
+              isi form wajib muat lebar jendela — kolom nilai memakai * sehingga
+              ikut menyusut, tanpa scroll kiri-kanan. Grid pembungkus menjaga
+              ContentControl meregang selebar viewport. -->
         <ScrollViewer VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled">
-            <ContentControl Content="{Binding InputView}" Margin="10,0"/>
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="0,0,0,4">
+            <Grid>
+                <ContentControl Content="{Binding InputView}" Margin="20,0,20,4"/>
+            </Grid>
         </ScrollViewer>
     </DockPanel>
 </UserControl>

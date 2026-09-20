@@ -84,6 +84,14 @@ namespace SuDesApp
                     if (e.IsSharedNumbering) shared.Add(e.NamaJenis.ToUpperInvariant());
                 }
 
+                // Penyesuaian penomoran yang diubah pengguna di halaman Pengaturan
+                // Aplikasi menempel di atas format bawaan berkas, supaya seluruh
+                // pemakai GetSuratNumberFormat langsung memakai awalan yang berlaku.
+                foreach (var penyesuaian in SuDesApp.Configuration.PenomoranOverrideStore.Muat())
+                {
+                    if (formats.ContainsKey(penyesuaian.Key)) formats[penyesuaian.Key] = penyesuaian.Value;
+                }
+
                 SuratNumberFormats = formats;
                 TemplateNames = names;
                 _sharedNumberingNames = shared;
@@ -94,6 +102,14 @@ namespace SuDesApp
                 _logger.LogWarning(ex, "Gagal memuat JenisSuratConfig.json; format nomor surat mengikuti nilai kosong");
             }
         }
+
+        /// <summary>
+        /// Muat ulang daftar jenis surat + format nomor dari JenisSuratConfig.json.
+        /// Dipakai setelah pengaturan penomoran surat diubah dari halaman Pengaturan
+        /// Aplikasi, agar nilai di memori (dibaca GetSuratNumberFormat) ikut berubah
+        /// tanpa perlu menutup aplikasi.
+        /// </summary>
+        public void ReloadSuratKindsFromConfig() => LoadSuratKindsFromConfigFile();
 
         // Inisialisasi konfigurasi dari IConfiguration (untuk ASP.NET Core/Host Builder)
         public AppConfig(IConfiguration configuration, ILogger<AppConfig>? logger = null)
@@ -328,5 +344,7 @@ namespace SuDesApp
         public const string NTCR_N2 = "NTCR_N2";
         public const string NTCR_N3 = "NTCR_N3";
         public const string NTCR_N4 = "NTCR_N4";
+        public const string NTCR_N5 = "NTCR_N5";
+        public const string NTCR_N6 = "NTCR_N6";
     }
 }

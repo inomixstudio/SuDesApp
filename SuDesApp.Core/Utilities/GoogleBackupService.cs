@@ -184,7 +184,7 @@ namespace SuDesApp.Utilities
                     var existing = await _driveService.ListItemsAsync(folderId, ct).ConfigureAwait(false);
                     foreach (var item in existing.Where(i => !i.IsFolder && i.Name == fileName))
                     {
-                        await _driveService.DeleteItemAsync(item.Id, ct).ConfigureAwait(false);
+                        await _driveService.DeleteItemAsync(item.Id!, ct).ConfigureAwait(false);
                         _logger.LogInformation("Cadangan lama dengan nama sama dihapus: {File}", fileName);
                     }
                 }
@@ -301,7 +301,7 @@ namespace SuDesApp.Utilities
                 {
                     try
                     {
-                        await _driveService.DeleteItemAsync(old.Id, ct).ConfigureAwait(false);
+                        await _driveService.DeleteItemAsync(old.Id!, ct).ConfigureAwait(false);
                         _logger.LogInformation("Cadangan lama dihapus dari Drive: {Name}", old.Name);
                     }
                     catch (Exception ex)

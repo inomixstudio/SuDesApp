@@ -4,85 +4,109 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="430" d:DesignWidth="900"
+             d:DesignHeight="500" d:DesignWidth="900"
              FontSize="13"
              SnapsToDevicePixels="True"
-             UseLayoutRounding="True">
+             UseLayoutRounding="True"
+            >
 
-    <UserControl.Resources>
-        <Style x:Key="GroupHeader" TargetType="TextBlock">
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
-        </Style>
-    </UserControl.Resources>
+    <!-- Satu kolom: field lebar penuh, hanya scroll vertikal. -->
+    <Grid IsSharedSizeScope="True">
+        <StackPanel>
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="12"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+            <!-- NOMOR SURAT -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="NOMOR SURAT" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Nomor Surat *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Column="1" Style="{StaticResource FormField}"
+                                 IsEnabled="{Binding NomorSuratEnabled}"
+                                 Text="{Binding NomorSurat, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Nomor surat (otomatis jika dikelola register)"/>
+                    </Grid>
 
-        <!-- Nomor Surat: memanjang penuh di atas -->
-        <GroupBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Padding="10" Header="Nomor Surat">
-            <TextBox Style="{StaticResource FieldBox}"
-                     IsEnabled="{Binding NomorSuratEnabled}"
-                     Text="{Binding NomorSurat, UpdateSourceTrigger=PropertyChanged}"
-                     ToolTip="Nomor surat (otomatis jika dikelola register)"/>
-        </GroupBox>
-
-        <!-- Kolom kiri: data instansi -->
-        <GroupBox Grid.Row="2" Grid.Column="0" Padding="10" Header="Data Instansi">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="130"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Nama Instansi *"/>
-                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
-                         Text="{Binding NamaInstansi, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="Nama Instansi"/>
-
-                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Alamat Instansi *"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
-                         Text="{Binding AlamatInstansi, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="Jln/Dusun dan RT/RW"/>
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Keterangan *"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FieldBox}"
-                         Height="100"
-                         AcceptsReturn="True" TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Auto"
-                         Text="{Binding Keterangan, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="Keterangan tambahan untuk surat"/>
-            </Grid>
-        </GroupBox>
-
-<!-- Kolom kanan: pejabat -->
-        <StackPanel Grid.Row="2" Grid.Column="2">
-            <GroupBox Padding="10" Header="Pejabat Yang Menandatangani">
-                <StackPanel Orientation="Horizontal">
-                    <RadioButton Content="Kepala Desa" GroupName="pejabat" Margin="0,0,24,0"
-                                 VerticalAlignment="Center"
-                                 IsChecked="{Binding IsKadesSelected, Mode=TwoWay}"/>
-                    <RadioButton Content="Sekretaris Desa" GroupName="pejabat"
-                                 VerticalAlignment="Center"
-                                 IsChecked="{Binding IsSekdesSelected, Mode=TwoWay}"/>
                 </StackPanel>
-            </GroupBox>
+            </Border>
+
+            <!-- DATA INSTANSI -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="DATA INSTANSI" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Nama Instansi *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding NamaInstansi, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Nama instansi"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Alamat Instansi *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding AlamatInstansi, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Jln/Dusun dan RT/RW"/>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+
+            <!-- KETERANGAN SURAT -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="KETERANGAN SURAT" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Keterangan *" Style="{StaticResource FormLabel}" VerticalAlignment="Top"/>
+                        <TextBox Grid.Column="1" Style="{StaticResource FormField}" Height="90"
+                                 AcceptsReturn="True" TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Text="{Binding Keterangan, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Keterangan tambahan untuk surat"/>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+
+            <!-- PEJABAT PENANDATANGAN -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="PEJABAT PENANDATANGAN" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Content="Kepala Desa" GroupName="pejabat" Margin="0,0,24,0"
+                                     VerticalAlignment="Center"
+                                     IsChecked="{Binding IsKadesSelected, Mode=TwoWay}"/>
+                        <RadioButton Content="Sekretaris Desa" GroupName="pejabat"
+                                     VerticalAlignment="Center"
+                                     IsChecked="{Binding IsSekdesSelected, Mode=TwoWay}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </Grid>
 </UserControl>

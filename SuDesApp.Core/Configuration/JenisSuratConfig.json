@@ -1,0 +1,200 @@
+[
+  {
+    "NamaJenis": "SKD_UMUM",
+    "KodeJenis": "SKD",
+    "TemplateName": "SKD_UMUM",
+    "DisplayName": "SKD Umum",
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "DOMISILI_WARGA",
+    "KodeJenis": "DOM_WRG",
+    "TemplateName": "DOMISILI_WARGA",
+    "DisplayName": "Domisili Warga",
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "INSTANSI",
+    "KodeJenis": "DOM_INS",
+    "TemplateName": "INSTANSI",
+    "DisplayName": "Domisili Instansi/Lembaga",
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "SKU",
+    "KodeJenis": "SKU",
+    "TemplateName": "SKU",
+    "DisplayName": "SKU (Surat Ket. Usaha)",
+    "NomorFormat": "510/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": false
+  },
+  {
+    "NamaJenis": "PENGANTAR_SKCK",
+    "KodeJenis": "SKCK",
+    "TemplateName": "PENGANTAR_SKCK",
+    "DisplayName": "Pengantar SKCK",
+    "NomorFormat": "474/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "IZIN_ORTU",
+    "KodeJenis": "IZIN",
+    "TemplateName": "IZIN_ORTU",
+    "DisplayName": "Izin Suami/Orang Tua",
+    "NomorFormat": "474.4/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "GARAPAN_SAWAH",
+    "KodeJenis": "GRP_SAW",
+    "TemplateName": "GARAPAN_SAWAH",
+    "DisplayName": "Ket. Garapan Sawah",
+    "NomorFormat": "593.2/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "KEMATIAN",
+    "KodeJenis": "KEM",
+    "TemplateName": "KEMATIAN",
+    "DisplayName": "Surat Kematian",
+    "NomorFormat": "570/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": false
+  },
+  {
+    "NamaJenis": "SKTM",
+    "KodeJenis": "SKTM",
+    "TemplateName": "SKTM",
+    "DisplayName": "SKTM (Surat Ket. Tidak Mampu)",
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "BEDANAMA",
+    "KodeJenis": "BEDANAMA",
+    "TemplateName": "BEDANAMA",
+    "DisplayName": "Surat Beda Data",
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "KENAL_LAHIR",
+    "KodeJenis": "KENAL_LAHIR",
+    "TemplateName": "KENAL_LAHIR",
+    "DisplayName": "Surat Kenal Lahir",
+    "NomorFormat": "474.2/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "AHLI_WARIS",
+    "KodeJenis": "AHLI_WARIS",
+    "TemplateName": "AHLI_WARIS",
+    "DisplayName": "Keterangan Ahli Waris",
+    "NomorFormat": "474.2/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "IJIN_TINGGAL",
+    "KodeJenis": "IJT",
+    "TemplateName": "IJIN_TINGGAL",
+    "DisplayName": "Surat Ijin Tinggal Sementara",
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "REKENING_KORAN",
+    "KodeJenis": "REKKOR",
+    "TemplateName": "REKENING_KORAN",
+    "DisplayName": "Permohonan Rekening Koran",
+    "NomorFormat": "130/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": false
+  },
+  {
+    "NamaJenis": "TEMPLATE_SURAT",
+    "KodeJenis": "TMPL",
+    "TemplateName": "TEMPLATE_SURAT",
+    "DisplayName": "Surat dari Template Surat",
+    "NomorFormat": "TMPL/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": false
+  },
+  {
+    "NamaJenis": "NTCR_N1",
+    "KodeJenis": "N1T",
+    "TemplateName": "NTCR_N1",
+    "DisplayName": "Surat Pengantar Nikah (N1)",
+    "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "NTCR_N2",
+    "KodeJenis": "N2T",
+    "TemplateName": "NTCR_N2",
+    "DisplayName": "Permohonan Kehendak Nikah (N2)",
+    "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "NTCR_N3",
+    "KodeJenis": "N3T",
+    "TemplateName": "NTCR_N3",
+    "DisplayName": "Permohonan Pencatatan Isbat (N3)",
+    "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "NTCR_N4",
+    "KodeJenis": "N4T",
+    "TemplateName": "NTCR_N4",
+    "DisplayName": "Persetujuan Calon Pengantin (N4)",
+    "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "NTCR_N5",
+    "KodeJenis": "N5T",
+    "TemplateName": "NTCR_N5",
+    "DisplayName": "Surat Izin Orang Tua (N5)",
+    "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "NTCR_N6",
+    "KodeJenis": "N6T",
+    "TemplateName": "NTCR_N6",
+    "DisplayName": "Keterangan Kematian Suami/Istri (N6)",
+    "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  },
+  {
+    "NamaJenis": "NTCR_N8",
+    "KodeJenis": "N8T",
+    "TemplateName": "NTCR_N8",
+    "DisplayName": "Surat Keterangan Numpang Nikah (N8)",
+    "NomorFormat": "474.2/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  }
+]

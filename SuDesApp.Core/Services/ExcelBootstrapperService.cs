@@ -226,7 +226,7 @@ namespace SuDesApp.Services
             if (string.IsNullOrWhiteSpace(nik) || nik.Length != 16 || !nik.All(char.IsDigit))
             {
                 _logger.LogWarning("NIK tidak valid: {NIK}. Harus 16 digit numerik.", nik);
-                return null;
+                return null!;
             }
 
             if (!templateName.Equals("BEDANAMA", StringComparison.OrdinalIgnoreCase))
@@ -250,7 +250,7 @@ namespace SuDesApp.Services
                 if (!await _fileService.FileExistsAsync(filePath))
                 {
                     _logger.LogWarning("File Excel tidak ditemukan: {FilePath}", filePath);
-                    return null;
+                    return null!;
                 }
 
                 using var package = new ExcelPackage();
@@ -263,14 +263,14 @@ namespace SuDesApp.Services
                 if (worksheet?.Dimension == null)
                 {
                     _logger.LogWarning("Worksheet '{SheetName}' tidak ditemukan atau kosong.", template.SheetName);
-                    return null;
+                    return null!;
                 }
 
                 // Mapping kolom berdasarkan header
                 var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 for (int col = 1; col <= worksheet.Dimension.Columns; col++)
                 {
-                    string header = worksheet.Cells[1, col]?.Text?.Trim();
+                    string? header = worksheet.Cells[1, col]?.Text?.Trim();
                     if (!string.IsNullOrEmpty(header))
                     {
                         columnMap[header] = col;
@@ -281,13 +281,13 @@ namespace SuDesApp.Services
                 if (!columnMap.TryGetValue("NIK", out int nikColumn) || !columnMap.TryGetValue("NAMA", out int namaColumn))
                 {
                     _logger.LogError("Kolom NIK/NAMA tidak ditemukan di worksheet.");
-                    return null;
+                    return null!;
                 }
 
                 // Cari data berdasarkan NIK
                 for (int row = 2; row <= worksheet.Dimension.Rows; row++)
                 {
-                    string currentNik = worksheet.Cells[row, nikColumn]?.Text?.Trim();
+                    string? currentNik = worksheet.Cells[row, nikColumn]?.Text?.Trim();
                     if (currentNik?.Equals(nik, StringComparison.OrdinalIgnoreCase) == true)
                     {
                         _logger.LogInformation("Data ditemukan untuk NIK: {NIK} di baris {Row}", nik, row);
@@ -312,12 +312,12 @@ namespace SuDesApp.Services
                 }
 
                 _logger.LogInformation("Data tidak ditemukan untuk NIK: {NIK}", nik);
-                return null;
+                return null!;
             }
             catch (FileNotFoundException ex)
             {
                 _logger.LogError(ex, "File Excel tidak ditemukan: {FilePath}", filePath);
-                return null;
+                return null!;
             }
             catch (Exception ex)
             {

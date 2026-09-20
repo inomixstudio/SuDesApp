@@ -11,18 +11,18 @@ namespace SuDesApp.Data.Queries
         private readonly IOptions<QueryProviderOptions> _options;
         private readonly ILogger<QueryProvider> _logger;
 
-        public QueryProvider(string filePath, ILogger<QueryProvider> logger = null)
+        public QueryProvider(string filePath, ILogger<QueryProvider>? logger = null)
         {
             _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-            _logger = logger;
+            _logger = logger!;
             _queries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             LoadQueries();
         }
 
-        public QueryProvider(IOptions<QueryProviderOptions> options, ILogger<QueryProvider> logger = null)
+        public QueryProvider(IOptions<QueryProviderOptions> options, ILogger<QueryProvider>? logger = null)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _logger = logger;
+            _logger = logger!;
             _queries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             // Use the file path from options

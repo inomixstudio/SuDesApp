@@ -252,8 +252,8 @@ namespace SuDesApp.Data.Repositories
 
             suratData.ID_Jenis = jenisSurat.ID_Jenis;
             suratData.KodeJenis = jenisSurat.KodeJenis;
-            suratData.NamaJenis = jenisSurat.NamaJenis;
-            suratData.SetJenisFromNamaJenis(suratData.NamaJenis);
+            suratData.NamaJenis = jenisSurat.NamaJenis!;
+            suratData.SetJenisFromNamaJenis(suratData.NamaJenis!);
         }
 
         public async Task<int> InsertAsync(SuratData suratData, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
@@ -275,20 +275,20 @@ namespace SuDesApp.Data.Repositories
 
                 suratData.ID_Jenis = jenisSurat.ID_Jenis;
                 suratData.KodeJenis = jenisSurat.KodeJenis;
-                suratData.NamaJenis = jenisSurat.NamaJenis;
-                suratData.SetJenisFromNamaJenis(suratData.NamaJenis);
+                suratData.NamaJenis = jenisSurat.NamaJenis!;
+                suratData.SetJenisFromNamaJenis(suratData.NamaJenis!);
 
                 if (string.IsNullOrWhiteSpace(suratData.Status))
                     suratData.Status = "Draft";
 
                 if (string.IsNullOrWhiteSpace(suratData.NomorSurat))
-                    suratData.NomorSurat = await _jenisSuratRepository.GenerateNomorSuratAsync(suratData.KodeJenis);
+                    suratData.NomorSurat = await _jenisSuratRepository.GenerateNomorSuratAsync(suratData.KodeJenis!);
                 else if (await CheckNomorSuratExistsAsync(suratData.NomorSurat, null, cancellationToken))
                     throw new ValidationException($"Nomor surat '{suratData.NomorSurat}' already used.");
 
                 await ValidateSuratDataAsync(suratData, cancellationToken);
 
-                int idWarga = await GetOrCreateWargaAsync(suratData, transaction, cancellationToken);
+                int idWarga = await GetOrCreateWargaAsync(suratData, transaction!, cancellationToken);
 
                 var query = _queryProvider.GetQuery("InsertSurat");
                 var suratId = await _connection.ExecuteScalarAsync<int>(query, new
@@ -307,7 +307,7 @@ namespace SuDesApp.Data.Repositories
                     throw new DataAccessException("Failed to insert surat, invalid ID returned.");
 
                 suratData.ID_Surat = suratId;
-                await InsertRelatedDataSafeAsync(suratId, suratData, transaction, cancellationToken);
+                await InsertRelatedDataSafeAsync(suratId, suratData, transaction!, cancellationToken);
 
                 if (ownTransaction)
                     transaction.Commit();
@@ -360,7 +360,7 @@ namespace SuDesApp.Data.Repositories
                     if (await CheckNomorSuratExistsAsync(suratData.NomorSurat, suratData.ID_Surat, cancellationToken))
                         throw new ValidationException($"Nomor surat '{suratData.NomorSurat}' already used.");
 
-                int idWarga = await GetOrCreateWargaAsync(suratData, transaction, cancellationToken);
+                int idWarga = await GetOrCreateWargaAsync(suratData, transaction!, cancellationToken);
 
                 var query = _queryProvider.GetQuery("UpdateSurat");
                 var rowsAffected = await _connection.ExecuteAsync(query, new
@@ -378,8 +378,8 @@ namespace SuDesApp.Data.Repositories
 
                 if (rowsAffected > 0)
                 {
-                    await DeleteRelatedDataAsync(suratData.ID_Surat, suratData.NamaJenis, transaction, cancellationToken);
-                    await InsertRelatedDataSafeAsync(suratData.ID_Surat, suratData, transaction, cancellationToken);
+                    await DeleteRelatedDataAsync(suratData.ID_Surat, suratData.NamaJenis, transaction!, cancellationToken);
+                    await InsertRelatedDataSafeAsync(suratData.ID_Surat, suratData, transaction!, cancellationToken);
 
                     if (ownTransaction)
                         transaction.Commit();
@@ -476,7 +476,7 @@ namespace SuDesApp.Data.Repositories
                 if (surat == null)
                     return false;
 
-                await DeleteRelatedDataAsync(id, surat.NamaJenis, transaction, cancellationToken);
+                await DeleteRelatedDataAsync(id, surat.NamaJenis, transaction!, cancellationToken);
 
                 var query = _queryProvider.GetQuery("DeleteSurat");
                 var rowsAffected = await _connection.ExecuteAsync(query, new { ID_Surat = id }, transaction);
@@ -542,7 +542,7 @@ namespace SuDesApp.Data.Repositories
                             Kabupaten = w.Kabupaten,
                             Pendidikan = w.Pendidikan,
                             Kewarganegaraan = w.Kewarganegaraan,
-                            AlamatLengkap = BuildAlamatLengkap(w.Dusun, w.Desa, w.Kecamatan, w.Kabupaten)
+                            AlamatLengkap = BuildAlamatLengkap(w.Dusun!, w.Desa!, w.Kecamatan!, w.Kabupaten!)
                         };
                     }
 
@@ -562,7 +562,7 @@ namespace SuDesApp.Data.Repositories
             if (surat != null)
             {
                 surat.Desa = await _desaRepository.GetInfoDesaAsync(cancellationToken);
-                await LoadRelatedDataAsync(surat, transaction, cancellationToken);
+                await LoadRelatedDataAsync(surat, transaction!, cancellationToken);
                 await _cacheService.SetAsync(cacheKey, surat, new MemoryCacheEntryOptions
                 {
                     SlidingExpiration = TimeSpan.FromMinutes(10),
@@ -571,7 +571,7 @@ namespace SuDesApp.Data.Repositories
                 _cachedSuratData[id] = surat;
                 return surat;
             }
-            return null;
+            return null!;
         }
 
         private async Task LoadRelatedDataAsync(SuratData surat, IDbTransaction transaction, CancellationToken cancellationToken)
@@ -706,10 +706,10 @@ namespace SuDesApp.Data.Repositories
             return defaultValue;
         }
 
-        private static string SafeGetString(object value, string defaultValue = null)
+        private static string SafeGetString(object value, string? defaultValue = null)
         {
             if (value == null || value == DBNull.Value)
-                return defaultValue;
+                return defaultValue!;
 
             return value.ToString();
         }
@@ -777,7 +777,7 @@ namespace SuDesApp.Data.Repositories
                 }
                 else if (filters.JenisSurat.Equals("GROUP_NTCR", StringComparison.OrdinalIgnoreCase))
                 {
-                    var ntcrGroup = new[] { SuratConstants.NTCR_N1, SuratConstants.NTCR_N2, SuratConstants.NTCR_N3, SuratConstants.NTCR_N4 };
+                    var ntcrGroup = SuratConstants.NtcrSemua;
                     conditions.Add("UPPER(js.NamaJenis) IN @JenisGroup");
                     parameters.Add("JenisGroup", ntcrGroup.Select(j => j.ToUpperInvariant()));
                 }
@@ -809,7 +809,12 @@ namespace SuDesApp.Data.Repositories
             if (!string.IsNullOrEmpty(filters.SearchText))
             {
                 var searchText = $"%{filters.SearchText}%";
-                conditions.Add("(s.NomorSurat LIKE @SearchText OR s.Keperluan LIKE @SearchText OR w.Nama LIKE @SearchText OR i.NamaInstansi LIKE @SearchText OR w.NIK LIKE @SearchText)");
+
+                // AdditionalData ikut dicari: surat dari Template Surat menyimpan seluruh
+                // isiannya (nama penerima, NIK, keperluan, isi surat) pada kolom itu,
+                // sehingga surat template tetap dapat ditemukan lewat nama/NIK walau
+                // kolom warga-nya hanya baris penanda milik aplikasi.
+                conditions.Add("(s.NomorSurat LIKE @SearchText OR s.Keperluan LIKE @SearchText OR w.Nama LIKE @SearchText OR i.NamaInstansi LIKE @SearchText OR w.NIK LIKE @SearchText OR s.AdditionalData LIKE @SearchText)");
                 parameters.Add("SearchText", searchText);
             }
 
@@ -818,9 +823,8 @@ namespace SuDesApp.Data.Repositories
             return (whereClause, parameters);
         }
 
-        /// <summary>Apakah NamaJenis termasuk kelompok NTCR (N1-N4).</summary>
-        private static bool IsNtcrJenis(string? namaJenis) =>
-            namaJenis?.ToUpperInvariant() is "NTCR_N1" or "NTCR_N2" or "NTCR_N3" or "NTCR_N4";
+        /// <summary>Apakah NamaJenis termasuk kelompok formulir NTCR (N1-N6).</summary>
+        private static bool IsNtcrJenis(string? namaJenis) => SuratConstants.IsNtcr(namaJenis!);
 
         /// <summary>
         /// Melengkapi data pasangan NTCR untuk baris register (Ntcr tidak ikut query dasar).
@@ -886,7 +890,7 @@ namespace SuDesApp.Data.Repositories
                         NamaAyahCalonSuami = row.NamaAyahCalonSuami,
                         NamaIbuCalonSuami = row.NamaIbuCalonSuami,
                         NamaAyahCalonIstri = row.NamaAyahCalonIstri,
-                        NamaIbuCalonIstri = row.NamaIbuCalonIstri
+                        NamaIbuCalonIstri = row.NamaIbuCalonIstri!
                     };
                 }
                 catch (Exception ex)

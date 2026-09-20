@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
-using SuDesApp.Interface;
+using SuDesApp.Interfaces;
 using SuDesApp.Utilities;
 using SuDesApp.WhatsApp;
 using SuDesApp.Wpf.Mvvm;
@@ -578,7 +578,7 @@ namespace SuDesApp.Wpf.ViewModels
                 filePath = Path.Combine(Path.GetTempPath(), $"Surat_{p.KodePermintaan}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
                 using (var stream = File.Create(filePath))
                 {
-                    await generator.GeneratePdfAsync(stream, suratData, suratData.Keterangan);
+                    await generator.GeneratePdfAsync(stream, suratData, suratData.Keterangan!);
                 }
 
                 var folderId = await drive.FindOrCreateFolderAsync("Surat Online", null, default);

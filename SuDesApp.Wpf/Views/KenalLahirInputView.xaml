@@ -7,53 +7,54 @@
              d:DesignHeight="900" d:DesignWidth="900"
              FontSize="13"
              SnapsToDevicePixels="True"
-             UseLayoutRounding="True">
+             UseLayoutRounding="True"
+            >
 
-    <UserControl.Resources>
-        <Style x:Key="GroupHeader" TargetType="TextBlock">
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
-        </Style>
-    </UserControl.Resources>
+    <!-- Satu kolom: semua field lebar penuh, hanya scroll vertikal. -->
+    <Grid IsSharedSizeScope="True">
+        <StackPanel>
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="12"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+            <!-- NOMOR SURAT -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="NOMOR SURAT" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Nomor Surat *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Column="1" Style="{StaticResource FormField}"
+                                 IsEnabled="{Binding NomorSuratEnabled}"
+                                 Text="{Binding NomorSurat, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Nomor surat (otomatis jika dikelola register)"/>
+                    </Grid>
 
-        <!-- Nomor Surat: memanjang penuh di atas -->
-        <GroupBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Padding="10" Header="Nomor Surat">
-            <TextBox Style="{StaticResource FieldBox}"
-                     IsEnabled="{Binding NomorSuratEnabled}"
-                     Text="{Binding NomorSurat, UpdateSourceTrigger=PropertyChanged}"
-                     ToolTip="Nomor surat (otomatis jika dikelola register)"/>
-        </GroupBox>
+                </StackPanel>
+            </Border>
 
-            <!-- Baris 2: Data Ayah (kiri), Data Ibu (kanan) -->
-            <Grid Grid.Row="2" Grid.ColumnSpan="3">
+            <!-- DATA AYAH | DATA IBU — berdampingan -->
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="14"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <GroupBox Grid.Column="0" Padding="10" Header="Data Ayah">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="130"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource FormCard}" Padding="14">
+                    <StackPanel>
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="DATA AYAH" Style="{StaticResource FormSectionTitle}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="96" MaxWidth="130" SharedSizeGroup="FormLabelPair"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -67,75 +68,70 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="NIK *"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
-                                 Name="NikAyah"
-                                 LostFocus="OnNikAyahLostFocus"
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="NIK *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Name="NikAyah" LostFocus="OnNikAyahLostFocus"
                                  Text="{Binding Nik, UpdateSourceTrigger=PropertyChanged}"
                                  MaxLength="16" ToolTip="NIK Ayah (16 digit angka)"/>
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Nama *"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Nama *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding Nama, UpdateSourceTrigger=PropertyChanged}"
                                  CharacterCasing="Upper" ToolTip="Nama Lengkap Ayah"/>
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tempat Lahir *"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Tempat Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding TempatLahir, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tgl. Lahir *"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}"
                                  ToolTip="Format: DD-MM-YYYY"/>
 
-                        <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Agama *"/>
-                        <ComboBox Grid.Row="4" Grid.Column="1" Style="{StaticResource DropDown}"
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Agama *" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormCombo}"
                                   ItemsSource="{Binding AgamaOptions}"
                                   SelectedItem="{Binding Agama, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Pekerjaan *"/>
-                        <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Pekerjaan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding Pekerjaan, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Alamat (Dusun) *"/>
-                        <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Alamat (Dusun) *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding Dusun, UpdateSourceTrigger=LostFocus}"/>
 
-                        <TextBlock Grid.Row="7" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Desa *"/>
-                        <TextBox Grid.Row="7" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Desa *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="7" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding Desa, UpdateSourceTrigger=LostFocus}"/>
 
-                        <Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,4,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Kecamatan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="8" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Kecamatan, UpdateSourceTrigger=LostFocus}"/>
+
+                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Kabupaten *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="9" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Kabupaten, UpdateSourceTrigger=LostFocus}"/>
+                    </Grid>
+
+                    <TextBlock FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"
+                               TextWrapping="Wrap"
+                               Text="Data Ayah juga menjadi data pemohon surat."/>
+                </StackPanel>
+            </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource FormCard}" Padding="14">
+                    <StackPanel>
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="DATA IBU" Style="{StaticResource FormSectionTitle}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="Auto" MinWidth="96" MaxWidth="130" SharedSizeGroup="FormLabelPair"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Kecamatan *"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
-                                     Text="{Binding Kecamatan, UpdateSourceTrigger=LostFocus}"/>
-                            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Kabupaten *"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
-                                     Text="{Binding Kabupaten, UpdateSourceTrigger=LostFocus}"/>
-                        </Grid>
-
-                        <TextBlock Grid.Row="9" Grid.Column="1"
-                                   FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"
-                                   Text="Data Ayah juga menjadi data pemohon surat."/>
-                    </Grid>
-                </GroupBox>
-
-                <GroupBox Grid.Column="2" Padding="10" Header="Data Ibu">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="130"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -148,78 +144,72 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="NIK *"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
-                                 Name="NikIbu"
-                                 LostFocus="OnNikIbuLostFocus"
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="NIK *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Name="NikIbu" LostFocus="OnNikIbuLostFocus"
                                  Text="{Binding IbuNIK, UpdateSourceTrigger=PropertyChanged}"
                                  MaxLength="16" ToolTip="NIK Ibu (16 digit angka)"/>
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Nama *"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Nama *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding IbuNama, UpdateSourceTrigger=PropertyChanged}"
                                  CharacterCasing="Upper" ToolTip="Nama Lengkap Ibu"/>
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tempat Lahir *"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Tempat Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding IbuTempatLahir, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tgl. Lahir *"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding IbuTanggalLahir, UpdateSourceTrigger=LostFocus}"
                                  ToolTip="Format: DD-MM-YYYY"/>
 
-                        <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Agama *"/>
-                        <ComboBox Grid.Row="4" Grid.Column="1" Style="{StaticResource DropDown}"
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Agama *" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormCombo}"
                                   ItemsSource="{Binding AgamaOptions}"
                                   SelectedItem="{Binding IbuAgama, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Pekerjaan *"/>
-                        <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Pekerjaan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding IbuPekerjaan, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Alamat (Dusun) *"/>
-                        <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Alamat (Dusun) *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding IbuDusun, UpdateSourceTrigger=LostFocus}"/>
 
-                        <TextBlock Grid.Row="7" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Desa *"/>
-                        <TextBox Grid.Row="7" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Desa *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="7" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding IbuDesa, UpdateSourceTrigger=LostFocus}"/>
 
-                        <Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,4,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Kecamatan *"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
-                                     Text="{Binding IbuKecamatan, UpdateSourceTrigger=LostFocus}"/>
-                            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Kabupaten *"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
-                                     Text="{Binding IbuKabupaten, UpdateSourceTrigger=LostFocus}"/>
-                        </Grid>
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Kecamatan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="8" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding IbuKecamatan, UpdateSourceTrigger=LostFocus}"/>
 
-                        <CheckBox Grid.Row="9" Grid.Column="1" Margin="0,6,0,0"
-                                  Content="Alamat Sama Ayah"
-                                  VerticalAlignment="Center"
-                                  IsChecked="{Binding IbuAlamatSamaAyah, Mode=TwoWay}"/>
-
-                        <TextBlock Grid.Row="10" Grid.Column="1"
-                                   FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"
-                                   Text="Centang jika alamat Ibu sama dengan Ayah."/>
+                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Kabupaten *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="9" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding IbuKabupaten, UpdateSourceTrigger=LostFocus}"/>
                     </Grid>
-                </GroupBox>
+
+                    <CheckBox Margin="0,10,0,0" Content="Alamat Sama Ayah"
+                              VerticalAlignment="Center"
+                              IsChecked="{Binding IbuAlamatSamaAyah, Mode=TwoWay}"/>
+                    <TextBlock FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"
+                               TextWrapping="Wrap"
+                               Text="Centang jika alamat Ibu sama dengan Ayah."/>
+                </StackPanel>
+                </Border>
             </Grid>
 
-            <!-- Baris 3: Data Anak (memanjang penuh) -->
-            <GroupBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Padding="10" Header="Data Anak">
+            <!-- DATA ANAK -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="DATA ANAK" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
@@ -234,65 +224,57 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Nama *"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Nama *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding NamaAnak, UpdateSourceTrigger=PropertyChanged}"
                                  CharacterCasing="Upper" ToolTip="Nama Lengkap Anak"/>
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tempat Lahir *"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Tempat Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding TempatLahirAnak, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Tgl. Lahir *"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding TanggalLahirAnak, UpdateSourceTrigger=LostFocus}"
                                  ToolTip="Format: DD-MM-YYYY"/>
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Anak Ke *"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Anak Ke *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding AnakKe, UpdateSourceTrigger=LostFocus}"
                                  ToolTip="Urutan anak dalam keluarga (1-20)" MaxLength="2"/>
 
-                        <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Dilahirkan di *"/>
-                        <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Dilahirkan di *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding LahirDi, UpdateSourceTrigger=PropertyChanged}"
                                  ToolTip="Tempat Kelahiran Anak (Rumah/RS/Puskesmas)"/>
 
-                        <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Alamat (Dusun) *"/>
-                        <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Alamat (Dusun) *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding DusunAnak, UpdateSourceTrigger=LostFocus}"/>
 
-                        <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Desa *"/>
-                        <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FieldBox}"
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Desa *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding DesaAnak, UpdateSourceTrigger=LostFocus}"/>
 
-                        <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,4,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Kecamatan *"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FieldBox}"
-                                     Text="{Binding KecamatanAnak, UpdateSourceTrigger=LostFocus}"/>
-                            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="Kabupaten *"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FieldBox}"
-                                     Text="{Binding KabupatenAnak, UpdateSourceTrigger=LostFocus}"/>
-                        </Grid>
-
-                        <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" Margin="0,6,0,0">
-                            <CheckBox Content="Alamat Sama Ibu" Margin="0,0,24,0"
-                                      VerticalAlignment="Center"
-                                      IsChecked="{Binding AnakAlamatSamaIbu, Mode=TwoWay}"/>
-                            <CheckBox Content="Alamat Sama Ayah"
-                                      VerticalAlignment="Center"
-                                      IsChecked="{Binding AnakAlamatSamaAyah, Mode=TwoWay}"/>
-                        </StackPanel>
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Kecamatan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="7" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding KecamatanAnak, UpdateSourceTrigger=LostFocus}"/>
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Kabupaten *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="8" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding KabupatenAnak, UpdateSourceTrigger=LostFocus}"/>
                     </Grid>
-                </GroupBox>
 
-        </Grid>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <CheckBox Content="Alamat Sama Ibu" Margin="0,0,24,0"
+                                  VerticalAlignment="Center"
+                                  IsChecked="{Binding AnakAlamatSamaIbu, Mode=TwoWay}"/>
+                        <CheckBox Content="Alamat Sama Ayah"
+                                  VerticalAlignment="Center"
+                                  IsChecked="{Binding AnakAlamatSamaAyah, Mode=TwoWay}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
 </UserControl>

@@ -152,6 +152,15 @@ namespace SuDesApp.Configuration
                     }
                 }
 
+                // JenisSurat.Deskripsi: kolom tambahan yang dipakai saat menyemai jenis surat
+                // (termasuk blanko NTCR N1–N6). Database yang dibuat dari desa.db.sql versi
+                // lama belum punya kolom ini, dan penyemaian yang menyebutnya akan gagal
+                // seluruhnya — daftar jenis surat pun tidak pernah terisi.
+                if (await TableExistsAsync(connection, "JenisSurat"))
+                {
+                    await EnsureColumnExistsAsync(connection, "JenisSurat", "Deskripsi", "TEXT");
+                }
+
                 _logger.LogInformation("Required columns verification completed");
             }
             catch (Exception ex)
@@ -577,7 +586,126 @@ namespace SuDesApp.Configuration
             // ? 5. Insert default data for new features
             await InsertDefaultDataAsync(connection);
 
+            // ? 6. Buang sisa data Model N7 (sudah tidak dipakai aplikasi)
+            await HapusSisaDataN7Async(connection);
+
             _logger.LogInformation("New features initialized successfully");
+        }
+
+        // ? BUANG SISA DATA MODEL N7
+        /// <summary>
+        /// Model N7 (penolakan kehendak nikah/rujuk) sudah tidak ada di aplikasi:
+        /// blanko itu diterbitkan KUA, bukan kantor desa. Migrasi ini membuang sisa
+        /// datanya pada database lama — surat beserta detail NTCR-nya dan baris jenis
+        /// suratnya — supaya register, penomoran, dan pemilihan jenis surat bersih.
+        ///
+        /// Aman untuk dijalankan berulang: bila tidak ada data N7, tidak terjadi apa-apa.
+        /// Sebelum menghapus, berkas database dicadangkan ke folder "Backup" di samping
+        /// database, sehingga surat lama masih bisa dikembalikan bila diperlukan.
+        /// </summary>
+        private async Task HapusSisaDataN7Async(SqliteConnection connection)
+        {
+            const string jenisN7 = "NTCR_N7";
+
+            try
+            {
+                // Tabel Surat tidak menyimpan NamaJenis; jenis surat dibaca lewat
+                // relasi ke JenisSurat (s.ID_Jenis = j.ID_Jenis).
+                const string hitungSuratN7 = @"
+                    SELECT COUNT(*) FROM Surat s
+                    INNER JOIN JenisSurat j ON j.ID_Jenis = s.ID_Jenis
+                    WHERE j.NamaJenis = @Jenis COLLATE NOCASE";
+
+                int suratN7 = await TableExistsAsync(connection, "Surat") && await TableExistsAsync(connection, "JenisSurat")
+                    ? await connection.ExecuteScalarAsync<int>(hitungSuratN7, new { Jenis = jenisN7 })
+                    : 0;
+
+                int jenisN7Tersisa = await TableExistsAsync(connection, "JenisSurat")
+                    ? await connection.ExecuteScalarAsync<int>(
+                        "SELECT COUNT(*) FROM JenisSurat WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 })
+                    : 0;
+
+                int permintaanN7 = await TableExistsAsync(connection, "PermintaanWa")
+                    ? await connection.ExecuteScalarAsync<int>(
+                        "SELECT COUNT(*) FROM PermintaanWa WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 })
+                    : 0;
+
+                if (suratN7 == 0 && jenisN7Tersisa == 0 && permintaanN7 == 0)
+                {
+                    return;
+                }
+
+                _logger.LogWarning(
+                    "Migrasi N7: ditemukan {Surat} surat, {Jenis} jenis surat, {Permintaan} permintaan online. " +
+                    "Model N7 sudah tidak dipakai — data lama akan dibuang setelah dicadangkan.",
+                    suratN7, jenisN7Tersisa, permintaanN7);
+
+                await CadangkanSebelumHapusN7Async();
+
+                if (suratN7 > 0)
+                {
+                    if (await TableExistsAsync(connection, "NTCR"))
+                    {
+                        await connection.ExecuteAsync(@"
+                            DELETE FROM NTCR WHERE ID_Surat IN (
+                                SELECT s.ID_Surat FROM Surat s
+                                INNER JOIN JenisSurat j ON j.ID_Jenis = s.ID_Jenis
+                                WHERE j.NamaJenis = @Jenis COLLATE NOCASE)",
+                            new { Jenis = jenisN7 });
+                    }
+
+                    // Hapus suratnya selagi baris jenis suratnya masih ada (sumber nama jenis).
+                    await connection.ExecuteAsync(@"
+                        DELETE FROM Surat WHERE ID_Jenis IN (
+                            SELECT ID_Jenis FROM JenisSurat WHERE NamaJenis = @Jenis COLLATE NOCASE)",
+                        new { Jenis = jenisN7 });
+                }
+
+                if (jenisN7Tersisa > 0)
+                {
+                    await connection.ExecuteAsync(
+                        "DELETE FROM JenisSurat WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 });
+                }
+
+                if (permintaanN7 > 0)
+                {
+                    await connection.ExecuteAsync(
+                        "DELETE FROM PermintaanWa WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 });
+                }
+
+                _logger.LogInformation("Migrasi N7 selesai: sisa data Model N7 dihapus.");
+            }
+            catch (Exception ex)
+            {
+                // Jangan gagalkan startup hanya karena pembersihan data opsional ini.
+                _logger.LogWarning(ex, "Gagal membersihkan sisa data Model N7 (tidak fatal).");
+            }
+        }
+
+        /// <summary>
+        /// Cadangkan berkas database sebelum data N7 dibuang: "&lt;database&gt;.sebelum-hapus-N7-
+        /// &lt;stempel waktu&gt;.bak" di folder "Backup" sebelah berkas database.
+        /// Bila pencadangan gagal, penghapusan dibatalkan demi keamanan data.
+        /// </summary>
+        private async Task CadangkanSebelumHapusN7Async()
+        {
+            var dbPath = new SqliteConnectionStringBuilder(_config.DatabaseConnectionString).DataSource;
+            var dbDir = Path.GetDirectoryName(dbPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+            var nama = Path.GetFileNameWithoutExtension(dbPath);
+
+            var backupPath = Path.Combine(dbDir, "Backup",
+                $"{nama}.sebelum-hapus-N7-{DateTime.Now:yyyyMMdd-HHmmss}.bak");
+
+            try
+            {
+                await CreateBackupAsync(backupPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Pencadangan sebelum hapus data N7 gagal.");
+                throw new InvalidOperationException(
+                    "Data N7 tidak dihapus karena pencadangan database gagal.", ex);
+            }
         }
 
         // ? CREATE AUDIT LOG TABLE
@@ -793,16 +921,42 @@ namespace SuDesApp.Configuration
                 _logger.LogWarning(ex, "Failed to insert default IJIN_TINGGAL data");
             }
 
-            // Insert NTCR jenis surat (N1-N4) jika belum ada
+            // Insert jenis surat REKENING_KORAN (permohonan print out rekening koran
+            // ke bank) jika belum ada. Surat ini surat keluar desa dan ikut penomoran
+            // bersama seperti SKD, jadi barisnya wajib ada agar nomornya bisa
+            // dihasilkan dan surat tercatat di register.
+            var rekeningKoranSql = @"
+                INSERT OR IGNORE INTO JenisSurat (ID_Jenis, NamaJenis, KodeJenis, Deskripsi) 
+                VALUES (21, 'REKENING_KORAN', 'REKKOR', 'Permohonan Print Out Rekening Koran');";
+
+            try
+            {
+                await connection.ExecuteAsync(rekeningKoranSql);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to insert default REKENING_KORAN data");
+            }
+
+            // Insert jenis surat NTCR yang dibuat kantor desa (blanko N1-N6 + surat
+            // numpang nikah N8) jika belum ada. Model N7 (penolakan kehendak
+            // nikah/rujuk) diterbitkan KUA, jadi tidak ikut disemai; sisa data N7 pada
+            // database lama dibersihkan oleh HapusSisaDataN7Async.
             var ntcrSql = @"
                 INSERT OR IGNORE INTO JenisSurat (ID_Jenis, NamaJenis, KodeJenis, Deskripsi) 
                 VALUES (14, 'NTCR_N1', 'N1T', 'Surat Pengantar Nikah (NTCR N1)');
                 INSERT OR IGNORE INTO JenisSurat (ID_Jenis, NamaJenis, KodeJenis, Deskripsi) 
-                VALUES (15, 'NTCR_N2', 'N2T', 'Surat Keterangan Untuk Nikah (NTCR N2)');
+                VALUES (15, 'NTCR_N2', 'N2T', 'Permohonan Kehendak Nikah (NTCR N2)');
                 INSERT OR IGNORE INTO JenisSurat (ID_Jenis, NamaJenis, KodeJenis, Deskripsi) 
-                VALUES (16, 'NTCR_N3', 'N3T', 'Surat Persetujuan Calon Mempelai (NTCR N3)');
+                VALUES (16, 'NTCR_N3', 'N3T', 'Permohonan Pencatatan Isbat (NTCR N3)');
                 INSERT OR IGNORE INTO JenisSurat (ID_Jenis, NamaJenis, KodeJenis, Deskripsi) 
-                VALUES (17, 'NTCR_N4', 'N4T', 'Surat Keterangan Orang Tua (NTCR N4)');";
+                VALUES (17, 'NTCR_N4', 'N4T', 'Persetujuan Calon Pengantin (NTCR N4)');
+                INSERT OR IGNORE INTO JenisSurat (ID_Jenis, NamaJenis, KodeJenis, Deskripsi) 
+                VALUES (18, 'NTCR_N5', 'N5T', 'Surat Izin Orang Tua (NTCR N5)');
+                INSERT OR IGNORE INTO JenisSurat (ID_Jenis, NamaJenis, KodeJenis, Deskripsi) 
+                VALUES (19, 'NTCR_N6', 'N6T', 'Keterangan Kematian Suami/Istri (NTCR N6)');
+                INSERT OR IGNORE INTO JenisSurat (ID_Jenis, NamaJenis, KodeJenis, Deskripsi) 
+                VALUES (20, 'NTCR_N8', 'N8T', 'Surat Keterangan Numpang Nikah (NTCR N8)');";
 
             try
             {
@@ -837,14 +991,21 @@ namespace SuDesApp.Configuration
                 _logger.LogWarning(ex, "Failed to update JenisSurat descriptions");
             }
 
-            // Update/muat deskripsi NTCR (N1-N4) jika ID_Jenis sudah terisi
+            // Update/muat deskripsi NTCR (N1-N6, N8) jika belum terisi. Deskripsi lama
+            // yang masih memakai penamaan keliru (N2-N4 sebelum disesuaikan dengan
+            // blanko resmi) ikut dimigrasi agar menu tidak menampilkan nama formulir
+            // yang salah.
             try
             {
                 await connection.ExecuteAsync(@"
                     UPDATE JenisSurat SET Deskripsi = 'Surat Pengantar Nikah (NTCR N1)' WHERE NamaJenis = 'NTCR_N1' AND (Deskripsi IS NULL OR Deskripsi = '');
-                    UPDATE JenisSurat SET Deskripsi = 'Surat Keterangan Untuk Nikah (NTCR N2)' WHERE NamaJenis = 'NTCR_N2' AND (Deskripsi IS NULL OR Deskripsi = '');
-                    UPDATE JenisSurat SET Deskripsi = 'Surat Persetujuan Calon Mempelai (NTCR N3)' WHERE NamaJenis = 'NTCR_N3' AND (Deskripsi IS NULL OR Deskripsi = '');
-                    UPDATE JenisSurat SET Deskripsi = 'Surat Keterangan Orang Tua (NTCR N4)' WHERE NamaJenis = 'NTCR_N4' AND (Deskripsi IS NULL OR Deskripsi = '');");
+                    UPDATE JenisSurat SET Deskripsi = 'Permohonan Kehendak Nikah (NTCR N2)' WHERE NamaJenis = 'NTCR_N2' AND (Deskripsi IS NULL OR Deskripsi = '' OR Deskripsi = 'Surat Keterangan Untuk Nikah (NTCR N2)');
+                    UPDATE JenisSurat SET Deskripsi = 'Permohonan Pencatatan Isbat (NTCR N3)' WHERE NamaJenis = 'NTCR_N3' AND (Deskripsi IS NULL OR Deskripsi = '' OR Deskripsi = 'Surat Persetujuan Calon Mempelai (NTCR N3)');
+                    UPDATE JenisSurat SET Deskripsi = 'Persetujuan Calon Pengantin (NTCR N4)' WHERE NamaJenis = 'NTCR_N4' AND (Deskripsi IS NULL OR Deskripsi = '' OR Deskripsi = 'Surat Keterangan Orang Tua (NTCR N4)');
+                    UPDATE JenisSurat SET Deskripsi = 'Surat Izin Orang Tua (NTCR N5)' WHERE NamaJenis = 'NTCR_N5' AND (Deskripsi IS NULL OR Deskripsi = '');
+                    UPDATE JenisSurat SET Deskripsi = 'Keterangan Kematian Suami/Istri (NTCR N6)' WHERE NamaJenis = 'NTCR_N6' AND (Deskripsi IS NULL OR Deskripsi = '');
+                    UPDATE JenisSurat SET Deskripsi = 'Surat Keterangan Numpang Nikah (NTCR N8)' WHERE NamaJenis = 'NTCR_N8' AND (Deskripsi IS NULL OR Deskripsi = '');
+                    UPDATE JenisSurat SET Deskripsi = 'Permohonan Print Out Rekening Koran' WHERE NamaJenis = 'REKENING_KORAN' AND (Deskripsi IS NULL OR Deskripsi = '');");
             }
             catch (Exception ex)
             {

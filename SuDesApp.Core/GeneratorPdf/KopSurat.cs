@@ -115,7 +115,7 @@ namespace SuDesApp.GeneratorPdf
                 return string.Empty;
             }
 
-            foreach (string awalan in new[] { kataPengulang, singkatan })
+            foreach (string ?awalan in new[] { kataPengulang, singkatan })
             {
                 if (string.IsNullOrEmpty(awalan) ||
                     teks.Length <= awalan.Length ||

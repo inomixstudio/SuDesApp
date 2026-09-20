@@ -11,9 +11,9 @@ namespace SuDesApp.Data.Handlers
 {
     public class SKUDto
     {
-        public string BidangUsaha { get; set; }
+        public string ?BidangUsaha { get; set; }
         public int SejakTahun { get; set; }
-        public string LokasiUsaha { get; set; }
+        public string ?LokasiUsaha { get; set; }
     }
 
     public class SKUDataHandler : ISuratDataHandler

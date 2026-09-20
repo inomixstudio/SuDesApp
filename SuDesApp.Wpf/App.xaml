@@ -4,13 +4,14 @@
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:views="clr-namespace:SuDesApp.Wpf.Views"
               xmlns:vm="clr-namespace:SuDesApp.Wpf.ViewModels"
+              xmlns:input="clr-namespace:SuDesApp.Wpf.Input"
               xmlns:local="clr-namespace:SuDesApp.Wpf.Converters"
               ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Themes/ThemeStyles.xaml"/>
-                <ResourceDictionary Source="Themes/EmeraldTheme.xaml"/>
+                <ResourceDictionary Source="Themes/GreenTheme.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
             <local:StringToBoolConverter x:Key="StringToBoolConverter"/>
@@ -69,8 +70,16 @@
 </Style>
             
             <!-- DataTemplates untuk navigasi View ke ViewModel -->
+            <!-- Beranda: halaman pembuka setelah login -->
+            <DataTemplate DataType="{x:Type vm:BerandaViewModel}">
+                <views:BerandaView/>
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:RegisterSuratViewModel}">
                 <views:RegisterSuratView/>
+            </DataTemplate>
+            <!-- Register NTCR terpisah dari Register Surat: view dan kolomnya sendiri -->
+            <DataTemplate DataType="{x:Type vm:RegisterNtcrViewModel}">
+                <views:RegisterNtcrView/>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:SetelanViewModel}">
                 <views:SetelanView/>
@@ -93,11 +102,18 @@
             <DataTemplate DataType="{x:Type vm:PdfPreviewViewModel}">
                 <views:PdfPreviewView/>
             </DataTemplate>
+            <!-- Agenda Surat & Buku SK/Peraturan: formulir input ditanam sebagai halaman -->
+            <DataTemplate DataType="{x:Type vm:InputAgendaViewModel}">
+                <views:InputAgendaView/>
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AgendaSuratViewModel}">
                 <views:AgendaSuratView/>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:RiwayatViewModel}">
                 <views:RiwayatView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:InputKeputusanViewModel}">
+                <views:InputKeputusanView/>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:KeputusanViewModel}">
                 <views:KeputusanView/>
@@ -134,6 +150,22 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AboutViewModel}">
                 <views:AboutView/>
+            </DataTemplate>
+            <!-- Template Surat: daftar template buatan pengguna + formulir pengisiannya -->
+            <!-- Wizard penyusunan template: ditanam sebagai halaman, bukan jendela -->
+            <DataTemplate DataType="{x:Type vm:TemplateSuratWizardViewModel}">
+                <views:TemplateSuratWizardView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:TemplateSuratViewModel}">
+                <views:TemplateSuratView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:IsiTemplateSuratViewModel}">
+                <views:IsiTemplateSuratView/>
+            </DataTemplate>
+            <!-- Alur paket NTCR (N1–N6 sekali isi): DataTemplate tepat per tipe ini
+                 dipakai lebih dulu daripada template NtcrInputViewModel induknya. -->
+            <DataTemplate DataType="{x:Type input:NtcrPaketViewModel}">
+                <views:NtcrPaketView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

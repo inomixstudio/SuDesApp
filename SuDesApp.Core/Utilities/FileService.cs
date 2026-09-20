@@ -94,7 +94,7 @@ namespace SuDesApp.Utilities
                     return true;
                 }
 
-                string directory = Path.GetDirectoryName(sanitizedPath);
+                string? directory = Path.GetDirectoryName(sanitizedPath);
                 string fileName = Path.GetFileName(sanitizedPath);
 
                 if (Directory.Exists(directory))
@@ -144,7 +144,7 @@ namespace SuDesApp.Utilities
                     return sanitizedPath;
                 }
 
-                string directory = Path.GetDirectoryName(sanitizedPath);
+                string? directory = Path.GetDirectoryName(sanitizedPath);
                 string fileName = Path.GetFileName(sanitizedPath);
 
                 if (Directory.Exists(directory))
@@ -241,7 +241,7 @@ namespace SuDesApp.Utilities
         {
             try
             {
-                string directory = Path.GetDirectoryName(SanitizePath(path));
+                string? directory = Path.GetDirectoryName(SanitizePath(path));
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
                     Directory.CreateDirectory(directory);
@@ -259,7 +259,7 @@ namespace SuDesApp.Utilities
         {
             try
             {
-                string directory = Path.GetDirectoryName(SanitizePath(path));
+                string? directory = Path.GetDirectoryName(SanitizePath(path));
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
                     await Task.Run(() => Directory.CreateDirectory(directory));

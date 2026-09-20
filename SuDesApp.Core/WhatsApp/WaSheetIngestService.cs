@@ -1,4 +1,5 @@
 using Google;
+using Google.Apis.Forms.v1.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Data.Models;
@@ -91,6 +92,16 @@ namespace SuDesApp.WhatsApp
 
                 var tab = WaSheetOptions.GetTabName();
                 var ct = CancellationToken.None;
+
+                try
+                {
+                    var forms = sp.GetRequiredService<GoogleFormsService>();
+                    await SinkronFormAsync(forms, sheets, sheetId, tab, ct).ConfigureAwait(false);
+                }
+                catch (Exception exSync)
+                {
+                    _logger.LogWarning(exSync, "Sinkronisasi jawaban Forms ke Sheet gagal — lanjut membaca Sheet yang ada");
+                }
 
                 var rows = await sheets.GetRowsAsync(sheetId, tab, ct).ConfigureAwait(false);
                 if (rows.Count == 0) return;
@@ -279,6 +290,76 @@ namespace SuDesApp.WhatsApp
             _engine.RaiseRequestCreated(permintaan);
         }
 
+        /// <summary>
+        /// Menyalin jawaban Google Form (dibaca via Forms API) ke Sheet mirror.
+        /// Hanya berlaku untuk form yang dibuat aplikasi (Forms API tidak bisa
+        /// menautkan form ke Sheet). Idempoten lewat kolom "Response ID".
+        /// </summary>
+        private async Task SinkronFormAsync(
+            GoogleFormsService forms, GoogleSheetsService sheets,
+            string sheetId, string tab, CancellationToken ct)
+        {
+            if (!WaSheetOptions.IsAutoForm()) return;
+            var formId = WaSheetOptions.GetFormId();
+            if (string.IsNullOrWhiteSpace(formId)) return;
+
+            var definisi = await forms.GetFormAsync(formId, ct).ConfigureAwait(false);
+            var peta = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var item in definisi.Items ?? new List<Item>())
+            {
+                var qid = item.QuestionItem?.Question?.QuestionId;
+                if (!string.IsNullOrEmpty(qid) && !string.IsNullOrWhiteSpace(item.Title))
+                    peta[qid!] = item.Title!;
+            }
+
+            var responses = await forms.ListResponsesAsync(formId, ct).ConfigureAwait(false);
+            if (responses.Count == 0) return;
+
+            var rows = await sheets.GetRowsAsync(sheetId, tab, ct).ConfigureAwait(false);
+            var dikenal = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var r in rows)
+            {
+                var id = r.Get(WaFormKatalog.KolomResponseId)?.Trim();
+                if (!string.IsNullOrEmpty(id)) dikenal.Add(id!);
+            }
+
+            var kolom = WaFormKatalog.KolomSheet;
+            var tsIdx = WaFormKatalog.IndexKolom(WaFormKatalog.KolomTimestamp);
+            var statusIdx = WaFormKatalog.IndexKolom(WaFormKatalog.KolomStatus);
+            var idIdx = WaFormKatalog.IndexKolom(WaFormKatalog.KolomResponseId);
+            var baru = new List<IList<object>>();
+
+            foreach (var resp in responses)
+            {
+                var rid = resp.ResponseId;
+                if (string.IsNullOrWhiteSpace(rid) || dikenal.Contains(rid!)) continue;
+
+                var nilai = new string[kolom.Count];
+                if (tsIdx >= 0 && !string.IsNullOrWhiteSpace(resp.CreateTimeRaw))
+                    nilai[tsIdx] = resp.CreateTimeRaw!;
+
+                foreach (var kv in resp.Answers ?? new Dictionary<string, Answer>())
+                {
+                    if (!peta.TryGetValue(kv.Key, out var judul)) continue;
+                    var idx = WaFormKatalog.IndexKolom(judul);
+                    if (idx < 0) continue;
+                    var teks = GoogleFormsService.JawabanTeks(kv.Value);
+                    if (!string.IsNullOrEmpty(teks)) nilai[idx] = teks;
+                }
+
+                if (statusIdx >= 0) nilai[statusIdx] = string.Empty;
+                if (idIdx >= 0) nilai[idIdx] = rid!;
+                baru.Add(nilai.Cast<object>().ToList());
+                dikenal.Add(rid!);
+            }
+
+            if (baru.Count > 0)
+            {
+                await sheets.AppendRowsAsync(sheetId, tab, baru, ct).ConfigureAwait(false);
+                _logger.LogInformation("Formulir: {Jumlah} jawaban baru disalin ke Sheet", baru.Count);
+            }
+        }
+
         /// <summary>Menulis status ke Sheet tanpa pernah melempar (pemrosesan utama jangan gagal karena status).</summary>
         private async Task TulisAmanAsync(GoogleSheetsService sheets, string sheetId, string tab,
             int rowNumber, string statusCol, string teks, CancellationToken ct)
@@ -292,7 +373,7 @@ namespace SuDesApp.WhatsApp
         {
             var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var skip = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                { "status", "token", "timestamp", "jenis", "jenissurat", "nowa", "nomorwhatsapp", "whatsapp" };
+                { "status", "token", "timestamp", "jenis", "jenissurat", "nowa", "nomorwhatsapp", "whatsapp", "responseid" };
 
             for (int i = 0; i < row.Headers.Length; i++)
             {

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.ControlSurat; // SettingsManager
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
-using SuDesApp.Interface;
+using SuDesApp.Interfaces;
 using SuDesApp.Utilities;
 using QuestPDF.Drawing;
 using QuestPDF.Fluent;
@@ -41,6 +41,9 @@ namespace SuDesApp.GeneratorPdf
         /// </summary>
         protected virtual int HalamanMaksimal => 1;
 
+        /// <summary>Kerapatan tata letak yang dicoba berurutan: lapang → rapat.</summary>
+        protected static IReadOnlyList<KerapatanSurat> KerapatanBertingkat => KerapatanSurat.Bertingkat;
+
         protected virtual bool UseDefaultLogo => true;
         protected virtual bool UseDefaultHeader => true;
         protected virtual bool UseDefaultFooter => true;
@@ -61,7 +64,7 @@ namespace SuDesApp.GeneratorPdf
             ISuratRepository suratRepository,
             SettingsManager settingsManager,
             ILogger<SuratGeneratorBase> logger,
-            ILoggerFactory loggerFactory = null)
+            ILoggerFactory? loggerFactory = null)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
@@ -103,7 +106,7 @@ namespace SuDesApp.GeneratorPdf
             _logger.LogInformation("Font dari {FontFolder} didaftarkan ke QuestPDF.", fontFolder);
         }
 
-        public virtual async Task GeneratePdfAsync(Stream outputStream, int idSurat, string keteranganTextBox = null)
+        public virtual async Task GeneratePdfAsync(Stream outputStream, int idSurat, string keteranganTextBox = default)
         {
             try
             {
@@ -123,7 +126,7 @@ namespace SuDesApp.GeneratorPdf
             }
         }
 
-        public virtual async Task GeneratePdfAsync(Stream outputStream, SuratData suratData, string keteranganTextBox = null)
+        public virtual async Task GeneratePdfAsync(Stream outputStream, SuratData suratData, string? keteranganTextBox = null)
         {
             if (outputStream == null)
                 throw new ArgumentNullException(nameof(outputStream));
@@ -166,7 +169,7 @@ namespace SuDesApp.GeneratorPdf
                 // berikutnya — biasa terjadi pada A4 yang lebih pendek dari F4 — dokumen
                 // dirender ulang dengan kerapatan lebih rapat sampai muat, sehingga
                 // surat yang sudah muat tidak berubah sama sekali.
-                var ukuranPdf = RenderDenganPenyesuaian(suratData, keteranganTextBox, lebarHalaman, tinggiHalaman);
+                var ukuranPdf = RenderDenganPenyesuaian(suratData, keteranganTextBox!, lebarHalaman, tinggiHalaman);
                 outputStream.Write(ukuranPdf, 0, ukuranPdf.Length);
 
                 _logger.LogInformation("PDF generation completed for Surat ID={ID_Surat}, stream size: {Size} bytes", suratData.ID_Surat, outputStream.Length);
@@ -200,14 +203,7 @@ namespace SuDesApp.GeneratorPdf
                 {
                     container.Page(page =>
                     {
-                        page.Size(new PageSize(lebarHalaman, tinggiHalaman, Unit.Point));
-                        page.MarginTop(36, Unit.Point);     // top, right, bottom, left
-                        page.MarginRight(45, Unit.Point);
-                        // Sisi bawah diberi ruang supaya tanda tangan tidak menyentuh
-                        // tepi kertas (area cetak printer umumnya butuh ±20pt).
-                        page.MarginBottom(30, Unit.Point);
-                        page.MarginLeft(45, Unit.Point);
-                        page.DefaultTextStyle(x => x.FontFamily(Fonts.TimesNewRoman).FontSize(DEFAULT_FONT_SIZE));
+                        SiapkanHalaman(page, lebarHalaman, tinggiHalaman);
 
                         page.Content().Column(kolom =>
                         {
@@ -249,9 +245,28 @@ namespace SuDesApp.GeneratorPdf
         }
 
         /// <summary>
+        /// Ukuran kertas, margin, dan gaya teks baku seluruh surat. Dipakai satu
+        /// halaman tunggal maupun dokumen gabungan (mis. paket NTCR N1–N6).
+        /// </summary>
+        protected static void SiapkanHalaman(PageDescriptor page, float lebarHalaman, float tinggiHalaman)
+        {
+            var kerapatan = KerapatanSurat.Aktif;
+
+            page.Size(new PageSize(lebarHalaman, tinggiHalaman, Unit.Point));
+            page.MarginTop(kerapatan.MarginAtas, Unit.Point);     // top, right, bottom, left
+            page.MarginRight(45, Unit.Point);
+            // Sisi bawah diberi ruang supaya tanda tangan tidak menyentuh
+            // tepi kertas (area cetak printer umumnya butuh ±20pt); margin menipis
+            // bersama kerapatan bila isi surat memang panjang.
+            page.MarginBottom(kerapatan.MarginBawah, Unit.Point);
+            page.MarginLeft(45, Unit.Point);
+            page.DefaultTextStyle(x => x.FontFamily(Fonts.TimesNewRoman).FontSize(DEFAULT_FONT_SIZE));
+        }
+
+        /// <summary>
         /// Jumlah halaman dokumen, dibaca dari pohon halaman PDF yang dihasilkan QuestPDF.
         /// </summary>
-        private static int HitungJumlahHalaman(byte[] pdf)
+        protected static int HitungJumlahHalaman(byte[] pdf)
         {
             // Latin1: satu byte = satu karakter, sehingga pola dapat dicari langsung.
             string isi = System.Text.Encoding.Latin1.GetString(pdf);
@@ -294,27 +309,27 @@ namespace SuDesApp.GeneratorPdf
         {
             // Gambar kop mengikuti Pengaturan Surat (bisa diganti pengguna);
             // null berarti kop dicetak tanpa logo.
-            string logoPath = PengaturanCetak.JalurLogoEfektif(_config.LogoPath);
+            string? logoPath = PengaturanCetak.JalurLogoEfektif(_config.LogoPath);
             if (logoPath != null)
             {
                 return logoPath;
             }
 
             _logger.LogWarning("Gambar logo tidak ditemukan; kop surat dicetak tanpa logo.");
-            return null;
+            return null!;
         }
 
         /// <summary>
         /// Susunan satu halaman surat: kop, judul + nomor, badan surat, lalu blok
         /// tanda tangan. Generator yang bentuknya khusus menimpa metode ini.
         /// </summary>
-        protected virtual void ComposeHalaman(BadanSurat halaman, SuratData suratData, string keteranganTextBox = null)
+        protected virtual void ComposeHalaman(BadanSurat halaman, SuratData suratData, string? keteranganTextBox = null)
         {
             if (UseDefaultHeader)
             {
                 var desa = suratData.Desa;
                 string logoPath = CariLogoPath();
-                halaman.Blok(c => SuratRenderer.Kop(c, desa, logoPath));
+                halaman.Blok(c => SuratRenderer.Kop(c, desa!, logoPath));
             }
 
             ComposeJudul(halaman, suratData);
@@ -340,7 +355,7 @@ namespace SuDesApp.GeneratorPdf
         {
             var data = DataKakiSurat(suratData, "Pemohon :");
             kaki.Blok(c => SuratRenderer.TandaTangan(
-                c, data.TampilkanPemohon, data.NamaPemohon, data.NamaDesa, data.TanggalTerformat, data.Jabatan, data.NamaPejabat, data.LabelPemohon));
+                c, data.TampilkanPemohon, data.NamaPemohon!, data.NamaDesa, data.TanggalTerformat, data.Jabatan, data.NamaPejabat, data.LabelPemohon));
         }
 
         /// <summary>Nomor surat yang tercetak: dari data, atau disusun dari format jenis surat.</summary>
@@ -395,7 +410,7 @@ namespace SuDesApp.GeneratorPdf
         }
 
         /// <summary>Badan surat masing-masing generator.</summary>
-        protected virtual void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBox = null)
+        protected virtual void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
         }
 

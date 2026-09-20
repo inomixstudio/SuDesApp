@@ -74,8 +74,8 @@ namespace SuDesApp.Data.Handlers
                 }
 
                 // Process parents data
-                int? idAyah = await ProcessParentDataAsync(data.Ayah, "Ayah", sqliteConnection, transaction);
-                int? idIbu = await ProcessParentDataAsync(data.Ibu, "Ibu", sqliteConnection, transaction);
+                int? idAyah = await ProcessParentDataAsync(data.Ayah!, "Ayah", sqliteConnection, transaction);
+                int? idIbu = await ProcessParentDataAsync(data.Ibu!, "Ibu", sqliteConnection, transaction);
 
                 // Validate parent-child relationship
                 if (idAyah.HasValue && idIbu.HasValue && idAyah.Value == idIbu.Value)
@@ -240,14 +240,14 @@ namespace SuDesApp.Data.Handlers
 
                 suratData.KenalLahir = new KenalLahirData
                 {
-                    Ayah = CreateParentData(data.ID_Ayah, data.NamaAyah, data.NIKAyah, data.TanggalLahirAyah,
-                        data.TempatLahirAyah, data.AgamaAyah, data.PekerjaanAyah, data.JenisKelaminAyah,
-                        data.StatusPerkawinanAyah, data.KewarganegaraanAyah, data.DusunAyah, data.DesaAyah,
-                        data.KecamatanAyah, data.KabupatenAyah),
-                    Ibu = CreateParentData(data.ID_Ibu, data.NamaIbu, data.NIKIbu, data.TanggalLahirIbu,
-                        data.TempatLahirIbu, data.AgamaIbu, data.PekerjaanIbu, data.JenisKelaminIbu,
-                        data.StatusPerkawinanIbu, data.KewarganegaraanIbu, data.DusunIbu, data.DesaIbu,
-                        data.KecamatanIbu, data.KabupatenIbu),
+                    Ayah = CreateParentData(data.ID_Ayah, data.NamaAyah!, data.NIKAyah!, data.TanggalLahirAyah,
+                        data.TempatLahirAyah!, data.AgamaAyah!, data.PekerjaanAyah!, data.JenisKelaminAyah!,
+                        data.StatusPerkawinanAyah!, data.KewarganegaraanAyah!, data.DusunAyah!, data.DesaAyah!,
+                        data.KecamatanAyah!, data.KabupatenAyah!),
+                    Ibu = CreateParentData(data.ID_Ibu, data.NamaIbu!, data.NIKIbu!, data.TanggalLahirIbu,
+                        data.TempatLahirIbu!, data.AgamaIbu!, data.PekerjaanIbu!, data.JenisKelaminIbu!,
+                        data.StatusPerkawinanIbu!, data.KewarganegaraanIbu!, data.DusunIbu!, data.DesaIbu!,
+                        data.KecamatanIbu!, data.KabupatenIbu!),
                     NamaAnak = data.NamaAnak,
                     TanggalLahirAnak = data.TanggalLahirAnak,
                     TempatLahirAnak = data.TempatLahirAnak,
@@ -332,7 +332,7 @@ namespace SuDesApp.Data.Handlers
         private (string namaAnak, DateTime? tanggalLahirAnak, string tempatLahirAnak, string jenisKelaminAnak) GetChildData(KenalLahirData data)
         {
             // Prioritize direct child data over Anak object
-            string namaAnak = !string.IsNullOrWhiteSpace(data.NamaAnak)
+            string? namaAnak = !string.IsNullOrWhiteSpace(data.NamaAnak)
                 ? data.NamaAnak.Trim()
                 : data.Anak?.NamaAnak?.Trim();
 
@@ -340,11 +340,11 @@ namespace SuDesApp.Data.Handlers
                 ? data.TanggalLahirAnak
                 : DateTime.TryParse(data.Anak?.TanggalLahir, out var parsedTanggalLahir) ? parsedTanggalLahir : null;
 
-            string tempatLahirAnak = !string.IsNullOrWhiteSpace(data.TempatLahirAnak)
+            string? tempatLahirAnak = !string.IsNullOrWhiteSpace(data.TempatLahirAnak)
                 ? data.TempatLahirAnak.Trim()
                 : null;
 
-            string jenisKelaminAnak = !string.IsNullOrWhiteSpace(data.Anak?.JenisKelamin)
+            string? jenisKelaminAnak = !string.IsNullOrWhiteSpace(data.Anak?.JenisKelamin)
                 ? data.Anak.JenisKelamin.Trim()
                 : null;
 
@@ -369,7 +369,7 @@ namespace SuDesApp.Data.Handlers
             string kewarganegaraan, string dusun, string desa, string kecamatan, string kabupaten)
         {
             if (string.IsNullOrWhiteSpace(nama))
-                return null;
+                return null!;
 
             return new WargaData
             {
@@ -431,12 +431,12 @@ namespace SuDesApp.Data.Handlers
 
             if (hasAyah)
             {
-                errors.AddRange(ValidateParentData(data.Ayah, "Ayah"));
+                errors.AddRange(ValidateParentData(data.Ayah!, "Ayah"));
             }
 
             if (hasIbu)
             {
-                errors.AddRange(ValidateParentData(data.Ibu, "Ibu"));
+                errors.AddRange(ValidateParentData(data.Ibu!, "Ibu"));
             }
 
             // Validate parents not the same
@@ -494,38 +494,38 @@ namespace SuDesApp.Data.Handlers
         {
             public int? ID_Ayah { get; set; }
             public int? ID_Ibu { get; set; }
-            public string NamaAnak { get; set; }
+            public string? NamaAnak { get; set; }
             public DateTime TanggalLahirAnak { get; set; }
-            public string TempatLahirAnak { get; set; }
-            public string JenisKelaminAnak { get; set; }
-            public string AlamatLengkapAnak { get; set; }
-            public string LahirDi { get; set; }
-            public string NamaAyah { get; set; }
-            public string NIKAyah { get; set; }
+            public string? TempatLahirAnak { get; set; }
+            public string? JenisKelaminAnak { get; set; }
+            public string? AlamatLengkapAnak { get; set; }
+            public string? LahirDi { get; set; }
+            public string? NamaAyah { get; set; }
+            public string? NIKAyah { get; set; }
             public DateTime? TanggalLahirAyah { get; set; }
-            public string TempatLahirAyah { get; set; }
-            public string AgamaAyah { get; set; }
-            public string PekerjaanAyah { get; set; }
-            public string JenisKelaminAyah { get; set; }
-            public string StatusPerkawinanAyah { get; set; }
-            public string KewarganegaraanAyah { get; set; }
-            public string DusunAyah { get; set; }
-            public string DesaAyah { get; set; }
-            public string KecamatanAyah { get; set; }
-            public string KabupatenAyah { get; set; }
-            public string NamaIbu { get; set; }
-            public string NIKIbu { get; set; }
+            public string? TempatLahirAyah { get; set; }
+            public string? AgamaAyah { get; set; }
+            public string? PekerjaanAyah { get; set; }
+            public string? JenisKelaminAyah { get; set; }
+            public string? StatusPerkawinanAyah { get; set; }
+            public string? KewarganegaraanAyah { get; set; }
+            public string? DusunAyah { get; set; }
+            public string? DesaAyah { get; set; }
+            public string? KecamatanAyah { get; set; }
+            public string? KabupatenAyah { get; set; }
+            public string? NamaIbu { get; set; }
+            public string? NIKIbu { get; set; }
             public DateTime? TanggalLahirIbu { get; set; }
-            public string TempatLahirIbu { get; set; }
-            public string AgamaIbu { get; set; }
-            public string PekerjaanIbu { get; set; }
-            public string JenisKelaminIbu { get; set; }
-            public string StatusPerkawinanIbu { get; set; }
-            public string KewarganegaraanIbu { get; set; }
-            public string DusunIbu { get; set; }
-            public string DesaIbu { get; set; }
-            public string KecamatanIbu { get; set; }
-            public string KabupatenIbu { get; set; }
+            public string? TempatLahirIbu { get; set; }
+            public string? AgamaIbu { get; set; }
+            public string? PekerjaanIbu { get; set; }
+            public string? JenisKelaminIbu { get; set; }
+            public string? StatusPerkawinanIbu { get; set; }
+            public string? KewarganegaraanIbu { get; set; }
+            public string? DusunIbu { get; set; }
+            public string? DesaIbu { get; set; }
+            public string? KecamatanIbu { get; set; }
+            public string? KabupatenIbu { get; set; }
         }
 
         #endregion

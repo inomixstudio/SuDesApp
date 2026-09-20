@@ -51,10 +51,185 @@ namespace SuDesApp.Wpf.ViewModels
     }
 
     /// <summary>
+    /// Baris pengaturan bernilai angka (mis. batas ukuran pembaruan otomatis dalam
+    /// MB). Tampil sebagai kotak teks kecil di samping label; nilai di luar rentang
+    /// ditolak dan dikembalikan ke nilai semula.
+    /// </summary>
+    public class SettingRowAngkaVM : ObservableObject
+    {
+        private readonly Action<int> _persist;
+        private readonly int _min;
+        private readonly int _maks;
+        private string _teks;
+
+        public string Judul { get; }
+        public string Keterangan { get; }
+
+        public string TeksNilai
+        {
+            get => _teks;
+            set
+            {
+                var baru = value?.Trim() ?? string.Empty;
+                if (!SetProperty(ref _teks, baru)) return;
+
+                if (int.TryParse(baru, out var angka) && angka >= _min && angka <= _maks)
+                {
+                    try { _persist(angka); } catch { /* preferensi non-kritis */ }
+                }
+                else
+                {
+                    // Kembalikan ke nilai tersimpan bila bukan angka valid.
+                    SetProperty(ref _teks, _persistGet().ToString(), nameof(TeksNilai));
+                }
+            }
+        }
+
+        private readonly Func<int> _persistGet;
+
+        public SettingRowAngkaVM(
+            string judul, string keterangan, int nilaiAwal,
+            Action<int> persist, Func<int> persistGet,
+            int min = 1, int maks = 999)
+        {
+            Judul = judul;
+            Keterangan = keterangan;
+            _teks = nilaiAwal.ToString();
+            _persist = persist;
+            _persistGet = persistGet;
+            _min = min;
+            _maks = maks;
+        }
+    }
+
+    /// <summary>
+    /// Satu bagian pada navigasi halaman Pengaturan Aplikasi. Hanya bagian yang
+    /// aktif yang ditampilkan, sehingga halaman tetap ringkas walau pengaturannya
+    /// sudah banyak.
+    /// </summary>
+    public class PengaturanSectionVM : ObservableObject
+    {
+        private bool _aktif;
+
+        /// <summary>Kunci bagian; sama dengan Tag kartu untuk fokus dari statusbar.</summary>
+        public string Key { get; }
+        public string Judul { get; }
+        public string Ikon { get; }
+        public string Ringkasan { get; }
+
+        public bool Aktif
+        {
+            get => _aktif;
+            set => SetProperty(ref _aktif, value);
+        }
+
+        public PengaturanSectionVM(string key, string judul, string ikon, string ringkasan)
+        {
+            Key = key;
+            Judul = judul;
+            Ikon = ikon;
+            Ringkasan = ringkasan;
+        }
+    }
+
+    /// <summary>
+    /// Satu baris pengaturan penomoran surat: awalan nomor yang bisa diganti
+    /// pengguna (mis. SKD 470 → 471) dengan contoh hasil nomornya.
+    /// </summary>
+    public class PenomoranBarisVM : ObservableObject
+    {
+        private string _awalan;
+
+        public string NamaJenis { get; }
+        public string DisplayName { get; }
+        public string KodeJenis { get; }
+
+        /// <summary>Apakah surat ini ikut penomoran bersama (satu urutan dengan SKD).</summary>
+        public bool IsSharedNumbering { get; }
+
+        /// <summary>Format bawaan aplikasi — bentuknya dipertahankan saat awalan diganti.</summary>
+        public string FormatBawaan { get; }
+
+        public string AwalanBawaan { get; }
+
+        /// <summary>Awalan nomor yang dipakai; kosong = kembali ke bawaan aplikasi.</summary>
+        public string Awalan
+        {
+            get => _awalan;
+            set
+            {
+                if (SetProperty(ref _awalan, value ?? string.Empty))
+                {
+                    OnPropertyChanged(nameof(Contoh));
+                    OnPropertyChanged(nameof(Disesuaikan));
+                    OnPropertyChanged(nameof(Terubah));
+                    OnPropertyChanged(nameof(PesanKesalahan));
+                    OnPropertyChanged(nameof(AdaKesalahan));
+                }
+            }
+        }
+
+        /// <summary>Awalan yang tersimpan di berkas (acuan perubahan belum disimpan).</summary>
+        public string AwalanTersimpan { get; private set; }
+
+        /// <summary>Berbeda dari nilai tersimpan — perlu disimpan.</summary>
+        public bool Terubah =>
+            !string.Equals(Awalan.Trim(), AwalanTersimpan.Trim(), StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>Berbeda dari bawaan aplikasi (boleh dikembalikan lewat tombol Bawaan).</summary>
+        public bool Disesuaikan =>
+            !string.Equals(Awalan.Trim(), AwalanBawaan, StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>Pesan kesalahan awalan; kosong bila awalan sah (atau dikembalikan ke bawaan).</summary>
+        public string PesanKesalahan
+        {
+            get
+            {
+                var bersih = Awalan.Trim();
+                if (bersih.Length == 0 || string.Equals(bersih, AwalanBawaan, StringComparison.OrdinalIgnoreCase))
+                    return string.Empty;
+
+                return SuDesApp.Services.PenomoranSuratService.AwalanValid(bersih, out var pesan)
+                    ? string.Empty
+                    : pesan;
+            }
+        }
+
+        public bool AdaKesalahan => PesanKesalahan.Length > 0;
+
+        /// <summary>Contoh nomor surat yang akan tercetak dengan awalan saat ini.</summary>
+        public string Contoh => SuDesApp.Services.PenomoranSuratService.Contoh(
+            SuDesApp.Services.PenomoranSuratService.BangunFormat(
+                FormatBawaan,
+                Awalan.Trim().Length == 0 ? AwalanBawaan : Awalan.Trim()));
+
+        /// <summary>Keterangan apakah jenis surat ini berbagi urutan nomor dengan SKD.</summary>
+        public string KeteranganUrutan => IsSharedNumbering
+            ? "Berbagi urutan nomor dengan SKD dan surat keterangan lain"
+            : "Urutan nomor tersendiri";
+
+        public RelayCommand KembalikanBawaanCommand { get; }
+
+        public PenomoranBarisVM(SuDesApp.Services.PenomoranSuratEntri entri)
+        {
+            NamaJenis = entri.NamaJenis;
+            DisplayName = entri.DisplayName;
+            KodeJenis = entri.KodeJenis;
+            IsSharedNumbering = entri.IsSharedNumbering;
+            FormatBawaan = entri.FormatBawaan;
+            AwalanBawaan = entri.AwalanBawaan;
+            _awalan = entri.Awalan;
+            AwalanTersimpan = entri.Awalan;
+            KembalikanBawaanCommand = new RelayCommand(() => Awalan = AwalanBawaan);
+        }
+    }
+
+    /// <summary>
     /// Halaman Pengaturan Aplikasi — pusat preferensi perilaku aplikasi
-    /// (berbeda dari Pengaturan Surat yang mengelola data desa). Setiap
-    /// tombol geser tersimpan langsung saat digeser; efeknya berlaku pada
-    /// login berikutnya / penutupan aplikasi berikutnya sesuai fungsinya.
+    /// (berbeda dari Pengaturan Surat yang mengelola data desa).
+    ///
+    /// Isinya dikelompokkan menjadi beberapa bagian dengan navigasi sendiri di
+    /// sisi kiri, dan setiap tombol geser tersimpan langsung saat digeser.
     /// </summary>
     public class PengaturanAplikasiViewModel : ObservableObject
     {
@@ -62,8 +237,12 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly NavigationService _navigation;
         private readonly ILogger<PengaturanAplikasiViewModel> _logger;
         private readonly GoogleDriveService? _googleDrive;
+        private readonly SuDesApp.Services.PenomoranSuratService? _penomoranSurat;
 
         public ObservableCollection<SettingRowVM> Rows { get; } = new();
+
+        /// <summary>Baris pengaturan bernilai angka (mis. batas ukuran MB).</summary>
+        public ObservableCollection<SettingRowAngkaVM> RowsAngka { get; } = new();
 
         private string _waJamBuka = AppPreferenceStore.GetWaServiceOpen() ?? string.Empty;
         private string _waJamTutup = AppPreferenceStore.GetWaServiceClose() ?? string.Empty;
@@ -78,7 +257,10 @@ namespace SuDesApp.Wpf.ViewModels
                 if (SetProperty(ref _waJamBuka, bersih))
                 {
                     if (bersih.Length == 0 || IsValidJam(bersih))
+                    {
                         AppPreferenceStore.SetWaServiceOpen(bersih);
+                        TampilkanStatusSementara("Tersimpan — jam layanan WhatsApp");
+                    }
                     OnPropertyChanged(nameof(WaJamLayananInfo));
                 }
             }
@@ -94,7 +276,10 @@ namespace SuDesApp.Wpf.ViewModels
                 if (SetProperty(ref _waJamTutup, bersih))
                 {
                     if (bersih.Length == 0 || IsValidJam(bersih))
+                    {
                         AppPreferenceStore.SetWaServiceClose(bersih);
+                        TampilkanStatusSementara("Tersimpan — jam layanan WhatsApp");
+                    }
                     OnPropertyChanged(nameof(WaJamLayananInfo));
                 }
             }
@@ -141,6 +326,7 @@ namespace SuDesApp.Wpf.ViewModels
                 ? string.Empty
                 : string.Join(",", aktif));
             OnPropertyChanged(nameof(WaJamLayananInfo));
+            TampilkanStatusSementara("Tersimpan — hari layanan WhatsApp");
         }
 
         public class HariLayananVM : ObservableObject
@@ -237,7 +423,7 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         public string WaGatewayInfo
-            => "Gateway aktif: WhatsApp Cloud API (Meta, resmi). Aplikasi hanya mengirim teks/tautan — gratis dalam jendela 24 jam.";
+            => "Gateway aktif: WhatsApp Cloud API (resmi, dari Meta). Aplikasi hanya mengirim teks dan tautan, tanpa berkas lampiran.";
 
         public string WaUjiKoneksiInfo
         {
@@ -320,7 +506,7 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(WaCloudApiToken))
                 {
-                    WizardValidasiInfo = "⚠ Isi access token terlebih dahulu — cara mengambilnya ada di Panduan WhatsApp Bagian A.";
+                    WizardValidasiInfo = "Isi Access Token terlebih dahulu; cara mengambilnya dijelaskan pada Panduan WhatsApp Bagian A.";
                     return Task.CompletedTask;
                 }
                 WizardStep = 1;
@@ -330,7 +516,7 @@ namespace SuDesApp.Wpf.ViewModels
                 var phoneId = WaCloudApiPhoneId.Trim();
                 if (phoneId.Length == 0 || !phoneId.All(char.IsDigit))
                 {
-                    WizardValidasiInfo = "⚠ Phone Number ID berupa deretan angka — salin dari Meta for Developers → WhatsApp → API Setup.";
+                    WizardValidasiInfo = "Phone Number ID berupa deretan angka; salin dari Meta for Developers → WhatsApp → API Setup.";
                     return Task.CompletedTask;
                 }
                 WizardStep = 2;
@@ -371,6 +557,8 @@ namespace SuDesApp.Wpf.ViewModels
                 if (SetProperty(ref _waSheetUrl, value ?? string.Empty))
                 {
                     WaSheetOptions.SetSheetUrl(value);
+                    WaSheetOptions.SetAutoForm(false);
+                    OnPropertyChanged(nameof(WaFormAutoSudahAda));
                     OnPropertyChanged(nameof(WaSheetRingkasan));
                 }
             }
@@ -389,17 +577,68 @@ namespace SuDesApp.Wpf.ViewModels
         public string WaSheetFormUrl
         {
             get => _waSheetFormUrl;
-            set { if (SetProperty(ref _waSheetFormUrl, value ?? string.Empty)) WaSheetOptions.SetFormUrl(value); }
+            set
+            {
+                if (SetProperty(ref _waSheetFormUrl, value ?? string.Empty))
+                {
+                    WaSheetOptions.SetFormUrl(value);
+                    WaSheetOptions.SetAutoForm(false);
+                    OnPropertyChanged(nameof(WaFormAutoSudahAda));
+                }
+            }
+        }
+
+        private int _waSheetUjiTone = 0;
+        /// <summary>Nada hasil uji: 0=info, 1=sukses, 2=peringatan, 3=gagal.</summary>
+        public int WaSheetUjiTone
+        {
+            get => _waSheetUjiTone;
+            private set => SetProperty(ref _waSheetUjiTone, value);
         }
 
         private string _waSheetUjiInfo = string.Empty;
         public string WaSheetUjiInfo
         {
             get => _waSheetUjiInfo;
-            private set => SetProperty(ref _waSheetUjiInfo, value);
+            private set { if (SetProperty(ref _waSheetUjiInfo, value)) WaSheetUjiTone = CariTone(value); }
+        }
+
+        private int _waFormAutoTone = 0;
+        /// <summary>Nada hasil pembuatan otomatis: 0=info, 1=sukses, 2=peringatan, 3=gagal.</summary>
+        public int WaFormAutoTone
+        {
+            get => _waFormAutoTone;
+            private set => SetProperty(ref _waFormAutoTone, value);
+        }
+
+        private string _waFormAutoInfo = string.Empty;
+        /// <summary>Hasil pembuatan formulir + Sheet otomatis.</summary>
+        public string WaFormAutoInfo
+        {
+            get => _waFormAutoInfo;
+            private set { if (SetProperty(ref _waFormAutoInfo, value)) WaFormAutoTone = CariTone(value); }
+        }
+
+        /// <summary>Formulir + Sheet otomatis sudah pernah dibuat (untuk mengunci tombol "Buat ulang").</summary>
+        public bool WaFormAutoSudahAda =>
+            WaSheetOptions.IsAutoForm()
+            && !string.IsNullOrWhiteSpace(WaSheetOptions.GetFormId())
+            && !string.IsNullOrWhiteSpace(WaSheetOptions.GetSheetUrl());
+
+        private static int CariTone(string? teks)
+        {
+            if (string.IsNullOrWhiteSpace(teks)) return 0;
+            if (teks.StartsWith("Gagal", StringComparison.Ordinal)) return 3;
+            if (teks.Contains("✓", StringComparison.Ordinal)) return 1;
+            if (teks.Contains("⚠️", StringComparison.Ordinal)
+                || teks.Contains("TIDAK", StringComparison.Ordinal)
+                || teks.Contains("belum", StringComparison.OrdinalIgnoreCase)) return 2;
+            return 0;
         }
 
         public AsyncRelayCommand UjiWaSheetCommand { get; }
+        public AsyncRelayCommand BuatFormulirOtomatisCommand { get; }
+        public AsyncRelayCommand BuatUlangFormulirCommand { get; }
 
         // ==== Template Google Sheet per jenis surat ====
 
@@ -463,12 +702,12 @@ namespace SuDesApp.Wpf.ViewModels
                 if (dialog.ShowDialog() != true) return;
 
                 WaSheetTemplateInfo = "Membuat template…";
-                var path = await Task.Run(() => WaSheetTemplateService.BuatTemplateFile(TemplateJenis.Key, Path.GetDirectoryName(dialog.FileName)!));
+                var path = await Task.Run(() => WaSheetTemplateService.BuatTemplateFile(TemplateJenis.Key, Path.GetDirectoryName(dialog.FileName)));
                 if (!string.Equals(path, dialog.FileName, StringComparison.OrdinalIgnoreCase))
                     File.Move(path, dialog.FileName, overwrite: true);
 
-                WaSheetTemplateInfo = "Template dibuat: " + dialog.FileName +
-                    "\nUnggah ke Google Drive lalu buka dengan Google Sheets, atau pakai tombol 'Buat + Unggah ke Drive'.";
+                WaSheetTemplateInfo = "Template berhasil dibuat: " + dialog.FileName +
+                    "\nUnggah berkas tersebut ke Google Drive lalu buka dengan Google Sheets, atau gunakan tombol 'Unggah Template ke Google Drive'.";
             }
             catch (Exception ex)
             {
@@ -490,11 +729,11 @@ namespace SuDesApp.Wpf.ViewModels
                 var drive = app?.ServiceProvider.GetRequiredService<GoogleDriveService>();
                 if (drive == null || !drive.IsOAuthEnabled || !drive.HasStoredToken())
                 {
-                    WaSheetTemplateInfo = "Akun Google belum terhubung. Masuk dengan Akun Google terlebih dahulu, atau pakai tombol simpan ke berkas.";
+                    WaSheetTemplateInfo = "Akun Google belum terhubung. Masuk dengan Akun Google terlebih dahulu, atau gunakan tombol 'Simpan Template ke Berkas'.";
                     return;
                 }
 
-                WaSheetTemplateInfo = "Membuat & mengunggah template…";
+                WaSheetTemplateInfo = "Membuat dan mengunggah template…";
                 var tempDir = Path.Combine(Path.GetTempPath(), "SuDesApp-SheetTemplate");
                 var path = await Task.Run(() => WaSheetTemplateService.BuatTemplateFile(TemplateJenis.Key, tempDir));
 
@@ -504,8 +743,8 @@ namespace SuDesApp.Wpf.ViewModels
 
                 try { File.Delete(path); } catch { /* biarkan bila terkunci */ }
 
-                WaSheetTemplateInfo = "Template terunggah ke Google Drive ✓\n" + link +
-                    "\nBuka tautan itu → File → Save as Google Sheets (bila masih format Excel) → salin URL Sheet-nya ke kolom 'URL Sheet jawaban'.";
+                WaSheetTemplateInfo = "Template berhasil diunggah ke Google Drive:\n" + link +
+                    "\nBuka tautan tersebut, pilih File → Save as Google Sheets bila masih berformat Excel, lalu salin URL Sheet-nya ke kolom 'URL Sheet jawaban'.";
             }
             catch (Exception ex)
             {
@@ -541,9 +780,9 @@ namespace SuDesApp.Wpf.ViewModels
         public string WaSheetRingkasan
             => WaSheetOptions.IsLinkModeEnabled()
                 ? (WaSheetOptions.IsConfigured()
-                    ? "Mode aktif: pesan apa pun dari warga dibalas tautan Google Formulir untuk diisi sendiri; jawaban terkumpul di Google Sheet diproses otomatis dan tautan unduh PDF dikirim balik ke WhatsApp."
-                    : "Mode aktif tetapi URL Google Formulir/Sheet belum diisi — balasan sementara masih memakai percakapan format.")
-                : "Mode nonaktif: alur percakapan format dipakai (warga mengetik data sesuai format per jenis surat).";
+                    ? "Mode aktif: setiap pesan dari warga dibalas tautan Google Formulir untuk diisi sendiri. Jawaban pada Google Sheet diproses otomatis, lalu tautan unduh PDF dikirim kembali melalui WhatsApp."
+                    : "Mode aktif, tetapi URL Google Formulir/Sheet belum diisi — balasan sementara masih memakai alur percakapan format.")
+                : "Mode nonaktif: alur percakapan format dipakai, yaitu warga mengetik data sesuai format tiap jenis surat.";
 
         /// <summary>
         /// Uji konfigurasi mode tautan: (1) akses baca Google Sheet jawaban via
@@ -562,14 +801,14 @@ namespace SuDesApp.Wpf.ViewModels
             var app = System.Windows.Application.Current as App;
             if (app == null)
             {
-                WaSheetUjiInfo = "Aplikasi belum siap.";
+                WaSheetUjiInfo = "Aplikasi belum siap pada sesi ini.";
                 return;
             }
 
             var drive = app.ServiceProvider.GetRequiredService<GoogleDriveService>();
             if (!drive.IsOAuthEnabled || !drive.HasStoredToken())
             {
-                WaSheetUjiInfo = "Akun Google belum terhubung. Masuk dengan Akun Google terlebih dahulu (login).";
+                WaSheetUjiInfo = "Akun Google belum terhubung. Masuk dengan Akun Google terlebih dahulu melalui halaman login.";
                 return;
             }
 
@@ -603,26 +842,26 @@ namespace SuDesApp.Wpf.ViewModels
                         {
                             var html = await resp.Content.ReadAsStringAsync();
                             bagian.Add(html.Contains("FormResponse", StringComparison.OrdinalIgnoreCase) || html.Contains("fbzx", StringComparison.OrdinalIgnoreCase)
-                                ? "Google Formulir ✓ — tautan bisa dibuka warga."
-                                : "⚠️ URL terbuka tetapi bukan halaman Google Formulir — periksa kembali URL-nya.");
+                                ? "Google Formulir OK — tautan dapat dibuka oleh warga."
+                                : "URL terbuka, tetapi bukan halaman Google Formulir. Periksa kembali URL-nya.");
                         }
                         else
                         {
-                            bagian.Add($"⚠️ Google Formulir TIDAK bisa dibuka (HTTP {(int)resp.StatusCode}) — warga tidak akan bisa mengisi. Periksa izin berbagi form.");
+                            bagian.Add($"Google Formulir tidak dapat dibuka (HTTP {(int)resp.StatusCode}), sehingga warga tidak bisa mengisi. Periksa izin berbagi formulir.");
                         }
                     }
                     catch (Exception exForm)
                     {
-                        bagian.Add("⚠️ Google Formulir tidak terjangkau: " + exForm.Message);
+                        bagian.Add("Google Formulir tidak terjangkau: " + exForm.Message);
                     }
                 }
                 else if (string.IsNullOrWhiteSpace(sheetId))
                 {
-                    bagian.Add("⚠️ URL Formulir kosong dan Sheet tidak terbaca — warga belum bisa menerima tautan form.");
+                    bagian.Add("URL Formulir kosong dan Sheet tidak terbaca, sehingga warga belum bisa menerima tautan formulir.");
                 }
                 else
                 {
-                    bagian.Add("⚠️ URL Formulir kosong — tautan untuk warga akan ditebak dari ID Sheet dan BISA MATI bila Sheet bukan sheet respons Google Form. Disarankan mengisi URL Formulir.");
+                    bagian.Add("URL Formulir kosong. Tautan untuk warga akan diturunkan dari ID Sheet dan berisiko tidak berfungsi bila Sheet bukan lembar respons Google Form. Sebaiknya isi URL Formulir.");
                 }
 
                 WaSheetUjiInfo = string.Join("\n\n", bagian);
@@ -633,12 +872,89 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
+        /// <summary>
+        /// Membuat Google Sheet jawaban + Google Formulir lengkap secara otomatis
+        /// di akun desa yang terhubung, lalu mengisi pengaturan. Idempoten: bila
+        /// sudah pernah dibuat (ganti = false), tidak membuat file baru — cukup
+        /// menampilkan kembali konfigurasi yang sudah tersimpan.
+        /// </summary>
+        private async Task BuatFormulirOtomatisAsync(bool ganti = false)
+        {
+            var app = System.Windows.Application.Current as App;
+            var setup = app?.ServiceProvider.GetRequiredService<WaFormAutoSetupService>();
+            if (setup == null)
+            {
+                WaFormAutoInfo = "Aplikasi belum siap pada sesi ini.";
+                return;
+            }
+
+            var drive = app!.ServiceProvider.GetRequiredService<GoogleDriveService>();
+            if (!drive.IsOAuthEnabled || !drive.HasStoredToken())
+            {
+                WaFormAutoInfo = "Akun Google belum terhubung. Masuk dengan Akun Google terlebih dahulu melalui halaman login, lalu coba lagi.";
+                return;
+            }
+
+            // Sudah ada & bukan perintah mengganti → tampilkan konfigurasi tersimpan, jangan buat baru.
+            if (!ganti && WaFormAutoSudahAda)
+            {
+                WaSheetFormUrl = WaSheetOptions.GetFormUrl() ?? string.Empty;
+                WaSheetUrl = WaSheetOptions.GetSheetUrl() ?? string.Empty;
+                WaSheetTabName = WaSheetOptions.GetTabName();
+                WaSheetMode = true;
+                WaSheetOptions.SetFormId(WaSheetOptions.GetFormId());
+                WaSheetOptions.SetAutoForm(true);
+                OnPropertyChanged(nameof(WaSheetRingkasan));
+                OnPropertyChanged(nameof(WaFormAutoSudahAda));
+
+                WaFormAutoInfo =
+                    "Formulir dan Sheet sudah pernah dibuat, jadi tidak dibuat ulang.\n" +
+                    "Tautan formulir warga: " + (WaSheetOptions.GetFormUrl() ?? string.Empty) + "\n" +
+                    "Sheet jawaban: " + (WaSheetOptions.GetSheetUrl() ?? string.Empty) + "\n" +
+                    "Kelola formulir: https://docs.google.com/forms/d/" + WaSheetOptions.GetFormId() + "/edit\n" +
+                    "Untuk menggantinya dengan yang baru, gunakan tombol 'Buat Ulang (Ganti)'.";
+                return;
+            }
+
+            try
+            {
+                BuatFormulirOtomatisCommand.RaiseCanExecuteChanged();
+                WaFormAutoInfo = "Membuat Formulir dan Sheet… (selesaikan login Google bila jendela login muncul)";
+                var hasil = await setup.BuatAsync(ganti: ganti);
+
+                WaSheetFormUrl = hasil.FormUrl;
+                WaSheetUrl = hasil.SheetUrl;
+                WaSheetTabName = hasil.TabName;
+                WaSheetMode = true;
+                WaSheetOptions.SetFormId(hasil.FormId);
+                WaSheetOptions.SetAutoForm(true);
+                OnPropertyChanged(nameof(WaSheetRingkasan));
+                OnPropertyChanged(nameof(WaFormAutoSudahAda));
+
+                WaFormAutoInfo =
+                    "Selesai — Formulir dan Sheet berhasil dibuat pada akun Google Anda.\n" +
+                    "Tautan formulir warga: " + hasil.FormUrl + "\n" +
+                    "Sheet jawaban: " + hasil.SheetUrl + " (tab: " + hasil.TabName + ")\n" +
+                    "Kelola formulir: " + hasil.EditUrl + "\n" +
+                    "Jawaban disalin ke Sheet secara berkala oleh aplikasi.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuat formulir otomatis");
+                WaFormAutoInfo = "Gagal: " + ex.Message;
+            }
+            finally
+            {
+                BuatFormulirOtomatisCommand.RaiseCanExecuteChanged();
+            }
+        }
+
         /// <summary>Uji token Cloud API: ambil profil nomor via Graph API GET /{phone-id}.</summary>
         private async Task UjiCloudApiAsync()
         {
             if (string.IsNullOrWhiteSpace(WaCloudApiToken) || string.IsNullOrWhiteSpace(WaCloudApiPhoneId))
             {
-                WaUjiKoneksiInfo = "Isi access token dan Phone Number ID terlebih dahulu.";
+                WaUjiKoneksiInfo = "Isi Access Token dan Phone Number ID terlebih dahulu.";
                 return;
             }
 
@@ -654,7 +970,7 @@ namespace SuDesApp.Wpf.ViewModels
                 var resp = await http.SendAsync(req);
                 var body = await resp.Content.ReadAsStringAsync();
                 WaUjiKoneksiInfo = resp.IsSuccessStatusCode
-                    ? "Terhubung ✓ — " + body.Trim()
+                    ? "Terhubung — " + body.Trim()
                     : "Gagal: " + body.Trim();
             }
             catch (Exception ex)
@@ -666,11 +982,13 @@ namespace SuDesApp.Wpf.ViewModels
         public PengaturanAplikasiViewModel(
             NavigationService navigation,
             ILogger<PengaturanAplikasiViewModel> logger,
-            IServiceProvider provider)
+            IServiceProvider provider,
+            SuDesApp.Services.PenomoranSuratService? penomoranSurat = null)
         {
             _navigation = navigation;
             _logger = logger;
             _provider = provider;
+            _penomoranSurat = penomoranSurat;
 
             _googleDrive = _provider.GetService<GoogleDriveService>();
             var kredensial = _googleDrive == null ? null : GoogleClientCredentials.Load();
@@ -686,51 +1004,93 @@ namespace SuDesApp.Wpf.ViewModels
             // Wizard dibuka di langkah akhir bila gateway sudah pernah dikonfigurasi.
             _wizardStep = WaGatewayReady ? 2 : 0;
             UjiWaSheetCommand = new AsyncRelayCommand(UjiWaSheetAsync);
+            BuatFormulirOtomatisCommand = new AsyncRelayCommand(() => BuatFormulirOtomatisAsync(ganti: false));
+            BuatUlangFormulirCommand = new AsyncRelayCommand(() => BuatFormulirOtomatisAsync(ganti: true));
             BuatTemplateSheetCommand = new AsyncRelayCommand(BuatTemplateSheetAsync);
             BuatDanUnggahTemplateCommand = new AsyncRelayCommand(BuatDanUnggahTemplateAsync);
             BukaPanduanWaCommand = new RelayCommand(BukaPanduanWa);
             BukaGoogleFormsCommand = new RelayCommand(BukaGoogleForms);
             MuatHariLayanan();
 
-            Rows.Add(new SettingRowVM(
+            SiapkanBagian();
+
+            SimpanPenomoranCommand = new AsyncRelayCommand(SimpanPenomoranAsync, () => AdaPerubahanPenomoran && !PenomoranSibuk);
+            MuatUlangPenomoranCommand = new RelayCommand(MuatPenomoran);
+            MuatPenomoran();
+
+            TambahBaris(new SettingRowVM(
                 "Login otomatis dengan Google",
-                "Bila aktif: pengguna yang pernah login Google langsung masuk dengan profil akunnya saat aplikasi dibuka. Bila nonaktif: form username/password selalu tampil lebih dulu — akun Google tetap bisa dipakai lewat tombol 'Masuk dengan Akun Google'.",
+                "Saat aktif, pengguna yang sudah pernah login Google langsung masuk memakai profil akunnya ketika aplikasi dibuka. Saat nonaktif, formulir username dan password selalu tampil lebih dahulu; akun Google tetap dapat digunakan melalui tombol 'Masuk dengan Akun Google'.",
                 AppPreferenceStore.IsGoogleAutoLoginEnabled(),
                 v => AppPreferenceStore.SetGoogleAutoLoginEnabled(v)));
 
-            Rows.Add(new SettingRowVM(
+            TambahBaris(new SettingRowVM(
                 "Backup otomatis ke Google Drive saat aplikasi ditutup",
-                "Membuat cadangan database + lampiran + template ke folder SuDesApp-Backup di Google Drive setiap penutupan aplikasi (maksimal 1x per hari, hanya bila ada akun Google yang terhubung).",
+                "Mengunggah cadangan database, lampiran, dan template ke folder SuDesApp-Backup di Google Drive setiap aplikasi ditutup (maksimal sekali sehari, hanya bila ada akun Google yang terhubung).",
                 AppPreferenceStore.IsBackupDriveOnExitEnabled(),
                 v => AppPreferenceStore.SetBackupDriveOnExitEnabled(v)));
 
-            Rows.Add(new SettingRowVM(
+            TambahBaris(new SettingRowVM(
                 "Backup otomatis formulir ke Google Drive",
-                "Menyinkronkan template formulir (PDF) ke folder SuDesApp-Formulir di Google Drive setiap ada unduhan baru, atau template ditambah/dihapus di Pengaturan Formulir. Hanya berjalan bila ada akun Google yang terhubung.",
+                "Menyinkronkan template formulir PDF ke folder SuDesApp-Formulir di Google Drive setiap ada unduhan baru atau template ditambah/dihapus pada Pengaturan Formulir. Berjalan hanya bila ada akun Google yang terhubung.",
                 AppPreferenceStore.IsAutoBackupFormulirDriveEnabled(),
                 v => AppPreferenceStore.SetAutoBackupFormulirDriveEnabled(v)));
 
-            Rows.Add(new SettingRowVM(
+            TambahBaris(new SettingRowVM(
                 "Proses otomatis permintaan WhatsApp",
-                "Permintaan surat dari WhatsApp diproses sendiri tanpa menunggu operator: surat dibuat, PDF di-generate dengan generator resmi, lalu dikirim balik ke nomor pemohon. Permintaan yang gagal diproses masuk status PERLU_PERBAIKAN di panel Layanan Online untuk diperiksa operator.",
+                "Permintaan surat dari WhatsApp diproses tanpa menunggu operator: surat dibuat, PDF dihasilkan memakai generator resmi, lalu tautan unduh dikirim ke pemohon. Permintaan yang gagal masuk status PERLU_PERBAIKAN pada panel Layanan Online untuk diperiksa operator.",
                 AppPreferenceStore.IsWaAutoProcessEnabled(),
                 v => AppPreferenceStore.SetWaAutoProcessEnabled(v)));
 
-            Rows.Add(new SettingRowVM(
+            TambahBaris(new SettingRowVM(
+                "Periksa pembaruan aplikasi saat dibuka",
+                "Saat aktif, aplikasi memeriksa rilis terbaru di latar belakang ketika dibuka lalu memberitahu lewat lonceng notifikasi apa yang diperbaiki. Perbaikan kecil dipasang sebagai pembaruan tambalan (hanya berkas yang berubah, tanpa installer), perubahan besar memakai installer penuh. Saat nonaktif, pemeriksaan hanya dijalankan dari menu Pembaruan.",
+                AppPreferenceStore.IsPeriksaPembaruanSaatMulai(),
+                v => AppPreferenceStore.SetPeriksaPembaruanSaatMulai(v)));
+
+            TambahBaris(new SettingRowVM(
+                "Pasang pembaruan kecil otomatis saat aplikasi ditutup",
+                "Saat aktif, pembaruan kecil (tambalan: hanya berkas yang berubah, data surat & pengaturan aman) diunduh, diverifikasi, dan dipasang otomatis ketika aplikasi ditutup — tanpa menanya lagi; aplikasi dibuka kembali dengan versi terbaru. Hanya pembaruan KECIL yang ikut alur ini: pembaruan besar selalu diminta persetujuan lewat halaman Pembaruan. Paket yang lebih besar dari batas ukuran di bawah tidak pernah dipasang senyap-senyap.",
+                AppPreferenceStore.IsPasangOtomatisSaatKeluar(),
+                v => AppPreferenceStore.SetPasangOtomatisSaatKeluar(v)));
+
+            TambahBarisAngka(new SettingRowAngkaVM(
+                "Batas ukuran pembaruan otomatis (MB)",
+                "Ukuran maksimal perubahan yang boleh dipasang otomatis saat aplikasi ditutup (1-500 MB, bawaan 25 MB). Pembaruan kecil yang lebih besar dari batas ini tetap ditawarkan lewat notifikasi dan dipasang manual dari menu Pembaruan.",
+                AppPreferenceStore.GetBatasUkuranTambalanMb(),
+                v => AppPreferenceStore.SetBatasUkuranTambalanMb(v),
+                () => AppPreferenceStore.GetBatasUkuranTambalanMb(),
+                min: 1, maks: 500));
+
+            TambahBaris(new SettingRowVM(
+                "Mode diam-diam saat aplikasi dibuka",
+                "Saat aktif, pekerjaan latar yang tidak penting bagi pengguna — pemeriksaan pembaruan online serta pembersihan PDF sementara, hasil ekspor lama, dan draft kedaluwarsa — ditunda beberapa menit setelah aplikasi dibuka, sehingga jendela login dan halaman utama muncul lebih cepat. Rotasi log tetap berjalan sejak dini karena kecil dan diperlukan.",
+                AppPreferenceStore.IsStartupDiamDiam(),
+                v => AppPreferenceStore.SetStartupDiamDiam(v)));
+
+            TambahBarisAngka(new SettingRowAngkaVM(
+                "Jeda mode diam-diam (menit)",
+                "Berapa menit pekerjaan latar ditunda setelah aplikasi dibuka (1-60 menit, bawaan 5 menit). Semakin besar jeda, semakin ringan pembukaan aplikasi; pembaruan dan pembersihan tetap berjalan otomatis setelah jeda berlalu.",
+                AppPreferenceStore.GetStartupDiamDiamMenit(),
+                v => AppPreferenceStore.SetStartupDiamDiamMenit(v),
+                () => AppPreferenceStore.GetStartupDiamDiamMenit(),
+                min: 1, maks: 60));
+
+            TambahBaris(new SettingRowVM(
                 "Riwayat aktivitas",
-                "Mencatat siapa (email Google atau admin) yang membuat, mengedit, mengubah status, dan menghapus surat maupun arsip — tampil di menu Riwayat Aktivitas.",
+                "Mencatat siapa (email Google atau admin) yang membuat, mengubah, mengubah status, dan menghapus surat maupun arsip. Catatannya tampil pada menu Riwayat Aktivitas.",
                 AppPreferenceStore.IsActivityLoggingEnabled(),
                 v => AppPreferenceStore.SetActivityLoggingEnabled(v)));
 
-            Rows.Add(new SettingRowVM(
+            TambahBaris(new SettingRowVM(
                 "Bersihkan PDF sementara saat aplikasi dibuka",
-                "Menghapus berkas pratinjau PDF lama di folder TempPDF agar tidak menumpuk sepanjang pemakaian.",
+                "Menghapus berkas pratinjau PDF lama di folder TempPDF agar tidak menumpuk selama pemakaian.",
                 AppPreferenceStore.IsCleanupTempPdfEnabled(),
                 v => AppPreferenceStore.SetCleanupTempPdfEnabled(v)));
 
-            Rows.Add(new SettingRowVM(
+            TambahBaris(new SettingRowVM(
                 "Hapus hasil ekspor lama (lebih dari 30 hari)",
-                "Berkas PDF hasil ekspor di folder Output/PDF yang berumur lebih dari 30 hari dihapus otomatis saat aplikasi dibuka.",
+                "Berkas PDF hasil ekspor pada folder Output/PDF yang berumur lebih dari 30 hari dihapus otomatis ketika aplikasi dibuka.",
                 AppPreferenceStore.IsCleanupOldExportsEnabled(),
                 v => AppPreferenceStore.SetCleanupOldExportsEnabled(v)));
 
@@ -739,11 +1099,88 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>Sesi aktif sekarang (dibaca ulang tiap halaman dibuka).</summary>
         public string SesiAktif =>
-            $"{SessionContext.Display} ({SessionContext.LoginMethod}) — masuk {SessionContext.LoginTime:dd-MM-yyyy HH:mm}";
+            $"{SessionContext.Display} — {SessionContext.LoginMethod} — sesi dimulai {SessionContext.LoginTime:dd-MM-yyyy HH:mm}";
 
         /// <summary>Lokasi penyimpanan preferensi.</summary>
         public string LokasiPreferensi => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SuDesApp", "login_prefs.json");
+
+        // =====================================================================
+        // Pesan status halaman.
+        //
+        // Identitas aplikasi (ikon, nama, versi, pengembang) tidak lagi disimpan di
+        // sini — statusbar kaki halaman memakai kontrol bersama AppStatusBar yang
+        // membacanya langsung dari atribut assembly.
+        // =====================================================================
+
+        /// <summary>Pesan tetap saat tidak ada perubahan yang baru disimpan.</summary>
+        private const string StatusSiap = "Semua perubahan tersimpan otomatis — tidak ada yang perlu diklik Simpan.";
+
+        private string _statusMessage = StatusSiap;
+        private CancellationTokenSource? _statusTimer;
+
+        /// <summary>Pesan pada statusbar halaman (berubah sesaat setelah menyimpan).</summary>
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            private set => SetProperty(ref _statusMessage, value);
+        }
+
+        /// <summary>Tampilkan pesan status sesaat, lalu kembali ke pesan siap.</summary>
+        private void TampilkanStatusSementara(string pesan)
+        {
+            try
+            {
+                _statusTimer?.Cancel();
+                _statusTimer?.Dispose();
+                var sumber = new CancellationTokenSource();
+                _statusTimer = sumber;
+
+                StatusMessage = pesan;
+
+                // Kembalikan ke pesan siap setelah jeda; lewat dispatcher tampilan
+                // bila ada, supaya pemberitahuan properti tetap di thread UI.
+                var dispatcher = System.Windows.Application.Current?.Dispatcher;
+                var konteks = SynchronizationContext.Current;
+                _ = Task.Delay(TimeSpan.FromSeconds(3.5), sumber.Token).ContinueWith(t =>
+                {
+                    if (t.IsCanceled) return;
+
+                    if (dispatcher != null && !dispatcher.CheckAccess())
+                        dispatcher.BeginInvoke(new Action(() => StatusMessage = StatusSiap));
+                    else if (konteks != null && konteks != SynchronizationContext.Current)
+                        konteks.Post(_ => StatusMessage = StatusSiap, null);
+                    else
+                        StatusMessage = StatusSiap;
+                }, TaskScheduler.Default);
+            }
+            catch
+            {
+                // Statusbar hanya informasi — jangan pernah mengganggu penyimpanan.
+            }
+        }
+
+        /// <summary>Tambahkan baris sakelar, sekaligus melaporkan tiap perubahan ke statusbar.</summary>
+        private void TambahBaris(SettingRowVM baris)
+        {
+            baris.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(SettingRowVM.Nilai))
+                    TampilkanStatusSementara($"Tersimpan — {baris.Judul}");
+            };
+            Rows.Add(baris);
+        }
+
+        /// <summary>Tambahkan baris bernilai angka, sekaligus melaporkan tiap perubahan ke statusbar.</summary>
+        private void TambahBarisAngka(SettingRowAngkaVM baris)
+        {
+            baris.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(SettingRowAngkaVM.TeksNilai))
+                    TampilkanStatusSementara($"Tersimpan — {baris.Judul}");
+            };
+            RowsAngka.Add(baris);
+        }
 
         // ===== Kredensial klien OAuth Google (Client ID & Client Secret) =====
         private string _googleClientId = string.Empty;
@@ -774,7 +1211,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Status apakah klien OAuth sudah aktif (Client ID & Secret tersedia).</summary>
         public string GoogleKredensialStatus => _googleDrive?.IsOAuthEnabled == true
             ? "Klien OAuth aktif — akun Google sudah bisa dihubungkan."
-            : "Klien OAuth belum aktif — isi Client ID & Client Secret di bawah lalu simpan.";
+            : "Klien OAuth belum aktif — isi Client ID dan Client Secret di bawah, lalu simpan.";
 
         public AsyncRelayCommand SimpanKredensialGoogleCommand { get; }
         public AsyncRelayCommand UjiKredensialGoogleCommand { get; }
@@ -800,7 +1237,7 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 _googleDrive.SaveClientCredentials(GoogleClientId, GoogleClientSecret);
-                GoogleKredensialInfo = "Kredensial tersimpan terenkripsi di:\n" + GoogleDriveService.CredentialsStorePath +
+                GoogleKredensialInfo = "Kredensial berhasil disimpan terenkripsi pada:\n" + GoogleDriveService.CredentialsStorePath +
                     "\n\nLangkah berikutnya: klik \"Uji Koneksi\" untuk membuka login akun Google.";
                 OnPropertyChanged(nameof(GoogleKredensialStatus));
                 _logger.LogInformation("Kredensial klien OAuth Google disimpan dari halaman Pengaturan.");
@@ -819,18 +1256,18 @@ namespace SuDesApp.Wpf.ViewModels
             var drive = _googleDrive;
             if (drive == null || !drive.IsOAuthEnabled)
             {
-                GoogleKredensialInfo = "Simpan Client ID & Client Secret terlebih dahulu, baru uji koneksi.";
+                GoogleKredensialInfo = "Simpan Client ID dan Client Secret terlebih dahulu, lalu uji koneksi.";
                 return;
             }
 
             try
             {
-                GoogleKredensialInfo = "Membuka login Google… selesaikan di browser bila diminta.";
+                GoogleKredensialInfo = "Membuka login Google… selesaikan prosesnya di peramban bila diminta.";
                 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
                 var email = await Task.Run(() => drive.GetAccountEmailAsync(cts.Token), cts.Token);
                 GoogleKredensialInfo = string.IsNullOrWhiteSpace(email)
-                    ? "Login selesai tetapi email tidak diperoleh. Periksa Google Drive API & OAuth consent screen."
-                    : "Terhubung ✓ — " + email;
+                    ? "Login selesai, tetapi email tidak diperoleh. Periksa Google Drive API dan OAuth consent screen."
+                    : "Terhubung — " + email;
             }
             catch (OperationCanceledException)
             {
@@ -845,16 +1282,264 @@ namespace SuDesApp.Wpf.ViewModels
 
         public RelayCommand BatalCommand { get; }
 
+        /// <summary>Buka halaman Tentang Aplikasi (diklik dari identitas di statusbar).</summary>
+
+
+        // =======================================================================
+        // Navigasi bagian halaman. Pengaturan aplikasi sudah banyak, jadi isinya
+        // dikelompokkan per bagian dengan daftar navigasi di sisi kiri — bukan
+        // sederet kartu panjang yang harus digulir.
+        // =======================================================================
+
+        public ObservableCollection<PengaturanSectionVM> Sections { get; } = new();
+
+        public PengaturanSectionVM BagianUmum { get; private set; } = null!;
+        public PengaturanSectionVM BagianPenomoran { get; private set; } = null!;
+        public PengaturanSectionVM BagianLayananWa { get; private set; } = null!;
+        public PengaturanSectionVM BagianGatewayWa { get; private set; } = null!;
+        public PengaturanSectionVM BagianGoogleOauth { get; private set; } = null!;
+        public PengaturanSectionVM BagianGoogleSheet { get; private set; } = null!;
+        public PengaturanSectionVM BagianInformasi { get; private set; } = null!;
+
+        private PengaturanSectionVM? _selectedSection;
+
+        /// <summary>Bagian yang sedang ditampilkan (dipilih dari daftar navigasi).</summary>
+        public PengaturanSectionVM? SelectedSection
+        {
+            get => _selectedSection;
+            set
+            {
+                if (value == null || ReferenceEquals(value, _selectedSection)) return;
+                if (!SetProperty(ref _selectedSection, value)) return;
+
+                foreach (var bagian in Sections) bagian.Aktif = ReferenceEquals(bagian, value);
+
+                OnPropertyChanged(nameof(JudulSeksiAktif));
+                OnPropertyChanged(nameof(RingkasanSeksiAktif));
+            }
+        }
+
+        /// <summary>Judul bagian yang sedang tampil (dipakai kepala area isi).</summary>
+        public string JudulSeksiAktif => _selectedSection?.Judul ?? string.Empty;
+
+        /// <summary>Penjelasan singkat bagian yang sedang tampil.</summary>
+        public string RingkasanSeksiAktif => _selectedSection?.Ringkasan ?? string.Empty;
+
+        /// <summary>Susun daftar bagian + pilih bagian pertama (Umum) saat halaman dibuka.</summary>
+        private void SiapkanBagian()
+        {
+            BagianUmum = new PengaturanSectionVM("umum", "Umum & Preferensi", "\u2699\uFE0F",
+                "Perilaku aplikasi, preferensi kerja, dan pembersihan berkas berkala.");
+            BagianPenomoran = new PengaturanSectionVM("penomoran", "Penomoran Surat", "\uD83D\uDD22",
+                "Awalan nomor surat tiap jenis surat, misalnya SKD 470 menjadi 471.");
+            BagianLayananWa = new PengaturanSectionVM("layanan-wa", "Jam Layanan WhatsApp", "\uD83D\uDD52",
+                "Hari dan jam pemrosesan otomatis permintaan surat dari WhatsApp.");
+            BagianGatewayWa = new PengaturanSectionVM("gateway-wa", "Gateway WhatsApp", "\uD83D\uDCAC",
+                "Sambungan WhatsApp Cloud API milik Meta: access token, nomor pengirim, dan uji koneksi.");
+            BagianGoogleOauth = new PengaturanSectionVM("google-oauth", "Kredensial Google", "\uD83D\uDD11",
+                "Client ID dan Client Secret aplikasi untuk login Google, Drive, Formulir, serta Sheet.");
+            BagianGoogleSheet = new PengaturanSectionVM("google-sheet", "Formulir & Sheet", "\uD83D\uDCC4",
+                "Koneksi Google Formulir dan Sheet jawaban, termasuk pembuatan formulir otomatis.");
+            BagianInformasi = new PengaturanSectionVM("informasi", "Informasi", "\u2139\uFE0F",
+                "Sesi login yang sedang aktif dan lokasi berkas pengaturan pada komputer ini.");
+
+            foreach (var bagian in new[]
+                     {
+                         BagianUmum, BagianPenomoran, BagianLayananWa, BagianGatewayWa,
+                         BagianGoogleOauth, BagianGoogleSheet, BagianInformasi
+                     })
+            {
+                Sections.Add(bagian);
+            }
+
+            SelectedSection = BagianUmum;
+        }
+
+        // =======================================================================
+        // Pengaturan penomoran surat per jenis (awalan nomor).
+        // =======================================================================
+
+        public ObservableCollection<PenomoranBarisVM> Penomoran { get; } = new();
+
+        private string _penomoranInfo = string.Empty;
+        private string _penomoranPeringatan = string.Empty;
+        private bool _penomoranSibuk;
+
+        /// <summary>Keterangan hasil muat/simpan pengaturan penomoran.</summary>
+        public string PenomoranInfo
+        {
+            get => _penomoranInfo;
+            private set => SetProperty(ref _penomoranInfo, value);
+        }
+
+        /// <summary>Peringatan awalan kembar (nomor berpotensi sama antar jenis surat).</summary>
+        public string PenomoranPeringatan
+        {
+            get => _penomoranPeringatan;
+            private set
+            {
+                if (SetProperty(ref _penomoranPeringatan, value))
+                    OnPropertyChanged(nameof(AdaPeringatanPenomoran));
+            }
+        }
+
+        public bool AdaPeringatanPenomoran => _penomoranPeringatan.Length > 0;
+
+        public bool PenomoranSibuk
+        {
+            get => _penomoranSibuk;
+            private set
+            {
+                if (SetProperty(ref _penomoranSibuk, value)) SimpanPenomoranCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        /// <summary>Ada awalan pada daftar yang berbeda dari nilai tersimpan.</summary>
+        public bool AdaPerubahanPenomoran => Penomoran.Any(b => b.Terubah);
+
+        /// <summary>Berkas penyesuaian penomoran (aman dari pembaruan aplikasi).</summary>
+        public string PenomoranLokasiBerkas => _penomoranSurat?.BerkasPenyesuaian ?? "-";
+
+        /// <summary>Berkas bawaan yang memuat daftar jenis surat + format default.</summary>
+        public string PenomoranLokasiBawaan => _penomoranSurat?.BerkasBawaan ?? "-";
+
+        public bool PenomoranTersedia => _penomoranSurat != null;
+
+        public AsyncRelayCommand SimpanPenomoranCommand { get; }
+        public RelayCommand MuatUlangPenomoranCommand { get; }
+
+        /// <summary>Muat ulang daftar penomoran dari berkas (membuang perubahan belum disimpan).</summary>
+        private void MuatPenomoran()
+        {
+            Penomoran.Clear();
+
+            if (_penomoranSurat == null)
+            {
+                PenomoranInfo = "Pengaturan penomoran tidak tersedia pada sesi ini.";
+                OnPropertyChanged(nameof(AdaPerubahanPenomoran));
+                SimpanPenomoranCommand.RaiseCanExecuteChanged();
+                return;
+            }
+
+            try
+            {
+                foreach (var entri in _penomoranSurat.MuatSemua())
+                {
+                    var baris = new PenomoranBarisVM(entri);
+                    baris.PropertyChanged += (_, e) =>
+                    {
+                        if (e.PropertyName != nameof(PenomoranBarisVM.Awalan)) return;
+
+                        PerbaruiPeringatanPenomoran();
+                        OnPropertyChanged(nameof(AdaPerubahanPenomoran));
+                        SimpanPenomoranCommand.RaiseCanExecuteChanged();
+                    };
+                    Penomoran.Add(baris);
+                }
+
+                PerbaruiPeringatanPenomoran();
+                PenomoranInfo = $"{Penomoran.Count} jenis surat. Awalan baru berlaku untuk nomor surat " +
+                                "yang dibuat setelah pengaturan ini disimpan.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal memuat pengaturan penomoran surat");
+                PenomoranInfo = "Gagal memuat pengaturan penomoran: " + ex.Message;
+            }
+
+            OnPropertyChanged(nameof(AdaPerubahanPenomoran));
+            SimpanPenomoranCommand.RaiseCanExecuteChanged();
+        }
+
+        /// <summary>
+        /// Perbarui peringatan awalan kembar: awalan yang dipakai beberapa jenis
+        /// surat dengan urutan nomor sendiri-sendiri bisa menghasilkan nomor sama.
+        /// </summary>
+        private void PerbaruiPeringatanPenomoran()
+        {
+            var entri = Penomoran.Select(b => new SuDesApp.Services.PenomoranSuratEntri
+            {
+                NamaJenis = b.NamaJenis,
+                DisplayName = b.DisplayName,
+                KodeJenis = b.KodeJenis,
+                IsSharedNumbering = b.IsSharedNumbering,
+                Awalan = b.Awalan.Trim().Length == 0 ? b.AwalanBawaan : b.Awalan.Trim()
+            });
+
+            var bentrok = SuDesApp.Services.PenomoranSuratService.CariBentrok(entri);
+            PenomoranPeringatan = bentrok.Count == 0 ? string.Empty : string.Join("\n", bentrok);
+        }
+
+        /// <summary>Simpan seluruh awalan yang diubah sekaligus.</summary>
+        private async Task SimpanPenomoranAsync()
+        {
+            if (_penomoranSurat == null || PenomoranSibuk) return;
+
+            var belumBenar = Penomoran.FirstOrDefault(b => b.AdaKesalahan);
+            if (belumBenar != null)
+            {
+                PenomoranInfo = $"Awalan pada '{belumBenar.DisplayName}' belum benar: {belumBenar.PesanKesalahan}";
+                return;
+            }
+
+            var perubahan = Penomoran.Where(b => b.Terubah)
+                .Select(b => new SuDesApp.Services.PerubahanPenomoran
+                {
+                    NamaJenis = b.NamaJenis,
+                    Awalan = b.Awalan
+                })
+                .ToList();
+
+            if (perubahan.Count == 0)
+            {
+                PenomoranInfo = "Belum ada awalan yang diubah.";
+                return;
+            }
+
+            PenomoranSibuk = true;
+            try
+            {
+                var (ok, pesan) = await _penomoranSurat.SimpanAsync(perubahan);
+                if (ok) MuatPenomoran();
+                PenomoranInfo = pesan;
+
+                if (ok)
+                    _logger.LogInformation("Pengaturan penomoran surat diperbarui dari halaman Pengaturan.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal menyimpan pengaturan penomoran surat");
+                PenomoranInfo = "Gagal menyimpan penomoran: " + ex.Message;
+            }
+            finally
+            {
+                PenomoranSibuk = false;
+            }
+        }
+
         /// <summary>
         /// Kunci seksi yang diminta untuk difokuskan saat halaman dibuka (mis.
-        /// dari chip status WA/Sheet di statusbar): "gateway-wa", "google-sheet".
-        /// Kosong = tampil normal dari atas. Di-set lewat <see cref="SetFocusSection"/>
-        /// SEBELUM halaman dinavigasikan; view membacanya saat DataContext terpasang.
+        /// dari chip status WA/Sheet di statusbar): "gateway-wa", "google-sheet",
+        /// "google-oauth". Kosong = tampil pada bagian pertama. Di-set lewat
+        /// <see cref="SetFocusSection"/> SEBELUM halaman dinavigasikan; view
+        /// membacanya saat DataContext terpasang untuk menyorot kartunya.
         /// </summary>
         public string? FocusSection { get; private set; }
 
-        /// <summary>Tandai seksi yang akan difokuskan (dipanggil sebelum Navigate).</summary>
-        public void SetFocusSection(string? sectionKey) => FocusSection = sectionKey;
+        /// <summary>
+        /// Tandai seksi yang akan difokuskan (dipanggil sebelum Navigate); bagian
+        /// navigasi yang memuat seksi tersebut langsung dipilih.
+        /// </summary>
+        public void SetFocusSection(string? sectionKey)
+        {
+            FocusSection = sectionKey;
+            if (string.IsNullOrWhiteSpace(sectionKey)) return;
+
+            var bagian = Sections.FirstOrDefault(s =>
+                string.Equals(s.Key, sectionKey.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (bagian != null) SelectedSection = bagian;
+        }
 
         /// <summary>Buka halaman Panduan WhatsApp (Bagian D = mode tautan Google Form/Sheet).</summary>
         private void BukaPanduanWa()

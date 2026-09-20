@@ -113,6 +113,11 @@ namespace SuDesApp.Utilities
         public const string KeyActivityLogging = "activityLogging";
         public const string KeyCleanupTempPdf = "cleanupTempPdf";
         public const string KeyCleanupOldExports = "cleanupOldExports";
+        public const string KeyPeriksaPembaruan = "periksaPembaruan";
+        public const string KeyPasangOtomatisSaatKeluar = "pasangOtomatisSaatKeluar";
+        public const string KeyBatasUkuranTambalanMb = "batasUkuranTambalanMb";
+        public const string KeyStartupDiamDiam = "startupDiamDiam";
+        public const string KeyStartupDiamDiamMenit = "startupDiamDiamMenit";
 
         /// <summary>Login otomatis Google (default: aktif).</summary>
         public static bool IsGoogleAutoLoginEnabled() => GetBool(KeyGoogleAutoLogin, true);
@@ -184,6 +189,56 @@ namespace SuDesApp.Utilities
         /// <summary>Hapus berkas ekspor lama (&gt;30 hari) saat aplikasi dimulai (default: aktif).</summary>
         public static bool IsCleanupOldExportsEnabled() => GetBool(KeyCleanupOldExports, true);
         public static void SetCleanupOldExportsEnabled(bool v) => SetBool(KeyCleanupOldExports, v);
+
+        /// <summary>
+        /// Periksa pembaruan aplikasi otomatis saat aplikasi dibuka (default: aktif).
+        /// Hanya membaca informasi rilis terbaru di latar belakang lalu memberi tahu
+        /// lewat lonceng notifikasi; pemasangan tetap menunggu persetujuan pengguna.
+        /// </summary>
+        public static bool IsPeriksaPembaruanSaatMulai() => GetBool(KeyPeriksaPembaruan, true);
+        public static void SetPeriksaPembaruanSaatMulai(bool v) => SetBool(KeyPeriksaPembaruan, v);
+
+        /// <summary>
+        /// Pasang pembaruan kecil (tambalan) secara OTOMATIS saat aplikasi ditutup,
+        /// tanpa menanya pengguna (default: nonaktif). Hanya berlaku untuk tambalan;
+        /// pembaruan besar selalu memerlukan persetujuan lewat halaman Pembaruan.
+        /// </summary>
+        public static bool IsPasangOtomatisSaatKeluar() => GetBool(KeyPasangOtomatisSaatKeluar, false);
+        public static void SetPasangOtomatisSaatKeluar(bool v) => SetBool(KeyPasangOtomatisSaatKeluar, v);
+
+        /// <summary>
+        /// Batas ukuran paket pembaruan kecil yang masih boleh dipasang otomatis
+        /// saat ditutup (dalam MB, default 25). Rilis dengan paket lebih besar
+        /// tetap ditawarkan lewat notifikasi, tidak pernah diunduh senyap-senyap.
+        /// </summary>
+        public static int GetBatasUkuranTambalanMb()
+        {
+            int v = GetInt(KeyBatasUkuranTambalanMb, 25);
+            return v is < 1 or > 500 ? 25 : v;
+        }
+
+        public static void SetBatasUkuranTambalanMb(int v) => SetInt(KeyBatasUkuranTambalanMb, v);
+
+        /// <summary>
+        /// Mode diam-diam startup (default: AKTIF): pekerjaan berat yang tidak penting
+        /// bagi pengguna — pemeriksaan pembaruan online dan pembersihan otomatis
+        /// (PDF sementara, hasil ekspor lama) — ditunda beberapa menit setelah
+        /// aplikasi dibuka sehingga aplikasi terasa lebih cepat saat dibuka.
+        /// </summary>
+        public static bool IsStartupDiamDiam() => GetBool(KeyStartupDiamDiam, true);
+        public static void SetStartupDiamDiam(bool v) => SetBool(KeyStartupDiamDiam, v);
+
+        /// <summary>
+        /// Jeda mode diam-diam dalam menit (1-60, bawaan 5). Rotasi log TIDAK ikut
+        /// ditunda (kecil & perlu sejak dini); sisanya menunggu jeda ini berlalu.
+        /// </summary>
+        public static int GetStartupDiamDiamMenit()
+        {
+            int v = GetInt(KeyStartupDiamDiamMenit, 5);
+            return v is < 1 or > 60 ? 5 : v;
+        }
+
+        public static void SetStartupDiamDiamMenit(int v) => SetInt(KeyStartupDiamDiamMenit, v);
     }
 
     /// <summary>

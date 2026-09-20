@@ -1,6 +1,7 @@
 <UserControl x:Class="SuDesApp.Wpf.Views.CatatanRilisView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
              FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
     <Grid Margin="20">
         <Grid.RowDefinitions>
@@ -96,11 +97,8 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <!-- Footer dengan versi applikasi -->
-        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Padding="8"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,12,0,0">
-            <TextBlock Text="{Binding VersionFooter}" FontSize="9"
-                       Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
-        </Border>
+        <!-- Statusbar halaman: info versi (kiri) + identitas aplikasi (kanan) -->
+        <c:AppStatusBar Grid.Row="2" Margin="0,12,0,0"
+                        StatusText="{Binding VersionFooter, FallbackValue='Catatan rilis'}"/>
     </Grid>
 </UserControl>

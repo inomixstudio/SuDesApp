@@ -1,0 +1,156 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.InputKeputusanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Kepala halaman -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#128220;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title, Mode=OneWay}" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Text="Isi identitas SK / Peraturan desa. Kolom bertanda * wajib diisi dan nomor harus unik untuk jenis arsip yang sama."
+                               Style="{StaticResource HeaderSubtitle}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled" Margin="0,12,0,0">
+            <StackPanel>
+
+                <!-- Identitas keputusan -->
+                <Border Style="{StaticResource FormCard}">
+                    <StackPanel>
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="IDENTITAS KEPUTUSAN / PERATURAN" Style="{StaticResource FormSectionTitle}"/>
+                        </StackPanel>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Nomor *" Style="{StaticResource FormLabel}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                     Text="{Binding Nomor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="Nomor Keputusan"
+                                     ToolTip="Nomor SK / Perdes / Perkades"/>
+
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Tanggal *" Style="{StaticResource FormLabel}"
+                                       Margin="16,6,10,6"/>
+                            <StackPanel Grid.Row="0" Grid.Column="3">
+                                <TextBox Style="{StaticResource FormField}"
+                                         Text="{Binding Tanggal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Tanggal Keputusan"
+                                         ToolTip="Format DD-MM-YYYY, misal 15-08-2026"/>
+                                <TextBlock Text="Format: DD-MM-YYYY (mis. 15-08-2026)" FontSize="11" Margin="0,0,0,4"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Tentang *" Style="{StaticResource FormLabel}"
+                                       VerticalAlignment="Top" Margin="0,10,10,0"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                                     Grid.ColumnSpan="3" Height="72" Margin="0,10,0,0" AcceptsReturn="True"
+                                     Text="{Binding Tentang, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                     AutomationProperties.Name="Tentang"
+                                     ToolTip="Pokok isi keputusan/peraturan"/>
+                        </Grid>
+
+                        <TextBlock Text="Keterangan *" Style="{StaticResource FormLabel}" Margin="0,10,0,0"/>
+                        <TextBox Style="{StaticResource FormField}" Margin="0,4,0,0" Height="48"
+                                 Text="{Binding Keterangan, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                 AutomationProperties.Name="Keterangan"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Lampiran Word/PDF -->
+                <Border Style="{StaticResource FormCard}">
+                    <StackPanel>
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="LAMPIRAN (OPSIONAL)" Style="{StaticResource FormSectionTitle}"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="Pilih File Word / PDF" Width="168" Height="32" Margin="0,0,8,0"
+                                    Command="{Binding PickWordFileCommand}" Style="{StaticResource SecondaryButton}"
+                                    ToolTip="Word (.docx/.doc) akan dibaca otomatis untuk mengisi formulir; PDF hanya dilampirkan"/>
+                            <Button Content="Lihat" Width="70" Height="32"
+                                    Command="{Binding OpenWordFileCommand}"
+                                    IsEnabled="{Binding HasStoredOrPickedFile, FallbackValue=False}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    ToolTip="Buka berkas lampiran"/>
+                            <TextBlock Text="{Binding WordFileDisplay, Mode=OneWay}" VerticalAlignment="Center" FontSize="12"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,0,0,0"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="240"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Word dibaca otomatis untuk mengisi Nomor/Tanggal/Tentang/Keterangan. PDF hanya disimpan sebagai lampiran."
+                                   FontSize="11" Margin="0,6,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Panel aksi -->
+        <Border Grid.Row="2" Style="{StaticResource ToolbarCard}" Margin="0,12,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Text="Nomor harus unik untuk jenis arsip yang sama. Setelah tersimpan, halaman kembali ke daftar SK / Peraturan dan daftarnya diperbarui."/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Batal" Width="110" Height="34" Margin="0,0,8,0"
+                            Command="{Binding CancelCommand}" Style="{StaticResource OutlineButton}"
+                            ToolTip="Kembali tanpa menyimpan"/>
+                    <Button Content="Simpan" Width="120" Height="34"
+                            Command="{Binding SaveCommand}" Style="{StaticResource SuccessButton}"
+                            ToolTip="Simpan data ke arsip SK / Peraturan"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Penghalang saat berkas Word sedang dibaca -->
+        <Border Grid.Row="0" Grid.RowSpan="3" Background="#80000000" Panel.ZIndex="100"
+                Visibility="{Binding IsLoadingWord, Converter={StaticResource BoolToVis}}">
+            <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Padding="30"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    MaxWidth="320" MinWidth="220">
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" Width="40" Height="40" Margin="0,0,0,16"/>
+                    <TextBlock Text="Membaca berkas Word..." FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextBrush}" TextAlignment="Center"/>
+                    <TextBlock Text="Mohon tunggu, aplikasi sedang memproses berkas..." FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Center" Margin="0,8,0,0"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

@@ -3,14 +3,12 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
-using SuDesApp.Wpf.Views;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -33,20 +31,36 @@ namespace SuDesApp.Wpf.ViewModels
         public string Perihal => Data.Perihal;
         public string IsiRingkas => Data.IsiRingkas;
         public string Keterangan => Data.Keterangan;
+        public string? FileLampiran => Data.FileLampiran;
+
+        /// <summary>Ada berkas lampiran (PDF/gambar) tersimpan untuk baris ini.</summary>
+        public bool PunyaLampiran => !string.IsNullOrWhiteSpace(Data.FileLampiran);
+
+        /// <summary>Label pendek jenis berkas lampiran (PDF/JPG/...) untuk chip, atau kosong.</summary>
+        public string EkstensiLampiran => LampiranArsipSurat.Label(Data.FileLampiran);
+
+        /// <summary>Teks gabungan untuk pencarian cepat (nomor, asal/tujuan, perihal, isi, keterangan, tanggal).</summary>
+        public string SearchText => string.Join(" ", NomorSurat, AsalTujuan, Perihal, IsiRingkas, Keterangan,
+            TanggalSurat, TanggalTerimaKirim, Data.TanggalSurat.Year.ToString());
     }
 
     /// <summary>
     /// Halaman buku agenda Surat Masuk/Keluar — padanan SuratKeluarMasuk (WinForms):
-    /// data dari arsip Excel berformat MASUK/KELUAR, filter tahun,
-    /// Tambah/Edit/Hapus, dan cetak PDF via generator.
+    /// data dari arsip (tabel ArsipSurat di database SQLite), filter tahun,
+    /// pencarian cepat, Tambah/Edit/Hapus, lampiran PDF/gambar, dan cetak PDF
+    /// via generator. Tata letak halaman mengikuti buku Keputusan/Peraturan
+    /// (kepala halaman, kartu ringkasan, bilah alat, dan daftar bergaya modern).
     /// </summary>
     public class AgendaSuratViewModel : ObservableObject
     {
+        /// <summary>Pilihan tahun untuk menampilkan seluruh data lintas tahun.</summary>
+        public const string OpsiSemuaTahun = "Semua Tahun";
+
         private readonly IArsipSuratRepository _repository;
         private readonly IDesaRepository _desaRepository;
         private readonly NavigationService _navigation;
         private readonly IMessageService _messageService;
-        private readonly Func<string, SuratKeluarMasukData?, InputAgendaWindow> _inputWindowFactory;
+        private readonly Func<string, SuratKeluarMasukData?, SuratKeluarMasukData?, InputAgendaViewModel> _inputFactory;
         private readonly Func<string, string, PdfPreviewViewModel> _previewFactory;
         private readonly ILogger<AgendaSuratViewModel> _logger;
 
@@ -54,6 +68,12 @@ namespace SuDesApp.Wpf.ViewModels
         private string? _selectedTahun;
         private AgendaRow? _selectedRow;
         private bool _isLoading;
+        private string _searchText = string.Empty;
+        private string _statusInfo = string.Empty;
+        private int _totalJenisCount;
+        private int _tampilCount;
+        private int _jumlahLampiran;
+        private int _tahunTerbaru;
         private System.Collections.Generic.List<SuratKeluarMasukData> _semua = new();
 
         public AgendaSuratViewModel(
@@ -61,7 +81,7 @@ namespace SuDesApp.Wpf.ViewModels
             IDesaRepository desaRepository,
             NavigationService navigation,
             IMessageService messageService,
-            Func<string, SuratKeluarMasukData?, InputAgendaWindow> inputWindowFactory,
+            Func<string, SuratKeluarMasukData?, SuratKeluarMasukData?, InputAgendaViewModel> inputFactory,
             Func<string, string, PdfPreviewViewModel> previewFactory,
             ILogger<AgendaSuratViewModel> logger)
         {
@@ -69,28 +89,96 @@ namespace SuDesApp.Wpf.ViewModels
             _desaRepository = desaRepository ?? throw new ArgumentNullException(nameof(desaRepository));
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
-            _inputWindowFactory = inputWindowFactory ?? throw new ArgumentNullException(nameof(inputWindowFactory));
+            _inputFactory = inputFactory ?? throw new ArgumentNullException(nameof(inputFactory));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             SetMasukCommand = new AsyncRelayCommand(() => SetJenisAsync("MASUK"));
             SetKeluarCommand = new AsyncRelayCommand(() => SetJenisAsync("KELUAR"));
             TambahCommand = new AsyncRelayCommand(AddAsync);
+            SalinCommand = new AsyncRelayCommand(SalinAsync, () => SelectedRow != null);
             EditCommand = new AsyncRelayCommand(EditAsync, () => SelectedRow != null);
             HapusCommand = new AsyncRelayCommand(HapusAsync, () => SelectedRow != null);
             CetakCommand = new AsyncRelayCommand(CetakAsync, () => SelectedTahun != null);
             SegarkanCommand = new AsyncRelayCommand(() => LoadAsync());
+            BukaLampiranCommand = new AsyncRelayCommand<AgendaRow?>(BukaLampiranAsync);
+            BersihkanPencarianCommand = new RelayCommand(() => SearchText = string.Empty);
             BatalCommand = new RelayCommand(() => _navigation.ShowDefault());
         }
 
         public string JenisSurat => _jenisSurat;
-        public string HeaderTitle => $"SURAT {_jenisSurat}";
+        public string HeaderTitle => $"BUKU AGENDA SURAT {_jenisSurat}";
         public bool IsMasuk => _jenisSurat == "MASUK";
         public bool IsKeluar => _jenisSurat == "KELUAR";
         public string TahunLabel => _jenisSurat == "MASUK" ? "Tahun Masuk" : "Tahun Keluar";
 
+        /// <summary>Judul kartu ringkasan total (mis. "TOTAL SURAT MASUK").</summary>
+        public string TotalLabel => $"TOTAL SURAT {_jenisSurat}";
+        public string HeaderSubtitle => _jenisSurat == "MASUK"
+            ? "Buku agenda surat masuk — klik dua kali baris untuk mengedit."
+            : "Buku agenda surat keluar — klik dua kali baris untuk mengedit.";
+
         public ObservableCollection<string> TahunOptions { get; } = new();
         public ObservableCollection<AgendaRow> Rows { get; } = new();
+
+        /// <summary>Total data jenis surat ini (tanpa filter tahun/pencarian).</summary>
+        public int TotalJenisCount
+        {
+            get => _totalJenisCount;
+            private set => SetProperty(ref _totalJenisCount, value);
+        }
+
+        /// <summary>Jumlah baris yang sedang tampil setelah filter.</summary>
+        public int TampilCount
+        {
+            get => _tampilCount;
+            private set => SetProperty(ref _tampilCount, value);
+        }
+
+        /// <summary>Jumlah baris tampil yang memiliki berkas lampiran.</summary>
+        public int JumlahLampiran
+        {
+            get => _jumlahLampiran;
+            private set => SetProperty(ref _jumlahLampiran, value);
+        }
+
+        public int TahunTerbaru
+        {
+            get => _tahunTerbaru;
+            private set
+            {
+                if (SetProperty(ref _tahunTerbaru, value))
+                {
+                    OnPropertyChanged(nameof(TahunTerbaruLabel));
+                }
+            }
+        }
+
+        /// <summary>Tahun terbaru sebagai teks ("—" bila belum ada data).</summary>
+        public string TahunTerbaruLabel => TahunTerbaru == 0 ? "—" : TahunTerbaru.ToString();
+
+        /// <summary>True bila ada baris yang tampil (kontrol pesan "tidak ada data").</summary>
+        public bool HasRows => Rows.Count > 0;
+
+        /// <summary>Kata kunci pencarian (nomor, asal/tujuan, perihal, isi ringkas, keterangan).</summary>
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetProperty(ref _searchText, value ?? string.Empty))
+                {
+                    FilterRows();
+                }
+            }
+        }
+
+        /// <summary>Info jumlah baris yang tampil vs total data jenis ini.</summary>
+        public string StatusInfo
+        {
+            get => _statusInfo;
+            private set => SetProperty(ref _statusInfo, value);
+        }
 
         public string? SelectedTahun
         {
@@ -114,6 +202,7 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     ((AsyncRelayCommand)EditCommand).RaiseCanExecuteChanged();
                     ((AsyncRelayCommand)HapusCommand).RaiseCanExecuteChanged();
+                    ((AsyncRelayCommand)SalinCommand).RaiseCanExecuteChanged();
                 }
             }
         }
@@ -127,10 +216,13 @@ namespace SuDesApp.Wpf.ViewModels
         public AsyncRelayCommand SetMasukCommand { get; }
         public AsyncRelayCommand SetKeluarCommand { get; }
         public AsyncRelayCommand TambahCommand { get; }
+        public AsyncRelayCommand SalinCommand { get; }
         public AsyncRelayCommand EditCommand { get; }
         public AsyncRelayCommand HapusCommand { get; }
         public AsyncRelayCommand CetakCommand { get; }
         public AsyncRelayCommand SegarkanCommand { get; }
+        public AsyncRelayCommand<AgendaRow?> BukaLampiranCommand { get; }
+        public RelayCommand BersihkanPencarianCommand { get; }
         public RelayCommand BatalCommand { get; }
 
         /// <summary>Inisialisasi awal (dipanggil factory navigasi).</summary>
@@ -144,11 +236,14 @@ namespace SuDesApp.Wpf.ViewModels
             }
 
             _jenisSurat = jenis;
+            SearchText = string.Empty;
             OnPropertyChanged(nameof(JenisSurat));
             OnPropertyChanged(nameof(HeaderTitle));
+            OnPropertyChanged(nameof(HeaderSubtitle));
             OnPropertyChanged(nameof(IsMasuk));
             OnPropertyChanged(nameof(IsKeluar));
             OnPropertyChanged(nameof(TahunLabel));
+            OnPropertyChanged(nameof(TotalLabel));
             await LoadAsync();
         }
 
@@ -159,8 +254,11 @@ namespace SuDesApp.Wpf.ViewModels
                 IsLoading = true;
                 _semua = await _repository.GetAllAsync();
 
-                var years = _semua
+                var jenisRows = _semua
                     .Where(s => s.JenisSurat.Equals(_jenisSurat, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                var years = jenisRows
                     .Select(s => s.TanggalSurat.Year)
                     .Distinct()
                     .OrderByDescending(y => y)
@@ -168,27 +266,49 @@ namespace SuDesApp.Wpf.ViewModels
                     .ToList();
 
                 TahunOptions.Clear();
+                TahunOptions.Add(OpsiSemuaTahun);
                 foreach (var year in years) TahunOptions.Add(year);
 
-                SelectedTahun = TahunOptions.FirstOrDefault();
-                if (SelectedTahun == null) FilterRows();
+                SelectedTahun = OpsiSemuaTahun;
+                TotalJenisCount = jenisRows.Count;
+                TahunTerbaru = years.Count > 0 && int.TryParse(years[0], out int lastYear) ? lastYear : 0;
+                FilterRows();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal memuat arsip surat {Jenis}", _jenisSurat);
+                await _messageService.ShowErrorAsync("Gagal memuat buku agenda: " + ex.Message);
             }
             finally
             {
                 IsLoading = false;
+                OnPropertyChanged(nameof(HasRows));
             }
         }
 
         private void FilterRows()
         {
+            bool isAllYears = SelectedTahun == OpsiSemuaTahun;
             int.TryParse(SelectedTahun, out int selectedYear);
-            var filtered = _semua
-                .Where(s => s.JenisSurat.Equals(_jenisSurat, StringComparison.OrdinalIgnoreCase) &&
-                            (selectedYear == 0 || s.TanggalSurat.Year == selectedYear))
+
+            // Pencarian cepat: cocokkan di nomor/asal tujuan/perihal/isi/keterangan/tanggal.
+            string? q = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText.Trim();
+
+            var jenisRows = _semua
+                .Where(s => s.JenisSurat.Equals(_jenisSurat, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var filtered = jenisRows
+                .Where(s => (isAllYears || selectedYear == 0 || s.TanggalSurat.Year == selectedYear) &&
+                            (q == null ||
+                             s.NomorSurat.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                             s.AsalTujuan.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                             s.Perihal.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                             s.IsiRingkas.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                             s.Keterangan.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                             s.TanggalSurat.ToString("dd-MM-yyyy").Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                             (s.TanggalDiterimaDikirim?.ToString("dd-MM-yyyy").Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                             s.TanggalSurat.Year.ToString().Contains(q, StringComparison.OrdinalIgnoreCase)))
                 .OrderByDescending(s => s.TanggalSurat)
                 .ToList();
 
@@ -198,26 +318,99 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 Rows.Add(new AgendaRow(item, no++));
             }
+
+            TampilCount = filtered.Count;
+            JumlahLampiran = filtered.Count(s => !string.IsNullOrWhiteSpace(s.FileLampiran));
+            OnPropertyChanged(nameof(HasRows));
+            StatusInfo = filtered.Count == jenisRows.Count
+                ? $"Menampilkan {filtered.Count} data."
+                : $"Menampilkan {filtered.Count} dari {jenisRows.Count} data.";
         }
 
-        private async Task AddAsync()
+        /// <summary>Membuka berkas lampiran milik baris yang diklik (bukan bergantung SelectedRow).</summary>
+        private async Task BukaLampiranAsync(AgendaRow? row)
         {
-            var window = _inputWindowFactory(_jenisSurat, null);
-            window.Owner = System.Windows.Application.Current?.MainWindow;
-            if (window.ShowDialog() == true)
+            row ??= SelectedRow;
+            if (row == null || !row.PunyaLampiran) return;
+            try
             {
-                await LoadAsync();
+                var fullPath = _repository.ResolveLampiranFullPath(row.FileLampiran);
+                if (fullPath == null)
+                {
+                    await _messageService.ShowWarningAsync("Berkas lampiran tidak ditemukan di penyimpanan.");
+                    return;
+                }
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(fullPath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka berkas lampiran agenda surat");
+                await _messageService.ShowErrorAsync("Gagal membuka berkas lampiran: " + ex.Message);
+            }
+        }
+
+        private Task AddAsync() => BukaFormulirAsync(null, null);
+
+        /// <summary>
+        /// Buka formulir input/edit agenda sebagai halaman di area konten utama.
+        /// Setelah tersimpan (atau dibatalkan) halaman kembali ke daftar agenda.
+        /// </summary>
+        private Task BukaFormulirAsync(SuratKeluarMasukData? editData, SuratKeluarMasukData? prefill)
+        {
+            try
+            {
+                var vm = _inputFactory(_jenisSurat, editData, prefill);
+                vm.Tersimpan += () => _ = LoadAsync();
+                vm.RequestClose += () => _navigation.Navigate(this);
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka formulir input agenda {Jenis}", _jenisSurat);
+                return _messageService.ShowErrorAsync("Gagal membuka formulir input: " + ex.Message);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private async Task SalinAsync()
+        {
+            if (SelectedRow == null) return;
+            try
+            {
+                var salinan = new SuratKeluarMasukData
+                {
+                    JenisSurat = _jenisSurat,
+                    NomorSurat = SelectedRow!.Data.NomorSurat,
+                    TanggalSurat = SelectedRow.Data.TanggalSurat,
+                    TanggalDiterimaDikirim = SelectedRow.Data.TanggalDiterimaDikirim,
+                    AsalTujuan = SelectedRow.Data.AsalTujuan,
+                    Perihal = SelectedRow.Data.Perihal,
+                    IsiRingkas = SelectedRow.Data.IsiRingkas,
+                    Keterangan = SelectedRow.Data.Keterangan,
+                    FileLampiran = null
+                };
+
+                await BukaFormulirAsync(null, salinan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuat salinan agenda {Jenis}", _jenisSurat);
+                await _messageService.ShowErrorAsync("Gagal membuat salinan: " + ex.Message);
             }
         }
 
         private async Task EditAsync()
         {
             if (SelectedRow == null) return;
-            var window = _inputWindowFactory(_jenisSurat, SelectedRow.Data);
-            window.Owner = System.Windows.Application.Current?.MainWindow;
-            if (window.ShowDialog() == true)
+            try
             {
-                await LoadAsync();
+                await BukaFormulirAsync(SelectedRow.Data, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka formulir edit agenda {Jenis}", _jenisSurat);
+                await _messageService.ShowErrorAsync("Gagal membuka formulir edit: " + ex.Message);
             }
         }
 
@@ -226,7 +419,9 @@ namespace SuDesApp.Wpf.ViewModels
             if (SelectedRow == null) return;
             bool confirmed = await _messageService.ShowConfirmationAsync(
                 "Konfirmasi Hapus",
-                $"Yakin ingin menghapus Nomor '{SelectedRow.NomorSurat}'?");
+                SelectedRow.PunyaLampiran
+                    ? $"Yakin ingin menghapus Nomor '{SelectedRow.NomorSurat}' beserta berkas lampirannya?"
+                    : $"Yakin ingin menghapus Nomor '{SelectedRow.NomorSurat}'?");
             if (!confirmed) return;
 
             try
@@ -243,14 +438,18 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task CetakAsync()
         {
-            if (string.IsNullOrEmpty(SelectedTahun) || !int.TryParse(SelectedTahun, out int year)) return;
+            if (string.IsNullOrEmpty(SelectedTahun)) return;
 
             try
             {
+                bool semuaTahun = SelectedTahun == OpsiSemuaTahun;
+                int.TryParse(SelectedTahun, out int year);
+                string labelTahun = semuaTahun ? "Semua Tahun" : year.ToString();
+
                 var desaData = await _desaRepository.GetInfoDesaAsync() ?? new DesaData();
                 var dataToPrint = _semua
                     .Where(s => s.JenisSurat.Equals(_jenisSurat, StringComparison.OrdinalIgnoreCase) &&
-                                s.TanggalSurat.Year == year)
+                                (semuaTahun || s.TanggalSurat.Year == year))
                     .ToList();
                 if (dataToPrint.Count == 0)
                 {
@@ -260,12 +459,12 @@ namespace SuDesApp.Wpf.ViewModels
 
                 var generator = new SuratKeluarMasukGenerator(desaData);
                 using var stream = new MemoryStream();
-                generator.GenerateAllSuratPdf(stream, dataToPrint, _jenisSurat, year);
+                generator.GenerateAllSuratPdf(stream, dataToPrint, _jenisSurat, semuaTahun ? null : year);
 
-                string tempPath = Path.Combine(Path.GetTempPath(), $"Arsip_{_jenisSurat}_{year}.pdf");
+                string tempPath = Path.Combine(Path.GetTempPath(), $"Arsip_{_jenisSurat}_{labelTahun.Replace(' ', '_')}.pdf");
                 await File.WriteAllBytesAsync(tempPath, stream.ToArray());
 
-                var preview = _previewFactory($"Arsip {_jenisSurat} {year}", tempPath);
+                var preview = _previewFactory($"Arsip {_jenisSurat} {labelTahun}", tempPath);
                 _navigation.Navigate(preview);
             }
             catch (Exception ex)

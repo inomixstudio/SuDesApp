@@ -52,7 +52,7 @@ namespace SuDesApp.Data.Handlers
                 }
 
                 // Serialisasi AhliWarisData ke JSON
-                string additionalData = null;
+                string? additionalData = null;
                 if (suratData.AhliWarisData != null)
                 {
                     additionalData = JsonSerializer.Serialize(suratData.AhliWarisData, new JsonSerializerOptions

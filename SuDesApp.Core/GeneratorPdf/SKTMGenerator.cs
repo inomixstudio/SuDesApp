@@ -25,7 +25,7 @@ namespace SuDesApp.GeneratorPdf
         protected override bool UseDefaultFooter => true;
         protected override bool ShowPemohonInFooter => false;
 
-        public override async Task GeneratePdfAsync(Stream outputStream, int idSurat, string keteranganTextBox = null)
+        public override async Task GeneratePdfAsync(Stream outputStream, int idSurat, string keteranganTextBox = default)
         {
             try
             {
@@ -67,7 +67,7 @@ namespace SuDesApp.GeneratorPdf
             }
         }
 
-        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             try
             {

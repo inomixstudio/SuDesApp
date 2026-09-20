@@ -2,9 +2,9 @@ namespace SuDesApp.Data.Models
 {
     public class KenalLahirData
     {
-        public WargaData Ayah { get; set; }
-        public WargaData Ibu { get; set; }
-        public AnakData Anak { get; set; }
+        public WargaData ?Ayah { get; set; }
+        public WargaData ?Ibu { get; set; }
+        public AnakData ?Anak { get; set; }
         public string? NamaAnak { get; set; }
         public DateTime? TanggalLahirAnak { get; set; }
         public string? TempatLahirAnak { get; set; }
@@ -32,6 +32,6 @@ namespace SuDesApp.Data.Models
     {
         public string? NamaAnak { get => Nama; set => Nama = value; }
         public int AnakKe { get; set; }
-        public string LahirDi { get; set; } // Misal: "Rumah" atau "Rumah Sakit"
+        public string ?LahirDi { get; set; } // Misal: "Rumah" atau "Rumah Sakit"
     }
 }

@@ -22,7 +22,7 @@ namespace SuDesApp.GeneratorPdf
         protected override string JudulSurat => "SURAT KETERANGAN DOMISILI";
         protected override bool ShowPemohonInFooter => false;
 
-        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBoxValue = null)
+        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBoxValue = null)
         {
             try
             {
@@ -73,7 +73,7 @@ namespace SuDesApp.GeneratorPdf
                 ],
                 labelTebal: ["Nama Instansi/Lembaga"]);
 
-                string keteranganFinal = suratData.Keterangan;
+                string? keteranganFinal = suratData.Keterangan;
 
                 if (string.IsNullOrWhiteSpace(keteranganFinal))
                 {

@@ -15,6 +15,8 @@ namespace SuDesApp.Utilities
         public const string KeyWaSheetFormUrl = "waSheetFormUrl";
         public const string KeyWaSheetUrl = "waSheetUrl";
         public const string KeyWaSheetTabName = "waSheetTabName";
+        public const string KeyWaFormId = "waFormId";
+        public const string KeyWaFormAuto = "waFormAuto";
 
         /// <summary>Mode tautan form aktif (default: aktif — alur yang diinginkan pengguna).</summary>
         public static bool IsLinkModeEnabled() => GetBool(KeyWaSheetMode, true);
@@ -37,6 +39,20 @@ namespace SuDesApp.Utilities
         /// <summary>Nama tab (worksheet) jawaban; default "Form Responses 1".</summary>
         public static string GetTabName() => GetString(KeyWaSheetTabName, "Form Responses 1") ?? "Form Responses 1";
         public static void SetTabName(string? v) => SetString(KeyWaSheetTabName, v ?? string.Empty);
+
+        /// <summary>
+        /// ID Google Form (bukan URL) untuk formulir yang DIBUAT aplikasi. Dipakai
+        /// membaca jawaban via Forms API dan menyinkronkannya ke Sheet mirror.
+        /// </summary>
+        public static string? GetFormId() => GetString(KeyWaFormId, string.Empty);
+        public static void SetFormId(string? v) => SetString(KeyWaFormId, v ?? string.Empty);
+
+        /// <summary>
+        /// Formulir jawaban dipantau lewat Forms API (dibuat otomatis oleh aplikasi)
+        /// dan disalin ke Sheet; bukan form yang mengisi Sheet-nya sendiri.
+        /// </summary>
+        public static bool IsAutoForm() => GetBool(KeyWaFormAuto, false);
+        public static void SetAutoForm(bool v) => SetBool(KeyWaFormAuto, v);
 
         /// <summary>Konfigurasi lengkap? (Sheet wajib; Form opsional bila Sheet diisi).</summary>
         public static bool IsConfigured()
@@ -67,6 +83,18 @@ namespace SuDesApp.Utilities
         {
             if (string.IsNullOrWhiteSpace(url)) return null;
             var s = url.Trim();
+
+            // URL terbit hasil "Kirim" (published): .../forms/d/e/<ID>/viewform —
+            // inilah tautan yang benar untuk warga. JANGAN dipecah pada "/d/",
+            // karena segmen setelahnya adalah "e" sehingga terpotong menjadi
+            // .../d/e/viewform dan menghasilkan HTTP 404.
+            if (s.Contains("/d/e/", StringComparison.Ordinal))
+            {
+                var vf = s.IndexOf("/viewform", StringComparison.Ordinal);
+                return vf >= 0 ? s[..(vf + "/viewform".Length)] : s;
+            }
+
+            // URL gaya editor: .../forms/d/<ID>/edit → .../forms/d/<ID>/viewform
             var marker = s.IndexOf("/d/", StringComparison.Ordinal);
             if (marker < 0) return s;
             var baseEnd = s.IndexOf('/', marker + 3);

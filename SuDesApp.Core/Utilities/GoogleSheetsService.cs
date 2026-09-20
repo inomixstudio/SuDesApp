@@ -36,8 +36,22 @@ namespace SuDesApp.Utilities
             => new((s ?? string.Empty).ToLowerInvariant().Where(c => !char.IsWhiteSpace(c)).ToArray());
     }
 
+    public sealed class InfoSpreadsheet
+    {
+        public string SpreadsheetId { get; }
+        public string Url { get; }
+        public string TabName { get; }
+
+        public InfoSpreadsheet(string spreadsheetId, string url, string tabName)
+        {
+            SpreadsheetId = spreadsheetId;
+            Url = url;
+            TabName = tabName;
+        }
+    }
+
     /// <summary>
-    /// Wrapper Google Sheets API memakai kredensial & token OAuth yang sama dengan
+    /// Wrapper Google Sheets API memakai kredensial &amp; token OAuth yang sama dengan
     /// GoogleDriveService (user aplikasi login sekali via jendela Google). Dipakai
     /// mode layanan online Google Sheet/Form: membaca baris jawaban warga dan
     /// menulis status pemrosesan.
@@ -93,6 +107,76 @@ namespace SuDesApp.Utilities
             var request = client.Spreadsheets.Values.Get(sheetId, range!);
             var response = await request.ExecuteAsync(ct).ConfigureAwait(false);
             return response.Values ?? new List<IList<object>>();
+        }
+
+        /// <summary>
+        /// Membuat spreadsheet baru, menamai tab jawaban, dan menulis baris header.
+        /// Region default (bukan A1) tidak diset eksplisit — mengikuti locale akun.
+        /// </summary>
+        public async Task<InfoSpreadsheet> BuatSpreadsheetAsync(
+            string judul, string tabName, IReadOnlyList<string> headers, CancellationToken ct = default)
+        {
+            var client = await GetClientAsync(ct).ConfigureAwait(false);
+
+            var created = await client.Spreadsheets.Create(new Spreadsheet
+            {
+                Properties = new SpreadsheetProperties { Title = judul }
+            }).ExecuteAsync(ct).ConfigureAwait(false);
+
+            var sheetId = created.SpreadsheetId;
+            if (string.IsNullOrWhiteSpace(sheetId))
+                throw new InvalidOperationException("Google Sheets tidak mengembalikan ID spreadsheet.");
+
+            var defaultSheet = created.Sheets?.FirstOrDefault();
+            var numericId = defaultSheet?.Properties?.SheetId ?? 0;
+            var oldTitle = defaultSheet?.Properties?.Title ?? "Sheet1";
+
+            if (!string.Equals(oldTitle, tabName, StringComparison.Ordinal))
+            {
+                var rename = new BatchUpdateSpreadsheetRequest
+                {
+                    Requests = new List<Request>
+                    {
+                        new Request
+                        {
+                            UpdateSheetProperties = new UpdateSheetPropertiesRequest
+                            {
+                                Properties = new SheetProperties { SheetId = numericId, Title = tabName },
+                                Fields = "title"
+                            }
+                        }
+                    }
+                };
+                await client.Spreadsheets.BatchUpdate(rename, sheetId).ExecuteAsync(ct).ConfigureAwait(false);
+            }
+
+            var body = new ValueRange
+            {
+                Values = new List<IList<object>> { headers.Cast<object>().ToList() }
+            };
+            var update = client.Spreadsheets.Values.Update(body, sheetId, $"'{tabName.Replace("'", "''")}'!A1");
+            update.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.RAW;
+            await update.ExecuteAsync(ct).ConfigureAwait(false);
+
+            var url = string.IsNullOrWhiteSpace(created.SpreadsheetUrl)
+                ? $"https://docs.google.com/spreadsheets/d/{sheetId}/edit"
+                : created.SpreadsheetUrl!;
+            _logger.LogInformation("Spreadsheet dibuat: {SheetId} tab {Tab}", sheetId, tabName);
+            return new InfoSpreadsheet(sheetId, url, tabName);
+        }
+
+        /// <summary>Menambahkan baris-baris baru setelah data terakhir pada tab.</summary>
+        public async Task AppendRowsAsync(
+            string sheetId, string tabName, IReadOnlyList<IList<object>> rows, CancellationToken ct = default)
+        {
+            if (rows.Count == 0) return;
+            var client = await GetClientAsync(ct).ConfigureAwait(false);
+            var body = new ValueRange { Values = rows as List<IList<object>> ?? rows.ToList() };
+            var request = client.Spreadsheets.Values.Append(body, sheetId, $"'{tabName.Replace("'", "''")}'!A1");
+            request.ValueInputOption = SpreadsheetsResource.ValuesResource.AppendRequest.ValueInputOptionEnum.RAW;
+            request.InsertDataOption = SpreadsheetsResource.ValuesResource.AppendRequest.InsertDataOptionEnum.INSERTROWS;
+            await request.ExecuteAsync(ct).ConfigureAwait(false);
+            _logger.LogInformation("Spreadsheet {SheetId}: {Jumlah} baris ditambahkan ke tab {Tab}", sheetId, rows.Count, tabName);
         }
 
         /// <summary>Membaca seluruh baris jawaban (tab) termasuk header baris 1.</summary>

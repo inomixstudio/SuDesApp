@@ -1,0 +1,232 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.TemplateSuratView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Kepala halaman (tombol "Buat Template Baru" dipindah ke bilah alat di bawah) -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#128221;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="TEMPLATE SURAT" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Style="{StaticResource HeaderSubtitle}"
+                               Text="Susun sendiri jenis surat yang belum tersedia di menu Buat Surat — surat yang dicetak tercatat di Register Surat"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Ringkasan -->
+        <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource KpiCardStyle}" Margin="0,0,6,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="TOTAL TEMPLATE" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding JumlahTotal, Mode=OneWay}" FontSize="22" FontWeight="Bold" Margin="0,2,0,0"
+                                   Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
+                            Background="{DynamicResource AccentSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="&#128221;" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource KpiCardStyle}" Margin="6,0,6,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="TAMPIL SAAT INI" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding JumlahTampil, Mode=OneWay}" FontSize="22" FontWeight="Bold" Margin="0,2,0,0"
+                                   Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
+                            Background="{DynamicResource SuccessSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="▤" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource SuccessTextBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource KpiCardStyle}" Margin="6,0,6,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="PUNYA KOLOM ISIAN" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding RingkasanBerkolom, Mode=OneWay}" FontSize="13" FontWeight="SemiBold" Margin="0,4,0,0"
+                                   Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
+                            Background="{DynamicResource WarningSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="&#9998;" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource WarningTextBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="3" Style="{StaticResource KpiCardStyle}" Margin="6,0,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="MEMAKAI KOP DESA" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding RingkasanBerkop, Mode=OneWay}" FontSize="13" FontWeight="SemiBold" Margin="0,4,0,0"
+                                   Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
+                            Background="{DynamicResource AccentSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="&#127970;" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Bilah alat -->
+        <Border Grid.Row="2" Style="{StaticResource ToolbarCard}" Margin="0,0,0,12">
+          <StackPanel>
+            <!-- Keterangan contoh bawaan yang baru disiapkan (tampil sekali saja) -->
+            <Border Background="{DynamicResource AccentSubtleBrush}" CornerRadius="6" Padding="10,8" Margin="0,0,0,8"
+                    Visibility="{Binding AdaInfoBawaan, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding InfoBawaan, Mode=OneWay}" TextWrapping="Wrap" FontSize="12"
+                           Foreground="{DynamicResource AccentTextBrush}"/>
+            </Border>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="180"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Height="34" CornerRadius="6" VerticalAlignment="Center"
+                        Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#128269;" FontSize="12" Margin="8,0,4,0"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBox Grid.Column="1" BorderThickness="0" Background="Transparent"
+                                 VerticalContentAlignment="Center"
+                                 Text="{Binding Pencarian, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Grid.Column="2" Content="✕" Command="{Binding BersihkanPencarianCommand}"
+                                ToolTip="Bersihkan pencarian" Background="Transparent" BorderThickness="0"
+                                Padding="6,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </Grid>
+                </Border>
+
+                <TextBlock Grid.Column="1" Text="{Binding RingkasanTampil, Mode=OneWay}" VerticalAlignment="Center"
+                           Margin="12,0,12,0" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="+ Buat Template Baru" Command="{Binding BuatBaruCommand}"
+                            Style="{StaticResource PrimaryButton}" Height="32" MinWidth="170" Margin="0,0,6,0"
+                            ToolTip="Buka wizard: kop, judul, nomor, teks, kolom isian, hingga tanda tangan"/>
+                    <Button Content="Perbarui Contoh" Command="{Binding PerbaruiContohCommand}" Style="{StaticResource SecondaryButton}"
+                            Height="32" Margin="0,0,6,0"
+                            ToolTip="Ganti susunan template yang berasal dari contoh bawaan dengan versi terbaru (mis. Surat Izin Keramaian)"/>
+                    <Button Content="Segarkan" Command="{Binding SegarkanCommand}" Style="{StaticResource SecondaryButton}"
+                            Height="32" Margin="0,0,6,0" ToolTip="Muat ulang daftar template dari database"/>
+                    <Button Content="Edit" Command="{Binding EditCommand}" Style="{StaticResource SecondaryButton}"
+                            Height="32" Margin="0,0,6,0" ToolTip="Ubah template terpilih di wizard"/>
+                    <Button Content="Duplikat" Command="{Binding DuplikatCommand}" Style="{StaticResource SecondaryButton}"
+                            Height="32" Margin="0,0,6,0" ToolTip="Buat salinan template terpilih"/>
+                    <Button Content="Hapus" Command="{Binding HapusCommand}" Style="{StaticResource DangerButton}"
+                            Height="32" Margin="0,0,6,0" ToolTip="Hapus template terpilih"/>
+                    <Button Content="Pratinjau" Command="{Binding PratinjauCommand}" Style="{StaticResource SecondaryButton}"
+                            Height="32" Margin="0,0,6,0" ToolTip="Lihat contoh surat dari template terpilih"/>
+                    <Button Content="Isi Surat" Command="{Binding IsiCommand}" Style="{StaticResource SuccessButton}"
+                            Height="32" ToolTip="Isi dan cetak surat memakai template terpilih"/>
+                </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- Daftar template -->
+        <Border Grid.Row="3" Style="{StaticResource GridHostCard}" Padding="1">
+            <Grid>
+                <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding Terpilih, Mode=TwoWay}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionMode="Single" SelectionUnit="FullRow"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          BorderThickness="0" RowHeight="34"
+                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                          Style="{StaticResource ModernDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Nama Template" Binding="{Binding NamaTampil}" Width="1.6*" MinWidth="150">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Judul Surat" Binding="{Binding Judul}" Width="1.6*" MinWidth="150">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="TextBlock.TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Nomor Berikutnya" Binding="{Binding NomorBerikutnyaTampil}" Width="1.2*" MinWidth="130">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Kop" Binding="{Binding LabelKop}" Width="0.5*" MinWidth="55"/>
+                        <DataGridTextColumn Header="Kolom" Binding="{Binding JumlahKolom}" Width="0.5*" MinWidth="55"/>
+                        <DataGridTextColumn Header="Susunan Surat" Binding="{Binding RingkasanSusunan}" Width="2.4*" MinWidth="220">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="TextBlock.TextTrimming" Value="CharacterEllipsis"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock Text="{Binding PesanKosong, Mode=OneWay}" TextWrapping="Wrap" MaxWidth="460"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"
+                           Visibility="{Binding AdaPesanKosong, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

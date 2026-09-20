@@ -20,6 +20,12 @@ namespace SuDesApp.Data.Repositories
         Task UpdateAsync(SuratKeluarMasukData item);
         Task DeleteAsync(int idBarisExcel);
 
+        /// <summary>Path penyimpanan berkas lampiran baru (PDF/gambar) untuk satu arsip.</summary>
+        (string FileName, string FullPath) ResolveLampiranStorage(int id, string jenisSurat, string nomorSurat, string sourceExtension);
+
+        /// <summary>Path lengkap berkas lampiran tersimpan, atau null bila tidak ada.</summary>
+        string? ResolveLampiranFullPath(string? fileName);
+
         /// <summary>
         /// Impor data dari file Excel ArsipSurat.xlsx (arsip lama) ke database SQLite.
         /// Baris dengan Id yang sudah ada dilewati (aman dipanggil ulang).
@@ -39,11 +45,13 @@ namespace SuDesApp.Data.Repositories
     /// penanda impor), seluruh isi ArsipSurat.xlsx lama diimpor otomatis,
     /// termasuk Id baris aslinya. Berkas Excel lama tidak diubah, sehingga bisa
     /// dipakai lagi sebagai sumber impor lewat ImportFromExcelAsync.
+    /// Berkas lampiran (PDF/gambar) tersimpan di folder ArsipSuratFiles.
     /// </summary>
     public class ArsipSuratRepository : IArsipSuratRepository
     {
         private readonly SqliteConnection _connection;
         private readonly string _legacyExcelPath;
+        private readonly string _lampiranFolder;
         private readonly ILogger<ArsipSuratRepository> _logger;
         private readonly ActivityLogService? _activityLog;
 
@@ -62,8 +70,11 @@ namespace SuDesApp.Data.Repositories
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _legacyExcelPath = fileService.SanitizePath(Path.Combine(appConfig.TemplateFolder, "ArsipSurat.xlsx"));
+            _lampiranFolder = fileService.SanitizePath(Path.Combine(appConfig.TemplateFolder, "ArsipSuratFiles"));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _activityLog = activityLog;
+
+            if (!Directory.Exists(_lampiranFolder)) Directory.CreateDirectory(_lampiranFolder);
         }
 
         // =====================================================================
@@ -89,12 +100,15 @@ namespace SuDesApp.Data.Repositories
                     Perihal                TEXT,
                     IsiRingkas             TEXT,
                     Keterangan             TEXT,
+                    FileLampiran           TEXT,
                     DibuatAt               TEXT NOT NULL DEFAULT (datetime('now','localtime')));
                     CREATE INDEX IF NOT EXISTS idx_arsipsurat_jenis   ON ArsipSurat(JenisSurat);
                     CREATE INDEX IF NOT EXISTS idx_arsipsurat_tanggal ON ArsipSurat(TanggalSurat);
                     CREATE TABLE IF NOT EXISTS ArsipSuratMeta (
                     Kunci  TEXT PRIMARY KEY,
                     Nilai  TEXT);").ConfigureAwait(false);
+
+                await EnsureColumnLampiranAsync().ConfigureAwait(false);
 
                 // Impor legacy sekali saja (ditandai di tabel meta agar penghapusan
                 // data oleh pengguna tidak memicu impor ulang).
@@ -118,6 +132,23 @@ namespace SuDesApp.Data.Repositories
             finally
             {
                 _initLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// Migrasi aman untuk tabel yang sudah dibuat versi lama (tanpa kolom
+        /// FileLampiran): tambahkan kolomnya bila belum ada.
+        /// </summary>
+        private async Task EnsureColumnLampiranAsync()
+        {
+            long ada = await _connection.ExecuteScalarAsync<long>(
+                "SELECT COUNT(*) FROM pragma_table_info('ArsipSurat') WHERE name = 'FileLampiran'")
+                .ConfigureAwait(false);
+            if (ada == 0)
+            {
+                await _connection.ExecuteAsync("ALTER TABLE ArsipSurat ADD COLUMN FileLampiran TEXT")
+                    .ConfigureAwait(false);
+                _logger.LogInformation("Kolom ArsipSurat.FileLampiran ditambahkan (migrasi tabel lama).");
             }
         }
 
@@ -153,7 +184,8 @@ namespace SuDesApp.Data.Repositories
         {
             await EnsureInitializedAsync().ConfigureAwait(false);
             const string sql = @"SELECT Id AS IdBarisExcel, JenisSurat, NomorSurat, TanggalSurat,
-                                        TanggalDiterimaDikirim, AsalTujuan, Perihal, IsiRingkas, Keterangan
+                                        TanggalDiterimaDikirim, AsalTujuan, Perihal, IsiRingkas, Keterangan,
+                                        FileLampiran
                                  FROM ArsipSurat
                                  ORDER BY Id";
             var rows = await _connection.QueryAsync<Row>(sql).ConfigureAwait(false);
@@ -167,7 +199,8 @@ namespace SuDesApp.Data.Repositories
                 AsalTujuan = (r.AsalTujuan ?? "").Trim(),
                 Perihal = (r.Perihal ?? "").Trim(),
                 IsiRingkas = (r.IsiRingkas ?? "").Trim(),
-                Keterangan = (r.Keterangan ?? "").Trim()
+                Keterangan = (r.Keterangan ?? "").Trim(),
+                FileLampiran = string.IsNullOrWhiteSpace(r.FileLampiran) ? null : r.FileLampiran!.Trim()
             }).ToList();
         }
 
@@ -176,8 +209,8 @@ namespace SuDesApp.Data.Repositories
             await EnsureInitializedAsync().ConfigureAwait(false);
             await WriteWithRetryAsync(async () =>
             {
-                const string sql = @"INSERT INTO ArsipSurat (JenisSurat, NomorSurat, TanggalSurat, TanggalDiterimaDikirim, AsalTujuan, Perihal, IsiRingkas, Keterangan)
-                                     VALUES (@JenisSurat, @NomorSurat, @TanggalSurat, @TanggalDiterimaDikirim, @AsalTujuan, @Perihal, @IsiRingkas, @Keterangan);
+                const string sql = @"INSERT INTO ArsipSurat (JenisSurat, NomorSurat, TanggalSurat, TanggalDiterimaDikirim, AsalTujuan, Perihal, IsiRingkas, Keterangan, FileLampiran)
+                                     VALUES (@JenisSurat, @NomorSurat, @TanggalSurat, @TanggalDiterimaDikirim, @AsalTujuan, @Perihal, @IsiRingkas, @Keterangan, @FileLampiran);
                                      SELECT last_insert_rowid();";
                 long id = await _connection.ExecuteScalarAsync<long>(sql, new
                 {
@@ -188,7 +221,8 @@ namespace SuDesApp.Data.Repositories
                     item.AsalTujuan,
                     item.Perihal,
                     item.IsiRingkas,
-                    item.Keterangan
+                    item.Keterangan,
+                    FileLampiran = string.IsNullOrWhiteSpace(item.FileLampiran) ? null : item.FileLampiran!.Trim()
                 }).ConfigureAwait(false);
                 item.IdBarisExcel = (int)id;
                 return id;
@@ -208,7 +242,8 @@ namespace SuDesApp.Data.Repositories
                 await _connection.ExecuteAsync(@"UPDATE ArsipSurat
                          SET JenisSurat = @JenisSurat, NomorSurat = @NomorSurat,
                              TanggalSurat = @TanggalSurat, TanggalDiterimaDikirim = @TanggalDiterimaDikirim,
-                             AsalTujuan = @AsalTujuan, Perihal = @Perihal, IsiRingkas = @IsiRingkas, Keterangan = @Keterangan
+                             AsalTujuan = @AsalTujuan, Perihal = @Perihal, IsiRingkas = @IsiRingkas, Keterangan = @Keterangan,
+                             FileLampiran = @FileLampiran
                          WHERE Id = @Id", new
                 {
                     item.JenisSurat,
@@ -219,6 +254,7 @@ namespace SuDesApp.Data.Repositories
                     item.Perihal,
                     item.IsiRingkas,
                     item.Keterangan,
+                    FileLampiran = string.IsNullOrWhiteSpace(item.FileLampiran) ? null : item.FileLampiran!.Trim(),
                     Id = item.IdBarisExcel
                 }).ConfigureAwait(false)).ConfigureAwait(false);
 
@@ -237,6 +273,10 @@ namespace SuDesApp.Data.Repositories
             await EnsureInitializedAsync().ConfigureAwait(false);
             await WriteWithRetryAsync(async () =>
             {
+                var fileLampiran = await _connection.ExecuteScalarAsync<string?>(
+                    "SELECT FileLampiran FROM ArsipSurat WHERE Id = @Id", new { Id = idBarisExcel })
+                    .ConfigureAwait(false);
+
                 int affected = await _connection.ExecuteAsync(
                     "DELETE FROM ArsipSurat WHERE Id = @Id", new { Id = idBarisExcel })
                     .ConfigureAwait(false);
@@ -246,6 +286,25 @@ namespace SuDesApp.Data.Repositories
 
                     // Riwayat aktivitas: catat penghapus arsip surat.
                     _activityLog?.Log("Agenda Surat", $"ID {idBarisExcel}", "Hapus");
+
+                    // Hapus berkas lampiran terkait agar tidak menumpuk berkas yatim.
+                    // Kegagalan hapus berkas tidak menggagalkan penghapusan data.
+                    if (!string.IsNullOrWhiteSpace(fileLampiran))
+                    {
+                        try
+                        {
+                            var path = ResolveLampiranFullPath(fileLampiran);
+                            if (path != null)
+                            {
+                                File.Delete(path);
+                                _logger.LogInformation("Berkas lampiran terkait dihapus: {File}", fileLampiran);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Gagal menghapus berkas lampiran terkait: {File}", fileLampiran);
+                        }
+                    }
                 }
                 return affected;
             }).ConfigureAwait(false);
@@ -339,6 +398,7 @@ namespace SuDesApp.Data.Repositories
             public string Perihal { get; set; } = "";
             public string IsiRingkas { get; set; } = "";
             public string Keterangan { get; set; } = "";
+            public string? FileLampiran { get; set; }
         }
 
         private static string ToIso(DateTime d) => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -383,5 +443,48 @@ namespace SuDesApp.Data.Repositories
 
         private static DateTime ParseTanggalCell(ExcelRange cell) =>
             ParseTanggalCellOrNull(cell) ?? DateTime.Today;
+
+        // =====================================================================
+        // Berkas lampiran (PDF / gambar)
+        // =====================================================================
+
+        /// <summary>
+        /// Nama + path penyimpanan berkas lampiran baru untuk satu arsip.
+        /// Hanya ekstensi PDF/gambar yang diterima (lihat
+        /// <see cref="LampiranArsipSurat"/>); berkas lain ditolak agar folder
+        /// arsip tidak terisi format yang tidak bisa dibuka.</summary>
+        public (string FileName, string FullPath) ResolveLampiranStorage(int id, string jenisSurat, string nomorSurat, string sourceExtension)
+        {
+            string ext = LampiranArsipSurat.EkstensiTerdukung(sourceExtension);
+            if (ext.Length == 0)
+            {
+                throw new InvalidOperationException(LampiranArsipSurat.PesanTidakDidukung(sourceExtension));
+            }
+
+            if (!Directory.Exists(_lampiranFolder)) Directory.CreateDirectory(_lampiranFolder);
+
+            var jenis = SanitizePart(jenisSurat ?? "SURAT");
+            var safeNomor = SanitizeFileName(string.IsNullOrWhiteSpace(nomorSurat) ? id.ToString() : nomorSurat.Trim());
+            var fileName = $"{jenis}_{id}_{safeNomor}{ext}";
+            return (fileName, Path.Combine(_lampiranFolder, fileName));
+        }
+
+        /// <summary>Path lengkap berkas lampiran tersimpan, atau null bila tidak ada.</summary>
+        public string? ResolveLampiranFullPath(string? fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) return null;
+            // Jaga agar tidak lolos direktori.
+            if (Path.IsPathRooted(fileName) || fileName.Contains("..")) return null;
+            var full = Path.Combine(_lampiranFolder, fileName);
+            return File.Exists(full) ? full : null;
+        }
+
+        /// <summary>Folder penyimpanan berkas lampiran agenda surat.</summary>
+        public string LampiranFolder => _lampiranFolder;
+
+        private static string SanitizeFileName(string name) =>
+            string.Join("_", name.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries));
+
+        private static string SanitizePart(string part) => SanitizeFileName(part.Replace("/", "_").Replace("\\", "_"));
     }
 }

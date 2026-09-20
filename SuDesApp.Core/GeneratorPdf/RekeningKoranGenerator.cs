@@ -1,238 +1,333 @@
 using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using SuDesApp.Configuration;
+using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
-using SuDesApp.Services;
+using SuDesApp.Data.Repositories;
 using SuDesApp.Utilities;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace SuDesApp.GeneratorPdf
 {
-    public class RekeningKoranGenerator
+    /// <summary>
+    /// Generator Permohonan Print Out Rekening Koran.
+    ///
+    /// Turunan <see cref="SuratGeneratorBase"/> supaya ukuran kertas, margin, gaya
+    /// teks, dan KOP-nya persis sama dengan surat-surat lain. Data desa diambil dari
+    /// pengaturan aplikasi — bukan disusun ulang dari jabatan penandatangan — sehingga
+    /// kop tidak lagi kehilangan kecamatan, kabupaten, alamat kantor, dan kodepos.
+    /// Alamat pejabat dibentuk dari empat komponen (Dusun/Jalan, Desa, Kecamatan,
+    /// Kabupaten) dengan pemformatan yang sama seperti hasil input surat.
+    /// </summary>
+    public class RekeningKoranGenerator : SuratGeneratorBase
     {
-        private readonly AppConfig _config;
-        private readonly FileService _fileService;
-        private readonly ILogger<RekeningKoranGenerator> _logger;
-        /// <summary>Ukuran halaman mengikuti Pengaturan Cetak (A4 bawaan atau F4).</summary>
-        private static PageSize UkuranHalaman()
-        {
-            var (lebar, tinggi) = PengaturanCetak.Dimensi();
-            return new PageSize(lebar, tinggi, Unit.Point);
-        }
-
         public RekeningKoranGenerator(
             AppConfig config,
             FileService fileService,
-            IUnitOfWork unitOfWork,
-            ILogger<RekeningKoranGenerator> logger)
+            IDesaRepository desaRepository,
+            ISuratRepository suratRepository,
+            SettingsManager settingsManager,
+            ILogger<RekeningKoranGenerator> logger,
+            ILoggerFactory loggerFactory)
+            : base(config, fileService, desaRepository, suratRepository, settingsManager, logger, loggerFactory)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
-            _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger.LogInformation("RekeningKoranGenerator siap — memakai kop & tata letak SuratGeneratorBase.");
         }
+
+        protected override string JudulSurat => "PERMOHONAN PRINT OUT REKENING KORAN";
+
+        /// <summary>Isi surat ini pendek: cukup satu halaman.</summary>
+        protected override int HalamanMaksimal => 1;
+
+        /// <summary>Surat ditandatangani Kepala Desa saja (tanpa kolom pemohon).</summary>
+        protected override bool ShowPemohonInFooter => false;
+
         /// <summary>
-        /// Metode utama untuk membuat PDF Permohonan Rekening Koran.
-        /// Metode ini membuat dokumen dari awal karena formatnya sangat unik.
+        /// Cetak permohonan dari data form. Dipakai tombol Buat PDF maupun saat surat
+        /// dicetak ulang dari register (isi surat dibaca kembali dari payload JSON).
         /// </summary>
         public async Task GeneratePdfAsync(Stream outputStream, RekeningKoranData data)
         {
+            if (outputStream == null) throw new ArgumentNullException(nameof(outputStream));
             if (data == null)
             {
                 _logger.LogError("Data RekeningKoranData tidak boleh null.");
                 throw new ArgumentNullException(nameof(data));
             }
 
-            // Nama wilayah dipakai di kop, badan surat, dan footer — pakai salinan bersih.
-            data.Desa = KopSurat.DesaBersih(data.Desa);
+            // Kop diambil dari pengaturan desa supaya lengkap; data dari form hanya
+            // dipakai untuk kolom yang memang diisi form (nama desa & kepala desa).
+            data.Desa = await DesaLengkapAsync(data.Desa).ConfigureAwait(false);
 
             ValidateRekeningKoranData(data);
 
-            _logger.LogInformation("Memulai pembuatan PDF untuk Permohonan Rekening Koran, NomorSurat={NomorSurat}", data.NomorSurat);
+            _logger.LogInformation(
+                "Membuat PDF Permohonan Rekening Koran, NomorSurat={NomorSurat}, Desa={Desa}",
+                data.NomorSurat, data.Desa?.NamaDesa);
 
-            Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Size(UkuranHalaman());
-                    page.MarginTop(60, Unit.Point);
-                    page.MarginRight(50, Unit.Point);
-                    page.MarginBottom(30, Unit.Point);
-                    page.MarginLeft(50, Unit.Point);
-                    page.DefaultTextStyle(x => x.FontFamily(Fonts.TimesNewRoman).FontSize(11));
+            var (lebarHalaman, tinggiHalaman) = PengaturanCetak.Dimensi();
+            byte[] pdf = RenderDenganKerapatan(data, lebarHalaman, tinggiHalaman);
 
-                    // Memanggil metode untuk menyusun konten kustom
-                    ComposeRekeningKoranContent(page, data);
-                });
-            }).GeneratePdf(outputStream);
-
-            // Task.CompletedTask hanya untuk memenuhi signature async, karena QuestPDF synchronous
-            await Task.CompletedTask;
+            await outputStream.WriteAsync(pdf, 0, pdf.Length).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Metode privat yang berisi logika untuk menyusun seluruh halaman PDF.
+        /// Jalur cadangan bila generator dipanggil lewat API dasar (data SuratData):
+        /// isi surat dibaca dari payload JSON di kolom AdditionalData.
         /// </summary>
-        private void ComposeRekeningKoranContent(PageDescriptor page, RekeningKoranData data)
+        protected override void ComposeHalaman(BadanSurat halaman, SuratData suratData, string? keteranganTextBox = null)
         {
-            // Komposisi Header Kustom (Hanya Kop Surat)
-            page.Header().Element(c => ComposeKopSurat(c, data.Desa));
-
-            // Konten Surat
-            page.Content().Column(column =>
+            var data = RekeningKoranData.FromJson(suratData.AdditionalData);
+            if (data == null)
             {
-                // Tempat dan Tanggal
-                string namaDesa = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(data.Desa.NamaDesa.ToLower());
-                column.Item().PaddingTop(15).AlignLeft().PaddingLeft(310).Text($"{namaDesa}, {FormatTanggalIndo(data.TanggalSurat)}");
+                throw new InvalidOperationException(
+                    "Isi permohonan rekening koran (payload JSON surat) tidak terbaca.");
+            }
 
-                // Nomor, Perihal, dan Tujuan
-                column.Item().PaddingTop(15).Row(row =>
-                {
-                    row.RelativeItem().Column(col =>
-                    {
-                        col.Item().Text($"Nomor\t\t: {data.NomorSurat}");
-                        col.Item().PaddingTop(3).Text($"Perihal\t\t: Permohonan Print Out Rekening Koran");
-                    });
+            data.NomorSurat = suratData.NomorSurat ?? data.NomorSurat;
+            if (suratData.TanggalSurat != default) data.TanggalSurat = suratData.TanggalSurat;
+            data.Desa = KomplitkanDesa(data.Desa);
 
-                    row.RelativeItem().PaddingLeft(70).Column(col =>
-                    {
-                        col.Item().Text("Kepada Yth,").Bold();
-                        col.Item().Text($"Customer Service");
-                        col.Item().Text($"Bank {data.Bank}");
-                        col.Item().Text($"KCP {data.KCP}");
-                        col.Item().PaddingTop(5).Text("Di -");
-                        col.Item().PaddingLeft(20).Text("Tempat");
-                    });
-                });
-
-                // Isi Surat
-                column.Item().PaddingTop(25).Text("Dengan Hormat,");
-                column.Item().PaddingTop(15).Text("Saya yang bertanda tangan di bawah ini:");
-
-                string alamatLengkap = data.AlamatPejabat;
-                string alamatFormatted = alamatLengkap.Replace("Kec.", "\nKec.");
-                column.Item().PaddingTop(10).PaddingLeft(20).Element(c =>
-                {
-                    var pejabatData = new List<(string, Action<IContainer>)>
-                    {
-                        ("Nama", cell => cell.Text(data.NamaPejabat).Bold()),
-                        ("Jabatan", cell => cell.Text(data.Jabatan)),
-                        ("Alamat", cell => cell.Text(alamatFormatted)),
-                    };
-                    ComposeFormTable(c, pejabatData);
-                });
-
-                column.Item().PaddingTop(15).Text("Bermaksud mengajukan Permohonan Print Out Rekening Koran atas nama:");
-                column.Item().PaddingTop(10).PaddingLeft(20).Element(c =>
-                {
-                    var rekeningData = new List<(string, Action<IContainer>)>
-                    {
-                        ("Nama Pemegang Rekening", cell => cell.Text(data.NamaPemegangRekening).Bold()),
-                        ("No. Rekening Giro", cell => cell.Text(data.NomorRekening)),
-                        ("Rekening Koran Periode", cell => cell.Text(FormatTanggalPeriode(data.PeriodeRekening))),
-                    };
-                    ComposeFormTable(c, rekeningData);
-                });
-
-                column.Item().PaddingTop(20).Text("Demikian permohonan ini kami sampaikan, atas perhatian dan kerjasamanya kami ucapkan terima kasih.");
-
-                column.Item().PaddingTop(30).Element(c => ComposeRekeningFooter(c, data));
-            });
+            SusunSurat(halaman, data);
         }
 
+        // =====================================================================
+        // Penyusunan dokumen
+        // =====================================================================
+
         /// <summary>
-        /// Membuat Kop Surat saja, tanpa judul dan nomor. Isinya diambil dari
-        /// KopSurat agar identik dengan dokumen lain (surat & daftar hadir).
+        /// Render berulang dengan kerapatan makin rapat sampai surat muat satu halaman —
+        /// perilaku yang sama dengan seluruh surat lain di <see cref="SuratGeneratorBase"/>.
         /// </summary>
-        private void ComposeKopSurat(IContainer container, DesaData desa)
+        private byte[] RenderDenganKerapatan(RekeningKoranData data, float lebarHalaman, float tinggiHalaman)
         {
-            container.Column(column =>
+            byte[]? pdf = null;
+            int jumlahHalaman = 0;
+
+            foreach (var kerapatan in KerapatanBertingkat)
             {
-                column.Item().Row(row =>
+                using var penanda = KerapatanSurat.Pakai(kerapatan);
+                using var penampung = new MemoryStream();
+
+                Document.Create(container =>
                 {
-                    row.ConstantItem(KopSurat.LebarLogo).Element(logoContainer =>
+                    container.Page(page =>
                     {
-                        // Gambar kop mengikuti Pengaturan Surat (bisa diganti pengguna).
-                        string logoPath = PengaturanCetak.JalurLogoEfektif(_config.LogoPath);
-                        if (logoPath != null)
+                        SiapkanHalaman(page, lebarHalaman, tinggiHalaman);
+
+                        page.Content().Column(kolom =>
                         {
-                            logoContainer.Image(logoPath).FitArea();
-                        }
-                    });
-                    row.RelativeItem().Column(col =>
-                    {
-                        foreach (var baris in KopSurat.BarisKop(desa))
-                        {
-                            var teks = col.Item().Text(baris.Teks).FontSize(baris.FontSize);
-                            if (baris.Tebal)
+                            var halaman = new BadanSurat();
+                            SusunSurat(halaman, data);
+
+                            foreach (var potongan in halaman.Potongan)
                             {
-                                teks.Bold();
+                                var render = potongan;
+                                kolom.Item().Element(c => render(c));
                             }
-                            teks.AlignCenter();
-                        }
+                        });
                     });
-                });
-                column.Item().PaddingTop(3).Height(KopSurat.GarisTipis).Background(Colors.Black);
-                column.Item().PaddingTop(1).Height(KopSurat.GarisTebal).Background(Colors.Black);
-            });
-        }
+                }).GeneratePdf(penampung);
 
-        private static void ComposeFormTable(IContainer container, IEnumerable<(string Label, Action<IContainer> Value)> rows)
-        {
-            container.Table(table =>
-            {
-                table.ColumnsDefinition(columns => { columns.ConstantColumn(150); columns.ConstantColumn(12); columns.RelativeColumn(); });
-                foreach (var row in rows)
+                pdf = penampung.ToArray();
+                jumlahHalaman = HitungJumlahHalaman(pdf);
+
+                if (jumlahHalaman <= HalamanMaksimal)
                 {
-                    table.Cell().Text(row.Label);
-                    table.Cell().Text(":");
-                    table.Cell().Element(row.Value);
+                    if (!ReferenceEquals(kerapatan, KerapatanSurat.Normal))
+                    {
+                        _logger.LogInformation(
+                            "Permohonan rekening koran dirapatkan ke kerapatan {Kerapatan} agar muat {Halaman} halaman.",
+                            kerapatan.Nama, HalamanMaksimal);
+                    }
+                    break;
                 }
-            });
+            }
+
+            return pdf ?? Array.Empty<byte>();
         }
-        private void ComposeRekeningFooter(IContainer container, RekeningKoranData data)
+
+        /// <summary>Kop bersama + badan khas surat permohonan rekening koran.</summary>
+        private void SusunSurat(BadanSurat halaman, RekeningKoranData data)
         {
-            container.AlignRight().Width(250).Column(column =>
+            var desa = data.Desa ?? new DesaData();
+
+            // Kop memakai renderer bersama — sama persis dengan surat keterangan lain.
+            string logoPath = CariLogoPath();
+            halaman.Blok(c => SuratRenderer.Kop(c, desa, logoPath));
+
+            // Tempat & tanggal (rata kanan), seperti surat desa pada umumnya.
+            string namaDesa = CultureInfo.CurrentCulture.TextInfo.ToTitleCase((desa.NamaDesa ?? string.Empty).ToLower());
+            halaman.Paragraf(
+                $"{namaDesa}, {FormatTanggalIndo(data.TanggalSurat)}",
+                rata: Rata.Kanan, jarakAtas: 14, jarakBawah: 12);
+
+            // Nomor & perihal di lajur kiri, alamat tujuan di lajur kanan.
+            halaman.Blok(c => c.Row(row =>
             {
-                column.Item().AlignCenter().Text($"KEPALA DESA {(data.Desa?.NamaDesa ?? "").ToUpper()}");
-                column.Item().PaddingTop(50).AlignCenter().Text(NamaFormatter.ToUpperNama(data.NamaPejabat)).Bold();
-            });
+                row.RelativeItem().Column(kolom =>
+                {
+                    kolom.Item().Text($"Nomor\t\t: {data.NomorSurat}");
+                    kolom.Item().PaddingTop(3).Text($"Perihal\t\t: {data.Perihal}");
+                });
+
+                row.RelativeItem().PaddingLeft(40).Column(kolom =>
+                {
+                    kolom.Item().Text("Kepada Yth,").Bold();
+                    kolom.Item().Text("Customer Service");
+                    kolom.Item().Text($"Bank {data.Bank}");
+                    kolom.Item().Text($"KCP {data.KCP}");
+                    kolom.Item().PaddingTop(5).Text("Di -");
+                    kolom.Item().PaddingLeft(20).Text("Tempat");
+                });
+            }));
+
+            halaman.Paragraf("Dengan Hormat,", jarakAtas: 22);
+            halaman.Paragraf("Saya yang bertanda tangan di bawah ini:", jarakAtas: 12);
+
+            // Alamat pejabat: empat komponen yang diformat sama seperti surat lain
+            // (Dusun/Jalan & Desa, lalu Kecamatan & Kabupaten).
+            halaman.TabelFormulir(
+                new List<(string Label, string? Nilai)>
+                {
+                    ("Nama", data.NamaPejabat),
+                    ("Jabatan", JabatanTercetak(data, desa)),
+                    ("Alamat", data.AlamatPejabatLengkap)
+                },
+                jarakAtas: 10, jarakBawah: 10, indentKiri: 20);
+
+            halaman.Paragraf("Bermaksud mengajukan Permohonan Print Out Rekening Koran atas nama:", jarakAtas: 14);
+
+            halaman.TabelFormulir(
+                new List<(string Label, string? Nilai)>
+                {
+                    ("Nama Pemegang Rekening", data.NamaPemegangRekening),
+                    ("No. Rekening Giro", data.NomorRekening),
+                    ("Rekening Koran Periode", FormatTanggalPeriode(data.PeriodeRekening))
+                },
+                jarakAtas: 10, jarakBawah: 10, tebalkanNama: false, indentKiri: 20);
+
+            halaman.Paragraf(
+                "Demikian permohonan ini kami sampaikan, atas perhatian dan kerjasamanya kami ucapkan terima kasih.",
+                jarakAtas: 18);
+
+            // Tanda tangan: jabatan + nama, sejajar kanan. Tanggal tidak diulang karena
+            // sudah tercetak di kepala surat.
+            string namaPejabat = NamaFormatter.ToUpperNama(data.NamaPejabat ?? desa.KepalaDesa ?? string.Empty);
+            halaman.Blok(c => c.PaddingTop(SuratRenderer.JarakBlok(12)).AlignRight().Width(250).Column(kolom =>
+            {
+                kolom.Item().AlignCenter().Text(JabatanTercetak(data, desa)).Bold();
+                kolom.Item().Height(SuratRenderer.RuangTandaTangan);
+                kolom.Item().AlignCenter().Text(
+                    string.IsNullOrWhiteSpace(namaPejabat) ? "_______________________" : namaPejabat).Bold();
+            }));
         }
 
-        // --- Helper Methods ---
-        private string FormatTanggalIndo(DateTime tanggal) => tanggal.ToString("dd MMMM yyyy", new CultureInfo("id-ID"));
+        /// <summary>Jabatan yang tercetak: dari form bila ada, jika tidak dari nama desa.</summary>
+        private static string JabatanTercetak(RekeningKoranData data, DesaData desa)
+        {
+            string dariForm = (data.Jabatan ?? string.Empty).Trim();
+            if (dariForm.Length > 0) return dariForm.ToUpperInvariant();
 
-        private string FormatTanggalPeriode(string periode)
+            string namaDesa = (desa.NamaDesa ?? string.Empty).Trim();
+            return namaDesa.Length > 0 ? $"KEPALA DESA {namaDesa.ToUpperInvariant()}" : "KEPALA DESA";
+        }
+
+        // =====================================================================
+        // Data desa
+        // =====================================================================
+
+        /// <summary>
+        /// Ambil data desa dari pengaturan aplikasi. Form rekening koran dulu menyusun
+        /// data desa hanya dari jabatan ("Kepala Desa Sumberjaya"), sehingga kop kehilangan
+        /// kecamatan, kabupaten, alamat, dan kodepos. Di sini data itu dilengkapi lagi
+        /// agar kop sama dengan surat lain — termasuk saat mencetak ulang surat lama.
+        /// </summary>
+        private async Task<DesaData> DesaLengkapAsync(DesaData? dariForm)
+        {
+            DesaData? pengaturan = null;
+            try
+            {
+                pengaturan = await _desaRepository.GetInfoDesaAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Gagal memuat data desa untuk kop permohonan rekening koran.");
+            }
+
+            if (pengaturan == null)
+            {
+                return KopSurat.DesaBersih(dariForm);
+            }
+
+            if (dariForm == null)
+            {
+                return KopSurat.DesaBersih(pengaturan);
+            }
+
+            // Kolom yang memang diisi form (nama desa & kepala desa) diutamakan;
+            // sisanya dilengkapi dari pengaturan.
+            if (string.IsNullOrWhiteSpace(dariForm.NamaDesa)) dariForm.NamaDesa = pengaturan.NamaDesa;
+            if (string.IsNullOrWhiteSpace(dariForm.Kecamatan)) dariForm.Kecamatan = pengaturan.Kecamatan;
+            if (string.IsNullOrWhiteSpace(dariForm.Kabupaten)) dariForm.Kabupaten = pengaturan.Kabupaten;
+            if (string.IsNullOrWhiteSpace(dariForm.Alamat)) dariForm.Alamat = pengaturan.Alamat;
+            if (string.IsNullOrWhiteSpace(dariForm.Kodepos)) dariForm.Kodepos = pengaturan.Kodepos;
+            if (string.IsNullOrWhiteSpace(dariForm.KepalaDesa)) dariForm.KepalaDesa = pengaturan.KepalaDesa;
+            if (string.IsNullOrWhiteSpace(dariForm.SekretarisDesa)) dariForm.SekretarisDesa = pengaturan.SekretarisDesa;
+
+            return KopSurat.DesaBersih(dariForm);
+        }
+
+        /// <summary>Salinan data desa yang komponennya sudah dirapikan (nama wilayah bersih).</summary>
+        private static DesaData KomplitkanDesa(DesaData? desa) => KopSurat.DesaBersih(desa);
+
+        // =====================================================================
+        // Pembantu format
+        // =====================================================================
+
+        private static string FormatTanggalIndo(DateTime tanggal) =>
+            tanggal.ToString("dd MMMM yyyy", new CultureInfo("id-ID"));
+
+        /// <summary>"01-01-2026 s/d 31-03-2026" → "01 Januari 2026 s/d 31 Maret 2026".</summary>
+        private static string FormatTanggalPeriode(string? periode)
         {
             if (string.IsNullOrWhiteSpace(periode)) return "N/A";
-            string[] parts = periode.Split(new[] { " s/d " }, StringSplitOptions.None);
-            if (parts.Length != 2) return periode;
 
-            if (DateTime.TryParseExact(parts[0], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime tgl1) &&
-                DateTime.TryParseExact(parts[1], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime tgl2))
+            string[] bagian = periode.Split(new[] { " s/d " }, StringSplitOptions.None);
+            if (bagian.Length != 2) return periode;
+
+            if (DateTime.TryParseExact(bagian[0], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime mulai) &&
+                DateTime.TryParseExact(bagian[1], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime selesai))
             {
-                return $"{FormatTanggalIndo(tgl1)} s/d {FormatTanggalIndo(tgl2)}";
+                return $"{FormatTanggalIndo(mulai)} s/d {FormatTanggalIndo(selesai)}";
             }
+
             return periode;
         }
 
         private void ValidateRekeningKoranData(RekeningKoranData data)
         {
-            var missingFields = new List<string>();
-            if (string.IsNullOrWhiteSpace(data.NomorSurat)) missingFields.Add("Nomor Surat");
-            if (string.IsNullOrWhiteSpace(data.NamaPejabat)) missingFields.Add("Nama Pejabat");
-            if (string.IsNullOrWhiteSpace(data.Jabatan)) missingFields.Add("Jabatan");
-            if (string.IsNullOrWhiteSpace(data.NamaPemegangRekening)) missingFields.Add("Nama Pemegang Rekening");
-            if (string.IsNullOrWhiteSpace(data.NomorRekening)) missingFields.Add("Nomor Rekening");
-            if (string.IsNullOrWhiteSpace(data.PeriodeRekening)) missingFields.Add("Periode Rekening");
-            if (string.IsNullOrWhiteSpace(data.Bank)) missingFields.Add("Bank");
+            var kurang = new List<string>();
 
-            if (missingFields.Any())
+            if (string.IsNullOrWhiteSpace(data.NomorSurat)) kurang.Add("Nomor Surat");
+            if (string.IsNullOrWhiteSpace(data.NamaPejabat)) kurang.Add("Nama Kepala Desa");
+            if (string.IsNullOrWhiteSpace(data.Jabatan)) kurang.Add("Jabatan");
+            if (data.AlamatKosong) kurang.Add("Alamat Kepala Desa");
+            if (string.IsNullOrWhiteSpace(data.NamaPemegangRekening)) kurang.Add("Nama Pemegang Rekening");
+            if (string.IsNullOrWhiteSpace(data.NomorRekening)) kurang.Add("Nomor Rekening");
+            if (string.IsNullOrWhiteSpace(data.PeriodeRekening)) kurang.Add("Periode Rekening");
+            if (string.IsNullOrWhiteSpace(data.Bank)) kurang.Add("Bank");
+
+            if (kurang.Count > 0)
             {
-                throw new InvalidOperationException($"Data tidak lengkap. Kolom berikut harus diisi: {string.Join(", ", missingFields)}.");
+                throw new InvalidOperationException(
+                    $"Data tidak lengkap. Kolom berikut harus diisi: {string.Join(", ", kurang)}.");
             }
         }
     }
 }
-

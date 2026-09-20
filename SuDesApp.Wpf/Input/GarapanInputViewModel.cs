@@ -105,8 +105,8 @@ namespace SuDesApp.Wpf.Input
             if (rincian != null && rincian.Count > 0)
             {
                 var first = rincian[0];
-                Lokasi = first.Lokasi;
-                NomorPersil = first.NomorPersil;
+                Lokasi = first.Lokasi!;
+                NomorPersil = first.NomorPersil!;
                 Luas = first.Luas > 0
                     ? first.Luas.ToString(CultureInfo.InvariantCulture)
                     : string.Empty;

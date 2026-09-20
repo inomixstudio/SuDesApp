@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
-using SuDesApp.Controllers.Interfaces;
+using SuDesApp.Interfaces;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Input;
@@ -70,6 +70,9 @@ namespace SuDesApp.Wpf.Input
         // ===== Observable Properties =====
         public string NomorSurat { get => _nomorSurat; set => SetProperty(ref _nomorSurat, value); }
         public bool NomorSuratEnabled { get => _nomorSuratEnabled; set => SetProperty(ref _nomorSuratEnabled, value); }
+
+        /// <summary>Keterangan kotak nomor surat; ditimpa alur yang mengisinya sendiri.</summary>
+        public virtual string NomorSuratTooltip => "Nomor surat (otomatis jika dikelola register)";
 
         public string Nik { get => _nik; set => SetProperty(ref _nik, value); }
         public string Nama { get => _nama; set => SetProperty(ref _nama, value); }
@@ -373,7 +376,7 @@ namespace SuDesApp.Wpf.Input
             if (_unitOfWork.WargaRepository == null)
                 throw new InvalidOperationException("WargaRepository tidak tersedia");
 
-            int idWarga = await _unitOfWork.WargaRepository.AddOrUpdateWargaAndGetIdAsync(suratData.Warga);
+            int idWarga = await _unitOfWork.WargaRepository.AddOrUpdateWargaAndGetIdAsync(suratData.Warga!);
             suratData.Warga.ID_Warga = idWarga;
         }
 

@@ -100,7 +100,7 @@ namespace SuDesApp.WhatsApp
             {
                 IdSurat = idSurat,
                 NomorSurat = suratData.NomorSurat,
-                NamaJenis = suratData.NamaJenis
+                NamaJenis = suratData.NamaJenis!
             };
         }
 

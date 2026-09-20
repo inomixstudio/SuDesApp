@@ -17,7 +17,7 @@ namespace SuDesApp.Data.Repositories
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<int> AddIzinOrtuAsync(IzinOrtuData izinData, SqliteConnection existingConnection = null, IDbTransaction existingTransaction = null)
+        public async Task<int> AddIzinOrtuAsync(IzinOrtuData izinData, SqliteConnection? existingConnection = null, IDbTransaction existingTransaction = null)
         {
             if (izinData == null) throw new ArgumentNullException(nameof(izinData));
             if (izinData.ID_Surat <= 0) throw new ArgumentException("ID_Surat harus valid.", nameof(izinData.ID_Surat));
@@ -113,7 +113,7 @@ namespace SuDesApp.Data.Repositories
             }
         }
 
-        public async Task<int> UpdateIzinOrtuAsync(IzinOrtuData izinData, SqliteConnection existingConnection = null, IDbTransaction existingTransaction = null)
+        public async Task<int> UpdateIzinOrtuAsync(IzinOrtuData izinData, SqliteConnection? existingConnection = null, IDbTransaction existingTransaction = null)
         {
             if (izinData == null) throw new ArgumentNullException(nameof(izinData));
             if (izinData.ID_Surat <= 0) throw new ArgumentException("ID_Surat harus valid.", nameof(izinData.ID_Surat));

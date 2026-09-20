@@ -7,7 +7,7 @@
         when ThemeService swaps the active theme ResourceDictionary.
 
         Input controls (TextBox/PasswordBox/ComboBox/ListBox) use themed templates
-        so they always follow the active theme (including Dark/Emerald/Slate).
+        so they always follow the active theme (including Dark/Slate).
     -->
 
     <!-- ========== Shared UI tokens ========== -->
@@ -118,6 +118,10 @@
     </Style>
 
     <!-- ========== Sidebar child button ========== -->
+    <!-- Font ikon monokrom untuk sidebar: glyph mengikuti warna tema (emoji tidak bisa).
+         Segoe Fluent Icons dipakai di Windows 11, MDL2 sebagai cadangan Windows 10. -->
+    <FontFamily x:Key="AppIconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
     <Style x:Key="SidebarChildButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource SidebarTextBrush}"/>
@@ -145,12 +149,51 @@
                                 <ContentPresenter VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
+                        <!-- Sorotan hover beranimasi (memudar, tidak berkedip) -->
+                        <Border x:Name="HoverOverlay" CornerRadius="7" IsHitTestVisible="False"
+                                Background="{DynamicResource SidebarHoverBrush}" Opacity="0"/>
                     </Grid>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarHoverBrush}"/>
-                            <Setter TargetName="AccentPill" Property="Opacity" Value="1"/>
-                        </Trigger>
+                        <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     To="1" Duration="0:0:0.15">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="AccentPill"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     To="1" Duration="0:0:0.15">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     To="0" Duration="0:0:0.20">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="AccentPill"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     To="0" Duration="0:0:0.20">
+                                        <DoubleAnimation.EasingFunction>
+                                            <CubicEase EasingMode="EaseOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarPressedBrush}"/>
                         </Trigger>
@@ -720,14 +763,17 @@
         <Setter Property="SelectionUnit" Value="FullRow"/>
         <Setter Property="AutoGenerateColumns" Value="False"/>
         <Setter Property="IsReadOnly" Value="True"/>
-        <!-- Virtualisasi baris dimatikan: halaman hanya 50 baris, dan kombinasi
-             virtualisasi + pengukuran otomatis rawan layout loop (stack overflow). -->
         <Setter Property="EnableRowVirtualization" Value="False"/>
         <Setter Property="EnableColumnVirtualization" Value="False"/>
         <Setter Property="RowHeaderWidth" Value="0"/>
         <Setter Property="ColumnHeaderStyle" Value="{StaticResource SortableColumnHeader}"/>
         <Setter Property="RowStyle" Value="{StaticResource ModernDataGridRowStyle}"/>
         <Setter Property="CellStyle" Value="{StaticResource ModernDataGridCell}"/>
+        <!-- Responsive column sizing -->
+        <Setter Property="ColumnWidth" Value="*"/>
+        <Setter Property="MinColumnWidth" Value="80"/>
+        <Setter Property="MaxColumnWidth" Value="500"/>
+        <Setter Property="CanUserResizeColumns" Value="True"/>
     </Style>
 
     <Style TargetType="DataGrid" BasedOn="{StaticResource ModernDataGrid}"/>
@@ -1342,6 +1388,49 @@
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="ClipToBounds" Value="True"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <!-- ========== Form Input Surat (kartu section + baris label/nilai) ==========
+         Semua form input surat memakai token ini agar seragam dan SELALU muat
+         lebar jendela (kolom nilai memakai * sehingga ikut menyusut), tanpa
+         scroll horizontal. -->
+    <Style x:Key="FormCard" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+        <Setter Property="Padding" Value="18"/>
+        <Setter Property="Margin" Value="0,0,0,14"/>
+    </Style>
+
+    <Style x:Key="FormSectionTitle" TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Label field: lebar Auto + batas max agar tidak menelan ruang di jendela sempit,
+         dan teks tetap membungkus rapi (tanpa mendorong melebar ke kanan). -->
+    <Style x:Key="FormLabel" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,6,10,6"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style x:Key="FormField" TargetType="TextBox" BasedOn="{StaticResource FieldBox}">
+        <Setter Property="Margin" Value="0,6"/>
+    </Style>
+
+    <Style x:Key="FormCombo" TargetType="ComboBox" BasedOn="{StaticResource DropDown}">
+        <Setter Property="Margin" Value="0,6"/>
+    </Style>
+
+    <Style x:Key="FormDate" TargetType="DatePicker" BasedOn="{StaticResource {x:Type DatePicker}}">
+        <Setter Property="Margin" Value="0,6"/>
+    </Style>
+
+    <!-- Judul section dengan garis aksen kiri -->
+    <Style x:Key="FormSectionHeaderPanel" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="Margin" Value="0,0,0,14"/>
     </Style>
 
     <!-- ========== Chrome Jendela Bertema (title bar kustom) ========== -->

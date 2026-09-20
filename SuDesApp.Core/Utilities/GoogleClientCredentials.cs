@@ -47,8 +47,8 @@ namespace SuDesApp.Utilities
                 ClientSecret = clientSecret.Trim()
             });
 
-            var dir = Path.GetDirectoryName(StorePath)!;
-            Directory.CreateDirectory(dir);
+            var dir = Path.GetDirectoryName(StorePath);
+            Directory.CreateDirectory(dir!);
             var encrypted = ProtectedData.Protect(
                 System.Text.Encoding.UTF8.GetBytes(payload),
                 optionalEntropy: null,

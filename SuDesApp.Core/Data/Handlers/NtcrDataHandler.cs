@@ -5,14 +5,18 @@ using SuDesApp.Configuration;
 using SuDesApp.Data.Repositories;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Text.Json;
 
 namespace SuDesApp.Data.Handlers
 {
     /// <summary>
-    /// Handler data NTCR (persyaratan pendaftaran pernikahan N1-N4).
-    /// Satu class handler untuk keempat jenis (N1..N4); NamaJenis diberikan
+    /// Handler data NTCR (formulir persyaratan pernikahan N1-N6 sesuai Keputusan
+    /// Dirjen Bimas Islam No. 473 Tahun 2020, ditambah surat keterangan numpang
+    /// nikah N8).
+    /// Satu class handler untuk seluruh jenis; NamaJenis diberikan
     /// melalui konstruktor agar dapat diregistrasi beberapa kali di DI.
-    /// Seluruh data terkait disimpan di tabel "NTCR".
+    /// Kolom baku tersimpan di tabel "NTCR"; kolom khusus tiap blanko dan
+    /// identitas orang tua disimpan sebagai JSON di kolom "DetailJson".
     /// </summary>
     public class NtcrDataHandler : ISuratDataHandler
     {
@@ -71,7 +75,8 @@ namespace SuDesApp.Data.Handlers
                         NamaIbuCalonIstri,
                         StatusPerkawinanIstri,
                         KeteranganTemuan,
-                        TujuanSurat
+                        TujuanSurat,
+                        DetailJson
                     ) VALUES (
                         @ID_Surat,
                         @ID_CalonIstri,
@@ -88,7 +93,8 @@ namespace SuDesApp.Data.Handlers
                         @NamaIbuCalonIstri,
                         @StatusPerkawinanIstri,
                         @KeteranganTemuan,
-                        @TujuanSurat
+                        @TujuanSurat,
+                        @DetailJson
                     )";
 
                 var ntcr = suratData.Ntcr;
@@ -109,7 +115,8 @@ namespace SuDesApp.Data.Handlers
                     NamaIbuCalonIstri = ntcr.NamaIbuCalonIstri,
                     StatusPerkawinanIstri = ntcr.StatusPerkawinanIstri,
                     KeteranganTemuan = ntcr.KeteranganTemuan,
-                    TujuanSurat = ntcr.TujuanSurat
+                    TujuanSurat = ntcr.TujuanSurat,
+                    DetailJson = SerializeDetail(ntcr)
                 }, transaction);
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
@@ -160,7 +167,7 @@ namespace SuDesApp.Data.Handlers
                            AgamaIstri, PekerjaanIstri, AlamatIstri,
                            NamaAyahCalonSuami, NamaIbuCalonSuami,
                            NamaAyahCalonIstri, NamaIbuCalonIstri,
-                           StatusPerkawinanIstri, KeteranganTemuan, TujuanSurat
+                           StatusPerkawinanIstri, KeteranganTemuan, TujuanSurat, DetailJson
                     FROM NTCR
                     WHERE ID_Surat = @ID_Surat";
 
@@ -180,13 +187,14 @@ namespace SuDesApp.Data.Handlers
                 suratData.Ntcr.AgamaIstri = row.AgamaIstri;
                 suratData.Ntcr.PekerjaanIstri = row.PekerjaanIstri;
                 suratData.Ntcr.AlamatIstri = row.AlamatIstri;
-                suratData.Ntcr.NamaAyahCalonSuami = row.NamaAyahCalonSuami;
-                suratData.Ntcr.NamaIbuCalonSuami = row.NamaIbuCalonSuami;
-                suratData.Ntcr.NamaAyahCalonIstri = row.NamaAyahCalonIstri;
-                suratData.Ntcr.NamaIbuCalonIstri = row.NamaIbuCalonIstri;
+                suratData.Ntcr.NamaAyahCalonSuami = row.NamaAyahCalonSuami!;
+                suratData.Ntcr.NamaIbuCalonSuami = row.NamaIbuCalonSuami!;
+                suratData.Ntcr.NamaAyahCalonIstri = row.NamaAyahCalonIstri!;
+                suratData.Ntcr.NamaIbuCalonIstri = row.NamaIbuCalonIstri!;
                 suratData.Ntcr.StatusPerkawinanIstri = row.StatusPerkawinanIstri;
                 suratData.Ntcr.KeteranganTemuan = row.KeteranganTemuan;
                 suratData.Ntcr.TujuanSurat = row.TujuanSurat;
+                ApplyDetail(suratData.Ntcr, row.DetailJson!);
 
                 _logger.LogInformation("Successfully loaded {NamaJenis} data for ID_Surat={ID_Surat}", _namaJenis, suratData.ID_Surat);
             }
@@ -200,20 +208,123 @@ namespace SuDesApp.Data.Handlers
         private class NtcrRow
         {
             public int ID_CalonIstri { get; set; }
-            public string NikIstri { get; set; }
-            public string NamaIstri { get; set; }
-            public string TempatLahirIstri { get; set; }
-            public string TanggalLahirIstri { get; set; }
-            public string AgamaIstri { get; set; }
-            public string PekerjaanIstri { get; set; }
-            public string AlamatIstri { get; set; }
-            public string NamaAyahCalonSuami { get; set; }
-            public string NamaIbuCalonSuami { get; set; }
-            public string NamaAyahCalonIstri { get; set; }
-            public string NamaIbuCalonIstri { get; set; }
-            public string StatusPerkawinanIstri { get; set; }
-            public string KeteranganTemuan { get; set; }
-            public string TujuanSurat { get; set; }
+            public string ?NikIstri { get; set; }
+            public string ?NamaIstri { get; set; }
+            public string ?TempatLahirIstri { get; set; }
+            public string ?TanggalLahirIstri { get; set; }
+            public string ?AgamaIstri { get; set; }
+            public string ?PekerjaanIstri { get; set; }
+            public string ?AlamatIstri { get; set; }
+            public string ?NamaAyahCalonSuami { get; set; }
+            public string ?NamaIbuCalonSuami { get; set; }
+            public string ?NamaAyahCalonIstri { get; set; }
+            public string ?NamaIbuCalonIstri { get; set; }
+            public string ?StatusPerkawinanIstri { get; set; }
+            public string ?KeteranganTemuan { get; set; }
+            public string ?TujuanSurat { get; set; }
+            public string ?DetailJson { get; set; }
+        }
+
+        /// <summary>
+        /// Kolom khusus tiap blanko (N1..N6, N8) dan identitas orang tua — disimpan
+        /// sebagai satu kolom JSON agar penambahan field baru berikutnya tidak
+        /// menambah puluhan kolom database.
+        /// </summary>
+        private sealed class NtcrDetail
+        {
+            public string ?KewarganegaraanIstri { get; set; }
+            public string ?PihakDiterangkanN1 { get; set; }
+            public string ?TujuanKua { get; set; }
+            public string ?HariTanggalJamAkad { get; set; }
+            public string ?TempatAkad { get; set; }
+            public string ?TanggalPenetapanIsbat { get; set; }
+            public string ?PengadilanAgama { get; set; }
+            public string ?LampiranTambahan { get; set; }
+            public string ?TanggalDiterima { get; set; }
+            public string ?PihakAnakIzinOrtu { get; set; }
+            public string ?PihakMeninggal { get; set; }
+            public string ?TanggalMeninggal { get; set; }
+            public string ?TempatMeninggal { get; set; }
+            public string ?DesaNumpang { get; set; }
+            public string ?KecamatanNumpang { get; set; }
+            public string ?KabupatenNumpang { get; set; }
+            public string ?KecamatanIstri { get; set; }
+            public string ?KabupatenIstri { get; set; }
+            public NtcrOrangTua ?AyahCalonSuami { get; set; }
+            public NtcrOrangTua ?IbuCalonSuami { get; set; }
+            public NtcrOrangTua ?AyahCalonIstri { get; set; }
+            public NtcrOrangTua ?IbuCalonIstri { get; set; }
+        }
+
+        private static string SerializeDetail(NtcrData ntcr)
+        {
+            if (ntcr == null) return null!;
+
+            var detail = new NtcrDetail
+            {
+                KewarganegaraanIstri = ntcr.KewarganegaraanIstri,
+                PihakDiterangkanN1 = ntcr.PihakDiterangkanN1,
+                TujuanKua = ntcr.TujuanKua,
+                HariTanggalJamAkad = ntcr.HariTanggalJamAkad,
+                TempatAkad = ntcr.TempatAkad,
+                TanggalPenetapanIsbat = ntcr.TanggalPenetapanIsbat,
+                PengadilanAgama = ntcr.PengadilanAgama,
+                LampiranTambahan = ntcr.LampiranTambahan,
+                TanggalDiterima = ntcr.TanggalDiterima,
+                PihakAnakIzinOrtu = ntcr.PihakAnakIzinOrtu,
+                PihakMeninggal = ntcr.PihakMeninggal,
+                TanggalMeninggal = ntcr.TanggalMeninggal,
+                TempatMeninggal = ntcr.TempatMeninggal,
+                DesaNumpang = ntcr.DesaNumpang,
+                KecamatanNumpang = ntcr.KecamatanNumpang,
+                KabupatenNumpang = ntcr.KabupatenNumpang,
+                KecamatanIstri = ntcr.KecamatanIstri,
+                KabupatenIstri = ntcr.KabupatenIstri,
+                AyahCalonSuami = ntcr.AyahCalonSuami?.Clone(),
+                IbuCalonSuami = ntcr.IbuCalonSuami?.Clone(),
+                AyahCalonIstri = ntcr.AyahCalonIstri?.Clone(),
+                IbuCalonIstri = ntcr.IbuCalonIstri?.Clone()!
+            };
+
+            return JsonSerializer.Serialize(detail);
+        }
+
+        private void ApplyDetail(NtcrData ntcr, string detailJson)
+        {
+            if (ntcr == null || string.IsNullOrWhiteSpace(detailJson)) return;
+
+            try
+            {
+                var detail = JsonSerializer.Deserialize<NtcrDetail>(detailJson);
+                if (detail == null) return;
+
+                ntcr.KewarganegaraanIstri = detail.KewarganegaraanIstri ?? ntcr.KewarganegaraanIstri;
+                ntcr.PihakDiterangkanN1 = detail.PihakDiterangkanN1 ?? ntcr.PihakDiterangkanN1;
+                ntcr.TujuanKua = detail.TujuanKua;
+                ntcr.HariTanggalJamAkad = detail.HariTanggalJamAkad;
+                ntcr.TempatAkad = detail.TempatAkad;
+                ntcr.TanggalPenetapanIsbat = detail.TanggalPenetapanIsbat;
+                ntcr.PengadilanAgama = detail.PengadilanAgama;
+                ntcr.LampiranTambahan = detail.LampiranTambahan;
+                ntcr.TanggalDiterima = detail.TanggalDiterima;
+                ntcr.PihakAnakIzinOrtu = detail.PihakAnakIzinOrtu ?? ntcr.PihakAnakIzinOrtu;
+                ntcr.PihakMeninggal = detail.PihakMeninggal ?? ntcr.PihakMeninggal;
+                ntcr.TanggalMeninggal = detail.TanggalMeninggal;
+                ntcr.TempatMeninggal = detail.TempatMeninggal;
+                ntcr.DesaNumpang = detail.DesaNumpang;
+                ntcr.KecamatanNumpang = detail.KecamatanNumpang;
+                ntcr.KabupatenNumpang = detail.KabupatenNumpang;
+                ntcr.KecamatanIstri = detail.KecamatanIstri;
+                ntcr.KabupatenIstri = detail.KabupatenIstri;
+                ntcr.AyahCalonSuami.CopyFrom(detail.AyahCalonSuami!);
+                ntcr.IbuCalonSuami.CopyFrom(detail.IbuCalonSuami!);
+                ntcr.AyahCalonIstri.CopyFrom(detail.AyahCalonIstri!);
+                ntcr.IbuCalonIstri.CopyFrom(detail.IbuCalonIstri!);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "DetailJson NTCR tidak dapat dibaca untuk ID_Surat={ID_Surat}", ntcr.ID_CalonIstri);
+            }
         }
 
         /// <summary>
@@ -224,7 +335,7 @@ namespace SuDesApp.Data.Handlers
         {
             try
             {
-                foreach (var columnName in new[] { "StatusPerkawinanIstri", "KeteranganTemuan", "TujuanSurat" })
+                foreach (var columnName in new[] { "StatusPerkawinanIstri", "KeteranganTemuan", "TujuanSurat", "DetailJson" })
                 {
                     var columnExists = await connection.ExecuteScalarAsync<int>(
                         "SELECT COUNT(*) FROM pragma_table_info('NTCR') WHERE name = @columnName COLLATE NOCASE",

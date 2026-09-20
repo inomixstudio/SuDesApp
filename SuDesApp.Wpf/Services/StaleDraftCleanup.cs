@@ -26,6 +26,13 @@ namespace SuDesApp.Wpf.Services
         {
             try
             {
+                // Mode diam-diam startup: pemeriksaan draft (membuka database) juga
+                // ikut ditunda beberapa menit agar pemuatan awal benar-benar ringan.
+                if (AppPreferenceStore.IsStartupDiamDiam())
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(AppPreferenceStore.GetStartupDiamDiamMenit()));
+                }
+
                 // Jeda agar pemeriksaan tidak berebut koneksi DB dengan pemuatan awal Register.
                 await Task.Delay(TimeSpan.FromSeconds(5));
                 await CheckAndCleanupAsync(serviceProvider, logger);

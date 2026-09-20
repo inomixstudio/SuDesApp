@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Windows.Input;
 using Microsoft.Win32;
 using Microsoft.Extensions.Logging;
@@ -196,6 +196,15 @@ namespace SuDesApp.Wpf.ViewModels
             private set { if (SetProperty(ref _hasChanges, value)) SaveCommand.RaiseCanExecuteChanged(); }
         }
 
+        private string _statusPesan = "Siap";
+
+        /// <summary>Pesan singkat untuk statusbar bawah halaman (bukan dialog).</summary>
+        public string StatusPesan
+        {
+            get => _statusPesan;
+            private set => SetProperty(ref _statusPesan, value);
+        }
+
         public AsyncRelayCommand SaveCommand { get; }
         public AsyncRelayCommand CancelCommand { get; }
 
@@ -336,7 +345,10 @@ namespace SuDesApp.Wpf.ViewModels
                 HasChanges = false;
                 SettingsSaved?.Invoke();
                 _logger.LogInformation("Pengaturan desa berhasil disimpan");
-                await _messageService.ShowInfoAsync("Pengaturan berhasil disimpan");
+
+                // Konfirmasi cukup lewat statusbar halaman ini — dialog yang muncul
+                // setiap kali Simpan terlalu mengganggu alur kerja.
+                StatusPesan = $"Pengaturan desa tersimpan — {DateTime.Now:HH:mm:ss}";
             }
             catch (Exception ex)
             {
@@ -387,7 +399,7 @@ namespace SuDesApp.Wpf.ViewModels
 
         private static void ValidateField(string? fieldValue, string fieldName, List<string> errorMessages)
         {
-            if (!Validator.ValidateRequired(fieldValue, fieldName, out var msg))
+            if (!Validator.ValidateRequired(fieldValue!, fieldName, out var msg))
             {
                 errorMessages.Add(msg);
             }

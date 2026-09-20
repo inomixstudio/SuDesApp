@@ -6,6 +6,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -24,13 +25,12 @@
                     </Border>
                     <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
-                        <TextBlock Text="Buku agenda surat masuk dan keluar (database SQLite, tabel ArsipSurat)"
-                                   Style="{StaticResource HeaderSubtitle}"/>
+                        <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"/>
                     </StackPanel>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="MASUK" Command="{Binding SetMasukCommand}" Width="90" Height="32" Margin="0,0,6,0">
+                    <Button Content="MASUK" Command="{Binding SetMasukCommand}" Width="90" Height="30" Margin="0,0,6,0">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                                 <Setter Property="Background" Value="Transparent"/>
@@ -44,7 +44,7 @@
                             </Style>
                         </Button.Style>
                     </Button>
-                    <Button Content="KELUAR" Command="{Binding SetKeluarCommand}" Width="90" Height="32" Margin="0,0,6,0">
+                    <Button Content="KELUAR" Command="{Binding SetKeluarCommand}" Width="90" Height="30" Margin="0,0,6,0">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                                 <Setter Property="Background" Value="Transparent"/>
@@ -62,8 +62,96 @@
             </Grid>
         </Border>
 
-        <!-- Toolbar: filter tahun + aksi -->
-        <Border Grid.Row="1" Style="{StaticResource ToolbarCard}">
+        <!-- Ringkasan -->
+        <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource KpiCardStyle}" Margin="0,0,6,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding TotalLabel}" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding TotalJenisCount}" FontSize="22" FontWeight="Bold" Margin="0,2,0,0"
+                                   Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
+                            Background="{DynamicResource AccentSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="&#128210;" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource KpiCardStyle}" Margin="6,0,6,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="TAMPIL SAAT INI" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TampilCount}" FontSize="22" FontWeight="Bold" Margin="0,2,0,0"
+                                   Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
+                            Background="{DynamicResource SuccessSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="▤" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource SuccessTextBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource KpiCardStyle}" Margin="6,0,6,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="TAHUN TERBARU" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TahunTerbaruLabel}" FontSize="22" FontWeight="Bold" Margin="0,2,0,0"
+                                   Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
+                            Background="{DynamicResource WarningSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="&#128197;" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="3" Style="{StaticResource KpiCardStyle}" Margin="6,0,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="DENGAN LAMPIRAN" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock FontSize="22" FontWeight="Bold" Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}">
+                            <Run Text="{Binding JumlahLampiran, Mode=OneWay}"/><Run Text=" / "/><Run Text="{Binding TampilCount, Mode=OneWay}"/>
+                        </TextBlock>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
+                            Background="{DynamicResource AccentSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="&#128206;" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Toolbar: cari + filter tahun + aksi -->
+        <Border Grid.Row="2" Style="{StaticResource ToolbarCard}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -72,42 +160,177 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                <TextBlock Text="{Binding TahunLabel}" Foreground="{DynamicResource TextBrush}"/>
-                <TextBlock Text=":" Foreground="{DynamicResource TextBrush}"/>
-            </StackPanel>
-                <ComboBox Grid.Column="1" ItemsSource="{Binding TahunOptions}" SelectedItem="{Binding SelectedTahun}"
-                          Width="110" Height="30"/>
+                <Border Grid.Column="0" Width="250" Height="34" Margin="0,0,8,0"
+                        Background="{DynamicResource WindowBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="24"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#128269;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBox x:Name="SearchBox" Grid.Column="1" BorderThickness="0" Background="Transparent"
+                                 FontSize="13" Foreground="{DynamicResource TextBrush}" VerticalContentAlignment="Center"
+                                 Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 TextChanged="SearchBox_TextChanged"/>
+                        <TextBlock x:Name="SearchWatermark" Grid.Column="1" Text="Cari nomor, perihal, asal/tujuan, isi…"
+                                   VerticalAlignment="Center" IsHitTestVisible="False"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,0"/>
+                        <Button x:Name="ClearSearchBtn" Grid.Column="2" Click="ClearSearch_Click"
+                                ToolTip="Bersihkan pencarian" Visibility="Collapsed"
+                                Background="Transparent" BorderThickness="0" Padding="0"
+                                Foreground="{DynamicResource TextSecondaryBrush}">
+                            <TextBlock Text="✕" FontSize="12" FontWeight="Bold"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TahunLabel}" Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <ComboBox ItemsSource="{Binding TahunOptions}" SelectedItem="{Binding SelectedTahun}"
+                              Width="120" Height="34" Margin="0,0,12,0"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="2" Text="{Binding StatusInfo}" VerticalAlignment="Center" Margin="12,0,0,0"
+                           FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Segarkan" Command="{Binding SegarkanCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,6,0"/>
-                    <Button Content="Tambah" Command="{Binding TambahCommand}" Style="{StaticResource PrimaryButton}" Height="32" Margin="0,0,6,0"/>
-                    <Button Content="Edit" Command="{Binding EditCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,6,0"/>
-                    <Button Content="Hapus" Command="{Binding HapusCommand}" Style="{StaticResource DangerButton}" Height="32" Margin="0,0,6,0"/>
-                    <Button Content="Cetak" Command="{Binding CetakCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,6,0"/>
-                    <Button Content="Batal" Command="{Binding BatalCommand}" Style="{StaticResource OutlineButton}" Height="32"/>
+                    <Button Content="Segarkan" Command="{Binding SegarkanCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,6,0"
+                            ToolTip="Muat ulang data dari database arsip"/>
+                    <Button Content="Tambah" Command="{Binding TambahCommand}" Style="{StaticResource PrimaryButton}" Height="32" Margin="0,0,6,0"
+                            ToolTip="Input data surat baru"/>
+                    <Button Content="Salin" Command="{Binding SalinCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,6,0"
+                            ToolTip="Buat data baru dari baris terpilih (nomor/asal-tujuan/perihal/isi/keterangan ikut tersalin)"/>
+                    <Button Content="Edit" Command="{Binding EditCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,6,0"
+                            ToolTip="Ubah data terpilih (atau klik dua kali baris)"/>
+                    <Button Content="Hapus" Command="{Binding HapusCommand}" Style="{StaticResource DangerButton}" Height="32" Margin="0,0,6,0"
+                            ToolTip="Hapus data terpilih beserta berkas lampirannya"/>
+                    <Button Content="Cetak" Command="{Binding CetakCommand}" Style="{StaticResource SuccessButton}" Height="32" Margin="0,0,6,0"
+                            ToolTip="Cetak PDF buku agenda sesuai filter tahun"/>
+                    <Button Content="Batal" Command="{Binding BatalCommand}" Style="{StaticResource OutlineButton}" Height="32"
+                            ToolTip="Kembali ke halaman utama"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Grid data -->
-        <Border Grid.Row="2" Style="{StaticResource GridHostCard}">
-            <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
-                      AutoGenerateColumns="False" IsReadOnly="True"
-                      SelectionMode="Single" SelectionUnit="FullRow"
-                      HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                      BorderThickness="0" RowHeight="28">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="No." Binding="{Binding No}" Width="45"/>
-                    <DataGridTextColumn Header="Nomor Surat" Binding="{Binding NomorSurat}" Width="1*"/>
-                    <DataGridTextColumn Header="Tanggal Surat" Binding="{Binding TanggalSurat}" Width="1*"/>
-                    <DataGridTextColumn Header="Tgl Diterima/Dikirim" Binding="{Binding TanggalTerimaKirim}" Width="1*"/>
-                    <DataGridTextColumn Header="Asal/Tujuan" Binding="{Binding AsalTujuan}" Width="1.5*"/>
-                    <DataGridTextColumn Header="Perihal" Binding="{Binding Perihal}" Width="2*"/>
-                    <DataGridTextColumn Header="Isi Ringkas" Binding="{Binding IsiRingkas}" Width="2*"/>
-                    <DataGridTextColumn Header="Keterangan" Binding="{Binding Keterangan}" Width="1.5*"/>
-                </DataGrid.Columns>
-            </DataGrid>
+        <Border Grid.Row="3" Style="{StaticResource GridHostCard}" Padding="1">
+            <Grid>
+                <DataGrid x:Name="DataGridAgenda" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionMode="Single" SelectionUnit="FullRow"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          BorderThickness="0" RowHeight="34"
+                          MouseDoubleClick="DataGridAgenda_MouseDoubleClick"
+                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                          Style="{StaticResource ModernDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="No." Binding="{Binding No}" Width="45"/>
+                        <DataGridTextColumn Header="Nomor Surat" Binding="{Binding NomorSurat}" Width="1.5*" MinWidth="150">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Tanggal Surat" Binding="{Binding TanggalSurat}" Width="1*" MinWidth="100">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Tgl Diterima/Dikirim" Binding="{Binding TanggalTerimaKirim}" Width="1*" MinWidth="110">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Asal / Tujuan" Binding="{Binding AsalTujuan}" Width="1.5*" MinWidth="130">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="TextBlock.TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Perihal" Binding="{Binding Perihal}" Width="2*" MinWidth="150">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="TextBlock.TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Isi Ringkas" Binding="{Binding IsiRingkas}" Width="2*" MinWidth="150">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="TextBlock.TextTrimming" Value="CharacterEllipsis"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Keterangan" Binding="{Binding Keterangan}" Width="1.5*" MinWidth="120">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+                                    <Setter Property="TextBlock.TextTrimming" Value="CharacterEllipsis"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTemplateColumn Header="Lampiran" Width="1.5*" MinWidth="160">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,6,0" VerticalAlignment="Center"
+                                                Background="{DynamicResource AccentSubtleBrush}"
+                                                Visibility="{Binding PunyaLampiran, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding EkstensiLampiran}" FontSize="10" FontWeight="Bold"
+                                                       Foreground="{DynamicResource AccentTextBrush}"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding FileLampiran}" VerticalAlignment="Center" FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,6,0"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="110"/>
+                                        <Button Content="Buka" Width="58" Height="24" Padding="4,0"
+                                                Command="{Binding DataContext.BukaLampiranCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                IsEnabled="{Binding PunyaLampiran}"
+                                                ToolTip="Buka berkas lampiran (PDF/gambar)"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="32">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasRows}" Value="False"/>
+                                        <Condition Binding="{Binding IsLoading}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="🗂️" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="44" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                        <TextBlock Text="Tidak Ada Data Ditemukan" FontSize="16" FontWeight="Bold"
+                                   HorizontalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+                        <TextBlock Text="Coba ubah kata kunci pencarian atau pilih tahun lain, atau gunakan tombol Tambah untuk mengisi data baru."
+                                   FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center" Margin="0,4,0,0" TextWrapping="Wrap" MaxWidth="420" TextAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

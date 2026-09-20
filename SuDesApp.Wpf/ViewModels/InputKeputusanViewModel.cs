@@ -24,7 +24,7 @@ namespace SuDesApp.Wpf.ViewModels
     /// pengguna cukup diberi tahu (messagebox) untuk mengisi formulir manual,
     /// lalu berkas tetap disalin ke arsip pada saat Simpan.
     /// </summary>
-    public class InputKeputusanViewModel : ObservableObject
+    public class InputKeputusanViewModel : ObservableObject, IJudulHalaman
     {
         private readonly IArsipKeputusanRepository _repository;
         private readonly IWordFileReader _wordReader;
@@ -54,6 +54,9 @@ namespace SuDesApp.Wpf.ViewModels
 
         public event Action? RequestClose;
 
+        /// <summary>Data berhasil disimpan — halaman induk perlu memuat ulang daftarnya.</summary>
+        public event Action? Tersimpan;
+
         public InputKeputusanViewModel(
             IArsipKeputusanRepository repository,
             IWordFileReader wordReader,
@@ -77,8 +80,17 @@ namespace SuDesApp.Wpf.ViewModels
         public string Title
         {
             get => _title;
-            private set => SetProperty(ref _title, value);
+            private set
+            {
+                if (SetProperty(ref _title, value))
+                {
+                    OnPropertyChanged(nameof(JudulHalaman));
+                }
+            }
         }
+
+        /// <summary>Judul halaman ini di title bar jendela (lihat <see cref="IJudulHalaman"/>).</summary>
+        public string JudulHalaman => Title;
 
         public bool IsLoadingWord
         {
@@ -116,7 +128,7 @@ namespace SuDesApp.Wpf.ViewModels
         public AsyncRelayCommand FillFromWordCommand { get; }
         public AsyncRelayCommand OpenWordFileCommand { get; }
 
-        public void Initialize(string jenisKeputusan, DataKeputusan? editData)
+        public void Initialize(string jenisKeputusan, DataKeputusan? editData, DataKeputusan? prefill = null)
         {
             _jenisKeputusan = (jenisKeputusan ?? "SK").ToUpperInvariant();
             _jenisKeputusanAwal = _jenisKeputusan;
@@ -131,6 +143,14 @@ namespace SuDesApp.Wpf.ViewModels
                 Tentang = _editData.Tentang;
                 Keterangan = _editData.Keterangan;
                 _storedFileName = _editData.FileWord;
+            }
+            else if (prefill != null)
+            {
+                Nomor = prefill.Nomor;
+                Tanggal = prefill.Tanggal.ToString("dd-MM-yyyy");
+                Tentang = prefill.Tentang;
+                Keterangan = prefill.Keterangan;
+                _storedFileName = null;
             }
             else
             {
@@ -393,7 +413,8 @@ namespace SuDesApp.Wpf.ViewModels
                         $"Buka jenis tersebut di Buku SK / Peraturan untuk melihat datanya.");
                 }
 
-                // Now close dialog - grid refresh will see updated FileWord
+                // Halaman ditutup agar daftar induk memuat ulang dan melihat FileWord terbaru.
+                Tersimpan?.Invoke();
                 RequestClose?.Invoke();
             }
             catch (Exception ex)

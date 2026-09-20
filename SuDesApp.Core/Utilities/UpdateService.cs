@@ -45,7 +45,7 @@ namespace SuDesApp.Utilities
 
         public bool IsAvailable => _initException == null;
 
-        public UpdateService(AppConfig appConfig, ILogger<UpdateService> logger = null)
+        public UpdateService(AppConfig appConfig, ILogger<UpdateService>? logger = null)
         {
             _logger = logger ?? NullLogger<UpdateService>.Instance;
             _updateCheckFileId = "1bAfykQQyNi6E0YF9ItpaHawFLgLOUAzb"; // ID version.json (mode Drive lama)
@@ -112,7 +112,7 @@ namespace SuDesApp.Utilities
             if (updateInfo == null || string.IsNullOrEmpty(updateInfo.Version))
             {
                 _logger.LogWarning("Rilis GitHub tidak berisi tag versi yang bisa dibaca: {Repo}", _githubRepo);
-                return null;
+                return null!;
             }
 
             _logger.LogInformation("Versi GitHub ditemukan: {Version} ({Url})", updateInfo.Version, updateInfo.DownloadUrl);
@@ -153,6 +153,20 @@ namespace SuDesApp.Utilities
                 ReleaseNotes = release.Body ?? string.Empty,
                 Sha256 = ExtractSha256(asset.Digest),
                 GitHubApiAssetUrl = asset.ApiUrl,
+                NamaInstaller = asset.Name,
+                // Seluruh aset rilis disimpan agar berkas tambalan (patch.json +
+                // patch-<versi>.zip) bisa dicari tanpa memanggil API GitHub dua kali.
+                DaftarAset = assets
+                    .Where(a => !string.IsNullOrWhiteSpace(a.Name) && !string.IsNullOrWhiteSpace(a.BrowserDownloadUrl))
+                    .Select(a => new AsetRilis
+                    {
+                        Nama = a.Name!,
+                        Url = a.BrowserDownloadUrl!,
+                        ApiUrl = a.ApiUrl,
+                        Sha256 = ExtractSha256(a.Digest),
+                        Ukuran = a.Size
+                    })
+                    .ToList()
             };
         }
 
@@ -190,7 +204,7 @@ namespace SuDesApp.Utilities
                 if (updateInfo == null || string.IsNullOrEmpty(updateInfo.Version))
                 {
                     _logger.LogWarning("Data versi gak valid dari {Url}. Pastiin Version diisi di version.json.", _updateCheckUrl);
-                    return null;
+                    return null!;
                 }
                 _logger.LogInformation("Versi ditemukan: {Version}", updateInfo.Version);
                 return updateInfo;
@@ -235,7 +249,7 @@ namespace SuDesApp.Utilities
                 if (updateInfo == null || string.IsNullOrEmpty(updateInfo.Version))
                 {
                     _logger.LogWarning("Data versi gak valid dari file ID: {FileId}. Pastiin Version diisi di version.json.", fileId);
-                    return null;
+                    return null!;
                 }
                 _logger.LogInformation($"Versi ditemukan: {updateInfo.Version}");
                 return updateInfo;
@@ -282,30 +296,9 @@ namespace SuDesApp.Utilities
             var fileName = Path.Combine(Path.GetTempPath(), $"SuDesApp_{updateInfo.Version}.exe");
             try
             {
-                var url = ChooseHttpDownloadUrl(updateInfo);
-                using var http = CreateHttpClient();
-                using var request = NewRequest(HttpMethod.Get, url);
-                if (IsGitHubApiUrl(url)) request.Headers.Accept.ParseAdd("application/octet-stream");
+                await UnduhKeBerkasAsync(
+                    ChooseHttpDownloadUrl(updateInfo), fileName, progress, cancellationToken, updateInfo.Sha256);
 
-                using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                response.EnsureSuccessStatusCode();
-
-                var total = response.Content.Headers.ContentLength ?? -1L;
-                await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
-                await using var target = File.Create(fileName);
-
-                var buffer = new byte[81920];
-                long totalRead = 0;
-                int bytesRead;
-                while ((bytesRead = await source.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
-                {
-                    await target.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
-                    totalRead += bytesRead;
-                    if (total > 0) progress?.Report((int)((totalRead * 100) / total));
-                }
-
-                VerifyHashOrThrow(fileName, updateInfo);
-                progress?.Report(100);
                 _logger.LogInformation("Pembaruan didownload ke: {FileName}", fileName);
                 return fileName;
             }
@@ -322,6 +315,79 @@ namespace SuDesApp.Utilities
             }
         }
 
+        /// <summary>
+        /// Unduh satu berkas dari tautan HTTPS atau API aset GitHub ke jalur tujuan,
+        /// sambil melaporkan kemajuan 0-100. Bila <paramref name="sha256Harapan"/> diisi,
+        /// berkas diverifikasi dulu dan dihapus lagi bila sidik jarinya tidak cocok.
+        /// Dipakai installer penuh maupun paket tambalan (patch).
+        /// </summary>
+        public async Task UnduhKeBerkasAsync(
+            string url,
+            string tujuan,
+            IProgress<int>? progress,
+            CancellationToken cancellationToken,
+            string? sha256Harapan = null)
+        {
+            if (!IsHttpUrl(url))
+                throw new ArgumentException("Tautan unduhan harus berupa HTTPS publik atau API GitHub.", nameof(url));
+
+            if (string.IsNullOrWhiteSpace(tujuan))
+                throw new ArgumentException("Jalur tujuan unduhan tidak boleh kosong.", nameof(tujuan));
+
+            var folder = Path.GetDirectoryName(tujuan);
+            if (!string.IsNullOrWhiteSpace(folder)) Directory.CreateDirectory(folder);
+
+            try
+            {
+                using var http = CreateHttpClient();
+                using var request = NewRequest(HttpMethod.Get, url);
+                // Aset repo privat diunduh lewat API aset dengan Accept octet-stream;
+                // tautan browser_download_url akan mengembalikan halaman HTML.
+                if (IsGitHubApiUrl(url)) request.Headers.Accept.ParseAdd("application/octet-stream");
+
+                using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var total = response.Content.Headers.ContentLength ?? -1L;
+                await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
+                await using var target = File.Create(tujuan);
+
+                var buffer = new byte[81920];
+                long totalRead = 0;
+                int bytesRead;
+                while ((bytesRead = await source.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
+                {
+                    await target.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                    totalRead += bytesRead;
+                    if (total > 0) progress?.Report((int)((totalRead * 100) / total));
+                }
+
+                await target.FlushAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                TryDelete(tujuan);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                TryDelete(tujuan);
+                throw new Exception("Gagal mengunduh berkas pembaruan: " + ex.Message, ex);
+            }
+
+            if (!string.IsNullOrWhiteSpace(sha256Harapan))
+            {
+                if (!VerifySha256(tujuan, sha256Harapan))
+                {
+                    TryDelete(tujuan);
+                    throw new InvalidOperationException(
+                        "Verifikasi berkas gagal: SHA-256 tidak cocok. Unduhan dibatalkan.");
+                }
+            }
+
+            progress?.Report(100);
+        }
+
         private string ChooseHttpDownloadUrl(UpdateInfo updateInfo)
         {
             // Repo privat: aset harus diunduh lewat API (butuh token & Accept octet-stream).
@@ -330,7 +396,7 @@ namespace SuDesApp.Utilities
             {
                 return updateInfo.GitHubApiAssetUrl!;
             }
-            return updateInfo.DownloadUrl;
+            return updateInfo.DownloadUrl!;
         }
 
         private async Task<string> DownloadUpdateViaDriveAsync(UpdateInfo updateInfo, string fileId, IProgress<int> progress, CancellationToken cancellationToken)
@@ -411,6 +477,18 @@ namespace SuDesApp.Utilities
             return !string.IsNullOrWhiteSpace(url) &&
                    Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
                    (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        }
+
+        /// <summary>
+        /// Tautan unduhan aset yang tepat: URL API (untuk repo privat yang memakai
+        /// token) atau tautan unduhan langsung.
+        /// </summary>
+        public string TautanAset(AsetRilis aset)
+        {
+            if (aset == null) throw new ArgumentNullException(nameof(aset));
+            return !string.IsNullOrWhiteSpace(_githubToken) && !string.IsNullOrWhiteSpace(aset.ApiUrl)
+                ? aset.ApiUrl!
+                : aset.Url;
         }
 
         private static bool IsGitHubApiUrl(string? url) =>
@@ -515,20 +593,38 @@ namespace SuDesApp.Utilities
 
             [JsonPropertyName("digest")]
             public string? Digest { get; set; }
+
+            [JsonPropertyName("size")]
+            public long Size { get; set; }
         }
     }
 
-    /// <summary>Informasi pembaruan dari version.json / rilis GitHub (porting dari WinForms).</summary>
+    /// <summary>Satu aset pada halaman rilis GitHub (mis. installer, zip portable, patch.json).</summary>
+    public class AsetRilis
+    {
+        public string Nama { get; set; } = string.Empty;
+
+        /// <summary>Tautan unduh langsung (repo publik).</summary>
+        public string Url { get; set; } = string.Empty;
+
+        /// <summary>URL API aset — dipakai saat repo privat (butuh token).</summary>
+        public string? ApiUrl { get; set; }
+
+        /// <summary>SHA-256 dari GitHub (bila ada).</summary>
+        public string? Sha256 { get; set; }
+
+        public long Ukuran { get; set; }
+    }        /// <summary>Informasi pembaruan dari version.json / rilis GitHub (porting dari WinForms).</summary>
     public class UpdateInfo
     {
         [JsonPropertyName("version")]
-        public string Version { get; set; }
+        public string ?Version { get; set; }
 
         [JsonPropertyName("downloadUrl")]
-        public string DownloadUrl { get; set; }
+        public string ?DownloadUrl { get; set; }
 
         [JsonPropertyName("releaseNotes")]
-        public string ReleaseNotes { get; set; }
+        public string ?ReleaseNotes { get; set; }
 
         [JsonPropertyName("sha256")]
         public string? Sha256 { get; set; }
@@ -539,5 +635,28 @@ namespace SuDesApp.Utilities
         /// </summary>
         [JsonIgnore]
         public string? GitHubApiAssetUrl { get; set; }
+
+        /// <summary>Nama berkas installer pada rilis (bila aset GitHub).</summary>
+        [JsonIgnore]
+        public string? NamaInstaller { get; set; }
+
+        /// <summary>Seluruh aset rilis GitHub (installer, zip portable, patch.json, tambalan).</summary>
+        [JsonIgnore]
+        public List<AsetRilis> DaftarAset { get; set; } = new();
+
+        /// <summary>
+        /// Tautan berkas <c>patch.json</c> pada rilis ini (null bila rilis tidak
+        /// menyediakannya — berarti pembaruan hanya lewat installer penuh).
+        /// </summary>
+        [JsonIgnore]
+        public string? PatchManifestUrl => CariAset("patch.json")?.Url;
+
+        /// <summary>Cari satu aset rilis berdasarkan namanya (tanpa peka huruf besar/kecil).</summary>
+        public AsetRilis? CariAset(string nama)
+        {
+            if (string.IsNullOrWhiteSpace(nama)) return null;
+            return DaftarAset?.FirstOrDefault(a =>
+                string.Equals(a.Nama, nama, StringComparison.OrdinalIgnoreCase));
+        }
     }
 }

@@ -31,7 +31,7 @@ namespace SuDesApp.GeneratorPdf
         protected override string JudulSurat => "SURAT KETERANGAN IJIN TINGGAL SEMENTARA";
         protected override bool ShowPemohonInFooter => true;
 
-        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             try
             {

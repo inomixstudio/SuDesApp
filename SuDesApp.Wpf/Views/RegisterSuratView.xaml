@@ -9,9 +9,6 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <CollectionViewSource x:Key="JenisSuratItemsView" Source="{Binding JenisSuratItems}"/>
 
-        <!-- Proxy DataContext untuk binding kolom register ke properti level ViewModel -->
-        <views:BindingProxy x:Key="Proxy" DataContext="{Binding}"/>
-
         <views:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
         <views:StatusToBorderConverter x:Key="StatusToBorderConverter"/>
         <views:StatusToForegroundConverter x:Key="StatusToForegroundConverter"/>
@@ -474,8 +471,6 @@
                         </DataGridTextColumn>
                         <DataGridTextColumn Header="Keperluan" Binding="{Binding Keperluan}" Width="220" MinWidth="100"/>
                         <DataGridTextColumn Header="Jenis Surat" Binding="{Binding JenisSuratLabel}" Width="180" MinWidth="110"/>
-                        <DataGridTextColumn Header="Calon Mempelai" Binding="{Binding PasanganDisplay}" Width="160" MinWidth="100"
-                                            Visibility="{Binding IsNtcrRegister, Converter={StaticResource BoolToVis}, Source={StaticResource Proxy}}"/>
                         <DataGridTemplateColumn Header="Status" Width="110" MinWidth="80">
                             <DataGridTemplateColumn.CellTemplate>
                                 <StaticResource ResourceKey="StatusCellTemplate"/>

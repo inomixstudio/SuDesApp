@@ -15,7 +15,7 @@ namespace SuDesApp.ControlSurat
         public SettingsManager(
             IDesaRepository desaRepository,
             AppConfig config,
-            ILogger<SettingsManager> logger = null)
+            ILogger<SettingsManager>? logger = null)
         {
             _desaRepository = desaRepository ?? throw new ArgumentNullException(nameof(desaRepository));
             if (config == null) throw new ArgumentNullException(nameof(config));

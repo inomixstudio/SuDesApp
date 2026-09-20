@@ -147,10 +147,10 @@
 
                             <TextBlock Grid.Row="4" Grid.Column="0" Text="Repository" FontSize="12"
                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <Button Grid.Row="4" Grid.Column="1" Content="github.com/inomixstudio/Surat-Desa"
+                            <Button Grid.Row="4" Grid.Column="1" Content="github.com/inomixstudio/SudesApp"
                                     Command="{Binding OpenUrlCommand}"
-                                    CommandParameter="https://github.com/inomixstudio/Surat-Desa"
-                                    ToolTip="https://github.com/inomixstudio/Surat-Desa"
+                                    CommandParameter="https://github.com/inomixstudio/SudesApp"
+                                    ToolTip="https://github.com/inomixstudio/SudesApp"
                                     Style="{StaticResource LinkButton}" HorizontalAlignment="Left" Padding="0"
                                     Background="Transparent" BorderThickness="0"/>
                         </Grid>
@@ -257,8 +257,8 @@
                             <TextBlock Text="DUKUNG PENGEMBANGAN" FontWeight="Bold"
                                        Foreground="{DynamicResource TextBrush}" FontSize="14" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <Button Content="  GitHub Repository" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/inomixstudio/Surat-Desa"
-                                ToolTip="https://github.com/inomixstudio/Surat-Desa"
+                        <Button Content="  GitHub Repository" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/inomixstudio/SudesApp"
+                                ToolTip="https://github.com/inomixstudio/SudesApp"
                                 Style="{StaticResource LinkButton}" HorizontalAlignment="Left" Margin="0,0,0,4"/>
                         <Button Content="  Website Resmi" Command="{Binding OpenUrlCommand}" CommandParameter="https://desa-sumberjaya.com"
                                 Style="{StaticResource LinkButton}" HorizontalAlignment="Left" Margin="0,0,0,4"/>

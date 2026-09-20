@@ -12,7 +12,7 @@ using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
-using SuDesApp.Interface;
+using SuDesApp.Interfaces;
 using SuDesApp.Utilities;
 
 namespace SuDesApp.GeneratorPdf
@@ -26,6 +26,18 @@ namespace SuDesApp.GeneratorPdf
         private readonly SettingsManager _settingsManager;
         private readonly ILogger<SuratRegisterGenerator> _logger;
         private const string JudulSurat = "REGISTER SURAT";
+
+        /// <summary>
+        /// Label jenis surat untuk surat dari Template Surat: menyebut nama templatenya
+        /// (dibaca dari payload surat) supaya buku register tetap informatif.
+        /// </summary>
+        private static string LabelTemplateSurat(SuratData surat)
+        {
+            var payload = TemplateSuratTercatat.FromJson(surat?.AdditionalData);
+            string nama = payload?.NamaTemplate?.Trim() ?? string.Empty;
+
+            return nama.Length == 0 ? "Surat dari Template Surat" : $"Template: {nama}";
+        }
         private const float DEFAULT_FONT_SIZE = 9f;
         private const float TITLE_FONT_SIZE = 12f;
 
@@ -133,8 +145,7 @@ namespace SuDesApp.GeneratorPdf
 
             var finalDesaData = desaDataForHeaderAndFooter;
 
-            var isRegisterNtcr = sortedSuratListForPdf.Any(s =>
-                s.NamaJenis?.ToUpperInvariant() is "NTCR_N1" or "NTCR_N2" or "NTCR_N3" or "NTCR_N4");
+            var isRegisterNtcr = sortedSuratListForPdf.Any(s => SuratConstants.IsNtcr(s.NamaJenis));
 
             Document.Create(container =>
             {
@@ -188,12 +199,32 @@ namespace SuDesApp.GeneratorPdf
                         int noUrut = 1;
                         foreach (var surat in sortedSuratListForPdf)
                         {
-                            string namaPemohonAtauInstansi = surat.NamaJenis?.ToUpperInvariant() == "INSTANSI"
-                                ? (surat.Instansi?.NamaInstansi ?? "[Data Instansi Tidak Ada]")
-                                : (surat.Warga?.Nama ?? "[Data Warga Tidak Ada]");
+                            // Surat dari Template Surat tidak punya data kependudukan:
+                            // identitas penerimanya dibaca dari isian surat itu sendiri.
+                            bool dariTemplate = TemplateSuratTercatat.DariTemplateSurat(surat);
+
+                            string namaPemohonAtauInstansi;
+                            if (dariTemplate)
+                            {
+                                string namaTemplate = TemplateSuratTercatat.NamaPenerimaTampil(surat);
+                                namaPemohonAtauInstansi = namaTemplate.Length > 0 ? namaTemplate : "[Surat dari Template Surat]";
+                            }
+                            else if (surat.NamaJenis?.ToUpperInvariant() == "INSTANSI")
+                            {
+                                namaPemohonAtauInstansi = surat.Instansi?.NamaInstansi ?? "[Data Instansi Tidak Ada]";
+                            }
+                            else
+                            {
+                                namaPemohonAtauInstansi = surat.Warga?.Nama ?? "[Data Warga Tidak Ada]";
+                            }
 
                             string ttl = "-";
-                            if (surat.Warga != null && !string.IsNullOrWhiteSpace(surat.Warga.TempatLahir) && !string.IsNullOrWhiteSpace(surat.Warga.TanggalLahir))
+                            if (dariTemplate)
+                            {
+                                string ttlTemplate = TemplateSuratTercatat.TempatTanggalLahirTampil(surat);
+                                if (ttlTemplate.Length > 0) ttl = ttlTemplate;
+                            }
+                            else if (surat.Warga != null && !string.IsNullOrWhiteSpace(surat.Warga.TempatLahir) && !string.IsNullOrWhiteSpace(surat.Warga.TanggalLahir))
                             {
                                 if (DateTime.TryParseExact(surat.Warga.TanggalLahir, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime tglLahirParsed))
                                 {
@@ -205,12 +236,22 @@ namespace SuDesApp.GeneratorPdf
                                 }
                             }
 
-                            string jk = surat.Warga?.JenisKelamin?.Length > 0 ? surat.Warga.JenisKelamin.Substring(0, 1).ToUpper() : "-";
+                            string jk = dariTemplate
+                                ? TemplateSuratTercatat.JenisKelaminTampil(surat)
+                                : (surat.Warga?.JenisKelamin?.Length > 0 ? surat.Warga.JenisKelamin.Substring(0, 1).ToUpper() : "-");
+                            if (jk.Length == 0) jk = "-";
 
                             string alamatPemohonAtauInstansi = "-";
                             if (surat.NamaJenis?.ToUpperInvariant() == "INSTANSI")
                             {
                                 alamatPemohonAtauInstansi = surat.Instansi?.AlamatInstansi ?? "[Alamat Instansi Kosong]";
+                            }
+                            else if (dariTemplate)
+                            {
+                                // Surat dari Template Surat menyimpan alamat bebas (bukan
+                                // dusun/desa/kecamatan) pada isian suratnya.
+                                string alamatTemplate = TemplateSuratTercatat.AlamatPenerimaTampil(surat);
+                                alamatPemohonAtauInstansi = alamatTemplate.Length > 0 ? alamatTemplate : "-";
                             }
                             else
                             {
@@ -233,9 +274,14 @@ namespace SuDesApp.GeneratorPdf
                             string jenisSuratDisplay = surat.NamaJenis?.ToUpperInvariant() switch
                             {
                                 "NTCR_N1" => "N1 - Surat Pengantar Nikah",
-                                "NTCR_N2" => "N2 - Surat Ket. Untuk Nikah",
-                                "NTCR_N3" => "N3 - Surat Persetujuan Calon Mempelai",
-                                "NTCR_N4" => "N4 - Surat Ket. Orang Tua",
+                                "NTCR_N2" => "N2 - Permohonan Kehendak Nikah",
+                                "NTCR_N3" => "N3 - Permohonan Pencatatan Isbat",
+                                "NTCR_N4" => "N4 - Persetujuan Calon Pengantin",
+                                "NTCR_N5" => "N5 - Surat Izin Orang Tua",
+                                "NTCR_N6" => "N6 - Ket. Kematian Suami/Istri",
+                                "NTCR_N8" => "N8 - Ket. Numpang Nikah",
+                                "REKENING_KORAN" => "Permohonan Rekening Koran",
+                                "TEMPLATE_SURAT" => LabelTemplateSurat(surat),
                                 "BEDANAMA" => "Surat Ket. Beda Data",
                                 "SKD_UMUM" => "SKD Umum",
                                 "DOMISILI_WARGA" => "Domisili Warga",

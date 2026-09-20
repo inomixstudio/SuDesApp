@@ -229,8 +229,8 @@ namespace SuDesApp.Data.Handlers
         {
             public int ID_Surat { get; set; }
             public int ID_Warga_Anak { get; set; }
-            public string NegaraTujuan { get; set; }
-            public string NamaPT { get; set; }
+            public string ?NegaraTujuan { get; set; }
+            public string ?NamaPT { get; set; }
         }
     }
 }

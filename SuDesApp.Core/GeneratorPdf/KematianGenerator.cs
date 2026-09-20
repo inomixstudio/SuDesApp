@@ -32,7 +32,7 @@ namespace SuDesApp.GeneratorPdf
         {
         }
 
-        protected override void ComposeHalaman(BadanSurat halaman, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeHalaman(BadanSurat halaman, SuratData suratData, string? keteranganTextBox = null)
         {
             var desa = suratData.Desa ?? new DesaData { NamaDesa = "[Desa]", Kecamatan = "[Kecamatan]", Kabupaten = "[Kabupaten]", KepalaDesa = "[Kepala Desa]" };
             var wargaAlmarhum = suratData.Warga ?? new WargaData();
@@ -73,7 +73,7 @@ namespace SuDesApp.GeneratorPdf
             // --- Isi surat ---
             halaman.Paragraf("Yang bertanda tangan dibawah ini, menerangkan bahwa :", jarakAtas: 10, jarakBawah: 8);
 
-            string umurAlmarhumDisplay = HitungUmurPadaTanggal(wargaAlmarhum.TanggalLahir, kematianDetail.TanggalKematian, "Tanggal Lahir Almarhum/ah", "Tanggal Kematian");
+            string umurAlmarhumDisplay = HitungUmurPadaTanggal(wargaAlmarhum.TanggalLahir!, kematianDetail.TanggalKematian!, "Tanggal Lahir Almarhum/ah", "Tanggal Kematian");
 
             halaman.Blok(container => TabelData(container, new List<(string Label, string? Value)> {
                 ("NIK", wargaAlmarhum.NIK),
@@ -98,7 +98,7 @@ namespace SuDesApp.GeneratorPdf
 
             halaman.Paragraf("PELAPOR", tebal: true, indentKiri: 20, jarakBawah: 2);
 
-            string umurPelaporDisplay = HitungUmurPadaTanggal(kematianDetail.UmurPelapor, suratData.TanggalSurat.ToString(DateFormatDb), "Tanggal Lahir Pelapor", "Tanggal Surat");
+            string umurPelaporDisplay = HitungUmurPadaTanggal(kematianDetail.UmurPelapor!, suratData.TanggalSurat.ToString(DateFormatDb), "Tanggal Lahir Pelapor", "Tanggal Surat");
 
             halaman.Blok(container => TabelData(container, new List<(string Label, string? Value)> {
                 ("NIK", kematianDetail.NIKPelapor),

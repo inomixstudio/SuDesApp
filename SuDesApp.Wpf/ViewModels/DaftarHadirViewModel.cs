@@ -124,18 +124,26 @@ namespace SuDesApp.Wpf.ViewModels
             TambahPesertaCommand = new RelayCommand(AddPeserta);
             HapusPesertaCommand = new RelayCommand(RemovePeserta, () => SelectedPeserta != null);
             BatalCommand = new RelayCommand(() => RequestClose?.Invoke());
+            BersihkanCommand = new AsyncRelayCommand(BersihkanAsync);
 
             // Hari/Tanggal terisi tanggal hari ini, tetapi tetap berupa textbox
             // sehingga bisa diganti; tombol "Hari ini" mengembalikannya.
             HariIniCommand = new RelayCommand(() => IsiHariTanggalHariIni());
             IsiHariTanggalHariIni();
 
-            // Beberapa baris awal agar grid langsung bisa diisi.
-            for (int i = 0; i < 5; i++)
+            // Beberapa baris awal agar grid langsung bisa diisi — sama dengan
+            // batas minimal cetak potret (10) sehingga tampilan grid dan PDF
+            // selalu identik saat baru dibuka.
+            for (int i = 0; i < BarisMinimumPotret; i++)
             {
                 Peserta.Add(new DaftarHadirPesertaRow());
             }
             Renumber();
+            Peserta.CollectionChanged += (_, _) =>
+            {
+                OnPropertyChanged(nameof(JumlahPeserta));
+                OnPropertyChanged(nameof(InfoBarisPeserta));
+            };
 
             _ = InitializeAsync();
         }
@@ -194,18 +202,73 @@ namespace SuDesApp.Wpf.ViewModels
         public bool TampilkanNama => true;
 
         /// <summary>Kolom jenis kelamin singkat (L/P) — opsional.</summary>
-        public bool TampilkanJenisKelamin { get => _tampilkanJenisKelamin; set => SetProperty(ref _tampilkanJenisKelamin, value); }
+        public bool TampilkanJenisKelamin
+        {
+            get => _tampilkanJenisKelamin;
+            set { if (SetProperty(ref _tampilkanJenisKelamin, value)) NotifyKolom(); }
+        }
 
-        public bool TampilkanJabatan { get => _tampilkanJabatan; set => SetProperty(ref _tampilkanJabatan, value); }
+        public bool TampilkanJabatan
+        {
+            get => _tampilkanJabatan;
+            set { if (SetProperty(ref _tampilkanJabatan, value)) NotifyKolom(); }
+        }
 
         /// <summary>Kolom Tanda Tangan — wajib dicetak.</summary>
         public bool TampilkanTandaTangan => true;
 
-        public bool TampilkanNip { get => _tampilkanNip; set => SetProperty(ref _tampilkanNip, value); }
-        public bool TampilkanNik { get => _tampilkanNik; set => SetProperty(ref _tampilkanNik, value); }
-        public bool TampilkanNoHp { get => _tampilkanNoHp; set => SetProperty(ref _tampilkanNoHp, value); }
-        public bool TampilkanAlamat { get => _tampilkanAlamat; set => SetProperty(ref _tampilkanAlamat, value); }
-        public bool TampilkanKeterangan { get => _tampilkanKeterangan; set => SetProperty(ref _tampilkanKeterangan, value); }
+        public bool TampilkanNip
+        {
+            get => _tampilkanNip;
+            set { if (SetProperty(ref _tampilkanNip, value)) NotifyKolom(); }
+        }
+
+        public bool TampilkanNik
+        {
+            get => _tampilkanNik;
+            set { if (SetProperty(ref _tampilkanNik, value)) NotifyKolom(); }
+        }
+
+        public bool TampilkanNoHp
+        {
+            get => _tampilkanNoHp;
+            set { if (SetProperty(ref _tampilkanNoHp, value)) NotifyKolom(); }
+        }
+
+        public bool TampilkanAlamat
+        {
+            get => _tampilkanAlamat;
+            set { if (SetProperty(ref _tampilkanAlamat, value)) NotifyKolom(); }
+        }
+
+        public bool TampilkanKeterangan
+        {
+            get => _tampilkanKeterangan;
+            set { if (SetProperty(ref _tampilkanKeterangan, value)) NotifyKolom(); }
+        }
+
+        /// <summary>Jumlah kolom yang akan dicetak, termasuk kolom wajib.</summary>
+        public int JumlahKolomTerpilih =>
+            (TampilkanNo ? 1 : 0) +
+            (TampilkanNama ? 1 : 0) +
+            (TampilkanJenisKelamin ? 1 : 0) +
+            (TampilkanJabatan ? 1 : 0) +
+            (TampilkanTandaTangan ? 1 : 0) +
+            (TampilkanNip ? 1 : 0) +
+            (TampilkanNik ? 1 : 0) +
+            (TampilkanNoHp ? 1 : 0) +
+            (TampilkanAlamat ? 1 : 0) +
+            (TampilkanKeterangan ? 1 : 0);
+
+        /// <summary>Orientasi cetak: lanskap bila kolom banyak, jika tidak potret.</summary>
+        public string OrientasiDokumen => JumlahKolomTerpilih >= 7 ? "Lanskap" : "Potret";
+
+        private void NotifyKolom()
+        {
+            OnPropertyChanged(nameof(JumlahKolomTerpilih));
+            OnPropertyChanged(nameof(OrientasiDokumen));
+            OnPropertyChanged(nameof(InfoBarisPeserta));
+        }
 
         /// <summary>Cetak blok tanda tangan Kepala Desa di bagian bawah atau tidak.</summary>
         public bool TampilkanFooterKepalaDesa
@@ -221,6 +284,31 @@ namespace SuDesApp.Wpf.ViewModels
         public IReadOnlyList<string> JenisKelaminOptions => ValidJenisKelaminOptions;
 
         public ObservableCollection<DaftarHadirPesertaRow> Peserta { get; } = new();
+
+        /// <summary>Jumlah baris peserta saat ini (bertambah saat Tambah, berkurang saat Hapus).</summary>
+        public int JumlahPeserta => Peserta.Count;
+
+        /// <summary>Minimal baris yang dicetak PDF pada orientasi potret (kolom &lt; 7).</summary>
+        public int BarisMinimumPotret { get; } = 10;
+
+        /// <summary>Minimal baris yang dicetak PDF pada orientasi lanskap (≥ 7 kolom dicentang).</summary>
+        public int BarisMinimumLanskap { get; } = 6;
+
+        /// <summary>
+        /// Penjelasan kesesuaian jumlah baris grid vs PDF: PDF mencetak semua baris
+        /// yang ada lalu melengkapi otomatis dengan baris kosong sampai batas minimal.
+        /// </summary>
+        public string InfoBarisPeserta
+        {
+            get
+            {
+                int minimal = JumlahKolomTerpilih >= 7 ? BarisMinimumLanskap : BarisMinimumPotret;
+                return "Baris grid: " + JumlahPeserta + " baris · orientasi " +
+                       OrientasiDokumen.ToLowerInvariant() +
+                       " · semua baris ikut dicetak apa adanya, kekurangan diisi baris kosong hingga minimal " +
+                       minimal + " baris.";
+            }
+        }
 
         public DaftarHadirPesertaRow? SelectedPeserta
         {
@@ -244,6 +332,7 @@ namespace SuDesApp.Wpf.ViewModels
         public RelayCommand TambahPesertaCommand { get; }
         public RelayCommand HapusPesertaCommand { get; }
         public RelayCommand BatalCommand { get; }
+        public AsyncRelayCommand BersihkanCommand { get; }
 
         private async Task InitializeAsync()
         {
@@ -290,6 +379,37 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 Peserta[i].No = i + 1;
             }
+        }
+
+        private async Task BersihkanAsync()
+        {
+            if (IsBusy) return;
+
+            bool lanjut = await _messageService.ShowConfirmationAsync(
+                "Reset Halaman Daftar Hadir",
+                "Hapus seluruh isian dan kembali ke tampilan awal (10 baris kosong, kolom bawaan)?");
+            if (!lanjut) return;
+
+            JudulSurat = "DAFTAR HADIR";
+            Pukul = "09.00 WIB s/d Selesai";
+            Tempat = string.Empty;
+            TampilkanJenisKelamin = false;
+            TampilkanJabatan = true;
+            TampilkanNip = false;
+            TampilkanNik = false;
+            TampilkanNoHp = false;
+            TampilkanAlamat = false;
+            TampilkanKeterangan = false;
+            TampilkanFooterKepalaDesa = true;
+            SelectedPeserta = null;
+            Peserta.Clear();
+            for (int i = 0; i < BarisMinimumPotret; i++)
+            {
+                Peserta.Add(new DaftarHadirPesertaRow());
+            }
+            Renumber();
+            IsiHariTanggalHariIni();
+            await InitializeAsync();
         }
 
         private async Task CetakAsync()

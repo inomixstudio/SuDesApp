@@ -30,7 +30,7 @@ namespace SuDesApp.GeneratorPdf
 
         private const float UkuranTabel = DEFAULT_FONT_SIZE - 1;
 
-        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             if (suratData == null) throw new ArgumentNullException(nameof(suratData));
 

@@ -5,7 +5,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Repositories;
-using SuDesApp.Interface;
+using SuDesApp.Interfaces;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
 using System;
@@ -30,14 +30,14 @@ namespace SuDesApp.GeneratorPdf
         protected override bool UseDefaultLogo => false;
         protected override bool ShowPemohonInFooter => true;
 
-        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             try
             {
                 AddPeneranganSection(badan, suratData);
                 AddDataWargaSection(badan, suratData);
                 AddPernyataanSection(badan, suratData);
-                AddKeteranganSection(badan, keteranganTextBox);
+                AddKeteranganSection(badan, keteranganTextBox!);
                 AddPenutupSection(badan);
             }
             catch (Exception ex)

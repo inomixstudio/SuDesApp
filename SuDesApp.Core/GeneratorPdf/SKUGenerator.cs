@@ -27,7 +27,7 @@ namespace SuDesApp.GeneratorPdf
         private const string DefaultTanggalFormat = "dd MMMM yyyy";
         private const string UnknownValue = "Tidak Diketahui";
 
-        public override async Task GeneratePdfAsync(Stream outputStream, int idSurat, string keteranganTextBox = null)
+        public override async Task GeneratePdfAsync(Stream outputStream, int idSurat, string keteranganTextBox = default)
         {
 
             try
@@ -59,7 +59,7 @@ namespace SuDesApp.GeneratorPdf
             }
         }
 
-        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string keteranganTextBox = null)
+        protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             try
             {
@@ -89,7 +89,7 @@ namespace SuDesApp.GeneratorPdf
                     ("Alamat", alamatLengkap),
                 ]);
 
-                string keteranganFinal = keteranganTextBox ?? suratData.Keterangan;
+                string? keteranganFinal = keteranganTextBox ?? suratData.Keterangan;
                 if (string.IsNullOrWhiteSpace(keteranganFinal))
                 {
                     _logger.LogWarning("keteranganTextBox and suratData.Keterangan are null or empty in SKUGenerator.ComposeBody. Using default keterangan.");

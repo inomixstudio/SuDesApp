@@ -18,23 +18,23 @@ namespace SuDesApp.Utilities
 {
     public sealed class GoogleDriveOptions
     {
-        public string CredentialsPath { get; set; }
-        public string RootFolderId { get; set; }
-        public string AuthMode { get; set; }
-        public string ClientId { get; set; }
-        public string ClientSecret { get; set; }
-        public string TokenFolder { get; set; }
+        public string ?CredentialsPath { get; set; }
+        public string ?RootFolderId { get; set; }
+        public string ?AuthMode { get; set; }
+        public string ?ClientId { get; set; }
+        public string ?ClientSecret { get; set; }
+        public string ?TokenFolder { get; set; }
     }
 
     public sealed class DriveItem
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string MimeType { get; set; }
+        public string ?Id { get; set; }
+        public string ?Name { get; set; }
+        public string ?MimeType { get; set; }
         public long? Size { get; set; }
         public DateTime? ModifiedTime { get; set; }
-        public string WebViewLink { get; set; }
-        public string ParentId { get; set; }
+        public string ?WebViewLink { get; set; }
+        public string ?ParentId { get; set; }
 
         public bool IsFolder => MimeType == GoogleDriveService.FolderMimeType;
         public bool IsPdf => MimeType == "application/pdf";
@@ -104,7 +104,7 @@ namespace SuDesApp.Utilities
         /// </summary>
         public event Action? ClientInvalidated;
 
-        public GoogleDriveService(IConfiguration configuration, ILogger<GoogleDriveService> logger = null)
+        public GoogleDriveService(IConfiguration configuration, ILogger<GoogleDriveService>? logger = null)
         {
             _logger = logger ?? NullLogger<GoogleDriveService>.Instance;
 
@@ -131,7 +131,7 @@ namespace SuDesApp.Utilities
             var configuredTokenFolder = string.IsNullOrWhiteSpace(section["tokenFolder"])
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SuDesApp", "GoogleDriveToken")
                 : section["tokenFolder"];
-            _tokenFolder = PerUserTokenFolder(configuredTokenFolder);
+            _tokenFolder = PerUserTokenFolder(configuredTokenFolder!);
         }
 
         /// <summary>
@@ -236,7 +236,7 @@ namespace SuDesApp.Utilities
         public async Task<string> GetAccountEmailAsync(CancellationToken ct = default)
         {
             var info = await GetAccountInfoAsync(ct).ConfigureAwait(false);
-            return info?.Email;
+            return info?.Email!;
         }
 
         /// <summary>
@@ -290,6 +290,9 @@ namespace SuDesApp.Utilities
             return BuildOAuthClient(ct);
         }
 
+        public const string FormsBodyScope = "https://www.googleapis.com/auth/forms.body";
+        public const string FormsResponsesScope = "https://www.googleapis.com/auth/forms.responses.readonly";
+
         private DriveService BuildOAuthClient(CancellationToken ct)
         {
             try
@@ -298,10 +301,17 @@ namespace SuDesApp.Utilities
                 var secrets = new ClientSecrets { ClientId = _clientId, ClientSecret = _clientSecret };
                 var dataStore = new FileDataStore(_tokenFolder, true);
 
+                var scopes = new[]
+                {
+                    DriveService.Scope.Drive,
+                    FormsBodyScope,
+                    FormsResponsesScope
+                };
+
                 var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
                 {
                     ClientSecrets = secrets,
-                    Scopes = new[] { DriveService.Scope.Drive },
+                    Scopes = scopes,
                     DataStore = dataStore,
                     // Selalu tampilkan pemilih akun: bila browser masih menyimpan
                     // sesi akun Google lama, Google tidak boleh otomatis memakai
@@ -309,8 +319,8 @@ namespace SuDesApp.Utilities
                     Prompt = "select_account"
                 });
 
-                var installedApp = new AuthorizationCodeInstalledApp(flow, new LocalServerCodeReceiver());
-                var credential = installedApp.AuthorizeAsync("sudesapp", ct).GetAwaiter().GetResult();
+                var credential = AuthorizeWithScopesAsync(flow, dataStore, "sudesapp", scopes, ct)
+                    .GetAwaiter().GetResult();
 
                 return new DriveService(new BaseClientService.Initializer
                 {
@@ -333,6 +343,39 @@ namespace SuDesApp.Utilities
                     "3. Google Drive API sudah diaktifkan pada proyek Cloud.",
                     ex);
             }
+        }
+
+        /// <summary>
+        /// Otorisasi dengan memeriksa cakupan (scope) token tersimpan: bila token
+        /// lama belum memuat cakupan Forms, token dihapus agar Google menampilkan
+        /// persetujuan ulang — mencegah kegagalan 403 "insufficient scope".
+        /// </summary>
+        private static async Task<UserCredential> AuthorizeWithScopesAsync(
+            GoogleAuthorizationCodeFlow flow, FileDataStore dataStore,
+            string userId, string[] scopes, CancellationToken ct)
+        {
+            var token = await flow.LoadTokenAsync(userId, ct).ConfigureAwait(false);
+            if (token != null && !HasAllScopes(token.Scope, scopes))
+            {
+                await dataStore.DeleteAsync<Google.Apis.Auth.OAuth2.Responses.TokenResponse>(userId).ConfigureAwait(false);
+                token = null;
+            }
+
+            if (token == null)
+            {
+                var installedApp = new AuthorizationCodeInstalledApp(flow, new LocalServerCodeReceiver());
+                return await installedApp.AuthorizeAsync(userId, ct).ConfigureAwait(false);
+            }
+
+            return new UserCredential(flow, userId, token);
+        }
+
+        private static bool HasAllScopes(string? granted, IEnumerable<string> required)
+        {
+            var dimiliki = new HashSet<string>(
+                (granted ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries),
+                StringComparer.Ordinal);
+            return required.All(dimiliki.Contains);
         }
 
         public string GetRootFolderIdOrRoot() => string.IsNullOrWhiteSpace(_rootFolderId) ? "root" : _rootFolderId;
@@ -360,7 +403,7 @@ namespace SuDesApp.Utilities
             };
         }
 
-        public async Task<IList<DriveItem>> ListItemsAsync(string folderId = null, CancellationToken ct = default)
+        public async Task<IList<DriveItem>> ListItemsAsync(string? folderId = null, CancellationToken ct = default)
         {
             var client = await GetClientAsync(ct).ConfigureAwait(false);
             var effectiveFolder = string.IsNullOrWhiteSpace(folderId) ? GetRootFolderIdOrRoot() : folderId;
@@ -420,7 +463,7 @@ namespace SuDesApp.Utilities
             return ToDriveItem(file, null);
         }
 
-        public async Task<string> FindOrCreateFolderAsync(string name, string parentId = null, CancellationToken ct = default)
+        public async Task<string> FindOrCreateFolderAsync(string name, string? parentId = null, CancellationToken ct = default)
         {
             var client = await GetClientAsync(ct).ConfigureAwait(false);
             var effectiveParent = string.IsNullOrWhiteSpace(parentId) ? GetRootFolderIdOrRoot() : parentId;
@@ -448,8 +491,8 @@ namespace SuDesApp.Utilities
             return created.Id;
         }
 
-        public async Task<DriveItem> UploadFileAsync(string filePath, string parentId = null, string fileName = null,
-            IProgress<double> progress = null, CancellationToken ct = default)
+        public async Task<DriveItem> UploadFileAsync(string filePath, string? parentId = null, string fileName = null,
+            IProgress<double>? progress = null, CancellationToken ct = default)
         {
             if (!File.Exists(filePath))
                 throw new FileNotFoundException($"File tidak ditemukan: {filePath}");
@@ -493,8 +536,8 @@ namespace SuDesApp.Utilities
             return result;
         }
 
-        public async Task<DriveItem> UploadBytesAsync(byte[] content, string mimeType, string fileName, string parentId = null,
-            IProgress<double> progress = null, CancellationToken ct = default)
+        public async Task<DriveItem> UploadBytesAsync(byte[] content, string mimeType, string fileName, string parentId = default,
+            IProgress<double>? progress = null, CancellationToken ct = default)
         {
             var client = await GetClientAsync(ct).ConfigureAwait(false);
             var effectiveParent = string.IsNullOrWhiteSpace(parentId) ? GetRootFolderIdOrRoot() : parentId;
@@ -542,7 +585,7 @@ namespace SuDesApp.Utilities
             await request.DownloadAsync(target, ct);
         }
 
-        public async Task DownloadToFileAsync(string fileId, string targetPath, IProgress<double> progress = null, CancellationToken ct = default)
+        public async Task DownloadToFileAsync(string fileId, string targetPath, IProgress<double>? progress = null, CancellationToken ct = default)
         {
             var client = await GetClientAsync(ct).ConfigureAwait(false);
             var metaRequest = client.Files.Get(fileId);
@@ -585,6 +628,23 @@ namespace SuDesApp.Utilities
 
         public string ToWebViewLink(string fileId) => $"https://drive.google.com/file/d/{fileId}/view";
 
+        /// <summary>
+        /// Mengizinkan siapa saja yang memiliki tautan membaca berkas (dipakai
+        /// agar warga tanpa akun Google bisa membuka formulir layanan surat).
+        /// </summary>
+        public async Task SetAnyoneReaderAsync(string fileId, CancellationToken ct = default)
+        {
+            var permission = new Google.Apis.Drive.v3.Data.Permission
+            {
+                Type = "anyone",
+                Role = "reader"
+            };
+            var request = (await GetClientAsync(ct).ConfigureAwait(false)).Permissions.Create(permission, fileId);
+            request.Fields = "id";
+            await request.ExecuteAsync(ct).ConfigureAwait(false);
+            _logger.LogInformation("Izin 'siapa saja dengan tautan' diberikan untuk berkas {Id}", fileId);
+        }
+
         private static DriveItem ToDriveItem(Google.Apis.Drive.v3.Data.File f, string parentId)
         {
             return new DriveItem
@@ -595,7 +655,7 @@ namespace SuDesApp.Utilities
                 Size = f.Size,
                 ModifiedTime = f.ModifiedTime,
                 WebViewLink = f.WebViewLink,
-                ParentId = parentId ?? f.Parents?.FirstOrDefault()
+                ParentId = parentId ?? f.Parents?.FirstOrDefault()!
             };
         }
 

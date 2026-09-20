@@ -9,7 +9,6 @@ using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
-using SuDesApp.Wpf.Views;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -29,7 +28,14 @@ namespace SuDesApp.Wpf.ViewModels
         public string Tanggal => Data.Tanggal.ToString("dd-MM-yyyy");
         public string Tentang => Data.Tentang;
         public string Keterangan => Data.Keterangan;
-        public string FileWord => Data.FileWord;
+        public string FileWord => Data.FileWord!;
+
+        /// <summary>Ekstensi berkas lampiran tanpa titik (mis. DOCX / PDF), atau kosong.</summary>
+        public string? EkstensiFile =>
+            string.IsNullOrWhiteSpace(FileWord) ? null : Path.GetExtension(FileWord).TrimStart('.').ToUpperInvariant();
+
+        /// <summary>Ada berkas lampiran tersimpan.</summary>
+        public bool PunyaLampiran => !string.IsNullOrWhiteSpace(FileWord);
 
         /// <summary>Teks gabungan untuk pencarian cepat (nomor/tentang/keterangan/tahun).</summary>
         public string SearchText => string.Join(" ", Nomor, Tentang, Keterangan, Tanggal, Data.Tanggal.Year.ToString());
@@ -46,7 +52,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly IDesaRepository _desaRepository;
         private readonly NavigationService _navigation;
         private readonly IMessageService _messageService;
-        private readonly Func<string, DataKeputusan?, InputKeputusanWindow> _inputWindowFactory;
+        private readonly Func<string, DataKeputusan?, DataKeputusan?, InputKeputusanViewModel> _inputFactory;
         private readonly Func<string, string, PdfPreviewViewModel> _previewFactory;
         private readonly ILogger<KeputusanViewModel> _logger;
 
@@ -56,14 +62,54 @@ namespace SuDesApp.Wpf.ViewModels
         private bool _isLoading;
         private string _searchText = string.Empty;
         private string _statusInfo = string.Empty;
+        private int _totalJenisCount;
+        private int _tampilCount;
+        private int _jumlahLampiran;
+        private int _tahunTerbaru;
         private System.Collections.Generic.List<DataKeputusan> _semua = new();
+
+        public int TotalJenisCount
+        {
+            get => _totalJenisCount;
+            private set => SetProperty(ref _totalJenisCount, value);
+        }
+
+        public int TampilCount
+        {
+            get => _tampilCount;
+            private set => SetProperty(ref _tampilCount, value);
+        }
+
+        public int JumlahLampiran
+        {
+            get => _jumlahLampiran;
+            private set => SetProperty(ref _jumlahLampiran, value);
+        }
+
+        public int TahunTerbaru
+        {
+            get => _tahunTerbaru;
+            private set
+            {
+                if (SetProperty(ref _tahunTerbaru, value))
+                {
+                    OnPropertyChanged(nameof(TahunTerbaruLabel));
+                }
+            }
+        }
+
+        /// <summary>Tahun terbaru sebagai teks ("—" bila belum ada data).</summary>
+        public string TahunTerbaruLabel => TahunTerbaru == 0 ? "—" : TahunTerbaru.ToString();
+
+        /// <summary>True bila ada baris yang tampil (kontrol pesan "tidak ada data").</summary>
+        public bool HasRows => Rows.Count > 0;
 
         public KeputusanViewModel(
             IArsipKeputusanRepository repository,
             IDesaRepository desaRepository,
             NavigationService navigation,
             IMessageService messageService,
-            Func<string, DataKeputusan?, InputKeputusanWindow> inputWindowFactory,
+            Func<string, DataKeputusan?, DataKeputusan?, InputKeputusanViewModel> inputFactory,
             Func<string, string, PdfPreviewViewModel> previewFactory,
             ILogger<KeputusanViewModel> logger)
         {
@@ -71,7 +117,7 @@ namespace SuDesApp.Wpf.ViewModels
             _desaRepository = desaRepository ?? throw new ArgumentNullException(nameof(desaRepository));
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
-            _inputWindowFactory = inputWindowFactory ?? throw new ArgumentNullException(nameof(inputWindowFactory));
+            _inputFactory = inputFactory ?? throw new ArgumentNullException(nameof(inputFactory));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -80,6 +126,7 @@ namespace SuDesApp.Wpf.ViewModels
             SetPerkadesCommand = new AsyncRelayCommand(() => SetJenisAsync("PERKADES"));
             TambahCommand = new AsyncRelayCommand(AddAsync);
             EditCommand = new AsyncRelayCommand(EditAsync, () => SelectedRow != null);
+            SalinCommand = new AsyncRelayCommand(SalinAsync, () => SelectedRow != null);
             HapusCommand = new AsyncRelayCommand(HapusAsync, () => SelectedRow != null);
             CetakCommand = new AsyncRelayCommand(CetakAsync, () => SelectedTahun != null);
             SegarkanCommand = new AsyncRelayCommand(() => LoadAsync());
@@ -144,6 +191,7 @@ namespace SuDesApp.Wpf.ViewModels
                 if (SetProperty(ref _selectedRow, value))
                 {
                     ((AsyncRelayCommand)EditCommand).RaiseCanExecuteChanged();
+                    ((AsyncRelayCommand)SalinCommand).RaiseCanExecuteChanged();
                     ((AsyncRelayCommand)HapusCommand).RaiseCanExecuteChanged();
                 }
             }
@@ -160,6 +208,7 @@ namespace SuDesApp.Wpf.ViewModels
         public AsyncRelayCommand SetPerkadesCommand { get; }
         public AsyncRelayCommand TambahCommand { get; }
         public AsyncRelayCommand EditCommand { get; }
+        public AsyncRelayCommand SalinCommand { get; }
         public AsyncRelayCommand HapusCommand { get; }
         public AsyncRelayCommand CetakCommand { get; }
         public AsyncRelayCommand SegarkanCommand { get; }
@@ -192,8 +241,11 @@ namespace SuDesApp.Wpf.ViewModels
                 IsLoading = true;
                 _semua = await _repository.GetAllAsync();
 
-                var years = _semua
+                var jenisRows = _semua
                     .Where(k => k.JenisKeputusan.Equals(_jenisKeputusan, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                var years = jenisRows
                     .Select(k => k.Tanggal.Year)
                     .Distinct()
                     .OrderByDescending(y => y)
@@ -205,6 +257,8 @@ namespace SuDesApp.Wpf.ViewModels
                 foreach (var year in years) TahunOptions.Add(year);
 
                 SelectedTahun = "Semua Tahun"; // Default to show all
+                TotalJenisCount = jenisRows.Count;
+                TahunTerbaru = years.Count > 0 && int.TryParse(years[0], out int lastYear) ? lastYear : 0;
                 FilterRows();
             }
             catch (Exception ex)
@@ -247,6 +301,9 @@ namespace SuDesApp.Wpf.ViewModels
                 Rows.Add(new KeputusanRow(item, no++));
             }
 
+            TampilCount = filtered.Count;
+            JumlahLampiran = filtered.Count(k => !string.IsNullOrWhiteSpace(k.FileWord));
+            OnPropertyChanged(nameof(HasRows));
             UpdateStatusInfo(jenisRows.Count, filtered.Count);
         }
 
@@ -257,21 +314,50 @@ namespace SuDesApp.Wpf.ViewModels
                 : $"Menampilkan {tampil} dari {totalJenis} data.";
         }
 
-        private async Task AddAsync()
+        private Task AddAsync() => BukaFormulirAsync(null, null);
+
+        /// <summary>
+        /// Buka formulir input/edit SK/Peraturan sebagai halaman di area konten utama.
+        /// Setelah tersimpan (atau dibatalkan) halaman kembali ke daftar arsip.
+        /// </summary>
+        private Task BukaFormulirAsync(DataKeputusan? editData, DataKeputusan? prefill)
         {
             try
             {
-                var window = _inputWindowFactory(_jenisKeputusan, null);
-                window.Owner = System.Windows.Application.Current?.MainWindow;
-                if (window.ShowDialog() == true)
-                {
-                    await LoadAsync();
-                }
+                var vm = _inputFactory(_jenisKeputusan, editData, prefill);
+                vm.Tersimpan += () => _ = LoadAsync();
+                vm.RequestClose += () => _navigation.Navigate(this);
+                _navigation.Navigate(vm);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal membuka formulir input keputusan {Jenis}", _jenisKeputusan);
-                await _messageService.ShowErrorAsync("Gagal membuka formulir input: " + ex.Message);
+                return _messageService.ShowErrorAsync("Gagal membuka formulir input: " + ex.Message);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private async Task SalinAsync()
+        {
+            if (SelectedRow == null) return;
+            try
+            {
+                var salinan = new DataKeputusan
+                {
+                    JenisKeputusan = SelectedRow.Data.JenisKeputusan,
+                    Nomor = SelectedRow.Data.Nomor,
+                    Tanggal = SelectedRow.Data.Tanggal,
+                    Tentang = SelectedRow.Data.Tentang,
+                    Keterangan = SelectedRow.Data.Keterangan,
+                    FileWord = null
+                };
+                await BukaFormulirAsync(null, salinan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka formulir salin keputusan {Jenis}", _jenisKeputusan);
+                await _messageService.ShowErrorAsync("Gagal membuka formulir salin: " + ex.Message);
             }
         }
 
@@ -280,12 +366,7 @@ namespace SuDesApp.Wpf.ViewModels
             if (SelectedRow == null) return;
             try
             {
-                var window = _inputWindowFactory(_jenisKeputusan, SelectedRow.Data);
-                window.Owner = System.Windows.Application.Current?.MainWindow;
-                if (window.ShowDialog() == true)
-                {
-                    await LoadAsync();
-                }
+                await BukaFormulirAsync(SelectedRow.Data, null);
             }
             catch (Exception ex)
             {
