@@ -1,0 +1,145 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Kartu pemberitahuan inline bersama (lihat ViewModels/PesanInline.cs).
+
+        Seluruh halaman memakai bentuk yang sama supaya kabar aplikasi konsisten dan
+        tidak lagi muncul sebagai dialog popup yang menutupi pekerjaan pengguna:
+        warna kartu mengikuti jenis pesan, ada tombol ✕, dan kartu keputusan
+        menambahkan tombol jawabannya di dalam kartunya.
+
+        Pemakaian di halaman:
+            <ItemsControl ItemsSource="{Binding Pesan}"
+                          Visibility="{Binding Pesan.Ada, Converter={StaticResource PesanInlineVis}}"
+                          ItemTemplate="{StaticResource KartuPesanInline}"/>
+    -->
+    <!-- Konverter sendiri supaya kamus ini bisa dipakai halaman mana pun tanpa
+         bergantung pada konverter milik App.xaml. -->
+    <BooleanToVisibilityConverter x:Key="PesanInlineVis"/>
+
+    <!-- Tombol kartu memakai gaya tombol aplikasi (Themes/ThemeStyles.xaml) lewat
+         DynamicResource: kamus ini digabung (merge) ke App.xaml, jadi rujukan
+         DynamicResource pasti menemukan gayanya saat kartu dipakai — sama seperti
+         halaman-halaman lain. -->
+
+    <Style x:Key="PesanInlineKartu" TargetType="Border">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="14,12"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding NamaJenis}" Value="Sukses">
+                <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding NamaJenis}" Value="Peringatan">
+                <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding NamaJenis}" Value="Galat">
+                <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding NamaJenis}" Value="Pertanyaan">
+                <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="PesanInlineIkon" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="Margin" Value="0,0,10,0"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding NamaJenis}" Value="Sukses">
+                <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding NamaJenis}" Value="Peringatan">
+                <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding NamaJenis}" Value="Galat">
+                <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="PesanInlineJudul" TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding NamaJenis}" Value="Peringatan">
+                <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding NamaJenis}" Value="Galat">
+                <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="PesanInlineTutup" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Width" Value="26"/>
+        <Setter Property="Height" Value="26"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="Content" Value="&#x2715;"/>
+        <Setter Property="ToolTip" Value="Tutup pemberitahuan ini"/>
+    </Style>
+
+    <!-- Satu kartu pemberitahuan siap pakai: ikon, judul, isi, (pertanyaan + tombol
+         jawaban bila kartunya kartu keputusan), dan tombol tutup. -->
+    <DataTemplate x:Key="KartuPesanInline">
+        <Border Style="{StaticResource PesanInlineKartu}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding Ikon, Mode=OneWay}"
+                           Style="{StaticResource PesanInlineIkon}"/>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="{Binding Judul, Mode=OneWay}"
+                               Style="{StaticResource PesanInlineJudul}"/>
+
+                    <TextBlock Text="{Binding Isi, Mode=OneWay}" TextWrapping="Wrap"
+                               FontSize="12" Margin="0,4,0,0" LineHeight="18"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                    <TextBlock Text="{Binding Pertanyaan, Mode=OneWay}" TextWrapping="Wrap"
+                               FontSize="12.5" FontWeight="SemiBold" Margin="0,10,0,0"
+                               Foreground="{DynamicResource TextBrush}"
+                               Visibility="{Binding AdaPertanyaan, Converter={StaticResource PesanInlineVis}}"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0"
+                                Visibility="{Binding AdaPertanyaan, Converter={StaticResource PesanInlineVis}}">
+                        <Button Content="{Binding TeksYa, Mode=OneWay}"
+                                Command="{Binding JawabYaCommand}"
+                                Height="32" Padding="14,0"
+                                Style="{DynamicResource SuccessButton}"/>
+                        <Button Content="{Binding TeksTidak, Mode=OneWay}"
+                                Command="{Binding JawabTidakCommand}"
+                                Height="32" Padding="14,0" Margin="8,0,0,0"
+                                Style="{DynamicResource OutlineButton}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button Grid.Column="2"
+                        Command="{Binding TutupCommand}"
+                        Style="{StaticResource PesanInlineTutup}"
+                        Visibility="{Binding BisaDitutup, Converter={StaticResource PesanInlineVis}}"
+                        AutomationProperties.Name="Tutup pemberitahuan"/>
+            </Grid>
+        </Border>
+    </DataTemplate>
+</ResourceDictionary>

@@ -38,6 +38,10 @@ namespace SuDesApp.Wpf.Services
         private string _current = DefaultTheme;
         private bool _isApplying = false;
 
+        /// <summary>Dinyalakan setelah tema benar-benar diterapkan ke ResourceDictionary
+        /// aplikasi. Dipakai jendela untuk memperbarui ikonnya agar ikut warna tema.</summary>
+        public event Action? TemaBerubah;
+
         public ThemeService(ILogger<ThemeService> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -206,6 +210,7 @@ namespace SuDesApp.Wpf.Services
 
                 _current = theme;
                 _logger.LogInformation("Tema diterapkan: {Theme}", theme);
+                TemaBerubah?.Invoke();
             }
             finally
             {
