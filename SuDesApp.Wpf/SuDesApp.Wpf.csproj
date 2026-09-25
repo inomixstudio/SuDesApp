@@ -11,8 +11,8 @@
     <AssemblyName>SuDesApp</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-    <AssemblyVersion>2.5.3.0</AssemblyVersion>
-    <FileVersion>2.5.3.0</FileVersion>
+    <AssemblyVersion>2.5.4.0</AssemblyVersion>
+    <FileVersion>2.5.4.0</FileVersion>
     <!-- Identitas aplikasi: tampil di halaman Tentang (detail aplikasi) -->
     <Product>SuDesApp</Product>
     <Company>Sumberjaya Dev.</Company>
