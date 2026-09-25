@@ -27,3 +27,7 @@ pdf-gallery/
 *.suo
 Thumbs.db
 desktop.ini
+
+# ===== Rahasia build lokal (TIDAK PERNAH ter-commit) =====
+# Kredensial OAuth Google asli — salin manual antar mesin build, jangan via git.
+SuDesApp.Core/Utilities/GoogleClientCredentialsBawaan.lokal.cs
