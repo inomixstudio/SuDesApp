@@ -5,6 +5,7 @@ using SuDesApp.Configuration;
 using SuDesApp.Interfaces;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
+using SuDesApp.Services;
 using SuDesApp.Wpf.Input;
 using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Wpf.Services;
@@ -26,6 +27,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly NavigationService _navigation;
         private readonly Func<string, string, int?, PdfPreviewViewModel> _previewFactory;
         private readonly IPeringatanDataDesaContoh? _peringatan;
+        private readonly SuratSaveService _simpanService;
         private readonly ILogger<InputWindowViewModel> _logger;
 
         private ISuratInput? _input;
@@ -55,6 +57,7 @@ namespace SuDesApp.Wpf.ViewModels
             AppConfig appConfig,
             NavigationService navigation,
             Func<string, string, int?, PdfPreviewViewModel> previewFactory,
+            SuDesApp.Services.SuratSaveService simpanService,
             ILogger<InputWindowViewModel> logger,
             IPeringatanDataDesaContoh? peringatan = null)
         {
@@ -65,6 +68,7 @@ namespace SuDesApp.Wpf.ViewModels
             _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
+            _simpanService = simpanService ?? throw new ArgumentNullException(nameof(simpanService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             _peringatan = peringatan;
@@ -309,7 +313,7 @@ namespace SuDesApp.Wpf.ViewModels
                 }
                 else
                 {
-                    await SaveNewAsync();
+                    await SaveNewAsync(ModeSimpan.Aktif);
                 }
             }
             catch (ValidationException ex)
@@ -328,8 +332,12 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        /// <summary>Alur surat baru: validasi -> insert -> generate PDF -> pratinjau.</summary>
-        private async Task SaveNewAsync()
+        /// <summary>
+        /// Alur surat baru: kumpul → validasi sesuai mode (draft eksplisit) →
+        /// insert atomik → generate PDF → pratinjau. Semua keputusan simpan
+        /// di SuratSaveService; VM hanya menyiapkan objek dan menampilkan hasil.
+        /// </summary>
+        private async Task SaveNewAsync(ModeSimpan mode)
         {
             await EnsureNomorSuratAsync();
 
@@ -340,44 +348,46 @@ namespace SuDesApp.Wpf.ViewModels
                 _unitOfWork.JenisSuratRepository,
                 _serviceProvider.GetService<ILogger<SuratData>>());
 
-            await _input!.CollectDataAsync(suratData);
-
-            var errors = await suratData.ValidateAsync();
-            if (errors.Any())
-            {
-                Pesan.Peringatan("Surat belum dapat disimpan",
-                    "Lengkapi dulu isian berikut:\n" + string.Join("\n", errors), "simpan-surat");
-                return;
-            }
-
-            // Status default surat baru: Aktif. (SaveSuratAsDraftAsync mengubahnya
-            // menjadi Draft untuk jalur "batal lalu simpan sebagai draft".)
-            suratData.Status = "Active";
-
-            int idSurat = await _unitOfWork.SuratRepository.AddSuratAsync(suratData);
+            var hasil = await _simpanService.SimpanBaruAsync(
+                suratData,
+                mode,
+                s => _input!.CollectDataAsync(s, mode));
 
             await suratData.EnsureDesaDataLoadedAsync(_unitOfWork.DesaRepository);
 
-            var pdfPath = await GeneratePdfAsync(suratData, idSurat);
+            var pdfPath = await GeneratePdfAsync(suratData, hasil.ID_Surat);
             if (pdfPath != null)
             {
                 _logger.LogInformation("PDF dibuat: {Path}", pdfPath);
                 var preview = _previewFactory(
-                    $"Surat {suratData.NamaJenis} — {suratData.NomorSurat}", pdfPath, idSurat);
+                    $"Surat {suratData.NamaJenis} — {suratData.NomorSurat}", pdfPath, hasil.ID_Surat);
                 _navigation.Navigate(preview);
             }
 
-            Pesan.Sukses("Surat berhasil disimpan",
-                $"Surat bernomor {suratData.NomorSurat} sudah tersimpan, dan pratinjaunya dibuka.",
-                "simpan-surat");
-            SuratSaved?.Invoke(idSurat);
+            if (hasil.Status == "Draft")
+            {
+                Pesan.Sukses("Surat tersimpan",
+                    $"Surat disimpan sebagai DRAFT (No. {suratData.NomorSurat}). " +
+                    "Lengkapi datanya lewat klik kanan surat di Register → Edit.",
+                    "simpan-surat");
+            }
+            else
+            {
+                Pesan.Sukses("Surat berhasil disimpan",
+                    $"Surat bernomor {suratData.NomorSurat} sudah tersimpan, dan pratinjaunya dibuka.",
+                    "simpan-surat");
+            }
+            SuratSaved?.Invoke(hasil.ID_Surat);
 
-            // Tidak lagi memanggil RequestClose di sini: saat form dipasang di content
+            // Tidak memanggil RequestClose di sini: saat form dipasang di content
             // host utama (bukan modal), navigasi ke pratinjau sudah mengganti konten.
             // RequestClose hanya dipakai jalur batal/penyimpanan draft.
         }
 
-        /// <summary>Alur edit: muat baris yang ada -> isi dari form -> UpdateAsync -> PDF baru.</summary>
+        /// <summary>
+        /// Alur edit: muat baris yang ada → kumpul sesuai mode → UpdateAsync → PDF baru.
+        /// Draft yang belum lengkap tetap tersimpan; yang sudah lengkap naik ke Aktif.
+        /// </summary>
         private async Task SaveEditAsync()
         {
             var existing = await _unitOfWork.SuratRepository.GetByIdAsync(_editSuratId);
@@ -390,64 +400,44 @@ namespace SuDesApp.Wpf.ViewModels
                 return;
             }
 
-            // Kunci nomor: edit tidak boleh mengubah nomor surat (menghindari duplikat).
-            var nomorAsli = existing.NomorSurat;
             var statusAsli = existing.Status;
             var wasDraft = string.Equals(statusAsli, "Draft", StringComparison.OrdinalIgnoreCase);
+            var mode = wasDraft ? ModeSimpan.Draft : ModeSimpan.Aktif;
 
-            await _input!.CollectDataAsync(existing);
-
-            // Kembalikan nomor yang terkunci setelah CollectData menimpanya.
-            existing.NomorSurat = nomorAsli;
-            existing.Status = string.IsNullOrWhiteSpace(statusAsli) ? "Draft" : statusAsli;
-
-            // Ukur kelengkapan dengan validasi ketat (status Aktif sementara agar
-            // validator tidak kena short-circuit mode Draft).
-            existing.Status = "Active";
-            var errors = (await existing.ValidateAsync()).ToList();
-            existing.Status = statusAsli ?? "Draft";
-
-            if (wasDraft)
+            try
             {
-                // Draft yang kini sudah lengkap otomatis naik ke Aktif;
-                // yang masih belum lengkap tetap Draft (dapat disimpan tanpa diblokir).
-                existing.Status = errors.Any() ? "Draft" : "Active";
+                var hasil = await _simpanService.PerbaruiAsync(existing, mode,
+                    s => _input!.CollectDataAsync(s, mode));
+
+                await existing.EnsureDesaDataLoadedAsync(_unitOfWork.DesaRepository);
+
+                var pdfPath = await GeneratePdfAsync(existing, existing.ID_Surat);
+                if (pdfPath != null)
+                {
+                    _logger.LogInformation("PDF hasil edit dibuat: {Path}", pdfPath);
+                    var preview = _previewFactory(
+                        $"Surat {existing.NamaJenis} — {existing.NomorSurat}", pdfPath, existing.ID_Surat);
+                    _navigation.Navigate(preview);
+                }
+
+                Pesan.Sukses("Perubahan surat tersimpan",
+                    $"Surat nomor {existing.NomorSurat} sudah diperbarui, dan pratinjaunya dibuka ulang.",
+                    "simpan-surat");
+                SuratSaved?.Invoke(existing.ID_Surat);
             }
-            else if (errors.Any())
+            catch (ValidationException ex)
             {
                 Pesan.Peringatan("Perubahan belum tersimpan",
-                    "Lengkapi dulu isian berikut:\n" + string.Join("\n", errors), "simpan-surat");
-                return;
+                    ex.Message.Replace("Surat belum lengkap: ", "Lengkapi dulu isian berikut:\n").Replace("; ", "\n"),
+                    "simpan-surat");
             }
-
-            var ok = await _unitOfWork.SuratRepository.UpdateAsync(existing);
-            if (!ok)
+            catch (InvalidOperationException ex)
             {
                 Pesan.Galat("Gagal menyimpan perubahan",
                     "Perubahan surat tidak tersimpan di database. Coba ulangi sebentar lagi.",
                     "simpan-surat");
-                return;
+                _logger.LogError(ex, "Gagal update surat #{Id}", _editSuratId);
             }
-
-            await existing.EnsureDesaDataLoadedAsync(_unitOfWork.DesaRepository);
-
-            var pdfPath = await GeneratePdfAsync(existing, existing.ID_Surat);
-            if (pdfPath != null)
-            {
-                _logger.LogInformation("PDF hasil edit dibuat: {Path}", pdfPath);
-                var preview = _previewFactory(
-                    $"Surat {existing.NamaJenis} — {existing.NomorSurat}", pdfPath, existing.ID_Surat);
-                _navigation.Navigate(preview);
-            }
-
-            Pesan.Sukses("Perubahan surat tersimpan",
-                $"Surat nomor {existing.NomorSurat} sudah diperbarui, dan pratinjaunya dibuka ulang.",
-                "simpan-surat");
-            SuratSaved?.Invoke(existing.ID_Surat);
-
-            // Tidak lagi memanggil RequestClose di sini: saat form dipasang di content
-            // host utama (bukan modal), navigasi ke pratinjau sudah mengganti konten.
-            // RequestClose hanya dipakai jalur batal/penyimpanan draft.
         }
 
         /// <summary>
@@ -507,59 +497,14 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Simpan isian saat ini sebagai surat DRAFT tanpa validasi ketat (boleh belum lengkap).
+        /// Simpan isian saat ini sebagai surat DRAFT (boleh belum lengkap).
         /// Bila data ternyata sudah lengkap/valid, surat langsung dianggap Aktif.
         /// </summary>
         private async Task SaveSuratAsDraftAsync()
         {
-            // Alur draft: izinkan isian belum lengkap — tanpa validasi ketat dan
-            // tanpa menulis tabel Warga (dibuat saat insert oleh repository).
-            if (_input is BaseSuratInputViewModel draftInput)
-                draftInput.DraftToleran = true;
-            try
-            {
-                await SaveSuratAsDraftCoreAsync();
-            }
-            finally
-            {
-                if (_input is BaseSuratInputViewModel resetInput)
-                    resetInput.DraftToleran = false;
-            }
-        }
+            await SaveNewAsync(ModeSimpan.Draft);
 
-        private async Task SaveSuratAsDraftCoreAsync()
-        {
-            await EnsureNomorSuratAsync();
-
-            var suratData = new SuratData(
-                _unitOfWork.SuratRepository,
-                _unitOfWork.WargaRepository,
-                _unitOfWork.DesaRepository,
-                _unitOfWork.JenisSuratRepository,
-                _serviceProvider.GetService<ILogger<SuratData>>());
-
-            await _input!.CollectDataAsync(suratData);
-
-            // Ukur kelengkapan dengan validasi KETAT: set status Aktif dulu agar
-            // validator tidak kena short-circuit mode Draft (Status default-nya "Draft").
-            suratData.Status = "Active";
-            var errors = (await suratData.ValidateAsync()).ToList();
-
-            // Data belum lengkap → simpan sebagai Draft (validasi ketat dilewati saat insert);
-            // data lengkap → tetap Aktif.
-            if (errors.Any()) suratData.Status = "Draft";
-
-            int idSurat = await _unitOfWork.SuratRepository.AddSuratAsync(suratData);
-
-            var pdfPath = await GeneratePdfAsync(suratData, idSurat);
-
-            Pesan.Sukses("Surat tersimpan",
-                suratData.Status == "Draft"
-                    ? $"Surat disimpan sebagai DRAFT (No. {suratData.NomorSurat}). " +
-                      "Lengkapi datanya lewat klik kanan surat di Register → Edit."
-                    : $"Surat lengkap tersimpan (No. {suratData.NomorSurat}).",
-                "simpan-surat");
-
+            // Jalur batal/penyimpanan draft menutup form (paritas perilaku lama).
             RequestClose?.Invoke();
         }
 

@@ -41,17 +41,20 @@ namespace SuDesApp.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppConfig _appConfig;
         private readonly NtcrGenerator _generator;
+        private readonly SuratSaveService _simpanService;
         private readonly ILogger<NtcrPaketService> _logger;
 
         public NtcrPaketService(
             IUnitOfWork unitOfWork,
             AppConfig appConfig,
             NtcrGenerator generator,
+            SuratSaveService simpanService,
             ILogger<NtcrPaketService> logger)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
             _generator = generator ?? throw new ArgumentNullException(nameof(generator));
+            _simpanService = simpanService ?? throw new ArgumentNullException(nameof(simpanService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -98,14 +101,16 @@ namespace SuDesApp.Services
 
             // ATOMIK: seluruh blanko tersimpan dalam SATU transaksi — jika satu
             // blanko gagal (nomor dobel, data rusak, dsb.), tidak ada blanko parsial
-            // yang tertinggal di register.
+            // yang tertinggal di register. Penyimpanan per blanko lewat
+            // SuratSaveService (pemilik alur simpan di Core).
             var tersimpan = await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
                 var daftar = new List<SuratData>(jenis.Count);
                 foreach (var namaJenis in jenis)
                 {
                     var surat = BuatSalinan(master, namaJenis);
-                    int id = await _unitOfWork.SuratRepository.AddSuratAsync(surat, _unitOfWork.CurrentTransaction, cancellationToken);
+                    int id = await _simpanService.SimpanDalamTransaksiAsync(
+                        surat, _unitOfWork.CurrentTransaction!, cancellationToken);
                     surat.ID_Surat = id;
                     daftar.Add(surat);
                 }

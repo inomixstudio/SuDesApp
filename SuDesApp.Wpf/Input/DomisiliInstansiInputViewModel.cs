@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.Data.Models;
+using SuDesApp.Services;
 using SuDesApp.Utilities;
 
 namespace SuDesApp.Wpf.Input
@@ -73,11 +74,11 @@ namespace SuDesApp.Wpf.Input
             return Task.CompletedTask;
         }
 
-        public override async Task CollectDataAsync(SuratData? suratData)
+        public override async Task CollectDataAsync(SuratData? suratData, ModeSimpan mode)
         {
             if (suratData == null) throw new ArgumentNullException(nameof(suratData));
 
-            if (!ValidateInput(out _))
+            if (mode == ModeSimpan.Aktif && !ValidateInput(out _))
                 throw new ValidationException("Validasi input gagal");
 
             suratData.Warga = null;

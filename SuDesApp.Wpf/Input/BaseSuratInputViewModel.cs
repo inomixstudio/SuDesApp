@@ -7,6 +7,7 @@ using SuDesApp.Configuration;
 using SuDesApp.Interfaces;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
+using SuDesApp.Services;
 using SuDesApp.Wpf.Input;
 using SuDesApp.Wpf.Mvvm;
 using Validator = SuDesApp.Utilities.Validator;
@@ -138,13 +139,12 @@ namespace SuDesApp.Wpf.Input
         protected virtual void ValidateSpecificFields(List<string> errors) { }
 
         /// <summary>
-        /// Mode alur "Batal → simpan sebagai DRAFT": true berarti isian yang belum
-        /// lengkap tetap dikumpulkan tanpa validasi ketat dan tanpa menyentuh tabel
-        /// Warga (dibuat nanti saat insert oleh repository). Inti draft adalah data
-        /// boleh belum lengkap. Diatur oleh host alur (InputWindowViewModel), bukan
-        /// oleh tipe form — jadi NTCR berperilaku sama dengan jenis surat lain.
+        /// [USANG] Flag ambient era pra-SuratSaveService. Selalu false; dipertahankan
+        /// sementara hanya agar tidak memutus pemanggil luar. Keputusan draft kini
+        /// lewat parameter ModeSimpan pada CollectDataAsync.
         /// </summary>
-        public bool DraftToleran { get; set; }
+        [Obsolete("Gunakan ModeSimpan pada CollectDataAsync (lihat SuratSaveService)")]
+        public bool DraftToleran => false;
 
         /// <summary>Dipanggil saat form dibuka (surat baru).</summary>
         public virtual async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -349,16 +349,16 @@ namespace SuDesApp.Wpf.Input
             await FillAlamatAsync(warga.Dusun, warga.Desa, warga.Kecamatan, warga.Kabupaten);
         }
 
-        public virtual async Task CollectDataAsync(SuratData? suratData)
+        public virtual async Task CollectDataAsync(SuratData? suratData, ModeSimpan mode)
         {
             if (suratData == null) throw new ArgumentNullException(nameof(suratData));
 
             suratData.Warga = CollectBasicWargaData();
 
-            if (DraftToleran)
+            if (mode == ModeSimpan.Draft)
             {
                 // Alur draft: kumpulkan isian tanpa memblokir — data yang belum
-                // lengkap diukur kemudian oleh pemanggil (ValidateAsync pada
+                // lengkap diukur kemudian oleh SuratSaveService (ValidateAsync pada
                 // SuratData), dan warga baru dibuat saat insert (paritas jalur
                 // non-draft lewat GetOrCreateWargaAsync).
                 await CollectSuratSpecificData(suratData);

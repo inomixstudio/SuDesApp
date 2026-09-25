@@ -598,6 +598,9 @@ namespace SuDesApp.Wpf
             services.AddTransient<NtcrInputViewModel>();
             // Alur paket NTCR: satu form untuk seluruh blanko N1–N6 sekaligus.
             services.AddTransient<NtcrPaketViewModel>();
+            // Pemilik alur simpan surat (validasi draft eksplisit, transaksi atomik,
+            // penomoran) — dipakai InputWindowViewModel & NtcrPaketService.
+            services.AddScoped<SuDesApp.Services.SuratSaveService>();
             services.AddTransient<SuDesApp.Services.NtcrPaketService>();
 
             // ==== Generator PDF surat (transient; di-resolve dalam scope input surat) ====

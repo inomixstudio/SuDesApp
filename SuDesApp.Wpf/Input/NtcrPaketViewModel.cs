@@ -328,7 +328,8 @@ namespace SuDesApp.Wpf.Input
                     _unitOfWork.JenisSuratRepository);
 
                 // Validasi form mengikuti blanko yang dicentang (IsN1..IsN6).
-                await CollectDataAsync(master);
+                // Paket selalu ketat: seluruh blanko harus lengkap sebelum disimpan.
+                await CollectDataAsync(master, ModeSimpan.Aktif);
                 master.Keterangan = GetKeteranganTextBox();
 
                 StatusText = "Menyimpan surat & membuat berkas gabungan…";

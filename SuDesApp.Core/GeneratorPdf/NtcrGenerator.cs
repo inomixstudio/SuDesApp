@@ -85,7 +85,7 @@ namespace SuDesApp.GeneratorPdf
         /// QuestPDF merender secara sinkron; metode ini mengembalikan Task agar
         /// seragam dengan sebutan generator lain saat dipanggil dari alur async.
         /// </remarks>
-        public Task GeneratePaketPdfAsync(
+        public virtual Task GeneratePaketPdfAsync(
             Stream outputStream,
             IReadOnlyList<SuratData> daftarBlanko,
             string? keteranganTextBox = null,
