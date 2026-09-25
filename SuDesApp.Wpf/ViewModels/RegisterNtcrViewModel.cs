@@ -56,7 +56,8 @@ namespace SuDesApp.Wpf.ViewModels
             IServiceProvider serviceProvider,
             NavigationService navigation,
             Func<string, string, int?, PdfPreviewViewModel> previewFactory,
-            PdfPrintService pdfPrintService)
+            PdfPrintService pdfPrintService,
+            IPeringatanDataDesaContoh? peringatan = null)
             : base(
                 unitOfWork,
                 loggerFactory,
@@ -67,7 +68,8 @@ namespace SuDesApp.Wpf.ViewModels
                 serviceProvider,
                 navigation,
                 previewFactory,
-                pdfPrintService)
+                pdfPrintService,
+                peringatan)
         {
         }
 

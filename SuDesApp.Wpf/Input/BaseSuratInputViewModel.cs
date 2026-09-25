@@ -137,6 +137,15 @@ namespace SuDesApp.Wpf.Input
         protected virtual Task CollectSpecificDataAsync(SuratData? suratData) => Task.CompletedTask;
         protected virtual void ValidateSpecificFields(List<string> errors) { }
 
+        /// <summary>
+        /// Mode alur "Batal → simpan sebagai DRAFT": true berarti isian yang belum
+        /// lengkap tetap dikumpulkan tanpa validasi ketat dan tanpa menyentuh tabel
+        /// Warga (dibuat nanti saat insert oleh repository). Inti draft adalah data
+        /// boleh belum lengkap. Diatur oleh host alur (InputWindowViewModel), bukan
+        /// oleh tipe form — jadi NTCR berperilaku sama dengan jenis surat lain.
+        /// </summary>
+        public bool DraftToleran { get; set; }
+
         /// <summary>Dipanggil saat form dibuka (surat baru).</summary>
         public virtual async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
@@ -346,6 +355,16 @@ namespace SuDesApp.Wpf.Input
 
             suratData.Warga = CollectBasicWargaData();
 
+            if (DraftToleran)
+            {
+                // Alur draft: kumpulkan isian tanpa memblokir — data yang belum
+                // lengkap diukur kemudian oleh pemanggil (ValidateAsync pada
+                // SuratData), dan warga baru dibuat saat insert (paritas jalur
+                // non-draft lewat GetOrCreateWargaAsync).
+                await CollectSuratSpecificData(suratData);
+                return;
+            }
+
             if (!ValidateInput(out _))
                 throw new ValidationException("Validasi input gagal");
 
@@ -377,7 +396,7 @@ namespace SuDesApp.Wpf.Input
                 throw new InvalidOperationException("WargaRepository tidak tersedia");
 
             int idWarga = await _unitOfWork.WargaRepository.AddOrUpdateWargaAndGetIdAsync(suratData.Warga!);
-            suratData.Warga.ID_Warga = idWarga;
+            suratData.Warga!.ID_Warga = idWarga;
         }
 
         private async Task CollectSuratSpecificData(SuratData suratData)

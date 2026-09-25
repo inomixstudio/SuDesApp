@@ -19,6 +19,12 @@ namespace SuDesApp.Configuration
         Task CommitTransactionAsync();
         Task RollbackTransactionAsync();
 
+        /// <summary>Jalankan operasi dalam satu transaksi: gagal = rollback penuh.</summary>
+        Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> operation);
+
+        /// <summary>Jalankan operasi dalam satu transaksi (tanpa nilai balik).</summary>
+        Task ExecuteInTransactionAsync(Func<Task> operation);
+
         IDbTransaction? CurrentTransaction { get; }
         SqliteConnection Connection { get; }
         bool HasActiveTransaction { get; }

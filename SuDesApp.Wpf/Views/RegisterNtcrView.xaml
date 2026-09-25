@@ -114,13 +114,23 @@
     <Grid Margin="16,12,16,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- 0: Page Title -->
-            <RowDefinition Height="Auto"/> <!-- 1: KPI Cards -->
-            <RowDefinition Height="Auto"/> <!-- 2: Action & Search Toolbar -->
-            <RowDefinition Height="Auto"/> <!-- 3: Category Filter Bar -->
-            <RowDefinition Height="Auto"/> <!-- 4: Progress Bar -->
-            <RowDefinition Height="*"/>    <!-- 5: DataGrid & Empty State -->
-            <RowDefinition Height="Auto"/> <!-- 6: Footer & Paging -->
+            <RowDefinition Height="Auto"/> <!-- 1: Pemberitahuan inline (kartu, bukan popup) -->
+            <RowDefinition Height="Auto"/> <!-- 2: KPI Cards -->
+            <RowDefinition Height="Auto"/> <!-- 3: Action & Search Toolbar -->
+            <RowDefinition Height="Auto"/> <!-- 4: Category Filter Bar -->
+            <RowDefinition Height="Auto"/> <!-- 5: Progress Bar -->
+            <RowDefinition Height="*"/>    <!-- 6: DataGrid & Empty State -->
+            <RowDefinition Height="Auto"/> <!-- 7: Footer & Paging -->
         </Grid.RowDefinitions>
+
+        <!-- ===== Row 1: Pemberitahuan inline =====
+             Register NTCR memakai view model register surat, jadi kabar halaman
+             (ekspor, statistik, kegagalan cetak) juga tampil di sini sebagai kartu. -->
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Pesan}"
+                      Visibility="{Binding Pesan.Ada, Converter={StaticResource BoolToVis}}"
+                      ItemTemplate="{StaticResource KartuPesanInline}"
+                      Margin="0,0,0,12"
+                      AutomationProperties.Name="Pemberitahuan register NTCR"/>
 
         <!-- ===== Row 0: Page Header ===== -->
         <Border Grid.Row="0" Style="{StaticResource PageHeader}">
@@ -138,7 +148,7 @@
         </Border>
 
         <!-- ===== Row 1: Top KPI Metric Cards ===== -->
-        <Grid Grid.Row="1" Margin="0,0,0,12">
+        <Grid Grid.Row="2" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -216,7 +226,7 @@
         </Grid>
 
         <!-- ===== Row 1: Action & Search Toolbar ===== -->
-        <Border Grid.Row="2" Style="{StaticResource ToolbarCard}">
+        <Border Grid.Row="3" Style="{StaticResource ToolbarCard}">
             <!-- WrapPanel: toolbar membungkus ke baris berikutnya saat jendela sempit,
                  sehingga tombol aksi kanan tidak pernah terpotong. -->
             <WrapPanel Orientation="Horizontal">
@@ -329,7 +339,7 @@
         </Border>
 
         <!-- ===== Row 2: Category Filter Bar ===== -->
-        <Border Grid.Row="3" Style="{StaticResource ToolbarCard}" Padding="12,8">
+        <Border Grid.Row="4" Style="{StaticResource ToolbarCard}" Padding="12,8">
             <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <!-- Jenis Surat -->
                 <StackPanel Orientation="Horizontal" Margin="0,2,16,2" VerticalAlignment="Center">
@@ -385,12 +395,12 @@
         </Border>
 
         <!-- ===== Row 3: Indeterminate ProgressBar ===== -->
-        <ProgressBar Grid.Row="4" IsIndeterminate="True" Height="3" Margin="0,-4,0,6"
+        <ProgressBar Grid.Row="5" IsIndeterminate="True" Height="3" Margin="0,-4,0,6"
                      Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
                      Foreground="{DynamicResource PrimaryBrush}"/>
 
         <!-- ===== Row 4: Modern DataGrid & Empty State ===== -->
-        <Border Grid.Row="5" Style="{StaticResource GridHostCard}">
+        <Border Grid.Row="6" Style="{StaticResource GridHostCard}">
             <Grid>
             <!-- Overlay spinner: tampil saat PDF surat sedang di-generate (pratinjau/cetak/ekspor).
                  Rotasi via RenderTransform (tanpa re-layout), transparan 85% menutupi grid. -->
@@ -526,7 +536,7 @@
         </Border>
 
         <!-- ===== Row 5: Footer & Pagination Bar ===== -->
-        <Border Grid.Row="6" Background="Transparent" Padding="0,10,0,0">
+        <Border Grid.Row="7" Background="Transparent" Padding="0,10,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

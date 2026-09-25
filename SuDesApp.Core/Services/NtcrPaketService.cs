@@ -96,14 +96,21 @@ namespace SuDesApp.Services
             if (master.Desa == null || string.IsNullOrWhiteSpace(master.Desa.NamaDesa))
                 master.Desa = await _unitOfWork.DesaRepository.GetInfoDesaAsync() ?? master.Desa;
 
-            var tersimpan = new List<SuratData>(jenis.Count);
-            foreach (var namaJenis in jenis)
+            // ATOMIK: seluruh blanko tersimpan dalam SATU transaksi — jika satu
+            // blanko gagal (nomor dobel, data rusak, dsb.), tidak ada blanko parsial
+            // yang tertinggal di register.
+            var tersimpan = await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                var surat = BuatSalinan(master, namaJenis);
-                int id = await _unitOfWork.SuratRepository.AddSuratAsync(surat, null, cancellationToken);
-                surat.ID_Surat = id;
-                tersimpan.Add(surat);
-            }
+                var daftar = new List<SuratData>(jenis.Count);
+                foreach (var namaJenis in jenis)
+                {
+                    var surat = BuatSalinan(master, namaJenis);
+                    int id = await _unitOfWork.SuratRepository.AddSuratAsync(surat, _unitOfWork.CurrentTransaction, cancellationToken);
+                    surat.ID_Surat = id;
+                    daftar.Add(surat);
+                }
+                return daftar;
+            });
 
             string berkasPdf = await TulisBerkasAsync(tersimpan, master.Keterangan, cancellationToken);
 

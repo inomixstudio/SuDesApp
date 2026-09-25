@@ -416,10 +416,10 @@ namespace SuDesApp.Wpf.Input
             ntcr.KeteranganTemuan = KeteranganTemuan.Trim();
             ntcr.TujuanSurat = TujuanSurat.Trim();
 
-            ntcr.AyahCalonSuami.CopyFrom(AyahCalonSuami);
-            ntcr.IbuCalonSuami.CopyFrom(IbuCalonSuami);
-            ntcr.AyahCalonIstri.CopyFrom(AyahCalonIstri);
-            ntcr.IbuCalonIstri.CopyFrom(IbuCalonIstri);
+            ntcr.AyahCalonSuami?.CopyFrom(AyahCalonSuami);
+            ntcr.IbuCalonSuami?.CopyFrom(IbuCalonSuami);
+            ntcr.AyahCalonIstri?.CopyFrom(AyahCalonIstri);
+            ntcr.IbuCalonIstri?.CopyFrom(IbuCalonIstri);
 
             if (suratData.Warga != null)
             {

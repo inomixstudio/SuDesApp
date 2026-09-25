@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:views="clr-namespace:SuDesApp.Wpf.Views"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
              mc:Ignorable="d"
              d:DesignHeight="900" d:DesignWidth="1000"
              FontSize="13"
@@ -24,7 +25,7 @@
         <Border DockPanel.Dock="Top" Style="{StaticResource PageHeader}" Margin="20,20,20,10">
             <StackPanel Orientation="Horizontal">
                 <Border Style="{StaticResource HeaderIconChip}">
-                    <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets"
+                    <TextBlock Text="{x:Static u:IkonMenu.Blanko}" FontFamily="{StaticResource AppIconFont}"
                                Foreground="{DynamicResource PrimaryBrush}"
                                FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>

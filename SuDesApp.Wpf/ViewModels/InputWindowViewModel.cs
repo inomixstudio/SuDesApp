@@ -25,6 +25,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly AppConfig _appConfig;
         private readonly NavigationService _navigation;
         private readonly Func<string, string, int?, PdfPreviewViewModel> _previewFactory;
+        private readonly IPeringatanDataDesaContoh? _peringatan;
         private readonly ILogger<InputWindowViewModel> _logger;
 
         private ISuratInput? _input;
@@ -35,6 +36,8 @@ namespace SuDesApp.Wpf.ViewModels
         private bool _isEditMode;
         private int _editSuratId;
         private string _editOriginalNomor = string.Empty;
+        private bool _tampilPeringatanDataContoh;
+        private string _pesanPeringatanDataContoh = string.Empty;
 
         public event Action? RequestClose;
 
@@ -52,7 +55,8 @@ namespace SuDesApp.Wpf.ViewModels
             AppConfig appConfig,
             NavigationService navigation,
             Func<string, string, int?, PdfPreviewViewModel> previewFactory,
-            ILogger<InputWindowViewModel> logger)
+            ILogger<InputWindowViewModel> logger,
+            IPeringatanDataDesaContoh? peringatan = null)
         {
             _inputFactory = inputFactory ?? throw new ArgumentNullException(nameof(inputFactory));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
@@ -63,8 +67,78 @@ namespace SuDesApp.Wpf.ViewModels
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+            _peringatan = peringatan;
             SaveCommand = new AsyncRelayCommand(SaveAsync);
             CancelCommand = new AsyncRelayCommand(CancelAsync);
+            BukaPengaturanSuratCommand = new RelayCommand(BukaPengaturanSurat);
+        }
+
+        // =================================================================
+        // Pemberitahuan inline (pengganti dialog popup)
+        // =================================================================
+
+        /// <summary>
+        /// Kabar halaman yang tampil di dalam form (bukan dialog popup): hasil simpan,
+        /// data yang belum valid, dan kegagalan membuat PDF. Kartu berkunci sama saling
+        /// menimpa, jadi menekan Simpan berulang tidak menumpuk kartu.
+        /// </summary>
+        public KumpulanPesanInline Pesan { get; } = new();
+
+        // =================================================================
+        // Peringatan data desa contoh (ditampilkan di atas form, bukan dialog)
+        // =================================================================
+
+        /// <summary>
+        /// Benar bila data desa masih contoh sehingga surat ini akan mencetak data
+        /// contoh pada kop dan tanda tangan. Muncul sendiri saat form dibuka.
+        /// </summary>
+        public bool TampilPeringatanDataContoh
+        {
+            get => _tampilPeringatanDataContoh;
+            private set => SetProperty(ref _tampilPeringatanDataContoh, value);
+        }
+
+        /// <summary>Pesan peringatan data desa contoh untuk banner di atas form surat.</summary>
+        public string PesanPeringatanDataContoh
+        {
+            get => _pesanPeringatanDataContoh;
+            private set => SetProperty(ref _pesanPeringatanDataContoh, value ?? string.Empty);
+        }
+
+        /// <summary>Tombol banner: langsung ke Pengaturan Surat (bagian Data Desa).</summary>
+        public RelayCommand BukaPengaturanSuratCommand { get; }
+
+        /// <summary>
+        /// Periksa data desa contoh lalu tampilkan/matikan banner peringatan.
+        /// Dipanggil saat form dibuka supaya pengguna tahu keadaannya sebelum
+        /// menekan Simpan (penjaga kedua tetap aktif saat menyimpan).
+        /// </summary>
+        public async Task PeriksaPeringatanDataContohAsync()
+        {
+            if (_peringatan == null)
+            {
+                return;
+            }
+
+            var keadaan = await _peringatan.PeriksaAsync();
+            TampilPeringatanDataContoh = keadaan.MasihContoh;
+            PesanPeringatanDataContoh = keadaan.MasihContoh
+                ? $"Data desa masih contoh: {keadaan.RingkasField}. Surat ini akan mencetak data contoh itu pada kop dan tanda tangan."
+                : string.Empty;
+        }
+
+        private void BukaPengaturanSurat()
+        {
+            try
+            {
+                var setelan = _serviceProvider.GetRequiredService<SetelanViewModel>();
+                setelan.TampilkanBagian(0);   // bagian 1: Data Desa
+                _navigation.Navigate(setelan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka Pengaturan Surat dari banner peringatan data contoh");
+            }
         }
 
         public string Title
@@ -130,6 +204,10 @@ namespace SuDesApp.Wpf.ViewModels
                 baseVm.SetEditMode(false);
                 _ = InitializeAsync(baseVm);
             }
+
+            // Peringatan data desa contoh muncul sendiri saat form dibuka, supaya
+            // pengguna tahu sebelum menekan Simpan (bukan hanya saat disimpan).
+            _ = PeriksaPeringatanDataContohAsync();
         }
 
         /// <summary>
@@ -159,6 +237,8 @@ namespace SuDesApp.Wpf.ViewModels
                 await baseVm.InitializeAsync();
                 await baseVm.FillDataAsync(existing);
             }
+
+            await PeriksaPeringatanDataContohAsync();
         }
 
         /// <summary>Inisialisasi form lalu isi nomor surat otomatis (paritas WinForms).</summary>
@@ -205,6 +285,21 @@ namespace SuDesApp.Wpf.ViewModels
         {
             if (_input == null || IsBusy) return;
 
+            // Data desa masih contoh: surat resmi akan keluar dengan nama desa/pejabat
+            // contoh. Beri kesempatan menghentikan penyimpanan lebih dulu.
+            if (_peringatan != null)
+            {
+                string kegiatan = _isEditMode
+                    ? "Perubahan surat ini akan disimpan dan dicetak ulang."
+                    : "Surat ini akan disimpan dan dicetak.";
+
+                if (!await _peringatan.BolehLanjutAsync(kegiatan, _messageService))
+                {
+                    await PeriksaPeringatanDataContohAsync();
+                    return;
+                }
+            }
+
             IsBusy = true;
             try
             {
@@ -219,12 +314,13 @@ namespace SuDesApp.Wpf.ViewModels
             }
             catch (ValidationException ex)
             {
-                await _messageService.ShowWarningAsync(ex.Message);
+                Pesan.Peringatan("Isian surat belum lengkap", ex.Message, "simpan-surat");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal menyimpan surat {Template}", _templateName);
-                await _messageService.ShowErrorAsync($"Gagal menyimpan surat: {ex.Message}");
+                Pesan.Galat("Gagal menyimpan surat", $"Surat belum tersimpan. Penyebabnya: {ex.Message}",
+                    "simpan-surat");
             }
             finally
             {
@@ -249,8 +345,8 @@ namespace SuDesApp.Wpf.ViewModels
             var errors = await suratData.ValidateAsync();
             if (errors.Any())
             {
-                await _messageService.ShowWarningAsync(
-                    "Data surat belum valid:\n" + string.Join("\n", errors));
+                Pesan.Peringatan("Surat belum dapat disimpan",
+                    "Lengkapi dulu isian berikut:\n" + string.Join("\n", errors), "simpan-surat");
                 return;
             }
 
@@ -271,7 +367,9 @@ namespace SuDesApp.Wpf.ViewModels
                 _navigation.Navigate(preview);
             }
 
-            await _messageService.ShowInfoAsync($"Surat berhasil disimpan (No. {suratData.NomorSurat}).");
+            Pesan.Sukses("Surat berhasil disimpan",
+                $"Surat bernomor {suratData.NomorSurat} sudah tersimpan, dan pratinjaunya dibuka.",
+                "simpan-surat");
             SuratSaved?.Invoke(idSurat);
 
             // Tidak lagi memanggil RequestClose di sini: saat form dipasang di content
@@ -285,7 +383,9 @@ namespace SuDesApp.Wpf.ViewModels
             var existing = await _unitOfWork.SuratRepository.GetByIdAsync(_editSuratId);
             if (existing == null)
             {
-                await _messageService.ShowErrorAsync($"Surat #{_editSuratId} tidak ditemukan (mungkin sudah dihapus).");
+                Pesan.Galat("Surat tidak ditemukan",
+                    $"Surat #{_editSuratId} mungkin sudah dihapus, jadi perubahannya tidak dapat disimpan.",
+                    "simpan-surat");
                 RequestClose?.Invoke();
                 return;
             }
@@ -315,15 +415,17 @@ namespace SuDesApp.Wpf.ViewModels
             }
             else if (errors.Any())
             {
-                await _messageService.ShowWarningAsync(
-                    "Data surat belum valid:\n" + string.Join("\n", errors));
+                Pesan.Peringatan("Perubahan belum tersimpan",
+                    "Lengkapi dulu isian berikut:\n" + string.Join("\n", errors), "simpan-surat");
                 return;
             }
 
             var ok = await _unitOfWork.SuratRepository.UpdateAsync(existing);
             if (!ok)
             {
-                await _messageService.ShowErrorAsync("Gagal menyimpan perubahan surat.");
+                Pesan.Galat("Gagal menyimpan perubahan",
+                    "Perubahan surat tidak tersimpan di database. Coba ulangi sebentar lagi.",
+                    "simpan-surat");
                 return;
             }
 
@@ -338,7 +440,9 @@ namespace SuDesApp.Wpf.ViewModels
                 _navigation.Navigate(preview);
             }
 
-            await _messageService.ShowInfoAsync($"Perubahan surat No. {existing.NomorSurat} berhasil disimpan.");
+            Pesan.Sukses("Perubahan surat tersimpan",
+                $"Surat nomor {existing.NomorSurat} sudah diperbarui, dan pratinjaunya dibuka ulang.",
+                "simpan-surat");
             SuratSaved?.Invoke(existing.ID_Surat);
 
             // Tidak lagi memanggil RequestClose di sini: saat form dipasang di content
@@ -396,7 +500,9 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal pada alur batal/draft surat {Template}", _templateName);
-                await _messageService.ShowErrorAsync($"Gagal memproses pembatalan: {ex.Message}");
+                Pesan.Galat("Gagal menyimpan draft",
+                    $"Isian surat tidak jadi disimpan sebagai draft. Penyebabnya: {ex.Message}",
+                    "simpan-surat");
             }
         }
 
@@ -405,6 +511,23 @@ namespace SuDesApp.Wpf.ViewModels
         /// Bila data ternyata sudah lengkap/valid, surat langsung dianggap Aktif.
         /// </summary>
         private async Task SaveSuratAsDraftAsync()
+        {
+            // Alur draft: izinkan isian belum lengkap — tanpa validasi ketat dan
+            // tanpa menulis tabel Warga (dibuat saat insert oleh repository).
+            if (_input is BaseSuratInputViewModel draftInput)
+                draftInput.DraftToleran = true;
+            try
+            {
+                await SaveSuratAsDraftCoreAsync();
+            }
+            finally
+            {
+                if (_input is BaseSuratInputViewModel resetInput)
+                    resetInput.DraftToleran = false;
+            }
+        }
+
+        private async Task SaveSuratAsDraftCoreAsync()
         {
             await EnsureNomorSuratAsync();
 
@@ -430,11 +553,12 @@ namespace SuDesApp.Wpf.ViewModels
 
             var pdfPath = await GeneratePdfAsync(suratData, idSurat);
 
-            await _messageService.ShowInfoAsync(
+            Pesan.Sukses("Surat tersimpan",
                 suratData.Status == "Draft"
                     ? $"Surat disimpan sebagai DRAFT (No. {suratData.NomorSurat}). " +
                       "Lengkapi datanya lewat klik kanan surat di Register → Edit."
-                    : $"Surat lengkap tersimpan (No. {suratData.NomorSurat}).");
+                    : $"Surat lengkap tersimpan (No. {suratData.NomorSurat}).",
+                "simpan-surat");
 
             RequestClose?.Invoke();
         }
@@ -447,16 +571,20 @@ namespace SuDesApp.Wpf.ViewModels
                     _serviceProvider, _appConfig, suratData, _logger, _templateName);
                 if (path == null)
                 {
-                    await _messageService.ShowWarningAsync(
-                        $"Surat tersimpan, tapi PDF gagal dibuat untuk jenis {_templateName}.");
+                    Pesan.Peringatan("Surat tersimpan, PDF gagal dibuat",
+                        $"Jenis {_templateName} belum berhasil dibuatkan dokumennya. " +
+                        "Detail penyebab ada di log aplikasi (error.log).",
+                        "pdf-surat");
                 }
                 return path;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal membuat PDF untuk surat #{Id}", idSurat);
-                await _messageService.ShowWarningAsync(
-                    $"Surat tersimpan, tapi PDF gagal dibuat: {ex.Message}");
+                Pesan.Peringatan("Surat tersimpan, PDF gagal dibuat",
+                    $"Suratnya aman di register, hanya dokumen PDF-nya yang belum jadi. " +
+                    $"Penyebabnya: {ex.Message}",
+                    "pdf-surat");
                 return null;
             }
         }

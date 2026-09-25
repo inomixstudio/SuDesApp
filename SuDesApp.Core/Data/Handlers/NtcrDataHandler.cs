@@ -316,10 +316,10 @@ namespace SuDesApp.Data.Handlers
                 ntcr.KabupatenNumpang = detail.KabupatenNumpang;
                 ntcr.KecamatanIstri = detail.KecamatanIstri;
                 ntcr.KabupatenIstri = detail.KabupatenIstri;
-                ntcr.AyahCalonSuami.CopyFrom(detail.AyahCalonSuami!);
-                ntcr.IbuCalonSuami.CopyFrom(detail.IbuCalonSuami!);
-                ntcr.AyahCalonIstri.CopyFrom(detail.AyahCalonIstri!);
-                ntcr.IbuCalonIstri.CopyFrom(detail.IbuCalonIstri!);
+                (ntcr.AyahCalonSuami ??= new NtcrOrangTua()).CopyFrom(detail.AyahCalonSuami ?? new NtcrOrangTua());
+                (ntcr.IbuCalonSuami ??= new NtcrOrangTua()).CopyFrom(detail.IbuCalonSuami ?? new NtcrOrangTua());
+                (ntcr.AyahCalonIstri ??= new NtcrOrangTua()).CopyFrom(detail.AyahCalonIstri ?? new NtcrOrangTua());
+                (ntcr.IbuCalonIstri ??= new NtcrOrangTua()).CopyFrom(detail.IbuCalonIstri ?? new NtcrOrangTua());
             }
             catch (JsonException ex)
             {
