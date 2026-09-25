@@ -1,0 +1,120 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PanduanWa.BagianAView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="PanduanWaStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!-- Root menegaskan ulang DataContext ke VM halaman (pola Views/About). -->
+    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:PanduanWaView}}">
+        <Border Style="{StaticResource GuideCard}">
+            <StackPanel>
+                <Border Style="{StaticResource CardHead}">
+                    <DockPanel>
+                        <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
+                            <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x1F4DD;"/>
+                        </Border>
+                        <Border Style="{StaticResource TimePill}" DockPanel.Dock="Right">
+                            <TextBlock Style="{StaticResource TimePillText}" Text="&#x2248; 30 menit &#x2022; sekali saja"/>
+                        </Border>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="BAGIAN A — DAFTAR META &amp; AKTIFKAN WHATSAPP" Margin="10,0,0,0"/>
+                    </DockPanel>
+                </Border>
+                <StackPanel Style="{StaticResource CardBody}">
+                    <!-- Langkah 1 -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource StepBadge}" Margin="0,1,10,0">
+                            <TextBlock Style="{StaticResource StepBadgeText}" Text="1"/>
+                        </Border>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Buat akun &amp; aplikasi di Meta for Developers" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Buka https://developers.facebook.com dari browser, daftar/login memakai akun Facebook desa. Lalu My Apps → Create App → pilih tipe &quot;Business&quot; → beri nama (mis. &quot;Surat Desa&quot;). Di dashboard aplikasi, tambahkan produk &quot;WhatsApp&quot; (klik tombol WhatsApp → Set up)." TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                            <Border Style="{StaticResource MockWindow}" MaxWidth="460" HorizontalAlignment="Left">
+                                <StackPanel>
+                                    <Border Style="{StaticResource MockTitleBar}">
+                                        <DockPanel>
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                                <Ellipse Style="{StaticResource TrafficDot}" Fill="#FF5F57"/>
+                                                <Ellipse Style="{StaticResource TrafficDot}" Fill="#FEBC2E"/>
+                                                <Ellipse Style="{StaticResource TrafficDot}" Fill="#28C840"/>
+                                            </StackPanel>
+                                            <TextBlock Style="{StaticResource MockMono}" Text="developers.facebook.com — App Dashboard" Margin="6,0,0,0"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <StackPanel Margin="12">
+                                        <Border Style="{StaticResource MockField}">
+                                            <TextBlock Style="{StaticResource MockMono}" Text="App :  Surat Desa   |   Tipe :  Business"/>
+                                        </Border>
+                                        <Border Style="{StaticResource MockField}" Margin="0">
+                                            <TextBlock Style="{StaticResource MockMono}" Text="Produk :  [+] WhatsApp   &#x2192;  Set up"/>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                    <!-- Langkah 2 -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource StepBadge}" Margin="0,1,10,0">
+                            <TextBlock Style="{StaticResource StepBadgeText}" Text="2"/>
+                        </Border>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Ambil Phone Number ID &amp; access token (versi uji coba dulu)" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Di menu WhatsApp → API Setup: terdapat nomor uji coba gratis (5 penerima) — pas untuk pengujian sebelum produksi. Catat Phone Number ID dan salin access token sementara (24 jam). Aplikasi bisa langsung diuji dengan dua nilai ini (Bagian B)." TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                            <Border Style="{StaticResource MockWindow}" MaxWidth="460" HorizontalAlignment="Left">
+                                <StackPanel>
+                                    <Border Style="{StaticResource MockTitleBar}">
+                                        <DockPanel>
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                                <Ellipse Style="{StaticResource TrafficDot}" Fill="#FF5F57"/>
+                                                <Ellipse Style="{StaticResource TrafficDot}" Fill="#FEBC2E"/>
+                                                <Ellipse Style="{StaticResource TrafficDot}" Fill="#28C840"/>
+                                            </StackPanel>
+                                            <TextBlock Style="{StaticResource MockMono}" Text="WhatsApp  &#x2192;  API Setup" Margin="6,0,0,0"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <StackPanel Margin="12">
+                                        <Border Style="{StaticResource MockField}">
+                                            <TextBlock Style="{StaticResource MockMono}" Text="Phone Number ID :  123456789012345"/>
+                                        </Border>
+                                        <Border Style="{StaticResource MockField}" Margin="0">
+                                            <TextBlock Style="{StaticResource MockMono}" Text="Access Token    :  EAAG&#x2026; (uji 24 jam)"/>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                    <!-- Langkah 3 -->
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource StepBadge}" Margin="0,1,10,0">
+                            <TextBlock Style="{StaticResource StepBadgeText}" Text="3"/>
+                        </Border>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Untuk PRODUKSI: nomor desa + token permanen" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                                Nomor uji coba tidak untuk warga. Beralih ke produksi:<LineBreak/>
+                                1. Siapkan <Run FontWeight="SemiBold">nomor WhatsApp khusus desa</Run> (tidak boleh sedang terpasang di HP/WhatsApp Web) + verifikasi di WhatsApp Manager.<LineBreak/>
+                                2. Buat <Run FontWeight="SemiBold">System User</Run> di Business Settings (Business → Users → System Users) beri peran Admin, lalu buat <Run FontWeight="SemiBold">permanent access token</Run> (Generate Token → permission whatsapp_business_messaging + whatsapp_business_management).<LineBreak/>
+                                3. Untuk volume besar, lengkapi verifikasi bisnis Meta — tanpa itu tetap jalan dengan batas 250 penerima unik/24 jam.
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

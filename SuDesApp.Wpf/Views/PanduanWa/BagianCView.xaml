@@ -1,0 +1,131 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PanduanWa.BagianCView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="PanduanWaStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!-- Root menegaskan ulang DataContext ke VM halaman (pola Views/About). -->
+    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:PanduanWaView}}">
+        <Border Style="{StaticResource GuideCard}">
+            <StackPanel>
+                <Border Style="{StaticResource CardHead}">
+                    <DockPanel>
+                        <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
+                            <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x1F310;"/>
+                        </Border>
+                        <Border Style="{StaticResource TimePill}" DockPanel.Dock="Right">
+                            <TextBlock Style="{StaticResource TimePillText}" Text="sekali setup"/>
+                        </Border>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="BAGIAN C — WEBHOOK: PESAN MASUK WARGA" Margin="10,0,0,0"/>
+                    </DockPanel>
+                </Border>
+                <StackPanel Style="{StaticResource CardBody}">
+                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}">
+                        Meta mengirim pesan masuk dengan cara &quot;mendorong&quot; ke alamat web HTTPS publik (webhook). Komputer kantor belum punya alamat publik, jadi pilih <Run FontWeight="SemiBold">satu</Run> opsi:
+                    </TextBlock>
+
+                    <!-- Opsi 1 -->
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="12" Margin="0,10,0,8">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,4">
+                                <Border DockPanel.Dock="Left" Background="{DynamicResource AccentSubtleBrush}" CornerRadius="10" Padding="8,2" Margin="0,0,8,0">
+                                    <TextBlock Text="OPSI 1" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}"/>
+                                </Border>
+                                <TextBlock Text="Domain sendiri + HTTPS" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                                Jika kantor punya domain &amp; IP publik. Meta mewajibkan HTTPS dengan sertifikat valid. Arahkan subdomain (mis. wa.desaanda.go.id) ke IP kantor lewat DNS, lalu forward port ke komputer aplikasi:
+                            </TextBlock>
+                            <Border Style="{StaticResource CodeBlock}">
+                                <TextBlock Style="{StaticResource CodeText}"
+                                           Text="Port luar 443 (HTTPS)  &#x2192;  proxy ke listener aplikasi di port 8787"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Opsi 2 -->
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,4">
+                                <Border DockPanel.Dock="Left" Background="{DynamicResource AccentSubtleBrush}" CornerRadius="10" Padding="8,2" Margin="0,0,8,0">
+                                    <TextBlock Text="OPSI 2" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}"/>
+                                </Border>
+                                <TextBlock Text="Tunnel gratis cloudflared (tanpa sentuh router)" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                                Unduh cloudflared dari situs resmi Cloudflare (bagian Downloads / Cloudflare Tunnel), lalu jalankan sekali di komputer kantor:
+                            </TextBlock>
+                            <Border Style="{StaticResource CodeBlock}">
+                                <TextBlock Style="{StaticResource CodeText}">
+                                    <Run Foreground="#7EE787">PS&gt;</Run> cloudflared tunnel --url http://localhost:8787
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                                Cloudflare menampilkan alamat HTTPS publik semacam https://acme-words.trycloudflare.com. Catat alamat itu — langkah berikutnya memakainya.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Callout}" Background="{DynamicResource WarningSubtleBrush}"
+                            BorderBrush="{DynamicResource WarningBrush}" Margin="0,2,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource CalloutIcon}" Background="{DynamicResource WarningBrush}">
+                                <TextBlock Text="!" Foreground="White" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource WarningTextBrush}" VerticalAlignment="Center">
+                                Pada Opsi 2 (tunnel cepat), alamat publik <Run FontWeight="Bold">berubah setiap cloudflared dijalankan ulang</Run>. Bila alamat berubah, perbarui Callback URL di dashboard Meta. Agar alamat tetap, buat Named Tunnel dengan domain sendiri.
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+
+                    <!-- Isi webhook di Meta -->
+                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,2">
+                        Lalu di dashboard aplikasi Meta, buka <Run FontWeight="SemiBold">WhatsApp → Configuration → Webhook</Run>, isi:
+                    </TextBlock>
+                    <Border Style="{StaticResource CodeBlock}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CodeText}">
+                                <Run Foreground="#7EE787">Callback URL   :</Run>  https://alamat-publik-anda.trycloudflare.com/wa-webhook
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource CodeText}" Margin="0,4,0,0">
+                                <Run Foreground="#7EE787">Verify token   :</Run>  (sama dengan yang diisi di Pengaturan Aplikasi)
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                        Klik <Run FontWeight="SemiBold">Verify and save</Run>. Aplikasi otomatis menjawab verifikasi Meta (listener berjalan setiap aplikasi dibuka, port 8787). Terakhir, di bagian <Run FontWeight="SemiBold">Webhook fields</Run> klik <Run FontWeight="SemiBold">Subscribe</Run> pada <Run FontWeight="SemiBold">messages</Run>. Pastikan aplikasi SuDesApp sedang berjalan, lalu coba kirim &quot;halo&quot; dari WhatsApp lain ke nomor desa: balasan instruksi harus muncul.
+                    </TextBlock>
+
+                    <Border Style="{StaticResource Callout}" Background="{DynamicResource AccentSubtleBrush}"
+                            BorderBrush="{DynamicResource AccentBrush}" Margin="0,10,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#x1F527;" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
+                                       VerticalAlignment="Top" Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource AccentTextBrush}">
+                                <Run FontWeight="Bold">Jika log menampilkan &quot;Gagal memulai webhook listener di port 8787&quot;:</Run>
+                                aplikasi belum berizin membuka port. Buka Command Prompt <Run FontWeight="SemiBold">sebagai Administrator</Run> satu kali, lalu jalankan:
+                                <LineBreak/><Run FontFamily="Consolas">netsh http add urlacl url=http://+:8787/wa-webhook/ user=Everyone</Run>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

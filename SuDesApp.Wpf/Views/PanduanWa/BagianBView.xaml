@@ -1,0 +1,69 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PanduanWa.BagianBView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="PanduanWaStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!-- Root menegaskan ulang DataContext ke VM halaman (pola Views/About). -->
+    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:PanduanWaView}}">
+        <Border Style="{StaticResource GuideCard}">
+            <StackPanel>
+                <Border Style="{StaticResource CardHead}">
+                    <DockPanel>
+                        <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
+                            <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x2699;&#xFE0F;"/>
+                        </Border>
+                        <Border Style="{StaticResource TimePill}" DockPanel.Dock="Right">
+                            <TextBlock Style="{StaticResource TimePillText}" Text="&#x2248; 1 menit"/>
+                        </Border>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="BAGIAN B — PASANG TOKEN DI APLIKASI" Margin="10,0,0,0"/>
+                    </DockPanel>
+                </Border>
+                <StackPanel Style="{StaticResource CardBody}">
+                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}">
+                        Buka menu <Run FontWeight="SemiBold">Pengaturan → Pengaturan Aplikasi</Run>, gulir ke blok <Run FontWeight="SemiBold">Gateway WhatsApp</Run>:
+                    </TextBlock>
+                    <StackPanel Margin="0,8,0,0">
+                        <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">1.</Run> Pilih <Run FontWeight="SemiBold">WhatsApp Cloud API — resmi Meta</Run>.
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">2.</Run> Tempel <Run FontWeight="SemiBold">Access token</Run> dan <Run FontWeight="SemiBold">Phone Number ID</Run> ke kolom yang tersedia.
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">3.</Run> Isi <Run FontWeight="SemiBold">Verify token webhook</Run> dengan kata sandi buatan sendiri (mis. desa-rahasia-2026) — akan dipakai lagi di Bagian C.
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">4.</Run> Klik <Run FontWeight="SemiBold">Uji koneksi</Run> — muncul &quot;Terhubung ✓&quot; beserta nama nomor WhatsApp bila sukses.
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">5.</Run> Selesai untuk arah pesan keluar: tautan form &amp; tautan unduh PDF otomatis terkirim ke nomor warga.
+                        </TextBlock>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource Callout}" Background="{DynamicResource SuccessSubtleBrush}"
+                            BorderBrush="{DynamicResource SuccessBrush}" Margin="0,12,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource CalloutIcon}" Background="{DynamicResource SuccessBrush}">
+                                <TextBlock Text="&#x2713;" Foreground="White" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource SuccessTextBrush}" VerticalAlignment="Center">
+                                Setelah langkah ini, aplikasi sudah bisa <Run FontWeight="Bold">mengirim</Run>. Untuk bisa <Run FontWeight="Bold">menerima</Run> pesan warga, lanjut ke Bagian C.
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

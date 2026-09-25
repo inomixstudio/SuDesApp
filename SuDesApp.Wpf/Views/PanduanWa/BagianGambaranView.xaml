@@ -1,0 +1,98 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PanduanWa.BagianGambaranView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="PanduanWaStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!-- Root menegaskan ulang DataContext ke VM halaman (pola Views/About). -->
+    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:PanduanWaView}}">
+        <Border Style="{StaticResource GuideCard}">
+            <StackPanel>
+                <Border Style="{StaticResource CardHead}">
+                    <DockPanel>
+                        <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
+                            <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x1F9ED;"/>
+                        </Border>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="GAMBARAN BESAR" Margin="10,0,0,0"/>
+                    </DockPanel>
+                </Border>
+                <StackPanel Style="{StaticResource CardBody}">
+                    <TextBlock Text="Layanan otomatis memiliki dua arah pesan dan satu mode opsional:"
+                               TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,10"/>
+
+                    <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#x2197;" FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="1 &#x2022; Pesan KELUAR" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
+                                    Tautan form &amp; tautan unduh PDF ke warga, dikirim lewat <Run FontWeight="SemiBold">WhatsApp Cloud API resmi Meta</Run>. Cukup pasang access token + Phone Number ID di Pengaturan Aplikasi. Aplikasi hanya mengirim teks/tautan — tidak pernah mengirim berkas.
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#x2199;" FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="2 &#x2022; Pesan MASUK" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
+                                    Permintaan warga, dikirim Meta ke &quot;webhook&quot; — alamat HTTPS publik komputer kantor. Butuh satu kali pengaturan jaringan (<Run FontWeight="SemiBold">Bagian C</Run>).
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#x1F517;" FontSize="15"
+                                       Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="3 &#x2022; Mode tautan (Google Form/Sheet)" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
+                                    Pesan apa pun dari warga dibalas tautan form untuk diisi sendiri; form + Sheet jawaban bisa dibuat <Run FontWeight="SemiBold">otomatis 1 klik</Run> (<Run FontWeight="SemiBold">Bagian D</Run>). Tanpa ini, warga mengikuti percakapan format (contoh di <Run FontWeight="SemiBold">Bagian E</Run>).
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource Callout}"
+                            Background="{DynamicResource AccentSubtleBrush}"
+                            BorderBrush="{DynamicResource AccentBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#x2753;" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
+                                       VerticalAlignment="Top" Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource AccentTextBrush}">
+                                <Run FontWeight="Bold">Kenapa Cloud API?</Run> Ini satu-satunya cara resmi memakai WhatsApp lewat aplikasi — bukan penyamaran WhatsApp Web — sehingga jauh lebih aman dari risiko nomor diblokir, tanpa branding pihak ketiga.
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

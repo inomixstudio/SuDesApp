@@ -2,161 +2,50 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:panduanWa="clr-namespace:SuDesApp.Wpf.Views.PanduanWa"
              FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+    <!--
+        Halaman Panduan WhatsApp — navigasi daftar bagian di KIRI, konten di kanan.
+        Hanya bagian aktif yang dirender (UserControl konten dibuat lazy saat
+        pertama dipilih) sehingga membuka halaman terasa ringan; sebelumnya
+        seluruh 6 kartu dibangun sekaligus dalam satu ScrollViewer panjang.
+    -->
     <UserControl.Resources>
-        <!-- ====== Kartu bagian ====== -->
-        <Style x:Key="GuideCard" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Margin" Value="0,0,0,14"/>
-            <Setter Property="ClipToBounds" Value="True"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
-        </Style>
-        <Style x:Key="CardHead" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="Padding" Value="14,10"/>
-        </Style>
-        <Style x:Key="CardBody" TargetType="StackPanel">
-            <Setter Property="Margin" Value="16,14,16,16"/>
-        </Style>
-        <Style x:Key="IconBadge" TargetType="Border">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style x:Key="IconBadgeText" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style x:Key="SectionTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
-        <Style x:Key="TimePill" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Padding" Value="8,3"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="10,0,0,0"/>
-        </Style>
-        <Style x:Key="TimePillText" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10.5"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="PanduanWa/PanduanWaStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-        <!-- ====== Navigasi langkah ====== -->
-        <Style x:Key="NavChip" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
-            <Setter Property="CornerRadius" Value="14"/>
-            <Setter Property="Padding" Value="11,6"/>
-            <Setter Property="Margin" Value="0,0,8,8"/>
-        </Style>
-        <Style x:Key="NavChipText" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="11.5"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
-        </Style>
-
-        <!-- ====== Badge nomor langkah ====== -->
-        <Style x:Key="StepBadge" TargetType="Border">
-            <Setter Property="Width" Value="26"/>
-            <Setter Property="Height" Value="26"/>
-            <Setter Property="CornerRadius" Value="13"/>
-            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="VerticalAlignment" Value="Top"/>
-        </Style>
-        <Style x:Key="StepBadgeText" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-
-        <!-- ====== Mock jendela browser / dashboard ====== -->
-        <Style x:Key="MockWindow" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Margin" Value="0,8,0,0"/>
-            <Setter Property="ClipToBounds" Value="True"/>
-        </Style>
-        <Style x:Key="MockTitleBar" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="Padding" Value="10,7"/>
-        </Style>
-        <Style x:Key="TrafficDot" TargetType="Ellipse">
-            <Setter Property="Width" Value="9"/>
-            <Setter Property="Height" Value="9"/>
-            <Setter Property="Margin" Value="0,0,5,0"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style x:Key="MockMono" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Consolas"/>
-            <Setter Property="FontSize" Value="11.5"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style x:Key="MockField" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="5"/>
-            <Setter Property="Padding" Value="9,6"/>
-            <Setter Property="Margin" Value="0,0,0,6"/>
-        </Style>
-
-        <!-- ====== Blok kode / terminal ====== -->
-        <Style x:Key="CodeBlock" TargetType="Border">
-            <Setter Property="Background" Value="#0D1117"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="12,9"/>
-            <Setter Property="Margin" Value="0,8,0,0"/>
-        </Style>
-        <Style x:Key="CodeText" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Consolas"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#E6EDF3"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
-
-        <!-- ====== Kotak catatan ====== -->
-        <Style x:Key="Callout" TargetType="Border">
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12"/>
-            <Setter Property="Margin" Value="0,0,0,10"/>
-        </Style>
-        <Style x:Key="CalloutIcon" TargetType="Border">
-            <Setter Property="Width" Value="26"/>
-            <Setter Property="Height" Value="26"/>
-            <Setter Property="CornerRadius" Value="13"/>
-            <Setter Property="VerticalAlignment" Value="Top"/>
-            <Setter Property="Margin" Value="0,0,10,0"/>
-        </Style>
+            <!-- Pemetaan kunci bagian → UserControl kontennya (dibuat lazy).
+                 Catatan penting bukan bagian navigasi — kartunya dirender tetap
+                 di bawah konten (lihat root Grid). -->
+            <DataTemplate x:Key="TemplateGambaran">
+                <panduanWa:BagianGambaranView/>
+            </DataTemplate>
+            <DataTemplate x:Key="TemplateA">
+                <panduanWa:BagianAView/>
+            </DataTemplate>
+            <DataTemplate x:Key="TemplateB">
+                <panduanWa:BagianBView/>
+            </DataTemplate>
+            <DataTemplate x:Key="TemplateC">
+                <panduanWa:BagianCView/>
+            </DataTemplate>
+            <DataTemplate x:Key="TemplateD">
+                <panduanWa:BagianDView/>
+            </DataTemplate>
+            <DataTemplate x:Key="TemplateE">
+                <panduanWa:BagianEView/>
+            </DataTemplate>
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -175,665 +64,80 @@
             </DockPanel>
         </Border>
 
-        <!-- Konten (scroll vertikal saja) -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel>
+        <!-- Isi: navigasi bagian di kiri + konten bagian aktif di kanan -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <!-- PETA LANGKAH -->
-                <Border Style="{StaticResource GuideCard}">
-                    <StackPanel>
-                        <Border Style="{StaticResource CardHead}">
-                            <DockPanel>
-                                <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x1F5FA;&#xFE0F;"/>
-                                </Border>
-                                <TextBlock Style="{StaticResource SectionTitle}" Text="PETA LANGKAH" Margin="10,0,0,0"/>
-                            </DockPanel>
-                        </Border>
-                        <StackPanel Style="{StaticResource CardBody}">
-                            <TextBlock Text="Lima langkah berurutan. Kerjakan dari atas ke bawah — setelah Bagian B selesai, pesan keluar otomatis (tautan form &amp; unduh PDF) langsung berfungsi."
-                                       TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10"/>
-                            <WrapPanel>
-                                <Border Style="{StaticResource NavChip}">
-                                    <TextBlock Style="{StaticResource NavChipText}" Text="&#x1F5FA;&#xFE0F; Gambaran besar"/>
-                                </Border>
-                                <Border Style="{StaticResource NavChip}">
-                                    <TextBlock Style="{StaticResource NavChipText}" Text="A &#x2022; Daftar Meta"/>
-                                </Border>
-                                <Border Style="{StaticResource NavChip}">
-                                    <TextBlock Style="{StaticResource NavChipText}" Text="B &#x2022; Pasang token"/>
-                                </Border>
-                                <Border Style="{StaticResource NavChip}">
-                                    <TextBlock Style="{StaticResource NavChipText}" Text="C &#x2022; Webhook"/>
-                                </Border>
-                                <Border Style="{StaticResource NavChip}">
-                                    <TextBlock Style="{StaticResource NavChipText}" Text="D &#x2022; Form &amp; Sheet"/>
-                                </Border>
-                                <Border Style="{StaticResource NavChip}">
-                                    <TextBlock Style="{StaticResource NavChipText}" Text="E &#x2022; Uji alur"/>
-                                </Border>
-                            </WrapPanel>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
+            <!-- Panel navigasi kiri -->
+            <Border Grid.Column="0" Style="{StaticResource WaNavPanel}" Margin="0,0,14,0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="ISI PANDUAN" FontSize="10.5" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,2,4,8"/>
 
-                <!-- GAMBARAN BESAR -->
-                <Border Style="{StaticResource GuideCard}">
-                    <StackPanel>
-                        <Border Style="{StaticResource CardHead}">
-                            <DockPanel>
-                                <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x1F9ED;"/>
-                                </Border>
-                                <TextBlock Style="{StaticResource SectionTitle}" Text="GAMBARAN BESAR" Margin="10,0,0,0"/>
-                            </DockPanel>
-                        </Border>
-                        <StackPanel Style="{StaticResource CardBody}">
-                            <TextBlock Text="Layanan otomatis memiliki dua arah pesan dan satu mode opsional:"
-                                       TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,10"/>
-
-                            <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="&#x2197;" FontSize="16" FontWeight="Bold"
-                                               Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,0,10,0"/>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="1 &#x2022; Pesan KELUAR" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
-                                        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
-                                            Tautan form &amp; tautan unduh PDF ke warga, dikirim lewat <Run FontWeight="SemiBold">WhatsApp Cloud API resmi Meta</Run>. Cukup pasang access token + Phone Number ID di Pengaturan Aplikasi. Aplikasi hanya mengirim teks/tautan — tidak pernah mengirim berkas.
-                                        </TextBlock>
+                    <ItemsControl ItemsSource="{Binding Bagian}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Tag="{Binding}" Style="{StaticResource WaNavItem}"
+                                        ToolTip="{Binding DeskripsiStatus}"
+                                        MouseLeftButtonUp="NavBagian_MouseLeftButtonUp">
+                                    <StackPanel Orientation="Horizontal">
+                                        <!-- Penanda aksen: garis tipis di kiri item terpilih -->
+                                        <Border Style="{StaticResource WaNavSelBar}"/>
+                                        <TextBlock Text="{Binding Ikon}" Style="{StaticResource WaNavItemIcon}"
+                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource WaNavItemText}"
+                                                   VerticalAlignment="Center" TextWrapping="Wrap"/>
                                     </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="&#x2199;" FontSize="16" FontWeight="Bold"
-                                               Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,0,10,0"/>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="2 &#x2022; Pesan MASUK" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
-                                        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
-                                            Permintaan warga, dikirim Meta ke &quot;webhook&quot; — alamat HTTPS publik komputer kantor. Butuh satu kali pengaturan jaringan (<Run FontWeight="SemiBold">Bagian C</Run>).
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="&#x1F517;" FontSize="15"
-                                               Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,0,10,0"/>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="3 &#x2022; Mode tautan (Google Form/Sheet)" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
-                                        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
-                                            Pesan apa pun dari warga dibalas tautan form untuk diisi sendiri; form + Sheet jawaban bisa dibuat <Run FontWeight="SemiBold">otomatis 1 klik</Run> (<Run FontWeight="SemiBold">Bagian D</Run>). Tanpa ini, warga mengikuti percakapan format (contoh di <Run FontWeight="SemiBold">Bagian E</Run>).
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <Border Style="{StaticResource Callout}"
-                                    Background="{DynamicResource AccentSubtleBrush}"
-                                    BorderBrush="{DynamicResource AccentBrush}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="&#x2753;" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
-                                               VerticalAlignment="Top" Margin="0,0,10,0"/>
-                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource AccentTextBrush}">
-                                        <Run FontWeight="Bold">Kenapa Cloud API?</Run> Ini satu-satunya cara resmi memakai WhatsApp lewat aplikasi — bukan penyamaran WhatsApp Web — sehingga jauh lebih aman dari risiko nomor diblokir, tanpa branding pihak ketiga.
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- BAGIAN A -->
-                <Border Style="{StaticResource GuideCard}">
-                    <StackPanel>
-                        <Border Style="{StaticResource CardHead}">
-                            <DockPanel>
-                                <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x1F4DD;"/>
                                 </Border>
-                                <Border Style="{StaticResource TimePill}" DockPanel.Dock="Right">
-                                    <TextBlock Style="{StaticResource TimePillText}" Text="&#x2248; 30 menit &#x2022; sekali saja"/>
-                                </Border>
-                                <TextBlock Style="{StaticResource SectionTitle}" Text="BAGIAN A — DAFTAR META &amp; AKTIFKAN WHATSAPP" Margin="10,0,0,0"/>
-                            </DockPanel>
-                        </Border>
-                        <StackPanel Style="{StaticResource CardBody}">
-                            <!-- Langkah 1 -->
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Style="{StaticResource StepBadge}" Margin="0,1,10,0">
-                                    <TextBlock Style="{StaticResource StepBadgeText}" Text="1"/>
-                                </Border>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Buat akun &amp; aplikasi di Meta for Developers" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Buka https://developers.facebook.com dari browser, daftar/login memakai akun Facebook desa. Lalu My Apps → Create App → pilih tipe &quot;Business&quot; → beri nama (mis. &quot;Surat Desa&quot;). Di dashboard aplikasi, tambahkan produk &quot;WhatsApp&quot; (klik tombol WhatsApp → Set up)." TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
-                                    <Border Style="{StaticResource MockWindow}" MaxWidth="460" HorizontalAlignment="Left">
-                                        <StackPanel>
-                                            <Border Style="{StaticResource MockTitleBar}">
-                                                <DockPanel>
-                                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                                                        <Ellipse Style="{StaticResource TrafficDot}" Fill="#FF5F57"/>
-                                                        <Ellipse Style="{StaticResource TrafficDot}" Fill="#FEBC2E"/>
-                                                        <Ellipse Style="{StaticResource TrafficDot}" Fill="#28C840"/>
-                                                    </StackPanel>
-                                                    <TextBlock Style="{StaticResource MockMono}" Text="developers.facebook.com — App Dashboard" Margin="6,0,0,0"/>
-                                                </DockPanel>
-                                            </Border>
-                                            <StackPanel Margin="12">
-                                                <Border Style="{StaticResource MockField}">
-                                                    <TextBlock Style="{StaticResource MockMono}" Text="App :  Surat Desa   |   Tipe :  Business"/>
-                                                </Border>
-                                                <Border Style="{StaticResource MockField}" Margin="0">
-                                                    <TextBlock Style="{StaticResource MockMono}" Text="Produk :  [+] WhatsApp   →  Set up"/>
-                                                </Border>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-                            </Grid>
-                            <!-- Langkah 2 -->
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Style="{StaticResource StepBadge}" Margin="0,1,10,0">
-                                    <TextBlock Style="{StaticResource StepBadgeText}" Text="2"/>
-                                </Border>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Ambil Phone Number ID &amp; access token (versi uji coba dulu)" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Di menu WhatsApp → API Setup: terdapat nomor uji coba gratis (5 penerima) — pas untuk pengujian sebelum produksi. Catat Phone Number ID dan salin access token sementara (24 jam). Aplikasi bisa langsung diuji dengan dua nilai ini (Bagian B)." TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
-                                    <Border Style="{StaticResource MockWindow}" MaxWidth="460" HorizontalAlignment="Left">
-                                        <StackPanel>
-                                            <Border Style="{StaticResource MockTitleBar}">
-                                                <DockPanel>
-                                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                                                        <Ellipse Style="{StaticResource TrafficDot}" Fill="#FF5F57"/>
-                                                        <Ellipse Style="{StaticResource TrafficDot}" Fill="#FEBC2E"/>
-                                                        <Ellipse Style="{StaticResource TrafficDot}" Fill="#28C840"/>
-                                                    </StackPanel>
-                                                    <TextBlock Style="{StaticResource MockMono}" Text="WhatsApp  →  API Setup" Margin="6,0,0,0"/>
-                                                </DockPanel>
-                                            </Border>
-                                            <StackPanel Margin="12">
-                                                <Border Style="{StaticResource MockField}">
-                                                    <TextBlock Style="{StaticResource MockMono}" Text="Phone Number ID :  123456789012345"/>
-                                                </Border>
-                                                <Border Style="{StaticResource MockField}" Margin="0">
-                                                    <TextBlock Style="{StaticResource MockMono}" Text="Access Token    :  EAAG… (uji 24 jam)"/>
-                                                </Border>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-                            </Grid>
-                            <!-- Langkah 3 -->
-                            <Grid Margin="0,0,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Style="{StaticResource StepBadge}" Margin="0,1,10,0">
-                                    <TextBlock Style="{StaticResource StepBadgeText}" Text="3"/>
-                                </Border>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Untuk PRODUKSI: nomor desa + token permanen" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                        Nomor uji coba tidak untuk warga. Beralih ke produksi:<LineBreak/>
-                                        1. Siapkan <Run FontWeight="SemiBold">nomor WhatsApp khusus desa</Run> (tidak boleh sedang terpasang di HP/WhatsApp Web) + verifikasi di WhatsApp Manager.<LineBreak/>
-                                        2. Buat <Run FontWeight="SemiBold">System User</Run> di Business Settings (Business → Users → System Users) beri peran Admin, lalu buat <Run FontWeight="SemiBold">permanent access token</Run> (Generate Token → permission whatsapp_business_messaging + whatsapp_business_management).<LineBreak/>
-                                        3. Untuk volume besar, lengkapi verifikasi bisnis Meta — tanpa itu tetap jalan dengan batas 250 penerima unik/24 jam.
-                                    </TextBlock>
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </Border>
 
-                <!-- BAGIAN B -->
-                <Border Style="{StaticResource GuideCard}">
-                    <StackPanel>
-                        <Border Style="{StaticResource CardHead}">
-                            <DockPanel>
-                                <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x2699;&#xFE0F;"/>
-                                </Border>
-                                <Border Style="{StaticResource TimePill}" DockPanel.Dock="Right">
-                                    <TextBlock Style="{StaticResource TimePillText}" Text="&#x2248; 1 menit"/>
-                                </Border>
-                                <TextBlock Style="{StaticResource SectionTitle}" Text="BAGIAN B — PASANG TOKEN DI APLIKASI" Margin="10,0,0,0"/>
-                            </DockPanel>
-                        </Border>
-                        <StackPanel Style="{StaticResource CardBody}">
-                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}">
-                                Buka menu <Run FontWeight="SemiBold">Pengaturan → Pengaturan Aplikasi</Run>, gulir ke blok <Run FontWeight="SemiBold">Gateway WhatsApp</Run>:
-                            </TextBlock>
-                            <StackPanel Margin="0,8,0,0">
-                                <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">1.</Run> Pilih <Run FontWeight="SemiBold">WhatsApp Cloud API — resmi Meta</Run>.
-                                </TextBlock>
-                                <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">2.</Run> Tempel <Run FontWeight="SemiBold">Access token</Run> dan <Run FontWeight="SemiBold">Phone Number ID</Run> ke kolom yang tersedia.
-                                </TextBlock>
-                                <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">3.</Run> Isi <Run FontWeight="SemiBold">Verify token webhook</Run> dengan kata sandi buatan sendiri (mis. desa-rahasia-2026) — akan dipakai lagi di Bagian C.
-                                </TextBlock>
-                                <TextBlock Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">4.</Run> Klik <Run FontWeight="SemiBold">Uji koneksi</Run> — muncul &quot;Terhubung ✓&quot; beserta nama nomor WhatsApp bila sukses.
-                                </TextBlock>
-                                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}">5.</Run> Selesai untuk arah pesan keluar: tautan form &amp; tautan unduh PDF otomatis terkirim ke nomor warga.
-                                </TextBlock>
-                            </StackPanel>
+            <!-- Konten bagian aktif (hanya satu yang dirender). Catatan penting
+                 TIDAK di dalam sini — kartunya slot tetap di bawah (Row 2),
+                 selalu terlihat tanpa menggulung dan konsisten di semua bagian.
+                 Content="{Binding}" sengaja: ContentPresenter menaruh nilai
+                 Content ke DataContext template, jadi bila diisi "BagianAktif"
+                 seluruh UserControl bagian tidak bisa membaca VM halaman. -->
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ContentControl Content="{Binding}" Focusable="False">
+                    <ContentControl.Style>
+                        <Style TargetType="ContentControl">
+                            <Setter Property="ContentTemplate" Value="{StaticResource TemplateGambaran}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding BagianAktif.Kunci}" Value="A">
+                                    <Setter Property="ContentTemplate" Value="{StaticResource TemplateA}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding BagianAktif.Kunci}" Value="B">
+                                    <Setter Property="ContentTemplate" Value="{StaticResource TemplateB}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding BagianAktif.Kunci}" Value="C">
+                                    <Setter Property="ContentTemplate" Value="{StaticResource TemplateC}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding BagianAktif.Kunci}" Value="D">
+                                    <Setter Property="ContentTemplate" Value="{StaticResource TemplateD}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding BagianAktif.Kunci}" Value="E">
+                                    <Setter Property="ContentTemplate" Value="{StaticResource TemplateE}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ContentControl.Style>
+                </ContentControl>
+            </ScrollViewer>
+        </Grid>
 
-                            <Border Style="{StaticResource Callout}" Background="{DynamicResource SuccessSubtleBrush}"
-                                    BorderBrush="{DynamicResource SuccessBrush}" Margin="0,12,0,0">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Border Grid.Column="0" Style="{StaticResource CalloutIcon}" Background="{DynamicResource SuccessBrush}">
-                                        <TextBlock Text="&#x2713;" Foreground="White" FontWeight="Bold"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource SuccessTextBrush}" VerticalAlignment="Center">
-                                        Setelah langkah ini, aplikasi sudah bisa <Run FontWeight="Bold">mengirim</Run>. Untuk bisa <Run FontWeight="Bold">menerima</Run> pesan warga, lanjut ke Bagian C.
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
+        <!-- Catatan penting — slot tetap satu-satunya di halaman (pola statusbar:
+             selalu tampil, posisi tidak berubah antar bagian, tidak berulang). -->
+        <panduanWa:BagianCatatanView Grid.Row="2" Margin="0,12,0,12"/>
 
-                <!-- BAGIAN C -->
-                <Border Style="{StaticResource GuideCard}">
-                    <StackPanel>
-                        <Border Style="{StaticResource CardHead}">
-                            <DockPanel>
-                                <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x1F310;"/>
-                                </Border>
-                                <Border Style="{StaticResource TimePill}" DockPanel.Dock="Right">
-                                    <TextBlock Style="{StaticResource TimePillText}" Text="sekali setup"/>
-                                </Border>
-                                <TextBlock Style="{StaticResource SectionTitle}" Text="BAGIAN C — WEBHOOK: PESAN MASUK WARGA" Margin="10,0,0,0"/>
-                            </DockPanel>
-                        </Border>
-                        <StackPanel Style="{StaticResource CardBody}">
-                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}">
-                                Meta mengirim pesan masuk dengan cara &quot;mendorong&quot; ke alamat web HTTPS publik (webhook). Komputer kantor belum punya alamat publik, jadi pilih <Run FontWeight="SemiBold">satu</Run> opsi:
-                            </TextBlock>
-
-                            <!-- Opsi 1 -->
-                            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                    CornerRadius="8" Padding="12" Margin="0,10,0,8">
-                                <StackPanel>
-                                    <DockPanel Margin="0,0,0,4">
-                                        <Border DockPanel.Dock="Left" Background="{DynamicResource AccentSubtleBrush}" CornerRadius="10" Padding="8,2" Margin="0,0,8,0">
-                                            <TextBlock Text="OPSI 1" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}"/>
-                                        </Border>
-                                        <TextBlock Text="Domain sendiri + HTTPS" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </DockPanel>
-                                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                        Jika kantor punya domain &amp; IP publik. Meta mewajibkan HTTPS dengan sertifikat valid. Arahkan subdomain (mis. wa.desaanda.go.id) ke IP kantor lewat DNS, lalu forward port ke komputer aplikasi:
-                                    </TextBlock>
-                                    <Border Style="{StaticResource CodeBlock}">
-                                        <TextBlock Style="{StaticResource CodeText}"
-                                                   Text="Port luar 443 (HTTPS)  &#x2192;  proxy ke listener aplikasi di port 8787"/>
-                                    </Border>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Opsi 2 -->
-                            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                    CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                <StackPanel>
-                                    <DockPanel Margin="0,0,0,4">
-                                        <Border DockPanel.Dock="Left" Background="{DynamicResource AccentSubtleBrush}" CornerRadius="10" Padding="8,2" Margin="0,0,8,0">
-                                            <TextBlock Text="OPSI 2" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}"/>
-                                        </Border>
-                                        <TextBlock Text="Tunnel gratis cloudflared (tanpa sentuh router)" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </DockPanel>
-                                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                        Unduh cloudflared dari situs resmi Cloudflare (bagian Downloads / Cloudflare Tunnel), lalu jalankan sekali di komputer kantor:
-                                    </TextBlock>
-                                    <Border Style="{StaticResource CodeBlock}">
-                                        <TextBlock Style="{StaticResource CodeText}">
-                                            <Run Foreground="#7EE787">PS&gt;</Run> cloudflared tunnel --url http://localhost:8787
-                                        </TextBlock>
-                                    </Border>
-                                    <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                        Cloudflare menampilkan alamat HTTPS publik semacam https://acme-words.trycloudflare.com. Catat alamat itu — langkah berikutnya memakainya.
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Style="{StaticResource Callout}" Background="{DynamicResource WarningSubtleBrush}"
-                                    BorderBrush="{DynamicResource WarningBrush}" Margin="0,2,0,10">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Border Grid.Column="0" Style="{StaticResource CalloutIcon}" Background="{DynamicResource WarningBrush}">
-                                        <TextBlock Text="!" Foreground="White" FontWeight="Bold"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource WarningTextBrush}" VerticalAlignment="Center">
-                                        Pada Opsi 2 (tunnel cepat), alamat publik <Run FontWeight="Bold">berubah setiap cloudflared dijalankan ulang</Run>. Bila alamat berubah, perbarui Callback URL di dashboard Meta. Agar alamat tetap, buat Named Tunnel dengan domain sendiri.
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
-
-                            <!-- Isi webhook di Meta -->
-                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,2">
-                                Lalu di dashboard aplikasi Meta, buka <Run FontWeight="SemiBold">WhatsApp → Configuration → Webhook</Run>, isi:
-                            </TextBlock>
-                            <Border Style="{StaticResource CodeBlock}">
-                                <StackPanel>
-                                    <TextBlock Style="{StaticResource CodeText}">
-                                        <Run Foreground="#7EE787">Callback URL   :</Run>  https://alamat-publik-anda.trycloudflare.com/wa-webhook
-                                    </TextBlock>
-                                    <TextBlock Style="{StaticResource CodeText}" Margin="0,4,0,0">
-                                        <Run Foreground="#7EE787">Verify token   :</Run>  (sama dengan yang diisi di Pengaturan Aplikasi)
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-                            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                Klik <Run FontWeight="SemiBold">Verify and save</Run>. Aplikasi otomatis menjawab verifikasi Meta (listener berjalan setiap aplikasi dibuka, port 8787). Terakhir, di bagian <Run FontWeight="SemiBold">Webhook fields</Run> klik <Run FontWeight="SemiBold">Subscribe</Run> pada <Run FontWeight="SemiBold">messages</Run>. Pastikan aplikasi SuDesApp sedang berjalan, lalu coba kirim &quot;halo&quot; dari WhatsApp lain ke nomor desa: balasan instruksi harus muncul.
-                            </TextBlock>
-
-                            <Border Style="{StaticResource Callout}" Background="{DynamicResource AccentSubtleBrush}"
-                                    BorderBrush="{DynamicResource AccentBrush}" Margin="0,10,0,0">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="&#x1F527;" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
-                                               VerticalAlignment="Top" Margin="0,0,10,0"/>
-                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource AccentTextBrush}">
-                                        <Run FontWeight="Bold">Jika log menampilkan &quot;Gagal memulai webhook listener di port 8787&quot;:</Run>
-                                        aplikasi belum berizin membuka port. Buka Command Prompt <Run FontWeight="SemiBold">sebagai Administrator</Run> satu kali, lalu jalankan:
-                                        <LineBreak/><Run FontFamily="Consolas">netsh http add urlacl url=http://+:8787/wa-webhook/ user=Everyone</Run>
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- BAGIAN D -->
-                <Border Style="{StaticResource GuideCard}">
-                    <StackPanel>
-                        <Border Style="{StaticResource CardHead}">
-                            <DockPanel>
-                                <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x1F4CB;"/>
-                                </Border>
-                                <Border Style="{StaticResource TimePill}" DockPanel.Dock="Right">
-                                    <TextBlock Style="{StaticResource TimePillText}" Text="&#x2248; 2 menit &#x2022; otomatis"/>
-                                </Border>
-                                <TextBlock Style="{StaticResource SectionTitle}" Text="BAGIAN D — GOOGLE FORMULIR &amp; SHEET JAWABAN" Margin="10,0,0,0"/>
-                            </DockPanel>
-                        </Border>
-                        <StackPanel Style="{StaticResource CardBody}">
-                            <!-- Prinsip -->
-                            <Border Background="{DynamicResource PanelBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
-                                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}">Prinsipnya dua wajah:</Run>
-                                    yang DIKIRIM ke warga adalah tautan <Run FontWeight="SemiBold">Google Formulir</Run> (halaman isian yang enak dibuka di HP);
-                                    yang DIBACA aplikasi adalah <Run FontWeight="SemiBold">Google Sheet jawaban</Run>.
-                                    Aplikasi dapat membuat keduanya sekaligus — ikuti cara otomatis di Langkah 1.
-                                </TextBlock>
-                            </Border>
-
-                            <!-- Prasyarat Google Cloud -->
-                            <Border Style="{StaticResource Callout}" Background="{DynamicResource AccentSubtleBrush}"
-                                    BorderBrush="{DynamicResource AccentBrush}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="&#x2699;" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
-                                               VerticalAlignment="Top" Margin="0,0,10,0"/>
-                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource AccentTextBrush}">
-                                        <Run FontWeight="Bold">Sekali saja oleh teknisi (untuk pembuatan otomatis):</Run>
-                                        di Google Cloud Console aktifkan <Run FontWeight="SemiBold">Google Forms API</Run> dan <Run FontWeight="SemiBold">Google Sheets API</Run>
-                                        pada proyek Client ID aplikasi, lalu tambahkan scope <Run FontFamily="Consolas">forms.body</Run> dan
-                                        <Run FontFamily="Consolas">forms.responses.readonly</Run> di OAuth consent screen. Setelah itu login ulang Google di aplikasi
-                                        (akan muncul layar persetujuan baru). Tanpa Forms API, pakai cara manual di Langkah 2.
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
-
-                            <!-- Syarat login -->
-                            <Border Style="{StaticResource Callout}" Background="{DynamicResource WarningSubtleBrush}"
-                                    BorderBrush="{DynamicResource WarningBrush}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Border Grid.Column="0" Style="{StaticResource CalloutIcon}" Background="{DynamicResource WarningBrush}">
-                                        <TextBlock Text="&#x26A0;" Foreground="White" FontWeight="Bold"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource WarningTextBrush}">
-                                        <Run FontWeight="Bold">SYARAT UTAMA — login akun Google.</Run> Layanan online ini <Run FontWeight="SemiBold">belum bisa berfungsi</Run> sebelum aplikasi login dengan akun Google, karena:
-                                        Google Formulir adalah tautan yang dikirim ke warga, Google Sheet adalah tempat jawaban dibaca aplikasi, dan Google Drive adalah tempat PDF surat disimpan + sumber tautan unduh — semuanya milik akun yang terhubung itu.
-                                        Masuk lewat <Run FontWeight="SemiBold">Login dengan Google</Run> di sidebar (akun harus punya akses Editor ke Formulir/Sheet). Cek kesiapan lewat chip statusbar dan banner di panel Layanan Online.
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
-
-                            <!-- Langkah 1: otomatis -->
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Style="{StaticResource StepBadge}" Margin="0,1,10,0">
-                                    <TextBlock Style="{StaticResource StepBadgeText}" Text="1"/>
-                                </Border>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Buat Formulir + Sheet otomatis (disarankan)" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                        Buka <Run FontWeight="SemiBold">Pengaturan → Pengaturan Aplikasi → Google Formulir &amp; Sheet (Mode Tautan)</Run>, lalu klik tombol
-                                        <Run FontWeight="SemiBold">✨ Buat Formulir + Sheet Otomatis</Run>. Aplikasi membuat <Run FontWeight="SemiBold">Google Sheet jawaban</Run>
-                                        beserta <Run FontWeight="SemiBold">Google Formulir lengkap</Run> (semua kolom, pilihan Jenis Surat, dropdown JK/Agama/Status) di akun Google desa,
-                                        mengizinkan form dibuka siapa saja, lalu <Run FontWeight="SemiBold">mengisi sendiri</Run> kolom URL Formulir, URL Sheet, dan nama tab.
-                                    </TextBlock>
-                                    <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                        Google Forms API tidak bisa menautkan Sheet secara langsung, jadi aplikasi membuat Sheet-nya sendiri lalu
-                                        <Run FontWeight="SemiBold">menyalin jawaban formulir ke Sheet</Run> setiap ± 30 detik (kolom <Run FontFamily="Consolas">Response ID</Run> mencegah salinan ganda).
-                                        <Run FontWeight="SemiBold">Aplikasi harus dibiarkan terbuka</Run> (di komputer kantor) — pemrosesan jawaban &amp; webhook hanya berjalan selama aplikasi nyala.
-                                        Terakhir klik <Run FontWeight="SemiBold">Uji koneksi Formulir &amp; Sheet</Run> — keduanya harus ✓.
-                                    </TextBlock>
-                                </StackPanel>
-                            </Grid>
-
-                            <!-- Langkah 2: alternatif manual -->
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Style="{StaticResource StepBadge}" Margin="0,1,10,0">
-                                    <TextBlock Style="{StaticResource StepBadgeText}" Text="2"/>
-                                </Border>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Alternatif — pakai Google Form buatan Anda sendiri" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                        Bila ingin memakai form yang sudah ada, buat form di <Run FontWeight="SemiBold">forms.google.com</Run> dengan kolom berikut
-                                        (nama bebas, usahakan mirip), lalu hubungkan dan salin URL-nya:
-                                    </TextBlock>
-                                    <StackPanel Margin="0,8,0,0">
-                                        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4">
-                                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">Wajib semua jenis:</Run>
-                                            Jenis Surat ("Dropdown"), NIK, Nama, Tempat Lahir, Tanggal Lahir (dd-mm-yyyy), JK (L/P), Agama, Status Perkawinan, Pekerjaan, Alamat ("Paragraph"), Keperluan ("Paragraph"), dan <Run FontWeight="SemiBold">No. WhatsApp</Run> (alamat pengiriman tautan unduh PDF).
-                                        </TextBlock>
-                                        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4">
-                                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">SKU:</Run> Bidang Usaha &amp; Sejak Tahun.
-                                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}"> Pengantar SKCK:</Run> Pendidikan &amp; Kewarganegaraan.
-                                        </TextBlock>
-                                        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4">
-                                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">Izin Orang Tua:</Run> data anak (NIK Anak, Nama Anak, TTL Anak, JK Anak, Agama Anak, Status Anak, Alamat Anak), Negara Tujuan, Nama PT.
-                                        </TextBlock>
-                                        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">Opsional:</Run> <Run FontWeight="SemiBold">Token</Run> — diisi otomatis oleh aplikasi saat mengirim tautan.
-                                        </TextBlock>
-                                    </StackPanel>
-                                    <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                        Lalu: tab <Run FontWeight="SemiBold">Responses</Run> → <Run FontWeight="SemiBold">Link to Sheets</Run> → &quot;Create a new spreadsheet&quot;;
-                                        klik <Run FontWeight="SemiBold">Kirim</Run> → ikon tautan → salin tautan <Run FontWeight="SemiBold">…/viewform</Run> (untuk warga);
-                                        dan di aplikasi centang <Run FontWeight="SemiBold">Aktifkan</Run> lalu tempel <Run FontWeight="SemiBold">URL Google Formulir</Run>
-                                        + <Run FontWeight="SemiBold">URL Sheet jawaban</Run> (…/edit). Bila form dibuat dengan akun berbeda, bagikan Sheet-nya ke email akun aplikasi sebagai Editor.
-                                        Pada cara ini Google mengisi Sheet langsung, sehingga sinkronisasi Forms API tidak dipakai.
-                                    </TextBlock>
-                                </StackPanel>
-                            </Grid>
-
-                            <!-- Langkah 3 -->
-                            <Grid Margin="0,0,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Style="{StaticResource StepBadge}" Margin="0,1,10,0">
-                                    <TextBlock Style="{StaticResource StepBadgeText}" Text="3"/>
-                                </Border>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Cara membaca kolom Status di Sheet" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
-                                    <StackPanel Margin="0,4,0,0">
-                                        <Border Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,0,5">
-                                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                                <Run FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}">DIPROSES (PMT-…)</Run> — jawaban sudah masuk database dan sedang dibuat PDF-nya.
-                                            </TextBlock>
-                                        </Border>
-                                        <Border Background="{DynamicResource SuccessSubtleBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,0,5">
-                                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource SuccessTextBrush}">
-                                                <Run FontWeight="SemiBold">SELESAI — surat … tautan unduh Google Drive dikirim</Run> — warga sudah menerima tautan unduh PDF via WhatsApp.
-                                            </TextBlock>
-                                        </Border>
-                                        <Border Background="{DynamicResource WarningSubtleBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,0,5">
-                                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource WarningTextBrush}">
-                                                <Run FontWeight="SemiBold">PERLU_DATA: …</Run> — isi belum lengkap (sebutan kolomnya ditulis di situ); minta warga mengisi ulang/melengkapi.
-                                            </TextBlock>
-                                        </Border>
-                                        <Border Background="{DynamicResource WarningSubtleBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,0,5">
-                                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource WarningTextBrush}">
-                                                <Run FontWeight="SemiBold">JENIS_TAK_DIKENAL</Run> — kolom Jenis Surat kosong/tidak dikenali (isi contoh: SKTM).
-                                            </TextBlock>
-                                        </Border>
-                                        <Border Background="{DynamicResource ErrorSubtleBrush}" CornerRadius="6" Padding="10,6">
-                                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource ErrorTextBrush}">
-                                                <Run FontWeight="SemiBold">GAGAL: …</Run> — kesalahan teknis; cek panel Layanan Online di aplikasi.
-                                            </TextBlock>
-                                        </Border>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- BAGIAN E -->
-                <Border Style="{StaticResource GuideCard}">
-                    <StackPanel>
-                        <Border Style="{StaticResource CardHead}">
-                            <DockPanel>
-                                <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x2705;"/>
-                                </Border>
-                                <TextBlock Style="{StaticResource SectionTitle}" Text="BAGIAN E — UJI ALUR PENUH" Margin="10,0,0,0"/>
-                            </DockPanel>
-                        </Border>
-                        <StackPanel Style="{StaticResource CardBody}">
-                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10">
-                                Mode tautan (Google Formulir &amp; Sheet jawaban, aktif dari Pengaturan Aplikasi):
-                            </TextBlock>
-                            <StackPanel Margin="0,0,0,0">
-                                <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">1.</Run> Dari WhatsApp pribadi Anda, kirim pesan apa pun (mis. &quot;halo&quot;) ke nomor desa → balasan berisi <Run FontWeight="SemiBold">tautan Google Formulir</Run> + Token.
-                                </TextBlock>
-                                <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">2.</Run> Buka tautan, isi form, klik Kirim → jawaban tersimpan di Google Formulir (pada cara otomatis, aplikasi menyalinnya ke Google Sheet dalam ± 30 detik).
-                                </TextBlock>
-                                <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">3.</Run> Aplikasi membaca Sheet (± 30 detik), menyimpan permohonan, dan menulis status di kolom <Run FontWeight="SemiBold">Status</Run> pada Sheet.
-                                </TextBlock>
-                                <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">4.</Run> PDF surat dibuat otomatis → WhatsApp Anda menerima <Run FontWeight="SemiBold">tautan unduh PDF</Run> (berkas tersimpan juga di folder Drive &quot;Surat Online&quot;).
-                                </TextBlock>
-                                <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">5.</Run> Surat tercatat di Register Surat seperti surat buatan biasa; kolom Status di Sheet berubah menjadi SELESAI.
-                                </TextBlock>
-                                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                    Mode percakapan (bila mode tautan dimatikan): kirim FORMAT SKTM → isi format → YA.
-                                </TextBlock>
-                            </StackPanel>
-
-                            <Border Style="{StaticResource Callout}" Background="{DynamicResource AccentSubtleBrush}"
-                                    BorderBrush="{DynamicResource AccentBrush}" Margin="0,10,0,0">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="&#x1F552;" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
-                                               VerticalAlignment="Top" Margin="0,0,10,0"/>
-                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource AccentTextBrush}">
-                                        <Run FontWeight="Bold">Catatan Cloud API:</Run> balasan teks/tautan dalam 24 jam sejak pesan warga terakhir <Run FontWeight="SemiBold">gratis</Run>. Selama jam &amp; hari layanan tutup, permintaan tetap tercatat dan diproses otomatis saat layanan dibuka.
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- CATATAN PENTING -->
-                <Border Style="{StaticResource GuideCard}" Margin="0,0,0,20">
-                    <StackPanel>
-                        <Border Style="{StaticResource CardHead}">
-                            <DockPanel>
-                                <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left"
-                                        Background="{DynamicResource WarningSubtleBrush}">
-                                    <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x26A0;&#xFE0F;"/>
-                                </Border>
-                                <TextBlock Style="{StaticResource SectionTitle}" Text="CATATAN PENTING" Margin="10,0,0,0"/>
-                            </DockPanel>
-                        </Border>
-                        <StackPanel Style="{StaticResource CardBody}">
-                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
-                                Cloud API adalah jalur RESMI Meta — nomor desa tidak berisiko diblokir seperti gateway tidak resmi. Tetap hindari mengirim pesan massal ke nomor yang tidak pernah menghubungi desa (bisa terkena penilaian kualitas Meta). Pola layanan surat ini — warga chat duluan, aplikasi membalas — adalah pola paling aman dan sebagian besar gratis.
-                            </TextBlock>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-            </StackPanel>
-        </ScrollViewer>
-
-        <!-- Statusbar halaman: panduan aktif (kiri) + identitas aplikasi (kanan) -->
-        <c:AppStatusBar Grid.Row="2" Margin="0,0,0,0"
-                        StatusText="Panduan WhatsApp — ikuti langkah sesuai bagian di atas."/>
+        <!-- Statusbar halaman: status bagian aktif (kiri) + identitas aplikasi (kanan) -->
+        <c:AppStatusBar Grid.Row="3" Margin="0,0,0,0"
+                        StatusText="{Binding BagianAktif.DeskripsiStatus}"/>
     </Grid>
 </UserControl>

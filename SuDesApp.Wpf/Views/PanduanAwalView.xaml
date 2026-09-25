@@ -1,0 +1,267 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PanduanAwalView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== Kepala halaman ===== -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#128203;" FontSize="20"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Judul, Mode=OneWay}" Style="{StaticResource HeaderTitle}"
+                               AutomationProperties.Name="PANDUAN AWAL"/>
+                    <TextBlock Text="{Binding Pengantar, Mode=OneWay}" Style="{StaticResource HeaderSubtitle}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Margin="0,12,0,0" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+
+                <!-- ===== Kemajuan panduan ===== -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="KEMAJUAN PANDUAN" Style="{StaticResource FormSectionTitle}"/>
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding ProgresTeks, Mode=OneWay}" FontSize="16" FontWeight="Bold"
+                                       Margin="0,2,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextBrush}"
+                                       AutomationProperties.Name="Kemajuan panduan"/>
+
+                            <ProgressBar Height="8" Margin="0,8,0,0" Minimum="0" Maximum="100"
+                                         Value="{Binding ProgresPersen, Mode=OneWay}"
+                                         Foreground="{DynamicResource AccentBrush}"
+                                         AutomationProperties.Name="Bilah kemajuan panduan"/>
+
+                            <TextBlock Text="{Binding StatusPanduan, Mode=OneWay}" TextWrapping="Wrap"
+                                       FontSize="12" Margin="0,8,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <Border Grid.Column="1" CornerRadius="10" Padding="10,4" VerticalAlignment="Top"
+                                Margin="12,0,0,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SemuaSelesai}" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock FontSize="10.5" FontWeight="SemiBold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                        <Setter Property="Text" Value="Perlu dilengkapi"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SemuaSelesai}" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                <Setter Property="Text" Value="Siap dipakai"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- ===== Kesalahan membuka langkah (bukan dialog) ===== -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12"
+                        Background="{DynamicResource ErrorSubtleBrush}"
+                        Visibility="{Binding AdaKesalahan, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#9888;" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Top"
+                                   Foreground="{DynamicResource ErrorTextBrush}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding PesanKesalahan, Mode=OneWay}" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource ErrorTextBrush}"
+                                   AutomationProperties.Name="Kesalahan panduan"/>
+                    </Grid>
+                </Border>
+
+                <!-- ===== Daftar langkah ===== -->
+                <ItemsControl ItemsSource="{Binding Langkah}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Lencana nomor / centang -->
+                                    <Border Grid.Column="0" Width="34" Height="34" CornerRadius="17"
+                                            VerticalAlignment="Top" Margin="0,2,12,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Selesai}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding IkonNomor, Mode=OneWay}" FontSize="14" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Selesai}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Judul, Mode=OneWay}" FontSize="14"
+                                                       FontWeight="{Binding KetebalanJudul}"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                            <Border CornerRadius="9" Padding="8,2" Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Background="{DynamicResource PanelBrush}">
+                                                <TextBlock Text="{Binding StatusTeks, Mode=OneWay}" FontSize="10"
+                                                           FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Selesai}" Value="True">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                                </DataTrigger>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding Selesai}" Value="False"/>
+                                                                        <Condition Binding="{Binding Opsional}" Value="False"/>
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                                                </MultiDataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <TextBlock Text="{Binding Keterangan, Mode=OneWay}" TextWrapping="Wrap"
+                                                   FontSize="12" Margin="0,4,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                                        <TextBlock Text="{Binding Rincian, Mode=OneWay}" TextWrapping="Wrap"
+                                                   FontSize="11.5" Margin="0,6,0,0"
+                                                   Visibility="{Binding AdaRincian, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Selesai}" Value="False">
+                                                            <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="14,0,0,0">
+                                        <Button Content="{Binding JudulTombolTampil, Mode=OneWay}"
+                                                Command="{Binding DataContext.BukaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                MinWidth="170" Height="32" Padding="14,0"
+                                                Style="{StaticResource PrimaryButton}"
+                                                AutomationProperties.Name="{Binding JudulTombolTampil, Mode=OneWay}"/>
+                                        <Button Content="{Binding JudulTombolKedua, Mode=OneWay}"
+                                                Command="{Binding DataContext.TandaiPenomoranCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                MinWidth="170" Height="30" Padding="14,0" Margin="0,6,0,0"
+                                                Style="{StaticResource OutlineButton}"
+                                                Visibility="{Binding TampilkanTombolKedua, Converter={StaticResource BoolToVis}}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- ===== Kiat & catatan ===== -->
+                <Border Style="{StaticResource FormCard}">
+                    <StackPanel>
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="KIAT AGAR LEBIH MUDAH" Style="{StaticResource FormSectionTitle}"/>
+                        </StackPanel>
+
+                        <ItemsControl ItemsSource="{Binding Tips}" Margin="0,2,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="&#8226;" Margin="2,0,8,0"
+                                                   Foreground="{DynamicResource AccentTextBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Mode=OneWay}" TextWrapping="Wrap"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="{Binding Catatan, Mode=OneWay}" TextWrapping="Wrap" FontSize="11.5"
+                                   Margin="0,8,0,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ===== Statusbar halaman ===== -->
+        <c:AppStatusBar Grid.Row="2" Margin="0,14,0,0"
+                        StatusText="{Binding StatusPesan, FallbackValue='Memeriksa kelengkapan data…'}">
+            <c:AppStatusBar.Buttons>
+                <Button Content="Segarkan" Command="{Binding PeriksaCommand}" MinWidth="110" Height="30"
+                        Margin="0,0,8,0" Style="{StaticResource OutlineButton}"
+                        AutomationProperties.Name="Segarkan keadaan panduan"/>
+                <Button Content="Selesai &amp; Tutup" Command="{Binding SelesaiCommand}" MinWidth="150" Height="30"
+                        Style="{StaticResource PrimaryButton}"
+                        AutomationProperties.Name="Tutup panduan awal"/>
+            </c:AppStatusBar.Buttons>
+        </c:AppStatusBar>
+    </Grid>
+</UserControl>

@@ -1,0 +1,35 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.About.BagianDetailLengkapView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="AboutStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!-- Root menegaskan ulang DataContext ke VM halaman (lihat BagianDetailAplikasiView). -->
+    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:AboutView}}">
+        <Border Style="{StaticResource AboutCard}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Border Style="{StaticResource AccentSectionBar}"/>
+                    <TextBlock Text="DETAIL LENGKAP" Style="{StaticResource SectionTitle}"/>
+                </StackPanel>
+                <TextBlock Text="Gambaran lengkap SuDesApp — apa saja yang bisa dilakukan aplikasi ini."
+                           Style="{StaticResource SectionSubtitle}" Margin="0,0,0,14"/>
+
+                <!-- Kutipan ringkasan -->
+                <Border Background="{DynamicResource AccentSubtleBrush}" BorderBrush="{DynamicResource AccentBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
+                    <TextBlock Text="{Binding DeskripsiSingkat}" TextWrapping="Wrap" LineHeight="20"
+                               Foreground="{DynamicResource AccentTextBrush}"/>
+                </Border>
+
+                <TextBlock Text="{Binding AssemblyDescription}" TextWrapping="Wrap" LineHeight="22"
+                           Foreground="{DynamicResource TextBrush}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
