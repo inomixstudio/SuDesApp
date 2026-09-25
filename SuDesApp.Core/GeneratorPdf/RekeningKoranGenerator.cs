@@ -277,6 +277,10 @@ namespace SuDesApp.GeneratorPdf
             if (string.IsNullOrWhiteSpace(dariForm.Kabupaten)) dariForm.Kabupaten = pengaturan.Kabupaten;
             if (string.IsNullOrWhiteSpace(dariForm.Alamat)) dariForm.Alamat = pengaturan.Alamat;
             if (string.IsNullOrWhiteSpace(dariForm.Kodepos)) dariForm.Kodepos = pengaturan.Kodepos;
+            // Email desa (opsional) juga dilengkapi dari pengaturan: form rekening koran
+            // tidak mengisinya sendiri, jadi tanpa baris ini kop kehilangan email yang
+            // sudah diisi pengguna di Pengaturan Surat.
+            if (string.IsNullOrWhiteSpace(dariForm.Email)) dariForm.Email = pengaturan.Email;
             if (string.IsNullOrWhiteSpace(dariForm.KepalaDesa)) dariForm.KepalaDesa = pengaturan.KepalaDesa;
             if (string.IsNullOrWhiteSpace(dariForm.SekretarisDesa)) dariForm.SekretarisDesa = pengaturan.SekretarisDesa;
 

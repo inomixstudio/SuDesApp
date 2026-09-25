@@ -134,33 +134,41 @@ namespace SuDesApp.Services
         }
 
         /// <summary>
-        /// Pemasangan pertama kali. Hanya berjalan bila daftar template masih kosong
-        /// DAN penanda menunjukkan contoh bawaan belum pernah dipasang — sehingga
-        /// contoh yang sudah dihapus pengguna tidak muncul kembali sendiri.
+        /// Pemasangan otomatis contoh bawaan. Contoh baru (kodenya belum tercatat pada
+        /// penanda) selalu disiapkan begitu aplikasi dibuka — termasuk ketika aplikasi
+        /// diperbarui dan katalog contoh bertambah. Contoh yang sudah pernah dipasang,
+        /// lalu dihapus pengguna, tidak dimunculkan kembali (penandanya menahan kode
+        /// contoh yang pernah dipasang).
         /// </summary>
         public async Task<List<TemplateSuratKustom>> PasangOtomatisAsync()
         {
             try
             {
-                if (TemplateBawaanStore.SudahPernah()) return new List<TemplateSuratKustom>();
+                var sudah = TemplateBawaanStore.Muat();
 
-                var daftar = await _repository.GetAllAsync().ConfigureAwait(false);
+                // Kode contoh yang belum pernah tercatat dipasang. Contoh yang sudah
+                // tercatat (lalu mungkin dihapus pengguna) tidak dimasukkan lagi —
+                // itulah gunanya penanda: menghormati penghapusan oleh pengguna.
+                var kodeBaru = TemplateSuratBawaan.SemuaKode
+                    .Where(k => !sudah.Contains(k))
+                    .ToList();
 
-                // Sudah ada template buatan sendiri: cukup tandai, jangan menambah apa pun.
-                if (daftar.Count > 0)
+                if (kodeBaru.Count == 0) return new List<TemplateSuratKustom>();
+
+                var terpasang = await PasangAsync(kodeBaru).ConfigureAwait(false);
+
+                // Catat kode yang benar-benar terpasang. Bisa lebih sedikit dari
+                // kodeBaru bila namanya bertabrakan dengan template buatan pengguna.
+                var kodeBaruTerpasang = terpasang
+                    .Select(t => TemplateSuratBawaan.KodeDariNama(t.NamaTampil) ?? t.NamaTampil)
+                    .Where(k => !sudah.Contains(k))
+                    .ToList();
+
+                if (kodeBaruTerpasang.Count > 0)
                 {
-                    TemplateBawaanStore.Simpan(TemplateSuratBawaan.SemuaKode);
-                    return new List<TemplateSuratKustom>();
-                }
-
-                var terpasang = await PasangAsync().ConfigureAwait(false);
-                TemplateBawaanStore.Simpan(terpasang.Count > 0
-                    ? terpasang.Select(t => TemplateSuratBawaan.KodeDariNama(t.NamaTampil) ?? t.NamaTampil)
-                    : TemplateSuratBawaan.SemuaKode);
-
-                if (terpasang.Count > 0)
-                {
-                    _logger.LogInformation("{Jumlah} contoh template bawaan disiapkan otomatis.", terpasang.Count);
+                    TemplateBawaanStore.Simpan(sudah.Concat(kodeBaruTerpasang));
+                    _logger.LogInformation("{Jumlah} contoh template bawaan disiapkan otomatis.",
+                        kodeBaruTerpasang.Count);
                 }
 
                 return terpasang;

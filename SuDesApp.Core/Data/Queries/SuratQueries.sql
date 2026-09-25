@@ -314,6 +314,14 @@ LEFT JOIN Warga w ON s.ID_Warga = w.ID_Warga
 LEFT JOIN Instansi i ON s.ID_Surat = i.ID_Surat
 {WhereClause};
 
+-- GetFilteredSuratStatusCounts
+SELECT s.Status AS Status, COUNT(*) AS Jumlah FROM Surat s
+INNER JOIN JenisSurat js ON s.ID_Jenis = js.ID_Jenis
+LEFT JOIN Warga w ON s.ID_Warga = w.ID_Warga
+LEFT JOIN Instansi i ON s.ID_Surat = i.ID_Surat
+{WhereClause}
+GROUP BY s.Status;
+
 -- GetAllSuratData
 SELECT 
     s.ID_Surat, s.ID_Jenis, s.NomorSurat, s.TanggalSurat, 

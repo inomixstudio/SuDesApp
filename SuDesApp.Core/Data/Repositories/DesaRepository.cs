@@ -119,7 +119,10 @@ namespace SuDesApp.Data.Repositories
                 ("IjinTinggal", "NikPenanggungJawab", "TEXT"),
                 ("IjinTinggal", "NamaPenanggungJawab", "TEXT"),
                 ("IjinTinggal", "TglLahirPenanggungJawab", "TEXT"),
-                ("IjinTinggal", "PekerjaanPenanggungJawab", "TEXT")
+                ("IjinTinggal", "PekerjaanPenanggungJawab", "TEXT"),
+                // Surel kantor desa (opsional) pada data desa/kop surat: database yang
+                // dibuat sebelum kolom ini ada langsung mendapatkannya saat aplikasi start.
+                ("InfoDesa", "Email", "TEXT")
             };
 
             foreach (var (table, column, definition) in pendingColumns)
@@ -240,6 +243,7 @@ namespace SuDesApp.Data.Repositories
                         Kodepos TEXT,
                         KepalaDesa TEXT,
                         SekretarisDesa TEXT,
+                        Email TEXT,
                         NamaCamat TEXT,
                         NipCamat TEXT,
                         GolCamat TEXT
@@ -382,18 +386,22 @@ namespace SuDesApp.Data.Repositories
 
         private DesaData CreateDefaultDesaData()
         {
+            // Pejabat Kecamatan sengaja dibiarkan kosong: camat tidak dipakai semua
+            // surat, jadi pengguna tidak dipaksa mengisi data contoh yang salah.
             return new DesaData
             {
-                NamaDesa = "Nama Desa",
-                Kecamatan = "Nama Kecamatan",
-                Kabupaten = "Nama Kabupaten",
-                Alamat = "Alamat Desa",
-                Kodepos = "00000",
-                KepalaDesa = "Nama Kepala Desa",
-                SekretarisDesa = "Nama Sekretaris Desa",
-                NamaCamat = "Nama Camat",
-                NipCamat = "000000000000000000",
-                GolCamat = "IV/a"
+                NamaDesa = DesaContoh.NamaDesa,
+                Kecamatan = DesaContoh.Kecamatan,
+                Kabupaten = DesaContoh.Kabupaten,
+                Alamat = DesaContoh.Alamat,
+                Kodepos = DesaContoh.Kodepos,
+                KepalaDesa = DesaContoh.KepalaDesa,
+                SekretarisDesa = DesaContoh.SekretarisDesa,
+                // Surel sengaja dikosongkan: kolom opsional, tidak semua desa memilikinya.
+                Email = string.Empty,
+                NamaCamat = string.Empty,
+                NipCamat = string.Empty,
+                GolCamat = string.Empty
             };
         }
 
@@ -422,10 +430,10 @@ namespace SuDesApp.Data.Repositories
                         connection,
                         @"INSERT INTO InfoDesa 
                             (NamaDesa, Kecamatan, Kabupaten, Alamat, Kodepos, 
-                             KepalaDesa, SekretarisDesa, NamaCamat, NipCamat, GolCamat)
+                             KepalaDesa, SekretarisDesa, Email, NamaCamat, NipCamat, GolCamat)
                           VALUES 
                             (@NamaDesa, @Kecamatan, @Kabupaten, @Alamat, @Kodepos, 
-                             @KepalaDesa, @SekretarisDesa, @NamaCamat, @NipCamat, @GolCamat)",
+                             @KepalaDesa, @SekretarisDesa, @Email, @NamaCamat, @NipCamat, @GolCamat)",
                         desaData,
                         null, // transaction
                         null, // commandTimeout
@@ -445,6 +453,7 @@ namespace SuDesApp.Data.Repositories
                             Kodepos = @Kodepos, 
                             KepalaDesa = @KepalaDesa, 
                             SekretarisDesa = @SekretarisDesa,
+                            Email = @Email,
                             NamaCamat = @NamaCamat, 
                             NipCamat = @NipCamat, 
                             GolCamat = @GolCamat",

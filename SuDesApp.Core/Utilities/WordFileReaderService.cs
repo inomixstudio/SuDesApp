@@ -12,8 +12,10 @@ namespace SuDesApp.Utilities
     /// <summary>
     /// Membaca teks paragraf dari file Word (.docx) dan (.doc).
     /// .docx dibaca tanpa library eksternal (System.IO.Compression + XmlReader).
-    /// .doc (format biner lama) dapat dibaca lewat Word COM bila Microsoft Word terpasang;
-    /// bila tidak tersedia, pengguna diminta memakai .docx.
+    /// .doc (format biner lama) dikonversi otomatis menjadi .docx memakai Microsoft Word
+    /// (IWordDocConverter) lalu dibaca dengan cara yang sama, sehingga susunan berkas dan
+    /// teks header/footer (tempat nomor & tanggal resmi) ikut terbaca. Bila Microsoft Word
+    /// tidak terpasang, pengguna menerima petunjuk yang jelas, bukan kesalahan misterius.
     /// </summary>
     public interface IWordFileReader
     {
@@ -29,10 +31,17 @@ namespace SuDesApp.Utilities
     public class WordFileReaderService : IWordFileReader
     {
         private readonly ILogger<WordFileReaderService> _logger;
+        private readonly IWordDocConverter? _konverterDoc;
 
-        public WordFileReaderService(ILogger<WordFileReaderService> logger)
+        /// <param name="konverterDoc">
+        /// Pengubah berkas .doc lama menjadi .docx. Bila tidak tersedia (Word tidak
+        /// terpasang), berkas .doc ditolak dengan petunjuk konversi manual.
+        /// </param>
+        public WordFileReaderService(
+            ILogger<WordFileReaderService> logger, IWordDocConverter? konverterDoc = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _konverterDoc = konverterDoc;
         }
 
         public async Task<WordFileContent> ReadAsync(string filePath, CancellationToken ct = default)
@@ -51,7 +60,7 @@ namespace SuDesApp.Utilities
             }
             else if (ext == ".DOC")
             {
-                ReadDocViaCom(filePath, content);
+                await ReadDocLamaAsync(filePath, content, ct).ConfigureAwait(false);
             }
             else
             {
@@ -131,69 +140,44 @@ namespace SuDesApp.Utilities
             return paragraphs;
         }
 
-        private void ReadDocViaCom(string filePath, WordFileContent content)
+        /// <summary>
+        /// Baca berkas .doc (Word 97-2003) lewat konversi otomatis ke .docx, memakai
+        /// pengubah yang sama dengan fitur "Buat dari File Word". Berkas sementara
+        /// selalu dihapus setelah dibaca.
+        /// </summary>
+        private async Task ReadDocLamaAsync(string filePath, WordFileContent content, CancellationToken ct)
         {
-            _logger.LogInformation("Mencoba baca .doc lewat Word COM: {Path}", filePath);
-            var appType = Type.GetTypeFromProgID("Word.Application");
-            if (appType == null || appType == typeof(System.DBNull))
+            if (_konverterDoc == null || !_konverterDoc.Tersedia)
             {
-                throw new NotSupportedException(
-                    "File .doc (format lama) memerlukan Microsoft Word yang terpasang. " +
-                    "Silakan konversi ke .docx (Simpan Sebagai → Word Document) lalu pilih file .docx.");
+                throw new NotSupportedException(WordDocConverter.PesanTanpaWord);
             }
 
-            object? app = null;
-            object? doc = null;
+            _logger.LogInformation("Mengonversi berkas .doc untuk dibaca: {Path}", filePath);
+
+            string? sementara = null;
             try
             {
-                app = Activator.CreateInstance(appType);
-                appType.InvokeMember("Visible", BF_SetProperty, null, app, new object[] { false });
-
-                var documents = appType.InvokeMember("Documents", BF_GetProperty, null, app, null);
-                var docsType = documents?.GetType();
-                doc = docsType?.InvokeMember("Open", BF_InvokeMethod, null, documents,
-                    new object[] { filePath, false, true }); // ReadOnly
-
-                var docType = doc?.GetType();
-                var contentRange = docType?.InvokeMember("Content", BF_GetProperty, null, doc, null);
-                var text = contentRange?.GetType().InvokeMember("Text", BF_GetProperty, null, contentRange, null) as string;
-
-                if (!string.IsNullOrEmpty(text))
-                {
-                    content.Paragraphs.AddRange(text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
-                                                     .Select(p => p.Trim())
-                                                     .Where(p => p.Length > 0));
-                }
+                sementara = await _konverterDoc.KeDocxAsync(filePath, ct).ConfigureAwait(false);
+                await ReadDocxAsync(sementara, content, ct).ConfigureAwait(false);
             }
             finally
             {
-                if (doc != null)
+                if (!string.IsNullOrEmpty(sementara))
                 {
-                    try { doc.GetType().InvokeMember("Close", BF_InvokeMethod, null, doc, new object[] { false }); }
-                    catch { /* ignore */ }
-                }
-                if (app != null)
-                {
-                    try { app.GetType().InvokeMember("Quit", BF_InvokeMethod, null, app, null); }
-                    catch { /* ignore */ }
-                    try { System.Runtime.InteropServices.Marshal.ReleaseComObject(app); }
-                    catch { /* ignore */ }
+                    try { File.Delete(sementara); }
+                    catch { /* berkas sementara gagal dihapus; dibersihkan saat aplikasi dijalankan lagi */ }
                 }
             }
         }
-
-        private const System.Reflection.BindingFlags BF_SetProperty =
-            System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
-        private const System.Reflection.BindingFlags BF_GetProperty =
-            System.Reflection.BindingFlags.GetProperty | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
-        private const System.Reflection.BindingFlags BF_InvokeMethod =
-            System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
     }
 
     internal static class WordParsingRegex
     {
+        // Nilai nomor sengaja tidak boleh memuat baris baru: tanpa itu pola ini menelan
+        // baris di bawahnya ("TENTANG", "MENETAPKAN :", …) sehingga kolom Nomor formulir
+        // terisi beberapa baris sekaligus.
         public static readonly Regex NomorRegex = new(
-            @"\b(?:NOMOR|No\.?|NOMOR\s+PERATURAN|NO\.)\s*[:\-\s]*[.:-]?\s*(\d+\s+TAHUN\s+\d{4}|[\d/.\-\sA-Za-z]{5,})",
+            @"\b(?:NOMOR|No\.?|NOMOR PERATURAN|NO\.)\s*[:\-]?\s*[.:]?\s*(\d+[ \t]+TAHUN[ \t]+\d{4}|[A-Za-z0-9][A-Za-z0-9/.\- \t]{3,})",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static readonly string[] Bulan =

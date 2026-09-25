@@ -42,7 +42,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to add content for NamaWarga={NamaWarga}", suratData.Warga.Nama);
+                _logger.LogError(ex, "Failed to add content for NamaWarga={NamaWarga}", suratData.Warga?.Nama);
                 throw;
             }
         }
@@ -62,15 +62,17 @@ namespace SuDesApp.GeneratorPdf
 
         private void AddDataWargaSection(BadanSurat badan, SuratData suratData)
         {
+            var warga = suratData.Warga ?? throw new InvalidOperationException("Data warga tidak lengkap untuk membuat PDF SKCK.");
+
             badan.TabelFormulir(
             [
-                ("Nama", suratData.Warga.Nama ?? UnknownValue),
-                ("Nomor KTP", suratData.Warga.NIK ?? UnknownValue),
-                ("Tempat/Tgl Lahir", $"{suratData.Warga.TempatLahir ?? UnknownValue}, {FormatTanggalLahir(suratData.Warga.TanggalLahir)}"),
-                ("Kewarganegaraan", suratData.Warga.Kewarganegaraan ?? UnknownValue),
-                ("Jenis Kelamin", suratData.Warga.JenisKelamin ?? UnknownValue),
-                ("Status Perkawinan", suratData.Warga.StatusPerkawinan ?? UnknownValue),
-                ("Pendidikan", suratData.Warga.Pendidikan ?? UnknownValue),
+                ("Nama", warga.Nama ?? UnknownValue),
+                ("Nomor KTP", warga.NIK ?? UnknownValue),
+                ("Tempat/Tgl Lahir", $"{warga.TempatLahir ?? UnknownValue}, {FormatTanggalLahir(warga.TanggalLahir)}"),
+                ("Kewarganegaraan", warga.Kewarganegaraan ?? UnknownValue),
+                ("Jenis Kelamin", warga.JenisKelamin ?? UnknownValue),
+                ("Status Perkawinan", warga.StatusPerkawinan ?? UnknownValue),
+                ("Pendidikan", warga.Pendidikan ?? UnknownValue),
                 ("Alamat", FormatAlamat(suratData)),
             ]);
         }
@@ -169,7 +171,7 @@ namespace SuDesApp.GeneratorPdf
             }));
         }
 
-        private string FormatTanggalLahir(string dbDate)
+        private string FormatTanggalLahir(string? dbDate)
         {
             if (string.IsNullOrWhiteSpace(dbDate))
                 return UnknownValue;

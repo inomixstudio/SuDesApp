@@ -12,6 +12,10 @@ namespace SuDesApp.GeneratorPdf
 
         public SuratKeluarMasukGenerator(DesaData desaInfo)
         {
+            // Generator ini tidak mewarisi SuratGeneratorBase: pastikan font buku
+            // (Times New Roman) sudah terdaftar juga bila ini PDF pertama sesi.
+            SuratGeneratorBase.DaftarkanFont();
+
             _desaInfo = desaInfo ?? new DesaData();
             QuestPDF.Settings.License = LicenseType.Community;
         }
@@ -57,7 +61,7 @@ namespace SuDesApp.GeneratorPdf
                 {
                     page.Size(PageSizes.A4.Landscape());
                     page.Margin(1.5f, Unit.Centimetre);
-                    page.DefaultTextStyle(style => style.FontSize(10).FontFamily(Fonts.Arial));
+                    page.DefaultTextStyle(style => style.FontSize(10).FontFamily("Times New Roman"));
 
                     page.Header().Element(ComposeHeader);
                     page.Content().Element(content => ComposeContentForPage(content, pageData.ToList()));

@@ -27,7 +27,7 @@ namespace SuDesApp.GeneratorPdf
         private const string DefaultTanggalFormat = "dd MMMM yyyy";
         private const string UnknownValue = "Tidak Diketahui";
 
-        public override async Task GeneratePdfAsync(Stream outputStream, int idSurat, string keteranganTextBox = default)
+        public override async Task GeneratePdfAsync(Stream outputStream, int idSurat, string? keteranganTextBox = null)
         {
 
             try
@@ -48,7 +48,7 @@ namespace SuDesApp.GeneratorPdf
                 }
 
                 _logger.LogInformation("SuratData retrieved: NamaWarga={NamaWarga}, NIK={NIK}, NomorSurat={NomorSurat}, NamaDesa={NamaDesa}, KepalaDesa={KepalaDesa}, Keterangan={Keterangan}",
-                    suratData.Warga.Nama, suratData.Warga.NIK, suratData.NomorSurat, suratData.Desa.NamaDesa, suratData.Desa.KepalaDesa, suratData.Keterangan);
+                    suratData.Warga?.Nama, suratData.Warga?.NIK, suratData.NomorSurat, suratData.Desa?.NamaDesa, suratData.Desa?.KepalaDesa, suratData.Keterangan);
 
                 await base.GeneratePdfAsync(outputStream, suratData, keteranganTextBox);
             }
@@ -63,8 +63,11 @@ namespace SuDesApp.GeneratorPdf
         {
             try
             {
+                var warga = suratData.Warga ?? throw new InvalidOperationException("Data warga tidak lengkap untuk menghasilkan PDF SKU.");
+                var desa = suratData.Desa ?? throw new InvalidOperationException("Data desa tidak lengkap untuk menghasilkan PDF SKU.");
+
                 _logger.LogInformation("Rendering content: NamaWarga={NamaWarga}, NamaDesa={NamaDesa}, KepalaDesa={KepalaDesa}, KeteranganTextBox={KeteranganTextBox}, SuratData.Keterangan={SuratDataKeterangan}",
-                    suratData.Warga.Nama, suratData.Desa.NamaDesa, suratData.Desa.KepalaDesa, keteranganTextBox, suratData.Keterangan);
+                    warga.Nama, desa.NamaDesa, desa.KepalaDesa, keteranganTextBox, suratData.Keterangan);
 
                 badan.Paragraf("Yang bertanda tangan di bawah ini :", jarakBawah: 10);
 
@@ -76,16 +79,16 @@ namespace SuDesApp.GeneratorPdf
 
                 badan.Paragraf("Dengan ini menerangkan bahwa :", jarakBawah: 10);
 
-                string alamatLengkap = AlamatFormatter.Format(suratData.Warga);
+                string alamatLengkap = AlamatFormatter.Format(warga);
                 badan.TabelFormulir(
                 [
-                    ("Nama", suratData.Warga.Nama),
-                    ("NIK", suratData.Warga.NIK),
-                    ("Tempat/Tanggal Lahir", $"{suratData.Warga.TempatLahir}, {FormatTanggalLahir(suratData.Warga.TanggalLahir)}"),
-                    ("Jenis Kelamin", suratData.Warga.JenisKelamin),
-                    ("Agama", suratData.Warga.Agama),
-                    ("Status Perkawinan", suratData.Warga.StatusPerkawinan),
-                    ("Pekerjaan", suratData.Warga.Pekerjaan ?? ""),
+                    ("Nama", warga.Nama),
+                    ("NIK", warga.NIK),
+                    ("Tempat/Tanggal Lahir", $"{warga.TempatLahir}, {FormatTanggalLahir(warga.TanggalLahir)}"),
+                    ("Jenis Kelamin", warga.JenisKelamin),
+                    ("Agama", warga.Agama),
+                    ("Status Perkawinan", warga.StatusPerkawinan),
+                    ("Pekerjaan", warga.Pekerjaan ?? ""),
                     ("Alamat", alamatLengkap),
                 ]);
 
@@ -118,12 +121,12 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SKU, NamaWarga={NamaWarga}", suratData.Warga.Nama);
+                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SKU, NamaWarga={NamaWarga}", suratData.Warga?.Nama);
                 throw;
             }
         }
 
-        private string FormatTanggalLahir(string dbDate)
+        private string FormatTanggalLahir(string? dbDate)
         {
             if (string.IsNullOrWhiteSpace(dbDate))
                 return UnknownValue;

@@ -56,6 +56,12 @@ namespace SuDesApp.GeneratorPdf
             _suratRepository = suratRepository ?? throw new ArgumentNullException(nameof(suratRepository));
             _settingsManager = settingsManager ?? throw new ArgumentNullException(nameof(settingsManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // Generator register tidak mewarisi SuratGeneratorBase, jadi pendaftaran
+            // font harus dipanggil sendiri — bila ini dokumen PDF pertama pada sesi,
+            // keluarga "Times New Roman" belum ada dan dokumen akan gagal dibuat.
+            SuratGeneratorBase.DaftarkanFont(config, logger);
+
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
@@ -154,7 +160,7 @@ namespace SuDesApp.GeneratorPdf
                     page.Size(PageSizes.A4.Landscape());
                     page.Margin(12.7f, Unit.Millimetre);
                     page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontSize(DEFAULT_FONT_SIZE).FontFamily(Fonts.Arial));
+                    page.DefaultTextStyle(x => x.FontSize(DEFAULT_FONT_SIZE).FontFamily("Times New Roman"));
 
                     // Header
                     page.Header().Column(column =>
@@ -165,7 +171,11 @@ namespace SuDesApp.GeneratorPdf
                         column.Item().PaddingVertical(8);
                     });
 
-                    // Tabel
+                    // Tabel. Kolom "Calon Mempelai" hanya dicetak pada buku register NTCR:
+                    // pada register surat desa umum, semua barisnya bukan blanko NTCR
+                    // sehingga kolom itu selalu berisi "-" (halaman Register Surat pun
+                    // sudah lama tidak menampilkannya) — ruangnya lebih berguna untuk
+                    // kolom identitas surat.
                     page.Content().PaddingVertical(10).AlignCenter().Table(table =>
                     {
                         table.ColumnsDefinition(columns =>
@@ -179,7 +189,11 @@ namespace SuDesApp.GeneratorPdf
                             columns.RelativeColumn(3.0f); // Alamat
                             columns.RelativeColumn(2.0f); // Digunakan Untuk
                             columns.RelativeColumn(2.0f); // Jenis Surat
-                            columns.RelativeColumn(1.8f); // Calon Mempelai (NTCR)
+
+                            if (isRegisterNtcr)
+                            {
+                                columns.RelativeColumn(1.8f); // Calon Mempelai (khas blanko NTCR)
+                            }
                         });
 
                         table.Header(header =>
@@ -193,7 +207,11 @@ namespace SuDesApp.GeneratorPdf
                             header.Cell().Element(TableCellStyle).PaddingVertical(5).Text("Alamat").AlignCenter().Bold();
                             header.Cell().Element(TableCellStyle).PaddingVertical(5).Text("Digunakan Untuk").AlignCenter().Bold();
                             header.Cell().Element(TableCellStyle).PaddingVertical(5).Text("Jenis Surat").AlignCenter().Bold();
-                            header.Cell().Element(TableCellStyle).PaddingVertical(5).Text("Calon Mempelai").AlignCenter().Bold();
+
+                            if (isRegisterNtcr)
+                            {
+                                header.Cell().Element(TableCellStyle).PaddingVertical(5).Text("Calon Mempelai").AlignCenter().Bold();
+                            }
                         });
 
                         int noUrut = 1;
@@ -304,18 +322,29 @@ namespace SuDesApp.GeneratorPdf
                             table.Cell().Element(TableCellStyle).AlignLeft().Text(alamatPemohonAtauInstansi);
                             table.Cell().Element(TableCellStyle).AlignLeft().Text(keperluanData);
                             table.Cell().Element(TableCellStyle).AlignLeft().Text(jenisSuratDisplay);
-                            table.Cell().Element(TableCellStyle).AlignLeft().Text(namaPasangan);
+
+                            if (isRegisterNtcr)
+                            {
+                                table.Cell().Element(TableCellStyle).AlignLeft().Text(namaPasangan);
+                            }
 
                             noUrut++;
                         }
-                    });
 
-                    // Keterangan tambahan
-                    if (!string.IsNullOrWhiteSpace(keteranganTextBox))
-                    {
-                        page.Content().PaddingTop(10).Text("Keterangan Tambahan:").Bold();
-                        page.Content().Text(keteranganTextBox);
-                    }
+                        // Keterangan tambahan dicetak sebagai baris penutup tabel.
+                        // QuestPDF menolak page.Content() dipanggil dua kali, sedangkan
+                        // cara lama membuat layer konten kedua — akibatnya buku register
+                        // gagal dibuat setiap kali kolom keterangan diisi.
+                        if (!string.IsNullOrWhiteSpace(keteranganTextBox))
+                        {
+                            table.Cell().ColumnSpan((uint)(isRegisterNtcr ? 10 : 9)).Element(TableCellStyle)
+                                .Text(teks =>
+                                {
+                                    teks.Span("Keterangan Tambahan: ").Bold();
+                                    teks.Span(keteranganTextBox);
+                                });
+                        }
+                    });
 
                     // Footer
                     page.Footer().AlignCenter().Column(column =>

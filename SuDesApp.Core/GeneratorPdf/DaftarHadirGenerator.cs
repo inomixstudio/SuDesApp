@@ -37,6 +37,10 @@ namespace SuDesApp.GeneratorPdf
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
             _logger = logger ?? NullLogger<DaftarHadirGenerator>.Instance;
+
+            // Generator ini tidak mewarisi SuratGeneratorBase: pastikan font buku
+            // (Times New Roman) sudah terdaftar juga bila ini PDF pertama sesi.
+            SuratGeneratorBase.DaftarkanFont(config, _logger);
         }
 
         public void GeneratePdf(Stream outputStream, DaftarHadirData data)
@@ -128,7 +132,7 @@ namespace SuDesApp.GeneratorPdf
                 page.MarginBottom(Landscape ? 18 : 40, Unit.Point);
                 page.MarginLeft(45, Unit.Point);
                 // Landscape memuat banyak kolom → teks sedikit lebih kecil agar tidak berlipat.
-                page.DefaultTextStyle(x => x.FontFamily(Fonts.TimesNewRoman).FontSize(Landscape ? 10 : 11));
+                page.DefaultTextStyle(x => x.FontFamily("Times New Roman").FontSize(Landscape ? 10 : 11));
 
                 // Kop + judul diletakkan di header agar tetap tampil di tiap halaman.
                 page.Header().Element(ComposeHeader);
@@ -140,9 +144,19 @@ namespace SuDesApp.GeneratorPdf
         {
             container.Column(column =>
             {
-                column.Item().Element(ComposeKopSurat);
+                // Kop surat hanya dicetak bila dipilih pengguna (ceklis
+                // "Tampilkan Kop Surat"). Tanpa kop, margin atas diperluas agar
+                // lembar tetap lega untuk cap/stempel manual.
+                if (_data.TampilkanKopSurat)
+                {
+                    column.Item().Element(ComposeKopSurat);
+                    column.Item().PaddingTop(14).Element(ComposeJudul);
+                }
+                else
+                {
+                    column.Item().PaddingTop(6).Element(ComposeJudul);
+                }
 
-                column.Item().PaddingTop(14).Element(ComposeJudul);
                 column.Item().PaddingTop(6).Element(ComposeBarisInfo);
             });
         }
@@ -277,11 +291,24 @@ namespace SuDesApp.GeneratorPdf
                     {
                         foreach (var baris in barisKop)
                         {
-                            var teks = col.Item().AlignCenter().Text(baris.Teks).FontSize(baris.FontSize);
-                            if (baris.Tebal)
+                            // Sama seperti dokumen lain: surel desa (opsional) dicetak biru
+                            // sebagai baris tersendiri di bawah nama kabupaten.
+                            col.Item().AlignCenter().Text(teks =>
                             {
-                                teks.Bold();
-                            }
+                                var utama = teks.Span(baris.Teks).FontSize(baris.FontSize);
+                                if (baris.Tebal)
+                                {
+                                    utama.Bold();
+                                }
+
+                                if (baris.AdaSurel)
+                                {
+                                    var pemisah = baris.Teks.Length == 0 ? string.Empty : " ";
+                                    teks.Span(pemisah + baris.Surel)
+                                        .FontSize(baris.FontSize)
+                                        .FontColor(KopSurat.WarnaSurel);
+                                }
+                            });
                         }
                     });
                 });

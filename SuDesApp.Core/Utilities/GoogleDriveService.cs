@@ -28,8 +28,10 @@ namespace SuDesApp.Utilities
 
     public sealed class DriveItem
     {
-        public string ?Id { get; set; }
-        public string ?Name { get; set; }
+        // Id & Name selalu ada pada respons Files API (diminta di request.Fields),
+        // jadi keduanya non-null: memudahkan pemakai (ViewModel Drive) tanpa cek null.
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         public string ?MimeType { get; set; }
         public long? Size { get; set; }
         public DateTime? ModifiedTime { get; set; }
@@ -38,7 +40,7 @@ namespace SuDesApp.Utilities
 
         public bool IsFolder => MimeType == GoogleDriveService.FolderMimeType;
         public bool IsPdf => MimeType == "application/pdf";
-        public bool IsGoogleDoc => MimeType.StartsWith("application/vnd.google-apps.", StringComparison.Ordinal);
+        public bool IsGoogleDoc => MimeType?.StartsWith("application/vnd.google-apps.", StringComparison.Ordinal) == true;
 
         public string TypeDisplay
         {
@@ -87,7 +89,8 @@ namespace SuDesApp.Utilities
         private string _clientId;
         private string _clientSecret;
         private readonly string _tokenFolder;
-        private DriveService _service;
+        // Nullable: klien dibangun malas lewat GetClientAsync dan dibuang lewat ResetClient.
+        private DriveService? _service;
 
         /// <summary>
         /// Serialisasi pembuatan klien OAuth: dua pemanggil bersamaan (mis. badge
@@ -113,14 +116,21 @@ namespace SuDesApp.Utilities
             _authMode = section["authMode"] ?? "";
 
             // Sumber kredensial (urutan):
-            // 1. File terenkripsi DPAPI per-user (GoogleClientCredentials) — jalur utama;
-            // 2. appsettings.json (kompatibilitas instalasi lama) — sekret dulu ditulis di sini,
-            //    kini section-nya boleh kosong/dihapus.
+            // 1. File terenkripsi DPAPI per-user (GoogleClientCredentials) — diisi teknisi
+            //    lewat API SaveClientCredentials (bukan UI pengaturan);
+            // 2. Kredensial tertanam di aplikasi (GoogleClientCredentialsBawaan) — ikut
+            //    installer, tidak dapat diubah pengguna;
+            // 3. appsettings.json (kompatibilitas instalasi lama).
             var stored = GoogleClientCredentials.Load();
             if (!string.IsNullOrWhiteSpace(stored?.ClientId) && !string.IsNullOrWhiteSpace(stored.ClientSecret))
             {
                 _clientId = stored.ClientId;
                 _clientSecret = stored.ClientSecret;
+            }
+            else if (GoogleClientCredentialsBawaan.Tersedia)
+            {
+                _clientId = GoogleClientCredentialsBawaan.ClientId;
+                _clientSecret = GoogleClientCredentialsBawaan.ClientSecret;
             }
             else
             {
@@ -189,14 +199,16 @@ namespace SuDesApp.Utilities
 
         public async Task<DriveService> GetClientAsync(CancellationToken ct = default)
         {
-            if (_service != null) return _service;
+            var existing = _service;
+            if (existing != null) return existing;
 
             await _clientLock.WaitAsync(ct).ConfigureAwait(false);
             try
             {
                 // Double-check: pemanggil lain mungkin sudah selesai membangun klien
                 // selama kita menunggu gembok.
-                if (_service != null) return _service;
+                existing = _service;
+                if (existing != null) return existing;
 
                 var drive = await Task.Run(() => BuildClient(ct: ct), ct).ConfigureAwait(false);
                 _service = drive;
@@ -491,7 +503,7 @@ namespace SuDesApp.Utilities
             return created.Id;
         }
 
-        public async Task<DriveItem> UploadFileAsync(string filePath, string? parentId = null, string fileName = null,
+        public async Task<DriveItem> UploadFileAsync(string filePath, string? parentId = null, string? fileName = null,
             IProgress<double>? progress = null, CancellationToken ct = default)
         {
             if (!File.Exists(filePath))
@@ -536,7 +548,7 @@ namespace SuDesApp.Utilities
             return result;
         }
 
-        public async Task<DriveItem> UploadBytesAsync(byte[] content, string mimeType, string fileName, string parentId = default,
+        public async Task<DriveItem> UploadBytesAsync(byte[] content, string mimeType, string fileName, string? parentId = default,
             IProgress<double>? progress = null, CancellationToken ct = default)
         {
             var client = await GetClientAsync(ct).ConfigureAwait(false);
@@ -645,12 +657,12 @@ namespace SuDesApp.Utilities
             _logger.LogInformation("Izin 'siapa saja dengan tautan' diberikan untuk berkas {Id}", fileId);
         }
 
-        private static DriveItem ToDriveItem(Google.Apis.Drive.v3.Data.File f, string parentId)
+        private static DriveItem ToDriveItem(Google.Apis.Drive.v3.Data.File f, string? parentId)
         {
             return new DriveItem
             {
-                Id = f.Id,
-                Name = f.Name,
+                Id = f.Id ?? string.Empty,
+                Name = f.Name ?? string.Empty,
                 MimeType = f.MimeType,
                 Size = f.Size,
                 ModifiedTime = f.ModifiedTime,

@@ -128,6 +128,8 @@ namespace SuDesApp.Data.Models
             KeteranganPenghasilan(),
             KeteranganBelumMenikah(),
             UndanganRapat(),
+            SuratKuasa(),
+            SuratTugas(),
             PengumumanWarga()
         };
 
@@ -321,6 +323,88 @@ namespace SuDesApp.Data.Models
                       "dan tanpa diwakilkan.")
                 .Teks("Demikian undangan ini disampaikan untuk dilaksanakan sebagaimana mestinya. Atas perhatian dan " +
                       "kehadirannya kami ucapkan terima kasih.")
+                .Jadi());
+
+        private static ContohTemplateSurat SuratKuasa()
+        {
+            // Surat kuasa lazimnya tidak memakai kop desa dan ditandatangani oleh
+            // pemberi kuasa di atas materai (bukan oleh Kepala Desa).
+            var template = new PenyusunContoh("Surat Kuasa", "SURAT KUASA", "591")
+                .SusunanBagian()
+                .Teks("Yang bertanda tangan di bawah ini:", RataBlokTemplate.Kiri)
+                .BagianDataDiri("Pemberi Kuasa",
+                    F("Nama", wajib: true),
+                    F("NIK", TipeKolomTemplate.Nik, true),
+                    F("Tempat Lahir"),
+                    F("Tanggal Lahir", TipeKolomTemplate.Tanggal),
+                    F("Jenis Kelamin", TipeKolomTemplate.Pilihan,
+                        pilihan: new[] { "Laki-laki", "Perempuan" }),
+                    F("Pekerjaan"),
+                    F("Jabatan", wajib: true),
+                    F("Alamat", TipeKolomTemplate.Paragraf, true))
+                .Teks("Dalam hal ini bertindak untuk dan atas nama diri sendiri, selanjutnya disebut sebagai " +
+                      "PEMBERI KUASA, dengan ini memberikan kuasa kepada:", RataBlokTemplate.Kiri)
+                .BagianDataDiri("Penerima Kuasa",
+                    F("Nama", wajib: true),
+                    F("NIK", TipeKolomTemplate.Nik, true),
+                    F("Pekerjaan"),
+                    F("Alamat", TipeKolomTemplate.Paragraf, true))
+                .Teks("Untuk selanjutnya disebut sebagai PENERIMA KUASA, khusus untuk:", RataBlokTemplate.Kiri)
+                .KelompokKolom("Isi Kuasa")
+                .Kolom("Hal yang Dikuasakan", TipeKolomTemplate.Paragraf, wajib: true,
+                       bawaan: "Mewakili pemberi kuasa mengurus penerimaan dan/atau penandatanganan dokumen di instansi terkait")
+                .Kolom("Masa Berlaku", TipeKolomTemplate.Teks,
+                       bawaan: "6 (enam) bulan sejak surat kuasa ini diterbitkan")
+                .Teks("Penerima kuasa tidak berhak melimpahkan (menguasakan kembali) kuasa ini kepada pihak lain, " +
+                      "kecuali dengan persetujuan tertulis lebih dahulu dari pemberi kuasa.")
+                .Teks("Pemberi kuasa dapat mencabut surat kuasa ini sewaktu-waktu selama kepentingan yang " +
+                      "dikuasakan belum selesai dilaksanakan.")
+                .Teks("Demikian surat kuasa ini dibuat dengan sebenarnya di atas materai secukupnya sesuai " +
+                      "ketentuan peraturan perundang-undangan yang berlaku, untuk dipergunakan sebagaimana mestinya.")
+                .Jadi();
+
+            template.PakaiKop = false;
+            template.PenandatanganDariDataDiri = true;
+            template.KunciPenandatanganDataDiri = "datadiri0";
+            template.JabatanPenandatangan = "Pemberi Kuasa";
+
+            return new ContohTemplateSurat(
+                "surat-kuasa",
+                "Surat Kuasa",
+                "Kuasa",
+                "Surat pemberian kuasa dari warga (pemberi kuasa) kepada orang lain (penerima kuasa) " +
+                "untuk mengurus atau mewakili suatu kepentingan tertentu.",
+                template);
+        }
+
+        private static ContohTemplateSurat SuratTugas() => new(
+            "surat-tugas",
+            "Surat Tugas",
+            "Tugas",
+            "Penugasan resmi kepada perangkat desa atau warga untuk melaksanakan suatu tugas, " +
+            "menghadiri kegiatan, atau mewakili desa pada acara tertentu.",
+            new PenyusunContoh("Surat Tugas", "SURAT TUGAS", "592")
+                .SusunanBagian()
+                .Teks("Yang bertanda tangan di bawah ini menerangkan bahwa berdasarkan keperluan dinas/kegiatan, " +
+                      "dengan ini menugaskan:", RataBlokTemplate.Kiri)
+                .BagianDataDiri("Yang Ditugaskan",
+                    F("Nama", wajib: true),
+                    F("NIK", TipeKolomTemplate.Nik, true),
+                    F("Tempat Lahir"),
+                    F("Tanggal Lahir", TipeKolomTemplate.Tanggal),
+                    F("Pekerjaan"),
+                    F("Alamat", TipeKolomTemplate.Paragraf, true))
+                .Teks("Untuk melaksanakan tugas sebagai berikut:", RataBlokTemplate.Kiri)
+                .KelompokKolom("Tugas yang Dilaksanakan")
+                .Kolom("Uraian Tugas", TipeKolomTemplate.Paragraf, wajib: true,
+                       bawaan: "Menghadiri rapat koordinasi perangkat desa se-kecamatan")
+                .Kolom("Hari/Tanggal Pelaksanaan", TipeKolomTemplate.Tanggal, wajib: true)
+                .Kolom("Waktu", TipeKolomTemplate.Teks, bawaan: "08.00 WIB s.d. selesai")
+                .Kolom("Tempat", TipeKolomTemplate.Teks, wajib: true, bawaan: "Kantor Kecamatan")
+                .Teks("Selesai melaksanakan tugas tersebut, yang bersangkutan wajib menyampaikan hasil dan laporan " +
+                      "kegiatannya kepada pejabat yang menugaskan.")
+                .Teks("Demikian surat tugas ini diberikan untuk dilaksanakan dengan sebaik-baiknya dan penuh " +
+                      "tanggung jawab.")
                 .Jadi());
 
         private static ContohTemplateSurat PengumumanWarga() => new(

@@ -553,5 +553,41 @@ namespace SuDesApp.Data.Models
             }
             return true;
         }
+
+        /// <summary>
+        /// Baca urutan nomor dari nomor yang sudah dicetak berdasarkan pola. Segmen
+        /// yang memuat penanda {urut} ditemukan lebih dulu pada pola, lalu segmen yang
+        /// sama pada nomor dibaca angkanya — tepat untuk pola berawalan angka seperti
+        /// "474.3/005/Ds/2026" (angka 474 milik awalan, bukan urutan).
+        /// Mengembalikan null bila urutan tidak dapat ditentukan.
+        /// </summary>
+        public static int? BacaUrutDariNomor(string? pola, string? nomorDicetak)
+        {
+            if (string.IsNullOrWhiteSpace(nomorDicetak)) return null;
+
+            string bentuk = (pola ?? string.Empty).Trim();
+            if (bentuk.Length == 0) return null;
+
+            var segmenPola = bentuk.Split('/');
+            var segmenNomor = (nomorDicetak ?? string.Empty).Trim().Split('/');
+
+            for (int i = 0; i < segmenPola.Length; i++)
+            {
+                if (!segmenPola[i].Contains("{urut", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (i >= segmenNomor.Length) return null;
+
+                // Segmen urutan boleh disertai teks lain (mis. "No. 005");
+                // angka di dalamnya itulah urutannya.
+                string angka = new string(segmenNomor[i].Where(char.IsDigit).ToArray());
+                if (angka.Length == 0 || angka.Length > 9) return null;
+                if (int.TryParse(angka, NumberStyles.None, CultureInfo.InvariantCulture, out int urut) && urut > 0)
+                    return urut;
+                return null;
+            }
+
+            return null;
+        }
     }
 }

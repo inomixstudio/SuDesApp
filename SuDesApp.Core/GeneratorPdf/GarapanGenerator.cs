@@ -215,7 +215,7 @@ namespace SuDesApp.GeneratorPdf
         }
 
         /// <summary>Format tanggal dari DB (yyyy-MM-dd) ke tampilan surat.</summary>
-        private string ParseTanggalToUiFormat(string dbDate, string format = "dd-MM-yyyy")
+        private string ParseTanggalToUiFormat(string? dbDate, string format = "dd-MM-yyyy")
         {
             if (string.IsNullOrWhiteSpace(dbDate)) return string.Empty;
             if (DateTime.TryParseExact(dbDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate))

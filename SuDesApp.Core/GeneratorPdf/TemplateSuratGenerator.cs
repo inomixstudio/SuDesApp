@@ -81,7 +81,7 @@ namespace SuDesApp.GeneratorPdf
                             try
                             {
                                 using var aliran = new MemoryStream(File.ReadAllBytes(berkas));
-                                FontManager.RegisterFont(aliran);
+                                FontManager.RegisterFontFromStream(aliran);
                             }
                             catch
                             {
@@ -200,7 +200,7 @@ namespace SuDesApp.GeneratorPdf
             page.MarginRight(45, Unit.Point);
             page.MarginBottom(kerapatan.MarginBawah, Unit.Point);
             page.MarginLeft(45, Unit.Point);
-            page.DefaultTextStyle(x => x.FontFamily(Fonts.TimesNewRoman).FontSize(SuratRenderer.UkuranTeks));
+            page.DefaultTextStyle(x => x.FontFamily("Times New Roman").FontSize(SuratRenderer.UkuranTeks));
         }
 
         /// <summary>Susun seluruh elemen surat sesuai pilihan pada definisi template.</summary>
@@ -316,7 +316,7 @@ namespace SuDesApp.GeneratorPdf
                 {
                     string isi = TemplateSuratNilai.NilaiCetak(k, TemplateSuratNilai.Ambil(nilai, k.Kunci));
                     if (isi.Length == 0) isi = k.Wajib ? "...................." : string.Empty;
-                    return (Label: k.Label.Trim(), Nilai: isi);
+                    return (Label: k.Label.Trim(), Nilai: (string?)isi);
                 })
                 .ToList();
 
@@ -341,7 +341,8 @@ namespace SuDesApp.GeneratorPdf
         /// <summary>
         /// Tentukan jabatan dan nama penandatangan. Bila template memilih salah satu
         /// blok Data Diri sebagai penandatangan, nama diambil dari kolom "Nama" dan
-        /// jabatan dari kolom "Jabatan" blok tersebut; bila kosong, jatuh ke Kepala Desa.
+        /// jabatan dari kolom "Jabatan" blok tersebut; bila kosong, jatuh ke pejabat desa
+        /// menurut jabatan yang dipilih (Sekretaris Desa atau Kepala Desa).
         /// </summary>
         private static (string Jabatan, string Nama) JatuhkanPenandatangan(
             TemplateSuratKustom template,
@@ -374,18 +375,33 @@ namespace SuDesApp.GeneratorPdf
                 }
             }
 
-            // Nilai default: Kepala Desa.
-            string pejabat = string.IsNullOrWhiteSpace(namaPejabat)
-                ? (desa?.KepalaDesa ?? string.Empty)
-                : namaPejabat;
-            return (JabatanCetak(template.JabatanPenandatangan, namaDesa), pejabat);
+            // Nilai default menurut jabatan: Sekretaris Desa memakai nama sekretaris desa,
+            // selain itu Kepala Desa.
+            string jabatanTemplate = template.JabatanPenandatangan ?? string.Empty;
+            string pejabat;
+            if (!string.IsNullOrWhiteSpace(namaPejabat))
+            {
+                pejabat = namaPejabat;
+            }
+            else if (jabatanTemplate.Contains("Sekretaris", StringComparison.OrdinalIgnoreCase))
+            {
+                pejabat = string.IsNullOrWhiteSpace(desa?.SekretarisDesa)
+                    ? (desa?.KepalaDesa ?? string.Empty)
+                    : desa!.SekretarisDesa!;
+            }
+            else
+            {
+                pejabat = desa?.KepalaDesa ?? string.Empty;
+            }
+
+            return (JabatanCetak(jabatanTemplate, namaDesa), pejabat);
         }
 
         /// <summary>
         /// Tabel bergaris: setiap kolom menjadi satu baris berlabel. Barisnya diberi
         /// garis tipis supaya isinya terbaca sebagai grid.
         /// </summary>
-        private static void TabelGrid(IContainer container, IReadOnlyList<(string Label, string Nilai)> baris)
+        private static void TabelGrid(IContainer container, IReadOnlyList<(string Label, string? Nilai)> baris)
         {
             float leading = KerapatanSurat.Aktif.LeadingSelTabel;
             float padding = KerapatanSurat.Aktif.PaddingSelTabel;

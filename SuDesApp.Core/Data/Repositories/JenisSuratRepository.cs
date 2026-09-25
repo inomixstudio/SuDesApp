@@ -194,19 +194,20 @@ namespace SuDesApp.Data.Repositories
             if (string.IsNullOrWhiteSpace(nomorSurat))
                 throw new ArgumentException("Nomor surat tidak boleh kosong.", nameof(nomorSurat));
 
-            string cacheKey = $"NomorSurat_Exists_{nomorSurat}";
-            return await GetWithCacheAsync(cacheKey, async () =>
-            {
-                var count = await SqlMapper.ExecuteScalarAsync<int>(
-                    _uow.Connection,
-                    "SELECT COUNT(*) FROM Surat WHERE NomorSurat = @NomorSurat",
-                    new { NomorSurat = nomorSurat },
-                    _uow.CurrentTransaction,
-                    null, // commandTimeout
-                    null  // commandType
-                );
-                return count > 0;
-            }, TimeSpan.FromMinutes(10));
+            // DIPERBAIKI: tidak lagi memakai GetWithCacheAsync. Sebelumnya hasil negatif
+            // ("nomor belum dipakai") disimpan 10 menit di cache dan tidak pernah
+            // divalidasi ulang saat surat disimpan, sehingga nomor yang baru tersimpan
+            // masih dianggap kosong -> deret unik menghasilkan nomor ganda, lalu batu
+            // di InsertAsync (UNIQUE / "Nomor surat sudah digunakan").
+            var count = await SqlMapper.ExecuteScalarAsync<int>(
+                _uow.Connection,
+                "SELECT COUNT(*) FROM Surat WHERE NomorSurat = @NomorSurat",
+                new { NomorSurat = nomorSurat },
+                _uow.CurrentTransaction,
+                null, // commandTimeout
+                null  // commandType
+            );
+            return count > 0;
         }
 
         public async Task<List<JenisSuratKelas>> GetAllJenisSuratAsync()
@@ -447,30 +448,53 @@ namespace SuDesApp.Data.Repositories
                 // meneruskan hitungan deret awalan lama.
                 var awalan = SuDesApp.Services.PenomoranSuratService.AmbilAwalan(config.NomorFormat);
 
-                sql = $@"
-                    SELECT 
-                        COALESCE(MAX(
-                            CAST(
-                                SUBSTR(
-                                    s.NomorSurat,
-                                    INSTR(s.NomorSurat, '/') + 1,
-                                    INSTR(SUBSTR(s.NomorSurat, INSTR(s.NomorSurat, '/') + 1), '/') - 1
-                                ) AS INTEGER
-                            )
-                        ), 0) + 1
-                    FROM Surat s
-                    INNER JOIN JenisSurat js ON s.ID_Jenis = js.ID_Jenis
-                    WHERE js.KodeJenis = @Filter
-                      AND s.NomorSurat LIKE '%/Ds/' || @Tahun
-                      AND SUBSTR(TRIM(s.NomorSurat), 1, LENGTH(@Awalan)) = @Awalan
-                      AND LENGTH(TRIM(s.NomorSurat)) > 0";
+                // DIPERBAIKI: blanko NTCR Kepdirjen N1–N6 memakai satu deret bersama
+                // (awalan 474.3). Sebelumnya setiap blanko dihitung per KodeJenis sendiri
+                // sehingga N1–N6 semuanya mulai dari 001 -> nomor ganda & gagal simpan.
+                bool deretBersamaNtcr = SuratConstants.IsNtcrBlankoKepdirjen(config.NamaJenis);
 
-                parameters = new
-                {
-                    Filter = config.KodeJenis,
-                    Tahun = currentYear,
-                    Awalan = awalan
-                };
+                sql = deretBersamaNtcr
+                    ? $@"
+                        SELECT 
+                            COALESCE(MAX(
+                                CAST(
+                                    SUBSTR(
+                                        s.NomorSurat,
+                                        INSTR(s.NomorSurat, '/') + 1,
+                                        INSTR(SUBSTR(s.NomorSurat, INSTR(s.NomorSurat, '/') + 1), '/') - 1
+                                    ) AS INTEGER
+                                )
+                            ), 0) + 1
+                        FROM Surat s
+                        WHERE s.NomorSurat LIKE '%/Ds/' || @Tahun
+                          AND SUBSTR(TRIM(s.NomorSurat), 1, LENGTH(@Awalan)) = @Awalan
+                          AND LENGTH(TRIM(s.NomorSurat)) > 0"
+                    : $@"
+                        SELECT 
+                            COALESCE(MAX(
+                                CAST(
+                                    SUBSTR(
+                                        s.NomorSurat,
+                                        INSTR(s.NomorSurat, '/') + 1,
+                                        INSTR(SUBSTR(s.NomorSurat, INSTR(s.NomorSurat, '/') + 1), '/') - 1
+                                    ) AS INTEGER
+                                )
+                            ), 0) + 1
+                        FROM Surat s
+                        INNER JOIN JenisSurat js ON s.ID_Jenis = js.ID_Jenis
+                        WHERE js.KodeJenis = @Filter
+                          AND s.NomorSurat LIKE '%/Ds/' || @Tahun
+                          AND SUBSTR(TRIM(s.NomorSurat), 1, LENGTH(@Awalan)) = @Awalan
+                          AND LENGTH(TRIM(s.NomorSurat)) > 0";
+
+                parameters = deretBersamaNtcr
+                    ? new { Tahun = currentYear, Awalan = awalan }
+                    : new
+                    {
+                        Filter = config.KodeJenis,
+                        Tahun = currentYear,
+                        Awalan = awalan
+                    };
             }
 
             try

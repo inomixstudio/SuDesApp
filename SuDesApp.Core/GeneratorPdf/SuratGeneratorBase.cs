@@ -74,19 +74,35 @@ namespace SuDesApp.GeneratorPdf
             _logger = logger ?? NullLogger<SuratGeneratorBase>.Instance;
             _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
 
-            DaftarkanFont();
+            DaftarkanFont(_config, _logger);
         }
+
+        private static bool _fontSudahDidaftarkan;
 
         /// <summary>
         /// Daftarkan seluruh font di folder font ke QuestPDF sehingga keluarga
-        /// "Times New Roman" tersedia untuk semua dokumen surat.
+        /// "Times New Roman" tersedia untuk semua dokumen surat. Statis dan sekali
+        /// per proses — generator mana pun boleh memanggilnya, termasuk yang tidak
+        /// mewarisi kelas ini (mis. SuratRegisterGenerator) agar PDF pertama pada
+        /// sebuah sesi tetap punya font terdaftar.
         /// </summary>
-        private void DaftarkanFont()
+        internal static void DaftarkanFont(AppConfig config, ILogger logger)
+            => DaftarkanFontCore(config.FontFolder, logger);
+
+        /// <summary>Overload tanpa konfigurasi: memakai folder font bawaan aplikasi
+        /// (Resources/Fonts di direktori aplikasi). Untuk generator buku yang tidak
+        /// menerima AppConfig (Keputusan, Agenda Surat Masuk/Keluar).</summary>
+        internal static void DaftarkanFont(ILogger? logger = null)
+            => DaftarkanFontCore(null, logger ?? NullLogger.Instance);
+
+        private static void DaftarkanFontCore(string? fontFolder, ILogger logger)
         {
-            var fontFolder = _config.FontFolder;
+            if (_fontSudahDidaftarkan) return;
+
+            fontFolder ??= System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "Fonts");
             if (!Directory.Exists(fontFolder))
             {
-                _logger.LogError("Folder font tidak ditemukan: {FontFolder}", fontFolder);
+                logger.LogError("Folder font tidak ditemukan: {FontFolder}", fontFolder);
                 throw new DirectoryNotFoundException($"Folder font tidak ditemukan: {fontFolder}");
             }
 
@@ -95,7 +111,7 @@ namespace SuDesApp.GeneratorPdf
                 try
                 {
                     using var aliran = new MemoryStream(File.ReadAllBytes(berkas));
-                    FontManager.RegisterFont(aliran);
+                    FontManager.RegisterFontFromStream(aliran);
                 }
                 catch
                 {
@@ -103,10 +119,11 @@ namespace SuDesApp.GeneratorPdf
                 }
             }
 
-            _logger.LogInformation("Font dari {FontFolder} didaftarkan ke QuestPDF.", fontFolder);
+            _fontSudahDidaftarkan = true;
+            logger.LogInformation("Font dari {FontFolder} didaftarkan ke QuestPDF.", fontFolder);
         }
 
-        public virtual async Task GeneratePdfAsync(Stream outputStream, int idSurat, string keteranganTextBox = default)
+        public virtual async Task GeneratePdfAsync(Stream outputStream, int idSurat, string? keteranganTextBox = null)
         {
             try
             {
@@ -260,7 +277,7 @@ namespace SuDesApp.GeneratorPdf
             // bersama kerapatan bila isi surat memang panjang.
             page.MarginBottom(kerapatan.MarginBawah, Unit.Point);
             page.MarginLeft(45, Unit.Point);
-            page.DefaultTextStyle(x => x.FontFamily(Fonts.TimesNewRoman).FontSize(DEFAULT_FONT_SIZE));
+            page.DefaultTextStyle(x => x.FontFamily("Times New Roman").FontSize(DEFAULT_FONT_SIZE));
         }
 
         /// <summary>
@@ -373,6 +390,10 @@ namespace SuDesApp.GeneratorPdf
         /// <summary>Data yang tercetak pada blok tanda tangan.</summary>
         protected (bool TampilkanPemohon, string? NamaPemohon, string NamaDesa, string TanggalTerformat, string Jabatan, string NamaPejabat, string LabelPemohon) DataKakiSurat(SuratData suratData, string labelPemohon)
         {
+            // Desa sudah divalidasi saat generator menyiapkan data; bila tetap null,
+            // gagalkan dengan pesan jelas alih-alih melempar NullReferenceException.
+            var desa = suratData.Desa ?? throw new InvalidOperationException("Objek DesaData adalah null saat menyusun blok tanda tangan surat.");
+
             string tanggalTerformat = suratData.TanggalSurat.ToString("dd MMMM yyyy", new CultureInfo("id-ID"));
 
             var pejabat = string.IsNullOrEmpty(suratData.PejabatPenandatangan)
@@ -381,14 +402,14 @@ namespace SuDesApp.GeneratorPdf
 
             // Jabatan ditulis KAPITAL sesuai template resmi desa ("KEPALA DESA SUMBERJAYA").
             var jabatan = pejabat.Equals("Sekretaris Desa", StringComparison.OrdinalIgnoreCase)
-                ? $"A/N Kepala Desa {suratData.Desa.NamaDesa}\nSekretaris Desa".ToUpperInvariant()
-                : $"Kepala Desa {suratData.Desa.NamaDesa}".ToUpperInvariant();
+                ? $"A/N Kepala Desa {desa.NamaDesa}\nSekretaris Desa".ToUpperInvariant()
+                : $"Kepala Desa {desa.NamaDesa}".ToUpperInvariant();
 
             // Nama penandatangan: kapital pada namanya, gelar dibiarkan apa adanya.
             var namaPejabat = !string.IsNullOrEmpty(suratData.NamaPejabatPenandatangan)
                 ? NamaFormatter.ToUpperNama(suratData.NamaPejabatPenandatangan)
-                : (!string.IsNullOrEmpty(suratData.Desa.KepalaDesa)
-                    ? NamaFormatter.ToUpperNama(suratData.Desa.KepalaDesa)
+                : (!string.IsNullOrEmpty(desa.KepalaDesa)
+                    ? NamaFormatter.ToUpperNama(desa.KepalaDesa)
                     : "_______________________");
 
             bool tampilkanPemohon = ShowPemohonInFooter;
@@ -398,7 +419,7 @@ namespace SuDesApp.GeneratorPdf
                 tampilkanPemohon = false;
             }
 
-            return (tampilkanPemohon, suratData.Warga?.Nama, suratData.Desa.NamaDesa ?? "NAMA DESA", tanggalTerformat, jabatan, namaPejabat, labelPemohon);
+            return (tampilkanPemohon, suratData.Warga?.Nama, desa.NamaDesa ?? "NAMA DESA", tanggalTerformat, jabatan, namaPejabat, labelPemohon);
         }
 
         /// <summary>

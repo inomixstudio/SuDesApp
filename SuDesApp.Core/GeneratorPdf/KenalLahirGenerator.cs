@@ -62,7 +62,7 @@ namespace SuDesApp.GeneratorPdf
             badan.ParagrafCampur(new List<(string, bool)>
             {
                 ("Yang bertanda tangan dibawah ini, Kepala Desa ", false),
-                (desa.NamaDesa, true),
+                (desa.NamaDesa ?? "", true),
                 ($" Kecamatan {desa.Kecamatan} Kabupaten {desa.Kabupaten} menerangkan berdasarkan keterangan dari :", false)
             },
             rata: Rata.Justify,

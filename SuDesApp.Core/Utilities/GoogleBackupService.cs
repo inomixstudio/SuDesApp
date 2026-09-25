@@ -292,7 +292,7 @@ namespace SuDesApp.Utilities
             {
                 var items = await _driveService.ListItemsAsync(folderId, ct).ConfigureAwait(false);
                 var oldBackups = items
-                    .Where(i => !i.IsFolder && i.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .Where(i => !i.IsFolder && i.Name?.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) == true)
                     .OrderByDescending(i => i.Name, StringComparer.OrdinalIgnoreCase) // nama memuat tanggal => urut waktu
                     .Skip(MaxBackups)
                     .ToList();

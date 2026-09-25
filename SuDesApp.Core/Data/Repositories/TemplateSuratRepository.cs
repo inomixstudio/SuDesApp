@@ -21,6 +21,9 @@ namespace SuDesApp.Data.Repositories
         Task<TemplateSuratKustom> AddAsync(TemplateSuratKustom template);
         Task UpdateAsync(TemplateSuratKustom template);
         Task DeleteAsync(int id);
+
+        /// <summary>Benar bila nama template sudah dipakai template lain (abaikan abjad) selain id dikecualikan.</summary>
+        Task<bool> NamaTerpakaiAsync(string nama, int kecualiId);
     }
 
     /// <summary>
@@ -209,6 +212,16 @@ namespace SuDesApp.Data.Repositories
                     .ConfigureAwait(false)).ConfigureAwait(false);
             _logger.LogInformation("Template surat dihapus: Id={Id}", id);
             _activityLog?.Log("Template Surat", $"ID {id}", "Hapus");
+        }
+
+        public async Task<bool> NamaTerpakaiAsync(string nama, int kecualiId)
+        {
+            await EnsureInitializedAsync().ConfigureAwait(false);
+            const string sql = @"SELECT COUNT(1) FROM TemplateSuratKustom
+                                 WHERE Nama = @Nama COLLATE NOCASE AND Id != @Kecuali";
+            long jumlah = await _connection.ExecuteScalarAsync<long>(sql,
+                new { Nama = (nama ?? string.Empty).Trim(), Kecuali = kecualiId }).ConfigureAwait(false);
+            return jumlah > 0;
         }
 
         // =====================================================================

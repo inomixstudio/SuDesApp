@@ -8,6 +8,16 @@ namespace SuDesApp.ControlSurat
 {
     public partial class SettingsManager
     {
+        /// <summary>
+        /// Dipicu setelah data desa benar-benar tersimpan (beserta data barunya).
+        ///
+        /// Dipakai untuk melanjutkan pekerjaan yang tadi ditahan karena data desa masih
+        /// contoh — mis. surat dari permintaan WhatsApp — sehingga semua penyimpan data
+        /// desa (halaman Pengaturan Surat, pemulihan database, apa pun yang datang
+        /// kemudian) otomatis membuka penahanan itu tanpa perlu mendaftar sendiri-sendiri.
+        /// </summary>
+        public event EventHandler<DesaData>? PengaturanDesaTersimpan;
+
         private readonly IDesaRepository _desaRepository;
         private readonly string _connectionString;
         private readonly ILogger<SettingsManager> _logger;
@@ -99,6 +109,36 @@ namespace SuDesApp.ControlSurat
             }
         }
 
+        /// <summary>
+        /// Pastikan kolom <c>Email</c> ada pada InfoDesa — kolom opsional untuk email
+        /// kantor desa yang dicetak biru di kop surat. Database yang dibuat sebelum fitur
+        /// ini ada belum memilikinya, jadi kolomnya ditambahkan sekali di sini.
+        /// </summary>
+        private async Task PastikanKolomEmailAsync(SqliteConnection connection)
+        {
+            try
+            {
+                var periksa = connection.CreateCommand();
+                periksa.CommandText =
+                    "SELECT COUNT(*) FROM pragma_table_info('InfoDesa') WHERE name = 'Email' COLLATE NOCASE";
+
+                if (Convert.ToInt32(await periksa.ExecuteScalarAsync()) > 0)
+                {
+                    return;
+                }
+
+                _logger.LogInformation("Menambahkan kolom Email pada InfoDesa (data desa lama).");
+                var tambah = connection.CreateCommand();
+                tambah.CommandText = "ALTER TABLE InfoDesa ADD COLUMN Email TEXT";
+                await tambah.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                // Kolom opsional: kegagalan di sini dicatat, tidak menghentikan alur simpan.
+                _logger.LogWarning(ex, "Gagal memastikan kolom Email pada InfoDesa");
+            }
+        }
+
         public async Task SaveSettingsAsync(DesaData desaData)
         {
             if (desaData == null)
@@ -107,8 +147,8 @@ namespace SuDesApp.ControlSurat
                 throw new ArgumentNullException(nameof(desaData));
             }
 
-            _logger.LogInformation("Saving village settings: NamaDesa={NamaDesa}, Kecamatan={Kecamatan}, Kabupaten={Kabupaten}, Alamat={Alamat}, Kodepos={Kodepos}, KepalaDesa={KepalaDesa}, SekretarisDesa={SekretarisDesa}, NamaCamat={NamaCamat}, NipCamat={NipCamat}, GolCamat={GolCamat}",
-                desaData.NamaDesa, desaData.Kecamatan, desaData.Kabupaten, desaData.Alamat, desaData.Kodepos, desaData.KepalaDesa, desaData.SekretarisDesa, desaData.NamaCamat, desaData.NipCamat, desaData.GolCamat);
+            _logger.LogInformation("Saving village settings: NamaDesa={NamaDesa}, Kecamatan={Kecamatan}, Kabupaten={Kabupaten}, Alamat={Alamat}, Kodepos={Kodepos}, KepalaDesa={KepalaDesa}, SekretarisDesa={SekretarisDesa}, Email={Email}, NamaCamat={NamaCamat}, NipCamat={NipCamat}, GolCamat={GolCamat}",
+                desaData.NamaDesa, desaData.Kecamatan, desaData.Kabupaten, desaData.Alamat, desaData.Kodepos, desaData.KepalaDesa, desaData.SekretarisDesa, desaData.Email, desaData.NamaCamat, desaData.NipCamat, desaData.GolCamat);
 
             try
             {
@@ -119,12 +159,17 @@ namespace SuDesApp.ControlSurat
                 checkCommand.CommandText = "SELECT COUNT(*) FROM InfoDesa";
                 var count = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
 
+                // Database lama belum punya kolom Email (email desa pada kop surat).
+                // Pastikan kolomnya ada lebih dulu supaya penyimpanan tidak gagal walau
+                // migrasi skema belum sempat berjalan.
+                await PastikanKolomEmailAsync(connection);
+
                 var command = connection.CreateCommand();
 
                 if (count == 0)
                 {
-                    command.CommandText = @"INSERT INTO InfoDesa (NamaDesa, Kecamatan, Kabupaten, Alamat, Kodepos, KepalaDesa, SekretarisDesa, NamaCamat, NipCamat, GolCamat)
-                                    VALUES (@namaDesa, @kecamatan, @kabupaten, @alamat, @kodepos, @kepalaDesa, @sekretarisDesa, @namaCamat, @nipCamat, @golCamat)";
+                    command.CommandText = @"INSERT INTO InfoDesa (NamaDesa, Kecamatan, Kabupaten, Alamat, Kodepos, KepalaDesa, SekretarisDesa, Email, NamaCamat, NipCamat, GolCamat)
+                                    VALUES (@namaDesa, @kecamatan, @kabupaten, @alamat, @kodepos, @kepalaDesa, @sekretarisDesa, @email, @namaCamat, @nipCamat, @golCamat)";
                     _logger.LogInformation("Executing INSERT for InfoDesa.");
                 }
                 else
@@ -137,6 +182,7 @@ namespace SuDesApp.ControlSurat
                                         Kodepos = @kodepos,
                                         KepalaDesa = @kepalaDesa,
                                         SekretarisDesa = @sekretarisDesa,
+                                        Email = @email,
                                         NamaCamat = @namaCamat,
                                         NipCamat = @nipCamat,
                                         GolCamat = @golCamat";
@@ -150,6 +196,9 @@ namespace SuDesApp.ControlSurat
                 AddParameterWithNullCheck(command, "@kodepos", desaData.Kodepos);
                 AddParameterWithNullCheck(command, "@kepalaDesa", desaData.KepalaDesa);
                 AddParameterWithNullCheck(command, "@sekretarisDesa", desaData.SekretarisDesa);
+                // Surel opsional: nilai kosong tetap tersimpan sebagai NULL/teks kosong
+                // dan tidak pernah menghalangi penyimpanan data desa.
+                AddParameterWithNullCheck(command, "@email", desaData.Email);
                 AddParameterWithNullCheck(command, "@namaCamat", desaData.NamaCamat);
                 AddParameterWithNullCheck(command, "@nipCamat", desaData.NipCamat);
                 AddParameterWithNullCheck(command, "@golCamat", desaData.GolCamat);
@@ -162,6 +211,10 @@ namespace SuDesApp.ControlSurat
                 // atau generator surat — masih memakai nama desa yang lama.
                 await _desaRepository.InvalidateCacheAsync();
                 _logger.LogInformation("Cache data desa dibersihkan setelah pengaturan disimpan.");
+
+                // Pemberitahuan ini sengaja dilakukan paling akhir: pelanggannya membaca
+                // data desa dari database, jadi harus melihat isi yang baru.
+                PengaturanDesaTersimpan?.Invoke(this, desaData);
             }
             catch (Exception ex)
             {
@@ -170,7 +223,7 @@ namespace SuDesApp.ControlSurat
             }
         }
 
-        private void AddParameterWithNullCheck(SqliteCommand command, string parameterName, string value)
+        private void AddParameterWithNullCheck(SqliteCommand command, string parameterName, string? value)
         {
             if (value != null && value.Length > 255)
             {

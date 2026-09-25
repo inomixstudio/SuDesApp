@@ -27,26 +27,29 @@ namespace SuDesApp.GeneratorPdf
             try
             {
                 // Perbaikan: Pengecekan data Instansi dengan fallback
-                if (suratData.Instansi == null || !suratData.Instansi.IsValid())
+                var instansi = suratData.Instansi;
+                if (instansi == null || !instansi.IsValid())
                 {
                     _logger.LogWarning("Data Instansi tidak lengkap untuk membuat PDF Domisili Instansi. Surat ID: {SuratId}. Menggunakan data default.",
                         suratData.ID_Surat);
-                    suratData.Instansi = new Instansi
+                    instansi = new Instansi
                     {
                         NamaInstansi = "[Nama Instansi Tidak Ditemukan]",
                         AlamatInstansi = "[Alamat Instansi Tidak Ditemukan]"
                     };
+                    suratData.Instansi = instansi;
                 }
 
-                if (suratData.Desa == null || string.IsNullOrWhiteSpace(suratData.Desa.NamaDesa) ||
-                    string.IsNullOrWhiteSpace(suratData.Desa.Kecamatan) || string.IsNullOrWhiteSpace(suratData.Desa.Kabupaten))
+                var desa = suratData.Desa;
+                if (desa == null || string.IsNullOrWhiteSpace(desa.NamaDesa) ||
+                    string.IsNullOrWhiteSpace(desa.Kecamatan) || string.IsNullOrWhiteSpace(desa.Kabupaten))
                 {
                     _logger.LogError("Data Desa tidak lengkap untuk membuat PDF Domisili Instansi. Surat ID: {SuratId}", suratData.ID_Surat);
                     throw new InvalidOperationException("Data Desa tidak lengkap.");
                 }
 
                 _logger.LogInformation("Rendering content for Domisili Instansi: NamaInstansi={NamaInstansi}, NomorSurat={NomorSurat}",
-                    suratData.Instansi.NamaInstansi, suratData.NomorSurat);
+                    instansi.NamaInstansi, suratData.NomorSurat);
 
                 badan.Paragraf("Yang bertanda tangan di bawah ini :", jarakBawah: 10);
 
@@ -59,16 +62,16 @@ namespace SuDesApp.GeneratorPdf
                 badan.Paragraf("Dengan ini menerangkan bahwa :", jarakBawah: 10);
 
                 // Format Alamat Instansi dengan menyertakan Desa, Kecamatan, Kabupaten
-                string alamatLengkapInstansi = $"{suratData.Instansi.AlamatInstansi} " + // Pemeriksaan null sudah dilakukan di atas
-                                             $"Desa {suratData.Desa.NamaDesa} " +
-                                             $"\nKecamatan {suratData.Desa.Kecamatan} " +
-                                             $"Kab. {suratData.Desa.Kabupaten}" +
-                                             $"\nKodepos {suratData.Desa.Kodepos}";
+                string alamatLengkapInstansi = $"{instansi.AlamatInstansi} " + // Pemeriksaan null sudah dilakukan di atas
+                                             $"Desa {desa.NamaDesa} " +
+                                             $"\nKecamatan {desa.Kecamatan} " +
+                                             $"Kab. {desa.Kabupaten}" +
+                                             $"\nKodepos {desa.Kodepos}";
 
                 // Nama instansi dicetak kapital + tebal, seperti tabel formulir desa.
                 badan.TabelFormulir(
                 [
-                    ("Nama Instansi/Lembaga", suratData.Instansi.NamaInstansi),
+                    ("Nama Instansi/Lembaga", instansi.NamaInstansi),
                     ("Alamat Instansi/Lembaga", alamatLengkapInstansi),
                 ],
                 labelTebal: ["Nama Instansi/Lembaga"]);
@@ -78,7 +81,7 @@ namespace SuDesApp.GeneratorPdf
                 if (string.IsNullOrWhiteSpace(keteranganFinal))
                 {
                     _logger.LogWarning("Keterangan kosong untuk Surat ID: {SuratId}. Menggunakan fallback keterangan internal.", suratData.ID_Surat);
-                    keteranganFinal = $"Adalah benar domisili instansi tersebut diatas berada di wilayah administratif Desa {suratData.Desa.NamaDesa} Kecamatan {suratData.Desa.Kecamatan} Kabupaten {suratData.Desa.Kabupaten}.";
+                    keteranganFinal = $"Adalah benar domisili instansi tersebut diatas berada di wilayah administratif Desa {desa.NamaDesa} Kecamatan {desa.Kecamatan} Kabupaten {desa.Kabupaten}.";
                 }
 
                 // Indentasi 60pt untuk seluruh baris (indent 30 + padding kiri 30 pada bentuk lama).

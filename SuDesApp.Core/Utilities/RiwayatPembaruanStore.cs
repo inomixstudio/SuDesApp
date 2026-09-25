@@ -66,6 +66,9 @@ namespace SuDesApp.Utilities
             set => _path = string.IsNullOrWhiteSpace(value) ? null : value;
         }
 
+        /// <summary>Benar bila berkas riwayat ada di disk (termasuk bila isinya tidak terbaca).</summary>
+        public static bool AdaBerkas => File.Exists(Path);
+
         /// <summary>Baca seluruh riwayat (terbaru dulu). Berkas tidak ada atau rusak → daftar kosong.</summary>
         public static List<EntriRiwayatPembaruan> Muat()
         {

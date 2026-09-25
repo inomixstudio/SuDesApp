@@ -8,7 +8,7 @@ namespace SuDesApp.Data.Queries
     {
         private readonly Dictionary<string, string> _queries;
         private readonly string _filePath;
-        private readonly IOptions<QueryProviderOptions> _options;
+        private readonly IOptions<QueryProviderOptions>? _options;
         private readonly ILogger<QueryProvider> _logger;
 
         public QueryProvider(string filePath, ILogger<QueryProvider>? logger = null)

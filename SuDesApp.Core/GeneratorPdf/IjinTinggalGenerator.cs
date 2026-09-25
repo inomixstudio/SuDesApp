@@ -71,7 +71,7 @@ namespace SuDesApp.GeneratorPdf
             }
         }
 
-        private void ValidateSuratData(SuratData suratData)
+        private new void ValidateSuratData(SuratData suratData)
         {
             if (suratData?.Warga == null)
             {
@@ -114,7 +114,7 @@ namespace SuDesApp.GeneratorPdf
                 ("Nama", string.IsNullOrWhiteSpace(suratData.NamaPejabatPenandatangan)
                     ? "[Nama Pejabat]"
                     : NamaFormatter.ToUpperNama(suratData.NamaPejabatPenandatangan)),
-                ("Jabatan", $"{suratData.PejabatPenandatangan} {suratData.Desa.NamaDesa}")
+                ("Jabatan", $"{suratData.PejabatPenandatangan} {suratData.Desa?.NamaDesa}")
             };
         }
 

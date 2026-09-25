@@ -198,11 +198,24 @@ namespace SuDesApp.GeneratorPdf
                         // di semua ukuran kertas.
                         foreach (var baris in KopSurat.BarisKop(desa))
                         {
-                            var teks = col.Item().AlignCenter().Text(baris.Teks).FontSize(baris.FontSize);
-                            if (baris.Tebal)
+                            col.Item().AlignCenter().Text(teks =>
                             {
-                                teks.Bold();
-                            }
+                                var utama = teks.Span(baris.Teks).FontSize(baris.FontSize);
+                                if (baris.Tebal)
+                                {
+                                    utama.Bold();
+                                }
+
+                                // Surel desa (opsional) dicetak biru sebagai baris tersendiri
+                                // di bawah nama kabupaten (bukan sambungan baris alamat).
+                                if (baris.AdaSurel)
+                                {
+                                    var pemisah = baris.Teks.Length == 0 ? string.Empty : " ";
+                                    teks.Span(pemisah + baris.Surel)
+                                        .FontSize(baris.FontSize)
+                                        .FontColor(KopSurat.WarnaSurel);
+                                }
+                            });
                         }
                     });
                 });

@@ -135,6 +135,21 @@ namespace SuDesApp.Data.Models
             NTCR_N1, NTCR_N2, NTCR_N3, NTCR_N4, NTCR_N5, NTCR_N6, NTCR_N8
         };
 
+        /// <summary>
+        /// Blanko NTCR Kepdirjen N1–N6 yang memakai satu deret penomoran bersama
+        /// (awalan 474.3). N8 sengaja tidak disertakan karena memakai deret sendiri
+        /// (awalan 474.2).
+        /// </summary>
+        public static readonly string[] NtcrBlankoKepdirjen =
+        {
+            NTCR_N1, NTCR_N2, NTCR_N3, NTCR_N4, NTCR_N5, NTCR_N6
+        };
+
+        /// <summary>Apakah <paramref name="namaJenis"/> salah satu blanko NTCR N1–N6.</summary>
+        public static bool IsNtcrBlankoKepdirjen(string namaJenis) =>
+            !string.IsNullOrWhiteSpace(namaJenis) &&
+            Array.Exists(NtcrBlankoKepdirjen, n => string.Equals(n, namaJenis, StringComparison.OrdinalIgnoreCase));
+
         /// <summary>Apakah <paramref name="namaJenis"/> termasuk kelompok formulir NTCR.</summary>
         public static bool IsNtcr(string namaJenis) =>
             !string.IsNullOrWhiteSpace(namaJenis) &&

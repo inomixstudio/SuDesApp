@@ -589,7 +589,50 @@ namespace SuDesApp.Configuration
             // ? 6. Buang sisa data Model N7 (sudah tidak dipakai aplikasi)
             await HapusSisaDataN7Async(connection);
 
+            // ? 7. Kosongkan Pejabat Kecamatan yang masih berisi contoh bawaan
+            await BersihkanPejabatKecamatanContohAsync(connection);
+
             _logger.LogInformation("New features initialized successfully");
+        }
+
+        // ? BERSIHKAN PEJABAT KECAMATAN CONTOH
+        /// <summary>
+        /// Kolom Pejabat Kecamatan (Nama Camat, NIP Camat, Golongan) tidak lagi diisi
+        /// contoh bawaan karena tidak semua surat memakainya. Database lama yang masih
+        /// menyimpan nilai contoh dibersihkan di sini — hanya bila nilainya PERSIS
+        /// contoh bawaan, jadi data camat yang benar-benar diisi pengguna tidak tersentuh.
+        ///
+        /// Aman dijalankan berulang: setelah bersih, tidak ada baris yang cocok lagi.
+        /// </summary>
+        private async Task BersihkanPejabatKecamatanContohAsync(SqliteConnection connection)
+        {
+            try
+            {
+                if (!await TableExistsAsync(connection, "InfoDesa"))
+                {
+                    return;
+                }
+
+                int terhapus = await connection.ExecuteAsync(
+                    @"UPDATE InfoDesa
+                         SET NamaCamat = CASE WHEN TRIM(COALESCE(NamaCamat, '')) IN ('Nama Camat', 'Default Camat') THEN '' ELSE NamaCamat END,
+                             NipCamat  = CASE WHEN TRIM(COALESCE(NipCamat, '')) IN ('000000000000000000', '0') THEN '' ELSE NipCamat END,
+                             GolCamat  = CASE WHEN TRIM(COALESCE(GolCamat, '')) IN ('IV/a', 'IV/a ') THEN '' ELSE GolCamat END
+                       WHERE TRIM(COALESCE(NamaCamat, '')) IN ('Nama Camat', 'Default Camat')
+                          OR TRIM(COALESCE(NipCamat, '')) IN ('000000000000000000', '0')
+                          OR TRIM(COALESCE(GolCamat, '')) IN ('IV/a', 'IV/a ')");
+
+                if (terhapus > 0)
+                {
+                    _logger.LogInformation(
+                        "Pejabat Kecamatan contoh dikosongkan pada {Jumlah} baris InfoDesa.", terhapus);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Pembersihan data opsional: jangan gagalkan startup karenanya.
+                _logger.LogWarning(ex, "Gagal membersihkan Pejabat Kecamatan contoh (tidak fatal).");
+            }
         }
 
         // ? BUANG SISA DATA MODEL N7

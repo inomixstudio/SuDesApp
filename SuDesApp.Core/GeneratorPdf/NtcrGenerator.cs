@@ -441,15 +441,20 @@ namespace SuDesApp.GeneratorPdf
                 ? (ntcr.AyahCalonIstri, ntcr.IbuCalonIstri)
                 : (ntcr.AyahCalonSuami, ntcr.IbuCalonSuami);
 
+            // Orang tua boleh belum diisi; pakai objek kosong agar blanko tetap
+            // tercetak dengan isian titik-titik.
+            ayah ??= new NtcrOrangTua();
+            ibu ??= new NtcrOrangTua();
+
             badan.Blok(c => SuratRenderer.JudulTengah(c, "SURAT IZIN ORANG TUA"));
 
             badan.Paragraf("Yang bertanda tangan di bawah ini:", jarakAtas: 15, jarakBawah: 4);
 
             badan.Paragraf("A. Ayah/wali/pengampu:", tebal: true, jarakBawah: 2);
-            TabelBaris(badan, BarisOrangTua(ayah!, pakaiBin: true));
+            TabelBaris(badan, BarisOrangTua(ayah, pakaiBin: true));
 
             badan.Paragraf("B. Ibu/wali/pengampu:", tebal: true, jarakAtas: 10, jarakBawah: 2);
-            TabelBaris(badan, BarisOrangTua(ibu!, pakaiBin: true));
+            TabelBaris(badan, BarisOrangTua(ibu, pakaiBin: true));
 
             badan.Paragraf("adalah ayah dan ibu kandung/wali/pengampu dari:", jarakAtas: 12, jarakBawah: 2);
             TabelBaris(badan, BarisIdentitasCalon(anakIstri, warga, ntcr));
@@ -485,7 +490,7 @@ namespace SuDesApp.GeneratorPdf
             var almarhum = new List<(string Label, string? Nilai)>
             {
                 ("1. Nama lengkap dan alias", NamaFormatter.ToUpperNama(suamiMeninggal ? warga.Nama : ntcr.NamaIstri)),
-                ("2. Bin/Binti", Isi(NamaFormatter.ToUpperNama(suamiMeninggal ? ntcr.AyahCalonSuami.Nama : ntcr.AyahCalonIstri.Nama))),
+                ("2. Bin/Binti", Isi(NamaFormatter.ToUpperNama(suamiMeninggal ? ntcr.AyahCalonSuami?.Nama : ntcr.AyahCalonIstri?.Nama))),
                 ("3. Nomor Induk Kependudukan", Isi(suamiMeninggal ? warga.NIK : ntcr.NikIstri)),
                 ("4. Tempat dan tanggal lahir", TempatTanggalLahir(
                     suamiMeninggal ? warga.TempatLahir : ntcr.TempatLahirIstri,
@@ -508,7 +513,7 @@ namespace SuDesApp.GeneratorPdf
             var ahli = new List<(string Label, string? Nilai)>
             {
                 ("1. Nama lengkap dan alias", NamaFormatter.ToUpperNama(suamiMeninggal ? ntcr.NamaIstri : warga.Nama)),
-                ("2. Bin/Binti", Isi(NamaFormatter.ToUpperNama(suamiMeninggal ? ntcr.AyahCalonIstri.Nama : ntcr.AyahCalonSuami.Nama))),
+                ("2. Bin/Binti", Isi(NamaFormatter.ToUpperNama(suamiMeninggal ? ntcr.AyahCalonIstri?.Nama : ntcr.AyahCalonSuami?.Nama))),
                 ("3. Nomor Induk Kependudukan", Isi(suamiMeninggal ? ntcr.NikIstri : warga.NIK)),
                 ("4. Tempat dan tanggal lahir", TempatTanggalLahir(
                     suamiMeninggal ? ntcr.TempatLahirIstri : warga.TempatLahir,
@@ -688,7 +693,7 @@ namespace SuDesApp.GeneratorPdf
         }
 
         /// <summary>Blok "Kepada yth, … di …" pada blanko permohonan (N2 &amp; N3).</summary>
-        private static void ComposeAlamatTujuan(BadanSurat badan, string pejabat, string tujuan)
+        private static void ComposeAlamatTujuan(BadanSurat badan, string pejabat, string? tujuan)
         {
             badan.Paragraf("Kepada yth,", jarakAtas: 15);
             badan.Paragraf(pejabat, indentKiri: 20);
@@ -979,7 +984,7 @@ namespace SuDesApp.GeneratorPdf
                 string.IsNullOrWhiteSpace(warga.Desa) ? null : $"Desa {warga.Desa}",
                 string.IsNullOrWhiteSpace(warga.Kecamatan) ? null : $"Kecamatan {warga.Kecamatan}",
                 string.IsNullOrWhiteSpace(warga.Kabupaten) ? null : $"Kabupaten {warga.Kabupaten}"
-            }.Where(b => !string.IsNullOrWhiteSpace(b)).Select(b => b.Trim());
+            }.Where(b => !string.IsNullOrWhiteSpace(b)).Select(b => b!.Trim());
 
             string alamat = string.Join(", ", bagian);
             return Isi(string.IsNullOrWhiteSpace(alamat) ? null : alamat);

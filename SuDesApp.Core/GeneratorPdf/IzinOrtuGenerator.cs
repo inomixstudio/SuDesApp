@@ -67,7 +67,7 @@ namespace SuDesApp.GeneratorPdf
                 throw new InvalidOperationException("Data Desa tidak ditemukan.");
             }
 
-            var orangTua = suratData.Warga;
+            var orangTua = suratData.Warga!; // sudah divalidasi tidak null di atas
             var anak = suratData.IzinOrtu; // Menggunakan suratData.IzinOrtu yang sudah diisi
 
             badan.Paragraf("Yang bertanda tangan dibawah ini :", jarakBawah: MARGIN_PARAGRAF_KECIL);
@@ -134,14 +134,15 @@ namespace SuDesApp.GeneratorPdf
         {
             var anak = suratData.IzinOrtu;
             var orangTua = suratData.Warga;
+            var desa = suratData.Desa;
 
-            string namaDesa = suratData.Desa.NamaDesa ?? "[Nama Desa]";
+            string namaDesa = desa?.NamaDesa ?? "[Nama Desa]";
             string tanggalTerformat = suratData.TanggalSurat.ToString("dd MMMM yyyy", new CultureInfo("id-ID"));
             string namaAnak = string.IsNullOrWhiteSpace(anak?.NamaAnak) ? "_______________________" : NamaFormatter.ToUpperNama(anak!.NamaAnak);
             string namaOrangTua = string.IsNullOrWhiteSpace(orangTua?.Nama) ? "_______________________" : NamaFormatter.ToUpperNama(orangTua!.Nama);
-            string namaKades = string.IsNullOrWhiteSpace(suratData.Desa.KepalaDesa)
+            string namaKades = string.IsNullOrWhiteSpace(desa?.KepalaDesa)
                 ? "_______________________"
-                : NamaFormatter.ToUpperNama(suratData.Desa.KepalaDesa);
+                : NamaFormatter.ToUpperNama(desa!.KepalaDesa);
 
             kaki.Blok(container => container.PaddingTop(MARGIN_PARAGRAF_BESAR).Column(kolom =>
             {
@@ -214,7 +215,7 @@ namespace SuDesApp.GeneratorPdf
                 .FontSize(DEFAULT_FONT_SIZE)
                 .LineHeight(LEADING_NORMAL / DEFAULT_FONT_SIZE);
 
-        private string ParseTanggalToUiFormat(string dbDate)
+        private string ParseTanggalToUiFormat(string? dbDate)
         {
             if (string.IsNullOrWhiteSpace(dbDate)) return string.Empty;
             if (DateTime.TryParseExact(dbDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate))

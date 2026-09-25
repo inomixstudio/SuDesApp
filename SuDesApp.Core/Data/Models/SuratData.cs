@@ -19,7 +19,8 @@ namespace SuDesApp.Data.Models
 
         public int ID_Surat { get; set; }
 
-        private string _namaJenis;
+        // Diberi nilai bawaan agar tidak pernah null — diisi ulang lewat konstruktor/InitializeSubmodels.
+        private string _namaJenis = string.Empty;
         [Required]
         public string NamaJenis
         {
@@ -82,7 +83,8 @@ namespace SuDesApp.Data.Models
         public JenisSuratEnum Jenis { get; set; }
         public JenisSuratKelas? JenisSurat { get; set; }
 
-        public List<GarapanData> RincianGarapans { get; set; }
+        // Diberi nilai bawaan agar tidak pernah null; diisi ulang lewat InitializeSubmodels.
+        public List<GarapanData> RincianGarapans { get; set; } = new();
         public string? PejabatPenandatangan { get; set; }
         public string? NamaPejabatPenandatangan { get; set; }
         public WargaData? WargaKK { get; set; }
@@ -274,9 +276,10 @@ namespace SuDesApp.Data.Models
         public async Task EnsureDesaDataLoadedAsync(IDesaRepository? desaRepository = null)
         {
             // Cek apakah data desa sudah valid
-            if (IsDesaDataValid(Desa!) && !string.IsNullOrWhiteSpace(Desa.Alamat))
+            var desa = Desa;
+            if (IsDesaDataValid(desa!) && desa != null && !string.IsNullOrWhiteSpace(desa.Alamat))
             {
-                _logger.LogInformation("Data desa sudah valid: NamaDesa={NamaDesa}", Desa.NamaDesa);
+                _logger.LogInformation("Data desa sudah valid: NamaDesa={NamaDesa}", desa.NamaDesa);
                 return;
             }
 
@@ -309,21 +312,22 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        // Method helper untuk membuat data desa default
+        // Method helper untuk membuat data desa default.
+        // Pejabat Kecamatan dibiarkan kosong (boleh tidak diisi pengguna).
         private DesaData CreateDefaultDesaData()
         {
             return new DesaData
             {
-                NamaDesa = "Nama Desa",
-                Kecamatan = "Nama Kecamatan",
-                Kabupaten = "Nama Kabupaten",
-                Alamat = "Alamat Desa",
-                Kodepos = "00000",
-                KepalaDesa = "Nama Kepala Desa",
-                SekretarisDesa = "Nama Sekretaris Desa",
-                NamaCamat = "Nama Camat",
-                NipCamat = "000000000000000000",
-                GolCamat = "IV/a"
+                NamaDesa = DesaContoh.NamaDesa,
+                Kecamatan = DesaContoh.Kecamatan,
+                Kabupaten = DesaContoh.Kabupaten,
+                Alamat = DesaContoh.Alamat,
+                Kodepos = DesaContoh.Kodepos,
+                KepalaDesa = DesaContoh.KepalaDesa,
+                SekretarisDesa = DesaContoh.SekretarisDesa,
+                NamaCamat = string.Empty,
+                NipCamat = string.Empty,
+                GolCamat = string.Empty
             };
         }
 
@@ -810,10 +814,11 @@ public bool isForInstansi
         public string? TujuanSurat { get; set; }
 
         // === Nama orang tua tetap dapat diakses lewat properti lama (kolom DB lama) ===
-        public string NamaAyahCalonSuami { get => AyahCalonSuami.Nama; set => AyahCalonSuami.Nama = value; }
-        public string NamaIbuCalonSuami { get => IbuCalonSuami.Nama; set => IbuCalonSuami.Nama = value; }
-        public string NamaAyahCalonIstri { get => AyahCalonIstri.Nama; set => AyahCalonIstri.Nama = value; }
-        public string NamaIbuCalonIstri { get => IbuCalonIstri.Nama; set => IbuCalonIstri.Nama = value; }
+        // Nullability mengikuti NtcrOrangTua.Nama (string?) — kolom DB lama memang boleh kosong.
+        public string? NamaAyahCalonSuami { get => AyahCalonSuami?.Nama; set { AyahCalonSuami ??= new NtcrOrangTua(); AyahCalonSuami.Nama = value; } }
+        public string? NamaIbuCalonSuami { get => IbuCalonSuami?.Nama; set { IbuCalonSuami ??= new NtcrOrangTua(); IbuCalonSuami.Nama = value; } }
+        public string? NamaAyahCalonIstri { get => AyahCalonIstri?.Nama; set { AyahCalonIstri ??= new NtcrOrangTua(); AyahCalonIstri.Nama = value; } }
+        public string? NamaIbuCalonIstri { get => IbuCalonIstri?.Nama; set { IbuCalonIstri ??= new NtcrOrangTua(); IbuCalonIstri.Nama = value; } }
 
         public bool IsValid()
         {
@@ -840,18 +845,19 @@ public bool isForInstansi
         private string? _pekerjaan;
         private string? _alamat;
 
-        public string Nama { get => _nama; set { _nama = value; OnPropertyChanged(nameof(Nama)); } }
+        // Kolom identitas boleh kosong di blanko (null), kecuali Kewarganegaraan yang berbawaan "WNI".
+        public string? Nama { get => _nama; set { _nama = value; OnPropertyChanged(nameof(Nama)); } }
 
         /// <summary>Bin (untuk ayah) atau Binti (untuk ibu) — nama ayah orang tersebut.</summary>
-        public string BinBinti { get => _binBinti; set { _binBinti = value; OnPropertyChanged(nameof(BinBinti)); } }
+        public string? BinBinti { get => _binBinti; set { _binBinti = value; OnPropertyChanged(nameof(BinBinti)); } }
 
-        public string Nik { get => _nik; set { _nik = value; OnPropertyChanged(nameof(Nik)); } }
-        public string TempatLahir { get => _tempatLahir; set { _tempatLahir = value; OnPropertyChanged(nameof(TempatLahir)); } }
-        public string TanggalLahir { get => _tanggalLahir; set { _tanggalLahir = value; OnPropertyChanged(nameof(TanggalLahir)); } }
+        public string? Nik { get => _nik; set { _nik = value; OnPropertyChanged(nameof(Nik)); } }
+        public string? TempatLahir { get => _tempatLahir; set { _tempatLahir = value; OnPropertyChanged(nameof(TempatLahir)); } }
+        public string? TanggalLahir { get => _tanggalLahir; set { _tanggalLahir = value; OnPropertyChanged(nameof(TanggalLahir)); } }
         public string Kewarganegaraan { get => _kewarganegaraan; set { _kewarganegaraan = value; OnPropertyChanged(nameof(Kewarganegaraan)); } }
-        public string Agama { get => _agama; set { _agama = value; OnPropertyChanged(nameof(Agama)); } }
-        public string Pekerjaan { get => _pekerjaan; set { _pekerjaan = value; OnPropertyChanged(nameof(Pekerjaan)); } }
-        public string Alamat { get => _alamat; set { _alamat = value; OnPropertyChanged(nameof(Alamat)); } }
+        public string? Agama { get => _agama; set { _agama = value; OnPropertyChanged(nameof(Agama)); } }
+        public string? Pekerjaan { get => _pekerjaan; set { _pekerjaan = value; OnPropertyChanged(nameof(Pekerjaan)); } }
+        public string? Alamat { get => _alamat; set { _alamat = value; OnPropertyChanged(nameof(Alamat)); } }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -1031,6 +1037,14 @@ public bool isForInstansi
         public string? Alamat { get; set; }
         [Required]
         public string? Kodepos { get; set; }
+        /// <summary>
+        /// Surel (email) kantor desa — <b>opsional</b>: boleh diisi, boleh dikosongkan.
+        /// Bila diisi, surel ikut dicetak pada baris alamat kop surat dengan warna biru
+        /// supaya mudah dikenali (lihat <c>KopSurat.BarisSurel</c>).
+        /// </summary>
+        [StringLength(100)]
+        public string? Email { get; set; }
+
         [Required]
         public string? KepalaDesa { get; set; }
         [Required]

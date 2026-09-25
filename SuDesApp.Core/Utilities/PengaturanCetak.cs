@@ -41,8 +41,16 @@ namespace SuDesApp.Utilities
 
         /// <summary>Dimensi halaman (point) untuk ukuran kertas terpilih.</summary>
         public static (float Lebar, float Tinggi) Dimensi(bool landscape = false)
+            => Dimensi(GetUkuranKertas(), landscape);
+
+        /// <summary>
+        /// Dimensi halaman (point) untuk ukuran kertas tertentu. Dipakai juga oleh
+        /// pratinjau di layar, supaya perbandingan ukuran huruf terhadap lebar kertas
+        /// dihitung dari angka yang sama dengan pencetakan PDF.
+        /// </summary>
+        public static (float Lebar, float Tinggi) Dimensi(UkuranKertasSurat ukuran, bool landscape = false)
         {
-            var (lebar, tinggi) = GetUkuranKertas() == UkuranKertasSurat.F4
+            var (lebar, tinggi) = ukuran == UkuranKertasSurat.F4
                 ? (F4Lebar, F4Tinggi)
                 : (A4Lebar, A4Tinggi);
 

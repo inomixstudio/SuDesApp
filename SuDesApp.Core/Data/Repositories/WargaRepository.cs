@@ -13,10 +13,16 @@ namespace SuDesApp.Data.Repositories
     public interface IWargaRepository
     {
         Task InitializeWargaTableAsync();
-        Task<int> AddOrUpdateWargaAsync(WargaData wargaData, SqliteConnection? existingConnection = null, IDbTransaction existingTransaction = null);
+        Task<int> AddOrUpdateWargaAsync(WargaData wargaData, SqliteConnection? existingConnection = null, IDbTransaction? existingTransaction = null);
         Task<WargaData> GetWargaByIdAsync(int idWarga);
-        Task<WargaData> GetWargaByNikAsync(string nik, SqliteConnection? connection = null, IDbTransaction transaction = null);
+        Task<WargaData> GetWargaByNikAsync(string nik, SqliteConnection? connection = null, IDbTransaction? transaction = null);
         Task<IEnumerable<WargaData>> GetAllWargaAsync();
+
+        /// <summary>
+        /// Jumlah warga terdata — dihitung di database (COUNT) tanpa memuat seluruh
+        /// baris, dipakai oleh ringkasan Beranda.
+        /// </summary>
+        Task<int> CountWargaAsync();
         Task<IEnumerable<WargaData>> SearchWargaAsync(string searchTerm);
         Task<bool> DeleteWargaAsync(int id);
         Task<string> GetAlamatByNikAsync(string nik);
@@ -329,6 +335,13 @@ namespace SuDesApp.Data.Repositories
 
             var rowsAffected = await connection.ExecuteAsync(query, updateData, transaction);
 
+            if (rowsAffected > 0)
+            {
+                // Jumlah warga (ringkasan Beranda) ikut berubah setiap ada penulisan
+                // baris warga — termasuk baris dummy yang dipakai surat tanpa data warga.
+                await _cacheService.RemoveAsync<int?>("Warga_Count");
+            }
+
             if (rowsAffected > 0 && !IsDummyNik(wargaData.NIK!))
             {
                 wargaData.ID_Warga = idWarga;
@@ -361,7 +374,7 @@ namespace SuDesApp.Data.Repositories
             await _cacheService.SetAsync($"Warga_Id_{idWarga}", wargaData, cacheOptions);
         }
 
-        public async Task<WargaData> GetWargaByNikAsync(string nik, SqliteConnection? connection = null, IDbTransaction transaction = null)
+        public async Task<WargaData> GetWargaByNikAsync(string nik, SqliteConnection? connection = null, IDbTransaction? transaction = null)
         {
             if (string.IsNullOrWhiteSpace(nik))
             {
@@ -469,6 +482,37 @@ namespace SuDesApp.Data.Repositories
             {
                 _logger.LogError(ex, "Failed to retrieve Warga by ID: {ID_Warga}", idWarga);
                 throw new DataRetrievalException($"Failed to retrieve Warga by ID: {idWarga}", ex);
+            }
+        }
+
+        public async Task<int> CountWargaAsync()
+        {
+            const string cacheKey = "Warga_Count";
+            var cached = await _cacheService.GetAsync<int?>(cacheKey);
+            if (cached.HasValue)
+            {
+                return cached.Value;
+            }
+
+            try
+            {
+                if (_connection.State != ConnectionState.Open)
+                    await _connection.OpenAsync();
+
+                int jumlah = await _connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Warga");
+
+                await _cacheService.SetAsync(cacheKey, jumlah, new MemoryCacheEntryOptions
+                {
+                    SlidingExpiration = TimeSpan.FromMinutes(5),
+                    AbsoluteExpirationRelativeToNow = _cacheExpiration
+                });
+
+                return jumlah;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal menghitung jumlah warga");
+                return 0;
             }
         }
 
@@ -607,6 +651,7 @@ namespace SuDesApp.Data.Repositories
 
                 if (rowsAffected > 0)
                 {
+                    await _cacheService.RemoveAsync<int?>("Warga_Count");
                     await _cacheService.RemoveAsync<WargaData>($"Warga_Id_{id}");
                     if (!IsDummyNik(warga.NIK!))
                     {

@@ -117,7 +117,7 @@ namespace SuDesApp.Data.Handlers
                         ID_Ayah = idAyah,
                         ID_Ibu = idIbu,
                         NamaAnak = namaAnak,
-                        TanggalLahirAnak = tanggalLahirAnak.Value.ToString("yyyy-MM-dd"),
+                        TanggalLahirAnak = tanggalLahirAnak!.Value.ToString("yyyy-MM-dd"),
                         TempatLahirAnak = tempatLahirAnak,
                         JenisKelaminAnak = jenisKelaminAnak,
                         AlamatLengkapAnak = data.AlamatLengkapAnak,
@@ -329,7 +329,9 @@ namespace SuDesApp.Data.Handlers
             return parentId;
         }
 
-        private (string namaAnak, DateTime? tanggalLahirAnak, string tempatLahirAnak, string jenisKelaminAnak) GetChildData(KenalLahirData data)
+        // Semua elemen boleh null; pemanggil wajib memeriksa (GetChildData melempar
+        // ValidationException untuk kolom wajib sebelum mengembalikan nilai).
+        private (string? namaAnak, DateTime? tanggalLahirAnak, string? tempatLahirAnak, string? jenisKelaminAnak) GetChildData(KenalLahirData data)
         {
             // Prioritize direct child data over Anak object
             string? namaAnak = !string.IsNullOrWhiteSpace(data.NamaAnak)
@@ -440,7 +442,7 @@ namespace SuDesApp.Data.Handlers
             }
 
             // Validate parents not the same
-            if (hasAyah && hasIbu && data.Ayah.NIK == data.Ibu.NIK)
+            if (hasAyah && hasIbu && data.Ayah?.NIK == data.Ibu?.NIK)
             {
                 errors.Add("NIK Ayah dan Ibu tidak boleh sama.");
             }

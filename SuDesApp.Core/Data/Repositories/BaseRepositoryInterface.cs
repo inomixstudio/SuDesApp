@@ -8,7 +8,7 @@ namespace SuDesApp.Data.Repositories
 {
     public interface IRepository<T> where T : class
     {
-    Task<T> GetByIdAsync(int id, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
+    Task<T?> GetByIdAsync(int id, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<T>> GetAllAsync(IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<T>> GetPagedAsync(int pageNumber, int pageSize, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
     Task<int> InsertAsync(T entity, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
@@ -33,7 +33,7 @@ public abstract class BaseRepository<T> : IRepository<T> where T : class
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public virtual async Task<T> GetByIdAsync(int id, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
+    public virtual async Task<T?> GetByIdAsync(int id, IDbTransaction? transaction = null, CancellationToken cancellationToken = default)
     {
         var conn = _uow.Connection;
         var trans = transaction ?? _uow.CurrentTransaction;

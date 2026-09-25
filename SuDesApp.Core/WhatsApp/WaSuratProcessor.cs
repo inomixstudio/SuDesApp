@@ -70,7 +70,7 @@ namespace SuDesApp.WhatsApp
             // 2. Bangun SuratData mirip alur form biasa.
             var suratData = new SuratData(_suratRepository, _wargaRepository, _desaRepository, _jenisSuratRepository, _loggerFactory.CreateLogger<SuratData>())
             {
-                NamaJenis = jenis.NamaJenis,
+                NamaJenis = jenis.NamaJenis ?? data.NamaJenis ?? string.Empty,
                 TanggalSurat = DateTime.Now,
                 Status = "Draft",
                 Keperluan = data.Keperluan,
@@ -99,8 +99,8 @@ namespace SuDesApp.WhatsApp
             return new Hasil
             {
                 IdSurat = idSurat,
-                NomorSurat = suratData.NomorSurat,
-                NamaJenis = suratData.NamaJenis!
+                NomorSurat = suratData.NomorSurat ?? string.Empty,
+                NamaJenis = suratData.NamaJenis ?? string.Empty
             };
         }
 
@@ -155,17 +155,18 @@ namespace SuDesApp.WhatsApp
         {
             var f = data.Fields;
 
-            switch (suratData.NamaJenis.ToUpperInvariant())
+            switch (suratData.NamaJenis?.ToUpperInvariant())
             {
                 case SuratConstants.SKU:
-                    suratData.SKU.BidangUsaha = f.GetValueOrDefault("bidangusaha") ?? string.Empty;
+                    var sku = suratData.SKU ??= new SKUData();
+                    sku.BidangUsaha = f.GetValueOrDefault("bidangusaha") ?? string.Empty;
                     if (int.TryParse(f.GetValueOrDefault("sejaktahun"), out var tahun))
-                        suratData.SKU.SejakTahun = tahun;
-                    suratData.SKU.LokasiUsaha = data.Warga?.AlamatLengkap;
+                        sku.SejakTahun = tahun;
+                    sku.LokasiUsaha = data.Warga?.AlamatLengkap;
                     break;
 
                 case SuratConstants.SKTM:
-                    suratData.SKTM.KeteranganKemiskinan = f.GetValueOrDefault("keterangan")
+                    (suratData.SKTM ??= new SKTMData()).KeteranganKemiskinan = f.GetValueOrDefault("keterangan")
                         ?? data.Keperluan ?? "Keterangan tidak mampu";
                     break;
 
@@ -189,18 +190,19 @@ namespace SuDesApp.WhatsApp
                     };
                     int idAnak = await _wargaRepository.AddOrUpdateWargaAndGetIdAsync(anak);
 
-                    suratData.IzinOrtu.ID_Anak = idAnak;
-                    suratData.IzinOrtu.NIKAnak = anak.NIK;
-                    suratData.IzinOrtu.NamaAnak = anak.Nama;
-                    suratData.IzinOrtu.TempatLahirAnak = anak.TempatLahir;
-                    suratData.IzinOrtu.TanggalLahirAnak = anak.TanggalLahir;
-                    suratData.IzinOrtu.JenisKelaminAnak = anak.JenisKelamin;
-                    suratData.IzinOrtu.AgamaAnak = anak.Agama;
-                    suratData.IzinOrtu.StatusPerkawinanAnak = anak.StatusPerkawinan;
-                    suratData.IzinOrtu.PekerjaanAnak = anak.Pekerjaan;
-                    suratData.IzinOrtu.AlamatAnak = anak.AlamatLengkap;
-                    suratData.IzinOrtu.NegaraTujuan = f.GetValueOrDefault("negaratujuan") ?? string.Empty;
-                    suratData.IzinOrtu.NamaPT = f.GetValueOrDefault("namapt");
+                    var izinOrtu = suratData.IzinOrtu ??= new IzinOrtuData();
+                    izinOrtu.ID_Anak = idAnak;
+                    izinOrtu.NIKAnak = anak.NIK;
+                    izinOrtu.NamaAnak = anak.Nama;
+                    izinOrtu.TempatLahirAnak = anak.TempatLahir;
+                    izinOrtu.TanggalLahirAnak = anak.TanggalLahir;
+                    izinOrtu.JenisKelaminAnak = anak.JenisKelamin;
+                    izinOrtu.AgamaAnak = anak.Agama;
+                    izinOrtu.StatusPerkawinanAnak = anak.StatusPerkawinan;
+                    izinOrtu.PekerjaanAnak = anak.Pekerjaan;
+                    izinOrtu.AlamatAnak = anak.AlamatLengkap;
+                    izinOrtu.NegaraTujuan = f.GetValueOrDefault("negaratujuan") ?? string.Empty;
+                    izinOrtu.NamaPT = f.GetValueOrDefault("namapt");
                     break;
 
                 case SuratConstants.INSTANSI:

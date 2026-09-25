@@ -21,6 +21,10 @@ namespace SuDesApp.GeneratorPdf
 
         public KeputusanPeraturanGenerator(DesaData desaInfo)
         {
+            // Generator ini tidak mewarisi SuratGeneratorBase: pastikan font buku
+            // (Times New Roman) sudah terdaftar juga bila ini PDF pertama sesi.
+            SuratGeneratorBase.DaftarkanFont();
+
             // Header & footer buku memakai nama wilayah; pakai salinan yang sudah bersih.
             _desaInfo = KopSurat.DesaBersih(desaInfo);
         }
@@ -64,7 +68,7 @@ namespace SuDesApp.GeneratorPdf
                 {
                     page.Size(new PageSize(330, 215, Unit.Millimetre));
                     page.Margin(1.5f, Unit.Centimetre);
-                    page.DefaultTextStyle(style => style.FontSize(11).FontFamily(Fonts.Arial));
+                    page.DefaultTextStyle(style => style.FontSize(11).FontFamily("Times New Roman"));
 
                     page.Header().Element(ComposeHeader);
                     page.Content().Element(content => ComposeContentForPage(content, pageData.ToList()));

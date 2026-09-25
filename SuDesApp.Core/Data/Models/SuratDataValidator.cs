@@ -311,22 +311,22 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        /// <summary>Pasangan orang tua dari pihak yang diterangkan pada blanko N1.</summary>
+        /// <summary>Pasangan orang tua dari pihak yang diterangkan pada blanko N1 (bawaan objek kosong bila belum diisi).</summary>
         private static (NtcrOrangTua Ayah, NtcrOrangTua Ibu, string Sebutan) PihakDiterangkanN1(NtcrData ntcr)
         {
             bool istri = string.Equals(ntcr.PihakDiterangkanN1, "Istri", StringComparison.OrdinalIgnoreCase);
             return istri
-                ? (ntcr.AyahCalonIstri, ntcr.IbuCalonIstri, "calon istri")
-                : (ntcr.AyahCalonSuami, ntcr.IbuCalonSuami, "calon suami");
+                ? (ntcr.AyahCalonIstri ?? new NtcrOrangTua(), ntcr.IbuCalonIstri ?? new NtcrOrangTua(), "calon istri")
+                : (ntcr.AyahCalonSuami ?? new NtcrOrangTua(), ntcr.IbuCalonSuami ?? new NtcrOrangTua(), "calon suami");
         }
 
-        /// <summary>Pasangan orang tua dari anak yang diberi izin pada blanko N5.</summary>
+        /// <summary>Pasangan orang tua dari anak yang diberi izin pada blanko N5 (bawaan objek kosong bila belum diisi).</summary>
         private static (NtcrOrangTua Ayah, NtcrOrangTua Ibu, string Sebutan) PihakAnakN5(NtcrData ntcr)
         {
             bool istri = string.Equals(ntcr.PihakAnakIzinOrtu, "Istri", StringComparison.OrdinalIgnoreCase);
             return istri
-                ? (ntcr.AyahCalonIstri, ntcr.IbuCalonIstri, "calon istri")
-                : (ntcr.AyahCalonSuami, ntcr.IbuCalonSuami, "calon suami");
+                ? (ntcr.AyahCalonIstri ?? new NtcrOrangTua(), ntcr.IbuCalonIstri ?? new NtcrOrangTua(), "calon istri")
+                : (ntcr.AyahCalonSuami ?? new NtcrOrangTua(), ntcr.IbuCalonSuami ?? new NtcrOrangTua(), "calon suami");
         }
 
         private void ValidateInstansi(List<string> errors)

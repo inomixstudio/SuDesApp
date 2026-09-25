@@ -119,6 +119,9 @@ namespace SuDesApp.Data.Models
         /// <summary>Tampilkan blok tanda tangan Kepala Desa di bagian bawah dokumen.</summary>
         public bool TampilkanFooterKepalaDesa { get; set; } = true;
 
+        /// <summary>Cetak kop surat desa di atas daftar hadir (false = tanpa kop).</summary>
+        public bool TampilkanKopSurat { get; set; } = true;
+
         /// <summary>Info desa untuk kop surat dan footer.</summary>
         public DesaData Desa { get; set; } = new();
     }

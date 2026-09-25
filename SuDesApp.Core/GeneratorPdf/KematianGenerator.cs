@@ -199,7 +199,7 @@ namespace SuDesApp.GeneratorPdf
         private static void SelHubungan(IContainer cell, string teks)
             => cell.Text(teks ?? string.Empty).FontSize(DEFAULT_FONT_SIZE_KEMATIAN).LineHeight(LeadingData / DEFAULT_FONT_SIZE_KEMATIAN);
 
-        private string FormatTanggalUntukTampilan(string tanggalInput)
+        private string FormatTanggalUntukTampilan(string? tanggalInput)
         {
             if (string.IsNullOrWhiteSpace(tanggalInput)) return "...............................";
             if (DateTime.TryParseExact(tanggalInput, DateFormatDb, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDb))

@@ -293,26 +293,79 @@ namespace SuDesApp.Utilities
 
         private async Task<string> DownloadUpdateViaHttpAsync(UpdateInfo updateInfo, IProgress<int> progress, CancellationToken cancellationToken)
         {
-            var fileName = Path.Combine(Path.GetTempPath(), $"SuDesApp_{updateInfo.Version}.exe");
+            var unduhan = BuatUnduhanInstaller(updateInfo)
+                ?? throw new InvalidOperationException("Sumber unduhan installer tidak memakai tautan HTTPS.");
+
             try
             {
-                await UnduhKeBerkasAsync(
-                    ChooseHttpDownloadUrl(updateInfo), fileName, progress, cancellationToken, updateInfo.Sha256);
+                // Pembatalan tidak menghapus sisa unduhan — itulah yang membuat
+                // unduhan bisa dijeda lalu dilanjutkan. Halaman Pembaruan yang
+                // memutuskan membuang sisanya (tombol Batal).
+                await unduhan.UnduhAsync(
+                    progress == null ? null : new Progress<KemajuanUnduhan>(k => progress.Report(k.Persen)),
+                    cancellationToken);
 
-                _logger.LogInformation("Pembaruan didownload ke: {FileName}", fileName);
-                return fileName;
+                _logger.LogInformation("Pembaruan didownload ke: {FileName}", unduhan.Tujuan);
+                return unduhan.Tujuan;
             }
             catch (OperationCanceledException)
             {
-                TryDelete(fileName);
                 throw;
             }
             catch (Exception ex)
             {
-                TryDelete(fileName);
                 _logger.LogError(ex, "Gagal download pembaruan dari {DownloadUrl}", updateInfo.DownloadUrl);
                 throw new Exception("Gagal download pembaruan: " + ex.Message, ex);
             }
+        }
+
+        /// <summary>
+        /// Siapkan unduhan installer yang bisa <b>dijeda dan dilanjutkan</b> untuk
+        /// sumber HTTPS/HTTP. Mengembalikan null untuk sumber Google Drive, yang
+        /// memakai jalur unduhan lama.
+        ///
+        /// Berkas sementara bernama tetap per versi (<c>SuDesApp_&lt;versi&gt;.exe.part</c>),
+        /// jadi unduhan yang terhenti — dijeda pengguna, koneksi putus, atau aplikasi
+        /// ditutup — bisa dilanjutkan tanpa mengunduh ulang bagian yang sudah ada.
+        /// </summary>
+        public UnduhanBerkasBerlanjut? BuatUnduhanInstaller(UpdateInfo updateInfo)
+        {
+            if (_initException != null) throw _initException;
+            if (!IsHttpUrl(updateInfo?.DownloadUrl)) return null;
+
+            string url = ChooseHttpDownloadUrl(updateInfo!);
+            string tujuan = Path.Combine(Path.GetTempPath(), $"SuDesApp_{updateInfo!.Version}.exe");
+
+            return new UnduhanBerkasBerlanjut(url, tujuan, updateInfo.Sha256, _logger, SiapkanPermintaanAset(url));
+        }
+
+        /// <summary>
+        /// Header tambahan untuk mengunduh aset rilis: token repo privat dan Accept
+        /// octet-stream untuk URL API (tanpa itu GitHub mengirim halaman HTML, bukan
+        /// berkasnya). Berkas sementara unduhan tetap dilanjutkan dengan header yang sama.
+        /// </summary>
+        private Action<HttpRequestMessage>? SiapkanPermintaanAset(string url)
+        {
+            bool api = IsGitHubApiUrl(url);
+            string? token = string.IsNullOrWhiteSpace(_githubToken) ? null : _githubToken;
+
+            if (!api && token == null)
+            {
+                return null;
+            }
+
+            return request =>
+            {
+                if (token != null)
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
+
+                if (api)
+                {
+                    request.Headers.Accept.ParseAdd("application/octet-stream");
+                }
+            };
         }
 
         /// <summary>
@@ -518,7 +571,11 @@ namespace SuDesApp.Utilities
             if (_initException != null) throw _initException;
             try
             {
-                var credential = GoogleCredential.FromFile(_credentialsPath)
+                // API baru (Google.Apis.Auth 1.74+): CredentialFactory menggantikan
+                // GoogleCredential.FromFile yang usang; pemasangan scope tetap lewat
+                // GoogleCredential.CreateScoped yang masih aktif.
+                var credential = CredentialFactory.FromFile<ServiceAccountCredential>(_credentialsPath)
+                    .ToGoogleCredential()
                     .CreateScoped(DriveService.Scope.DriveReadonly);
                 return new DriveService(new BaseClientService.Initializer()
                 {

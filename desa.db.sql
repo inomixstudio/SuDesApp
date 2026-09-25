@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS "InfoDesa" (
     "Kodepos" TEXT NOT NULL,
     "KepalaDesa" TEXT,
     "SekretarisDesa" TEXT,
+    "Email" TEXT,
     "NamaCamat" TEXT,
     "NipCamat" TEXT,
     "GolCamat" TEXT,

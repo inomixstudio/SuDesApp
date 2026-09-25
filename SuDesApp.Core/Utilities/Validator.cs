@@ -84,14 +84,15 @@ namespace SuDesApp.Utilities
             return true;
         }
 
-        public static bool ValidateRequired(string value, string fieldName, out string message)
+        public static bool ValidateRequired(string? value, string fieldName, out string message)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
                 message = $"{fieldName} harus diisi.";
                 return false;
             }
-            message = null;
+            // Pesan hanya dibaca ketika validasi gagal; saat sukses cukup diisi kosong.
+            message = string.Empty;
             return true;
         }
     }
