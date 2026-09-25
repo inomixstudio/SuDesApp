@@ -160,7 +160,7 @@ namespace SuDesApp.Wpf.Input
                     IbuNama = warga.Nama ?? string.Empty;
                     IbuTempatLahir = warga.TempatLahir ?? string.Empty;
                     IbuTanggalLahir = ParseTanggalLahirToUiFormat(warga.TanggalLahir);
-                    IbuAgama = IsValidOption(warga.Agama, ValidAgamaOptions) ? warga.Agama : string.Empty!;
+                    IbuAgama = IsValidOption(warga.Agama, ValidAgamaOptions) && warga.Agama != null ? warga.Agama : string.Empty;
                     IbuPekerjaan = warga.Pekerjaan ?? string.Empty;
                     ParseAndFillAlamat(warga.AlamatLengkap,
                         (d, de, k, ka) => { IbuDusun = d; IbuDesa = de; IbuKecamatan = k; IbuKabupaten = ka; });
@@ -191,7 +191,7 @@ namespace SuDesApp.Wpf.Input
                 IbuNama = kl.Ibu.Nama ?? string.Empty;
                 IbuTempatLahir = kl.Ibu.TempatLahir ?? string.Empty;
                 IbuTanggalLahir = ParseTanggalLahirToUiFormat(kl.Ibu.TanggalLahir);
-                IbuAgama = IsValidOption(kl.Ibu.Agama, ValidAgamaOptions) ? kl.Ibu.Agama : string.Empty!;
+                IbuAgama = IsValidOption(kl.Ibu.Agama, ValidAgamaOptions) && kl.Ibu.Agama != null ? kl.Ibu.Agama : string.Empty;
                 IbuPekerjaan = kl.Ibu.Pekerjaan ?? string.Empty;
                 ParseAndFillAlamat(kl.Ibu.AlamatLengkap,
                     (d, de, k, ka) => { IbuDusun = d; IbuDesa = de; IbuKecamatan = k; IbuKabupaten = ka; });

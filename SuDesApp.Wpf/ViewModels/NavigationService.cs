@@ -56,5 +56,17 @@ namespace SuDesApp.Wpf.ViewModels
         {
             CurrentView = null;
         }
+
+        /// <summary>
+        /// Buka halaman Pengaturan Surat tepat pada salah satu bagiannya.
+        /// Dipakai tombol "Isi Data Desa" pada peringatan data desa contoh
+        /// (bagian 0 = Data Desa).
+        /// </summary>
+        public void ShowSetelanBagianSurat(int bagian)
+        {
+            var setelan = _serviceProvider.GetRequiredService<SetelanViewModel>();
+            setelan.TampilkanBagian(bagian);
+            CurrentView = setelan;
+        }
     }
 }

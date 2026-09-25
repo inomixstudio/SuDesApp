@@ -12,6 +12,12 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Themes/ThemeStyles.xaml"/>
                 <ResourceDictionary Source="Themes/GreenTheme.xaml"/>
+                <!-- Kartu pemberitahuan inline bersama (dipakai semua halaman yang
+                     menggantikan dialog popup informasi). -->
+                <ResourceDictionary Source="Themes/NotifikasiInline.xaml"/>
+                <ResourceDictionary Source="Themes/NavKiri.xaml"/>
+                <!-- Kartu versi catatan rilis bersama: dipakai halaman Catatan Rilis. -->
+                <ResourceDictionary Source="Themes/KartuCatatanRilis.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
             <local:StringToBoolConverter x:Key="StringToBoolConverter"/>
@@ -126,6 +132,9 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:PanduanWaViewModel}">
                 <views:PanduanWaView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:PanduanAwalViewModel}">
+                <views:PanduanAwalView/>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:ExImdbViewModel}">
                 <views:ExImdbView/>

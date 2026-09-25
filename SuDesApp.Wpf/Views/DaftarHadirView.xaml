@@ -132,16 +132,22 @@
                 <!-- Info sesi -->
                 <Border CornerRadius="8" Background="{DynamicResource AccentSubtleBrush}" BorderThickness="0"
                         Padding="14,10" Margin="0,0,0,14">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#x1F4BE;" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock TextWrapping="Wrap" FontSize="12"
+                    <!-- Grid (bukan StackPanel horizontal): kolom teks berlebar terbatas
+                         sehingga TextWrapping benar-benar membungkus, tidak terpotong di tepi kartu. -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#x1F4BE;" FontSize="15" VerticalAlignment="Top" Margin="0,0,8,0"/>
+                        <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="12"
                                    Foreground="{DynamicResource AccentTextBrush}">
                             <Run FontWeight="SemiBold" Text="Isian tersimpan sementara: "/>
                             <Run Text="daftar yang Anda buat (termasuk peserta) ikut dicetak otomatis dan tetap tampil saat menu dibuka lagi selama aplikasi belum ditutup. Setelah aplikasi keluar dan dibuka kembali, menu kembali ke isian awal. Gunakan tombol "/>
                             <Run FontWeight="SemiBold" Text="Isi Ulang"/>
                             <Run Text=" bila ingin mengosongkannya sekarang."/>
                         </TextBlock>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- JUDUL SURAT -->
@@ -260,15 +266,18 @@
                     </StackPanel>
                 </Border>
 
-                <!-- BAGIAN BAWAH -->
+                <!-- KOP & BAGIAN BAWAH -->
                 <Border Style="{StaticResource CardStyle}" Padding="18" Margin="0,0,0,14">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                             <Border Style="{StaticResource AccentSectionBar}"/>
-                            <TextBlock Text="BAGIAN BAWAH DOKUMEN" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="KOP &amp; BAGIAN BAWAH DOKUMEN" Style="{StaticResource SectionTitle}"/>
                         </StackPanel>
 
-                        <CheckBox Content="Tampilkan footer tanda tangan Kepala Desa"
+                        <CheckBox Content="Tampilkan Kop Surat"
+                                  IsChecked="{Binding TampilkanKopSurat, Mode=TwoWay}"
+                                  ToolTip="Hilangkan centang bila dokumen dicetak di atas kertas berkop desa — kop aplikasi tidak ikut dicetak"/>
+                        <CheckBox Margin="0,8,0,0" Content="Tampilkan Tanda Tangan Kepala Desa"
                                   IsChecked="{Binding TampilkanFooterKepalaDesa, Mode=TwoWay}"
                                   ToolTip="Hilangkan centang bila dokumen tidak memerlukan tanda tangan Kepala Desa"/>
                     </StackPanel>
@@ -279,7 +288,7 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                             <Border Style="{StaticResource AccentSectionBar}"/>
-                            <TextBlock Text="PESERTA / PENERIMA" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="PESERTA RAPAT/UNDANGAN" Style="{StaticResource SectionTitle}"/>
                             <Border Background="{DynamicResource AccentSubtleBrush}" CornerRadius="10" Padding="9,2" Margin="10,0,0,0"
                                     VerticalAlignment="Center">
                                 <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}"

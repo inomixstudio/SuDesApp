@@ -94,7 +94,7 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Button Content="Pilih File Word / PDF" Width="168" Height="32" Margin="0,0,8,0"
                                     Command="{Binding PickWordFileCommand}" Style="{StaticResource SecondaryButton}"
-                                    ToolTip="Word (.docx/.doc) akan dibaca otomatis untuk mengisi formulir; PDF hanya dilampirkan"/>
+                                    ToolTip="Word (.docx/.doc) akan dibaca otomatis untuk mengisi formulir — berkas .doc lama dikonversi otomatis; PDF hanya dilampirkan"/>
                             <Button Content="Lihat" Width="70" Height="32"
                                     Command="{Binding OpenWordFileCommand}"
                                     IsEnabled="{Binding HasStoredOrPickedFile, FallbackValue=False}"
@@ -105,7 +105,7 @@
                                        TextTrimming="CharacterEllipsis" MaxWidth="240"/>
                         </StackPanel>
 
-                        <TextBlock Text="Word dibaca otomatis untuk mengisi Nomor/Tanggal/Tentang/Keterangan. PDF hanya disimpan sebagai lampiran."
+                        <TextBlock Text="Word dibaca otomatis untuk mengisi Nomor/Tanggal/Tentang/Keterangan; berkas .doc lama dikonversi otomatis lebih dulu. PDF hanya disimpan sebagai lampiran."
                                    FontSize="11" Margin="0,6,0,0" TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>

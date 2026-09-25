@@ -6,7 +6,9 @@ using SuDesApp.Data.Repositories;
 using SuDesApp.Utilities;
 using SuDesApp.WhatsApp;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +26,17 @@ namespace SuDesApp.Wpf.Services
     ///   SELESAI          → PDF terkirim ke warga.
     ///   PERLU_PERBAIKAN  → gagal (data tidak valid/generator error); menunggu
     ///                      operator di panel Layanan Online.
+    ///
+    /// Jalur otomatis ini juga DITAHAN bila data desa masih memakai contoh bawaan
+    /// aplikasi: surat tidak dibuat dan tidak dikirim, lalu permintaannya ditandai
+    /// PERLU_PERBAIKAN beserta alasannya — di sini tidak ada operator yang bisa
+    /// ditanyai seperti di form input, jadi mengirim surat berkop contoh ke warga
+    /// tidak boleh terjadi tanpa disadari.
+    ///
+    /// Penahanan itu <b>tidak permanen</b>: begitu data desa disimpan (atau ketika
+    /// aplikasi dibuka kembali dengan data desa yang sudah lengkap), daftar permintaan
+    /// yang tertahan dibaca ulang lalu diproses lagi sendiri — operator tidak perlu
+    /// menyentuhnya (lihat <see cref="LanjutkanPermintaanTertahanAsync"/>).
     /// </summary>
     public class WaAutoProcessor
     {
@@ -31,6 +44,12 @@ namespace SuDesApp.Wpf.Services
         private readonly AppConfig _config;
         private readonly ILogger<WaAutoProcessor> _logger;
         private readonly NotificationService _notifications;
+
+        /// <summary>Penjaga agar pembukaan penahanan tidak berjalan dua kali sekaligus.</summary>
+        private readonly SemaphoreSlim _kunciLanjut = new(1, 1);
+
+        /// <summary>Judul kabar lonceng saat surat warga ditahan karena data desa contoh.</summary>
+        public const string JudulNotifDitahan = "Surat Warga Ditahan";
 
         public WaAutoProcessor(
             IServiceProvider provider,
@@ -117,6 +136,156 @@ namespace SuDesApp.Wpf.Services
             => _ = Task.Run(() => CatchUpAsync());
 
         /// <summary>
+        /// Buka kembali permintaan yang tadi ditahan karena data desa masih contoh, lalu
+        /// proses ulang sekarang juga — tanpa perlu disentuh operator. Dipanggil begitu
+        /// data desa disimpan (lihat <c>SettingsManager.PengaturanDesaTersimpan</c>) dan
+        /// sekali saat aplikasi dibuka, supaya penahanan dari sesi sebelumnya pun lepas
+        /// walau data desanya diisi lewat pemulihan/impor database.
+        ///
+        /// Yang TIDAK ikut diutak-atik: permintaan yang gagal karena sebab lain
+        /// (generator, pengiriman) — penahanannya bukan karena data desa. Bila data desa
+        /// masih contoh, tidak ada yang dibuka sama sekali. Di luar jam layanan, hanya
+        /// penahanannya yang dilepas (status kembali BARU); catch-up akan memprosesnya
+        /// saat jam layanan dibuka.
+        /// </summary>
+        /// <returns>Jumlah permintaan yang penahanannya dibuka.</returns>
+        public async Task<int> LanjutkanPermintaanTertahanAsync(CancellationToken ct = default)
+        {
+            if (!AppPreferenceStore.IsWaAutoProcessEnabled())
+            {
+                _logger.LogInformation(
+                    "Lanjut permintaan tertahan dilewati — proses otomatis WA sedang dimatikan.");
+                return 0;
+            }
+
+            // Dua penyimpanan data desa yang berdekatan (atau simpan + pemrosesan saat aplikasi
+            // dibuka) tidak boleh memproses permintaan yang sama dua kali.
+            if (!await _kunciLanjut.WaitAsync(0))
+            {
+                _logger.LogInformation("Lanjut permintaan tertahan sedang berjalan — panggilan ini dilewati.");
+                return 0;
+            }
+
+            try
+            {
+                using var scope = _provider.CreateScope();
+                var sp = scope.ServiceProvider;
+                var repo = sp.GetRequiredService<IPermintaanWaRepository>();
+
+                var penjagaDesa = sp.GetRequiredService<IPeringatanDataDesaContoh>();
+                var keadaanDesa = await penjagaDesa.PeriksaAsync(ct);
+                if (keadaanDesa.MasihContoh)
+                {
+                    _logger.LogInformation(
+                        "Lanjut permintaan tertahan ditunda — data desa masih contoh ({Field}).",
+                        keadaanDesa.RingkasField);
+                    return 0;
+                }
+
+                var perluPerbaikan = await repo.GetAllAsync(WaRequestStatus.PERLU_PERBAIKAN, ct);
+                var tertahan = perluPerbaikan
+                    .Where(p => PenahananDataDesaContoh.Ditahan(p.Status, p.Catatan))
+                    .ToList();
+
+                if (tertahan.Count == 0)
+                {
+                    return 0;
+                }
+
+                _logger.LogInformation(
+                    "Data desa sudah diisi: {Count} permintaan yang tadi ditahan dilanjutkan otomatis.",
+                    tertahan.Count);
+
+                int dibuka = 0, terkirim = 0, perluDiperiksa = 0, dijadwalkan = 0;
+
+                foreach (var calon in tertahan)
+                {
+                    if (ct.IsCancellationRequested) break;
+
+                    // Baca ulang tepat sebelum dibuka: bila penahanannya sudah ditangani
+                    // proses lain, permintaan ini tidak boleh diproses dua kali.
+                    var permintaan = await repo.GetByIdAsync(calon.ID_Permintaan, ct);
+                    if (!PenahananDataDesaContoh.Ditahan(permintaan))
+                    {
+                        continue;
+                    }
+
+                    await repo.UpdateStatusAsync(calon.ID_Permintaan, WaRequestStatus.BARU,
+                        PenahananDataDesaContoh.CatatanDibukaKembali, null, null, ct);
+                    dibuka++;
+
+                    // Kabar lama "surat ditahan" untuk permintaan ini tidak berlaku lagi:
+                    // lonceng tidak boleh menyuruh operator memproses ulang hal yang
+                    // sedang dikerjakan sendiri oleh aplikasi.
+                    _notifications.HapusPesanLama(JudulNotifDitahan, permintaan!.KodePermintaan);
+
+                    if (!DalamJamLayanan())
+                    {
+                        dijadwalkan++;
+                        await TulisStatusSheetAsync(sp, permintaan!,
+                            "MENUNGGU: data desa sudah diisi — surat diproses otomatis saat jam layanan dibuka", ct);
+                        continue;
+                    }
+
+                    if (await ProcessAsync(calon.ID_Permintaan, ct))
+                    {
+                        terkirim++;
+                    }
+                    else
+                    {
+                        perluDiperiksa++;
+                    }
+                }
+
+                if (dibuka == 0)
+                {
+                    return 0; // semuanya sudah ditangani proses lain
+                }
+
+                KabariHasilLanjut(dibuka, terkirim, perluDiperiksa, dijadwalkan);
+                return dibuka;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Melanjutkan permintaan yang tertahan gagal.");
+                return 0;
+            }
+            finally
+            {
+                _kunciLanjut.Release();
+            }
+        }
+
+        /// <summary>
+        /// Kabarkan hasil pembukaan penahanan lewat lonceng: apa yang sudah terkirim,
+        /// apa yang masih perlu diperiksa operator, dan apa yang menunggu jam layanan.
+        /// </summary>
+        private void KabariHasilLanjut(int jumlah, int terkirim, int perluDiperiksa, int dijadwalkan)
+        {
+            var rincian = new List<string>();
+            if (terkirim > 0) rincian.Add($"{terkirim} surat terkirim ke warga");
+            if (perluDiperiksa > 0) rincian.Add($"{perluDiperiksa} masih perlu diperiksa di panel Layanan Online");
+            if (dijadwalkan > 0) rincian.Add($"{dijadwalkan} diproses otomatis saat jam layanan dibuka");
+
+            string pesan = $"{jumlah} permintaan warga yang tadi ditahan karena data desa masih contoh " +
+                           "dilanjutkan sendiri setelah data desa disimpan." +
+                           (rincian.Count == 0 ? string.Empty : "\n" + string.Join(" • ", rincian) + ".");
+
+            if (perluDiperiksa > 0)
+            {
+                _notifications.Warning("Surat Warga Dilanjutkan — sebagian perlu diperiksa", pesan, "layanan-online");
+            }
+            else if (terkirim == 0 && dijadwalkan > 0)
+            {
+                _notifications.Info("Surat Warga Dijadwalkan", pesan, "layanan-online");
+            }
+            else
+            {
+                _notifications.Success("Surat Warga Dilanjutkan", pesan, "layanan-online");
+            }
+        }
+
+        /// <summary>
         /// Memproses satu permintaan sampai PDF terkirim. Mengembalikan true bila
         /// berhasil (status SELESAI), false bila gagal (PERLU_PERBAIKAN).
         /// </summary>
@@ -151,6 +320,36 @@ namespace SuDesApp.Wpf.Services
                     _logger.LogInformation(
                         "Auto-proses dilewati untuk {Kode} (status {Status}).",
                         permintaan.KodePermintaan, permintaan.Status);
+                    return false;
+                }
+
+                // 0. Penjaga data desa contoh. Di jalur otomatis TIDAK ada orang yang bisa
+                //    ditanyai seperti di form input, jadi surat untuk warga tidak diteruskan:
+                //    permintaan ditahan dan ditandai PERLU_PERBAIKAN beserta alasannya, supaya
+                //    operator melengkapinya setelah data desa diisi. Suratnya pun belum dibuat,
+                //    sehingga tidak ada dokumen berkop contoh yang tersimpan di register.
+                var penjagaDesa = sp.GetRequiredService<IPeringatanDataDesaContoh>();
+                var keadaanDesa = await penjagaDesa.PeriksaAsync(ct);
+                var alasanTahan = AlasanTahanDataDesaContoh(keadaanDesa);
+
+                if (alasanTahan.Length > 0)
+                {
+                    _logger.LogWarning(
+                        "Auto-proses {Kode} ditahan: data desa masih contoh ({Field}).",
+                        permintaan.KodePermintaan, keadaanDesa.RingkasField);
+
+                    await repo.UpdateStatusAsync(idPermintaan, WaRequestStatus.PERLU_PERBAIKAN,
+                        alasanTahan, null, null, ct);
+                    await TulisStatusSheetAsync(sp, permintaan,
+                        "DITAHAN: data desa masih contoh — surat belum dikirim ke warga", ct);
+
+                    _notifications.Warning(
+                        JudulNotifDitahan,
+                        permintaan.KodePermintaan + " — surat belum dibuat/dikirim ke warga karena data desa " +
+                        "masih memakai contoh bawaan aplikasi (" + keadaanDesa.RingkasField + ").\n" +
+                        "Lengkapi Pengaturan Surat → Data Desa, lalu proses ulang permintaan ini " +
+                        "dari panel Layanan Online.",
+                        "layanan-online");
                     return false;
                 }
 
@@ -267,6 +466,16 @@ namespace SuDesApp.Wpf.Services
                 return false;
             }
         }
+
+        /// <summary>
+        /// Alasan penahanan surat otomatis bila data desa masih contoh — kosong bila aman.
+        ///
+        /// Dipisah sebagai fungsi murni supaya aturan "surat warga tidak boleh keluar
+        /// memakai data desa contoh" bisa diperiksa uji tanpa menjalankan seluruh pipeline
+        /// WhatsApp (database, generator PDF, Drive, dan gateway).
+        /// </summary>
+        public static string AlasanTahanDataDesaContoh(KeadaanDataDesaContoh? keadaan)
+            => PenahananDataDesaContoh.Alasan(keadaan);
 
         /// <summary>
         /// Mengirim surat selesai ke warga: unggah PDF ke folder "Surat Online"

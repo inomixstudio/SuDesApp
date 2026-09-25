@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Extensions.Logging;
@@ -37,6 +39,9 @@ namespace SuDesApp.Wpf.ViewModels
         private string _statusText = string.Empty;
         private string _searchText = string.Empty;
 
+        /// <summary>Penjadwal muat ulang saat pengguna mengetik di kotak pencarian.</summary>
+        private CancellationTokenSource? _debouncePencarian;
+
         public RiwayatViewModel(
             ActivityLogService activityLog,
             IMessageService messageService,
@@ -56,7 +61,12 @@ namespace SuDesApp.Wpf.ViewModels
         public string HeaderTitle => "RIWAYAT AKTIVITAS";
         public string HeaderSubtitle => $"Sesi aktif: {SessionContext.Display} ({SessionContext.LoginMethod}) — mencatat siapa membuat/mengubah surat & arsip";
 
-        public ObservableCollection<ActivityRow> Items { get; } = new();
+        /// <summary>
+        /// Baris riwayat yang tampil. Diganti sebagai satu koleksi utuh setiap kali
+        /// dimuat — jauh lebih ringan daripada menambah 500 baris satu per satu ke
+        /// koleksi yang sudah terikat ke DataGrid.
+        /// </summary>
+        public ObservableCollection<ActivityRow> Items { get; private set; } = new();
 
         public bool IsBusy
         {
@@ -70,7 +80,49 @@ namespace SuDesApp.Wpf.ViewModels
         public string SearchText
         {
             get => _searchText;
-            set { if (SetProperty(ref _searchText, value)) { _ = LoadAsync(); } }
+            set
+            {
+                if (SetProperty(ref _searchText, value))
+                {
+                    JadwalkanMuatUlang();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Tunda pemuatan ±300 ms setelah ketikan terakhir lalu muat SEKALI —
+        /// mengetik tidak lagi memicu satu query database per huruf.
+        /// </summary>
+        private void JadwalkanMuatUlang()
+        {
+            var sebelumnya = _debouncePencarian;
+            var baru = new CancellationTokenSource();
+            _debouncePencarian = baru;
+            sebelumnya?.Cancel();
+            sebelumnya?.Dispose();
+
+            _ = MuatTertundaAsync(baru.Token);
+        }
+
+        private async Task MuatTertundaAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await Task.Delay(300, cancellationToken);
+
+                // Bila pemuatan lain sedang berjalan, tunggu sampai selesai supaya
+                // hasil pencarian terakhir tidak hilang tertelan penjaga IsBusy.
+                for (int i = 0; i < 20 && IsBusy; i++)
+                {
+                    await Task.Delay(100, cancellationToken);
+                }
+
+                await LoadAsync();
+            }
+            catch (OperationCanceledException)
+            {
+                // Ketikan berikutnya menggantikan jadwal ini.
+            }
         }
 
         public ICommand RefreshCommand { get; }
@@ -86,10 +138,11 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 StatusText = "Memuat riwayat...";
                 var entries = await _activityLog.GetRecentAsync(500, string.IsNullOrWhiteSpace(SearchText) ? null : SearchText.Trim());
-                Items.Clear();
+
+                var baris = new List<ActivityRow>();
                 foreach (var e in entries)
                 {
-                    Items.Add(new ActivityRow
+                    baris.Add(new ActivityRow
                     {
                         Waktu = e.Waktu,
                         Pengguna = e.Pengguna,
@@ -99,6 +152,10 @@ namespace SuDesApp.Wpf.ViewModels
                         Detail = e.Detail
                     });
                 }
+
+                // Sekali ganti untuk seluruh baris (bukan ratusan notifikasi ke UI).
+                Items = new ObservableCollection<ActivityRow>(baris);
+                OnPropertyChanged(nameof(Items));
                 StatusText = Items.Count == 0
                     ? "Belum ada aktivitas tercatat."
                     : $"Menampilkan {Items.Count} aktivitas terakhir.";

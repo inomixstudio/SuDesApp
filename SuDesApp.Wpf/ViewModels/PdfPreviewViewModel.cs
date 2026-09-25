@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using System.Windows.Input;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
@@ -16,7 +17,10 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly NavigationService _navigation;
         private readonly Func<int, InputWindowViewModel>? _editViewModelFactory;
         private readonly IMessageService? _messageService;
+        private readonly IPeringatanDataDesaContoh? _peringatan;
         private readonly int? _suratId;
+        private bool _tampilPeringatanDataContoh;
+        private string _pesanPeringatanDataContoh = string.Empty;
 
         public string Title { get; }
         public string? PdfPath { get; private set; }
@@ -35,14 +39,22 @@ namespace SuDesApp.Wpf.ViewModels
         public ICommand ExportCommand { get; }
         public ICommand EditCommand { get; }
 
+        /// <summary>Tombol strip peringatan: buka Pengaturan Surat bagian Data Desa.</summary>
+        public ICommand BukaPengaturanSuratCommand { get; }
+
         /// <param name="batalKembali">
         /// Aksi tombol Batal. Kosong = kembali ke tampilan awal (bawaan). Dipakai
         /// pratinjau di dalam wizard yang perlu kembali ke langkah sebelumnya,
         /// bukan menutup halaman utama.
         /// </param>
+        /// <param name="peringatan">
+        /// Penjaga data desa contoh: sebelum mencetak, pengguna diberi tahu bila kop
+        /// masih memakai data contoh. Kosong = dokumen ini tidak diperiksa.
+        /// </param>
         public PdfPreviewViewModel(string title, string? pdfPath, NavigationService navigation,
             int? suratId = null, Func<int, InputWindowViewModel>? editViewModelFactory = null,
-            IMessageService? messageService = null, Action? batalKembali = null)
+            IMessageService? messageService = null, Action? batalKembali = null,
+            IPeringatanDataDesaContoh? peringatan = null)
         {
             Title = title;
             PdfPath = pdfPath;
@@ -51,9 +63,70 @@ namespace SuDesApp.Wpf.ViewModels
             _suratId = suratId;
             _editViewModelFactory = editViewModelFactory;
             _messageService = messageService;
+            _peringatan = peringatan;
             BatalCommand = new RelayCommand(batalKembali ?? (() => _navigation.ShowDefault()));
             ExportCommand = new RelayCommand(ExportAs);
             EditCommand = new RelayCommand(EditSurat, () => CanEdit);
+            BukaPengaturanSuratCommand = new RelayCommand(
+                () => _navigation.ShowSetelanBagianSurat(0));
+
+            _ = PeriksaPeringatanDataContohAsync();
+        }
+
+        // =================================================================
+        // Peringatan data desa contoh sebelum mencetak
+        // =================================================================
+
+        /// <summary>Benar bila dokumen ini dibuat dari data desa yang masih contoh.</summary>
+        public bool TampilPeringatanDataContoh
+        {
+            get => _tampilPeringatanDataContoh;
+            private set => SetProperty(ref _tampilPeringatanDataContoh, value);
+        }
+
+        /// <summary>Pesan strip peringatan pada pratinjau (kosong bila data desa sudah diisi).</summary>
+        public string PesanPeringatanDataContoh
+        {
+            get => _pesanPeringatanDataContoh;
+            private set => SetProperty(ref _pesanPeringatanDataContoh, value ?? string.Empty);
+        }
+
+        /// <summary>Periksa data desa contoh untuk strip peringatan di halaman pratinjau.</summary>
+        public async Task PeriksaPeringatanDataContohAsync()
+        {
+            if (_peringatan == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var keadaan = await _peringatan.PeriksaAsync();
+                TampilPeringatanDataContoh = keadaan.MasihContoh;
+                PesanPeringatanDataContoh = keadaan.MasihContoh
+                    ? $"Dokumen ini memakai data desa contoh: {keadaan.RingkasField}. Cetak setelah datanya diganti di Pengaturan Surat → Data Desa."
+                    : string.Empty;
+            }
+            catch
+            {
+                // Strip peringatan hanya kabar tambahan: kegagalan membacanya tidak
+                // boleh mengganggu pratinjau. Penjaga sebelum mencetak tetap berlaku.
+            }
+        }
+
+        /// <summary>
+        /// Penjaga tombol Cetak: dokumen bersurat tidak boleh tercetak memakai nama
+        /// desa/pejabat contoh tanpa persetujuan pengguna. True = boleh mencetak.
+        /// </summary>
+        public async Task<bool> BolehCetakAsync()
+        {
+            if (_peringatan == null)
+            {
+                return true;
+            }
+
+            return await _peringatan.BolehLanjutAsync(
+                $"Dokumen \"{Title}\" akan dicetak.", _messageService!);
         }
 
         /// <summary>
@@ -116,7 +189,7 @@ namespace SuDesApp.Wpf.ViewModels
         private string BuildDefaultFileName()
         {
             // Prioritaskan judul (mis. "Surat SKD_UMUM — 470/.../2026"), fallback nama file temp.
-            var raw = !string.IsNullOrWhiteSpace(Title) ? Title : System.IO.Path.GetFileNameWithoutExtension(PdfPath);
+            var raw = !string.IsNullOrWhiteSpace(Title) ? Title : System.IO.Path.GetFileNameWithoutExtension(PdfPath) ?? string.Empty;
             var invalid = System.IO.Path.GetInvalidFileNameChars();
             var clean = new string(raw.Where(c => !invalid.Contains(c)).ToArray()).Trim();
             return string.IsNullOrWhiteSpace(clean) ? "Dokumen.pdf" : clean + ".pdf";

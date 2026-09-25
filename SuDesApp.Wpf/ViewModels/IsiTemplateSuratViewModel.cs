@@ -485,17 +485,27 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 int urut = _urutTerpakai;
 
-                // Nomor diedit pengguna?: pakai kelompok angka pada nomor itu sebagai
-                // urutan terakhir, supaya surat berikutnya melanjut dari situ.
+                // Nomor diedit pengguna?: urutan dibaca dari nomor yang dicetak memakai
+                // pola (bukan kelompok angka pertama — bisa jadi milik awalan, mis.
+                // "474.3/005/Ds/2026" → 5, bukan 474). Cadangan: kelompok angka
+                // pertama seperti perilaku lama.
                 if (!string.Equals((NomorSurat ?? string.Empty).Trim(), _nomorOtomatis.Trim(), StringComparison.Ordinal))
                 {
-                    var kelompok = (NomorSurat ?? string.Empty)
-                        .Split(new[] { '/', '-', '.', ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Where(b => b.Length > 0 && b.All(char.IsDigit))
-                        .ToList();
-                    if (kelompok.Count > 0 && int.TryParse(kelompok[0], out var dariNomor) && dariNomor > 0 && dariNomor < 1000000)
+                    int? dariPola = TemplateSuratNomor.BacaUrutDariNomor(_template.PolaNomor, NomorSurat);
+                    if (dariPola is > 0 and < 1000000)
                     {
-                        urut = dariNomor;
+                        urut = dariPola.Value;
+                    }
+                    else
+                    {
+                        var kelompok = (NomorSurat ?? string.Empty)
+                            .Split(new[] { '/', '-', '.', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Where(b => b.Length > 0 && b.All(char.IsDigit))
+                            .ToList();
+                        if (kelompok.Count > 0 && int.TryParse(kelompok[0], out var dariNomor) && dariNomor > 0 && dariNomor < 1000000)
+                        {
+                            urut = dariNomor;
+                        }
                     }
                 }
 

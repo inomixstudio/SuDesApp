@@ -24,77 +24,10 @@
             </StackPanel>
         </Border>
 
-        <!-- Daftar versi (scroll; tiap versi = kartu Material) -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Entries}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,14">
-                            <StackPanel>
-                                <!-- Judul versi + badge TERBARU -->
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Width="34" Height="34" CornerRadius="8"
-                                            Background="{DynamicResource AccentSubtleBrush}" VerticalAlignment="Center">
-                                        <TextBlock Text="&#x1F4CC;" FontSize="14" Foreground="{DynamicResource AccentTextBrush}"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="{Binding VersionText}" FontWeight="Bold"
-                                               FontSize="15" Foreground="{DynamicResource TextBrush}"
-                                               VerticalAlignment="Center" Margin="10,0,0,0" TextWrapping="Wrap"/>
-                                    <Border Background="{DynamicResource AccentBrush}" CornerRadius="10"
-                                            Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center"
-                                            Visibility="{Binding IsLatest, Converter={StaticResource BoolToVis}}">
-                                        <TextBlock Text="TERBARU" FontSize="9" FontWeight="Bold" Foreground="White"/>
-                                    </Border>
-                                </StackPanel>
-
-                                <!-- Section per versi -->
-                                <ItemsControl ItemsSource="{Binding Sections}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Margin="0,0,0,12">
-                                                <Grid Margin="0,0,0,6">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <Border Grid.Column="0" Width="4" Height="14" CornerRadius="2"
-                                                            Background="{DynamicResource AccentBrush}"
-                                                            VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Heading}" FontWeight="SemiBold"
-                                                               FontSize="13" Foreground="{DynamicResource TextBrush}"
-                                                               VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                                </Grid>
-                                                <ItemsControl ItemsSource="{Binding Points}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <!-- Grid (bukan StackPanel Horizontal) agar kolom teks
-                                                                 terikat lebar viewport dan wrap — tidak memicu
-                                                                 scroll horizontal. -->
-                                                            <Grid Margin="12,0,0,4">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="Auto"/>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                </Grid.ColumnDefinitions>
-                                                                <TextBlock Grid.Column="0" Text="&#x2022;"
-                                                                           Foreground="{DynamicResource AccentBrush}"
-                                                                           Margin="0,0,8,0" VerticalAlignment="Top"/>
-                                                                <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
-                                                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                                                           LineHeight="20"/>
-                                                            </Grid>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+        <!-- Daftar kartu versi (terbaru di atas, maksimal tiga kartu). -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Entries}"
+                          ItemTemplate="{StaticResource KartuCatatanRilis}"/>
         </ScrollViewer>
 
         <!-- Statusbar halaman: info versi (kiri) + identitas aplikasi (kanan) -->

@@ -152,8 +152,11 @@
                             <TextBlock Text="{Binding JudulTipe}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"
                                        VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <Button Content="+ Field" Command="{Binding DataContext.TambahKolomBagianCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Height="26"
+                                    CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Height="26" Margin="0,0,8,0"
                                     ToolTip="Tambahkan field baru pada blok data diri ini"/>
+                            <Button Content="+ Kolom Umum" Command="{Binding DataContext.TambahKolomUmumBagianCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Height="26"
+                                    ToolTip="Tambahkan field identitas umum (NIK, nama, alamat, dan lainnya) sekaligus"/>
                         </StackPanel>
                         <TextBlock Text="Nama kelompok (mis. Pemohon, Saksi)" Foreground="{DynamicResource TextBrush}" Margin="0,8,0,0"/>
                         <TextBox Text="{Binding Judul, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -191,8 +194,11 @@
                             <TextBlock Text="{Binding JudulTipe}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"
                                        VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <Button Content="+ Kolom" Command="{Binding DataContext.TambahKolomBagianCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Height="26"
+                                    CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Height="26" Margin="0,0,8,0"
                                     ToolTip="Tambahkan kolom isian baru pada bagian ini"/>
+                            <Button Content="+ Kolom Umum" Command="{Binding DataContext.TambahKolomUmumBagianCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Height="26"
+                                    ToolTip="Tambahkan kolom identitas umum (NIK, nama, alamat, dan lainnya) sekaligus"/>
                         </StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -662,24 +668,32 @@
                         <!-- ===== Keterangan komponen: tempat & tanggal + kop ===== -->
                         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12"
                                 Visibility="{Binding PakaiTempatTanggal, Converter={StaticResource BoolToVis}}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#128337;" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="&#128337;" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"
                                            Foreground="{DynamicResource AccentTextBrush}"/>
-                                <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}">
+                                <TextBlock Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}">
                                     Baris tempat &amp; tanggal akan dicetak di atas badan surat, diisi otomatis saat pembuatan surat.
                                 </TextBlock>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,4"
                                 Visibility="{Binding PakaiKop, Converter={StaticResource BoolToVis}}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#9962;" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="&#9962;" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"
                                            Foreground="{DynamicResource AccentTextBrush}"/>
-                                <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}">
+                                <TextBlock Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}">
                                     Kop surat desa (logo, nama desa, kecamatan, kabupaten) diambil dari Pengaturan Surat.
                                 </TextBlock>
-                            </StackPanel>
+                            </Grid>
                         </Border>
                         </StackPanel>
 
@@ -861,13 +875,17 @@
                         </Border>
 
                         <Border Style="{StaticResource CardStyle}" Margin="0,12,0,4" Padding="12">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#128221;" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="&#128221;" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"
                                            Foreground="{DynamicResource AccentTextBrush}"/>
-                                <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}">
+                                <TextBlock Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}">
                                     Bila tampilan sudah sesuai, tekan &quot;Simpan Template&quot; atau &quot;Simpan &amp; Isi Surat&quot;. Untuk mengubah komponen atau isian, tekan &quot;Kembali&quot;.
                                 </TextBlock>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                     </StackPanel>

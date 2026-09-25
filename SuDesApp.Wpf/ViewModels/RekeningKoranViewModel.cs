@@ -339,6 +339,8 @@ namespace SuDesApp.Wpf.ViewModels
                     Kabupaten = _desaData.Kabupaten ?? string.Empty,
                     Alamat = _desaData.Alamat ?? string.Empty,
                     Kodepos = _desaData.Kodepos ?? string.Empty,
+                    // Email desa (opsional) ikut ke kop; surat ini tidak punya kolomnya sendiri.
+                    Email = _desaData.Email,
                     KepalaDesa = NamaKades,
                     SekretarisDesa = _desaData.SekretarisDesa,
                     NamaCamat = _desaData.NamaCamat,
@@ -397,7 +399,7 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal membuat PDF Rekening Koran");
-                await _messageService.ShowErrorAsync($"Error: {ex.Message}");
+                await _messageService.ShowErrorAsync("Gagal membuat PDF Rekening Koran: " + ex.Message);
             }
             finally
             {

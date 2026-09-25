@@ -25,8 +25,8 @@ namespace SuDesApp.Wpf.ViewModels
 {
     public class SuratDisplayModel : ObservableObject
     {
-        private string ?_statusDisplay;
-        private string ?_status;
+        private string _statusDisplay = string.Empty;
+        private string _status = string.Empty;
 
         public int ID_Surat { get; set; }
         public DateTime TanggalSurat { get; set; }
@@ -57,8 +57,8 @@ namespace SuDesApp.Wpf.ViewModels
 
     public class FilterItem : ObservableObject
     {
-        private string ?_displayName;
-        private string ?_filterValue;
+        private string _displayName = string.Empty;
+        private string _filterValue = string.Empty;
 
         public string DisplayName
         {
@@ -72,7 +72,7 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         public override string ToString() => DisplayName;
-        public override bool Equals(object obj) => obj is FilterItem other && string.Equals(FilterValue, other.FilterValue, StringComparison.OrdinalIgnoreCase);
+        public override bool Equals(object? obj) => obj is FilterItem other && string.Equals(FilterValue, other.FilterValue, StringComparison.OrdinalIgnoreCase);
         public override int GetHashCode() => FilterValue?.GetHashCode() ?? 0;
     }
 
@@ -85,6 +85,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly FileService _fileService;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IMessageService _messageService;
+        private readonly IPeringatanDataDesaContoh? _peringatan;
         protected readonly IServiceProvider _serviceProvider;
         private readonly NavigationService _navigation;
         private readonly Func<string, string, int?, PdfPreviewViewModel> _previewFactory;
@@ -115,6 +116,14 @@ namespace SuDesApp.Wpf.ViewModels
         private int _pendingFilterRequests = 0;
         private bool _suppressFilterEvents = false;
 
+        /// <summary>
+        /// Kabar halaman yang tampil di dalam daftar (bukan dialog popup): hasil ekspor,
+        /// statistik, kegagalan cetak, dan sebab sebuah tombol tidak bisa dilanjutkan.
+        /// Kartu berkunci sama saling menimpa, jadi menekan tombol yang sama dua kali
+        /// hanya menyisakan kabar terakhir. Kelas turunan (Register NTCR) ikut memakainya.
+        /// </summary>
+        public KumpulanPesanInline Pesan { get; } = new();
+
         public RegisterSuratViewModel(
             IUnitOfWork unitOfWork,
             ILoggerFactory loggerFactory,
@@ -125,7 +134,8 @@ namespace SuDesApp.Wpf.ViewModels
             IServiceProvider serviceProvider,
             NavigationService navigation,
             Func<string, string, int?, PdfPreviewViewModel> previewFactory,
-            PdfPrintService pdfPrintService)
+            PdfPrintService pdfPrintService,
+            IPeringatanDataDesaContoh? peringatan = null)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
@@ -140,6 +150,7 @@ namespace SuDesApp.Wpf.ViewModels
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
             _pdfPrintService = pdfPrintService ?? throw new ArgumentNullException(nameof(pdfPrintService));
+            _peringatan = peringatan;
 
             SuratItems = new ObservableCollection<SuratDisplayModel>();
             JenisSuratItems = new ObservableCollection<FilterItem>();
@@ -243,15 +254,15 @@ namespace SuDesApp.Wpf.ViewModels
             set => SetProperty(ref _cancelledSuratCount, value);
         }
 
-        private FilterItem _selectedJenisSurat;
-        public FilterItem SelectedJenisSurat
+        private FilterItem? _selectedJenisSurat;
+        public FilterItem? SelectedJenisSurat
         {
             get => _selectedJenisSurat;
             set => SetProperty(ref _selectedJenisSurat, value);
         }
 
-        private FilterItem _selectedStatus;
-        public FilterItem SelectedStatus
+        private FilterItem? _selectedStatus;
+        public FilterItem? SelectedStatus
         {
             get => _selectedStatus;
             set
@@ -261,8 +272,8 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        private string _selectedTahun;
-        public string SelectedTahun
+        private string? _selectedTahun;
+        public string? SelectedTahun
         {
             get => _selectedTahun;
             set => SetProperty(ref _selectedTahun, value);
@@ -419,10 +430,11 @@ namespace SuDesApp.Wpf.ViewModels
 
             foreach (var jenis in allJenis.Where(j => j?.NamaJenis != null && !ntcrSet.Contains(j.NamaJenis)))
             {
-                var displayName = allDisplayNames.TryGetValue(jenis.NamaJenis!, out var name) && !string.IsNullOrWhiteSpace(name)
+                var namaJenis = jenis!.NamaJenis!;
+                var displayName = allDisplayNames.TryGetValue(namaJenis, out var name) && !string.IsNullOrWhiteSpace(name)
                     ? name
-                    : System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(jenis.NamaJenis.Replace("_", " ").ToLower());
-                items.Add(new FilterItem { DisplayName = displayName, FilterValue = jenis.NamaJenis.ToUpperInvariant() });
+                    : System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(namaJenis.Replace("_", " ").ToLower());
+                items.Add(new FilterItem { DisplayName = displayName, FilterValue = namaJenis.ToUpperInvariant() });
             }
 
             return items;
@@ -840,7 +852,9 @@ namespace SuDesApp.Wpf.ViewModels
             if (!_isComboBoxInitialized || _isInitializing || !IsDateFilterEnabled) return;
             if (TanggalMulai > TanggalSelesai)
             {
-                await _messageService.ShowWarningAsync("Tanggal mulai tidak boleh lebih baru dari tanggal selesai.");
+                Pesan.Peringatan("Filter tanggal belum tepat",
+                    "Tanggal mulai tidak boleh lebih baru dari tanggal selesai. Urutkan dulu tanggalnya, ya.",
+                    "filter-tanggal");
                 return;
             }
             _currentPage = 1;
@@ -852,30 +866,25 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 var filters = BuildFilterConditions();
-                var counts = new Dictionary<string, int>();
+                Dictionary<string, int> counts;
 
+                // SATU query GROUP BY untuk seluruh status (dulu satu query COUNT per
+                // status) — halaman terbuka/berganti filter jauh lebih ringan.
                 // Serialisasi via _dbGate: hindari query konkuren pada koneksi bersama.
                 await _dbGate.WaitAsync();
                 try
                 {
-                    foreach (var status in SuratConstants.ValidStatus)
-                    {
-                        var statusFilter = new FilterConditions
-                        {
-                            JenisSurat = filters.JenisSurat,
-                            ExcludeJenisNames = filters.ExcludeJenisNames,
-                            Tahun = filters.Tahun,
-                            SearchText = filters.SearchText,
-                            TanggalMulai = filters.TanggalMulai,
-                            TanggalSelesai = filters.TanggalSelesai,
-                            Status = status
-                        };
-                        counts[status] = await _unitOfWork.SuratRepository.CountAsync(statusFilter);
-                    }
+                    counts = await _unitOfWork.SuratRepository.CountByStatusAsync(filters);
                 }
                 finally
                 {
                     _dbGate.Release();
+                }
+
+                // Status yang belum punya baris tetap muncul dengan angka 0.
+                foreach (var status in SuratConstants.ValidStatus)
+                {
+                    counts.TryAdd(status, 0);
                 }
 
                 ActiveSuratCount = counts.GetValueOrDefault("Active", 0);
@@ -922,7 +931,9 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (!exportData.Any())
                 {
-                    await _messageService.ShowInfoAsync("Tidak ada data yang sesuai filter untuk diekspor.");
+                    Pesan.Info("Tidak ada data untuk diekspor",
+                        "Tidak ada surat yang sesuai filter sekarang, jadi berkas ekspor tidak dibuat.",
+                        "ekspor-register");
                     return;
                 }
 
@@ -1021,12 +1032,16 @@ namespace SuDesApp.Wpf.ViewModels
                     }
                 }
 
-                await _messageService.ShowInfoAsync($"Berhasil mengekspor {exportData.Count} surat ke file:\n{sfd.FileName}");
+                Pesan.Sukses("Register diekspor",
+                    $"Berhasil mengekspor {exportData.Count} surat ke berkas:\n{sfd.FileName}",
+                    "ekspor-register");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal mengekspor register surat");
-                await _messageService.ShowErrorAsync($"Gagal mengekspor data: {ex.Message}");
+                Pesan.Galat("Gagal mengekspor register",
+                    $"Berkas ekspor tidak jadi dibuat. Penyebabnya: {ex.Message}",
+                    "ekspor-register");
             }
             finally
             {
@@ -1041,17 +1056,21 @@ namespace SuDesApp.Wpf.ViewModels
                 var stats = await _unitOfWork.SuratRepository.GetDatabaseStatsAsync();
                 if (stats == null || stats.Count == 0)
                 {
-                    await _messageService.ShowInfoAsync("Tidak ada data statistik.");
+                    Pesan.Info("Belum ada statistik",
+                        "Database surat masih kosong, jadi belum ada angka yang bisa ditampilkan.",
+                        "statistik");
                     return;
                 }
 
                 var lines = stats.Select(kvp => $"{kvp.Key}: {kvp.Value}");
-                await _messageService.ShowInfoAsync(string.Join(Environment.NewLine, lines));
+                Pesan.Info("Statistik database surat",
+                    string.Join(Environment.NewLine, lines), "statistik");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to show statistics");
-                await _messageService.ShowErrorAsync($"Gagal memuat statistik: {ex.Message}");
+                Pesan.Galat("Gagal memuat statistik",
+                    $"Angka statistik tidak dapat dibaca. Penyebabnya: {ex.Message}", "statistik");
             }
         }
 
@@ -1065,7 +1084,9 @@ namespace SuDesApp.Wpf.ViewModels
                 var suratList = allFilteredData?.ToList() ?? new List<SuratData>();
                 if (!suratList.Any())
                 {
-                    await _messageService.ShowInfoAsync("Tidak ada data surat yang cocok untuk dicetak.");
+                    Pesan.Info("Tidak ada data untuk dicetak",
+                        "Tidak ada surat yang cocok dengan filter sekarang, jadi buku register tidak dibuat.",
+                        "cetak-register");
                     return;
                 }
 
@@ -1089,7 +1110,8 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to print register");
-                await _messageService.ShowErrorAsync($"Gagal mencetak register: {ex.Message}");
+                Pesan.Galat("Gagal mencetak register",
+                    $"Buku register tidak dapat dibuat. Penyebabnya: {ex.Message}", "cetak-register");
             }
             finally
             {
@@ -1158,7 +1180,8 @@ namespace SuDesApp.Wpf.ViewModels
             var target = SelectedSurat;
             if (target == null)
             {
-                await _messageService.ShowWarningAsync("Pilih surat yang akan diubah statusnya terlebih dahulu.");
+                Pesan.Peringatan("Belum ada surat yang dipilih",
+                    "Pilih dulu satu baris surat di daftar, lalu ubah statusnya.", "status-surat");
                 return;
             }
 
@@ -1169,7 +1192,9 @@ namespace SuDesApp.Wpf.ViewModels
 
             if (string.Equals(target.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
             {
-                await _messageService.ShowWarningAsync("Surat yang sudah dibatalkan tidak dapat diubah statusnya.");
+                Pesan.Peringatan("Status surat dibatalkan tidak dapat diubah",
+                    $"Surat nomor {target.NomorSurat} sudah dibatalkan, jadi statusnya kini tetap.",
+                    "status-surat");
                 return;
             }
 
@@ -1180,19 +1205,23 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     target.Status = newStatus;
                     target.StatusDisplay = GetStatusDisplayName(newStatus);
-                    target.OriginalSuratData.Status = newStatus;
+                    if (target.OriginalSuratData != null)
+                        target.OriginalSuratData.Status = newStatus;
                     _ = LoadDataSafeAsync();
                     _ = LoadStatusSummaryAsync();
                 }
                 else
                 {
-                    await _messageService.ShowErrorAsync("Gagal mengubah status surat.");
+                    Pesan.Galat("Gagal mengubah status surat",
+                        "Perubahan status tidak tersimpan di database. Coba ulangi sebentar lagi.",
+                        "status-surat");
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to change status for surat ID={Id}", target.ID_Surat);
-                await _messageService.ShowErrorAsync($"Gagal mengubah status: {ex.Message}");
+                Pesan.Galat("Gagal mengubah status surat",
+                    $"Penyebabnya: {ex.Message}", "status-surat");
             }
         }
 
@@ -1206,8 +1235,18 @@ namespace SuDesApp.Wpf.ViewModels
 
             if (string.Equals(model.OriginalSuratData.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
             {
-                await _messageService.ShowWarningAsync(
-                    $"Surat nomor {model.NomorSurat} berstatus dibatalkan dan tidak dapat dicetak.");
+                Pesan.Peringatan("Surat dibatalkan tidak dapat dicetak",
+                    $"Surat nomor {model.NomorSurat} berstatus dibatalkan, jadi tidak dicetak.",
+                    "cetak-surat");
+                return;
+            }
+
+            // Data desa masih contoh: surat resmi akan keluar dengan kop contoh.
+            // Pengguna diberi kesempatan menghentikan pencetakan lebih dulu.
+            if (_peringatan != null &&
+                !await _peringatan.BolehLanjutAsync(
+                    $"Surat nomor {model.NomorSurat} akan dicetak langsung ke printer.", _messageService))
+            {
                 return;
             }
 
@@ -1228,9 +1267,10 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (pdfPath == null || !File.Exists(pdfPath))
                 {
-                    await _messageService.ShowWarningAsync(
-                        $"PDF surat tidak dapat dibuat untuk jenis '{suratData.NamaJenis ?? "?"}'. " +
-                        "Detail penyebab ada di log aplikasi (error.log).");
+                    Pesan.Peringatan("PDF surat tidak dapat dibuat",
+                        $"Jenis '{suratData.NamaJenis ?? "?"}' belum berhasil dibuatkan dokumennya. " +
+                        "Detail penyebab ada di log aplikasi (error.log).",
+                        "cetak-surat");
                     return;
                 }
 
@@ -1239,14 +1279,14 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (printed)
                 {
-                    await _messageService.ShowInfoAsync(
-                        $"Surat nomor {model.NomorSurat} terkirim ke printer.");
+                    Pesan.Sukses("Surat terkirim ke printer",
+                        $"Surat nomor {model.NomorSurat} sudah dikirim ke printer.", "cetak-surat");
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal mencetak surat #{Id}", model.ID_Surat);
-                await _messageService.ShowErrorAsync($"Gagal mencetak surat: {ex.Message}");
+                Pesan.Galat("Gagal mencetak surat", $"Penyebabnya: {ex.Message}", "cetak-surat");
             }
             finally
             {
@@ -1261,8 +1301,9 @@ namespace SuDesApp.Wpf.ViewModels
 
             if (string.Equals(model.OriginalSuratData.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
             {
-                await _messageService.ShowWarningAsync(
-                    $"Surat nomor {model.NomorSurat} berstatus dibatalkan dan tidak dapat dibuka.");
+                Pesan.Peringatan("Surat dibatalkan tidak dapat dibuka",
+                    $"Surat nomor {model.NomorSurat} berstatus dibatalkan, jadi pratinjaunya tidak dibuka.",
+                    "pratinjau-surat");
                 return;
             }
 
@@ -1287,7 +1328,9 @@ namespace SuDesApp.Wpf.ViewModels
                     !TemplateSuratTercatat.DariTemplateSurat(suratData) &&
                     suratData.Warga == null)
                 {
-                    await _messageService.ShowWarningAsync("Data warga tidak ditemukan untuk surat ini.");
+                    Pesan.Peringatan("Data warga tidak ditemukan",
+                        "Surat ini belum terhubung ke data warga, jadi pratinjaunya tidak dapat dibuat.",
+                        "pratinjau-surat");
                     return;
                 }
 
@@ -1296,9 +1339,10 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (pdfPath == null)
                 {
-                    await _messageService.ShowWarningAsync(
-                        $"PDF surat tidak dapat dibuat untuk jenis '{suratData.NamaJenis ?? "?"}'. " +
-                        "Detail penyebab ada di log aplikasi (error.log). Coba tutup pratinjau lain lalu ulangi.");
+                    Pesan.Peringatan("PDF surat tidak dapat dibuat",
+                        $"Jenis '{suratData.NamaJenis ?? "?"}' belum berhasil dibuatkan dokumennya. " +
+                        "Detail penyebab ada di log aplikasi (error.log). Tutup pratinjau lain lalu ulangi.",
+                        "pratinjau-surat");
                     return;
                 }
 
@@ -1311,7 +1355,7 @@ namespace SuDesApp.Wpf.ViewModels
                 _logger.LogError(ex, "Failed to open document");
                 // Sebelumnya error ini ditelan diam-diam sehingga klik pratinjau PDF
                 // tampak "tidak berfungsi". Tampilkan penyebabnya ke pengguna.
-                await _messageService.ShowErrorAsync($"Gagal membuka pratinjau PDF: {ex.Message}");
+                Pesan.Galat("Gagal membuka pratinjau PDF", $"Penyebabnya: {ex.Message}", "pratinjau-surat");
             }
             finally
             {
@@ -1331,8 +1375,9 @@ namespace SuDesApp.Wpf.ViewModels
 
             if (string.Equals(model.OriginalSuratData.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
             {
-                await _messageService.ShowWarningAsync(
-                    $"Surat nomor {model.NomorSurat} berstatus dibatalkan dan tidak dapat diedit.");
+                Pesan.Peringatan("Surat dibatalkan tidak dapat diedit",
+                    $"Surat nomor {model.NomorSurat} berstatus dibatalkan, jadi isinya tidak dapat diubah.",
+                    "edit-surat");
                 return;
             }
 
@@ -1375,7 +1420,7 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal membuka form edit surat #{Id}", model.ID_Surat);
-                await _messageService.ShowErrorAsync($"Gagal membuka form edit: {ex.Message}");
+                Pesan.Galat("Gagal membuka form edit", $"Penyebabnya: {ex.Message}", "edit-surat");
             }
         }
 
@@ -1415,19 +1460,21 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (pdfPath == null || !File.Exists(pdfPath))
                 {
-                    await _messageService.ShowWarningAsync(
-                        $"PDF tidak dapat dibuat untuk jenis '{suratData.NamaJenis ?? "?"}'. " +
-                        "Detail penyebab ada di log aplikasi (error.log).");
+                    Pesan.Peringatan("PDF tidak dapat dibuat",
+                        $"Jenis '{suratData.NamaJenis ?? "?"}' belum berhasil dibuatkan dokumennya. " +
+                        "Detail penyebab ada di log aplikasi (error.log).",
+                        "ekspor-pdf");
                     return;
                 }
 
                 File.Copy(pdfPath, sfd.FileName, overwrite: true);
-                await _messageService.ShowInfoAsync($"Surat diekspor ke:\n{sfd.FileName}");
+                Pesan.Sukses("Surat diekspor ke PDF",
+                    $"Berkas disimpan di:\n{sfd.FileName}", "ekspor-pdf");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal mengekspor surat #{Id} ke PDF", model.ID_Surat);
-                await _messageService.ShowErrorAsync($"Gagal mengekspor PDF: {ex.Message}");
+                Pesan.Galat("Gagal mengekspor surat ke PDF", $"Penyebabnya: {ex.Message}", "ekspor-pdf");
             }
             finally
             {

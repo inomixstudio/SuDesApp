@@ -126,20 +126,22 @@ namespace SuDesApp.Wpf.ViewModels
 
             try
             {
-                var surat = await MuatSuratAsync();
-                var hariIni = DateTime.Today;
+                // Ringkasan dihitung di database (COUNT/GROUP BY + 5 baris terbaru).
+                // Sebelumnya seluruh tabel arsip surat DAN seluruh data warga dimuat
+                // ke memori hanya untuk mengambil angka & daftar terbaru — halaman
+                // pembuka ini jadi berat seiring bertambahnya data.
+                var ringkasan = await _arsipSurat.GetRingkasanAsync(5);
 
-                TotalSurat = surat.Count;
-                SuratHariIni = surat.Count(s => s.TanggalSurat.Date == hariIni);
-                SuratBulanIni = surat.Count(s =>
-                    s.TanggalSurat.Year == hariIni.Year && s.TanggalSurat.Month == hariIni.Month);
+                TotalSurat = ringkasan.Total;
+                SuratHariIni = ringkasan.HariIni;
+                SuratBulanIni = ringkasan.BulanIni;
 
-                IsiTerbaru(surat);
-                IsiPintasan(surat);
-                TotalWarga = await HitungWargaAsync();
+                IsiTerbaru(ringkasan.Terbaru);
+                IsiPintasan(ringkasan.PerJenis);
+                TotalWarga = await _warga.CountWargaAsync();
 
                 WaktuMuat = DateTime.Now.ToString("HH:mm:ss");
-                PesanStatus = surat.Count == 0
+                PesanStatus = ringkasan.Total == 0
                     ? "Register surat masih kosong — surat yang dibuat akan tampil di sini."
                     : $"Ringkasan diperbarui pukul {WaktuMuat}.";
             }
@@ -154,47 +156,17 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        private async Task<List<SuratKeluarMasukData>> MuatSuratAsync()
-        {
-            try
-            {
-                var data = await _arsipSurat.GetAllAsync();
-                return data ?? new List<SuratKeluarMasukData>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal membaca register surat untuk Beranda");
-                return new List<SuratKeluarMasukData>();
-            }
-        }
-
-        private async Task<int> HitungWargaAsync()
-        {
-            try
-            {
-                var semua = await _warga.GetAllWargaAsync();
-                return semua?.Count() ?? 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal menghitung warga untuk Beranda");
-                return 0;
-            }
-        }
-
         private void IsiTerbaru(List<SuratKeluarMasukData> surat)
         {
+            // Baris terbaru sudah diurutkan oleh database (Id menurun).
             Terbaru.Clear();
-            foreach (var item in surat
-                         .OrderByDescending(s => s.TanggalSurat)
-                         .ThenByDescending(s => s.IdBarisExcel)
-                         .Take(5))
+            foreach (var item in surat)
             {
                 Terbaru.Add(item);
             }
         }
 
-        private void IsiPintasan(List<SuratKeluarMasukData> surat)
+        private void IsiPintasan(IReadOnlyDictionary<string, int> jumlahPerJenis)
         {
             Pintasan.Clear();
             foreach (var (nama, ikon) in JenisPopuler)
@@ -202,9 +174,9 @@ namespace SuDesApp.Wpf.ViewModels
                 // Cocokkan longgar: jenis di register bisa berbentuk "SKD" / "Surat
                 // Keterangan Domisili", jadi dibandingkan pada kata kunci pertamanya.
                 var kunci = nama.Split(' ')[0];
-                var jumlah = surat.Count(s =>
-                    !string.IsNullOrWhiteSpace(s.JenisSurat) &&
-                    s.JenisSurat.ToUpperInvariant().Contains(kunci, StringComparison.Ordinal));
+                int jumlah = jumlahPerJenis
+                    .Where(kvp => kvp.Key.Contains(kunci, StringComparison.OrdinalIgnoreCase))
+                    .Sum(kvp => kvp.Value);
 
                 Pintasan.Add(new PintasanSurat
                 {

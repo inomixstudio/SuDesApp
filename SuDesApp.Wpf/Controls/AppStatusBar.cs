@@ -1,7 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -9,17 +8,19 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Utilities;
 
 namespace SuDesApp.Wpf.Controls
 {
     /// <summary>
     /// Statusbar bawah halaman yang dipakai bersama: pesan status (kiri) +
-    /// identitas aplikasi — ikon, nama, versi, pengembang, bisa diklik untuk
+    /// identitas aplikasi — ikon, nama, versi, nama pengembang, bisa diklik untuk
     /// membuka Tentang Aplikasi — plus tombol aksi opsional (kanan).
-    /// Dipakai di Pengaturan Aplikasi, Pengaturan Surat, Catatan Rilis,
-    /// Panduan WhatsApp, Ubah Kata Sandi, dan Pembaruan.
+    /// Dipakai di Pengaturan Aplikasi, Pengaturan Surat, Pengaturan Formulir,
+    /// Catatan Rilis, Panduan WhatsApp, Ubah Kata Sandi, dan Pembaruan.
     /// Nama/versi/pengembang dibaca dari atribut assembly sehingga ikut berubah
-    /// begitu versi di csproj dinaikkan.
+    /// begitu versi di csproj dinaikkan; nama pengembang ditulis apa adanya
+    /// (mis. "Sumberjaya Dev.") tanpa label tambahan.
     /// </summary>
     [System.Windows.Markup.ContentProperty(nameof(Buttons))]
     public class AppStatusBar : Border
@@ -122,7 +123,41 @@ namespace SuDesApp.Wpf.Controls
             }
         }
 
-        /// <summary>Chip ikon + nama + versi + pengembang; klik membuka Tentang Aplikasi.</summary>
+        /// <summary>
+        /// Ikon aplikasi untuk chip identitas, dibaca dari rakitan yang MEMUAT kontrol ini
+        /// (bukan rakitan pemanggil), lalu alamat gaya lama sebagai cadangan. Bila ikonnya
+        /// tidak ada, chip tetap tampil dengan nama &amp; versi — kegagalan memuat ikon
+        /// tidak boleh membuat seluruh halaman gagal dibuka.
+        /// </summary>
+        private static BitmapSource? MuatIkonAplikasi()
+        {
+            string[] alamat =
+            {
+                "pack://application:,,,/SuDesApp;component/Resources/AppIcon-256.png",
+                "pack://application:,,,/Resources/AppIcon-256.png"
+            };
+
+            foreach (var satu in alamat)
+            {
+                try
+                {
+                    var gambar = new BitmapImage();
+                    gambar.BeginInit();
+                    gambar.UriSource = new Uri(satu, UriKind.Absolute);
+                    gambar.CacheOption = BitmapCacheOption.OnLoad;
+                    gambar.EndInit();
+                    return gambar;
+                }
+                catch (Exception)
+                {
+                    // Coba alamat berikutnya; tanpa ikon pun statusbar tetap berguna.
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>Chip ikon + nama + versi + nama pengembang; klik membuka Tentang Aplikasi.</summary>
         private Border BuildChipIdentitas()
         {
             var chip = new Border
@@ -141,14 +176,18 @@ namespace SuDesApp.Wpf.Controls
 
             var panel = new StackPanel { Orientation = Orientation.Horizontal };
 
-            var ikon = new Image
+            var ikonAplikasi = MuatIkonAplikasi();
+            if (ikonAplikasi != null)
             {
-                Width = 16, Height = 16,
-                VerticalAlignment = VerticalAlignment.Center,
-                Source = new BitmapImage(new Uri("pack://application:,,,/Resources/AppIcon-256.png"))
-            };
-            RenderOptions.SetBitmapScalingMode(ikon, BitmapScalingMode.HighQuality);
-            panel.Children.Add(ikon);
+                var ikon = new Image
+                {
+                    Width = 16, Height = 16,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Source = ikonAplikasi
+                };
+                RenderOptions.SetBitmapScalingMode(ikon, BitmapScalingMode.HighQuality);
+                panel.Children.Add(ikon);
+            }
 
             var nama = new TextBlock
             {
@@ -190,9 +229,11 @@ namespace SuDesApp.Wpf.Controls
                 pemisah.SetResourceReference(BackgroundProperty, "BorderBrush");
                 panel.Children.Add(pemisah);
 
+                // Hanya nama pengembang yang ditulis (tanpa kata "Pengembang:") —
+                // chip ini sudah jelas bagian identitas aplikasi.
                 var pengembang = new TextBlock
                 {
-                    Text = "Pengembang: " + Pengembang,
+                    Text = Pengembang,
                     FontSize = 10.5,
                     VerticalAlignment = VerticalAlignment.Center
                 };
@@ -225,32 +266,13 @@ namespace SuDesApp.Wpf.Controls
         }
 
         // ----- Identitas dari atribut assembly (sumber sama dengan Tentang Aplikasi) -----
-        private static Assembly AssemblyAplikasi => Assembly.GetExecutingAssembly();
+        // Pembacaannya dipusatkan di IdentitasAplikasi (Utilities) agar satu sumber kebenaran.
+        private static string NamaAplikasi => IdentitasAplikasi.Nama;
 
-        private static string NamaAplikasi =>
-            AssemblyAplikasi.GetCustomAttribute<AssemblyProductAttribute>()?.Product is { Length: > 0 } produk
-                ? produk
-                : "SuDesApp";
+        private static string Pengembang => IdentitasAplikasi.Pengembang;
 
-        private static string Pengembang =>
-            AssemblyAplikasi.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? string.Empty;
+        private static string HakCipta => IdentitasAplikasi.HakCipta;
 
-        private static string HakCipta =>
-            AssemblyAplikasi.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? string.Empty;
-
-        private static string VersiAplikasi
-        {
-            get
-            {
-                var versi = AssemblyAplikasi.GetName().Version;
-                if (versi == null) return string.Empty;
-
-                // 2.5.3.0 → "v2.5.3": nomor revisi hanya ikut bila benar-benar dipakai.
-                var teks = versi.Revision > 0
-                    ? $"{versi.Major}.{versi.Minor}.{versi.Build}.{versi.Revision}"
-                    : $"{versi.Major}.{versi.Minor}.{versi.Build}";
-                return "v" + teks;
-            }
-        }
+        private static string VersiAplikasi => IdentitasAplikasi.VersiDenganPrefiks;
     }
 }

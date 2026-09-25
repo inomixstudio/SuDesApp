@@ -135,7 +135,7 @@ namespace SuDesApp.Wpf.Input
                 if (warga != null)
                 {
                     NamaPelapor = warga.Nama ?? string.Empty;
-                    AgamaPelapor = IsValidOption(warga.Agama, ValidAgamaOptions) ? warga.Agama : "Islam"!;
+                    AgamaPelapor = IsValidOption(warga.Agama, ValidAgamaOptions) && warga.Agama != null ? warga.Agama : "Islam";
                     PekerjaanPelapor = warga.Pekerjaan ?? string.Empty;
                     if (!string.IsNullOrEmpty(warga.TanggalLahir))
                     {
@@ -170,7 +170,7 @@ namespace SuDesApp.Wpf.Input
             NIKPelapor = km.NIKPelapor ?? string.Empty;
             NamaPelapor = km.NamaPelapor ?? string.Empty;
             UmurPelapor = ParseTanggalLahirToUiFormat(km.UmurPelapor);
-            AgamaPelapor = IsValidOption(km.AgamaPelapor, ValidAgamaOptions) ? km.AgamaPelapor : "Islam"!;
+            AgamaPelapor = IsValidOption(km.AgamaPelapor, ValidAgamaOptions) && km.AgamaPelapor != null ? km.AgamaPelapor : "Islam";
             PekerjaanPelapor = km.PekerjaanPelapor ?? string.Empty;
             HubunganPelapor = km.HubunganPelapor ?? string.Empty;
 

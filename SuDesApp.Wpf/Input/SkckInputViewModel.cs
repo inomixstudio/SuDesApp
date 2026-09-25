@@ -50,11 +50,11 @@ namespace SuDesApp.Wpf.Input
 
             Keterangan = string.IsNullOrWhiteSpace(suratData.Keterangan)
                 ? DefaultKeteranganSkck
-                : suratData.Keterangan;
+                : suratData.Keterangan!;
 
-            Kewarganegaraan = suratData.Warga != null &&!
-                              ValidKewarganegaraanOptions.Contains(suratData.Warga.Kewarganegaraan?.Trim() ?? string.Empty, StringComparer.OrdinalIgnoreCase)
-                ? suratData.Warga.Kewarganegaraan
+            var kewarganegaraanTersimpan = suratData.Warga?.Kewarganegaraan?.Trim() ?? string.Empty;
+            Kewarganegaraan = ValidKewarganegaraanOptions.Contains(kewarganegaraanTersimpan, StringComparer.OrdinalIgnoreCase)
+                ? kewarganegaraanTersimpan
                 : "WNI";
 
             if (string.Equals(suratData.PejabatPenandatangan, "Sekretaris Desa", StringComparison.OrdinalIgnoreCase))
@@ -79,7 +79,7 @@ namespace SuDesApp.Wpf.Input
                 suratData.Warga.Pendidikan = Pendidikan.Trim();
                 suratData.Warga.Kewarganegaraan =
                     ValidKewarganegaraanOptions.Contains(Kewarganegaraan?.Trim() ?? string.Empty, StringComparer.OrdinalIgnoreCase)
-                        ? Kewarganegaraan.Trim()
+                        ? Kewarganegaraan!.Trim()
                         : "WNI";
                 suratData.Warga.NamaJenis = NamaJenisSkck;
                 suratData.Warga.IsForInstansi = false;

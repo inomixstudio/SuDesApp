@@ -1,6 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,6 +15,7 @@ using SuDesApp.WhatsApp;
 using SuDesApp.Wpf.Input;
 using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Wpf.Services;
+using SuDesApp.Wpf.Utilities;
 using SuDesApp.Wpf.Views;
 
 namespace SuDesApp.Wpf.ViewModels
@@ -46,11 +50,13 @@ namespace SuDesApp.Wpf.ViewModels
             get => _title;
             set => SetProperty(ref _title, value);
         }
-        public string Icon { get; set; } = "●";
+        /// <summary>Glyph ikon item (font ikon Segoe Fluent/MDL2). Nilai bawaan dari
+        /// <see cref="IkonMenu.Halaman"/> — jangan isi glyph literal teks di sini.</summary>
+        public string Icon { get; set; } = IkonMenu.Halaman;
 
-        /// <summary>Glyph chip pada header accordion (default: folder). Memakai font ikon
+        /// <summary>Glyph chip pada header accordion (bawaan: <see cref="IkonMenu.Folder"/>). Memakai font ikon
         /// monokrom agar warnanya mengikuti tema, bukan emoji berwarna tetap.</summary>
-        public string GroupIcon { get; set; } = "\uE8B7";
+        public string GroupIcon { get; set; } = IkonMenu.Folder;
 
         public string Description { get; set; } = string.Empty;
         public ObservableCollection<NavItem> Children { get; } = new();
@@ -137,19 +143,40 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly NavigationService _navigation;
         private readonly IMessageService _messageService;
         private readonly IServiceScopeFactory _scopeFactory;
+
+        /// <summary>
+        /// Cache instance halaman yang sering dibuka (Pengaturan Aplikasi, Pengaturan
+        /// Surat, Catatan Rilis). ViewModel-nya tetap dibuat baru setiap dibuka (agar
+        /// nilainya segar), tetapi pohon visual halaman tidak dibangun ulang dari nol —
+        /// yang membuat perpindahan menu terasa ringan.
+        /// </summary>
+        private readonly Dictionary<Type, UserControl> _cacheHalaman = new();
         private readonly ILogger<MainWindowViewModel> _logger;
         private readonly SettingsManager _settingsManager;
         private readonly FormulirMenuService _formulirMenuService;
         private readonly WaEngine _waEngine;
         private readonly ThemeService _themeService;
         private readonly NotificationService _notifications;
+
+        /// <summary>Judul tetap notifikasi peringatan data desa contoh (dipakai untuk mencarinya lagi).</summary>
+        private const string JudulNotifDataDesaContoh = "Data desa masih contoh — ganti dengan data Anda";
+
+        /// <summary>Peringatan data desa contoh sudah dikirim pada sesi ini.</summary>
+        private bool _sudahIngatkanDataDesaContoh;
         private readonly WaAutoProcessor _waAutoProcessor;
+
+        /// <summary>Penanda pemberitahuan sambutan (cukup sekali seumur pemasangan).</summary>
+        private readonly IPemberitahuanSambutanStore _sambutanStore;
         private NavItem? _formulirHeader;
         private NavItem? _formulirAccordion;
         private NavItem? _permintaanOnlineButton;
         private NavItem? _googleNavButton;
         private NavItem? _pembaruanButton;
+        private NavItem? _panduanAwalButton;
         private DaftarHadirViewModel? _daftarHadirViewModel;
+        private FormulirViewModel? _formulirViewModel;
+        private PanduanWaViewModel? _panduanWaViewModel;
+        private object? _panduanWaView; // cache view juga untuk menghindari rebuild XAML
         private object? _currentView;
         private string _villageInfo = "DESA ... KECAMATAN ... KABUPATEN ...";
         private string _userName = "Operator";
@@ -164,7 +191,8 @@ namespace SuDesApp.Wpf.ViewModels
             WaEngine waEngine,
             ThemeService themeService,
             NotificationService notifications,
-            WaAutoProcessor waAutoProcessor)
+            WaAutoProcessor waAutoProcessor,
+            IPemberitahuanSambutanStore? sambutanStore = null)
         {
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
@@ -176,6 +204,7 @@ namespace SuDesApp.Wpf.ViewModels
             _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
             _notifications = notifications ?? throw new ArgumentNullException(nameof(notifications));
             _waAutoProcessor = waAutoProcessor ?? throw new ArgumentNullException(nameof(waAutoProcessor));
+            _sambutanStore = sambutanStore ?? new PemberitahuanSambutanStore();
 
             // Chip status di statusbar bisa diklik → Pengaturan Aplikasi langsung
             // menggulir ke kartu terkait (Gateway WhatsApp / Google Sheet).
@@ -189,13 +218,19 @@ namespace SuDesApp.Wpf.ViewModels
             SetelanViewModel.SettingsSaved += () =>
             {
                 var dispatcher = System.Windows.Application.Current?.Dispatcher;
-                if (dispatcher is null || dispatcher.CheckAccess())
+                void Segarkan()
                 {
                     RefreshVillageInfo();
+                    _ = PeriksaDataDesaSetelahSimpanAsync();
+                }
+
+                if (dispatcher is null || dispatcher.CheckAccess())
+                {
+                    Segarkan();
                 }
                 else
                 {
-                    dispatcher.BeginInvoke(RefreshVillageInfo);
+                    dispatcher.BeginInvoke(new Action(Segarkan));
                 }
             };
 
@@ -240,6 +275,14 @@ namespace SuDesApp.Wpf.ViewModels
                     AppPreferenceStore.GetWaServiceDays());
             _waEngine.ServiceHoursOpened += _waAutoProcessor.HandleServiceHoursOpened;
 
+            // Permintaan warga yang tadi DITAHAN karena data desa masih contoh dibuka
+            // kembali tepat saat data desa disimpan — bukan cuma dikabarkan ke operator,
+            // tapi diproses ulang sendiri sampai suratnya terkirim. Dipasang di
+            // SettingsManager (sumber penyimpanan data desa), bukan di satu halaman,
+            // supaya penyimpan data desa mana pun ikut membuka penahanannya.
+            _settingsManager.PengaturanDesaTersimpan += (_, _) =>
+                _ = _waAutoProcessor.LanjutkanPermintaanTertahanAsync();
+
             // Status gateway WA di statusbar: cek awal + polling ringan tiap
             // 10 detik agar perubahan preferensi (ganti gateway/isi token)
             // terpantau tanpa perlu mekanisme event antar halaman.
@@ -256,6 +299,12 @@ namespace SuDesApp.Wpf.ViewModels
             };
             waStatusTimer.Start();
             _waEngine.StartPolling();
+
+            // Penahanan dari sesi sebelumnya (aplikasi ditutup sebelum data desa diisi,
+            // atau data desa dilengkapi lewat pemulihan database) ikut dilepas saat
+            // aplikasi dibuka — sekali saja, di latar belakang.
+            _ = _waAutoProcessor.LanjutkanPermintaanTertahanAsync();
+
             _ = RefreshWaBadgeAsync();
             _ = RefreshGoogleBadgeAsync();
             _ = LoadVillageInfoAsync();
@@ -266,11 +315,33 @@ namespace SuDesApp.Wpf.ViewModels
             _ = LaporkanHasilTambalanAsync();
             _ = PeriksaPembaruanLatarAsync();
 
-            // Notifikasi sambutan sekali per sesi — sekaligus menandakan
+            // Notifikasi sambutan cukup SEKALI seumur pemasangan — sekaligus menandakan
             // lonceng notifikasi aktif di status bar.
-            _notifications.Info(
+            KirimPemberitahuanSambutan(_sambutanStore, _notifications, LoginViewModel.CurrentUserName);
+        }
+
+        /// <summary>
+        /// Kirim pemberitahuan sambutan bila belum pernah ditampilkan. Penandanya ditulis
+        /// saat notifikasi dikirim, sehingga membuka aplikasi berikutnya — atau setelah
+        /// daftar notifikasi dibersihkan pengguna — tidak memunculkannya kembali.
+        ///
+        /// Terbuka untuk uji supaya aturannya bisa diperiksa tanpa membangun seluruh
+        /// jendela utama (yang butuh layanan WhatsApp, tema, dan database).
+        /// </summary>
+        /// <returns>True bila notifikasi sambutan benar-benar dikirim.</returns>
+        public static bool KirimPemberitahuanSambutan(
+            IPemberitahuanSambutanStore store, NotificationService notifikasi, string namaPengguna)
+        {
+            if (store is null || notifikasi is null || !store.AmbilSekali())
+            {
+                return false;
+            }
+
+            notifikasi.Info(
                 "Notifikasi aktif",
-                $"Selamat datang, {LoginViewModel.CurrentUserName}. Pemberitahuan aplikasi akan muncul di sini.");
+                $"Selamat datang, {namaPengguna}. Pemberitahuan aplikasi akan muncul di sini.");
+
+            return true;
         }
 
         public ObservableCollection<NavItem> MenuItems { get; } = new();
@@ -604,35 +675,59 @@ namespace SuDesApp.Wpf.ViewModels
             HalamanAktif = string.IsNullOrWhiteSpace(judul) ? _judulDasarHalaman : judul!;
         }
 
-        private bool _sidebarCiut;
+        private SidebarMode _modeSidebar = SidebarMode.Terbuka;
+
+        /// <summary>Pengatur tema aktif — dipakai jendela untuk menggambar ulang ikonnya
+        /// saat tema berubah (ubin aksen mengikuti menu sidebar).</summary>
+        public ThemeService TemaService => _themeService;
 
         /// <summary>
-        /// True bila sidebar dalam mode ciut (hanya ikon). Template sidebar memakai
-        /// nilai ini untuk menyembunyikan label dan memusatkan ikon.
+        /// Tampilan sidebar yang sedang dipakai: terbuka penuh atau ikon saja. Template
+        /// sidebar memakai <see cref="SidebarCiut"/> untuk menyembunyikan label.
         /// </summary>
-        public bool SidebarCiut
+        public SidebarMode ModeSidebar
         {
-            get => _sidebarCiut;
+            get => _modeSidebar;
             private set
             {
-                if (SetProperty(ref _sidebarCiut, value))
+                if (!SetProperty(ref _modeSidebar, value))
                 {
-                    OnPropertyChanged(nameof(SidebarTerbuka));
+                    return;
                 }
+
+                OnPropertyChanged(nameof(SidebarCiut));
+                OnPropertyChanged(nameof(SidebarTerbuka));
+                OnPropertyChanged(nameof(SidebarModeTeks));
+                OnPropertyChanged(nameof(ModeSidebarBerikut));
             }
         }
 
-        /// <summary>Kebalikan <see cref="SidebarCiut"/> — memudahkan binding Visibility.</summary>
-        public bool SidebarTerbuka => !_sidebarCiut;
+        /// <summary>True bila sidebar hanya menampilkan ikon (mode ikon saja).</summary>
+        public bool SidebarCiut => _modeSidebar != SidebarMode.Terbuka;
 
-        /// <summary>Ubah mode sidebar (dipanggil jendela saat tombol ciut/lebar diklik).</summary>
-        public void SetSidebarCiut(bool ciut) => SidebarCiut = ciut;
+        /// <summary>Kebalikan <see cref="SidebarCiut"/> — memudahkan binding Visibility.</summary>
+        public bool SidebarTerbuka => _modeSidebar == SidebarMode.Terbuka;
+
+        /// <summary>Keterangan tampilan yang sedang dipakai (tooltip tombol).</summary>
+        public string SidebarModeTeks => SidebarModePrefs.Teks(_modeSidebar);
+
+        /// <summary>Mode yang akan dipakai bila tombol ganti tampilan ditekan.</summary>
+        public SidebarMode ModeSidebarBerikut => SidebarModePrefs.Berikutnya(_modeSidebar);
+
+        /// <summary>Ubah mode sidebar (dipanggil jendela saat tombol ganti tampilan diklik).</summary>
+        public void SetSidebarMode(SidebarMode mode) => ModeSidebar = mode;
+
+        /// <summary>
+        /// Kompatibilitas: ciut = mode ikon saja, lebar = tampilan penuh.
+        /// </summary>
+        public void SetSidebarCiut(bool ciut)
+            => SetSidebarMode(ciut ? SidebarMode.IkonRingkas : SidebarMode.Terbuka);
 
         private void BuildSidebar()
         {
             // Beranda paling atas: halaman ringkasan yang juga menjadi tampilan
             // pertama setelah login (area konten tidak kosong lagi).
-            _berandaButton = NavButton("Beranda", "\uE80F", () => { _ = ShowBerandaAsync(); });
+            _berandaButton = NavButton("Beranda", IkonMenu.Beranda, () => { _ = ShowBerandaAsync(); });
             _berandaButton.Description = "Ringkasan surat, pintasan cepat, dan aktivitas terbaru";
             MenuItems.Add(_berandaButton);
 
@@ -641,45 +736,50 @@ namespace SuDesApp.Wpf.ViewModels
             // (gabungan SK/Peraturan + Surat Masuk + Surat Keluar).
             MenuItems.Add(new NavItem { Title = "BUAT SURAT", IsSectionHeader = true });
 
-            MenuItems.Add(NavButton("Register Surat", "\uE8F1", () => { _ = ShowRegisterSuratAsync(); }));
+            MenuItems.Add(NavButton("Register Surat", IkonMenu.Dokumen, () => { _ = ShowRegisterSuratAsync(); }));
 
-            var buatSurat = new NavItem { Title = "Buat Surat Baru", Icon = "\uE710", GroupIcon = "\uE710", IsAccordion = true, IsExpanded = false };
-            buatSurat.Children.Add(new NavItem { Title = "SKD Umum", Icon = "\u2022", Action = NewSurat("SKD UMUM") });
-            buatSurat.Children.Add(new NavItem { Title = "Domisili Warga", Icon = "\u2022", Action = NewSurat("DOMISILI WARGA") });
-            buatSurat.Children.Add(new NavItem { Title = "Domisili Instansi", Icon = "\u2022", Action = NewSurat("DOMISILI INSTANSI") });
-            buatSurat.Children.Add(new NavItem { Title = "SKU", Icon = "\u2022", Action = NewSurat("SKU") });
-            buatSurat.Children.Add(new NavItem { Title = "Pengantar SKCK", Icon = "\u2022", Action = NewSurat("PENGANTAR SKCK") });
-            buatSurat.Children.Add(new NavItem { Title = "Izin Suami / Orang Tua", Icon = "\u2022", Action = NewSurat("IZIN ORTU / SUAMI") });
-            buatSurat.Children.Add(new NavItem { Title = "SKTM", Icon = "\u2022", Action = NewSurat("SKTM") });
-            buatSurat.Children.Add(new NavItem { Title = "Garapan Sawah", Icon = "\u2022", Action = NewSurat("GARAPAN SAWAH") });
-            buatSurat.Children.Add(new NavItem { Title = "Kematian", Icon = "\u2022", Action = NewSurat("KEMATIAN") });
-            buatSurat.Children.Add(new NavItem { Title = "Beda Nama", Icon = "\u2022", Action = NewSurat("BEDA NAMA") });
-            buatSurat.Children.Add(new NavItem { Title = "Kenal Lahir", Icon = "\u2022", Action = NewSurat("KENAL LAHIR") });
-            buatSurat.Children.Add(new NavItem { Title = "Tinggal Sementara", Icon = "\u2022", Action = NewSurat("IJIN TINGGAL") });
-            buatSurat.Children.Add(new NavItem { Title = "Ahli Waris", Icon = "\u2022", Action = NewSurat("AHLI WARIS") });
-            buatSurat.Children.Add(new NavItem { Title = "Permohonan Rekening Koran", Icon = "\u2022", Action = NewLambda(() => { _ = ShowRekeningKoranAsync(); }) });
+            var buatSurat = new NavItem { Title = "Buat Surat Baru", Icon = IkonMenu.Tambah, GroupIcon = IkonMenu.Tambah, IsAccordion = true, IsExpanded = false };
+            // Anak akordeon ini setara "dokumen surat yang akan dibuat": ikon halaman
+            // (bukan bullet polos) memperjelas bahwa setiap baris menghasilkan surat.
+            buatSurat.Children.Add(new NavItem { Title = "SKD Umum", Icon = IkonMenu.Dokumen, Action = NewSurat("SKD UMUM") });
+            buatSurat.Children.Add(new NavItem { Title = "Domisili Warga", Icon = IkonMenu.Dokumen, Action = NewSurat("DOMISILI WARGA") });
+            buatSurat.Children.Add(new NavItem { Title = "Domisili Instansi", Icon = IkonMenu.Dokumen, Action = NewSurat("DOMISILI INSTANSI") });
+            buatSurat.Children.Add(new NavItem { Title = "SKU", Icon = IkonMenu.Dokumen, Action = NewSurat("SKU") });
+            buatSurat.Children.Add(new NavItem { Title = "Pengantar SKCK", Icon = IkonMenu.Dokumen, Action = NewSurat("PENGANTAR SKCK") });
+            buatSurat.Children.Add(new NavItem { Title = "Izin Suami / Orang Tua", Icon = IkonMenu.Dokumen, Action = NewSurat("IZIN ORTU / SUAMI") });
+            buatSurat.Children.Add(new NavItem { Title = "SKTM", Icon = IkonMenu.Dokumen, Action = NewSurat("SKTM") });
+            buatSurat.Children.Add(new NavItem { Title = "Garapan Sawah", Icon = IkonMenu.Dokumen, Action = NewSurat("GARAPAN SAWAH") });
+            buatSurat.Children.Add(new NavItem { Title = "Kematian", Icon = IkonMenu.Dokumen, Action = NewSurat("KEMATIAN") });
+            buatSurat.Children.Add(new NavItem { Title = "Beda Nama", Icon = IkonMenu.Dokumen, Action = NewSurat("BEDA NAMA") });
+            buatSurat.Children.Add(new NavItem { Title = "Kenal Lahir", Icon = IkonMenu.Dokumen, Action = NewSurat("KENAL LAHIR") });
+            buatSurat.Children.Add(new NavItem { Title = "Tinggal Sementara", Icon = IkonMenu.Dokumen, Action = NewSurat("IJIN TINGGAL") });
+            buatSurat.Children.Add(new NavItem { Title = "Ahli Waris", Icon = IkonMenu.Dokumen, Action = NewSurat("AHLI WARIS") });
+            buatSurat.Children.Add(new NavItem { Title = "Permohonan Rekening Koran", Icon = IkonMenu.Dokumen, Action = NewLambda(() => { _ = ShowRekeningKoranAsync(); }) });
             MenuItems.Add(buatSurat);
 
             // Template Surat (buat sendiri) sengaja menjadi item tersendiri, tepat
             // di atas Daftar Hadir.
-            MenuItems.Add(NavButton("Template Surat (buat sendiri)", "\uE8A5", () => { _ = ShowTemplateSuratAsync(); }));
+            MenuItems.Add(NavButton("Template Surat (buat sendiri)", IkonMenu.Blanko, () => { _ = ShowTemplateSuratAsync(); }));
 
             // Daftar Hadir: halaman cetak daftar hadir, sengaja berdiri sendiri
             // tepat di atas Surat Peraturan.
-            MenuItems.Add(NavButton("Daftar Hadir", "\uE716", () => { _ = ShowDaftarHadirAsync(); }));
+            MenuItems.Add(NavButton("Daftar Hadir", IkonMenu.DaftarHadir, () => { _ = ShowDaftarHadirAsync(); }));
 
             // Surat Peraturan: akordeon SK/Keputusan + Perdes + Perkades
             // (Surat Masuk & Surat Keluar dipindah ke menu Surat Masuk/Keluar di bawah).
-            var suratPeraturan = new NavItem { Title = "Surat Peraturan", Icon = "\uE7C3", GroupIcon = "\uE7C3", IsAccordion = true, IsExpanded = false };
-            suratPeraturan.Children.Add(new NavItem { Title = "SK / Keputusan", Icon = "\u2022", Action = NewLambda(() => { _ = ShowKeputusanAsync("SK"); }) });
-            suratPeraturan.Children.Add(new NavItem { Title = "Perdes", Icon = "\u2022", Action = NewLambda(() => { _ = ShowKeputusanAsync("PERDES"); }) });
-            suratPeraturan.Children.Add(new NavItem { Title = "Perkades", Icon = "\u2022", Action = NewLambda(() => { _ = ShowKeputusanAsync("PERKADES"); }) });
+            var suratPeraturan = new NavItem { Title = "Surat Peraturan", Icon = IkonMenu.Peraturan, GroupIcon = IkonMenu.Peraturan, IsAccordion = true, IsExpanded = false };
+            // SK/Perdes/Perkades adalah "produk hukum": ikon dokumen hukum dipakai agar
+            // sekuens ini langsung terlihat sebagai kelompok peraturan, bukan bullet biasa.
+            suratPeraturan.Children.Add(new NavItem { Title = "SK / Keputusan", Icon = IkonMenu.Blanko, Action = NewLambda(() => { _ = ShowKeputusanAsync("SK"); }) });
+            suratPeraturan.Children.Add(new NavItem { Title = "Perdes", Icon = IkonMenu.Blanko, Action = NewLambda(() => { _ = ShowKeputusanAsync("PERDES"); }) });
+            suratPeraturan.Children.Add(new NavItem { Title = "Perkades", Icon = IkonMenu.Blanko, Action = NewLambda(() => { _ = ShowKeputusanAsync("PERKADES"); }) });
             MenuItems.Add(suratPeraturan);
 
             // Surat Masuk/Keluar: akordeon terpisah di bawah Surat Peraturan.
-            var suratMasukKeluar = new NavItem { Title = "Surat Masuk/Keluar", Icon = "\uE896", GroupIcon = "\uE896", IsAccordion = true, IsExpanded = false };
-            suratMasukKeluar.Children.Add(new NavItem { Title = "Surat Masuk", Icon = "\u2022", Action = NewLambda(() => { _ = ShowAgendaAsync("MASUK"); }) });
-            suratMasukKeluar.Children.Add(new NavItem { Title = "Surat Keluar", Icon = "\u2022", Action = NewLambda(() => { _ = ShowAgendaAsync("KELUAR"); }) });
+            var suratMasukKeluar = new NavItem { Title = "Surat Masuk/Keluar", Icon = IkonMenu.Agenda, GroupIcon = IkonMenu.Agenda, IsAccordion = true, IsExpanded = false };
+            // Panah masuk (Import) & keluar (Export) menegaskan arah agenda surat.
+            suratMasukKeluar.Children.Add(new NavItem { Title = "Surat Masuk", Icon = IkonMenu.SuratMasuk, Action = NewLambda(() => { _ = ShowAgendaAsync("MASUK"); }) });
+            suratMasukKeluar.Children.Add(new NavItem { Title = "Surat Keluar", Icon = IkonMenu.SuratKeluar, Action = NewLambda(() => { _ = ShowAgendaAsync("KELUAR"); }) });
             MenuItems.Add(suratMasukKeluar);
 
             // NTCR — formulir persyaratan pernikahan Model N1–N6 sesuai Keputusan
@@ -688,11 +788,11 @@ namespace SuDesApp.Wpf.ViewModels
             // berkas) DAN blanko perorangan (membuat satu blanko N1–N6 atau N8 saja).
             // Model N7 sudah dihapus dari aplikasi karena diterbitkan KUA, bukan
             // kantor desa.
-            var ntcr = new NavItem { Title = "NTCR", Icon = "\uE77B", GroupIcon = "\uE77B", IsAccordion = true, IsExpanded = false };
+            var ntcr = new NavItem { Title = "NTCR", Icon = IkonMenu.Orang, GroupIcon = IkonMenu.Orang, IsAccordion = true, IsExpanded = false };
             ntcr.Children.Add(new NavItem
             {
                 Title = "Paket N1–N6 (satu pasangan)",
-                Icon = "\uE8F1",
+                Icon = IkonMenu.Dokumen,
                 Action = NewLambda(() => { _ = ShowNtcrPaketAsync(); }),
                 Description = "Sekali isi data satu pasangan: seluruh blanko yang dicentang dibuat & dicetak dalam satu berkas PDF."
             });
@@ -704,7 +804,7 @@ namespace SuDesApp.Wpf.ViewModels
                 ntcr.Children.Add(new NavItem
                 {
                     Title = blanko.Judul,
-                    Icon = "\u2022",
+                    Icon = IkonMenu.Blanko,
                     Action = NewLambda(() => { _ = LoadSuratAsync(namaJenis); }),
                     Description = $"{blanko.Kode} — {blanko.Keterangan}"
                 });
@@ -712,34 +812,33 @@ namespace SuDesApp.Wpf.ViewModels
             MenuItems.Add(ntcr);
 
             // Register NTCR terpisah dari Register Surat umum.
-            MenuItems.Add(NavButton("Register NTCR", "\uE8F1", () => { _ = ShowRegisterNtcrAsync(); }));
-            MenuItems.Add(NavButton("Riwayat Aktivitas", "\uE81C", () => { _ = ShowRiwayatAsync(); }));
+            MenuItems.Add(NavButton("Register NTCR", IkonMenu.Dokumen, () => { _ = ShowRegisterNtcrAsync(); }));
+            MenuItems.Add(NavButton("Riwayat Aktivitas", IkonMenu.Riwayat, () => { _ = ShowRiwayatAsync(); }));
 
-            _permintaanOnlineButton = NavButton("Layanan Online", "\uE774", () => { _ = ShowWaPanelAsync(); });
+            _permintaanOnlineButton = NavButton("Layanan Online", IkonMenu.LayananOnline, () => { _ = ShowWaPanelAsync(); });
             MenuItems.Add(_permintaanOnlineButton);
 
             _formulirHeader = new NavItem { Title = "FORMULIR", IsSectionHeader = true };
             MenuItems.Add(_formulirHeader);
-            _formulirAccordion = new NavItem { Title = "Formulir", Icon = "\uE8A5", GroupIcon = "\uE8A5", IsAccordion = true, IsExpanded = false };
+            _formulirAccordion = new NavItem { Title = "Formulir", Icon = IkonMenu.Blanko, GroupIcon = IkonMenu.Blanko, IsAccordion = true, IsExpanded = false };
             MenuItems.Add(_formulirAccordion);
             RefreshFormulirSection();
 
             MenuItems.Add(new NavItem { Title = "PENGATURAN", IsSectionHeader = true });
-            MenuItems.Add(NavButton("Pengaturan Aplikasi", "\uE713", () => { _ = ShowPengaturanAplikasiAsync(); }));
-            MenuItems.Add(NavButton("Pengaturan Surat", "\uE713", () => { _ = ShowSettingsAsync(); }));
-            MenuItems.Add(NavButton("Pengaturan Formulir", "\uE713", () => { _ = ShowFormulirAsync(); }));
-            MenuItems.Add(NavButton("Ubah Kata Sandi", "\uE72E", () => { _ = ShowUbahSandiAsync(); }));
-            _googleNavButton = NavButton("Login dengan Google", "\uE77B", () => { _ = ShowGoogleLoginAsync(); });
+            MenuItems.Add(NavButton("Pengaturan Aplikasi", IkonMenu.Pengaturan, () => { _ = ShowPengaturanAplikasiAsync(); }));
+            MenuItems.Add(NavButton("Pengaturan Surat", IkonMenu.Pengaturan, () => { _ = ShowSettingsAsync(); }));
+            MenuItems.Add(NavButton("Pengaturan Formulir", IkonMenu.Pengaturan, () => { _ = ShowFormulirAsync(); }));
+            MenuItems.Add(NavButton("Ubah Kata Sandi", IkonMenu.KataSandi, () => { _ = ShowUbahSandiAsync(); }));
+            _googleNavButton = NavButton("Login dengan Google", IkonMenu.AkunGoogle, () => { _ = ShowGoogleLoginAsync(); });
             MenuItems.Add(_googleNavButton);
 
-            var pencadanganDb = new NavItem { Title = "Pencadangan Database", Icon = "\uE74E", GroupIcon = "\uE74E", IsAccordion = true, IsExpanded = false };
-            pencadanganDb.Children.Add(new NavItem { Title = "Ekspor Database", Icon = "\u2022", Action = NewLambda(() => { _ = ShowExImdbAsync(false); }) });
-            pencadanganDb.Children.Add(new NavItem { Title = "Impor Database", Icon = "\u2022", Action = NewLambda(() => { _ = ShowExImdbAsync(true); }) });
-            MenuItems.Add(pencadanganDb);
+            // Pencadangan database: satu halaman dengan dua kartu (Ekspor & Impor),
+            // bukan lagi akordeon berisi dua menu terpisah — lebih sederhana dipakai.
+            MenuItems.Add(NavButton("Cadangkan & Pulihkan", IkonMenu.Cadangkan, () => { _ = ShowExImdbAsync(); }));
 
             MenuItems.Add(new NavItem { Title = "BANTUAN", IsSectionHeader = true });
 
-            var temaAccordion = new NavItem { Title = "Tema", Icon = "\uE790", GroupIcon = "\uE790", IsAccordion = true, IsExpanded = false };
+            var temaAccordion = new NavItem { Title = "Tema", Icon = IkonMenu.Tema, GroupIcon = IkonMenu.Tema, IsAccordion = true, IsExpanded = false };
             // Daftar tema dibaca langsung dari ThemeService (selalu sinkron dengan
             // GetAvailableThemes). Tema default ditampilkan paling atas agar mudah
             // dipilih lagi setelah pengguna berpindah tema.
@@ -760,23 +859,26 @@ namespace SuDesApp.Wpf.ViewModels
                 temaAccordion.Children.Add(new NavItem
                 {
                     Title = display,
-                    Icon = theme == ThemeService.DefaultTheme ? "★" : "•",
+                    Icon = theme == ThemeService.DefaultTheme ? IkonMenu.TemaDefault : IkonMenu.TemaLain,
                     Action = NewLambda(() => _themeService.Apply(theme))
                 });
             }
             MenuItems.Add(temaAccordion);
 
             // Mode akordeon eksklusif untuk seluruh sidebar: membuka satu akordeon
-            // (Buat Surat Baru, Surat Peraturan, Formulir, Pencadangan Database,
-            // Tema, dll.) otomatis menutup akordeon lain yang sedang terbuka.
+            // (Buat Surat Baru, Surat Peraturan, Formulir, Tema, dll.) otomatis
+            // menutup akordeon lain yang sedang terbuka.
             NavItem.RegisterExclusiveAccordions(MenuItems.Where(i => i.IsAccordion));
 
-            _pembaruanButton = NavButton("Pembaruan", "\uE896", () => _ = ShowPembaruanAsync());
+            _pembaruanButton = NavButton("Pembaruan", IkonMenu.Pembaruan, () => _ = ShowPembaruanAsync());
             MenuItems.Add(_pembaruanButton);
-            MenuItems.Add(NavButton("Panduan WhatsApp", "\uE8F1", () => { _ = ShowPanduanWaAsync(); }));
-            MenuItems.Add(NavButton("Catatan Rilis", "\uE7C3", () => { _ = ShowCatatanRilisAsync(); }));
-            MenuItems.Add(NavButton("Tentang", "\uE946", () => { _ = ShowAboutAsync(); }));
-            MenuItems.Add(NavButton("Keluar", "\uE711", () => ExitRequested?.Invoke()));
+            _panduanAwalButton = NavButton("Panduan Awal", IkonMenu.Panduan, () => { _ = ShowPanduanAwalAsync(); });
+            _panduanAwalButton.Description = "Langkah mengisi data desa, pejabat, dan nomor surat";
+            MenuItems.Add(_panduanAwalButton);
+            MenuItems.Add(NavButton("Panduan WhatsApp", IkonMenu.Dokumen, () => { _ = ShowPanduanWaAsync(); }));
+            MenuItems.Add(NavButton("Catatan Rilis", IkonMenu.Peraturan, () => { _ = ShowCatatanRilisAsync(); }));
+            MenuItems.Add(NavButton("Tentang", IkonMenu.Tentang, () => { _ = ShowAboutAsync(); }));
+            MenuItems.Add(NavButton("Keluar", IkonMenu.Keluar, () => ExitRequested?.Invoke()));
 
             // Terakhir: pasang penanda halaman aktif pada semua tombol navigasi.
             PasangPenandaHalamanAktif(MenuItems);
@@ -884,7 +986,7 @@ namespace SuDesApp.Wpf.ViewModels
                 _formulirAccordion.Children.Add(new NavItem
                 {
                     Title = "Tambah Template",
-                    Icon = "\u2022",
+                    Icon = IkonMenu.Tambah,
                     Action = new AsyncRelayCommand(async () => await ShowFormulirAsync())
                 });
                 return;
@@ -903,7 +1005,7 @@ namespace SuDesApp.Wpf.ViewModels
         private NavItem FormulirTemplateButton(string templateName)
         {
             string display = templateName.Replace("_", " ").ToUpperInvariant();
-            return NavButton(display, "\uE8A5", () => { _ = ShowFormulirPdfAsync(templateName); });
+            return NavButton(display, IkonMenu.Blanko, () => { _ = ShowFormulirPdfAsync(templateName); });
         }
 
         private AsyncRelayCommand NewSurat(string display) => new(async () => await LoadSuratAsync(display));
@@ -941,7 +1043,7 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<PengaturanAplikasiViewModel>();
-                _navigation.Navigate(vm);
+                NavigasiHalaman<Views.PengaturanAplikasiView>(vm);
             }
             catch (Exception ex)
             {
@@ -962,7 +1064,7 @@ namespace SuDesApp.Wpf.ViewModels
                 var vm = _scopeFactory.CreateScope()
                     .ServiceProvider.GetRequiredService<PengaturanAplikasiViewModel>();
                 vm.SetFocusSection(sectionKey);
-                _navigation.Navigate(vm);
+                NavigasiHalaman<Views.PengaturanAplikasiView>(vm);
             }
             catch (Exception ex)
             {
@@ -983,6 +1085,23 @@ namespace SuDesApp.Wpf.ViewModels
         /// banner panel Layanan Online yang mengarahkan ke halaman Login Google).
         /// </summary>
         public void NavigateToView(object view) => _navigation.Navigate(view);
+
+        /// <summary>
+        /// Tampilkan halaman dengan pohon visual yang dipertahankan antar bukaan:
+        /// instance halaman dibuat sekali lalu digunakan lagi untuk ViewModel baru,
+        /// sehingga membuka kembali halaman tidak membangun ulang seluruh elemennya.
+        /// </summary>
+        private void NavigasiHalaman<TView>(object viewModel) where TView : UserControl, new()
+        {
+            if (!_cacheHalaman.TryGetValue(typeof(TView), out var halaman))
+            {
+                halaman = new TView();
+                _cacheHalaman[typeof(TView)] = halaman;
+            }
+
+            halaman.DataContext = viewModel;
+            _navigation.Navigate(halaman);
+        }
 
         /// <summary>Klik chip WA di statusbar → Pengaturan Aplikasi, kartu Gateway WhatsApp.</summary>
         public AsyncRelayCommand WaChipClickCommand { get; }
@@ -1047,8 +1166,7 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 var scope = _scopeFactory.CreateScope();
                 var vm = scope.ServiceProvider.GetRequiredService<SetelanViewModel>();
-                var view = new Views.SetelanView { DataContext = vm };
-                _navigation.Navigate(view);
+                NavigasiHalaman<Views.SetelanView>(vm);
             }
             catch (Exception ex)
             {
@@ -1062,10 +1180,17 @@ namespace SuDesApp.Wpf.ViewModels
             _logger.LogInformation("ShowFormulirAsync called");
             try
             {
-                var scope = _scopeFactory.CreateScope();
-                var vm = scope.ServiceProvider.GetRequiredService<FormulirViewModel>();
-                var view = new Views.FormulirView { DataContext = vm };
-                _navigation.Navigate(view);
+                // Pengaturan Formulir bersifat "template sesi": instance VM disimpan
+                // selama aplikasi berjalan sehingga daftar template tidak perlu di-scan
+                // ulang (plus centang/pencarian pengguna) setiap kali menu dibuka —
+                // sama seperti Daftar Hadir. Tombol Segarkan tetap menyegarkan daftar.
+                if (_formulirViewModel is null)
+                {
+                    var scope = _scopeFactory.CreateScope();
+                    _formulirViewModel = scope.ServiceProvider.GetRequiredService<FormulirViewModel>();
+                }
+
+                _navigation.Navigate(new Views.FormulirView { DataContext = _formulirViewModel });
             }
             catch (Exception ex)
             {
@@ -1097,8 +1222,10 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<AgendaSuratViewModel>();
-                await vm.SetJenisAsync(jenisSurat);
+
+                // Tampilkan halaman dulu, muat data menyusul (lihat ShowKeputusanAsync).
                 _navigation.Navigate(vm);
+                await vm.SetJenisAsync(jenisSurat);
             }
             catch (Exception ex)
             {
@@ -1140,8 +1267,12 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<KeputusanViewModel>();
-                await vm.SetJenisAsync(jenisKeputusan);
+
+                // Halaman ditampilkan lebih dulu (judul + grid kosong ber-indikator
+                // memuat), baru data dimuat — klik menu terasa langsung merespons
+                // walau arsipnya besar.
                 _navigation.Navigate(vm);
+                await vm.SetJenisAsync(jenisKeputusan);
             }
             catch (Exception ex)
             {
@@ -1150,18 +1281,21 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        private async Task ShowExImdbAsync(bool isImport)
+        /// <summary>
+        /// Buka halaman Pencadangan Database — satu halaman berisi kartu Ekspor
+        /// (membuat salinan cadangan) dan kartu Impor (memulihkan dari cadangan).
+        /// </summary>
+        private async Task ShowExImdbAsync()
         {
             try
             {
                 var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ExImdbViewModel>();
-                vm.SetMode(isImport);
                 _navigation.Navigate(vm);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal membuka Ekspor/Impor Database");
-                await _messageService.ShowErrorAsync("Gagal membuka Ekspor/Impor Database: " + ex.Message);
+                _logger.LogError(ex, "Gagal membuka Pencadangan Database");
+                await _messageService.ShowErrorAsync("Gagal membuka Pencadangan Database: " + ex.Message);
             }
         }
 
@@ -1356,6 +1490,7 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 "pembaruan" => ShowPembaruanAsync(),
                 "layanan-online" => ShowWaPanelAsync(),
+                "pengaturan-surat" => ShowSettingsAsync(),
                 _ => Task.CompletedTask
             };
         }
@@ -1434,12 +1569,78 @@ namespace SuDesApp.Wpf.ViewModels
             return email.Length <= 22 ? email : email.Substring(0, 21) + "…";
         }
 
+        /// <summary>
+        /// Buka halaman Panduan Awal (langkah mengisi data desa, pejabat, dan nomor
+        /// surat). Bisa dibuka kapan saja dari menu Panduan Awal.
+        /// </summary>
+        public async Task ShowPanduanAwalAsync()
+        {
+            try
+            {
+                var scope = _scopeFactory.CreateScope();
+                var vm = scope.ServiceProvider.GetRequiredService<PanduanAwalViewModel>();
+                vm.PanduanDitutup += BukaBeranda;
+                await vm.PeriksaAsync();
+                SetHalamanAktif(_panduanAwalButton);
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka panduan awal");
+                await _messageService.ShowErrorAsync("Gagal membuka panduan awal: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Dipanggil sekali setelah pengguna masuk: bila data desa/pejabat belum beres
+        /// dan pengguna belum pernah menutup panduan, halaman Panduan Awal dibuka
+        /// menggantikan Beranda. Kalau datanya sudah beres, panduan hanya ditandai
+        /// selesai dan tidak pernah muncul mengganggu.
+        /// </summary>
+        /// <returns>True bila panduan benar-benar dibuka (pemanggil tidak perlu membuka Beranda).</returns>
+        public async Task<bool> TampilkanPanduanAwalJikaPerluAsync()
+        {
+            try
+            {
+                var scope = _scopeFactory.CreateScope();
+                var vm = scope.ServiceProvider.GetRequiredService<PanduanAwalViewModel>();
+                await vm.PeriksaAsync();
+
+                if (!vm.PerluDitampilkanSaatMulai)
+                {
+                    _logger.LogInformation("Panduan awal tidak perlu ditampilkan (data sudah beres atau sudah ditutup).");
+                    return false;
+                }
+
+                vm.PanduanDitutup += BukaBeranda;
+                SetHalamanAktif(_panduanAwalButton);
+                _navigation.Navigate(vm);
+                _logger.LogInformation("Panduan awal dibuka otomatis: data desa/pejabat belum lengkap.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Panduan hanya bantuan: kegagalannya tidak boleh menghalangi aplikasi.
+                _logger.LogWarning(ex, "Panduan awal tidak dapat ditampilkan otomatis.");
+                return false;
+            }
+        }
+
         private async Task ShowPanduanWaAsync()
         {
             try
             {
-                var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<PanduanWaViewModel>();
-                _navigation.Navigate(vm);
+                // Panduan WhatsApp bersifat statis: instance VM + View disimpan
+                // selama aplikasi berjalan agar halaman tidak perlu dibangun ulang
+                // setiap kali dibuka (XAML kompleks + parsing berat dihindarkan).
+                if (_panduanWaViewModel is null)
+                {
+                    var scope = _scopeFactory.CreateScope();
+                    _panduanWaViewModel = scope.ServiceProvider.GetRequiredService<PanduanWaViewModel>();
+                    _panduanWaView = new Views.PanduanWaView { DataContext = _panduanWaViewModel };
+                }
+
+                _navigation.Navigate(_panduanWaView!);
             }
             catch (Exception ex)
             {
@@ -1585,7 +1786,7 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 var scope = _scopeFactory.CreateScope();
                 var vm = scope.ServiceProvider.GetRequiredService<CatatanRilisViewModel>();
-                _navigation.Navigate(vm);
+                NavigasiHalaman<Views.CatatanRilisView>(vm);
             }
             catch (Exception ex)
             {
@@ -1666,10 +1867,77 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     VillageInfo = "DESA " + settings.NamaDesa + "  •  KEC. " + settings.Kecamatan + "  •  KAB. " + settings.Kabupaten;
                 }
+
+                IngatkanDataDesaContoh(settings);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Gagal memuat info desa untuk status bar.");
+            }
+        }
+
+        /// <summary>
+        /// Data desa bawaan aplikasi masih berupa contoh ("Nama Desa" dan sejenisnya).
+        /// Selama masih contoh, pengguna diingatkan lewat lonceng notifikasi setiap kali
+        /// aplikasi dibuka — notifikasi bisa diklik untuk langsung membuka Pengaturan Surat.
+        /// Begitu data desa sudah diisi, notifikasi ini tidak dibuat lagi dan yang lama
+        /// dibuang dari daftar (lihat PengaturanDesaDisimpan).
+        /// </summary>
+        private void IngatkanDataDesaContoh(SuDesApp.Data.Models.DesaData? desa)
+        {
+            var fieldContoh = SuDesApp.Data.Models.DesaContoh.FieldContoh(desa);
+            if (fieldContoh.Count == 0)
+            {
+                // Sudah diisi: cukup pastikan tidak ada sisa peringatan lama.
+                HapusPeringatanDataDesaContoh();
+                return;
+            }
+
+            if (_sudahIngatkanDataDesaContoh) return;   // sekali per sesi saja
+            _sudahIngatkanDataDesaContoh = true;
+
+            _notifications.Warning(
+                JudulNotifDataDesaContoh,
+                $"Data berikut masih berisi contoh bawaan aplikasi: {SuDesApp.Data.Models.DesaContoh.RingkasField(fieldContoh)}." +
+                "\nBuka Pengaturan Surat, lalu isi data desa Anda yang sebenarnya supaya surat yang dicetak tidak memakai data contoh.",
+                "pengaturan-surat");
+        }
+
+        /// <summary>Buang peringatan data desa contoh dari lonceng (tidak berisik lagi).</summary>
+        private void HapusPeringatanDataDesaContoh()
+        {
+            if (!_sudahIngatkanDataDesaContoh) return;
+            _sudahIngatkanDataDesaContoh = false;
+
+            var item = _notifications.Items.FirstOrDefault(i =>
+                string.Equals(i.Title, JudulNotifDataDesaContoh, StringComparison.Ordinal));
+            if (item != null)
+            {
+                _notifications.Hapus(item);
+            }
+        }
+
+        /// <summary>
+        /// Dipanggil setelah data desa disimpan di Pengaturan Surat: bila data contoh
+        /// sudah diganti, peringatan pada lonceng langsung dibuang supaya tidak
+        /// mengganggu lagi.
+        /// </summary>
+        private async Task PeriksaDataDesaSetelahSimpanAsync()
+        {
+            if (!_sudahIngatkanDataDesaContoh) return;
+
+            try
+            {
+                var desa = await _settingsManager.GetSettingsAsync();
+                if (!SuDesApp.Data.Models.DesaContoh.MasihContoh(desa))
+                {
+                    HapusPeringatanDataDesaContoh();
+                    _logger.LogInformation("Data desa sudah disesuaikan: peringatan data contoh dibuang.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Gagal memeriksa data desa setelah disimpan.");
             }
         }
 

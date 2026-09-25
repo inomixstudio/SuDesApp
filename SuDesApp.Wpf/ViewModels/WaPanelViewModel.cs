@@ -564,6 +564,17 @@ namespace SuDesApp.Wpf.ViewModels
                     return;
                 }
 
+                // Surat warga tidak boleh terkirim memakai data desa contoh. Di sini ada
+                // operator, jadi keadaannya ditanyakan lebih dulu (bukan ditahan diam-diam);
+                // memilih berhenti membatalkan pengiriman tanpa mengubah status permintaan.
+                var penjagaDesa = sp.GetRequiredService<SuDesApp.Utilities.IPeringatanDataDesaContoh>();
+                if (!await penjagaDesa.BolehLanjutAsync(
+                        "Surat ini akan dikirim ke warga " + p.NomorWA + " lewat WhatsApp.",
+                        _messageService, default))
+                {
+                    return;
+                }
+
                 var suratRepo = sp.GetRequiredService<ISuratRepository>();
                 var suratData = await suratRepo.GetByIdAsync(p.IdSurat.Value, default) ??
                     throw new InvalidOperationException("Data surat tidak ditemukan.");

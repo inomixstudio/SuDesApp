@@ -146,6 +146,7 @@ namespace SuDesApp.Wpf.ViewModels
             TurunBagianCommand = new RelayCommand<BagianWizardItemViewModel>(b => Geser(Bagian, b, 1), b => !IsBusy && b != null);
 
             TambahKolomBagianCommand = new RelayCommand<BagianWizardItemViewModel>(TambahKolomBagian, b => !IsBusy && b != null && b is BagianKolomWizardItemViewModel or BagianDataDiriWizardItemViewModel);
+            TambahKolomUmumBagianCommand = new RelayCommand<BagianWizardItemViewModel>(TambahKolomUmumBagian, b => !IsBusy && b != null && b is BagianKolomWizardItemViewModel or BagianDataDiriWizardItemViewModel);
             HapusKolomBagianCommand = new RelayCommand<KolomItemViewModel>(HapusKolomBagian, k => !IsBusy && k != null);
             NaikKolomBagianCommand = new RelayCommand<KolomItemViewModel>(k => GeserKolomBagian(k, -1), k => !IsBusy && k != null);
             TurunKolomBagianCommand = new RelayCommand<KolomItemViewModel>(k => GeserKolomBagian(k, 1), k => !IsBusy && k != null);
@@ -177,6 +178,12 @@ namespace SuDesApp.Wpf.ViewModels
 
                 case TemplateSuratViewModel.ModeDuplikat when template != null:
                     SiapkanBaru(template.Clone());
+                    break;
+
+                // Hasil pembacaan berkas Word: susunan & nama sudah disiapkan, jadi
+                // wizard dibuka apa adanya supaya bisa diperiksa lalu disimpan.
+                case TemplateSuratViewModel.ModeImpor when template != null:
+                    SiapkanBaru(template.Clone(), dariImporWord: true);
                     break;
 
                 default:
@@ -407,6 +414,7 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     TemplateSuratViewModel.ModeEdit => "Ubah Template",
                     TemplateSuratViewModel.ModeDuplikat => "Duplikat Template",
+                    TemplateSuratViewModel.ModeImpor => "Template dari File Word",
                     _ => "Template Baru"
                 };
 
@@ -758,6 +766,9 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>Tambah satu kolom di dalam bagian kolom isian atau data diri.</summary>
         public RelayCommand<BagianWizardItemViewModel> TambahKolomBagianCommand { get; }
+
+        /// <summary>Tambah kolom identitas umum (NIK, nama, alamat, dan lainnya) ke bagian kolom isian atau data diri.</summary>
+        public RelayCommand<BagianWizardItemViewModel> TambahKolomUmumBagianCommand { get; }
         public RelayCommand<KolomItemViewModel> HapusKolomBagianCommand { get; }
         public RelayCommand<KolomItemViewModel> NaikKolomBagianCommand { get; }
         public RelayCommand<KolomItemViewModel> TurunKolomBagianCommand { get; }
@@ -766,27 +777,46 @@ namespace SuDesApp.Wpf.ViewModels
         // Pemuatan data
         // =====================================================================
 
-        /// <summary>Isi wizard untuk template baru, atau salin dari template yang ada (duplikat).</summary>
-        public void SiapkanBaru(TemplateSuratKustom? salinan = null)
+        /// <summary>
+        /// Isi wizard untuk template baru, salin dari template yang ada (duplikat), atau
+        /// dari hasil pembacaan berkas Word (<paramref name="dariImporWord"/>: nama dan
+        /// susunan hasil pembacaan dibiarkan apa adanya).
+        /// </summary>
+        public void SiapkanBaru(TemplateSuratKustom? salinan = null, bool dariImporWord = false)
         {
             _idTersunting = 0;
             if (salinan != null)
             {
                 TerapkanKeForm(salinan);
-                // Duplikat: nomor mulai dari awal dan namanya diberi penanda.
+
+                // Nomor selalu mulai dari awal untuk template baru.
                 _nomorTerakhir = 0;
                 _tahunNomor = 0;
                 _dibuat = default;
                 _dibuatOleh = string.Empty;
-                Nama = string.IsNullOrWhiteSpace(Nama) ? "Salinan template" : Nama + " (salinan)";
+
+                if (!dariImporWord)
+                {
+                    // Duplikat: namanya diberi penanda agar tidak tertukar dengan aslinya.
+                    Nama = string.IsNullOrWhiteSpace(Nama) ? "Salinan template" : Nama + " (salinan)";
+                }
             }
 
             Langkah = 0;
             PesanKesalahan = string.Empty;
-            PesanInformasi = "Pilih komponen surat dengan kotak centang, lalu tekan Lanjut ke Pratinjau.";
-            if (Kolom.Count == 0)
+            PesanInformasi = dariImporWord
+                ? "Susunan surat hasil pembacaan berkas Word. Periksa tiap langkah, lalu simpan."
+                : "Pilih komponen surat dengan kotak centang, lalu tekan Lanjut ke Pratinjau.";
+
+            if (!dariImporWord && Bagian.Count == 0 && Kolom.Count == 0)
             {
-                TambahKolomUmum();
+                // Template baru langsung diisi kolom umum sebagai bagian "Kolom Isian"
+                // — bukan daftar datar — supaya kolom itu tidak hilang diam-diam bila
+                // pengguna kemudian menambahkan bagian teks / data diri / kolom lain.
+                var kelompok = new BagianKolomWizardItemViewModel(string.Empty, "kolom");
+                TambahKolomUmum(kelompok.Kolom);
+                Bagian.Add(kelompok);
+                PerbaruiCermin();
             }
             PerbaruiLencana();
         }
@@ -953,26 +983,81 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>
         /// Tambahkan kolom identitas yang paling sering dipakai (NIK, nama, alamat,
-        /// dan lainnya) tanpa menimpa kolom yang sudah ada.
+        /// dan lainnya) ke daftar datar tanpa menimpa kolom yang sudah ada.
         /// </summary>
         private void TambahKolomUmum()
         {
+            int ditambah = TambahKolomUmum(Kolom);
+            PesanInformasi = ditambah == 0
+                ? "Seluruh kolom umum sudah ada."
+                : $"{ditambah} kolom umum ditambahkan.";
+        }
+
+        /// <summary>Tambahkan kolom umum ke sebuah bagian (kolom isian atau data diri).</summary>
+        private void TambahKolomUmumBagian(BagianWizardItemViewModel? bagian)
+        {
+            var target = bagian switch
+            {
+                BagianKolomWizardItemViewModel kelompok => kelompok.Kolom,
+                BagianDataDiriWizardItemViewModel dataDiri => dataDiri.Kolom,
+                _ => null
+            };
+            if (target == null) return;
+
+            int ditambah = TambahKolomUmum(target);
+            PerbaruiCermin();
+            PesanInformasi = ditambah == 0
+                ? "Kolom umum sudah lengkap pada bagian ini."
+                : $"{ditambah} kolom umum ditambahkan ke bagian ini.";
+        }
+
+        /// <summary>
+        /// Tambahkan preset kolom umum ke koleksi target (bagian atau daftar datar),
+        /// tanpa menimpa kolom yang labelnya sudah ada, dengan kunci unik menyeluruh.
+        /// Mengembalikan jumlah kolom yang benar-benar ditambahkan.
+        /// </summary>
+        private int TambahKolomUmum(ObservableCollection<KolomItemViewModel> target)
+        {
             int ditambah = 0;
+            var kunciTerpakai = KunciKolomTerpakai();
             foreach (var preset in TemplateSuratPreset.KolomUmum)
             {
-                if (Kolom.Any(k => string.Equals((k.Label ?? string.Empty).Trim(), preset.Label, StringComparison.OrdinalIgnoreCase)))
+                if (target.Any(k => string.Equals((k.Label ?? string.Empty).Trim(), preset.Label, StringComparison.OrdinalIgnoreCase)))
                 {
                     continue;
                 }
 
-                var kolom = TemplateSuratPreset.BuatKolom(preset, Kolom.Select(k => k.Kunci).Where(k => k.Length > 0));
-                Kolom.Add(new KolomItemViewModel(kolom));
+                var kolom = TemplateSuratPreset.BuatKolom(preset, kunciTerpakai);
+                kunciTerpakai.Add(kolom.Kunci);
+                target.Add(new KolomItemViewModel(kolom));
                 ditambah++;
             }
+            return ditambah;
+        }
 
-            PesanInformasi = ditambah == 0
-                ? "Seluruh kolom umum sudah ada."
-                : $"{ditambah} kolom umum ditambahkan.";
+        /// <summary>
+        /// Seluruh kunci kolom yang terpakai saat ini (daftar datar + semua bagian) —
+        /// dipakai agar preset kolom baru selalu mendapat kunci unik di seluruh template.
+        /// </summary>
+        private List<string> KunciKolomTerpakai()
+        {
+            var daftar = new List<string>();
+            foreach (var k in Kolom)
+            {
+                if (!string.IsNullOrWhiteSpace(k.Kunci)) daftar.Add(k.Kunci);
+            }
+            foreach (var bagian in Bagian)
+            {
+                if (bagian is BagianKolomWizardItemViewModel kelompok)
+                {
+                    foreach (var k in kelompok.Kolom) if (!string.IsNullOrWhiteSpace(k.Kunci)) daftar.Add(k.Kunci);
+                }
+                else if (bagian is BagianDataDiriWizardItemViewModel dataDiri)
+                {
+                    foreach (var k in dataDiri.Kolom) if (!string.IsNullOrWhiteSpace(k.Kunci)) daftar.Add(k.Kunci);
+                }
+            }
+            return daftar;
         }
 
         private void HapusKolom(KolomItemViewModel? kolom)
@@ -1133,7 +1218,8 @@ namespace SuDesApp.Wpf.ViewModels
             Kolom.Clear();
             foreach (var kolom in Bagian
                 .OfType<BagianKolomWizardItemViewModel>()
-                .SelectMany(b => b.Kolom))
+                .SelectMany(b => b.Kolom)
+                .Concat(Bagian.OfType<BagianDataDiriWizardItemViewModel>().SelectMany(b => b.Kolom)))
             {
                 Kolom.Add(kolom);
             }
@@ -1439,7 +1525,7 @@ namespace SuDesApp.Wpf.ViewModels
                 string berkas = Path.Combine(
                     Path.GetTempPath(), "SuDesApp",
                     $"pratinjau-template-{Guid.NewGuid():N}.pdf");
-                Directory.CreateDirectory(Path.GetDirectoryName(berkas));
+                Directory.CreateDirectory(Path.GetDirectoryName(berkas)!);
                 await File.WriteAllBytesAsync(berkas, pdf);
 
                 Pratinjau = _previewFactory($"Pratinjau — {template.NamaTampil}", berkas, Kembali);
@@ -1501,6 +1587,15 @@ namespace SuDesApp.Wpf.ViewModels
             if (!PeriksaSemuaLangkah(out var pesanValidasi))
             {
                 PesanKesalahan = pesanValidasi;
+                return;
+            }
+
+            // Nama template tidak boleh sama dengan template lain agar tidak tertukar di daftar.
+            if (await _repository.NamaTerpakaiAsync(template.NamaTampil, _idTersunting))
+            {
+                Langkah = 0;
+                PesanKesalahan = $"Nama \"{template.NamaTampil}\" sudah dipakai template lain. " +
+                    $"Pilih nama lain, misalnya \"{template.NamaTampil} — {DateTime.Now.Year}\".";
                 return;
             }
 
@@ -1618,8 +1713,36 @@ namespace SuDesApp.Wpf.ViewModels
                     }
                 }
 
-                // Daftar datar "umum" yang diisi SiapkanBaru TIDAK ikut tercetak pada
-                // susunan baru — kolom hanyalah yang ada di dalam bagian.
+                // Kolom daftar datar yang TIDAK berada di bagian mana pun (mis. ditambah
+                // lewat jalur lama "Tambah Kolom") tetap digabung menjadi satu bagian
+                // kolom terusan di urutan akhir — tidak dibuang diam-diam.
+                var kolomSudah = kolom.Select(k => k.Kunci)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var sisa = new List<KolomTemplateSurat>();
+                foreach (var item in Kolom)
+                {
+                    var model = item.KeModel(kunciTerpakai);
+                    if (string.IsNullOrWhiteSpace(model.Label) || kolomSudah.Contains(model.Kunci))
+                    {
+                        continue;
+                    }
+                    kolomSudah.Add(model.Kunci);
+                    kunciTerpakai.Add(model.Kunci);
+                    sisa.Add(model);
+                }
+                if (sisa.Count > 0)
+                {
+                    var kelompokTambahan = new BagianTemplateSurat
+                    {
+                        Tipe = TipeBagianTemplate.Kolom,
+                        JudulKelompok = string.Empty,
+                        Kunci = "kolomtambahan",
+                        Grid = _pakaiGrid
+                    };
+                    kelompokTambahan.Kolom.AddRange(sisa);
+                    bagian.Add(kelompokTambahan);
+                    kolom.AddRange(sisa);
+                }
             }
             else
             {

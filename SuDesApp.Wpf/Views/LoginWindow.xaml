@@ -256,8 +256,8 @@
                     </Button>
                 </Grid>
 
-                <!-- ===== Teks versi ===== -->
-                <TextBlock Grid.Row="2" Text="Surat Desa V.2.5.3  •  Sumberjaya Dev."
+                <!-- ===== Teks versi (otomatis dari assembly/csproj) ===== -->
+                <TextBlock Grid.Row="2" Text="{Binding FooterVersi, FallbackValue=''}"
                            Foreground="{DynamicResource TextSecondaryBrush}" FontSize="9"
                            HorizontalAlignment="Center" Margin="0,0,0,14"/>
             </Grid>

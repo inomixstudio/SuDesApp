@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
@@ -24,9 +25,14 @@ namespace SuDesApp.Wpf.ViewModels
     /// membuat salinan, menghapus, atau langsung memakai template untuk mengisi dan
     /// mencetak surat.
     ///
-    /// Contoh siap pakai dipasang otomatis sekali bila daftar masih kosong, dan
-    /// tombol "Perbarui Contoh" menyegarkan template yang berasal dari contoh bawaan
-    /// ke susunan terbaru.
+    /// Selain menyusun sendiri lewat wizard, template bisa dibuat dari berkas Word
+    /// (.docx) yang sudah dipakai sehari-hari: susunan surat pada berkas dibaca, lalu
+    /// dijadikan template yang bisa diisi dan dicetak seperti template biasa.
+    ///
+    /// Berkas .doc (Word lama) ikut didukung: berkas dikonversi otomatis lebih dulu
+    /// memakai Microsoft Word bila terpasang.
+    ///
+    /// Contoh siap pakai dipasang otomatis sekali bila daftar masih kosong.
     /// </summary>
     public class TemplateSuratViewModel : ObservableObject
     {
@@ -35,9 +41,14 @@ namespace SuDesApp.Wpf.ViewModels
         public const int ModeEdit = 1;
         public const int ModeDuplikat = 2;
 
+        /// <summary>Buat template baru dari hasil pembacaan berkas Word (bukan lewat wizard dari nol).</summary>
+        public const int ModeImpor = 3;
+
         private readonly ITemplateSuratRepository _repository;
         private readonly TemplateSuratGenerator _generator;
         private readonly TemplateSuratBawaanService _bawaanService;
+        private readonly ITemplateSuratWordImpor _wordImpor;
+        private readonly ITemplateSuratPratinjau _pratinjauService;
         private readonly Func<int, TemplateSuratKustom?, TemplateSuratWizardViewModel> _wizardFactory;
         private readonly Func<IsiTemplateSuratViewModel> _isiFactory;
         private readonly Func<string, string, PdfPreviewViewModel> _previewFactory;
@@ -46,6 +57,13 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly ILogger<TemplateSuratViewModel> _logger;
 
         private readonly List<TemplateSuratKustom> _semua = new();
+
+        /// <summary>
+        /// Kabar halaman yang tampil di dalam daftar template (bukan dialog popup): hasil
+        /// pembacaan berkas Word, sebab sebuah tombol tidak bisa dilanjutkan, dan kegagalan
+        /// daftar/pratinjau. Kartu berkunci sama saling menimpa supaya tidak menumpuk.
+        /// </summary>
+        public KumpulanPesanInline Pesan { get; } = new();
 
         /// <summary>Contoh bawaan hanya disiapkan sekali per pemakaian halaman.</summary>
         private bool _sudahSiapkanBawaan;
@@ -60,6 +78,8 @@ namespace SuDesApp.Wpf.ViewModels
             ITemplateSuratRepository repository,
             TemplateSuratGenerator generator,
             TemplateSuratBawaanService bawaanService,
+            ITemplateSuratWordImpor wordImpor,
+            ITemplateSuratPratinjau pratinjauService,
             Func<int, TemplateSuratKustom?, TemplateSuratWizardViewModel> wizardFactory,
             Func<IsiTemplateSuratViewModel> isiFactory,
             Func<string, string, PdfPreviewViewModel> previewFactory,
@@ -70,6 +90,8 @@ namespace SuDesApp.Wpf.ViewModels
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _generator = generator ?? throw new ArgumentNullException(nameof(generator));
             _bawaanService = bawaanService ?? throw new ArgumentNullException(nameof(bawaanService));
+            _wordImpor = wordImpor ?? throw new ArgumentNullException(nameof(wordImpor));
+            _pratinjauService = pratinjauService ?? throw new ArgumentNullException(nameof(pratinjauService));
             _wizardFactory = wizardFactory ?? throw new ArgumentNullException(nameof(wizardFactory));
             _isiFactory = isiFactory ?? throw new ArgumentNullException(nameof(isiFactory));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
@@ -86,7 +108,7 @@ namespace SuDesApp.Wpf.ViewModels
             IsiCommand = new AsyncRelayCommand(IsiAsync, () => !IsBusy && Terpilih != null);
             PratinjauCommand = new AsyncRelayCommand(PratinjauAsync, () => !IsBusy && Terpilih != null);
             SegarkanCommand = new AsyncRelayCommand(MuatAsync, () => !IsBusy);
-            PerbaruiContohCommand = new AsyncRelayCommand(PerbaruiContohAsync, () => !IsBusy && JumlahContohBisaDisegarkan > 0);
+            BuatDariWordCommand = new AsyncRelayCommand(BuatDariWordAsync, () => !IsBusy);
             BersihkanPencarianCommand = new RelayCommand(() => Pencarian = string.Empty);
 
             _ = MuatAsync();
@@ -171,8 +193,8 @@ namespace SuDesApp.Wpf.ViewModels
         public AsyncRelayCommand PratinjauCommand { get; }
         public AsyncRelayCommand SegarkanCommand { get; }
 
-        /// <summary>Segarkan template yang berasal dari contoh bawaan ke susunan terbaru.</summary>
-        public AsyncRelayCommand PerbaruiContohCommand { get; }
+        /// <summary>Susun template baru dari berkas Word (.docx) yang sudah dipakai.</summary>
+        public AsyncRelayCommand BuatDariWordCommand { get; }
 
         public RelayCommand BersihkanPencarianCommand { get; }
 
@@ -190,12 +212,6 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         public bool AdaInfoBawaan => !string.IsNullOrWhiteSpace(_infoBawaan);
-
-        /// <summary>
-        /// Jumlah template pengguna yang berasal dari contoh bawaan — inilah yang bisa
-        /// diperbarui ke susunan contoh terbaru (mis. Surat Izin Keramaian yang baru).
-        /// </summary>
-        public int JumlahContohBisaDisegarkan => TemplateSuratBawaanService.JumlahBisaDisegarkan(_semua);
 
         // ===== Muat data =====
 
@@ -228,7 +244,9 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 _logger.LogError(ex, "Gagal memuat daftar template surat");
                 PesanKosong = "Daftar template tidak dapat dimuat: " + ex.Message;
-                await _messageService.ShowErrorAsync("Gagal memuat daftar Template Surat: " + ex.Message);
+                Pesan.Galat("Daftar template tidak dapat dimuat",
+                    "Coba buka halaman ini lagi sebentar lagi. Penyebabnya: " + ex.Message,
+                    "muat-template");
             }
             finally
             {
@@ -320,7 +338,8 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal membuka wizard template surat (mode {Mode})", mode);
-                _ = _messageService.ShowErrorAsync("Gagal membuka wizard Template Surat: " + ex.Message);
+                Pesan.Galat("Gagal membuka wizard Template Surat",
+                    "Penyebabnya: " + ex.Message, "wizard-template");
             }
         }
 
@@ -350,7 +369,8 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal menghapus template surat");
-                await _messageService.ShowErrorAsync("Gagal menghapus template: " + ex.Message);
+                Pesan.Galat("Gagal menghapus template",
+                    "Template belum terhapus. Penyebabnya: " + ex.Message, "hapus-template");
             }
         }
 
@@ -377,7 +397,9 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal membuka pengisian surat dari template");
-                await _messageService.ShowErrorAsync("Gagal membuka pengisian surat: " + ex.Message);
+                Pesan.Galat("Gagal membuka pengisian surat",
+                    "Formulir isian template tidak dapat dibuka. Penyebabnya: " + ex.Message,
+                    "isi-template");
             }
         }
 
@@ -393,7 +415,9 @@ namespace SuDesApp.Wpf.ViewModels
                 var template = await _repository.GetByIdAsync(Terpilih.Id) ?? Terpilih;
                 if (template.JumlahElemen == 0)
                 {
-                    await _messageService.ShowWarningAsync("Template belum memiliki elemen yang bisa dicetak.");
+                    Pesan.Peringatan("Template belum bisa dicetak",
+                        "Template ini belum memiliki elemen yang bisa dicetak. Tambahkan elemennya lewat Edit dulu, ya.",
+                        "pratinjau-template");
                     return;
                 }
 
@@ -404,13 +428,14 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (pdf.Length == 0)
                 {
-                    await _messageService.ShowWarningAsync("Pratinjau gagal dibuat: berkas PDF kosong.");
+                    Pesan.Peringatan("Pratinjau gagal dibuat",
+                        "Berkas PDF-nya kosong, jadi pratinjau tidak dibuka.", "pratinjau-template");
                     return;
                 }
 
                 string berkas = Path.Combine(Path.GetTempPath(), "SuDesApp",
                     $"pratinjau-template-{Guid.NewGuid():N}.pdf");
-                Directory.CreateDirectory(Path.GetDirectoryName(berkas));
+                Directory.CreateDirectory(Path.GetDirectoryName(berkas)!);
                 await File.WriteAllBytesAsync(berkas, pdf);
 
                 _navigation.Navigate(_previewFactory($"Pratinjau template — {template.NamaTampil}", berkas));
@@ -418,7 +443,119 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal membuat pratinjau template surat");
-                await _messageService.ShowErrorAsync("Gagal membuat pratinjau: " + ex.Message);
+                Pesan.Galat("Gagal membuat pratinjau template",
+                    "Penyebabnya: " + ex.Message, "pratinjau-template");
+            }
+        }
+
+        // =====================================================================
+        // Buat template dari berkas Word
+        // =====================================================================
+
+        /// <summary>
+        /// Buat template surat dari berkas Word yang sudah dipakai sehari-hari: .docx
+        /// langsung dibaca, berkas .doc lama dikonversi otomatis lebih dulu (Microsoft Word).
+        ///
+        /// Berkas yang memuat satu bentuk surat langsung dibuka di wizard (mode impor)
+        /// supaya susunannya bisa diperiksa sebelum disimpan. Berkas yang memuat beberapa
+        /// bentuk surat (beberapa halaman/bagian) menampilkan dialog pemilihan, sehingga
+        /// bagian yang dipilih dapat disimpan sekaligus sebagai beberapa template.
+        /// </summary>
+        private async Task BuatDariWordAsync()
+        {
+            if (IsBusy) return;
+
+            try
+            {
+                var dialog = new OpenFileDialog
+                {
+                    Title = "Pilih berkas Word untuk dijadikan template surat",
+                    Filter = "Dokumen Word|*.docx;*.doc|Word (.docx)|*.docx|Word 97-2003 (.doc)|*.doc|Semua Berkas (*.*)|*.*",
+                    CheckFileExists = true
+                };
+                if (dialog.ShowDialog() != true) return;
+
+                IsBusy = true;
+                var hasil = await _wordImpor.BacaAsync(dialog.FileName);
+
+                // Pembacaan selesai: halaman bebas lagi supaya daftar bisa dimuat ulang
+                // setelah template hasil pembacaan disimpan.
+                IsBusy = false;
+
+                if (hasil.Kandidat.Count == 0)
+                {
+                    string catatan = hasil.Peringatan.Count == 0
+                        ? string.Empty
+                        : "\n\n" + string.Join("\n", hasil.Peringatan);
+                    Pesan.Peringatan("Tidak ada surat yang bisa dibaca",
+                        "Pastikan isi berkas berupa teks, bukan gambar atau hasil pindai." + catatan,
+                        "impor-word");
+                    return;
+                }
+
+                var namaTerpakai = _semua.Select(t => t.NamaTampil).ToList();
+
+                // Satu surat saja: buka wizard supaya pengguna bisa memeriksa dan menyimpan.
+                if (hasil.Kandidat.Count == 1)
+                {
+                    var kandidat = hasil.Kandidat[0];
+                    kandidat.Definisi.Nama = TemplateSuratWordImporService.NamaUnik(
+                        kandidat.Definisi.Nama, namaTerpakai);
+                    BukaWizardDenganTemplate(ModeImpor, kandidat.Definisi);
+                    return;
+                }
+
+                // Beberapa surat dalam satu berkas: pengguna memilih bagian yang disimpan.
+                // Setiap bagian bisa dipratinjau (halaman pertama) sebelum diputuskan.
+                var terpilih = WordImporWindow.Show(
+                    hasil, namaTerpakai, template => _pratinjauService.BuatAsync(template));
+                if (terpilih == null || terpilih.Count == 0) return;
+
+                int berhasil = 0;
+                var gagal = new List<string>();
+                foreach (var (nama, template) in terpilih)
+                {
+                    try
+                    {
+                        template.Dibuat = DateTime.Now;
+                        await _repository.AddAsync(template);
+                        berhasil++;
+                        _logger.LogInformation("Template surat dari berkas Word dibuat: {Nama}", nama);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Gagal menyimpan template hasil pembacaan berkas Word: {Nama}", nama);
+                        gagal.Add($"{nama}: {ex.Message}");
+                    }
+                }
+
+                await MuatAsync();
+
+                if (gagal.Count > 0)
+                {
+                    Pesan.Peringatan("Sebagian template gagal disimpan",
+                        $"{berhasil} template dibuat, {gagal.Count} gagal disimpan:\n\n" + string.Join("\n", gagal),
+                        "impor-word");
+                    return;
+                }
+
+                Pesan.Sukses("Template dari berkas Word dibuat",
+                    $"{berhasil} template surat dibuat dari berkas \"{hasil.NamaBerkas}\".\n\n" +
+                    "Pilih salah satu pada daftar: tekan Edit untuk menyesuaikan susunannya, atau " +
+                    "Isi Surat untuk langsung mencetak.",
+                    "impor-word");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuat template surat dari berkas Word");
+                Pesan.Galat("Gagal membaca berkas Word",
+                    "Pastikan berkasnya berformat .doc/.docx, tidak rusak, dan tidak sedang dibuka di " +
+                    "aplikasi lain.\n\n" + ex.Message,
+                    "impor-word");
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 
@@ -440,68 +577,15 @@ namespace SuDesApp.Wpf.ViewModels
                 var terpasang = await _bawaanService.PasangOtomatisAsync();
                 if (terpasang.Count > 0)
                 {
-                    InfoBawaan = $"{terpasang.Count} contoh template siap pakai sudah disiapkan (misalnya " +
-                        "Surat Pengantar RT/RW, Surat Izin Keramaian, dan Surat Keterangan Penghasilan). " +
+                    InfoBawaan = $"{terpasang.Count} contoh template siap pakai sudah disiapkan: " +
+                        string.Join(", ", terpasang.Select(t => t.NamaTampil)) + ". " +
                         "Contoh-contoh ini bisa langsung diisi dan dicetak, disunting, atau dihapus seperti template biasa.";
                 }
 
-                PerbaruiInfoContoh();
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Gagal menyiapkan contoh template bawaan");
-            }
-        }
-
-        private void PerbaruiInfoContoh()
-        {
-            OnPropertyChanged(nameof(JumlahContohBisaDisegarkan));
-            PerbaruiContohCommand.RaiseCanExecuteChanged();
-        }
-
-        /// <summary>
-        /// Ganti definisi template yang berasal dari contoh bawaan dengan definisi contoh
-        /// terbaru. Berguna ketika susunan contoh diperbaiki (mis. Surat Izin Keramaian
-        /// mengikuti format surat pengantar izin rame-rame).
-        /// </summary>
-        private async Task PerbaruiContohAsync()
-        {
-            var kandidat = _semua
-                .Where(t => TemplateSuratBawaan.KodeDariNama(t.NamaTampil) != null)
-                .ToList();
-            if (kandidat.Count == 0)
-            {
-                InfoBawaan = "Tidak ada template dari contoh bawaan pada daftar.";
-                return;
-            }
-
-            string daftarNama = string.Join(", ", kandidat.Take(4).Select(t => t.NamaTampil));
-            if (kandidat.Count > 4)
-            {
-                daftarNama += $", dan {kandidat.Count - 4} lainnya";
-            }
-
-            bool lanjut = await _messageService.ShowConfirmationAsync(
-                "Perbarui Contoh Bawaan",
-                $"Perbarui {kandidat.Count} template berikut ke susunan terbaru: {daftarNama}? " +
-                "Susunan surat dan kolom isiannya diganti, sehingga perubahan yang pernah Anda buat " +
-                "pada template tersebut ikut tertimpa. Nomor surat terakhir tetap dipertahankan.");
-
-            if (!lanjut) return;
-
-            try
-            {
-                var diubah = await _bawaanService.SegarkanAsync();
-                InfoBawaan = diubah.Count > 0
-                    ? $"{diubah.Count} template diperbarui ke susunan contoh terbaru."
-                    : "Tidak ada template yang perlu diperbarui.";
-
-                await MuatAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal memperbarui contoh template bawaan");
-                await _messageService.ShowErrorAsync("Gagal memperbarui contoh template: " + ex.Message);
             }
         }
 
@@ -514,7 +598,7 @@ namespace SuDesApp.Wpf.ViewModels
             IsiCommand.RaiseCanExecuteChanged();
             PratinjauCommand.RaiseCanExecuteChanged();
             SegarkanCommand.RaiseCanExecuteChanged();
-            PerbaruiContohCommand.RaiseCanExecuteChanged();
+            BuatDariWordCommand.RaiseCanExecuteChanged();
         }
     }
 }

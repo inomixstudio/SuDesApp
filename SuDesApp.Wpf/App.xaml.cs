@@ -54,13 +54,23 @@ namespace SuDesApp.Wpf
                     // karena exception sangat dini, tampil MessageBox biasa).
                     try
                     {
+                        // Kata "Error" sengaja tidak dipakai: pesan berbahasa Indonesia
+                        // yang menjelaskan keadaan + langkah lanjutan lebih menenangkan.
                         SuDesApp.Wpf.Views.MessageDialogWindow.Show(
-                            "Error", $"Error tidak tertangani:\n{args.Exception.Message}",
+                            "Aplikasi mengalami gangguan",
+                            "Terjadi gangguan yang tidak terduga. Pekerjaan yang sudah tersimpan tetap aman.\n\n" +
+                            $"Rincian: {args.Exception.Message}\n\n" +
+                            "Aplikasi dapat dilanjutkan; bila gangguan berulang, buka menu Pembaruan " +
+                            "atau laporkan rincian di atas.",
                             SuDesApp.Utilities.AppMessageButton.Ok, SuDesApp.Utilities.AppMessageIcon.Error);
                     }
                     catch
                     {
-                        MessageBox.Show($"Error tidak tertangani:\n{args.Exception.Message}", "Error",
+                        MessageBox.Show(
+                            "Terjadi gangguan yang tidak terduga.\n\n" +
+                            $"Rincian: {args.Exception.Message}\n\n" +
+                            "Pekerjaan yang sudah tersimpan tetap aman.",
+                            "Aplikasi mengalami gangguan",
                             MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
@@ -147,8 +157,8 @@ namespace SuDesApp.Wpf
         /// </summary>
         private void JadwalkanPembersihanStartup()
         {
-            var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
-            var config = _serviceProvider.GetRequiredService<AppConfig>();
+            var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+            var config = ServiceProvider.GetRequiredService<AppConfig>();
 
             if (!AppPreferenceStore.IsStartupDiamDiam())
             {
@@ -191,6 +201,10 @@ namespace SuDesApp.Wpf
             if (AppPreferenceStore.IsCleanupTempPdfEnabled())
             {
                 TempPdfCleanup.CleanOldFiles(config, logger);
+                // Sisa konversi berkas Word lama (.doc → .docx) yang terputus.
+                TempPdfCleanup.CleanOldWordConversions(logger);
+                // Sisa unduhan pembaruan yang dijeda lalu tak pernah dilanjutkan lagi.
+                TempPdfCleanup.CleanOldDownloadParts(logger);
             }
 
             // Hapus hasil ekspor lama di Output/PDF (> 30 hari).
@@ -229,27 +243,27 @@ namespace SuDesApp.Wpf
         {
             try
             {
-                var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
+                var loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger("GoogleBackup");
 
-                if (!_serviceProvider.GetRequiredService<GoogleDriveService>().IsOAuthEnabled)
+                if (!ServiceProvider.GetRequiredService<GoogleDriveService>().IsOAuthEnabled)
                 {
                     logger.LogInformation("Backup Drive dilewati: OAuth belum dikonfigurasi.");
                     return;
                 }
-                if (!_serviceProvider.GetRequiredService<GoogleDriveService>().HasStoredToken())
+                if (!ServiceProvider.GetRequiredService<GoogleDriveService>().HasStoredToken())
                 {
                     logger.LogInformation("Backup Drive dilewati: belum ada akun Google yang terhubung.");
                     return;
                 }
-                if (_serviceProvider.GetRequiredService<GoogleBackupService>().IsBackupDoneToday())
+                if (ServiceProvider.GetRequiredService<GoogleBackupService>().IsBackupDoneToday())
                 {
                     logger.LogInformation("Backup Drive dilewati: sudah dilakukan hari ini.");
                     return;
                 }
 
                 logger.LogInformation("Memulai backup harian database ke Google Drive...");
-                var backup = _serviceProvider.GetRequiredService<GoogleBackupService>();
+                var backup = ServiceProvider.GetRequiredService<GoogleBackupService>();
                 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
                 // Jalankan di THREAD POOL (bukan UI thread) agar tidak ada
@@ -257,7 +271,7 @@ namespace SuDesApp.Wpf
                 // deadlock penutupan aplikasi (sinkron .GetResult() di UI thread
                 // + awaite tanpa ConfigureAwait(false) = proses hang selamanya).
                 var backupTask = Task.Run(
-                    () => _serviceProvider.GetRequiredService<GoogleBackupService>().BackupNowAsync(cts.Token),
+                    () => ServiceProvider.GetRequiredService<GoogleBackupService>().BackupNowAsync(cts.Token),
                     cts.Token);
 
                 // Tunggu berbatas waktu. Selama jeda ini snapshot & upload berjalan
@@ -292,7 +306,7 @@ namespace SuDesApp.Wpf
             }
             catch (OperationCanceledException)
             {
-                (_serviceProvider.GetRequiredService<ILoggerFactory>()!
+                (ServiceProvider.GetRequiredService<ILoggerFactory>()
                     .CreateLogger("GoogleBackup"))
                     .LogWarning("Backup Google Drive dibatalkan (melebihi 2 menit).");
             }
@@ -301,12 +315,12 @@ namespace SuDesApp.Wpf
                 // Jangan pernah gagalkan penutupan aplikasi karena backup.
                 try
                 {
-                    (_serviceProvider.GetRequiredService<ILoggerFactory>()!
+                    (ServiceProvider.GetRequiredService<ILoggerFactory>()
                         .CreateLogger("GoogleBackup"))
                         .LogError(ex, "Backup Google Drive gagal saat aplikasi ditutup");
 
                     App.Current?.Dispatcher.Invoke(() =>
-                        _serviceProvider?.GetRequiredService<NotificationService>()
+                        ServiceProvider.GetRequiredService<NotificationService>()
                             .Error("Backup Otomatis Drive", "Backup harian gagal: " + ex.Message));
                 }
                 catch { /* logger pun tidak tersedia */ }
@@ -349,7 +363,18 @@ namespace SuDesApp.Wpf
         private IServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
-            services.AddLogging(b => { b.AddConsole(); b.AddDebug(); b.SetMinimumLevel(LogLevel.Information); });
+            // Log konsol memakai cap waktu: memudahkan menakar halaman/proses mana yang
+            // lambat saat menguji performa (selisih antar-baris = durasi tahap itu).
+            services.AddLogging(b =>
+            {
+                b.AddSimpleConsole(o =>
+                {
+                    o.TimestampFormat = "HH:mm:ss.fff ";
+                    o.SingleLine = false;
+                });
+                b.AddDebug();
+                b.SetMinimumLevel(LogLevel.Information);
+            });
 
             // ==== Konfigurasi & lapisan data (replikasi AddCoreServices/AddDatabaseServices/AddRepositoryServices) ====
             var configuration = new ConfigurationBuilder()
@@ -445,10 +470,28 @@ namespace SuDesApp.Wpf
             services.AddSingleton<WaFormAutoSetupService>();
             services.AddSingleton<ActivityLogService>();
             services.AddTransient<GoogleBackupService>();
+            // Pembacaan berkas Word lampiran (Input SK/Peraturan). Berkas .doc lama
+            // dikonversi otomatis memakai pengubah .doc → .docx di bawah.
             services.AddSingleton<IWordFileReader, WordFileReaderService>();
+            // Konversi berkas Word lama (.doc) → .docx lewat Microsoft Word, dipakai
+            // "Buat dari File Word" dan pembacaan lampiran SK/Peraturan supaya
+            // pengguna tidak perlu konversi manual dulu.
+            services.AddSingleton<IWordDocConverter, WordDocConverter>();
 
             // Manager & utilitas
             services.AddSingleton<SettingsManager>();
+
+            // Penanda panduan awal (langkah pertama aplikasi): disimpan di preferensi
+            // aplikasi supaya tetap berlaku antar sesi, dan bisa ditukar tiruannya saat uji.
+            services.AddSingleton<SuDesApp.Utilities.IPanduanAwalStore, SuDesApp.Utilities.PanduanAwalStore>();
+
+            // Penjaga data desa contoh: dipakai sebelum mencetak/menyimpan surat supaya
+            // surat resmi tidak keluar memakai nama desa & pejabat contoh bawaan aplikasi.
+            services.AddSingleton<SuDesApp.Utilities.IPeringatanDataDesaContoh, SuDesApp.Utilities.PeringatanDataDesaContoh>();
+
+            // Penanda pemberitahuan sambutan di lonceng notifikasi: hanya boleh tampil
+            // sekali seumur pemasangan, jadi penandanya ikut tersimpan di preferensi.
+            services.AddSingleton<SuDesApp.Utilities.IPemberitahuanSambutanStore, SuDesApp.Utilities.PemberitahuanSambutanStore>();
             services.AddSingleton<FormulirMenuService>();
 
             // Message service khusus WPF
@@ -489,6 +532,15 @@ namespace SuDesApp.Wpf
             services.AddTransient<InputControlFactory>();
             services.AddTransient<SetelanViewModel>();
             services.AddTransient<PengaturanAplikasiViewModel>();
+            // Panduan awal butuh IServiceProvider untuk membuka halaman tujuannya
+            // (Pengaturan Surat / Pengaturan Aplikasi) tanpa bergantung pada host.
+            services.AddTransient<PanduanAwalViewModel>(sp => new PanduanAwalViewModel(
+                sp.GetRequiredService<SettingsManager>(),
+                sp.GetRequiredService<SuDesApp.Services.PenomoranSuratService>(),
+                sp.GetRequiredService<SuDesApp.Utilities.IPanduanAwalStore>(),
+                sp,
+                sp.GetRequiredService<NavigationService>(),
+                sp.GetRequiredService<ILogger<PanduanAwalViewModel>>()));
             services.AddTransient<FormulirViewModel>();
             services.AddTransient<RegisterSuratViewModel>();
             services.AddTransient<RegisterNtcrViewModel>();
@@ -503,7 +555,7 @@ namespace SuDesApp.Wpf
             services.AddTransient<CatatanRilisViewModel>();
             services.AddTransient<BerandaViewModel>();
             services.AddTransient<WaPanelViewModel>();
-            services.AddTransient<PanduanWaViewModel>();
+            services.AddSingleton<PanduanWaViewModel>();
             services.AddTransient<UbahSandiViewModel>();
             services.AddTransient<InputWindowViewModel>();
             services.AddTransient<RekeningKoranViewModel>();
@@ -515,6 +567,14 @@ namespace SuDesApp.Wpf
             services.AddTransient<TemplateSuratGenerator>();
             // Contoh template siap pakai (pemasangan otomatis saat daftar masih kosong).
             services.AddTransient<SuDesApp.Services.TemplateSuratBawaanService>();
+            // Pembacaan berkas Word (.docx) untuk membuat template surat dari berkas
+            // yang sudah dipakai (bisa satu atau beberapa bentuk surat sekaligus).
+            services.AddSingleton<SuDesApp.Services.ITemplateSuratWordImpor,
+                SuDesApp.Services.TemplateSuratWordImporService>();
+            // Pratinjau singkat (halaman pertama) untuk dialog "Buat dari File Word":
+            // pengguna melihat bentuk cetaknya sebelum bagian surat disimpan.
+            services.AddTransient<SuDesApp.Wpf.Services.ITemplateSuratPratinjau,
+                SuDesApp.Wpf.Services.TemplateSuratPratinjauService>();
             // Pencatatan surat template ke Register Surat (nomor, payload, edit).
             services.AddTransient<SuDesApp.Services.TemplateSuratRegisterService>();
             services.AddTransient<TemplateSuratViewModel>();
@@ -573,14 +633,17 @@ namespace SuDesApp.Wpf
                     sp.GetRequiredService<FileService>(),
                     sp.GetRequiredService<ILogger<FormulirPdfViewModel>>()));
             services.AddTransient<Func<string, string, PdfPreviewViewModel>>(sp =>
-                (title, path) => new PdfPreviewViewModel(title, path, sp.GetRequiredService<NavigationService>()));
+                (title, path) => new PdfPreviewViewModel(title, path, sp.GetRequiredService<NavigationService>(),
+                    messageService: sp.GetRequiredService<SuDesApp.Utilities.IMessageService>(),
+                    peringatan: sp.GetRequiredService<SuDesApp.Utilities.IPeringatanDataDesaContoh>()));
             // Factory pratinjau surat (alur Buat/Edit Surat): menyertakan ID surat + factory form edit
             // agar tombol ✏️ Edit tampil di pratinjau.
             services.AddTransient<Func<string, string, int?, PdfPreviewViewModel>>(sp =>
                 (title, path, suratId) => new PdfPreviewViewModel(
                     title, path, sp.GetRequiredService<NavigationService>(),
                     suratId, sp.GetRequiredService<Func<int, InputWindowViewModel>>(),
-                    sp.GetRequiredService<SuDesApp.Utilities.IMessageService>()));
+                    sp.GetRequiredService<SuDesApp.Utilities.IMessageService>(),
+                    peringatan: sp.GetRequiredService<SuDesApp.Utilities.IPeringatanDataDesaContoh>()));
             // Formulir agenda & SK/Peraturan kini halaman di area konten utama (bukan jendela).
             services.AddTransient<Func<string, SuratKeluarMasukData?, SuratKeluarMasukData?, InputAgendaViewModel>>(sp =>
                 (jenis, data, prefill) =>
@@ -609,7 +672,9 @@ namespace SuDesApp.Wpf
             services.AddTransient<Func<string, string, Action?, PdfPreviewViewModel>>(sp =>
                 (title, path, batalKembali) => new PdfPreviewViewModel(
                     title, path, sp.GetRequiredService<NavigationService>(),
-                    batalKembali: batalKembali));
+                    messageService: sp.GetRequiredService<SuDesApp.Utilities.IMessageService>(),
+                    batalKembali: batalKembali,
+                    peringatan: sp.GetRequiredService<SuDesApp.Utilities.IPeringatanDataDesaContoh>()));
 
             // Singleton inti (login + main window)
             services.AddSingleton<MainWindowViewModel>();

@@ -18,7 +18,8 @@ namespace SuDesApp.Wpf.ViewModels
     /// Fitur tambahan: tombol "Pilih File Lampiran" (Word/PDF). Dokumen Word (.docx/.doc)
     /// dibaca untuk mengisi otomatis Nomor/Tanggal/Tentang/Keterangan, lalu berkas (Word/PDF)
     /// disalin ke folder penyimpanan (ArsipKeputusanFiles) pada saat Simpan agar bisa
-    /// dilihat, diedit, atau dicetak kembali.
+    /// dilihat, diedit, atau dicetak kembali. Berkas .doc (Word lama) dikonversi otomatis
+    /// lebih dulu memakai Microsoft Word, jadi pengguna tidak perlu menyimpan ulang.
     ///
     /// PDF: pemilihan berkas .pdf juga didukung, tetapi TIDAK dibaca isinya —
     /// pengguna cukup diberi tahu (messagebox) untuk mengisi formulir manual,
@@ -181,9 +182,9 @@ namespace SuDesApp.Wpf.ViewModels
         };
 
         /// <summary>
-        /// Memilih berkas lampiran. Word (.docx/.doc) dibaca untuk isi otomatis;
-        /// PDF hanya dilampirkan — isinya tidak dibaca, pengguna diingatkan
-        /// mengisi formulir secara manual.
+        /// Memilih berkas lampiran. Word (.docx/.doc) dibaca untuk isi otomatis — berkas
+        /// .doc lama dikonversi otomatis lebih dulu; PDF hanya dilampirkan — isinya tidak
+        /// dibaca, pengguna diingatkan mengisi formulir secara manual.
         /// </summary>
         private async Task PickFileAsync()
         {
@@ -302,7 +303,10 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal membaca/mengisi dari berkas Word");
-                await _messageService.ShowErrorAsync("Tidak dapat membaca berkas Word. Pastikan berkas tidak rusak dan coba gunakan format .docx.\n\n" + ex.Message);
+                await _messageService.ShowErrorAsync(
+                    "Tidak dapat membaca berkas Word. Pastikan berkas tidak rusak dan tidak sedang dibuka di aplikasi lain.\n\n" +
+                    "Berkas .doc (Word lama) dikonversi otomatis memakai Microsoft Word; pastikan Microsoft Word terpasang di komputer ini.\n\n" +
+                    ex.Message);
             }
             finally
             {

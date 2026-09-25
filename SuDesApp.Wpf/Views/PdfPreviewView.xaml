@@ -10,6 +10,7 @@
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -50,8 +51,44 @@
             </Grid>
         </Border>
 
+        <!-- Peringatan data desa contoh: dokumen ini akan mencetak kop contoh,
+             jadi keadaannya dijelaskan di sini sebelum pengguna menekan Cetak. -->
+        <Border Grid.Row="1" Margin="0,0,0,12"
+                Background="{DynamicResource WarningSubtleBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="10" Padding="14,10"
+                Visibility="{Binding TampilPeringatanDataContoh, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="&#9888;" FontSize="16" Margin="0,0,10,0"
+                           VerticalAlignment="Top"
+                           Foreground="{DynamicResource WarningTextBrush}"/>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="Dokumen ini masih memakai data desa contoh"
+                               FontWeight="SemiBold" TextWrapping="Wrap"
+                               Foreground="{DynamicResource WarningTextBrush}"
+                               AutomationProperties.Name="Peringatan data desa contoh"/>
+                    <TextBlock Text="{Binding PesanPeringatanDataContoh, Mode=OneWay}"
+                               TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                               Foreground="{DynamicResource WarningTextBrush}"/>
+                </StackPanel>
+
+                <Button Grid.Column="2" Content="Isi Data Desa" Height="30" Padding="12,0"
+                        Margin="12,0,0,0" VerticalAlignment="Center"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding BukaPengaturanSuratCommand}"
+                        ToolTip="Buka Pengaturan Surat bagian Data Desa"/>
+            </Grid>
+        </Border>
+
         <!-- Pratinjau PDF (PDFium) -->
-        <Border Grid.Row="1" Background="#525659" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+        <Border Grid.Row="2" Background="#525659" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="8" ClipToBounds="True">
             <Grid>
                 <ScrollViewer x:Name="ScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"

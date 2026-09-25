@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using SuDesApp.Utilities;
 using SuDesApp.Wpf.Controls;
 using SuDesApp.Wpf.Services;
 using SuDesApp.Wpf.ViewModels;
@@ -56,6 +57,10 @@ namespace SuDesApp.Wpf
             // "Keluar" dari sidebar cukup menutup jendela; konfirmasi hanya
             // ditangani satu kali oleh MainWindow_Closing (menghindari dobel prompt).
             viewModel.ExitRequested += () => Close();
+
+            // Ikon jendela/taskbar mengikuti warna aksen tema aktif; ikon digambar
+            // ulang setiap kali tema diganti (ubin aksen + amplop putih).
+            viewModel.TemaService.TemaBerubah += () => TerapkanIkonTema();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -63,14 +68,23 @@ namespace SuDesApp.Wpf
             Title = $"SuDesApp — {LoginViewModel.CurrentUserName}";
             _viewModel.UserName = LoginViewModel.CurrentUserName;
 
+            // Ikon tema dipasang lagi saat jendela siap (event TemaBerubah sempat
+            // menyala saat konstruksi ThemeService, sebelum jendela ada).
+            TerapkanIkonTema();
+
+            // Tampilan sidebar terakhir dipakai lagi. Tanpa animasi: lebar dipasang
+            // langsung supaya sidebar tidak "tumbuh" saat jendela baru dibuka.
+            TerapkanModeSidebar(SidebarModePrefs.Muat(), animasi: false);
+
             // Pemeriksaan resolusi layar: sesuaikan ukuran window dengan monitor
             // (laptop 1366×768 @125% sampai desktop 4K) lalu tampilkan ringkasan
             // layar di status bar.
             ApplyScreenResolutionCheck();
 
-            // Halaman pembuka: Beranda berisi ringkasan surat & pintasan cepat,
-            // supaya area konten tidak kosong saat aplikasi pertama dibuka.
-            _viewModel.BukaBeranda();
+            // Halaman pembuka: panduan awal didahulukan bila data desa/pejabat belum
+            // lengkap (menuntun mengisi data desa, pejabat, dan nomor surat); selain
+            // itu Beranda berisi ringkasan surat & pintasan cepat yang langsung tampil.
+            _ = BukaHalamanPembukaAsync();
 
             // Grup yang terlanjur terbuka saat pertama render (mis. dari pengaturan
             // tersimpan) tetap disinkronkan agar tingginya sudah benar.
@@ -80,11 +94,25 @@ namespace SuDesApp.Wpf
             // konten saat aplikasi dibuka.
             LayoutGrid.BeginAnimation(OpacityProperty, null);
             LayoutGrid.BeginAnimation(RenderTransformProperty, null);
-            var masuk = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(280))
+            var masuk = new DoubleAnimation(
+                0, 1, KecepatanAnimasiPrefs.Skala(KecepatanAnimasiPrefs.DasarTransisiHalaman))
             {
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
             LayoutGrid.BeginAnimation(OpacityProperty, masuk);
+        }
+
+        /// <summary>
+        /// Halaman pertama yang tampil di area konten. Panduan awal menunggu daftar
+        /// data desa selesai diperiksa lebih dulu supaya tidak tertimpa Beranda
+        /// (keduanya memuat datanya sendiri-sendiri secara asinkron).
+        /// </summary>
+        private async Task BukaHalamanPembukaAsync()
+        {
+            if (!await _viewModel.TampilkanPanduanAwalJikaPerluAsync())
+            {
+                _viewModel.BukaBeranda();
+            }
         }
 
         /// <summary>Seret area judul untuk memindah jendela; seret ke tepi atas
@@ -255,7 +283,12 @@ namespace SuDesApp.Wpf
         }
 
         /// <summary>Deretan glyph indikator (diputar + diganti tiap 120 ms → cakram berputar).</summary>
-        private static readonly string[] GlyphPembaruan = { "◐", "◓", "◑", "◒" };
+        // Glyph spinner memakai font ikon (AppIconFont, lihat XAML): E895 = Sync.
+        // Gerakan diperoleh dari rotasi 90° per langkah, bukan pergantian karakter —
+        // karakter ◐◓◑◒ tidak punya glyph di font ikon (tampil kotak/rusak).
+        /// <summary>Segmen animasi spinner pembaruan: glyph Sinkron (E895) diputar
+        /// 90° tiap langkah lewat RotateTransform yang sudah ada.</summary>
+        private static readonly string[] GlyphPembaruan = { SuDesApp.Wpf.Utilities.IkonMenu.Sinkron };
 
         /// <summary>Pita animasi glyph indikator pembaruan (dibangun sekali).</summary>
         private Storyboard? _pembaruanSpin;
@@ -387,21 +420,28 @@ namespace SuDesApp.Wpf
                     lewatBatas = true;
                     SembunyikanIndikatorPembaruan();
 
-                    // Pengguna sudah memilih keluar — konfirmasikan sekali lagi karena
-                    // pembaruan dilewati (bukan senyap-senyap).
-                    var lanjutKeluar = SuDesApp.Wpf.Views.MessageDialogWindow.Show(
-                        "Pembaruan Otomatis Dilewati",
-                        $"Pembaruan kecil {siap.Versi} ({siap.TotalByte / (1024.0 * 1024.0):0.#} MB) melebihi batas " +
-                        $"otomatis {SuDesApp.Utilities.AppPreferenceStore.GetBatasUkuranTambalanMb()} MB, jadi tidak dipasang otomatis.\n\n" +
-                        "Tetap keluar sekarang? Pembaruan tetap bisa dipasang manual dari menu Pembaruan.",
-                        SuDesApp.Utilities.AppMessageButton.YesNo,
-                        SuDesApp.Utilities.AppMessageIcon.Warning);
-
-                    if (lanjutKeluar != true)
+                    // Pembaruan dilewati karena melebihi batas otomatis. Pengguna sudah
+                    // memilih keluar, jadi tidak ada lagi dialog yang ditampilkan —
+                    // alasannya dicatat ke Riwayat Pembaruan supaya bisa dibaca lagi
+                    // kapan saja di halaman Pembaruan (tanpa popup), lalu aplikasi keluar.
+                    try
                     {
-                        // Pengguna membatalkan keluar: aplikasi tetap terbuka;
-                        // pembaruan bisa dipasang manual dari menu Pembaruan.
-                        return;
+                        SuDesApp.Utilities.RiwayatPembaruanStore.Tambah(new SuDesApp.Utilities.EntriRiwayatPembaruan
+                        {
+                            Versi = siap.Versi,
+                            Jenis = "Tambalan",
+                            JumlahBerkas = siap.JumlahBerkas,
+                            Berhasil = false,
+                            Pesan = $"Dilewati otomatis: {siap.TotalByte / (1024.0 * 1024.0):0.#} MB melebihi batas " +
+                                    $"{SuDesApp.Utilities.AppPreferenceStore.GetBatasUkuranTambalanMb()} MB — " +
+                                    "pasang manual dari halaman Pembaruan bila diinginkan.",
+                            DariVersi = versiTerpasang.ToString(),
+                            Waktu = DateTime.Now
+                        });
+                    }
+                    catch (Exception exRiwayat)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Riwayat pembaruan dilewati gagal dicatat: " + exRiwayat.Message);
                     }
 
                     return; // keluar tanpa pemasangan (ditutup oleh blok finally/akhir)
@@ -456,6 +496,7 @@ namespace SuDesApp.Wpf
             if (e.Key == Key.F5)
             {
                 _viewModel.RefreshVillageInfo();
+                return;
             }
         }
 
@@ -525,7 +566,12 @@ namespace SuDesApp.Wpf
 
             // Warning/Error ditampilkan juga sebagai toast singkat supaya tidak
             // terlewat — Info/Success cukup lewat badge + ayunan lonceng.
-            if (e.Type == NotificationType.Warning || e.Type == NotificationType.Error)
+            //
+            // Kabar pembaruan tidak memakai toast/overlay sama sekali: halaman
+            // Pembaruan sudah menampilkan kabarnya sendiri, dan pengguna memintanya
+            // bebas dari popup. Cukup badge + lonceng yang bisa diklik ke halaman itu.
+            bool kabarPembaruan = string.Equals(e.TujuanMenu, "pembaruan", StringComparison.Ordinal);
+            if (!kabarPembaruan && (e.Type == NotificationType.Warning || e.Type == NotificationType.Error))
             {
                 TampilkanToast(e);
             }
@@ -597,31 +643,58 @@ namespace SuDesApp.Wpf
             SembunyikanToast();
         }
 
-        // ===== Sidebar: lebar mengalir + mode ciut yang benar-benar aktif =====
+        // ===== Sidebar: dua tampilan — penuh (nama menu tampil) ↔ ikon saja =====
+        // Tombol di header memutarnya, dan pilihannya diingat untuk pembukaan
+        // aplikasi berikutnya.
+
+        /// <summary>Gambar ulang ikon jendela (taskbar/Alt-Tab) dengan warna aksen
+        /// tema aktif — dipanggil saat jendela dimuat dan tiap kali tema diganti.</summary>
+        private void TerapkanIkonTema()
+        {
+            var ikon = PenataIkonJendela.BuatUntukTemaAktif();
+            if (ikon != null)
+            {
+                Icon = ikon;
+            }
+        }
 
         private const double LebarSidebarTerbuka = 264;
         private const double LebarSidebarCiut = 64;
 
-        private bool _sidebarCiut;
+        // Tinggi header: 66 cukup untuk satu baris logo+nama (terbuka); saat ikon-saja
+        // logo terpusat di atas dan tombol di dasar sehingga butuh 108 agar tidak
+        // bertumpukan di lebar 64 px.
+        private const double TinggiHeaderTerbuka = 66;
+        private const double TinggiHeaderCiut = 108;
+
+        private SidebarMode _modeSidebar = SidebarMode.Terbuka;
         private List<NavItem> _grupTerbukaSebelumCiut = new();
 
-        private void SidebarToggle_Click(object sender, RoutedEventArgs e) => SetSidebarCiut(!_sidebarCiut);
+        /// <summary>Klik tombol tampilan: ke mode berikutnya (penuh ↔ ikon saja).</summary>
+        private void SidebarToggle_Click(object sender, RoutedEventArgs e)
+            => TerapkanModeSidebar(SidebarModePrefs.Berikutnya(_viewModel.ModeSidebar),
+                animasi: true, simpan: true);
 
         /// <summary>
-        /// Ubah sidebar antara lebar penuh dan mode ciut (hanya ikon).
-        /// Lebarnya dianimasikan, dan mode ciut diberitahukan ke ViewModel supaya
-        /// template item (label/ikon terpusat/tooltip) ikut menyesuaikan.
+        /// Terapkan salah satu dari dua tampilan sidebar. Lebarnya dianimasikan dan
+        /// tampilannya diberitahukan ke ViewModel supaya template item (label/ikon
+        /// terpusat/tooltip) ikut menyesuaikan.
         /// </summary>
-        private void SetSidebarCiut(bool ciut)
+        /// <param name="animasi">
+        /// False dipakai saat memulihkan pilihan tersimpan ketika jendela baru dibuka:
+        /// lebar langsung dipasang supaya tidak ada sidebar yang "tumbuh" saat start.
+        /// </param>
+        private void TerapkanModeSidebar(SidebarMode mode, bool animasi, bool simpan = false)
         {
-            if (ciut == _sidebarCiut)
+            bool berubah = mode != _modeSidebar;
+            _modeSidebar = mode;
+
+            if (simpan)
             {
-                return;
+                SidebarModePrefs.Simpan(mode);
             }
 
-            _sidebarCiut = ciut;
-
-            if (ciut)
+            if (berubah && mode != SidebarMode.Terbuka)
             {
                 // Ingat grup yang sedang terbuka, lalu tutup semuanya: di lebar 64px
                 // daftar anak tidak punya ruang untuk ditampilkan dengan layak.
@@ -635,27 +708,66 @@ namespace SuDesApp.Wpf
                 }
             }
 
-            _viewModel.SetSidebarCiut(ciut);
+            _viewModel.SetSidebarMode(mode);
 
-            SidebarToggleIcon.Text = ciut ? "\uE00F" : "\uE00E"; // chevron kanan / kiri
-            SidebarToggleButton.ToolTip = ciut
-                ? "Tampilkan sidebar navigasi"
-                : "Sembunyikan sidebar navigasi";
+            SidebarToggleButton.ToolTip =
+                $"Tampilan navigasi: {_viewModel.SidebarModeTeks}\n" +
+                $"Klik untuk {SidebarModePrefs.TeksBerikut(mode)}";
+
+            bool ciut = mode != SidebarMode.Terbuka;
+
+            // Panah tombol buka/tutup diputar halus (0° ↔ 180°) dengan durasi yang
+            // sama seperti lebar sidebar, bukan diganti glyph seketika — dulu arahnya
+            // berubah mendadak sehingga terasa melompat.
+            AnimasiSederhana(
+                SidebarToggleRotate, RotateTransform.AngleProperty,
+                ciut ? 180d : 0d, KecepatanAnimasiPrefs.Skala(DurasiTransisiSidebar));
+
+            // Nama aplikasi memudar mengikuti lebar sidebar, bukan hilang mendadak.
+            AnimasiSederhana(
+                HeaderBrandText, UIElement.OpacityProperty,
+                ciut ? 0d : 1d, KecepatanAnimasiPrefs.Skala(DurasiTransisiSidebar));
 
             var kolom = LayoutGrid.ColumnDefinitions[0];
-            double dari = kolom.ActualWidth > 0 ? kolom.ActualWidth : LebarSidebarTerbuka;
             double ke = ciut ? LebarSidebarCiut : LebarSidebarTerbuka;
 
-            var animasi = new GridLengthAnimation
+            if (!animasi)
+            {
+                kolom.BeginAnimation(ColumnDefinition.WidthProperty, null);
+                kolom.Width = new GridLength(ke);
+                HeaderBorder.Height = ciut ? TinggiHeaderCiut : TinggiHeaderTerbuka;
+
+                if (!ciut)
+                {
+                    PulihkanGrupTerbuka();
+                }
+
+                return;
+            }
+
+            // Seluruh transisi sidebar memakai satu durasi yang sudah diskalakan sesuai
+            // kecepatan animasi pilihan pengguna (Lambat/Normal/Cepat).
+            var durasi = KecepatanAnimasiPrefs.Skala(DurasiTransisiSidebar);
+
+            // Tinggi header mengikuti mode (66 terbuka / 108 ikon-saja) satu tempo dengan
+            // lebarnya, supaya logo & tombol tidak bertumpukan di lebar 64 px.
+            AnimasiSederhana(
+                HeaderBorder, FrameworkElement.HeightProperty,
+                ciut ? TinggiHeaderCiut : TinggiHeaderTerbuka, durasi);
+
+            double dari = kolom.ActualWidth > 0 ? kolom.ActualWidth : LebarSidebarTerbuka;
+
+            var animasiLebar = new GridLengthAnimation
             {
                 From = new GridLength(dari),
                 To = new GridLength(ke),
-                Duration = TimeSpan.FromMilliseconds(ciut ? 190 : 280),
-                // Ciut: mulailah lebih cepat agar terasa lincah; lebar: landas lembut.
-                EasingMode = ciut ? GridLengthEasingMode.EaseIn : GridLengthEasingMode.EaseOut
+                // Satu durasi & satu kurva untuk kedua arah: menciutkan dan melebarkan
+                // kini terasa sama halusnya (dulu ciut 190 dtk EaseIn, lebar 280 dtk EaseOut).
+                Duration = durasi,
+                EasingMode = GridLengthEasingMode.EaseInOut
             };
 
-            animasi.Completed += (_, _) =>
+            animasiLebar.Completed += (_, _) =>
             {
                 // Lepas animasi lalu kunci lebar akhir sebagai nilai biasa, agar
                 // pengaturan lebar berikutnya (dan drag) tidak "ditahan" animasi.
@@ -668,7 +780,75 @@ namespace SuDesApp.Wpf
                 }
             };
 
-            kolom.BeginAnimation(ColumnDefinition.WidthProperty, animasi);
+            kolom.BeginAnimation(ColumnDefinition.WidthProperty, animasiLebar);
+        }
+
+        /// <summary>
+        /// Durasi dasar transisi sidebar — dipakai lebar kolom, nama aplikasi, dan
+        /// panahnya. Nilai akhirnya selalu lewat <c>KecepatanAnimasiPrefs.Skala</c>,
+        /// sehingga mengikuti pilihan pengguna di Pengaturan Aplikasi.
+        /// </summary>
+        private static readonly TimeSpan DurasiTransisiSidebar = KecepatanAnimasiPrefs.DasarSidebar;
+
+        /// <summary>Durasi dasar tinggi & geser isi dropdown grup (nilai akhirnya diskalakan).</summary>
+        private static readonly TimeSpan DurasiDropdown = KecepatanAnimasiPrefs.DasarDropdown;
+
+        /// <summary>Durasi dasar memudarnya isi dropdown grup (nilai akhirnya diskalakan).</summary>
+        private static readonly TimeSpan DurasiDropdownFade = KecepatanAnimasiPrefs.DasarDropdownFade;
+
+        /// <summary>
+        /// Animasi nilai tunggal dengan kurva lembut yang sama untuk semua transisi
+        /// sidebar. Nilai akhir sekaligus dikunci setelah selesai supaya tidak
+        /// tertahan oleh animasi.
+        /// </summary>
+        private static void AnimasiSederhana(
+            UIElement target, DependencyProperty properti, double ke, TimeSpan durasi)
+            => JalankanAnimasiSederhana(target, properti, ke, durasi);
+
+        private static void AnimasiSederhana(
+            Animatable target, DependencyProperty properti, double ke, TimeSpan durasi)
+            => JalankanAnimasiSederhana(target, properti, ke, durasi);
+
+        /// <summary>
+        /// Jalankan animasi dari nilai saat ini ke <paramref name="ke"/>. Nilai dasar
+        /// TIDAK disetel lebih dulu (kalau disetel, animasi akan berjalan dari tujuan
+        /// ke tujuan alias tidak bergerak); nilai dasar baru dikunci setelah animasi
+        /// selesai sehingga perpindahan berikutnya berangkat dari keadaan nyata.
+        /// </summary>
+        private static void JalankanAnimasiSederhana(
+            DependencyObject target, DependencyProperty properti, double ke, TimeSpan durasi)
+        {
+            var animasi = new DoubleAnimation
+            {
+                To = ke,
+                Duration = durasi,
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut },
+                FillBehavior = FillBehavior.Stop
+            };
+
+            animasi.Completed += (_, _) =>
+            {
+                if (target is UIElement ui)
+                {
+                    ui.BeginAnimation(properti, null);
+                }
+                else if (target is Animatable animatable)
+                {
+                    animatable.BeginAnimation(properti, null);
+                }
+
+                target.SetValue(properti, ke);
+            };
+
+            switch (target)
+            {
+                case UIElement ui:
+                    ui.BeginAnimation(properti, animasi);
+                    break;
+                case Animatable animatable:
+                    animatable.BeginAnimation(properti, animasi);
+                    break;
+            }
         }
 
         /// <summary>Buka kembali grup yang tadinya terbuka sebelum sidebar diciutkan.</summary>
@@ -688,12 +868,14 @@ namespace SuDesApp.Wpf
         /// </summary>
         private void AccordionHeader_Click(object sender, RoutedEventArgs e)
         {
-            if (!_sidebarCiut)
+            if (_modeSidebar == SidebarMode.Terbuka)
             {
                 return; // sidebar normal: biarkan toggle buka/tutup grup bekerja
             }
 
-            SetSidebarCiut(false);
+            // Klik header saat sidebar hanya ikon: lebarkan sidebar lebih dulu (agar
+            // nama menu terbaca). Pilihan ini diingat seperti tombol tampilan.
+            TerapkanModeSidebar(SidebarMode.Terbuka, animasi: true, simpan: true);
 
             // Kembalikan status grup ini: klik tadi hanya dimaksudkan untuk melebarkan
             // sidebar, bukan membuka grup yang namanya belum sempat terbaca.
@@ -730,6 +912,14 @@ namespace SuDesApp.Wpf
                     return;
                 }
 
+                // Satu durasi untuk tinggi, fade, dan putaran chevron — diskalakan
+                // sesuai kecepatan animasi pilihan pengguna.
+                var durasiIsi = KecepatanAnimasiPrefs.Skala(DurasiDropdown);
+                var durasiFade = KecepatanAnimasiPrefs.Skala(DurasiDropdownFade);
+
+                // Panah grup berputar serentak dengan tumbuh/menyusutnya isi.
+                AnimasikanChevron(expander, terbuka ? 90d : 0d, durasiIsi);
+
                 // Bersihkan animasi transisi sebelumnya (apa pun statusnya) agar mulai
                 // dari nilai aktual, bukan sisa keyframe lama.
                 konten.BeginAnimation(MaxHeightProperty, null);
@@ -747,9 +937,9 @@ namespace SuDesApp.Wpf
                     double tinggi = konten.DesiredSize.Height;
                     konten.MaxHeight = 0;
 
-                    var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+                    var ease = new CubicEase { EasingMode = EasingMode.EaseInOut };
 
-                    var animTinggi = new DoubleAnimation(0, tinggi, TimeSpan.FromMilliseconds(260))
+                    var animTinggi = new DoubleAnimation(0, tinggi, durasiIsi)
                     {
                         EasingFunction = ease
                     };
@@ -757,11 +947,11 @@ namespace SuDesApp.Wpf
                     konten.BeginAnimation(MaxHeightProperty, animTinggi);
 
                     // Konten ikut fade + geser turun ke posisi — serentak dengan tumbuhnya.
-                    var animFade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
+                    var animFade = new DoubleAnimation(0, 1, durasiFade)
                     {
                         EasingFunction = ease
                     };
-                    var animGeser = new DoubleAnimation(-8, 0, TimeSpan.FromMilliseconds(260))
+                    var animGeser = new DoubleAnimation(-8, 0, durasiIsi)
                     {
                         EasingFunction = ease
                     };
@@ -771,9 +961,11 @@ namespace SuDesApp.Wpf
                 else
                 {
                     double tinggi = konten.ActualHeight;
-                    var ease = new CubicEase { EasingMode = EasingMode.EaseIn };
+                    // Durasi & kurva menutup disamakan dengan membuka — dulu 180/130 dtk
+                    // dengan EaseIn sehingga menutup terasa jauh lebih cepat.
+                    var ease = new CubicEase { EasingMode = EasingMode.EaseInOut };
 
-                    var animTinggi = new DoubleAnimation(tinggi, 0, TimeSpan.FromMilliseconds(180))
+                    var animTinggi = new DoubleAnimation(tinggi, 0, durasiIsi)
                     {
                         EasingFunction = ease
                     };
@@ -787,11 +979,11 @@ namespace SuDesApp.Wpf
                     };
                     konten.BeginAnimation(MaxHeightProperty, animTinggi);
 
-                    var animFade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(130))
+                    var animFade = new DoubleAnimation(1, 0, durasiFade)
                     {
                         EasingFunction = ease
                     };
-                    var animGeser = new DoubleAnimation(0, -6, TimeSpan.FromMilliseconds(180))
+                    var animGeser = new DoubleAnimation(0, -6, durasiIsi)
                     {
                         EasingFunction = ease
                     };
@@ -807,20 +999,69 @@ namespace SuDesApp.Wpf
         /// sehingga BeginAnimation langsung melontarkan InvalidOperationException —
         /// solusinya klon ke instans baru yang bisa diedit dan tempelkan kembali.
         /// </summary>
-        private static TranslateTransform? SiapkanGeserBisaAnimasi(StackPanel konten)
+        private static TranslateTransform? SiapkanGeserBisaAnimasi(FrameworkElement konten)
+            => SiapkanTransform<TranslateTransform>(konten);
+
+        /// <summary>
+        /// Putar panah (chevron) header grup agar serentak dengan isi dropdown yang
+        /// tumbuh/menyusut — dulu lewat EventTrigger berdurasi tetap di XAML sehingga
+        /// tidak ikut kecepatan animasi pilihan pengguna.
+        /// </summary>
+        private static void AnimasikanChevron(FrameworkElement grup, double sudut, TimeSpan durasi)
         {
-            if (konten.RenderTransform is not TranslateTransform transform)
+            if (CariAnakBernama(grup, "ChevronIcon") is not FrameworkElement chevron)
             {
-                transform = new TranslateTransform();
-                konten.RenderTransform = transform;
-            }
-            else if (transform.IsFrozen)
-            {
-                transform = transform.Clone();
-                konten.RenderTransform = transform;
+                return;
             }
 
-            return transform;
+            var putar = SiapkanTransform<RotateTransform>(chevron);
+            AnimasiSederhana(putar, RotateTransform.AngleProperty, sudut, durasi);
+        }
+
+        /// <summary>Cari turunan pertama bernama <paramref name="nama"/> di pohon visual.</summary>
+        private static FrameworkElement? CariAnakBernama(DependencyObject root, string nama)
+        {
+            int jumlah = VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < jumlah; i++)
+            {
+                var anak = VisualTreeHelper.GetChild(root, i);
+                if (anak is FrameworkElement elemen && string.Equals(elemen.Name, nama, StringComparison.Ordinal))
+                {
+                    return elemen;
+                }
+
+                var temuan = CariAnakBernama(anak, nama);
+                if (temuan is not null)
+                {
+                    return temuan;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Kembalikan transform aman-animasi milik sebuah elemen. Transform yang
+        /// dideklarasikan di XAML templat dibekukan WPF (BeginAnimation langsung
+        /// melempar InvalidOperationException), jadi versi bekunya diklon dulu.
+        /// </summary>
+        private static T SiapkanTransform<T>(FrameworkElement elemen) where T : Transform, new()
+        {
+            if (elemen.RenderTransform is T ada)
+            {
+                if (!ada.IsFrozen)
+                {
+                    return ada;
+                }
+
+                var klon = (T)ada.Clone();
+                elemen.RenderTransform = klon;
+                return klon;
+            }
+
+            var baru = new T();
+            elemen.RenderTransform = baru;
+            return baru;
         }
 
         /// <summary>Panel anak sebuah grup accordion di sidebar (nama: AccordionContent).</summary>

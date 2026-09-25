@@ -99,6 +99,7 @@ namespace SuDesApp.Wpf.ViewModels
         private bool _tampilkanAlamat;
         private bool _tampilkanKeterangan;
         private bool _tampilkanFooterKepalaDesa = true;
+        private bool _tampilkanKopSurat = true;
         private bool _isBusy;
         private DaftarHadirPesertaRow? _selectedPeserta;
         private DesaData _desa = new();
@@ -277,6 +278,13 @@ namespace SuDesApp.Wpf.ViewModels
             set => SetProperty(ref _tampilkanFooterKepalaDesa, value);
         }
 
+        /// <summary>Cetak kop surat desa di atas daftar hadir atau tidak.</summary>
+        public bool TampilkanKopSurat
+        {
+            get => _tampilkanKopSurat;
+            set => SetProperty(ref _tampilkanKopSurat, value);
+        }
+
         /// <summary>Pilihan jenis kelamin singkat untuk kolom L/P.</summary>
         private static readonly string[] ValidJenisKelaminOptions = { "L", "P" };
 
@@ -401,6 +409,7 @@ namespace SuDesApp.Wpf.ViewModels
             TampilkanAlamat = false;
             TampilkanKeterangan = false;
             TampilkanFooterKepalaDesa = true;
+            TampilkanKopSurat = true;
             SelectedPeserta = null;
             Peserta.Clear();
             for (int i = 0; i < BarisMinimumPotret; i++)
@@ -479,6 +488,7 @@ namespace SuDesApp.Wpf.ViewModels
             TampilkanAlamat = TampilkanAlamat,
             TampilkanKeterangan = TampilkanKeterangan,
             TampilkanFooterKepalaDesa = TampilkanFooterKepalaDesa,
+            TampilkanKopSurat = TampilkanKopSurat,
             Desa = _desa
         };
         }

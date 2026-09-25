@@ -1,17 +1,54 @@
 <UserControl x:Class="SuDesApp.Wpf.Views.InputSuratHostView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
              FontSize="13"
              SnapsToDevicePixels="True"
              UseLayoutRounding="True">
 
     <DockPanel Background="{DynamicResource WindowBackgroundBrush}">
+        <!-- Peringatan data desa contoh: surat yang dibuat sekarang akan memakai
+             nama desa/pejabat contoh, jadi pengguna diberi tahu sebelum menyimpan. -->
+        <Border DockPanel.Dock="Top" Margin="20,10,20,0"
+                Background="{DynamicResource WarningSubtleBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="10" Padding="14,10"
+                Visibility="{Binding TampilPeringatanDataContoh, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="&#9888;" FontSize="16" Margin="0,0,10,0"
+                           VerticalAlignment="Top"
+                           Foreground="{DynamicResource WarningTextBrush}"/>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="Surat ini akan dibuat dengan data desa contoh"
+                               FontWeight="SemiBold" TextWrapping="Wrap"
+                               Foreground="{DynamicResource WarningTextBrush}"
+                               AutomationProperties.Name="Peringatan data desa contoh"/>
+                    <TextBlock Text="{Binding PesanPeringatanDataContoh, Mode=OneWay}"
+                               TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                               Foreground="{DynamicResource WarningTextBrush}"/>
+                </StackPanel>
+
+                <Button Grid.Column="2" Content="Isi Data Desa" Height="30" Padding="12,0"
+                        Margin="12,0,0,0" VerticalAlignment="Center"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding BukaPengaturanSuratCommand}"
+                        ToolTip="Buka Pengaturan Surat bagian Data Desa"/>
+            </Grid>
+        </Border>
+
         <!-- Kop: kartu header seragam (PageHeader) seperti halaman lain.
              Margin sisi 20; konten & panel bawah menyesuaikan agar total 20px. -->
         <Border DockPanel.Dock="Top" Style="{StaticResource PageHeader}" Margin="20,20,20,10">
             <StackPanel Orientation="Horizontal">
                 <Border Style="{StaticResource HeaderIconChip}">
-                    <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets"
+                    <TextBlock Text="{x:Static u:IkonMenu.Blanko}" FontFamily="{StaticResource AppIconFont}"
                                Foreground="{DynamicResource PrimaryBrush}"
                                FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
@@ -22,6 +59,15 @@
                 </StackPanel>
             </StackPanel>
         </Border>
+
+        <!-- Pemberitahuan inline: hasil simpan, isian yang belum lengkap, dan kegagalan
+             membuat PDF tampil di dalam form ini — bukan sebagai dialog popup yang
+             menutupi isian yang sedang dikerjakan. -->
+        <ItemsControl DockPanel.Dock="Top" Margin="20,0,20,0"
+                      ItemsSource="{Binding Pesan}"
+                      Visibility="{Binding Pesan.Ada, Converter={StaticResource BoolToVis}}"
+                      ItemTemplate="{StaticResource KartuPesanInline}"
+                      AutomationProperties.Name="Pemberitahuan form surat"/>
 
         <!-- Panel bawah: kartu aksi seragam (ToolbarCard) -->
         <Border DockPanel.Dock="Bottom" Style="{StaticResource ToolbarCard}" Margin="20,0,20,20">

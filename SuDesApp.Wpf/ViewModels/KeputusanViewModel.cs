@@ -68,6 +68,9 @@ namespace SuDesApp.Wpf.ViewModels
         private int _tahunTerbaru;
         private System.Collections.Generic.List<DataKeputusan> _semua = new();
 
+        /// <summary>Baris arsip untuk jenis yang sedang aktif — dihitung sekali per muat.</summary>
+        private System.Collections.Generic.List<DataKeputusan> _jenisRows = new();
+
         public int TotalJenisCount
         {
             get => _totalJenisCount;
@@ -148,7 +151,13 @@ namespace SuDesApp.Wpf.ViewModels
         public bool IsPerkades => _jenisKeputusan == "PERKADES";
 
         public ObservableCollection<string> TahunOptions { get; } = new();
-        public ObservableCollection<KeputusanRow> Rows { get; } = new();
+
+        /// <summary>
+        /// Baris yang tampil di grid. Diganti sebagai satu koleksi utuh setiap kali
+        /// filter berubah: DataGrid cukup sekali menyusun ulang (dan tetap
+        /// tervirtualisasi), bukan menerima ribuan notifikasi baris satu per satu.
+        /// </summary>
+        public ObservableCollection<KeputusanRow> Rows { get; private set; } = new();
 
         /// <summary>Kata kunci pencarian (nomor, tentang, keterangan, tahun).</summary>
         public string SearchText
@@ -221,7 +230,7 @@ namespace SuDesApp.Wpf.ViewModels
 
             if (_jenisKeputusan == jenis)
             {
-                await LoadAsync();
+                await LoadAsync(muatUlangData: false);
                 return;
             }
 
@@ -231,21 +240,35 @@ namespace SuDesApp.Wpf.ViewModels
             OnPropertyChanged(nameof(IsSk));
             OnPropertyChanged(nameof(IsPerdes));
             OnPropertyChanged(nameof(IsPerkades));
-            await LoadAsync();
+
+            // Pindah tab SK/PERDES/PERKADES tidak perlu membaca ulang seluruh tabel:
+            // ketiga jenisnya satu tabel, jadi data yang sudah dimuat dipakai lagi.
+            await LoadAsync(muatUlangData: false);
         }
 
-        public async Task LoadAsync()
+        /// <param name="muatUlangData">
+        /// True untuk membaca ulang seluruh arsip dari database (muat pertama,
+        /// tombol Segarkan, dan setelah simpan/hapus). False untuk memakai data
+        /// yang sudah ada di memori — mis. saat berpindah tab SK/PERDES/PERKADES.
+        /// </param>
+        public async Task LoadAsync(bool muatUlangData = true)
         {
             try
             {
                 IsLoading = true;
-                _semua = await _repository.GetAllAsync();
 
-                var jenisRows = _semua
+                if (muatUlangData || _semua.Count == 0)
+                {
+                    _semua = await _repository.GetAllAsync() ?? new System.Collections.Generic.List<DataKeputusan>();
+                }
+
+                // Sekali jalan saja: baris untuk jenis aktif, lalu dipakai ulang oleh
+                // FilterRows saat tahun/pencarian berubah (tidak difilter dua kali).
+                _jenisRows = _semua
                     .Where(k => k.JenisKeputusan.Equals(_jenisKeputusan, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-                var years = jenisRows
+                var years = _jenisRows
                     .Select(k => k.Tanggal.Year)
                     .Distinct()
                     .OrderByDescending(y => y)
@@ -256,9 +279,9 @@ namespace SuDesApp.Wpf.ViewModels
                 TahunOptions.Add("Semua Tahun"); // Add "All Years" option
                 foreach (var year in years) TahunOptions.Add(year);
 
-                SelectedTahun = "Semua Tahun"; // Default to show all
-                TotalJenisCount = jenisRows.Count;
+                TotalJenisCount = _jenisRows.Count;
                 TahunTerbaru = years.Count > 0 && int.TryParse(years[0], out int lastYear) ? lastYear : 0;
+                SelectedTahun = "Semua Tahun"; // Default to show all
                 FilterRows();
             }
             catch (Exception ex)
@@ -279,9 +302,7 @@ namespace SuDesApp.Wpf.ViewModels
             // Pencarian cepat: cocokkan di nomor/tentang/keterangan/tanggal (case-insensitive).
             string? q = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText.Trim();
 
-            var jenisRows = _semua
-                .Where(k => k.JenisKeputusan.Equals(_jenisKeputusan, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            var jenisRows = _jenisRows;
 
             var filtered = jenisRows
                 .Where(k => (isAllYears || selectedYear == 0 || k.Tanggal.Year == selectedYear) &&
@@ -294,12 +315,14 @@ namespace SuDesApp.Wpf.ViewModels
                 .OrderByDescending(k => k.Tanggal)
                 .ToList();
 
-            Rows.Clear();
+            var baris = new System.Collections.Generic.List<KeputusanRow>(filtered.Count);
             int no = 1;
             foreach (var item in filtered)
             {
-                Rows.Add(new KeputusanRow(item, no++));
+                baris.Add(new KeputusanRow(item, no++));
             }
+            Rows = new ObservableCollection<KeputusanRow>(baris);
+            OnPropertyChanged(nameof(Rows));
 
             TampilCount = filtered.Count;
             JumlahLampiran = filtered.Count(k => !string.IsNullOrWhiteSpace(k.FileWord));

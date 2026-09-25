@@ -237,10 +237,25 @@ namespace SuDesApp.Wpf.Views
                 return;
             }
 
-            // Cetak seperti aplikasi lama (WinForms): dialog cetak Windows standar
-            // (pilih printer, rentang halaman, salinan) → langsung kirim ke printer.
             try
             {
+                // Data desa masih contoh: surat resmi tidak boleh keluar dengan kop
+                // contoh tanpa sepengetahuan pengguna. Pertanyaan dijawab lebih dulu.
+                // (Di dalam try: kegagalan dialog konfirmasi tidak boleh menjatuhkan
+                // aplikasi lewat async void — cukup hentikan percetakan ini.)
+                if (DataContext is PdfPreviewViewModel vm && !await vm.BolehCetakAsync())
+                {
+                    return;
+                }
+
+                // Pengguna bisa saja berpindah halaman selagi menjawab pertanyaan di atas.
+                if (_document is null || _document.PageCount == 0)
+                {
+                    return;
+                }
+
+                // Cetak seperti aplikasi lama (WinForms): dialog cetak Windows standar
+                // (pilih printer, rentang halaman, salinan) → langsung kirim ke printer.
                 if (_currentPdfPath is not null && File.Exists(_currentPdfPath))
                 {
                     await App.PrintService.PrintPdfFileAsync(_currentPdfPath, _title);

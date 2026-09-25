@@ -214,6 +214,57 @@ namespace SuDesApp.Wpf.Services
         public void Warning(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Warning, title, message, tujuanMenu);
         public void Error(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Error, title, message, tujuanMenu);
 
+        /// <summary>
+        /// Cari notifikasi lama yang sudah tidak berlaku lagi: judulnya sama, dan — bila
+        /// <paramref name="memuat"/> diberikan — isinya memuat teks tertentu.
+        ///
+        /// Dipisah sebagai fungsi murni supaya aturan "kabar mana yang sudah usang" bisa
+        /// diperiksa tanpa menyentuh UI.
+        /// </summary>
+        public static List<NotificationItem> CariPesanLama(
+            IEnumerable<NotificationItem> daftar, string judul, string? memuat = null)
+            => (daftar ?? Array.Empty<NotificationItem>())
+                .Where(i => i != null
+                            && string.Equals(i.Title, judul, StringComparison.OrdinalIgnoreCase)
+                            && (string.IsNullOrEmpty(memuat)
+                                || i.Message.Contains(memuat!, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+        /// <summary>
+        /// Hapus kabar lama yang sudah tidak berlaku — mis. "surat warga ditahan" untuk
+        /// permintaan yang kini sudah dilanjutkan sendiri. Tanpa ini, lonceng terus
+        /// meminta operator mengerjakan sesuatu yang sudah beres.
+        /// </summary>
+        /// <returns>Jumlah kabar lama yang cocok (dan dihapus bila UI tersedia).</returns>
+        public int HapusPesanLama(string judul, string? memuat = null)
+        {
+            var usang = CariPesanLama(Items, judul, memuat);
+            if (usang.Count == 0) return 0;
+
+            // Aplikasi berjalan normal: penghapusan dijadwalkan ke thread UI seperti Add.
+            var dispatcher = Application.Current?.Dispatcher;
+            void Hapus()
+            {
+                foreach (var item in usang)
+                {
+                    if (Items.Remove(item) && !item.IsRead) UnreadCount--;
+                }
+
+                if (Items.Count == 0) _timerWaktu?.Stop();
+            }
+
+            if (dispatcher == null || dispatcher.CheckAccess())
+            {
+                Hapus();
+            }
+            else
+            {
+                _ = dispatcher.BeginInvoke(new Action(Hapus));
+            }
+
+            return usang.Count;
+        }
+
         /// <summary>Hapus satu notifikasi dari daftar (tombol ✕ per item).</summary>
         public void Hapus(NotificationItem item)
         {

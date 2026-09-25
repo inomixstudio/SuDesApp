@@ -12,6 +12,7 @@ using Microsoft.Win32;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Wpf.Services;
+using SuDesApp.Wpf.Views;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -24,10 +25,27 @@ namespace SuDesApp.Wpf.ViewModels
         private string _name;
         private bool _isChecked;
 
-        public FormulirTemplate(string name)
+        public FormulirTemplate(string name, string? kode = null, long ukuranByte = 0, DateTime? diperbarui = null)
         {
             _name = name;
+            KodeFormulir = kode ?? string.Empty;
+            UkuranByte = ukuranByte;
+            Diperbarui = diperbarui;
+
+            var bagian = new List<string>();
+            if (KodeFormulir.Length > 0) bagian.Add(KodeFormulir);
+            if (UkuranByte > 0) bagian.Add(FormatUkuran(UkuranByte));
+            if (Diperbarui.HasValue) bagian.Add(Diperbarui.Value.ToString("dd MMM yyyy"));
+            RingkasanTeks = string.Join("  •  ", bagian);
+
+            BukaCommand = new RelayCommand(() => SaatDibuka?.Invoke(this));
         }
+
+        /// <summary>Dipanggil saat tombol Buka pada baris ini ditekan. Diisi oleh view model.</summary>
+        internal Action<FormulirTemplate>? SaatDibuka { get; set; }
+
+        /// <summary>Buka pratinjau PDF formulir ini di dalam aplikasi.</summary>
+        public ICommand BukaCommand { get; }
 
         public string Name
         {
@@ -39,6 +57,29 @@ namespace SuDesApp.Wpf.ViewModels
         {
             get => _isChecked;
             set => SetProperty(ref _isChecked, value);
+        }
+
+        /// <summary>Kode formulir dari nama berkas (mis. "F-1.01"); kosong bila tidak ber-kode.</summary>
+        public string KodeFormulir { get; }
+
+        public bool AdaKode => KodeFormulir.Length > 0;
+
+        public long UkuranByte { get; }
+
+        public DateTime? Diperbarui { get; }
+
+        /// <summary>Baris keterangan singkat: kode • ukuran • tanggal berkas terakhir diubah.</summary>
+        public string RingkasanTeks { get; }
+
+        /// <summary>Nama berkas PDF-nya, dipakai sebagai tip bantuan pada baris.</summary>
+        public string NamaBerkas => Name + ".pdf";
+
+        internal static string FormatUkuran(long byteCount)
+        {
+            if (byteCount <= 0) return "-";
+            if (byteCount < 1024) return $"{byteCount} B";
+            if (byteCount < 1024 * 1024) return $"{Math.Max(1, byteCount / 1024)} KB";
+            return (byteCount / (1024.0 * 1024.0)).ToString("0.#") + " MB";
         }
     }
 
@@ -83,6 +124,8 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly HttpClient _httpClient;
         private readonly GoogleDriveService? _driveService;
         private readonly NotificationService? _notifications;
+        private readonly NavigationService? _navigation;
+        private readonly Func<string, FormulirPdfViewModel>? _pdfPreviewFactory;
 
         /// <summary>Nama folder khusus template formulir di Google Drive.</summary>
         private const string DriveFormulirFolderName = "SuDesApp-Formulir";
@@ -105,7 +148,9 @@ namespace SuDesApp.Wpf.ViewModels
             ILogger<FormulirViewModel> logger,
             HttpClient? httpClient = null,
             GoogleDriveService? driveService = null,
-            NotificationService? notifications = null)
+            NotificationService? notifications = null,
+            NavigationService? navigation = null,
+            Func<string, FormulirPdfViewModel>? pdfPreviewFactory = null)
         {
             _appConfig = appConfig;
             _fileService = fileService;
@@ -115,27 +160,149 @@ namespace SuDesApp.Wpf.ViewModels
             _httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
             _driveService = driveService;
             _notifications = notifications;
+            _navigation = navigation;
+            _pdfPreviewFactory = pdfPreviewFactory;
 
             Templates = new ObservableCollection<FormulirTemplate>();
+            TemplatesTampil = new ObservableCollection<FormulirTemplate>();
+            // Tombol Hapus hanya berguna bila ada baris yang dicentang.
+            DeleteCommand = new AsyncRelayCommand(DeleteSelectedAsync, () => AdaTerpilih);
+            HasilUnduhanRincian = new ObservableCollection<string>();
+
             AddCommand = new AsyncRelayCommand(AddTemplateAsync);
-            DeleteCommand = new AsyncRelayCommand(DeleteSelectedAsync);
             RefreshCommand = new AsyncRelayCommand(LoadTemplatesAsync);
             DownloadCommand = new AsyncRelayCommand(DownloadFromSourceAsync, () => !IsLoading);
+            TogglePilihSemuaCommand = new RelayCommand(TogglePilihSemua);
+            BukaFolderCommand = new RelayCommand(BukaFolderTemplate);
+            TerimaTawaranUnduhCommand = new AsyncRelayCommand(AcceptDownloadOfferAsync);
+            TutupTawaranUnduhCommand = new RelayCommand(TutupTawaranUnduh);
+            TutupHasilUnduhanCommand = new RelayCommand(TutupHasilUnduhan);
             _ = LoadTemplatesAsync();
         }
 
         private readonly FormulirMenuService _formulirMenuService;
 
+        /// <summary>Seluruh berkas template PDF di folder Templates (urutan abjad).</summary>
         public ObservableCollection<FormulirTemplate> Templates { get; }
+
+        /// <summary>Baris yang benar-benar ditampilkan — hasil penyaringan kotak pencarian.</summary>
+        public ObservableCollection<FormulirTemplate> TemplatesTampil { get; }
 
         public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
         public bool HasTemplates => Templates.Count > 0;
         public bool IsEmpty => Templates.Count == 0;
 
-        /// <summary>Jumlah template formulir yang tampil, untuk statusbar.</summary>
+        /// <summary>Jumlah template formulir yang tersedia, untuk statusbar.</summary>
         public int TemplateCount => Templates.Count;
 
+        /// <summary>Jumlah baris yang tampil setelah disaring pencarian.</summary>
+        public int JumlahTampil => TemplatesTampil.Count;
+
         public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
+
+        // =====================================================================
+        // Pencarian & pemilihan
+        // =====================================================================
+
+        private string _searchText = string.Empty;
+
+        /// <summary>Kotak pencarian: menyaring nama berkas maupun kode formulir (mis. "F-1").</summary>
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetProperty(ref _searchText, value ?? string.Empty))
+                {
+                    RefreshTampilan();
+                }
+            }
+        }
+
+        public bool AdaPencarian => _searchText.Trim().Length > 0;
+
+        /// <summary>Benar bila pencarian aktif dan tidak ada baris yang cocok.</summary>
+        public bool KosongKarenaPencarian => TemplatesTampil.Count == 0 && Templates.Count > 0;
+
+        /// <summary>Benar bila folder Templates memang belum berisi PDF sama sekali.</summary>
+        public bool KosongTanpaFormulir => Templates.Count == 0;
+
+        public string PesanKosong => KosongTanpaFormulir
+            ? "Belum ada template formulir di folder Templates. Gunakan tombol Tambah untuk memilih berkas PDF, " +
+              "atau Unduh dari Sumber untuk mengambil formulir resmi."
+            : $"Tidak ada formulir yang cocok dengan pencarian \u201c{_searchText.Trim()}\u201d.";
+
+        public int JumlahTerpilih => Templates.Count(t => t.IsChecked);
+
+        public bool AdaTerpilih => Templates.Count(t => t.IsChecked) > 0;
+
+        /// <summary>Ringkasan pilihan untuk statusbar: "3 formulir dipilih" / "Belum ada yang dipilih".</summary>
+        public string TeksTerpilih
+        {
+            get
+            {
+                int jumlah = Templates.Count(t => t.IsChecked);
+                return jumlah == 0 ? "Belum ada yang dipilih" : $"{jumlah} formulir dipilih";
+            }
+        }
+
+        /// <summary>Benar bila seluruh baris yang tampil sudah dicentang.</summary>
+        public bool SemuaTampilTerpilih => TemplatesTampil.Count > 0 && TemplatesTampil.All(t => t.IsChecked);
+
+        /// <summary>Label tombol pilih-semua yang berubah sesuai keadaan centang saat ini.</summary>
+        public string TeksPilihSemua => SemuaTampilTerpilih ? "Kosongkan pilihan" : "Pilih semua tampil";
+
+        public ICommand TogglePilihSemuaCommand { get; }
+
+        /// <summary>Buka folder Templates di Windows Explorer (agar berkas mudah diperiksa/disalin).</summary>
+        public ICommand BukaFolderCommand { get; }
+
+        // =====================================================================
+        // Ringkasan folder & sumber (kartu informasi halaman)
+        // =====================================================================
+
+        public string FolderTemplates => _appConfig.TemplateFolder;
+
+        public string NamaFolderTemplates
+        {
+            get
+            {
+                var bersih = _appConfig.TemplateFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                var nama = Path.GetFileName(bersih);
+                return string.IsNullOrWhiteSpace(nama) ? "Templates" : nama;
+            }
+        }
+
+        /// <summary>Jumlah formulir yang tersimpan beserta ukuran totalnya, untuk kartu ringkasan.</summary>
+        public string RingkasanJumlah => Templates.Count == 0
+            ? "Belum ada berkas"
+            : $"{Templates.Count} formulir  •  {FormulirTemplate.FormatUkuran(Templates.Sum(t => t.UkuranByte))}";
+
+        /// <summary>Alamat halaman sumber formulir resmi yang dipakai tombol Unduh dari Sumber.</summary>
+        public string SumberFormulirTeks => SourceUrl.Host;
+
+        /// <summary>Benar bila cadangan otomatis ke Google Drive ikut aktif (perlu login Drive).</summary>
+        public bool CadanganDriveAktif => IsDriveReady && AppPreferenceStore.IsAutoBackupFormulirDriveEnabled();
+
+        /// <summary>Keterangan keadaan cadangan Drive untuk kartu informasi — selalu bisa dibaca pengguna.</summary>
+        public string KeteranganCadanganDrive
+        {
+            get
+            {
+                if (!AppPreferenceStore.IsAutoBackupFormulirDriveEnabled())
+                {
+                    return "Cadangan otomatis ke Google Drive sedang dimatikan di Pengaturan Aplikasi. " +
+                           "Formulir tetap aman di folder Templates komputer ini.";
+                }
+
+                return IsDriveReady
+                    ? "Cadangan otomatis ke Google Drive aktif. Formulir baru ikut diunggah ke folder " +
+                      $"\u201c{DriveFormulirFolderName}\u201d supaya bisa dipakai ulang di komputer lain."
+                    : "Belum masuk Google Drive, jadi cadangan otomatis belum berjalan — formulir tetap " +
+                      "tersimpan di folder Templates. Masuk lewat menu Google (Login dengan Google) bila ingin " +
+                      "cadangan otomatis dan unduhan dari Drive.";
+            }
+        }
 
         /// <summary>
         /// Drive dipakai hanya bila OAuth dikonfigurasi DAN token tersimpan
@@ -150,11 +317,228 @@ namespace SuDesApp.Wpf.ViewModels
         public ICommand RefreshCommand { get; }
         public ICommand DownloadCommand { get; }
 
+        // =====================================================================
+        // Kartu informasi inline (tawaran unduh & hasil unduhan)
+        // =====================================================================
+
+        private bool _adaTawaranUnduh;
+        private string _tawaranUnduhTeks = string.Empty;
+
+        /// <summary>Benar bila kartu tawaran "formulir belum lengkap" perlu ditampilkan.</summary>
+        public bool AdaTawaranUnduh
+        {
+            get => _adaTawaranUnduh;
+            private set => SetProperty(ref _adaTawaranUnduh, value);
+        }
+
+        public string TawaranUnduhTeks
+        {
+            get => _tawaranUnduhTeks;
+            private set => SetProperty(ref _tawaranUnduhTeks, value ?? string.Empty);
+        }
+
+        public ICommand TerimaTawaranUnduhCommand { get; }
+        public ICommand TutupTawaranUnduhCommand { get; }
+
+        private bool _adaHasilUnduhan;
+        private string _hasilUnduhanJudul = string.Empty;
+        private string _hasilUnduhanRingkas = string.Empty;
+        private bool _hasilUnduhanBerhasil = true;
+
+        /// <summary>Benar bila kartu hasil unduhan terakhir perlu ditampilkan.</summary>
+        public bool AdaHasilUnduhan
+        {
+            get => _adaHasilUnduhan;
+            private set => SetProperty(ref _adaHasilUnduhan, value);
+        }
+
+        public string HasilUnduhanJudul
+        {
+            get => _hasilUnduhanJudul;
+            private set => SetProperty(ref _hasilUnduhanJudul, value ?? string.Empty);
+        }
+
+        /// <summary>Ringkasan hasil: jumlah berhasil, dari Drive, dan yang dilewati.</summary>
+        public string HasilUnduhanRingkas
+        {
+            get => _hasilUnduhanRingkas;
+            private set => SetProperty(ref _hasilUnduhanRingkas, value ?? string.Empty);
+        }
+
+        /// <summary>True bila hasil terakhir berhasil (warna kartu hijau), false bila gagal (merah).</summary>
+        public bool HasilUnduhanBerhasil
+        {
+            get => _hasilUnduhanBerhasil;
+            private set => SetProperty(ref _hasilUnduhanBerhasil, value);
+        }
+
+        /// <summary>Rincian per formulir (satu baris per berkas), ditampilkan di kartu hasil.</summary>
+        public ObservableCollection<string> HasilUnduhanRincian { get; }
+
+        public ICommand TutupHasilUnduhanCommand { get; }
+
+        /// <summary>Tutup kartu hasil unduhan (tombol ✕) — riwayatnya tetap ada di lonceng.</summary>
+        private void TutupHasilUnduhan()
+        {
+            AdaHasilUnduhan = false;
+            HasilUnduhanRincian.Clear();
+        }
+
+        private void TampilkanHasilUnduhan(
+            string judul, string ringkas, IEnumerable<string> rincian, bool berhasil)
+        {
+            HasilUnduhanJudul = judul;
+            HasilUnduhanRingkas = ringkas;
+            HasilUnduhanBerhasil = berhasil;
+            HasilUnduhanRincian.Clear();
+
+            foreach (var baris in rincian)
+            {
+                HasilUnduhanRincian.Add(baris);
+            }
+
+            AdaHasilUnduhan = true;
+        }
+
+        /// <summary>
+        /// Sembunyikan tawaran unduh dan jalankan unduhannya (dipakai tombol pada
+        /// kartu tawaran). Pengguna yang menyetujui langsung melihat prosesnya
+        /// berjalan di halaman ini — tanpa dialog popup.
+        /// </summary>
+        private async Task AcceptDownloadOfferAsync()
+        {
+            TutupTawaranUnduh();
+            if (!IsLoading)
+            {
+                await DownloadFromSourceAsync();
+            }
+        }
+
+        private void TutupTawaranUnduh()
+        {
+            AdaTawaranUnduh = false;
+        }
+
+        // =====================================================================
+        // Pencarian, pemilihan, dan folder
+        // =====================================================================
+
+        /// <summary>Susun ulang daftar tampil menurut kotak pencarian dan hitung ulang penanda.</summary>
+        private void RefreshTampilan()
+        {
+            var kata = _searchText.Trim();
+
+            var tampil = string.IsNullOrEmpty(kata)
+                ? Templates.ToList()
+                : Templates
+                    .Where(t => t.Name.Contains(kata, StringComparison.OrdinalIgnoreCase)
+                             || t.KodeFormulir.Contains(kata, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+            TemplatesTampil.Clear();
+            foreach (var item in tampil)
+            {
+                TemplatesTampil.Add(item);
+            }
+
+            OnPropertyChanged(nameof(JumlahTampil));
+            OnPropertyChanged(nameof(AdaPencarian));
+            OnPropertyChanged(nameof(KosongKarenaPencarian));
+            OnPropertyChanged(nameof(KosongTanpaFormulir));
+            OnPropertyChanged(nameof(PesanKosong));
+            PerbaruiPenandaPilihan();
+        }
+
+        /// <summary>Hitung ulang jumlah terpilih, label tombol, dan keaktifan tombol Hapus.</summary>
+        private void PerbaruiPenandaPilihan()
+        {
+            OnPropertyChanged(nameof(JumlahTerpilih));
+            OnPropertyChanged(nameof(AdaTerpilih));
+            OnPropertyChanged(nameof(TeksTerpilih));
+            OnPropertyChanged(nameof(SemuaTampilTerpilih));
+            OnPropertyChanged(nameof(TeksPilihSemua));
+            (DeleteCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+        }
+
+        /// <summary>Centang/hapus centang seluruh baris yang tampil.</summary>
+        private void TogglePilihSemua()
+        {
+            bool jadikanTerpilih = !SemuaTampilTerpilih;
+            foreach (var item in TemplatesTampil)
+            {
+                item.IsChecked = jadikanTerpilih;
+            }
+
+            PerbaruiPenandaPilihan();
+        }
+
+        /// <summary>
+        /// Buka pratinjau PDF satu formulir di dalam aplikasi (bukan pembaca PDF
+        /// bawaan Windows). Bila berkasnya sudah dipindahkan/dihapus, keadaannya
+        /// cukup dilaporkan di statusbar halaman — tanpa dialog.
+        /// </summary>
+        public void BukaFormulir(FormulirTemplate? formulir)
+        {
+            if (formulir == null) return;
+
+            try
+            {
+                var jalur = FindTemplateFile(_appConfig.TemplateFolder, formulir.Name);
+                if (jalur == null || !File.Exists(jalur))
+                {
+                    StatusText = $"Berkas {formulir.NamaBerkas} tidak ditemukan di folder Templates.";
+                    return;
+                }
+
+                if (_navigation is null || _pdfPreviewFactory is null)
+                {
+                    StatusText = $"Pratinjau {formulir.NamaBerkas} tidak tersedia di halaman ini.";
+                    return;
+                }
+
+                var pratinjau = _pdfPreviewFactory(formulir.Name);
+                _navigation.Navigate(new Views.PdfPreviewView { DataContext = pratinjau });
+                StatusText = $"Membuka pratinjau {formulir.NamaBerkas}...";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Gagal membuka pratinjau formulir {Nama}", formulir.NamaBerkas);
+                StatusText = $"Berkas {formulir.NamaBerkas} tidak bisa dibuka dari sini.";
+            }
+        }
+
+        /// <summary>Buka folder Templates di Windows Explorer.</summary>
+        private void BukaFolderTemplate()
+        {
+            try
+            {
+                var folder = _appConfig.TemplateFolder;
+                if (!Directory.Exists(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = folder,
+                    UseShellExecute = true
+                });
+
+                StatusText = $"Folder Templates dibuka: {folder}";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Gagal membuka folder Templates");
+                StatusText = "Folder Templates tidak dapat dibuka dari sini.";
+            }
+        }
+
         public async Task LoadTemplatesAsync()
         {
             try
             {
                 IsLoading = true;
+                StatusText = "Membaca folder Templates...";
                 Templates.Clear();
 
                 var templateFolder = _appConfig.TemplateFolder;
@@ -163,23 +547,49 @@ namespace SuDesApp.Wpf.ViewModels
                     Directory.CreateDirectory(templateFolder);
                 }
 
-                var pdfFiles = await Task.Run(() => Directory.GetFiles(templateFolder, "*.pdf")
-                    .Select(f => Path.GetFileNameWithoutExtension(f))
-                    .Where(name => !string.IsNullOrWhiteSpace(name))
-                    .Select(name => name!)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                // Nama, ukuran, dan tanggal ubah berkas dibaca sekaligus supaya
+                // baris daftar bisa menampilkan keterangan yang berguna.
+                var berkas = await Task.Run(() => Directory.GetFiles(templateFolder, "*.pdf")
+                    .Select(f => new FileInfo(f))
+                    .Where(fi => !string.IsNullOrWhiteSpace(fi.Name))
+                    .GroupBy(fi => Path.GetFileNameWithoutExtension(fi.Name), StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.OrderByDescending(fi => fi.LastWriteTimeUtc).First())
+                    .OrderBy(fi => Path.GetFileNameWithoutExtension(fi.Name), StringComparer.OrdinalIgnoreCase)
+                    .Select(fi => (
+                        Nama: Path.GetFileNameWithoutExtension(fi.Name),
+                        Ukuran: fi.Length,
+                        Diubah: fi.LastWriteTime))
                     .ToList());
 
-                foreach (var file in pdfFiles)
+                foreach (var file in berkas)
                 {
-                    Templates.Add(new FormulirTemplate(file));
+                    var item = new FormulirTemplate(
+                        file.Nama,
+                        GetFormCode(file.Nama),
+                        file.Ukuran,
+                        file.Diubah);
+
+                    // Tombol Buka pada baris membuka pratinjau PDF-nya di dalam aplikasi.
+                    item.SaatDibuka = BukaFormulir;
+
+                    // Perubahan centang langsung memperbarui ringkasan pilihan & tombol Hapus.
+                    item.PropertyChanged += (_, e) =>
+                    {
+                        if (e.PropertyName == nameof(FormulirTemplate.IsChecked))
+                        {
+                            PerbaruiPenandaPilihan();
+                        }
+                    };
+
+                    Templates.Add(item);
                 }
 
                 OnPropertyChanged(nameof(HasTemplates));
                 OnPropertyChanged(nameof(IsEmpty));
                 OnPropertyChanged(nameof(TemplateCount));
-                _logger.LogInformation("Memuat {Count} template PDF", pdfFiles.Count);
+                OnPropertyChanged(nameof(RingkasanJumlah));
+                OnPropertyChanged(nameof(KosongTanpaFormulir));
+                _logger.LogInformation("Memuat {Count} template PDF", Templates.Count);
             }
             catch (Exception ex)
             {
@@ -188,43 +598,37 @@ namespace SuDesApp.Wpf.ViewModels
             finally
             {
                 IsLoading = false;
+                RefreshTampilan();
+
+                StatusText = Templates.Count == 0
+                    ? "Folder Templates masih kosong."
+                    : $"{Templates.Count} formulir siap dipakai.";
 
                 // Tawarkan unduhan bila daftar template belum lengkap
-                // (sekali per sesi aplikasi). Harus setelah loading selesai.
-                _ = MaybePromptDownloadAsync(Templates.Count);
+                // (sekali per sesi aplikasi) — lewat kartu di halaman, bukan popup.
+                TawarkanUnduhBilaBelumLengkap();
             }
         }
 
         /// <summary>
-        /// Popup tawaran unduh formulir: muncul otomatis bila jumlah template
-        /// yang tampil kurang dari DownloadPromptThreshold. Hanya sekali per
-        /// sesi agar tidak mengganggu setiap kali halaman dibuka.
+        /// Tawaran unduh formulir bila jumlah template masih di bawah
+        /// <see cref="DownloadPromptThreshold"/>. Ditampilkan sebagai kartu di
+        /// dalam halaman (bukan popup) dan hanya sekali per sesi aplikasi supaya
+        /// tidak mengganggu setiap kali halaman dibuka.
         /// </summary>
-        private async Task MaybePromptDownloadAsync(int templateCount)
+        private void TawarkanUnduhBilaBelumLengkap()
         {
-            if (_downloadPromptShown || templateCount >= DownloadPromptThreshold)
+            if (_downloadPromptShown || Templates.Count >= DownloadPromptThreshold)
             {
                 return;
             }
 
             _downloadPromptShown = true;
-            try
-            {
-                var accepted = await _messageService.ShowConfirmationAsync(
-                    "Formulir belum lengkap",
-                    $"Baru ada {templateCount} template formulir di aplikasi ini.\n\n" +
-                    "Unduh formulir resmi dari sumber (infosadaradmindukkarawang.id) sekarang?\n" +
-                    "Formulir yang sudah ada di folder Templates akan dilewati.");
-
-                if (accepted && !IsLoading)
-                {
-                    await DownloadFromSourceAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal menampilkan popup tawaran unduh formulir");
-            }
+            TawaranUnduhTeks =
+                $"Baru ada {Templates.Count} dari {DownloadPromptThreshold} formulir yang biasa dipakai. " +
+                "Formulir resmi dapat diunduh langsung dari " + SumberFormulirTeks + " — formulir yang sudah ada " +
+                "di folder Templates tidak akan diunduh ulang.";
+            AdaTawaranUnduh = true;
         }
 
         /// <summary>Tambah template PDF baru (padanan formOpenFileDialog pada dialog Formulir).</summary>
@@ -245,7 +649,12 @@ namespace SuDesApp.Wpf.ViewModels
             string sourcePath = dialog.FileName;
             if (!_fileService.IsValidPdf(sourcePath))
             {
-                await _messageService.ShowErrorAsync("File yang dipilih bukan PDF yang valid.");
+                StatusText = "Berkas yang dipilih bukan PDF yang valid.";
+                TampilkanHasilUnduhan(
+                    "Berkas bukan PDF",
+                    $"\u201c{Path.GetFileName(sourcePath)}\u201d tidak bisa dipakai sebagai template formulir.",
+                    new[] { "Pilih berkas PDF yang bisa dibuka di pembaca PDF, lalu coba lagi." },
+                    berhasil: false);
                 return;
             }
 
@@ -278,6 +687,7 @@ namespace SuDesApp.Wpf.ViewModels
                 _logger.LogInformation("Template ditambahkan: {Path}", destinationPath);
                 await LoadTemplatesAsync();
                 _formulirMenuService.NotifyTemplatesChanged();
+                StatusText = $"Template {baseName}.pdf ditambahkan.";
 
                 // Backup otomatis ke Drive (bila diaktifkan di Pengaturan Aplikasi).
                 await TryUploadTemplatesToDriveAsync(templateFolder);
@@ -285,7 +695,13 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal menyalin template: {Path}", destinationPath);
-                await _messageService.ShowErrorAsync("Gagal menyalin template PDF.");
+
+                // Kesalahan ditampilkan sebagai kartu di halaman, bukan dialog.
+                TampilkanHasilUnduhan(
+                    "Gagal menyalin template",
+                    $"Template {baseName}.pdf tidak bisa disalin ke folder Templates.",
+                    new[] { ex.Message }, berhasil: false);
+                StatusText = "Gagal menyalin template PDF.";
             }
         }
 
@@ -298,6 +714,8 @@ namespace SuDesApp.Wpf.ViewModels
                 return;
             }
 
+            // Penghapusan berkas tetap meminta konfirmasi — berisiko menghilangkan
+            // berkas pengguna, jadi layak dikonfirmasi lebih dulu.
             bool confirmed = await _messageService.ShowConfirmationAsync(
                 "Hapus template",
                 checkedItems.Count == 1
@@ -326,6 +744,9 @@ namespace SuDesApp.Wpf.ViewModels
 
                 await LoadTemplatesAsync();
                 _formulirMenuService.NotifyTemplatesChanged();
+                StatusText = checkedItems.Count == 1
+                    ? $"Template {checkedItems[0].Name}.pdf dihapus."
+                    : $"{checkedItems.Count} template dihapus dari folder Templates.";
 
                 // Pastikan sisa template tetap tercadangkan di Drive.
                 await TryUploadTemplatesToDriveAsync(templateFolder);
@@ -333,7 +754,11 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal menghapus template");
-                await _messageService.ShowErrorAsync("Gagal menghapus template.");
+                StatusText = "Gagal menghapus template.";
+                TampilkanHasilUnduhan(
+                    "Gagal menghapus template",
+                    $"{checkedItems.Count} berkas tidak bisa dihapus dari folder Templates.",
+                    new[] { ex.Message }, berhasil: false);
             }
         }
 
@@ -442,28 +867,44 @@ namespace SuDesApp.Wpf.ViewModels
                 var result = await FetchFormulirSourceListAsync(CancellationToken.None);
                 if (!result.Ok)
                 {
-                    await _messageService.ShowErrorAsync(
-                        "Gagal mengambil daftar formulir dari sumber resmi.\n\n" + result.ErrorMessage);
                     StatusText = "Gagal mengambil daftar formulir.";
+                    TampilkanHasilUnduhan(
+                        "Gagal mengambil daftar formulir",
+                        $"Daftar formulir dari {SumberFormulirTeks} belum bisa dibaca.",
+                        new[]
+                        {
+                            result.ErrorMessage ?? "Penyebabnya tidak diketahui.",
+                            "Formulir yang sudah ada di folder Templates tetap bisa dipakai seperti biasa."
+                        },
+                        berhasil: false);
                     return;
                 }
 
                 if (result.Entries.Count == 0)
                 {
-                    await _messageService.ShowInfoAsync(
-                        "Daftar formulir kosong atau tidak ditemukan di halaman sumber.\n\n" +
-                        "Formulir yang ada di folder Templates tetap tersedia untuk digunakan.");
                     StatusText = "Tidak ada formulir yang ditemukan di halaman sumber.";
+                    TampilkanHasilUnduhan(
+                        "Daftar formulir kosong",
+                        $"Halaman sumber {SumberFormulirTeks} tidak memuat tautan formulir saat diperiksa.",
+                        new[] { "Formulir yang ada di folder Templates tetap bisa dipakai seperti biasa." },
+                        berhasil: false);
                     return;
                 }
 
+                // Kemajuan proses terlihat di statusbar halaman; rinciannya
+                // ditampilkan sebagai kartu di halaman, bukan dialog popup.
                 StatusText = $"Ditemukan {result.Entries.Count} formulir. Memulai unduh...";
-                await _messageService.ShowInfoAsync(
-                    $"Ditemukan {result.Entries.Count} formulir di sumber resmi.\n\n" +
-                    "Aplikasi akan mengunduh formulir yang belum ada di folder Templates.\n" +
-                    "Formulir diambil lebih dulu dari Google Drive (bila Anda login);\n" +
-                    "bila tidak tersedia di Drive, diunduh dari sumber resmi.\n\n" +
-                    "Program akan langsung berjalan. Tunggu sampai semua formulir selesai diunduh.");
+                TampilkanHasilUnduhan(
+                    "Mengunduh formulir resmi",
+                    $"{result.Entries.Count} formulir ditemukan di {SumberFormulirTeks}. " +
+                    "Formulir yang sudah ada di folder Templates akan dilewati.",
+                    new[]
+                    {
+                        CadanganDriveAktif
+                            ? $"Formulir diambil dari Google Drive lebih dulu, lalu dari sumber resmi bila belum ada."
+                            : "Google Drive belum aktif — formulir diunduh langsung dari sumber resmi."
+                    },
+                    berhasil: true);
 
                 var templateFolder = _appConfig.TemplateFolder;
                 if (!Directory.Exists(templateFolder))
@@ -518,14 +959,18 @@ namespace SuDesApp.Wpf.ViewModels
                     await TryUploadTemplatesToDriveAsync(templateFolder);
                 }
 
-                await _messageService.ShowInfoAsync(
-                    $"Unduhan formulir selesai.\n\n" +
-                    $"Berhasil mengunduh: {downloaded}\n" +
-                    $"  • Dari Google Drive: {fromDrive}\n" +
-                    $"  • Dari sumber resmi: {downloaded - fromDrive}\n" +
-                    $"Dilewati/gagal: {skipped}\n\n" +
-                    $"Folder tujuan:\n{templateFolder}\n\n" +
-                    "Rincian:\n" + string.Join("\n", fileResults));
+                StatusText = downloaded > 0
+                    ? $"Unduhan selesai — {downloaded} formulir baru siap dipakai."
+                    : $"Unduhan selesai — tidak ada formulir baru ({skipped} sudah tersedia).";
+
+                TampilkanHasilUnduhan(
+                    downloaded > 0 ? "Unduhan formulir selesai" : "Semua formulir sudah tersedia",
+                    $"Berhasil {downloaded}  •  dari Drive {fromDrive}  •  dari sumber {downloaded - fromDrive}  •  " +
+                    $"dilewati/gagal {skipped}",
+                    fileResults
+                        .Append("Folder tujuan: " + templateFolder)
+                        .ToList(),
+                    berhasil: downloaded > 0 && skipped == 0);
             }
             catch (OperationCanceledException)
             {
@@ -535,8 +980,15 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 _logger.LogError(ex, "Gagal mengunduh formulir dari sumber resmi");
                 StatusText = "Unduhan gagal.";
-                await _messageService.ShowErrorAsync(
-                    "Gagal mengunduh formulir dari sumber resmi.\n\n" + ex.Message);
+                TampilkanHasilUnduhan(
+                    "Unduhan gagal",
+                    $"Proses unduh formulir dari {SumberFormulirTeks} terhenti.",
+                    new[]
+                    {
+                        ex.Message,
+                        "Periksa koneksi internet lalu tekan Unduh dari Sumber lagi — formulir yang sudah terunduh tidak diulang."
+                    },
+                    berhasil: false);
             }
             finally
             {

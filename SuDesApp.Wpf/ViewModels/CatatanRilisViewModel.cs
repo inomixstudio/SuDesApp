@@ -1,8 +1,22 @@
 using Microsoft.Extensions.Logging;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Utilities;
 
 namespace SuDesApp.Wpf.ViewModels
 {
+    /// <summary>
+    /// Jenis sub-bagian catatan rilis; dipakai untuk penanda warna pada kartu
+    /// (mis. "Fitur Baru" hijau, "Perbaikan Bug" oranye, sisanya aksen tema).
+    /// </summary>
+    public enum GayaRilisCatatan
+    {
+        FiturBaru,
+        Peningkatan,
+        Perbaikan,
+        Pembaruan,
+        Umum
+    }
+
     /// <summary>
     /// Entri sub-bagian dalam satu versi catatan rilis.
     /// </summary>
@@ -10,12 +24,36 @@ namespace SuDesApp.Wpf.ViewModels
     {
         public string Heading { get; }
         public List<string> Points { get; }
+        public GayaRilisCatatan Jenis { get; }
+        public string LabelJenis { get; }
 
-        public CatatanRilisSubSection(string heading, List<string> points)
+        public CatatanRilisSubSection(string heading, List<string> points, GayaRilisCatatan? jenis = null)
         {
             Heading = heading;
             Points = points;
+            Jenis = jenis ?? TentukanJenis(heading);
+            LabelJenis = LabelUntuk(Jenis);
         }
+
+        /// <summary>Tentukan jenis sub-bagian dari awalan judulnya.</summary>
+        private static GayaRilisCatatan TentukanJenis(string heading)
+        {
+            var teks = heading ?? string.Empty;
+            if (teks.StartsWith("Fitur Baru", StringComparison.OrdinalIgnoreCase)) return GayaRilisCatatan.FiturBaru;
+            if (teks.StartsWith("Peningkatan", StringComparison.OrdinalIgnoreCase)) return GayaRilisCatatan.Peningkatan;
+            if (teks.StartsWith("Perbaikan", StringComparison.OrdinalIgnoreCase)) return GayaRilisCatatan.Perbaikan;
+            if (teks.StartsWith("Pembaruan", StringComparison.OrdinalIgnoreCase)) return GayaRilisCatatan.Pembaruan;
+            return GayaRilisCatatan.Umum;
+        }
+
+        private static string LabelUntuk(GayaRilisCatatan jenis) => jenis switch
+        {
+            GayaRilisCatatan.FiturBaru => "FITUR BARU",
+            GayaRilisCatatan.Peningkatan => "PENINGKATAN",
+            GayaRilisCatatan.Perbaikan => "PERBAIKAN",
+            GayaRilisCatatan.Pembaruan => "PEMBARUAN",
+            _ => "LAINNYA"
+        };
     }
 
     /// <summary>
@@ -45,15 +83,54 @@ namespace SuDesApp.Wpf.ViewModels
 
         public string Title => "CATATAN RILIS";
         public string Subtitle => "Pembaruan dan perbaikan aplikasi";
-        public string VersionFooter => "Surat Desa V.2.5.3  \u2022  Sumberjaya Dev.";
+        /// <summary>
+        /// Identitas aplikasi pada statusbar halaman ("Surat Desa V.x.y.z  •  ...") —
+        /// disusun otomatis dari atribut assembly (csproj) oleh <see cref="IdentitasAplikasi"/>,
+        /// sehingga selalu mengikuti versi terbaru tanpa perlu disunting.
+        /// </summary>
+        public string VersionFooter => IdentitasAplikasi.FooterVersi;
 
+        /// <summary>
+        /// Jumlah kartu versi yang ditampilkan di halaman. Catatan rilis dipakai sebagai
+        /// riwayat, jadi versi lama tetap tersimpan — hanya jumlah kartu yang ditampilkan
+        /// yang dibatasi supaya halaman ini tetap ringkas dan mudah dibaca.
+        /// </summary>
+        public const int MaksKartu = 3;
+
+        /// <summary>Kartu versi yang tampil di halaman (terbaru di atas, maksimal <see cref="MaksKartu"/>).</summary>
         public List<CatatanRilisEntry> Entries { get; }
+
+        /// <summary>Seluruh riwayat versi aplikasi — tiga kartu terbaru diambil dari sini.</summary>
+        public IReadOnlyList<CatatanRilisEntry> SemuaVersi { get; }
 
         public CatatanRilisViewModel(ILogger<CatatanRilisViewModel> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            Entries = new List<CatatanRilisEntry>
+            SemuaVersi = RiwayatVersi();
+
+            // Hanya kartu versi terbaru yang ditampilkan (terbaru di atas). Versi lama
+            // tetap tersimpan di SemuaVersi/RiwayatVersi, hanya tidak ditampilkan kartunya.
+            Entries = SemuaVersi.Take(MaksKartu).ToList();
+
+            _logger.LogInformation(
+                "Catatan rilis dimuat: {Total} versi, {Tampil} kartu ditampilkan (batas {Maks})",
+                SemuaVersi.Count, Entries.Count, MaksKartu);
+        }
+
+        /// <summary>
+        /// Seluruh riwayat versi aplikasi — sumber tunggal untuk kartu-kartu di halaman
+        /// Catatan Rilis (tiga versi terbaru yang diambil dari daftar ini).
+        /// </summary>
+        public static IReadOnlyList<CatatanRilisEntry> RiwayatVersi()
+            => _riwayatVersi ??= SusunRiwayatVersi();
+
+        private static IReadOnlyList<CatatanRilisEntry>? _riwayatVersi;
+
+        /// <summary>Menyusun riwayat versi (terbaru di atas) beserta rincian tiap versinya.</summary>
+        private static List<CatatanRilisEntry> SusunRiwayatVersi()
+        {
+            return new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
                     "Versi 2.5.3 (19 September 2026)",
@@ -481,8 +558,6 @@ namespace SuDesApp.Wpf.ViewModels
                         })
                     })
             };
-
-            _logger.LogInformation("Catatan rilis dimuat: {Count} versi", Entries.Count);
         }
     }
 }

@@ -7,8 +7,18 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+
+        <!-- Pemberitahuan inline: hasil pembacaan berkas Word, sebab sebuah tombol
+             tidak bisa dilanjutkan, dan kegagalan daftar/pratinjau tampil di dalam
+             halaman ini — bukan sebagai dialog popup. -->
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Pesan}"
+                      Visibility="{Binding Pesan.Ada, Converter={StaticResource BoolToVis}}"
+                      ItemTemplate="{StaticResource KartuPesanInline}"
+                      Margin="0,12,0,0"
+                      AutomationProperties.Name="Pemberitahuan template surat"/>
 
         <!-- Kepala halaman (tombol "Buat Template Baru" dipindah ke bilah alat di bawah) -->
         <Border Grid.Row="0" Style="{StaticResource PageHeader}">
@@ -20,13 +30,13 @@
                 <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="TEMPLATE SURAT" Style="{StaticResource HeaderTitle}"/>
                     <TextBlock Style="{StaticResource HeaderSubtitle}"
-                               Text="Susun sendiri jenis surat yang belum tersedia di menu Buat Surat — surat yang dicetak tercatat di Register Surat"/>
+                               Text="Susun sendiri jenis surat yang belum tersedia di menu Buat Surat, atau ambil susunannya dari berkas Word (.docx/.doc) — surat yang dicetak tercatat di Register Surat"/>
                 </StackPanel>
             </StackPanel>
         </Border>
 
         <!-- Ringkasan -->
-        <Grid Grid.Row="1" Margin="0,0,0,12">
+        <Grid Grid.Row="2" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -114,7 +124,7 @@
         </Grid>
 
         <!-- Bilah alat -->
-        <Border Grid.Row="2" Style="{StaticResource ToolbarCard}" Margin="0,0,0,12">
+        <Border Grid.Row="3" Style="{StaticResource ToolbarCard}" Margin="0,0,0,12">
           <StackPanel>
             <!-- Keterangan contoh bawaan yang baru disiapkan (tampil sekali saja) -->
             <Border Background="{DynamicResource AccentSubtleBrush}" CornerRadius="6" Padding="10,8" Margin="0,0,0,8"
@@ -157,9 +167,9 @@
                     <Button Content="+ Buat Template Baru" Command="{Binding BuatBaruCommand}"
                             Style="{StaticResource PrimaryButton}" Height="32" MinWidth="170" Margin="0,0,6,0"
                             ToolTip="Buka wizard: kop, judul, nomor, teks, kolom isian, hingga tanda tangan"/>
-                    <Button Content="Perbarui Contoh" Command="{Binding PerbaruiContohCommand}" Style="{StaticResource SecondaryButton}"
+                    <Button Content="Buat dari File Word" Command="{Binding BuatDariWordCommand}" Style="{StaticResource SecondaryButton}"
                             Height="32" Margin="0,0,6,0"
-                            ToolTip="Ganti susunan template yang berasal dari contoh bawaan dengan versi terbaru (mis. Surat Izin Keramaian)"/>
+                            ToolTip="Buat template surat dari berkas Word (.docx atau .doc lama — berkas lama dikonversi otomatis). Berkas yang memuat beberapa surat (beberapa halaman) bisa disimpan sekaligus sebagai beberapa template"/>
                     <Button Content="Segarkan" Command="{Binding SegarkanCommand}" Style="{StaticResource SecondaryButton}"
                             Height="32" Margin="0,0,6,0" ToolTip="Muat ulang daftar template dari database"/>
                     <Button Content="Edit" Command="{Binding EditCommand}" Style="{StaticResource SecondaryButton}"
@@ -178,7 +188,7 @@
         </Border>
 
         <!-- Daftar template -->
-        <Border Grid.Row="3" Style="{StaticResource GridHostCard}" Padding="1">
+        <Border Grid.Row="4" Style="{StaticResource GridHostCard}" Padding="1">
             <Grid>
                 <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding Terpilih, Mode=TwoWay}"
                           AutoGenerateColumns="False" IsReadOnly="True"

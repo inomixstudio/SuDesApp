@@ -39,17 +39,21 @@
             </Border>
 
             <!-- Baris ikon + judul -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-                <Border x:Name="IconBadge" Width="40" Height="40" CornerRadius="20"
+            <Grid Grid.Row="1" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" x:Name="IconBadge" Width="40" Height="40" CornerRadius="20"
                         Background="{DynamicResource PrimaryBrush}">
                     <TextBlock x:Name="IconText" Text="i" FontSize="18" FontWeight="Bold"
                                Foreground="White" FontFamily="Segoe UI Symbol"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <TextBlock x:Name="TitleText" Text="Judul" FontSize="15" FontWeight="SemiBold"
+                <TextBlock Grid.Column="1" x:Name="TitleText" Text="Judul" FontSize="15" FontWeight="SemiBold"
                            Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"
                            Margin="12,0,0,0" TextWrapping="Wrap"/>
-            </StackPanel>
+            </Grid>
 
             <!-- Pesan (dibungkus scroll agar pesan sangat panjang tetap wajar) -->
             <ScrollViewer Grid.Row="2" MaxHeight="380" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">

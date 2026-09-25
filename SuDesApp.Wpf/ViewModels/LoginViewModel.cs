@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows.Input;
 using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Utilities;
+using SuDesApp.Wpf.Utilities;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -69,6 +70,13 @@ namespace SuDesApp.Wpf.ViewModels
             get => _hasError;
             set => SetProperty(ref _hasError, value);
         }
+
+        /// <summary>
+        /// Teks versi di kaki jendela login ("Surat Desa V.x.y.z  •  ...") —
+        /// disusun otomatis dari atribut assembly (csproj) oleh <see cref="IdentitasAplikasi"/>,
+        /// sehingga selalu mengikuti versi terbaru tanpa perlu disunting.
+        /// </summary>
+        public string FooterVersi => IdentitasAplikasi.FooterVersi;
 
         /// <summary>Proses verifikasi login sedang berjalan (progres tampil).</summary>
         public bool IsBusy

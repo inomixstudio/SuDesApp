@@ -232,6 +232,12 @@
         <!-- Grid data -->
         <Border Grid.Row="3" Style="{StaticResource GridHostCard}" Padding="1">
             <Grid>
+                <!-- Halaman tampil lebih dulu; data menyusul — garis ini menandai
+                     bahwa arsip masih dimuat (bukan benar-benar kosong). -->
+                <ProgressBar Panel.ZIndex="5" Height="3" IsIndeterminate="True"
+                             VerticalAlignment="Top"
+                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+                             Foreground="{DynamicResource PrimaryBrush}"/>
                 <DataGrid x:Name="DataGridKeputusan" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           SelectionMode="Single" SelectionUnit="FullRow"
