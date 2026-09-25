@@ -2,6 +2,8 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using SuDesApp.Utilities;
 
 namespace SuDesApp.Wpf.Views
 {
@@ -20,6 +22,19 @@ namespace SuDesApp.Wpf.Views
         public const string SectionGatewayWa = "gateway-wa";
         public const string SectionGoogleSheet = "google-sheet";
 
+        /// <summary>Urutan bagian sama persis dengan urutan StackPanel pada XAML.
+        /// Bagian "google-oauth" (Kredensial Google) dihapus — kredensial kini
+        /// tertanam di aplikasi dan tidak dikelola dari halaman ini.</summary>
+        private static readonly string[] UrutanSeksi =
+        {
+            "umum", "penomoran", "layanan-wa", "gateway-wa", "google-sheet", "informasi"
+        };
+
+        private ViewModels.PengaturanAplikasiViewModel? _vm;
+        private bool _seksiDipetakan;
+        private readonly Dictionary<string, UIElement> _seksiPanel = new();
+        private bool _memilihSeksi;
+
         public PengaturanAplikasiView()
         {
             InitializeComponent();
@@ -32,21 +47,163 @@ namespace SuDesApp.Wpf.Views
 
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if (e.NewValue is ViewModels.PengaturanAplikasiViewModel vm && !string.IsNullOrEmpty(vm.FocusSection))
+            if (e.OldValue is ViewModels.PengaturanAplikasiViewModel lama)
+                lama.PropertyChanged -= OnVmPropertyChanged;
+
+            if (e.NewValue is not ViewModels.PengaturanAplikasiViewModel vm)
+            {
+                TumpukanBagian?.Children.Clear();
+                return;
+            }
+
+            _vm = vm;
+            vm.PropertyChanged += OnVmPropertyChanged;
+
+            if (!string.IsNullOrEmpty(vm.FocusSection))
             {
                 // Tunggu layout selesai agar posisi kartu & ExtentHeight sudah final.
                 Dispatcher.BeginInvoke(new Action(() => ScrollToSection(vm.FocusSection)),
                     System.Windows.Threading.DispatcherPriority.Loaded);
             }
 
-            if (e.NewValue is ViewModels.PengaturanAplikasiViewModel kredensialVm)
-                GoogleSecretBox.Password = kredensialVm.GoogleClientSecret ?? string.Empty;
+            KumpulkanSeksi();
+            TampilkanSeksi(vm.SelectedSection);
+            IsiPengaturan?.ScrollToTop();
         }
 
-        private void GoogleSecretBox_PasswordChanged(object sender, RoutedEventArgs e)
+        private void OnVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (DataContext is ViewModels.PengaturanAplikasiViewModel vm)
-                vm.GoogleClientSecret = GoogleSecretBox.Password ?? string.Empty;
+            if (e.PropertyName != nameof(ViewModels.PengaturanAplikasiViewModel.SelectedSection)) return;
+            if (_vm == null) return;
+
+            TampilkanSeksi(_vm.SelectedSection);
+            IsiPengaturan?.ScrollToTop();
+        }
+
+        /// <summary>
+        /// Rekam pemetaan kunci bagian → StackPanel-nya. Dilakukan sekali saja
+        /// (saat semua bagian memang masih ada di pohon), karena setelah bagian
+        /// dilepas dari pohon pencarannya tidak lengkap lagi.
+        /// </summary>
+        private void KumpulkanSeksi()
+        {
+            if (_seksiDipetakan || TumpukanBagian == null) return;
+
+            int i = 0;
+            foreach (UIElement anak in TumpukanBagian.Children)
+            {
+                if (i < UrutanSeksi.Length) _seksiPanel[UrutanSeksi[i]] = anak;
+                i++;
+            }
+            _seksiDipetakan = true;
+        }
+
+        /// <summary>
+        /// Hanya bagian yang terpilih yang disambungkan ke pohon visual; bagian
+        /// lain dilepas sehingga tidak dirender, diukur, maupun digambar — halaman
+        /// tetap ringan dan gulirannya tidak tersendat.
+        /// </summary>
+        private void TampilkanSeksi(ViewModels.PengaturanSectionVM? bagian)
+        {
+            if (_memilihSeksi || TumpukanBagian == null) return;
+            _memilihSeksi = true;
+            try
+            {
+                var kunci = bagian?.Key ?? "umum";
+                _seksiPanel.TryGetValue(kunci, out var target);
+
+                TumpukanBagian.Children.Clear();
+                if (target != null) TumpukanBagian.Children.Add(target);
+            }
+            finally
+            {
+                _memilihSeksi = false;
+            }
+        }
+
+        // ===== Contoh animasi kecepatan (Lambat/Normal/Cepat) =====
+
+        /// <summary>Keadaan contoh: tertutup (sidebar lebar, dropdown menutup) atau terbuka.</summary>
+        private bool _contohTerbuka;
+
+        /// <summary>
+        /// Putar contoh animasi memakai durasi dari kecepatan yang sedang dipilih, supaya
+        /// pengguna bisa merasakan bedanya sebelum menutup halaman pengaturan. Yang
+        /// dianimasikan adalah tiruan kecil di kartu ini, bukan sidebar aplikasi, agar
+        /// tata letak kerja pengguna tidak ikut berubah.
+        /// </summary>
+        private void ContohAnimasi_Click(object sender, RoutedEventArgs e)
+        {
+            _contohTerbuka = !_contohTerbuka;
+
+            var durasiSidebar = KecepatanAnimasiPrefs.Skala(KecepatanAnimasiPrefs.DasarSidebar);
+            var durasiDropdown = KecepatanAnimasiPrefs.Skala(KecepatanAnimasiPrefs.DasarDropdown);
+            var ease = new CubicEase { EasingMode = EasingMode.EaseInOut };
+
+            // (1) Sidebar tiruan menyempit/melebar — sama seperti menekan tombol tampilan navigasi.
+            AnimasiContoh(ContohSidebar, FrameworkElement.WidthProperty,
+                _contohTerbuka ? 104d : 196d, durasiSidebar, ease);
+            AnimasiContoh(ContohSidebarJudul, UIElement.OpacityProperty,
+                _contohTerbuka ? 0d : 1d, durasiSidebar, ease);
+
+            // (2) Dropdown grup membuka/menutup, panahnya berputar serentak.
+            AnimasiContoh(ContohDropdown, FrameworkElement.MaxHeightProperty,
+                _contohTerbuka ? 72d : 0d, durasiDropdown, ease);
+            AnimasiContoh(ContohDropdown, UIElement.OpacityProperty,
+                _contohTerbuka ? 1d : 0d, durasiDropdown, ease);
+            AnimasiContoh(SiapkanPutarContoh(), RotateTransform.AngleProperty,
+                _contohTerbuka ? 90d : 0d, durasiDropdown, ease);
+
+            TombolContohAnimasi.Content = _contohTerbuka ? "Tutup contoh" : "Putar contoh";
+        }
+
+        /// <summary>
+        /// Putaran panah contoh. Transform hasil XAML dibekukan WPF, sehingga
+        /// BeginAnimation langsung melempar — versi bekunya diklon lebih dulu.
+        /// </summary>
+        private RotateTransform SiapkanPutarContoh()
+        {
+            if (ContohChevron.RenderTransform is RotateTransform putar)
+            {
+                if (!putar.IsFrozen)
+                {
+                    return putar;
+                }
+
+                var klon = putar.Clone();
+                ContohChevron.RenderTransform = klon;
+                return klon;
+            }
+
+            var baru = new RotateTransform { CenterX = 5, CenterY = 6 };
+            ContohChevron.RenderTransform = baru;
+            return baru;
+        }
+
+        /// <summary>
+        /// Animasi contoh: nilai akhir dipegang animasi (HoldEnd), jadi gerakan berikutnya
+        /// selalu berangkat dari posisi nyatanya dan tidak ada lompatan di ujung animasi.
+        /// </summary>
+        private static void AnimasiContoh(
+            DependencyObject target, DependencyProperty properti, double ke, TimeSpan durasi, IEasingFunction ease)
+        {
+            var animasi = new DoubleAnimation
+            {
+                To = ke,
+                Duration = durasi,
+                EasingFunction = ease,
+                FillBehavior = FillBehavior.HoldEnd
+            };
+
+            switch (target)
+            {
+                case UIElement ui:
+                    ui.BeginAnimation(properti, animasi);
+                    break;
+                case Animatable animatable:
+                    animatable.BeginAnimation(properti, animasi);
+                    break;
+            }
         }
 
         /// <summary>

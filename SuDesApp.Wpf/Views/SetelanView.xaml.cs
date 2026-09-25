@@ -5,6 +5,8 @@ namespace SuDesApp.Wpf.Views
 {
     public partial class SetelanView : UserControl
     {
+        public SetelanView() : this(null) { }
+
         public SetelanView(SetelanViewModel? viewModel = null)
         {
             InitializeComponent();

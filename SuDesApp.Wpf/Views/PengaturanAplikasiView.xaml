@@ -19,11 +19,8 @@
                             <Border x:Name="track" CornerRadius="14" Background="{DynamicResource BorderBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"/>
                             <Ellipse x:Name="thumb" Width="22" Height="22" Fill="White"
-                                     HorizontalAlignment="Left" Margin="3,0,0,0">
-                                <Ellipse.Effect>
-                                    <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="1" Opacity="0.35"/>
-                                </Ellipse.Effect>
-                            </Ellipse>
+                                     Stroke="#33000000" StrokeThickness="0.5"
+                                     HorizontalAlignment="Left" Margin="3,0,0,0"/>
                             <TextBlock x:Name="labelOff" Text="OFF" FontSize="9" FontWeight="Bold"
                                        Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Right" Margin="0,0,7,0"
                                        VerticalAlignment="Center"/>
@@ -79,6 +76,9 @@
         </Style>
         <Style x:Key="SectionIconText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="15"/>
+            <!-- Font ikon aplikasi (Segoe Fluent/MDL2): glyph mengikuti warna tema,
+                 bukan emoji berwarna yang tidak ikut tema. -->
+            <Setter Property="FontFamily" Value="{StaticResource AppIconFont}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
@@ -205,7 +205,8 @@
         <Border Grid.Row="0" Style="{StaticResource PageHeader}">
             <DockPanel>
                 <Border Style="{StaticResource HeaderIconChip}" DockPanel.Dock="Left">
-                    <TextBlock Text="&#x2699;&#xFE0F;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                    <TextBlock Text="&#xE713;" FontFamily="{StaticResource AppIconFont}" FontSize="18"
+                               Foreground="{DynamicResource PrimaryBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
@@ -263,7 +264,8 @@
                                                                 <ColumnDefinition Width="Auto"/>
                                                                 <ColumnDefinition Width="*"/>
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock Grid.Column="0" Text="{Binding Ikon}" FontSize="14"
+                                                            <TextBlock Grid.Column="0" Text="{Binding Ikon}" FontFamily="{StaticResource AppIconFont}"
+                                                                       FontSize="14"
                                                                        Width="20" TextAlignment="Center"
                                                                        VerticalAlignment="Center"/>
                                                             <TextBlock x:Name="teks" Grid.Column="1" Text="{Binding Judul}"
@@ -314,7 +316,11 @@
 
                 <ScrollViewer x:Name="IsiPengaturan" VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel>
+                    <!-- Tumpukan berisi ketujuh bagian pengaturan. Code-behind melepas
+                         bagian yang tidak terpilih dari pohon visual (hanya bagian yang
+                         sedang ditampilkan yang dirender/diukur), sehingga halaman tetap
+                         ringan dan gulirannya tidak tersendat. -->
+                    <StackPanel x:Name="TumpukanBagian">
 
                 <!-- ============ Bagian: Umum & preferensi ============ -->
                 <StackPanel Visibility="{Binding BagianUmum.Aktif, Converter={StaticResource BoolToVis}}">
@@ -325,7 +331,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x2699;&#xFE0F;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE713;"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Preferensi Aplikasi" Margin="10,0,0,0"/>
                             </DockPanel>
@@ -403,6 +409,166 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ===== Kecepatan animasi antarmuka ===== -->
+                <Border Style="{StaticResource SettingCard}" Tag="kecepatan-animasi">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x23F1;&#xFE0F;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Kecepatan Animasi Antarmuka" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource InfoBoxText}" Margin="0" MaxWidth="660"
+                                       Text="Menentukan lamanya gerakan antarmuka: lebar sidebar, daftar nama menu yang muncul saat kursor mendekat, dropdown grup menu, dan sorotan baris menu. Pilihan tersimpan otomatis dan langsung berlaku — tidak perlu menutup aplikasi. Animasi yang menerangkan keadaan (mis. lonceng notifikasi dan indikator proses) tidak ikut diperlambat."/>
+
+                            <!-- Tiga kartu pilihan; yang terpilih ditandai aksen -->
+                            <ListBox x:Name="DaftarKecepatanAnimasi" Margin="0,13,0,0"
+                                     ItemsSource="{Binding PilihanKecepatanAnimasi}"
+                                     SelectedItem="{Binding KecepatanAnimasiTerpilih, Mode=TwoWay}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     AutomationProperties.Name="Pilihan kecepatan animasi">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="1"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0,0,10,0"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                        <Setter Property="Cursor" Value="Hand"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border x:Name="kartu" CornerRadius="8" Padding="12,10"
+                                                            Background="{DynamicResource PanelBrush}"
+                                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                                            SnapsToDevicePixels="True">
+                                                        <StackPanel>
+                                                            <DockPanel>
+                                                                <TextBlock DockPanel.Dock="Left" Text="{Binding Ikon}" FontFamily="{StaticResource AppIconFont}"
+                                                                           FontSize="14"
+                                                                           Width="20" TextAlignment="Center" VerticalAlignment="Center"/>
+                                                                <TextBlock x:Name="judul" Text="{Binding Judul}" FontWeight="SemiBold"
+                                                                           Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                                                            </DockPanel>
+                                                            <TextBlock x:Name="faktor" Text="{Binding FaktorTeks}" FontSize="11" Margin="0,4,0,0"
+                                                                       Foreground="{DynamicResource AccentTextBrush}"/>
+                                                            <TextBlock Text="{Binding Keterangan}" FontSize="11.5" Margin="0,6,0,0"
+                                                                       TextWrapping="Wrap" LineHeight="16"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Text="{Binding ContohTeks}" FontSize="11" FontWeight="SemiBold"
+                                                                       Margin="0,8,0,0" TextWrapping="Wrap"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="kartu" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="kartu" Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                                            <Setter TargetName="kartu" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                            <Setter TargetName="kartu" Property="BorderThickness" Value="2"/>
+                                                            <Setter TargetName="judul" Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                                                            <Setter TargetName="faktor" Property="FontWeight" Value="Bold"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+
+                            <!-- ===== Contoh langsung: putar animasi memakai kecepatan terpilih ===== -->
+                            <Border Margin="0,14,0,0" CornerRadius="8" Padding="12"
+                                    Background="{DynamicResource PanelBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <DockPanel>
+                                        <Button x:Name="TombolContohAnimasi" DockPanel.Dock="Right"
+                                                Content="Putar contoh" Click="ContohAnimasi_Click"
+                                                Style="{StaticResource PrimaryButton}" Padding="14,5"
+                                                VerticalAlignment="Center"
+                                                AutomationProperties.Name="Putar contoh animasi"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Contoh animasi" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                            <TextBlock Text="{Binding KecepatanAnimasiContohInfo}" FontSize="11.5"
+                                                       TextWrapping="Wrap" LineHeight="16" MaxWidth="500" Margin="0,3,14,0"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- (1) Sidebar tiruan: menyempit & melebar -->
+                                        <Border x:Name="ContohSidebar" Grid.Column="0" Width="196"
+                                                CornerRadius="7" Padding="7" VerticalAlignment="Top"
+                                                Background="{DynamicResource SidebarBackgroundBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                            <StackPanel>
+                                                <TextBlock x:Name="ContohSidebarJudul" Text="Navigasi utama" FontSize="11"
+                                                           FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource SidebarTextBrush}"/>
+                                                <Border Height="20" CornerRadius="5" Margin="0,7,0,0"
+                                                        Background="{DynamicResource SidebarHoverBrush}"/>
+                                                <Border Height="20" CornerRadius="5" Margin="0,4,0,0"
+                                                        Background="{DynamicResource SidebarHoverBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- (2) Dropdown grup tiruan: isi tumbuh/menyusut, panah berputar -->
+                                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Top">
+                                            <Border CornerRadius="7" Padding="9,7"
+                                                    Background="{DynamicResource SidebarBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                                <StackPanel>
+                                                    <DockPanel>
+                                                        <TextBlock x:Name="ContohChevron" DockPanel.Dock="Right" Text="&#xE76C;"
+                                                                   FontFamily="{StaticResource AppIconFont}"
+                                                                   FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource SidebarAccentBrush}">
+                                                            <TextBlock.RenderTransform>
+                                                                <RotateTransform Angle="0" CenterX="5" CenterY="6"/>
+                                                            </TextBlock.RenderTransform>
+                                                        </TextBlock>
+                                                        <TextBlock Text="Grup menu" FontSize="11" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource SidebarTextBrush}" VerticalAlignment="Center"/>
+                                                    </DockPanel>
+                                                    <StackPanel x:Name="ContohDropdown" MaxHeight="0" ClipToBounds="True">
+                                                        <Border Height="18" CornerRadius="5" Margin="0,7,0,0"
+                                                                Background="{DynamicResource SidebarHoverBrush}"/>
+                                                        <Border Height="18" CornerRadius="5" Margin="0,3,0,0"
+                                                                Background="{DynamicResource SidebarHoverBrush}"/>
+                                                        <Border Height="18" CornerRadius="5" Margin="0,3,0,0"
+                                                                Background="{DynamicResource SidebarHoverBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                            <TextBlock Margin="2,8,0,0" FontSize="11" TextWrapping="Wrap" LineHeight="16"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Text="Kiri: lebar sidebar saat diciutkan. Kanan: daftar menu dalam grup yang membuka &amp; menutup. Keduanya memakai durasi dari pilihan di atas, jadi bedanya bisa langsung dirasakan di sini juga."/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
                 </StackPanel><!-- /bagian Umum -->
 
                 <!-- ============ Bagian: Penomoran surat ============ -->
@@ -414,7 +580,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x1F522;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE8F1;"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Awalan Nomor per Jenis Surat" Margin="10,0,0,0"/>
                             </DockPanel>
@@ -599,7 +765,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x1F552;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE81C;"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Jam &amp; Hari Layanan Otomatis" Margin="10,0,0,0"/>
                             </DockPanel>
@@ -681,7 +847,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x1F4AC;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE774;"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Gateway WhatsApp" Margin="10,0,0,0"/>
                             </DockPanel>
@@ -926,213 +1092,28 @@
 
                 </StackPanel><!-- /bagian Gateway WhatsApp -->
 
-                <!-- ============ Bagian: Kredensial Google ============ -->
-                <StackPanel Visibility="{Binding BagianGoogleOauth.Aktif, Converter={StaticResource BoolToVis}}">
+                <!-- Bagian "Kredensial Google" dihapus: kredensial klien OAuth kini
+                     tertanam (embed) di dalam aplikasi (GoogleClientCredentialsBawaan),
+                     ikut installer, dan tidak dapat dilihat/diubah pengguna. -->
 
-                <!-- ===== Kredensial klien OAuth Google ===== -->
-                <Border Style="{StaticResource SettingCard}" Tag="google-oauth">
-                    <StackPanel>
-                        <Border Style="{StaticResource SettingHead}">
-                            <DockPanel>
-                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x1F511;"/>
-                                </Border>
-                                <TextBlock Style="{StaticResource SettingTitle}" Text="Kredensial Google (Client ID dan Client Secret)" Margin="10,0,0,0"/>
-                            </DockPanel>
-                        </Border>
-                        <StackPanel Style="{StaticResource SettingBody}">
-                            <TextBlock Style="{StaticResource SettingDesc}"
-                                       Text="Klien OAuth aplikasi dari Google Cloud Console yang dipakai untuk login akun Google serta akses Drive, Formulir, dan Sheet. Nilainya disimpan terenkripsi (DPAPI, khusus pengguna Windows ini), bukan sebagai teks biasa pada appsettings.json."/>
-
-                            <Grid Style="{StaticResource SettingRow}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Client ID"/>
-                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
-                                         HorizontalAlignment="Left" MinWidth="300"
-                                         Text="{Binding GoogleClientId, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="Client ID dari Google Cloud Console → APIs &amp; Services → Credentials → OAuth 2.0 Client IDs (tipe Desktop app)"
-                                         AutomationProperties.Name="Google Client ID"/>
-                            </Grid>
-
-                            <Grid Style="{StaticResource SettingRow}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Client Secret"/>
-                                <PasswordBox x:Name="GoogleSecretBox" Grid.Column="1"
-                                             Style="{StaticResource SettingSecretInput}" MaxWidth="560"
-                                             HorizontalAlignment="Left" MinWidth="300"
-                                             PasswordChanged="GoogleSecretBox_PasswordChanged"
-                                             ToolTip="Client Secret dari halaman yang sama; tersimpan terenkripsi dan hanya dikirim ke Google saat login."
-                                             AutomationProperties.Name="Google Client Secret"/>
-                            </Grid>
-
-                            <Grid Style="{StaticResource SettingRow}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text=""/>
-                                <WrapPanel Grid.Column="1">
-                                    <Button Content="Simpan Kredensial" Command="{Binding SimpanKredensialGoogleCommand}" Width="150" Height="30"
-                                            Style="{StaticResource PrimaryButton}"
-                                            ToolTip="Menyimpan Client ID dan Client Secret terenkripsi pada komputer ini"/>
-                                    <Button Content="Uji Koneksi" Command="{Binding UjiKredensialGoogleCommand}" Width="130" Height="30" Margin="10,0,0,0"
-                                            ToolTip="Membuka login Google memakai kredensial tersimpan untuk memastikan pengaturan sudah benar"/>
-                                </WrapPanel>
-                            </Grid>
-
-                            <TextBlock Text="{Binding GoogleKredensialStatus}" FontSize="11.5" Margin="140,8,0,0" TextWrapping="Wrap"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-
-                            <TextBlock Text="{Binding GoogleKredensialInfo}" FontSize="11.5" Margin="140,6,0,0" TextWrapping="Wrap"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-
-                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,8,0,0" TextWrapping="Wrap"
-                                       Text="Berkas kredensial terenkripsi (hanya dapat dibuka oleh pengguna Windows ini):"/>
-                            <Border Style="{StaticResource PathBox}">
-                                <TextBlock Style="{StaticResource PathText}" Text="{Binding GoogleKredensialLokasi}"
-                                           ToolTip="{Binding GoogleKredensialLokasi}"/>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                </StackPanel><!-- /bagian Kredensial Google -->
-
-                <!-- ============ Bagian: Formulir & Sheet (mode tautan) ============ -->
+                <!-- ============ Bagian: Formulir & Sheet ============ -->
                 <StackPanel Visibility="{Binding BagianGoogleSheet.Aktif, Converter={StaticResource BoolToVis}}">
 
-                <!-- ===== Mode tautan Google Formulir + Sheet jawaban ===== -->
+                <!-- ===== 1. Pembuatan Formulir & Sheet Otomatis ===== -->
                 <Border Style="{StaticResource SettingCard}" Tag="google-sheet">
                     <StackPanel>
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x1F4CB;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE8F1;"/>
                                 </Border>
-                                <TextBlock Style="{StaticResource SettingTitle}" Text="Google Formulir &amp; Sheet — Mode Tautan" Margin="10,0,0,0"/>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Pembuatan Formulir &amp; Sheet Otomatis" Margin="10,0,0,0"/>
                             </DockPanel>
                         </Border>
                         <StackPanel Style="{StaticResource SettingBody}">
                             <TextBlock Style="{StaticResource SettingDesc}"
-                                       Text="Setiap pesan dari warga dibalas tautan Google Formulir untuk diisi sendiri. Jawaban terkumpul otomatis pada Google Sheet yang terhubung dengan formulir tersebut; aplikasi membaca Sheet, membuat PDF surat, lalu mengirim tautan unduh kepada warga melalui WhatsApp."/>
-                            <Border Background="{DynamicResource WarningSubtleBrush}" BorderBrush="{DynamicResource WarningBrush}"
-                                    BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,8,0,4">
-                                <TextBlock TextWrapping="Wrap" LineHeight="16" Foreground="{DynamicResource WarningTextBrush}">
-                                    <Run FontWeight="SemiBold">Penting — perlu login akun Google:</Run><LineBreak/>
-                                    Layanan online ini belum bisa berfungsi sebelum aplikasi terhubung ke akun Google, karena seluruh alurnya memakai akun tersebut: Google Formulir (tautan untuk warga), Google Sheet (jawaban yang dibaca aplikasi), dan Google Drive (penyimpanan PDF surat + tautan unduh).<LineBreak/>
-                                    Masuk lewat <Run FontWeight="SemiBold">Login dengan Google</Run> di sidebar memakai akun yang punya akses ke Formulir/Sheet (Editor). Status koneksi terlihat di chip statusbar; bila belum terhubung, panel Layanan Online juga menampilkan banner pengingat.
-                                </TextBlock>
-                            </Border>
-
-                            <TextBlock Style="{StaticResource SettingSub}" Text="Koneksi Google Formulir &amp; Sheet Jawaban"/>
-
-                            <!-- URL Formulir = tautan yang diterima warga -->
+                                       Text="Sekali klik: aplikasi membuat Google Sheet jawaban dan Google Formulir lengkap di akun desa (tanpa Apps Script), lalu mengisi kolom koneksi pada kartu di bawah dan mengaktifkan mode tautan secara otomatis."/>
                             <Grid Style="{StaticResource SettingRow}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="URL Google Formulir"/>
-                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
-                                         HorizontalAlignment="Left" MinWidth="280"
-                                         Text="{Binding WaSheetFormUrl, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="Tautan Google Formulir yang diterima warga melalui WhatsApp (bentuk …/viewform). Diambil dari editor formulir: Kirim → ikon tautan."
-                                         AutomationProperties.Name="URL Google Formulir"/>
-                            </Grid>
-
-                            <!-- URL Sheet jawaban = sumber data aplikasi -->
-                            <Grid Style="{StaticResource SettingRow}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="URL Sheet jawaban"/>
-                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
-                                         HorizontalAlignment="Left" MinWidth="280"
-                                         Text="{Binding WaSheetUrl, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="Google Sheet tempat jawaban terkumpul (URL dari peramban yang memuat /d/…/edit). Dibaca aplikasi untuk membuat surat dan tidak dikirim ke warga."
-                                         AutomationProperties.Name="URL Sheet jawaban"/>
-                            </Grid>
-
-                            <Grid Style="{StaticResource SettingRow}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Nama tab jawaban"/>
-                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
-                                         HorizontalAlignment="Left" MinWidth="280"
-                                         Text="{Binding WaSheetTabName, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="Nama tab di bagian bawah Google Sheet; bawaan: Form Responses 1"
-                                         AutomationProperties.Name="Nama tab jawaban"/>
-                            </Grid>
-
-                            <Grid Style="{StaticResource SettingRow}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Mode tautan"/>
-                                <WrapPanel Grid.Column="1">
-                                    <CheckBox Content="Aktifkan mode tautan (balasan berupa tautan formulir)"
-                                              IsChecked="{Binding WaSheetMode, Mode=TwoWay}"
-                                              ToolTip="Saat aktif, warga mengisi Google Formulir; saat nonaktif, warga mengetik data sesuai format percakapan."/>
-                                </WrapPanel>
-                            </Grid>
-
-                            <TextBlock Text="{Binding WaSheetRingkasan}" FontSize="11.5" FontStyle="Italic" Margin="140,0,0,0"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="16"/>
-
-<Grid Style="{StaticResource SettingRow}" Margin="0,12,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text=""/>
-                                <WrapPanel Grid.Column="1">
-                                    <Button Content="Uji Koneksi Formulir &amp; Sheet" Command="{Binding UjiWaSheetCommand}" MinWidth="220" Height="30"
-                                            ToolTip="Memeriksa akses baca ke Sheet jawaban (Sheets API) sekaligus memastikan tautan Google Formulir dapat dibuka publik oleh warga"/>
-                                    <Button Content="Buka Panduan (Bagian D)" Command="{Binding BukaPanduanWaCommand}" MinWidth="170" Height="30" Margin="10,0,0,0"
-                                            Style="{StaticResource SecondaryButton}"
-                                            ToolTip="Panduan lengkap: membuat Google Formulir, kolom yang wajib ada, berbagi Sheet, dan membaca kolom Status"/>
-                                </WrapPanel>
-                            </Grid>
-
-                            <!-- Hasil uji koneksi (muncul tepat di bawah tombolnya) -->
-                            <Border Visibility="{Binding WaSheetUjiInfo, Converter={StaticResource StringNotEmptyToVis}}">
-                                <Border.Style>
-                                    <Style TargetType="Border" BasedOn="{StaticResource InfoBox}">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding WaSheetUjiTone}" Value="1">
-                                                <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding WaSheetUjiTone}" Value="2">
-                                                <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding WaSheetUjiTone}" Value="3">
-                                                <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding WaSheetUjiInfo}" TextAlignment="Left"/>
-                            </Border>
-
-                            <Border Style="{StaticResource Divider}"/>
-
-                            <TextBlock Style="{StaticResource SettingSub}" Text="Pembuatan Formulir &amp; Sheet Otomatis (disarankan)"/>
-
-                            <!-- Pembuat formulir otomatis (Forms API) -->
-<Grid Style="{StaticResource SettingRow}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
                                     <ColumnDefinition Width="*"/>
@@ -1142,7 +1123,7 @@
                                     <WrapPanel>
                                         <Button Content="Buat Formulir &amp; Sheet Otomatis" Command="{Binding BuatFormulirOtomatisCommand}" MinWidth="240" Height="30"
                                                 Style="{StaticResource PrimaryButton}"
-                                                ToolTip="Membuat Google Formulir beserta Google Sheet jawabannya di akun Google desa secara otomatis. Hanya dibuat satu kali — klik berikutnya hanya menampilkan hasil yang sudah ada."/>
+                                                ToolTip="Membuat Google Formulir beserta Google Sheet jawabannya di akun Google desa secara otomatis. Hanya dibuat satu kali; klik berikutnya hanya menampilkan hasil yang sudah ada."/>
                                         <Button Content="Buat Ulang (Ganti)" Command="{Binding BuatUlangFormulirCommand}" MinWidth="150" Height="30" Margin="10,0,0,0"
                                                 Style="{StaticResource SecondaryButton}"
                                                 Visibility="{Binding WaFormAutoSudahAda, Converter={StaticResource BoolToVis}}"
@@ -1150,9 +1131,7 @@
                                     </WrapPanel>
                                     <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" FontSize="11" LineHeight="16"
                                                Foreground="{DynamicResource TextSecondaryBrush}">
-                                        Sekali klik: aplikasi membuat Sheet jawaban dan Formulir lengkap (tanpa Apps Script), lalu mengisi ketiga kolom di atas
-                                        dan mengaktifkan mode tautan. Tombol ini hanya membuat <Run FontWeight="SemiBold">satu kali</Run>; klik berikutnya tidak membuat duplikat
-                                        (gunakan &quot;Buat Ulang (Ganti)&quot; untuk menggantinya dengan yang baru).
+                                        Tombol ini hanya membuat <Run FontWeight="SemiBold">satu kali</Run>; klik berikutnya tidak membuat duplikat (gunakan &quot;Buat Ulang (Ganti)&quot; untuk menggantinya). Perlu akun Google yang terhubung: Formulir (tautan untuk warga), Sheet (jawaban yang dibaca aplikasi), dan Drive (penyimpanan PDF surat + tautan unduh). Masuk lewat <Run FontWeight="SemiBold">Login dengan Google</Run> di sidebar.
                                     </TextBlock>
                                 </StackPanel>
                             </Grid>
@@ -1179,54 +1158,112 @@
                                 </Border.Style>
                                 <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding WaFormAutoInfo}"/>
                             </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                            <Border Style="{StaticResource Divider}"/>
-
-                            <TextBlock Style="{StaticResource SettingSub}" Text="Template Sheet per Jenis Surat"/>
-
-                            <!-- Template Sheet siap pakai per jenis surat -->
+                <!-- ===== 2. Koneksi Google Formulir & Jawaban ===== -->
+                <Border Style="{StaticResource SettingCard}" Tag="google-sheet-koneksi">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE774;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Koneksi Google Formulir &amp; Jawaban" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="Tautan yang dipakai aplikasi: URL Formulir dibalaskan kepada warga lewat WhatsApp, URL Sheet dibaca aplikasi untuk membuat surat PDF."/>
                             <Grid Style="{StaticResource SettingRow}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Jenis surat" VerticalAlignment="Top" Margin="0,6,0,0"/>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="URL Google Formulir"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
+                                         HorizontalAlignment="Left" MinWidth="280"
+                                         Text="{Binding WaSheetFormUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Tautan Google Formulir yang diterima warga melalui WhatsApp (bentuk …/viewform). Diambil dari editor formulir: Kirim → ikon tautan."
+                                         AutomationProperties.Name="URL Google Formulir"/>
+                            </Grid>
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="URL Sheet jawaban"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
+                                         HorizontalAlignment="Left" MinWidth="280"
+                                         Text="{Binding WaSheetUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Google Sheet tempat jawaban terkumpul (URL dari peramban yang memuat /d/…/edit). Dibaca aplikasi untuk membuat surat dan tidak dikirim ke warga."
+                                         AutomationProperties.Name="URL Sheet jawaban"/>
+                            </Grid>
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Nama tab jawaban"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
+                                         HorizontalAlignment="Left" MinWidth="280"
+                                         Text="{Binding WaSheetTabName, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Nama tab di bagian bawah Google Sheet; bawaan: Form Responses 1"
+                                         AutomationProperties.Name="Nama tab jawaban"/>
+                            </Grid>
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Mode tautan"/>
+                                <WrapPanel Grid.Column="1">
+                                    <CheckBox Content="Aktifkan mode tautan (balasan berupa tautan formulir)"
+                                              IsChecked="{Binding WaSheetMode, Mode=TwoWay}"
+                                              ToolTip="Saat aktif, warga mengisi Google Formulir; saat nonaktif, warga mengetik data sesuai format percakapan."/>
+                                </WrapPanel>
+                            </Grid>
+                            <TextBlock Text="{Binding WaSheetRingkasan}" FontSize="11.5" FontStyle="Italic" Margin="140,0,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="16"/>
+                            <Grid Style="{StaticResource SettingRow}" Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text=""/>
                                 <StackPanel Grid.Column="1">
                                     <WrapPanel>
-                                        <ComboBox Width="300" Height="32" VerticalContentAlignment="Center"
-                                                  ItemsSource="{Binding TemplateJenisList}"
-                                                  SelectedItem="{Binding TemplateJenis}"
-                                                  ToolTip="Pilih jenis surat: template memuat kolom yang dibaca aplikasi, dua baris contoh, dan daftar pilihan"/>
-                                        <Button Content="Simpan Template ke Berkas" Command="{Binding BuatTemplateSheetCommand}" MinWidth="215" Height="30" Margin="10,0,0,0"
-                                                ToolTip="Membuat berkas .xlsx template Google Sheet dan menyimpannya ke komputer untuk diunggah manual ke Drive atau Sheets"/>
-                                    </WrapPanel>
-                                    <WrapPanel Margin="0,8,0,0">
-                                        <Button Content="Unggah Template ke Google Drive" Command="{Binding BuatDanUnggahTemplateCommand}" MinWidth="245" Height="30"
-                                                Style="{StaticResource PrimaryButton}"
-                                                ToolTip="Membuat template lalu mengunggahnya ke Google Drive akun yang terhubung; buka dari Drive dan pilih 'Open with Google Sheets'"/>
-                                        <Button Content="Buat Google Formulir Baru" Command="{Binding BukaGoogleFormsCommand}" MinWidth="205" Height="30" Margin="10,0,0,0"
+                                        <Button Content="Uji Koneksi Formulir &amp; Sheet" Command="{Binding UjiWaSheetCommand}" MinWidth="220" Height="30"
+                                                ToolTip="Memeriksa akses baca ke Sheet jawaban (Sheets API) sekaligus memastikan tautan Google Formulir dapat dibuka publik oleh warga"/>
+                                        <Button Content="Buka Panduan (Bagian D)" Command="{Binding BukaPanduanWaCommand}" MinWidth="170" Height="30" Margin="10,0,0,0"
                                                 Style="{StaticResource SecondaryButton}"
-                                                ToolTip="Membuka Google Forms di peramban untuk membuat formulir permohonan surat baru."/>
+                                                ToolTip="Panduan lengkap: membuat Google Formulir, kolom yang wajib ada, berbagi Sheet, dan membaca kolom Status"/>
                                     </WrapPanel>
+                                    <!-- Hasil uji koneksi (muncul tepat di bawah tombolnya) -->
+                                    <Border Margin="0,8,0,0" Visibility="{Binding WaSheetUjiInfo, Converter={StaticResource StringNotEmptyToVis}}">
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource InfoBox}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding WaSheetUjiTone}" Value="1">
+                                                        <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WaSheetUjiTone}" Value="2">
+                                                        <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WaSheetUjiTone}" Value="3">
+                                                        <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding WaSheetUjiInfo}" TextAlignment="Left"/>
+                                    </Border>
                                 </StackPanel>
                             </Grid>
-
-                            <!-- Hasil template -->
-                            <Border Visibility="{Binding WaSheetTemplateInfo, Converter={StaticResource StringNotEmptyToVis}}">
-                                <Border.Style>
-                                    <Style TargetType="Border" BasedOn="{StaticResource InfoBox}">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding WaSheetTemplateInfo}" Value="">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding WaSheetTemplateInfo}"/>
-                            </Border>
-
-                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,10,0,0" TextWrapping="Wrap"
-                                       Text="Google Formulir wajib memuat kolom: Jenis Surat, NIK, Nama, Tempat Lahir, Tanggal Lahir, Jenis Kelamin, Agama, Status Perkawinan, Pekerjaan, Alamat, Keperluan, dan No. WhatsApp. Template kolom di atas dapat langsung diunduh atau diunggah ke Google Sheet. Rincian tiap jenis surat dan cara penyiapan ada pada Panduan WhatsApp Bagian D."/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -1242,7 +1279,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x2139;&#xFE0F;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE946;"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Sesi &amp; Lokasi Pengaturan" Margin="10,0,0,0"/>
                             </DockPanel>

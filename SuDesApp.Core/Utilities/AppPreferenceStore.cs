@@ -118,6 +118,52 @@ namespace SuDesApp.Utilities
         public const string KeyBatasUkuranTambalanMb = "batasUkuranTambalanMb";
         public const string KeyStartupDiamDiam = "startupDiamDiam";
         public const string KeyStartupDiamDiamMenit = "startupDiamDiamMenit";
+        public const string KeyPanduanAwalSelesai = "panduanAwalSelesai";
+
+        /// <summary>
+        /// Pemberitahuan sambutan di lonceng notifikasi sudah pernah ditampilkan.
+        /// Dibaca lewat <c>PemberitahuanSambutanStore</c>; setelah ditampilkan sekali,
+        /// notifikasi itu tidak muncul lagi setiap aplikasi dibuka.
+        /// </summary>
+        public const string KeyPemberitahuanSambutan = "pemberitahuanSambutan";
+        public const string KeyPenomoranSuratDiperiksa = "penomoranSuratDiperiksa";
+
+        /// <summary>
+        /// Tampilan sidebar navigasi terakhir ("terbuka", "ikon"). Dibaca
+        /// lewat <c>SidebarModePrefs</c> supaya nilainya tetap stabil meskipun urutan
+        /// enum di aplikasi berubah.
+        /// </summary>
+        public const string KeyModeSidebar = "modeSidebar";
+
+        /// <summary>
+        /// Kecepatan animasi antarmuka ("lambat", "normal", "cepat"). Dibaca lewat
+        /// <c>KecepatanAnimasiPrefs</c> supaya nilai yang tidak dikenal tetap jatuh ke
+        /// kecepatan bawaan.
+        /// </summary>
+        public const string KeyKecepatanAnimasi = "kecepatanAnimasi";
+
+        /// <summary>
+        /// Panduan awal (langkah mengisi data desa, pejabat, dan nomor surat) sudah
+        /// ditutup/diselesaikan pengguna, jadi tidak dibuka otomatis lagi (default:
+        /// belum). Panduan tetap bisa dibuka kapan saja dari menu Panduan Awal.
+        /// </summary>
+        public static bool IsPanduanAwalSelesai() => GetBool(KeyPanduanAwalSelesai, false);
+        public static void SetPanduanAwalSelesai(bool v) => SetBool(KeyPanduanAwalSelesai, v);
+
+        /// <summary>
+        /// Pemberitahuan sambutan ("Notifikasi aktif — selamat datang …") sudah pernah
+        /// muncul di lonceng notifikasi. Default: belum pernah.
+        /// </summary>
+        public static bool IsPemberitahuanSambutanPernahTampil() => GetBool(KeyPemberitahuanSambutan, false);
+        public static void SetPemberitahuanSambutanPernahTampil(bool v) => SetBool(KeyPemberitahuanSambutan, v);
+
+        /// <summary>
+        /// Pengguna sudah menyatakan penomoran surat sesuai dengan kantor desanya
+        /// (bawaan aplikasi boleh dipakai) — dipakai panduan awal untuk menandai
+        /// langkah nomor surat selesai tanpa memaksa mengubah apa pun.
+        /// </summary>
+        public static bool IsPenomoranSuratDiperiksa() => GetBool(KeyPenomoranSuratDiperiksa, false);
+        public static void SetPenomoranSuratDiperiksa(bool v) => SetBool(KeyPenomoranSuratDiperiksa, v);
 
         /// <summary>Login otomatis Google (default: aktif).</summary>
         public static bool IsGoogleAutoLoginEnabled() => GetBool(KeyGoogleAutoLogin, true);
@@ -200,10 +246,11 @@ namespace SuDesApp.Utilities
 
         /// <summary>
         /// Pasang pembaruan kecil (tambalan) secara OTOMATIS saat aplikasi ditutup,
-        /// tanpa menanya pengguna (default: nonaktif). Hanya berlaku untuk tambalan;
-        /// pembaruan besar selalu memerlukan persetujuan lewat halaman Pembaruan.
+        /// tanpa menanya pengguna (default: aktif — batal centang bila tidak diinginkan).
+        /// Hanya berlaku untuk tambalan; pembaruan besar selalu memerlukan persetujuan
+        /// lewat halaman Pembaruan.
         /// </summary>
-        public static bool IsPasangOtomatisSaatKeluar() => GetBool(KeyPasangOtomatisSaatKeluar, false);
+        public static bool IsPasangOtomatisSaatKeluar() => GetBool(KeyPasangOtomatisSaatKeluar, true);
         public static void SetPasangOtomatisSaatKeluar(bool v) => SetBool(KeyPasangOtomatisSaatKeluar, v);
 
         /// <summary>

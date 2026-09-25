@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Utilities;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -100,6 +101,56 @@ namespace SuDesApp.Wpf.ViewModels
             _min = min;
             _maks = maks;
         }
+    }
+
+    /// <summary>
+    /// Satu pilihan kecepatan animasi antarmuka (Lambat/Normal/Cepat) di halaman
+    /// Pengaturan Aplikasi. Semua teksnya diturunkan dari aturan di
+    /// <see cref="KecepatanAnimasiPrefs"/>, sehingga pilihan kartu, penjelasan, dan
+    /// durasi yang benar-benar dipakai animasi tidak bisa saling melenceng.
+    /// </summary>
+    public class KecepatanAnimasiPilihanVM
+    {
+        public KecepatanAnimasiPilihanVM(KecepatanAnimasi nilai)
+        {
+            Nilai = nilai;
+            Judul = KecepatanAnimasiPrefs.Judul(nilai);
+            FaktorTeks = KecepatanAnimasiPrefs.FaktorTeks(nilai);
+            Keterangan = KecepatanAnimasiPrefs.Keterangan(nilai);
+            ContohSidebar = "sidebar " + KecepatanAnimasiPrefs.ContohTeks(nilai, KecepatanAnimasiPrefs.DasarSidebar);
+            ContohDropdown = "dropdown " + KecepatanAnimasiPrefs.ContohTeks(nilai, KecepatanAnimasiPrefs.DasarDropdown);
+            // Glyph Segoe Fluent Icons: pelan = jam, normal = centang, cepat = kilat.
+            Ikon = nilai switch
+            {
+                KecepatanAnimasi.Lambat => IkonMenu.Riwayat,      // \uE81C jam
+                KecepatanAnimasi.Cepat => "\uE945",               // kilat ganda
+                _ => "\uE73E"                                     // centang
+            };
+        }
+
+        /// <summary>Nilai yang disimpan ke preferensi aplikasi.</summary>
+        public KecepatanAnimasi Nilai { get; }
+
+        public string Judul { get; }
+
+        /// <summary>Pengali dibanding bawaan, mis. "1,9× lebih lambat dari bawaan".</summary>
+        public string FaktorTeks { get; }
+
+        /// <summary>Kapan pilihan ini cocok dipakai.</summary>
+        public string Keterangan { get; }
+
+        public string Ikon { get; }
+
+        /// <summary>Durasi nyata transisi sidebar pada pilihan ini, mis. "sidebar 0,49 dtk".</summary>
+        public string ContohSidebar { get; }
+
+        /// <summary>Durasi nyata dropdown grup pada pilihan ini, mis. "dropdown 0,46 dtk".</summary>
+        public string ContohDropdown { get; }
+
+        /// <summary>Ringkasan durasi kedua transisi utama untuk kartu pilihan.</summary>
+        public string ContohTeks => ContohSidebar + " · " + ContohDropdown;
+
+        public override string ToString() => Judul;
     }
 
     /// <summary>
@@ -243,6 +294,51 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>Baris pengaturan bernilai angka (mis. batas ukuran MB).</summary>
         public ObservableCollection<SettingRowAngkaVM> RowsAngka { get; } = new();
+
+        // ===== Kecepatan animasi antarmuka (Lambat/Normal/Cepat) =====
+
+        /// <summary>
+        /// Pilihan kecepatan animasi untuk kartu pengaturan. Urutannya tetap
+        /// Lambat → Normal → Cepat (paling halus ke paling gesit).
+        /// </summary>
+        public static IReadOnlyList<KecepatanAnimasiPilihanVM> DaftarKecepatanAnimasi()
+            => new[]
+            {
+                new KecepatanAnimasiPilihanVM(KecepatanAnimasi.Lambat),
+                new KecepatanAnimasiPilihanVM(KecepatanAnimasi.Normal),
+                new KecepatanAnimasiPilihanVM(KecepatanAnimasi.Cepat)
+            };
+
+        public IReadOnlyList<KecepatanAnimasiPilihanVM> PilihanKecepatanAnimasi { get; }
+            = DaftarKecepatanAnimasi();
+
+        private KecepatanAnimasiPilihanVM _kecepatanAnimasiTerpilih;
+
+        /// <summary>
+        /// Kecepatan animasi yang dipilih. Tersimpan langsung saat dipilih, dan
+        /// langsung berlaku pada animasi berikutnya — tidak perlu menutup aplikasi.
+        /// </summary>
+        public KecepatanAnimasiPilihanVM KecepatanAnimasiTerpilih
+        {
+            get => _kecepatanAnimasiTerpilih;
+            set
+            {
+                if (value == null || ReferenceEquals(value, _kecepatanAnimasiTerpilih)) return;
+                if (!SetProperty(ref _kecepatanAnimasiTerpilih, value)) return;
+
+                KecepatanAnimasiPrefs.Simpan(value.Nilai);
+
+                OnPropertyChanged(nameof(KecepatanAnimasiContohInfo));
+                TampilkanStatusSementara($"Tersimpan — kecepatan animasi: {value.Judul}");
+            }
+        }
+
+        /// <summary>Keterangan kecepatan yang sedang berlaku beserta durasi nyatanya.</summary>
+        public string KecepatanAnimasiContohInfo =>
+            $"Contoh di bawah memakai kecepatan {_kecepatanAnimasiTerpilih.Judul}: " +
+            $"sidebar {KecepatanAnimasiPrefs.ContohTeks(_kecepatanAnimasiTerpilih.Nilai, KecepatanAnimasiPrefs.DasarSidebar)}, " +
+            $"dropdown {KecepatanAnimasiPrefs.ContohTeks(_kecepatanAnimasiTerpilih.Nilai, KecepatanAnimasiPrefs.DasarDropdown)}, " +
+            $"sorotan menu {KecepatanAnimasiPrefs.ContohTeks(_kecepatanAnimasiTerpilih.Nilai, KecepatanAnimasiPrefs.DasarSorotMasuk)}.";
 
         private string _waJamBuka = AppPreferenceStore.GetWaServiceOpen() ?? string.Empty;
         private string _waJamTutup = AppPreferenceStore.GetWaServiceClose() ?? string.Empty;
@@ -637,144 +733,10 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         public AsyncRelayCommand UjiWaSheetCommand { get; }
+        public RelayCommand BukaPanduanWaCommand { get; }
         public AsyncRelayCommand BuatFormulirOtomatisCommand { get; }
         public AsyncRelayCommand BuatUlangFormulirCommand { get; }
 
-        // ==== Template Google Sheet per jenis surat ====
-
-        /// <summary>Item pilihan jenis surat untuk dropdown template (binding-safe).</summary>
-        public class TemplateJenisVM
-        {
-            public string Key { get; }
-            public string Label { get; }
-            public TemplateJenisVM(string key, string label) { Key = key; Label = label; }
-            public override string ToString() => Label;
-        }
-
-        private static readonly TemplateJenisVM[] TemplateJenisOptions =
-        {
-            new("SEMUA", "Semua jenis (satu berkas, satu tab per jenis)"),
-            new("SKTM", "SKTM"),
-            new("SKD_UMUM", "SKD Umum"),
-            new("DOMISILI_WARGA", "Domisili Warga"),
-            new("PENGANTAR_SKCK", "Pengantar SKCK"),
-            new("SKU", "SKU (Keterangan Usaha)"),
-            new("IZIN_ORTU", "Izin Orang Tua"),
-            new("INSTANSI", "Surat Instansi"),
-        };
-
-        /// <summary>Opsi pilihan jenis surat untuk dropdown template.</summary>
-        public IReadOnlyList<TemplateJenisVM> TemplateJenisList => TemplateJenisOptions;
-
-        private TemplateJenisVM _templateJenis = TemplateJenisOptions[0];
-        /// <summary>Jenis surat yang dipilih untuk template Sheet.</summary>
-        public TemplateJenisVM TemplateJenis
-        {
-            get => _templateJenis;
-            set => SetProperty(ref _templateJenis, value);
-        }
-
-        private string _waSheetTemplateInfo = string.Empty;
-        /// <summary>Hasil pembuatan/unggah template Sheet.</summary>
-        public string WaSheetTemplateInfo
-        {
-            get => _waSheetTemplateInfo;
-            private set => SetProperty(ref _waSheetTemplateInfo, value);
-        }
-
-        public AsyncRelayCommand BuatTemplateSheetCommand { get; }
-        public AsyncRelayCommand BuatDanUnggahTemplateCommand { get; }
-
-        /// <summary>
-        /// Membuat template .xlsx Google Sheet sesuai jenis surat terpilih dan
-        /// menyimpannya ke lokasi pilihan operator (mode SaveFileDialog).
-        /// </summary>
-        private async Task BuatTemplateSheetAsync()
-        {
-            try
-            {
-                var dialog = new Microsoft.Win32.SaveFileDialog
-                {
-                    Title = "Simpan Template Google Sheet",
-                    Filter = "Berkas Excel (*.xlsx)|*.xlsx",
-                    FileName = $"Template-Sheet-{(TemplateJenis.Key == "SEMUA" ? "Semua" : TemplateJenis.Label.Replace(' ', '-'))}.xlsx"
-                };
-                if (dialog.ShowDialog() != true) return;
-
-                WaSheetTemplateInfo = "Membuat template…";
-                var path = await Task.Run(() => WaSheetTemplateService.BuatTemplateFile(TemplateJenis.Key, Path.GetDirectoryName(dialog.FileName)));
-                if (!string.Equals(path, dialog.FileName, StringComparison.OrdinalIgnoreCase))
-                    File.Move(path, dialog.FileName, overwrite: true);
-
-                WaSheetTemplateInfo = "Template berhasil dibuat: " + dialog.FileName +
-                    "\nUnggah berkas tersebut ke Google Drive lalu buka dengan Google Sheets, atau gunakan tombol 'Unggah Template ke Google Drive'.";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal membuat template Google Sheet");
-                WaSheetTemplateInfo = "Gagal: " + ex.Message;
-            }
-        }
-
-        /// <summary>
-        /// Membuat template .xlsx lalu mengunggahnya langsung ke Google Drive
-        /// (folder akun yang terhubung). Operator cukup membukanya di Drive dan
-        /// memilih "Open with Google Sheets".
-        /// </summary>
-        private async Task BuatDanUnggahTemplateAsync()
-        {
-            try
-            {
-                var app = System.Windows.Application.Current as App;
-                var drive = app?.ServiceProvider.GetRequiredService<GoogleDriveService>();
-                if (drive == null || !drive.IsOAuthEnabled || !drive.HasStoredToken())
-                {
-                    WaSheetTemplateInfo = "Akun Google belum terhubung. Masuk dengan Akun Google terlebih dahulu, atau gunakan tombol 'Simpan Template ke Berkas'.";
-                    return;
-                }
-
-                WaSheetTemplateInfo = "Membuat dan mengunggah template…";
-                var tempDir = Path.Combine(Path.GetTempPath(), "SuDesApp-SheetTemplate");
-                var path = await Task.Run(() => WaSheetTemplateService.BuatTemplateFile(TemplateJenis.Key, tempDir));
-
-                var uploaded = await drive.UploadFileAsync(path, parentId: null,
-                    Path.GetFileName(path), null);
-                var link = drive.ToWebViewLink(uploaded.Id);
-
-                try { File.Delete(path); } catch { /* biarkan bila terkunci */ }
-
-                WaSheetTemplateInfo = "Template berhasil diunggah ke Google Drive:\n" + link +
-                    "\nBuka tautan tersebut, pilih File → Save as Google Sheets bila masih berformat Excel, lalu salin URL Sheet-nya ke kolom 'URL Sheet jawaban'.";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal mengunggah template Google Sheet");
-                WaSheetTemplateInfo = "Gagal: " + ex.Message;
-            }
-        }
-
-        public RelayCommand BukaPanduanWaCommand { get; }
-        public RelayCommand BukaGoogleFormsCommand { get; }
-
-        /// <summary>
-        /// Buka Google Forms di browser default untuk membuat formulir baru.
-        /// </summary>
-        private void BukaGoogleForms()
-        {
-            try
-            {
-                var psi = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "https://forms.google.com",
-                    UseShellExecute = true
-                };
-                System.Diagnostics.Process.Start(psi);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal membuka Google Forms di browser");
-            }
-        }
 
         /// <summary>Ringkasan status mode tautan untuk ditampilkan di kartu pengaturan.</summary>
         public string WaSheetRingkasan
@@ -991,12 +953,6 @@ namespace SuDesApp.Wpf.ViewModels
             _penomoranSurat = penomoranSurat;
 
             _googleDrive = _provider.GetService<GoogleDriveService>();
-            var kredensial = _googleDrive == null ? null : GoogleClientCredentials.Load();
-            GoogleClientId = kredensial?.ClientId ?? string.Empty;
-            GoogleClientSecret = kredensial?.ClientSecret ?? string.Empty;
-
-            SimpanKredensialGoogleCommand = new AsyncRelayCommand(SimpanKredensialGoogleAsync);
-            UjiKredensialGoogleCommand = new AsyncRelayCommand(UjiKredensialGoogleAsync);
 
             UjiCloudApiCommand = new AsyncRelayCommand(UjiCloudApiAsync);
             WizardLanjutCommand = new AsyncRelayCommand(WizardLanjutAsync);
@@ -1006,11 +962,14 @@ namespace SuDesApp.Wpf.ViewModels
             UjiWaSheetCommand = new AsyncRelayCommand(UjiWaSheetAsync);
             BuatFormulirOtomatisCommand = new AsyncRelayCommand(() => BuatFormulirOtomatisAsync(ganti: false));
             BuatUlangFormulirCommand = new AsyncRelayCommand(() => BuatFormulirOtomatisAsync(ganti: true));
-            BuatTemplateSheetCommand = new AsyncRelayCommand(BuatTemplateSheetAsync);
-            BuatDanUnggahTemplateCommand = new AsyncRelayCommand(BuatDanUnggahTemplateAsync);
             BukaPanduanWaCommand = new RelayCommand(BukaPanduanWa);
-            BukaGoogleFormsCommand = new RelayCommand(BukaGoogleForms);
             MuatHariLayanan();
+
+            // Kecepatan animasi yang sedang berlaku dipasang sebagai pilihan terpilih;
+            // nilainya ditulis langsung ke bidang (bukan properti) supaya membuka halaman
+            // ini tidak dianggap sebagai perubahan pengguna.
+            _kecepatanAnimasiTerpilih = PilihanKecepatanAnimasi
+                .First(p => p.Nilai == KecepatanAnimasiPrefs.SaatIni);
 
             SiapkanBagian();
 
@@ -1182,103 +1141,8 @@ namespace SuDesApp.Wpf.ViewModels
             RowsAngka.Add(baris);
         }
 
-        // ===== Kredensial klien OAuth Google (Client ID & Client Secret) =====
-        private string _googleClientId = string.Empty;
-        private string _googleClientSecret = string.Empty;
-        private string _googleKredensialInfo = string.Empty;
-
-        public string GoogleClientId
-        {
-            get => _googleClientId;
-            set => SetProperty(ref _googleClientId, value ?? string.Empty);
-        }
-
-        public string GoogleClientSecret
-        {
-            get => _googleClientSecret;
-            set => SetProperty(ref _googleClientSecret, value ?? string.Empty);
-        }
-
-        public string GoogleKredensialInfo
-        {
-            get => _googleKredensialInfo;
-            private set => SetProperty(ref _googleKredensialInfo, value);
-        }
-
-        /// <summary>Lokasi berkas kredensial terenkripsi DPAPI (untuk ditampilkan ke teknisi).</summary>
-        public string GoogleKredensialLokasi => GoogleDriveService.CredentialsStorePath;
-
-        /// <summary>Status apakah klien OAuth sudah aktif (Client ID & Secret tersedia).</summary>
-        public string GoogleKredensialStatus => _googleDrive?.IsOAuthEnabled == true
-            ? "Klien OAuth aktif — akun Google sudah bisa dihubungkan."
-            : "Klien OAuth belum aktif — isi Client ID dan Client Secret di bawah, lalu simpan.";
-
-        public AsyncRelayCommand SimpanKredensialGoogleCommand { get; }
-        public AsyncRelayCommand UjiKredensialGoogleCommand { get; }
-
-        /// <summary>
-        /// Simpan Client ID & Client Secret terenkripsi DPAPI per user Windows
-        /// (tidak lagi plaintext di appsettings.json yang ikut terdistribusi).
-        /// </summary>
-        private Task SimpanKredensialGoogleAsync()
-        {
-            if (_googleDrive == null)
-            {
-                GoogleKredensialInfo = "Layanan Google tidak tersedia pada sesi ini.";
-                return Task.CompletedTask;
-            }
-
-            if (string.IsNullOrWhiteSpace(GoogleClientId) || string.IsNullOrWhiteSpace(GoogleClientSecret))
-            {
-                GoogleKredensialInfo = "Client ID dan Client Secret wajib diisi.";
-                return Task.CompletedTask;
-            }
-
-            try
-            {
-                _googleDrive.SaveClientCredentials(GoogleClientId, GoogleClientSecret);
-                GoogleKredensialInfo = "Kredensial berhasil disimpan terenkripsi pada:\n" + GoogleDriveService.CredentialsStorePath +
-                    "\n\nLangkah berikutnya: klik \"Uji Koneksi\" untuk membuka login akun Google.";
-                OnPropertyChanged(nameof(GoogleKredensialStatus));
-                _logger.LogInformation("Kredensial klien OAuth Google disimpan dari halaman Pengaturan.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal menyimpan kredensial klien OAuth Google");
-                GoogleKredensialInfo = "Gagal menyimpan: " + ex.Message;
-            }
-            return Task.CompletedTask;
-        }
-
-        /// <summary>Uji kredensial dengan membuka alur login Google dan menampilkan email hasilnya.</summary>
-        private async Task UjiKredensialGoogleAsync()
-        {
-            var drive = _googleDrive;
-            if (drive == null || !drive.IsOAuthEnabled)
-            {
-                GoogleKredensialInfo = "Simpan Client ID dan Client Secret terlebih dahulu, lalu uji koneksi.";
-                return;
-            }
-
-            try
-            {
-                GoogleKredensialInfo = "Membuka login Google… selesaikan prosesnya di peramban bila diminta.";
-                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
-                var email = await Task.Run(() => drive.GetAccountEmailAsync(cts.Token), cts.Token);
-                GoogleKredensialInfo = string.IsNullOrWhiteSpace(email)
-                    ? "Login selesai, tetapi email tidak diperoleh. Periksa Google Drive API dan OAuth consent screen."
-                    : "Terhubung — " + email;
-            }
-            catch (OperationCanceledException)
-            {
-                GoogleKredensialInfo = "Waktu login habis atau dibatalkan.";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Uji koneksi kredensial Google gagal");
-                GoogleKredensialInfo = "Gagal: " + ex.Message;
-            }
-        }
+        // Kredensial klien OAuth Google kini tertanam di aplikasi
+        // (GoogleClientCredentialsBawaan) — tidak lagi dikelola dari halaman ini.
 
         public RelayCommand BatalCommand { get; }
 
@@ -1297,7 +1161,6 @@ namespace SuDesApp.Wpf.ViewModels
         public PengaturanSectionVM BagianPenomoran { get; private set; } = null!;
         public PengaturanSectionVM BagianLayananWa { get; private set; } = null!;
         public PengaturanSectionVM BagianGatewayWa { get; private set; } = null!;
-        public PengaturanSectionVM BagianGoogleOauth { get; private set; } = null!;
         public PengaturanSectionVM BagianGoogleSheet { get; private set; } = null!;
         public PengaturanSectionVM BagianInformasi { get; private set; } = null!;
 
@@ -1328,25 +1191,25 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Susun daftar bagian + pilih bagian pertama (Umum) saat halaman dibuka.</summary>
         private void SiapkanBagian()
         {
-            BagianUmum = new PengaturanSectionVM("umum", "Umum & Preferensi", "\u2699\uFE0F",
-                "Perilaku aplikasi, preferensi kerja, dan pembersihan berkas berkala.");
-            BagianPenomoran = new PengaturanSectionVM("penomoran", "Penomoran Surat", "\uD83D\uDD22",
+            // Ikon memakai glyph Segoe Fluent Icons (IkonMenu) sehingga mengikuti
+            // tema dan tampil konsisten dengan sidebar — bukan emoji berwarna.
+            BagianUmum = new PengaturanSectionVM("umum", "Umum & Preferensi", IkonMenu.Pengaturan,
+                "Perilaku aplikasi, kecepatan animasi antarmuka, preferensi kerja, dan pembersihan berkas berkala.");
+            BagianPenomoran = new PengaturanSectionVM("penomoran", "Penomoran Surat", IkonMenu.Dokumen,
                 "Awalan nomor surat tiap jenis surat, misalnya SKD 470 menjadi 471.");
-            BagianLayananWa = new PengaturanSectionVM("layanan-wa", "Jam Layanan WhatsApp", "\uD83D\uDD52",
+            BagianLayananWa = new PengaturanSectionVM("layanan-wa", "Jam Layanan WhatsApp", IkonMenu.LayananOnline,
                 "Hari dan jam pemrosesan otomatis permintaan surat dari WhatsApp.");
-            BagianGatewayWa = new PengaturanSectionVM("gateway-wa", "Gateway WhatsApp", "\uD83D\uDCAC",
+            BagianGatewayWa = new PengaturanSectionVM("gateway-wa", "Gateway WhatsApp", IkonMenu.LayananOnline,
                 "Sambungan WhatsApp Cloud API milik Meta: access token, nomor pengirim, dan uji koneksi.");
-            BagianGoogleOauth = new PengaturanSectionVM("google-oauth", "Kredensial Google", "\uD83D\uDD11",
-                "Client ID dan Client Secret aplikasi untuk login Google, Drive, Formulir, serta Sheet.");
-            BagianGoogleSheet = new PengaturanSectionVM("google-sheet", "Formulir & Sheet", "\uD83D\uDCC4",
+            BagianGoogleSheet = new PengaturanSectionVM("google-sheet", "Formulir & Sheet", IkonMenu.Dokumen,
                 "Koneksi Google Formulir dan Sheet jawaban, termasuk pembuatan formulir otomatis.");
-            BagianInformasi = new PengaturanSectionVM("informasi", "Informasi", "\u2139\uFE0F",
+            BagianInformasi = new PengaturanSectionVM("informasi", "Informasi", IkonMenu.Tentang,
                 "Sesi login yang sedang aktif dan lokasi berkas pengaturan pada komputer ini.");
 
             foreach (var bagian in new[]
                      {
                          BagianUmum, BagianPenomoran, BagianLayananWa, BagianGatewayWa,
-                         BagianGoogleOauth, BagianGoogleSheet, BagianInformasi
+                         BagianGoogleSheet, BagianInformasi
                      })
             {
                 Sections.Add(bagian);

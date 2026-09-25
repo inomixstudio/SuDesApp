@@ -424,7 +424,7 @@ public class DatabaseImportExportService
         }
     }
 
-    private async Task UpdateSchemaVersionAsync(SqliteConnection conn, int version, SqliteTransaction transaction = default)
+    private async Task UpdateSchemaVersionAsync(SqliteConnection conn, int version, SqliteTransaction? transaction = null)
     {
         using var cmd = new SqliteCommand("UPDATE SchemaVersion SET Version = @version", conn, transaction);
         cmd.Parameters.AddWithValue("@version", version);
@@ -466,7 +466,7 @@ public class DatabaseImportExportService
         return false;
     }
 
-    private async Task<string> GetColumnNameByIndexAsync(SqliteConnection conn, string tableName, int columnIndex, SqliteTransaction transaction = default)
+    private async Task<string> GetColumnNameByIndexAsync(SqliteConnection conn, string tableName, int columnIndex, SqliteTransaction? transaction = null)
     {
         using var cmd = new SqliteCommand($"PRAGMA table_info({tableName});", conn, transaction);
         using var reader = await cmd.ExecuteReaderAsync();
@@ -475,7 +475,7 @@ public class DatabaseImportExportService
             if (reader.GetInt32(0) == columnIndex)
                 return reader.GetString(1);
         }
-        return null!;
+        return string.Empty;
     }
 
     private async Task ExecuteNonQueryAsync(SqliteConnection conn, string sql, SqliteTransaction? transaction = null)
