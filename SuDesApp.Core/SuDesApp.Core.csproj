@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.86" />
     <PackageReference Include="EPPlus" Version="8.7.0" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.76.0.4261" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.76.0.4273" />
     <PackageReference Include="Google.Apis.Forms.v1" Version="1.74.0.3764" />
     <!-- Sheets API untuk mode layanan online Google Sheet/Form (baca jawaban + tulis status). -->
     <!-- Versi terakhir yang diterbitkan: 1.75.0.4178; aman dipakai bersama Drive.v3 1.76 (Google.Apis diunify). -->
@@ -31,7 +31,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.12" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="QuestPDF" Version="2026.9.0" />
+    <PackageReference Include="QuestPDF" Version="2026.9.1" />
     <!-- DPAPI utk kredensial klien OAuth Google (GoogleClientCredentials) -->
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />
   </ItemGroup>
@@ -42,5 +42,14 @@
     <Compile Remove="Configuration\DapperExtensions.cs" />
     <Compile Remove="db\DatabaseMigrator.cs" />
   </ItemGroup>
+
+  <!-- Kredensial OAuth Google tertanam: nilai asli hidup DI LUAR git di
+       Utilities/GoogleClientCredentialsBawaan.lokal.cs (terdaftar di .gitignore;
+       ikut compile otomatis lewat globbing SDK). Saat berkas lokal ada, simbol
+       GOOGLE_KREDENSIAL_LOKAL membuat placeholder di GoogleClientCredentialsBawaan.cs
+       menjadi kosong — source yang ter-commit tidak pernah memuat rahasia. -->
+  <PropertyGroup Condition="Exists('Utilities\GoogleClientCredentialsBawaan.lokal.cs')">
+    <DefineConstants>$(DefineConstants);GOOGLE_KREDENSIAL_LOKAL</DefineConstants>
+  </PropertyGroup>
 
 </Project>
