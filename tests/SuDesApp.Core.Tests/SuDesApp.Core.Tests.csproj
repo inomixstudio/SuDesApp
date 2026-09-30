@@ -15,6 +15,8 @@
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <!-- Ikuti Core: hanya provider SQLCipher yang boleh aktif di proses uji. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" ExcludeAssets="all" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
@@ -22,6 +24,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\SuDesApp.Core\SuDesApp.Core.csproj" />
+  </ItemGroup>
+
+  <!-- AppConfig.FontFolder menunjuk ke {BaseDirectory}/Resources/Fonts (lihat
+       AppConfig.GetFullPath). Generator PDF mendaftarkan font dari folder itu,
+       jadi berkas font harus ikut ke folder keluaran pengujian. Tanpa ini,
+       uji yang benar-benar menulis PDF gagal dengan "font family not
+       available: Times New Roman" hanya pada mesin yang bin/-nya sudah
+       pernah diisi, sehingga hasil uji tidak dapat direproduksi. -->
+  <ItemGroup>
+    <Content Include="..\..\Resources\Fonts\*.ttf" Link="Resources\Fonts\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
   </ItemGroup>
 
 </Project>
