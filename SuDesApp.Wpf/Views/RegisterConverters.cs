@@ -64,4 +64,17 @@ namespace SuDesApp.Wpf.Views
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
             => throw new NotImplementedException();
     }
+
+    /// <summary>
+    /// Teks terisi -> Visible, teks kosong/null -> Collapsed. Dipakai untuk kotak
+    /// pesan galat yang hanya boleh muncul kalau ada isinya.
+    /// </summary>
+    public class StringToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            => string.IsNullOrWhiteSpace(value as string) ? Visibility.Collapsed : Visibility.Visible;
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            => throw new NotImplementedException();
+    }
 }

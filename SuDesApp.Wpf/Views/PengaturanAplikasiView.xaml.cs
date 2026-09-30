@@ -27,7 +27,7 @@ namespace SuDesApp.Wpf.Views
         /// tertanam di aplikasi dan tidak dikelola dari halaman ini.</summary>
         private static readonly string[] UrutanSeksi =
         {
-            "umum", "penomoran", "layanan-wa", "gateway-wa", "google-sheet", "informasi"
+            "umum", "penomoran", "layanan-wa", "gateway-wa", "google-sheet", "database", "informasi"
         };
 
         private ViewModels.PengaturanAplikasiViewModel? _vm;

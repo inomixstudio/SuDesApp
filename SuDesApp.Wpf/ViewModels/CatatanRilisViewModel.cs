@@ -133,8 +133,47 @@ namespace SuDesApp.Wpf.ViewModels
             return new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
-                    "Versi 2.5.3 (19 September 2026)",
+                    "Versi 2.5.4 (30 September 2026)",
                     true,
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Fitur Baru — API Desa (Layanan Data Lokal)", new List<string>
+                        {
+                            "Menu BANTUAN baru 'API Desa': aplikasi dapat membuka layanan HTTP lokal (http://localhost:8790/sudes/api/v1) untuk dibaca sistem lain di kantor desa — mati secara bawaan dan hanya melayani localhost.",
+                            "Akses memakai kunci API (header X-Api-Key atau Bearer) dengan cakupan tambahan: kunci Agregat untuk membaca statistik kependudukan & data perangkat desa, dan kunci Permintaan untuk mengirim permintaan surat dari sistem luar ke antrean operator di panel Layanan Online.",
+                            "Kunci utama (Penuh), kunci tambahan, port (1025-65535), dan pembatasan laju (60 permintaan/menit) dikelola langsung di halaman API Desa; kunci disimpan terenkripsi DPAPI dan hanya bisa dibaca akun Windows yang sama.",
+                            "Endpoint verifikasi surat GET /verifikasi/{kode} terbuka tanpa kunci API: pihak luar cukup membuka alamatnya di peramban untuk memeriksa keaslian surat terbit.",
+                            "Data pribadi warga tidak pernah diekspos — API hanya membuka angka agregat, data perangkat, dan permintaan surat; seluruh kegiatan tercatat di Riwayat Aktivitas."
+                        }),
+                        new CatatanRilisSubSection("Fitur Baru — Lokasi Berkas Database Dapat Dipilih", new List<string>
+                        {
+                            "Pengaturan Aplikasi → Database Desa: lokasi berkas desa.db kini dapat dipindah sendiri (mis. ke folder data desa di drive D) lewat tombol pilih berkas, tanpa menyentuh berkas konfigurasi.",
+                            "Pilihan disimpan di profil pengguna dan tetap dipakai setelah aplikasi diperbarui; kembali ke lokasi bawaan cukup satu tombol, dan lokasi aktif beserta status berkasnya (terenkripsi & terkunci / siap dienkripsi / tidak terbaca) tampil di halaman.",
+                            "Saat berpindah, aplikasi memeriksa berkas lebih dulu: database yang belum terenkripsi atau tidak terbaca meminta konfirmasi sebelum dipakai, dan jalur tidak sah otomatis kembali ke lokasi bawaan tanpa menggagalkan pembukaan aplikasi.",
+                            "Pengaturan diterapkan setelah aplikasi ditutup lalu dibuka lagi agar seluruh sambungan database tertutup rapi — tidak ada data yang dipindah atau diubah otomatis. Tombol 'Simpan & Mulai Ulang Sekarang' mengerjakan penutupan dan pembukaan kembali itu seketika, lengkap dengan konfirmasi."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan", new List<string>
+                        {
+                            "Halaman Tentang Aplikasi diselaraskan: daftar fitur dan teknologi kini menyebut enkripsi database SQLCipher dan API Desa, dan lokasi data dipecah jelas — 'Folder aplikasi' (program + database) serta 'Preferensi & kunci' (%LOCALAPPDATA%\\SuDesApp).",
+                            "Pengaturan Aplikasi → Preferensi: tinggi maksimum baris tabel bertext panjang (Register Surat, Register NTCR, API Desa, Data Warga) kini dapat diatur operator — cukup tekan tombol cepat Ringkas, Normal, atau Lega, atau ketik sendiri angkanya (40-600 piksel, bawaan 200) — dan tersimpan di preferensi aplikasi. Naikkan bila alamat panjang perlu tampil lebih utuh, turunkan bila tabel ingin lebih ringkas; tabel yang sedang terbuka langsung menyesuaikan tanpa perlu dibuka ulang.",
+                            "Kontras keenam tema (Terang, Gelap, Biru, Hijau, Pink, Abu-abu) disesuaikan agar memenuhi WCAG 2.1 AA: token teks 'di atas latar' untuk lencana sukses/peringatan/galat ditambahkan, warna teks status dan subjudul header disetel ulang, serta teks aksen kini memakai token teks — bukan warna isian. Akibatnya teks di atas aksen di tema Terang/Gelap/Hijau/Pink berganti dari putih (1,9-3,5:1) menjadi tinta gelap yang terbaca, dan header gradien di empat tema itu sedikit lebih gelap. Rinciannya di AUDIT-TEMA.md; aturannya dijaga otomatis uji KontrasTemaTests (49 pasangan × 7 tema) yang meniru alat Tools/check-kontras-wcag.ps1. Putaran kedua (1 Oktober 2026) menutup celahnya: sepuluh pasangan yang dipakai kode tetapi belum pernah diperiksa ditambahkan ke gerbang, dan beberapa angka palet disetel ulang (teks sekunder tema Gelap dari #9E9E9E ke #BDBDBD, kartu galat tema Pink dari #FEE2E2 ke #FEEAEA, aksen terang tema Biru dan Pink diperjelas).",
+                            "Tema ketujuh 'Kontras Tinggi' ditambahkan untuk pengguna low vision: latar hitam pekat, teks putih, dan aksen kuning menyala — dipilih dari daftar Tema seperti tema lain, tersimpan, dan tetap berlaku setelah aplikasi dibuka ulang. Ini satu-satunya tema yang menargetkan WCAG 2.1 AAA (teks normal minimal 7:1), jadi ambangnya ikut dinaikkan di gerbang kontras — baik di alat Tools/check-kontras-wcag.ps1 maupun uji KontrasTemaTests — bukan sekadar AA seperti enam tema lainnya.",
+                            "Menu 'Ubah Kata Sandi' di sidebar dihapus dan dipindah ke halaman Kelola Pengguna: tombol 'Ubah Kata Sandi Saya' kini berada di header halaman itu sehingga tetap tersedia untuk semua peran — bukan hanya Administrator — sementara halaman Kelola Pengguna ditata ulang dengan kotak pencarian nama/nama akun/peran, ringkasan jumlah akun aktif, lencana status akun, dan daftar akun yang lebih rapi.",
+                            "Kartu 'Akun Saya' ditambahkan di halaman Kelola Pengguna: menampilkan nama lengkap, peran, status aktif/nonaktif, nama akun yang dipakai berikut cara masuknya (Google atau akun aplikasi), dan peringatan bila akun itu ditandai nonaktif. Kartu ini tampil untuk semua peran — termasuk Sekretaris Desa, Kepala Desa, dan Auditor yang tidak berhak membuka daftar akun — karena halaman ini satu-satunya tempat pemakai melihat identitas akunnya sendiri secara utuh."
+                        }),
+                        new CatatanRilisSubSection("Perbaikan Bug", new List<string>
+                        {
+                            "Halaman-halaman yang sempat kosong atau gagal dibuka kini tampil normal: kotak pencarian Data Warga, kepala halaman Data Perangkat Desa, serta halaman-halaman menu BANTUAN — tanpa sumber daya tema yang hilang.",
+                            "Tinggi baris tabel pada Register Surat, Register NTCR, API Desa, dan pratinjau impor Data Warga kini menyesuaikan panjang teksnya secara otomatis — jumlah baris teks dihitung per baris data, jadi alamat dan keterangan sepanjang apa pun terbaca tanpa terpotong (tooltip tetap tersedia).",
+                            "Kolom tabel Data Perangkat Desa diperiksa lengkap setiap aplikasi dibuka sehingga database lama tidak lagi gagal dengan galat 'no such column'.",
+                            "Nomor langkah pada panduan WhatsApp tidak terlihat karena teksnya dibuat sejajar warna lencananya, dan nomor langkah wizard Pengaturan Aplikasi tercetak putih di atas lingkaran abu-abu yang belum aktif — keduanya kini memakai token teks yang sesuai sehingga terbaca di semua tema.",
+                            "Teks putih kaku di atas latar berwarna (badge notifikasi, lencana TERBARU dan Draft, ikon dialog, label toggle ON, ikon panduan) diganti token tema, jadi kontrasnya ikut benar saat operator mengganti tema tanpa membuka halaman lagi.",
+                            "Kepala halaman Data Perangkat Desa tidak lagi tampil tanpa latar, dan sejumlah teks yang nyaris tak terbaca diperbaiki: keterangan pada bilah status Google Drive, pesan galat di jendela Masuk serta halaman Data Warga dan Pembaruan, lencana pada halaman Pembaruan dan Dokumentasi, judul pada Ringkasan Buku Tahunan dan daftar surat hari ini, serta keterangan di Formulir Surat dan wizard Template Surat. Di Pengaturan Aplikasi, subjudul yang tercetak putih di atas kartu putih dan satu butir navigasi di kartu terang kini mengikuti token teks; pratinjau kertas di jendela impor Word memakai warna teks tetap karena latarnya memang selalu putih."
+                        })
+                    }),
+                new CatatanRilisEntry(
+                    "Versi 2.5.3 (19 September 2026)",
+                    false,
                     new List<CatatanRilisSubSection>
                     {
                         new CatatanRilisSubSection("Fitur Baru — Mode Diam-Diam Startup (Aplikasi Terbuka Lebih Cepat)", new List<string>

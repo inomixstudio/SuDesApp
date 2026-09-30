@@ -13,7 +13,6 @@
 
     <!-- ========== Shared UI tokens ========== -->
     <SolidColorBrush x:Key="ToggleHoverBrush" Color="White" Opacity="0.2"/>
-    <SolidColorBrush x:Key="OnAccentTextBrush" Color="White"/>
     <CornerRadius x:Key="CardCornerRadius">6</CornerRadius>
     <Thickness x:Key="CardPadding">16</Thickness>
 
@@ -78,13 +77,13 @@
 
     <Style x:Key="SuccessButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnSuccessTextBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
     <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnErrorTextBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
@@ -531,7 +530,7 @@
                         <StackPanel>
                             <TextBlock Text="{TemplateBinding Header}"
                                        FontWeight="SemiBold" FontSize="13"
-                                       Foreground="{DynamicResource AccentBrush}"
+                                       Foreground="{DynamicResource AccentTextBrush}"
                                        Margin="0,0,0,10"/>
                             <ContentPresenter/>
                         </StackPanel>
@@ -947,7 +946,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="tabBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -1332,6 +1331,27 @@
         <Setter Property="Foreground" Value="{DynamicResource HeaderSubtitleBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="Margin" Value="0,3,0,0"/>
+    </Style>
+
+    <!-- Tombol aksi di dalam header halaman (latar PrimaryBrush), dipakai halaman
+         data seperti Data Warga, Laporan Penduduk, API Desa, dan pembaca dokumen.
+         Tombol utama memakai warna solid agar jadi tindakan utama halaman; tombol
+         kedua bergaya garis supaya tidak berebut perhatian. Keduanya mewarisi
+         template tombol bawaan sehingga hover/tekan dan status nonaktif tetap
+         seragam dengan tombol lain di aplikasi. -->
+    <Style x:Key="HeaderActionButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+        <Setter Property="Padding" Value="14,5"/>
+        <Setter Property="Margin" Value="0"/>
+    </Style>
+
+    <Style x:Key="HeaderGhostButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource HeaderSubtitleBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="14,5"/>
+        <Setter Property="Margin" Value="0"/>
     </Style>
 
     <Style x:Key="AccentSectionBar" TargetType="Border">

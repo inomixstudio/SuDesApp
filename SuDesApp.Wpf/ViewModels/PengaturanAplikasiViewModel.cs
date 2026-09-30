@@ -5,7 +5,10 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Windows;
+using SuDesApp.Configuration;
 using SuDesApp.Utilities;
+using SuDesApp.Wpf.Input;
 using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Wpf.Utilities;
 
@@ -52,9 +55,44 @@ namespace SuDesApp.Wpf.ViewModels
     }
 
     /// <summary>
+    /// Satu pilihan cepat pada baris pengaturan bernilai angka (mis. Ringkas /
+    /// Normal / Lega untuk tinggi maksimum baris tabel). Operator cukup menekan
+    /// tombolnya — tidak perlu mengetik angka; angkanya sendiri tetap bisa
+    /// disesuaikan lewat kotak isian di sebelahnya.
+    /// </summary>
+    public class PilihanAngkaVM : ObservableObject
+    {
+        private bool _aktif;
+
+        public string Judul { get; }
+
+        /// <summary>Nilai yang dipakai saat tombol ini ditekan.</summary>
+        public int Nilai { get; }
+
+        /// <summary>Sedang dipakai (nilai baris sama dengan nilai pilihan ini).</summary>
+        public bool Aktif
+        {
+            get => _aktif;
+            internal set => SetProperty(ref _aktif, value);
+        }
+
+        public RelayCommand PakaiCommand { get; }
+
+        public PilihanAngkaVM(string judul, int nilai, Action<int> pakai)
+        {
+            Judul = judul;
+            Nilai = nilai;
+            PakaiCommand = new RelayCommand(() => pakai(nilai));
+        }
+
+        public override string ToString() => $"{Judul} ({Nilai})";
+    }
+
+    /// <summary>
     /// Baris pengaturan bernilai angka (mis. batas ukuran pembaruan otomatis dalam
     /// MB). Tampil sebagai kotak teks kecil di samping label; nilai di luar rentang
-    /// ditolak dan dikembalikan ke nilai semula.
+    /// ditolak dan dikembalikan ke nilai semula. Boleh dilengkapi pilihan cepat
+    /// supaya nilai yang sering dipakai tidak perlu diketik.
     /// </summary>
     public class SettingRowAngkaVM : ObservableObject
     {
@@ -65,6 +103,11 @@ namespace SuDesApp.Wpf.ViewModels
 
         public string Judul { get; }
         public string Keterangan { get; }
+
+        /// <summary>Tombol nilai siap pakai (kosong = baris hanya punya kotak isian).</summary>
+        public ObservableCollection<PilihanAngkaVM> PilihanCepat { get; } = new();
+
+        public bool AdaPilihanCepat => PilihanCepat.Count > 0;
 
         public string TeksNilai
         {
@@ -83,6 +126,8 @@ namespace SuDesApp.Wpf.ViewModels
                     // Kembalikan ke nilai tersimpan bila bukan angka valid.
                     SetProperty(ref _teks, _persistGet().ToString(), nameof(TeksNilai));
                 }
+
+                PerbaruiPilihanCepatAktif();
             }
         }
 
@@ -91,7 +136,8 @@ namespace SuDesApp.Wpf.ViewModels
         public SettingRowAngkaVM(
             string judul, string keterangan, int nilaiAwal,
             Action<int> persist, Func<int> persistGet,
-            int min = 1, int maks = 999)
+            int min = 1, int maks = 999,
+            IEnumerable<(string Judul, int Nilai)>? pilihanCepat = null)
         {
             Judul = judul;
             Keterangan = keterangan;
@@ -100,6 +146,40 @@ namespace SuDesApp.Wpf.ViewModels
             _persistGet = persistGet;
             _min = min;
             _maks = maks;
+
+            if (pilihanCepat != null)
+            {
+                foreach (var (pilihanJudul, nilai) in pilihanCepat)
+                {
+                    // Di luar rentang tidak mungkin dipakai — lebih baik tidak ditawarkan.
+                    if (nilai < _min || nilai > _maks) continue;
+                    PilihanCepat.Add(new PilihanAngkaVM(pilihanJudul, nilai, Pakai));
+                }
+            }
+
+            PerbaruiPilihanCepatAktif();
+        }
+
+        /// <summary>Tekan satu pilihan cepat: kotak isian ikut berubah dan nilainya tersimpan.</summary>
+        private void Pakai(int angka)
+        {
+            if (angka < _min || angka > _maks) return;
+
+            if (SetProperty(ref _teks, angka.ToString(), nameof(TeksNilai)))
+            {
+                try { _persist(angka); } catch { /* preferensi non-kritis */ }
+            }
+
+            PerbaruiPilihanCepatAktif();
+        }
+
+        private void PerbaruiPilihanCepatAktif()
+        {
+            bool adaAngka = int.TryParse(_teks, out var aktif);
+            foreach (var pilihan in PilihanCepat)
+            {
+                pilihan.Aktif = adaAngka && aktif == pilihan.Nilai;
+            }
         }
     }
 
@@ -289,6 +369,8 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly ILogger<PengaturanAplikasiViewModel> _logger;
         private readonly GoogleDriveService? _googleDrive;
         private readonly SuDesApp.Services.PenomoranSuratService? _penomoranSurat;
+        private readonly AppConfig? _appConfig;
+        private readonly IMessageService? _pesan;
 
         public ObservableCollection<SettingRowVM> Rows { get; } = new();
 
@@ -301,6 +383,20 @@ namespace SuDesApp.Wpf.ViewModels
         /// Pilihan kecepatan animasi untuk kartu pengaturan. Urutannya tetap
         /// Lambat → Normal → Cepat (paling halus ke paling gesit).
         /// </summary>
+        /// <summary>
+        /// Pilihan cepat tinggi maksimum baris tabel: Ringkas (tabel padat),
+        /// Normal (bawaan aplikasi — diambil dari preferensi supaya tidak bisa
+        /// melenceng), dan Lega (teks panjang tampil lebih utuh). Angka lain tetap
+        /// bisa diketik pada kotak isiannya.
+        /// </summary>
+        public static IReadOnlyList<(string Judul, int Nilai)> PilihanTinggiBarisTabel() => new
+            (string, int)[]
+            {
+                ("Ringkas", 80),
+                ("Normal", AppPreferenceStore.TinggiBarisMaksimumBawaanPx),
+                ("Lega", 400)
+            };
+
         public static IReadOnlyList<KecepatanAnimasiPilihanVM> DaftarKecepatanAnimasi()
             => new[]
             {
@@ -953,6 +1049,13 @@ namespace SuDesApp.Wpf.ViewModels
             _penomoranSurat = penomoranSurat;
 
             _googleDrive = _provider.GetService<GoogleDriveService>();
+            _appConfig = _provider.GetService<AppConfig>();
+            _pesan = _provider.GetService<IMessageService>();
+
+            PilihBerkasDatabaseCommand = new AsyncRelayCommand(PilihBerkasDatabaseAsync);
+            PakaiDatabaseBawaanCommand = new RelayCommand(PakaiDatabaseBawaan, () => DatabasePunyaPilihan);
+            BukaFolderDatabaseCommand = new RelayCommand(BukaFolderDatabase);
+            SimpanMulaiUlangDatabaseCommand = new AsyncRelayCommand(SimpanMulaiUlangDatabaseAsync, () => !DatabaseSibuk);
 
             UjiCloudApiCommand = new AsyncRelayCommand(UjiCloudApiAsync);
             WizardLanjutCommand = new AsyncRelayCommand(WizardLanjutAsync);
@@ -1035,6 +1138,27 @@ namespace SuDesApp.Wpf.ViewModels
                 () => AppPreferenceStore.GetStartupDiamDiamMenit(),
                 min: 1, maks: 60));
 
+            TambahBarisAngka(new SettingRowAngkaVM(
+                "Tinggi maksimum baris tabel (piksel)",
+                "Batas tinggi satu baris pada tabel dengan teks panjang — Register Surat, " +
+                "Register NTCR, API Desa, dan Data Warga (40-600 piksel, bawaan 200). Pakai " +
+                "tombol cepat Ringkas, Normal, atau Lega, atau ketik sendiri angkanya. " +
+                "Naikkan bila alamat atau keterangan perlu tampil lebih panjang; turunkan " +
+                "bila tabel ingin lebih ringkas sehingga lebih banyak surat terlihat " +
+                "sekaligus. Teks yang melebihi batas tetap terbaca lewat tooltip atau " +
+                "garis pemisah baris yang ditarik sendiri.",
+                AppPreferenceStore.GetTinggiBarisMaksimumPx(),
+                v =>
+                {
+                    AppPreferenceStore.SetTinggiBarisMaksimumPx(v);
+                    // Tabel yang sedang terbuka langsung memakai batas baru.
+                    TinggiBarisDinamis.SegarkanBatasMaksimum();
+                },
+                () => AppPreferenceStore.GetTinggiBarisMaksimumPx(),
+                min: AppPreferenceStore.TinggiBarisMaksimumTerendahPx,
+                maks: AppPreferenceStore.TinggiBarisMaksimumTertinggiPx,
+                pilihanCepat: PilihanTinggiBarisTabel()));
+
             TambahBaris(new SettingRowVM(
                 "Riwayat aktivitas",
                 "Mencatat siapa (email Google atau admin) yang membuat, mengubah, mengubah status, dan menghapus surat maupun arsip. Catatannya tampil pada menu Riwayat Aktivitas.",
@@ -1063,6 +1187,308 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Lokasi penyimpanan preferensi.</summary>
         public string LokasiPreferensi => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SuDesApp", "login_prefs.json");
+
+        // =====================================================================
+        // Lokasi berkas database desa.
+        //
+        // Database desa boleh disimpan di folder datanya sendiri (mis. drive D
+        // atau folder arsip desa) supaya tidak tercampur berkas aplikasi dan
+        // tidak perlu disalin ulang setiap aplikasi diperbarui. Pilihannya
+        // disimpan di preferensi pengguna lalu dibaca AppConfig saat aplikasi
+        // dibuka — jadi baru berlaku setelah aplikasi ditutup lalu dibuka lagi.
+        // =====================================================================
+
+        /// <summary>Buka pemilih berkas untuk menentukan lokasi database desa.</summary>
+        public AsyncRelayCommand PilihBerkasDatabaseCommand { get; }
+
+        /// <summary>Simpan pilihan lokasi lalu tutup & buka kembali aplikasi sekarang.</summary>
+        public AsyncRelayCommand SimpanMulaiUlangDatabaseCommand { get; }
+
+        /// <summary>Kembalikan penggunaan database ke lokasi bawaan (folder aplikasi).</summary>
+        public RelayCommand PakaiDatabaseBawaanCommand { get; }
+
+        /// <summary>Buka folder lokasi database yang sedang dipakai di Windows Explorer.</summary>
+        public RelayCommand BukaFolderDatabaseCommand { get; }
+
+        /// <summary>Lokasi database yang sedang dipakai aplikasi (dibaca saat start-up).</summary>
+        public string LokasiDatabaseAktif => string.IsNullOrWhiteSpace(_appConfig?.DatabasePath)
+            ? "(tidak diketahui)"
+            : _appConfig!.DatabasePath;
+
+        /// <summary>Lokasi database bawaan dari appsettings (desa.db di folder aplikasi).</summary>
+        public string LokasiDatabaseBawaan => string.IsNullOrWhiteSpace(_appConfig?.DatabasePathBawaan)
+            ? "(tidak diketahui)"
+            : _appConfig!.DatabasePathBawaan;
+
+        /// <summary>True bila lokasi yang sedang dipakai berasal dari pilihan pengguna.</summary>
+        public bool DatabaseAktifKustom => _appConfig?.DatabaseKustom ?? false;
+
+        /// <summary>True bila sedang dipakai lokasi bawaan (tombol kembali ke bawaan dimatikan).</summary>
+        public bool DatabasePakaiBawaan => !DatabaseAktifKustom && !DatabasePunyaPilihan;
+
+        /// <summary>Ada pilihan lokasi tersimpan — baik sudah berlaku maupun menunggu aplikasi dibuka ulang.</summary>
+        public bool DatabasePunyaPilihan => !string.IsNullOrWhiteSpace(AppPreferenceStore.GetJalurDatabase());
+
+        /// <summary>
+        /// Keterangan pilihan lokasi yang sudah tersimpan tetapi BELUM berlaku karena
+        /// aplikasi belum dibuka ulang; kosong bila tidak ada pilihan menggantung.
+        /// </summary>
+        public string DatabasePilihanTersimpan
+        {
+            get
+            {
+                var jalur = AppPreferenceStore.GetJalurDatabase();
+                if (string.IsNullOrWhiteSpace(jalur)) return string.Empty;
+
+                return jalur.Equals(LokasiDatabaseAktif, StringComparison.OrdinalIgnoreCase)
+                    ? string.Empty
+                    : $"Menunggu aplikasi dibuka ulang: {jalur}";
+            }
+        }
+
+        /// <summary>True bila ada pilihan lokasi yang menunggu aplikasi dibuka ulang.</summary>
+        public bool AdanyaDatabasePilihanTersimpan => DatabasePilihanTersimpan.Length > 0;
+
+        private string _infoDatabase = string.Empty;
+
+        /// <summary>Hasil tindakan terakhir pada bagian Database (kosong = belum ada tindakan).</summary>
+        public string InfoDatabase
+        {
+            get => _infoDatabase;
+            private set
+            {
+                if (SetProperty(ref _infoDatabase, value))
+                    OnPropertyChanged(nameof(AdanyaInfoDatabase));
+            }
+        }
+
+        /// <summary>True bila ada keterangan hasil tindakan untuk ditampilkan.</summary>
+        public bool AdanyaInfoDatabase => InfoDatabase.Length > 0;
+
+        /// <summary>Pilih berkas database desa lain lewat pemilih berkas Windows.</summary>
+        private async Task PilihBerkasDatabaseAsync()
+        {
+            try
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Pilih berkas database desa",
+                    Filter = "Berkas database (*.db)|*.db|Semua berkas (*.*)|*.*",
+                    CheckFileExists = true,
+                    Multiselect = false,
+                    InitialDirectory = FolderDatabase(),
+                };
+
+                if (dialog.ShowDialog() != true) return;
+
+                var jalur = Path.GetFullPath(dialog.FileName);
+
+                if (jalur.Equals(LokasiDatabaseAktif, StringComparison.OrdinalIgnoreCase))
+                {
+                    InfoDatabase = "Berkas itu sudah dipakai aplikasi saat ini.";
+                    return;
+                }
+
+                // Periksa lebih dahulu supaya akibat pilihan sudah jelas sebelum
+                // disimpan: berkas polos akan dienkripsi, berkas berkunci mesin lain
+                // tidak akan bisa dibuka aplikasi.
+                switch (EnkripsiDatabase.PeriksaBerkas(jalur))
+                {
+                    case StatusBerkasDatabase.PlaintextSiapDienkripsi:
+                        if (!await KonfirmasiDatabaseAsync(
+                                "Berkas belum terenkripsi",
+                                "Berkas database yang dipilih masih berupa database biasa (belum terkunci).\n\n" +
+                                "Saat aplikasi dibuka dengan berkas ini, isinya akan dienkripsi otomatis. " +
+                                "Cadangan dalam bentuk aslinya dibuat lebih dahulu (desa-plaintext-*.bak) " +
+                                "di folder yang sama.\n\nLanjutkan memakai berkas ini?"))
+                            return;
+                        break;
+
+                    case StatusBerkasDatabase.TidakTerbaca:
+                        if (!await KonfirmasiDatabaseAsync(
+                                "Berkas database tidak bisa dibuka",
+                                "Berkas ini tidak bisa dibaca dengan kunci enkripsi di komputer ini — " +
+                                "kemungkinan dibuat di komputer lain atau rusak.\n\n" +
+                                "Aplikasi hanya bisa memakainya bila berkas kunci dari instalasi asal " +
+                                "juga disalin ke komputer ini.\n\nTetap pakai berkas ini?"))
+                            return;
+                        break;
+                }
+
+                AppPreferenceStore.SetJalurDatabase(jalur);
+                SegarkanInfoDatabase();
+                TampilkanStatusSementara("Lokasi database disimpan — berlaku setelah aplikasi dibuka ulang.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Gagal memilih berkas database");
+                InfoDatabase = "Berkas database tidak dapat dipilih dari sini.";
+            }
+        }
+
+        /// <summary>Kembali memakai database bawaan aplikasi (folder aplikasi).</summary>
+        private void PakaiDatabaseBawaan()
+        {
+            AppPreferenceStore.SetJalurDatabase(null);
+            SegarkanInfoDatabase();
+            TampilkanStatusSementara(DatabaseAktifKustom
+                ? "Pilihan lokasi dihapus — aplikasi memakai database bawaan setelah dibuka ulang."
+                : "Sudah memakai database bawaan aplikasi.");
+        }
+
+        /// <summary>
+        /// Tombol "Simpan & Mulai Ulang Sekarang" pada bagian Database Desa.
+        /// Catatan penting tentang urutan data: PilihBerkasDatabaseAsync sudah
+        /// menyimpan pilihan ke preferensi SAAAT berkas dipilih (bukan saat tombol
+        /// ini ditekan), jadi tombol ini hanya (1) memastikan memang ada perubahan
+        /// yang menunggu diterapkan, (2) meminta konfirmasi terakhir, lalu
+        /// (3) menutup dan membuka kembali aplikasi.
+        /// </summary>
+        private async Task SimpanMulaiUlangDatabaseAsync()
+        {            // Tidak ada yang perlu diterapkan = jangan buang waktu pengguna
+            // dengan mulai ulang sia-sia. Dua keadaan demikian: (1) pilihan tersimpan
+            // SUDAH dipakai aplikasi saat ini, (2) tidak ada pilihan dan aplikasi
+            // memang sedang memakai lokasi bawaan.
+            var pilihan = AppPreferenceStore.GetJalurDatabase();
+            var sudahBerlaku = !string.IsNullOrWhiteSpace(pilihan)
+                && pilihan.Equals(LokasiDatabaseAktif, StringComparison.OrdinalIgnoreCase);
+
+            if (sudahBerlaku)
+            {
+                InfoDatabase = "Lokasi database yang tersimpan sudah dipakai aplikasi saat ini — "
+                    + "tidak ada perubahan yang menunggu diterapkan.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(pilihan) && !DatabaseAktifKustom)
+            {
+                InfoDatabase = "Pilih berkas database terlebih dahulu (atau tekan \"Kembali ke Bawaan\" "
+                    + "bila sedang memakai lokasi lain) — belum ada perubahan yang menunggu diterapkan.";
+                return;
+            }
+
+            var namaLokasi = DatabaseAktifKustom
+                ? Path.GetFileName(LokasiDatabaseAktif)
+                : "database bawaan (folder aplikasi)";
+
+            var setuju = await KonfirmasiDatabaseAsync(
+                "Simpan & Mulai Ulang Sekarang",
+                "Aplikasi akan ditutup lalu dibuka kembali sekarang juga supaya lokasi database baru "
+                + "(\"" + namaLokasi + "\") langsung dipakai.\n\n"
+                + "Pastikan tidak ada proses cetak atau pengisian surat yang sedang berjalan.");
+
+            if (!setuju) return;
+
+            try
+            {
+                DatabaseSibuk = true;
+
+                // 1. Pasang penanda "lahir dari mulai ulang" untuk proses baru.
+                MulaiUlangAplikasi.PasangPenanda();
+
+                // 2. Jadwalkan pembukaan kembali: proses pembantu menunggu proses ini
+                //    benar-benar selesai (termasuk backup Drive di OnExit) sebelum
+                //    menjalankan exe yang sama. Gagal jadwal = JANGAN menutup aplikasi.
+                if (!MulaiUlangAplikasi.JadwalkanProsesBaru())
+                {
+                    MulaiUlangAplikasi.BersihkanPenanda();
+                    InfoDatabase = "Pembukaan kembali gagal dijadwalkan — aplikasi tidak ditutup. "
+                        + "Lokasi database tetap tersimpan dan berlaku pada pembukaan berikutnya.";
+                    return;
+                }
+
+                InfoDatabase = "Menutup aplikasi untuk mulai ulang…";
+
+                // 3. Tutup jendela utama dengan melewati dialog "Yakin ingin keluar?"
+                //    (penutupan ini disengaja) lalu OnExit berjalan normal — backup
+                //    Drive saat keluar ikut selesai sebelum proses baru mengambil alih.
+                (Application.Current.MainWindow as MainWindow)?.KeluarUntukMulaiUlang();
+                Application.Current.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal menjalankan mulai ulang untuk penerapan lokasi database");
+                MulaiUlangAplikasi.BersihkanPenanda();
+                InfoDatabase = "Mulai ulang gagal dijalankan: " + ex.Message;
+            }
+            finally
+            {
+                // Shutdown sudah berjalan — ini hanya jaring pengaman bila penutupan
+                // dibatalkan (mis. jendela ditutup lewat tombol lain).
+                DatabaseSibuk = false;
+            }
+        }
+
+        /// <summary>Buka folder tempat database yang sedang dipakai berada.</summary>
+        private void BukaFolderDatabase()
+        {
+            try
+            {
+                var folder = Path.GetDirectoryName(LokasiDatabaseAktif);
+                if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+                {
+                    InfoDatabase = "Folder database tidak ditemukan.";
+                    return;
+                }
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = folder,
+                    UseShellExecute = true
+                });
+
+                TampilkanStatusSementara("Folder database dibuka: " + folder);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Gagal membuka folder database");
+                InfoDatabase = "Folder database tidak dapat dibuka dari sini.";
+            }
+        }
+
+        /// <summary>Folder awal pemilih berkas: folder database yang sedang dipakai.</summary>
+        private string? FolderDatabase()
+        {
+            try
+            {
+                var folder = Path.GetDirectoryName(LokasiDatabaseAktif);
+                return Directory.Exists(folder) ? folder : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>Konfirmasi ke pengguna; bila layanan pesan tidak tersedia, pilihan dianggap setuju.</summary>
+        private async Task<bool> KonfirmasiDatabaseAsync(string judul, string pesan)
+        {
+            if (_pesan == null) return true;
+
+            try
+            {
+                return await _pesan.ShowConfirmationAsync(judul, pesan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Dialog konfirmasi database gagal ditampilkan");
+                return true;
+            }
+        }
+
+        /// <summary>Segarkan seluruh tampilan bagian Database setelah pilihan berubah.</summary>
+        private void SegarkanInfoDatabase()
+        {
+            InfoDatabase = DatabasePunyaPilihan
+                ? "Lokasi database tersimpan. Tutup lalu buka kembali aplikasi supaya lokasi baru dipakai."
+                : "Aplikasi memakai database bawaan di folder aplikasi.";
+
+            OnPropertyChanged(nameof(DatabasePunyaPilihan));
+            OnPropertyChanged(nameof(DatabasePakaiBawaan));
+            OnPropertyChanged(nameof(DatabasePilihanTersimpan));
+            OnPropertyChanged(nameof(AdanyaDatabasePilihanTersimpan));
+            PakaiDatabaseBawaanCommand.RaiseCanExecuteChanged();
+        }
 
         // =====================================================================
         // Pesan status halaman.
@@ -1162,6 +1588,7 @@ namespace SuDesApp.Wpf.ViewModels
         public PengaturanSectionVM BagianLayananWa { get; private set; } = null!;
         public PengaturanSectionVM BagianGatewayWa { get; private set; } = null!;
         public PengaturanSectionVM BagianGoogleSheet { get; private set; } = null!;
+        public PengaturanSectionVM BagianDatabase { get; private set; } = null!;
         public PengaturanSectionVM BagianInformasi { get; private set; } = null!;
 
         private PengaturanSectionVM? _selectedSection;
@@ -1203,13 +1630,16 @@ namespace SuDesApp.Wpf.ViewModels
                 "Sambungan WhatsApp Cloud API milik Meta: access token, nomor pengirim, dan uji koneksi.");
             BagianGoogleSheet = new PengaturanSectionVM("google-sheet", "Formulir & Sheet", IkonMenu.Dokumen,
                 "Koneksi Google Formulir dan Sheet jawaban, termasuk pembuatan formulir otomatis.");
+            BagianDatabase = new PengaturanSectionVM("database", "Database Desa", IkonMenu.Cadangkan,
+                "Lokasi berkas database desa yang sedang dipakai dan pemindahannya ke folder data sendiri, " +
+                "misalnya di drive lain — tanpa menyalin berkas ke folder aplikasi.");
             BagianInformasi = new PengaturanSectionVM("informasi", "Informasi", IkonMenu.Tentang,
                 "Sesi login yang sedang aktif dan lokasi berkas pengaturan pada komputer ini.");
 
             foreach (var bagian in new[]
                      {
                          BagianUmum, BagianPenomoran, BagianLayananWa, BagianGatewayWa,
-                         BagianGoogleSheet, BagianInformasi
+                         BagianGoogleSheet, BagianDatabase, BagianInformasi
                      })
             {
                 Sections.Add(bagian);
@@ -1254,6 +1684,18 @@ namespace SuDesApp.Wpf.ViewModels
             private set
             {
                 if (SetProperty(ref _penomoranSibuk, value)) SimpanPenomoranCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        /// <summary>Benar bila mulai ulang (penerapan lokasi database) sedang berjalan — menonaktifkan tombolnya.</summary>
+        private bool _databaseSibuk;
+
+        public bool DatabaseSibuk
+        {
+            get => _databaseSibuk;
+            private set
+            {
+                if (SetProperty(ref _databaseSibuk, value)) SimpanMulaiUlangDatabaseCommand.RaiseCanExecuteChanged();
             }
         }
 

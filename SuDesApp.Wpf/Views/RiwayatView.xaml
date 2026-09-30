@@ -68,7 +68,7 @@
                       AutoGenerateColumns="False" IsReadOnly="True"
                       SelectionMode="Single" SelectionUnit="FullRow"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                      BorderThickness="0" RowHeight="28">
+                      BorderThickness="0" RowHeight="36">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Waktu" Binding="{Binding WaktuDisplay}" Width="150"/>
                     <DataGridTextColumn Header="Pengguna" Binding="{Binding Pengguna}" Width="2*">

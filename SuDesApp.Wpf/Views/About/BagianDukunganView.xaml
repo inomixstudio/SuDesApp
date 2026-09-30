@@ -34,10 +34,10 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Kartu tautan: Tag=URL, klik via code-behind -->
-                        <Border Grid.Row="0" Grid.Column="0" Tag="https://github.com/inomixstudio/SudesApp"
+                        <!-- Kartu tautan: Tag=URL dari view model, klik via code-behind -->
+                        <Border Grid.Row="0" Grid.Column="0" Tag="{Binding RepoUrl}"
                                 Style="{StaticResource TautanKartu}" MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
-                                ToolTip="https://github.com/inomixstudio/SudesApp">
+                                ToolTip="{Binding RepoUrl}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#x1F4A0;" FontSize="16" VerticalAlignment="Center" Margin="0,0,9,0"/>
                                 <StackPanel VerticalAlignment="Center">
@@ -49,40 +49,43 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Row="0" Grid.Column="2" Tag="https://desa-sumberjaya.com"
-                                Style="{StaticResource TautanKartu}" MouseLeftButtonUp="Tautan_MouseLeftButtonUp">
+                        <Border Grid.Row="0" Grid.Column="2" Tag="{Binding UrlWebsite}"
+                                Style="{StaticResource TautanKartu}" MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
+                                ToolTip="{Binding UrlWebsite}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#x1F310;" FontSize="16" VerticalAlignment="Center" Margin="0,0,9,0"/>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Website Resmi" FontSize="12.5" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextBrush}"/>
-                                    <TextBlock Text="desa-sumberjaya.com" FontSize="10.5"
+                                    <TextBlock Text="{Binding WebsiteTampil}" FontSize="10.5"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Row="2" Grid.Column="0" Tag="https://saweria.co/arieino"
-                                Style="{StaticResource TautanKartu}" MouseLeftButtonUp="Tautan_MouseLeftButtonUp">
+                        <Border Grid.Row="2" Grid.Column="0" Tag="{Binding UrlDukungan}"
+                                Style="{StaticResource TautanKartu}" MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
+                                ToolTip="{Binding UrlDukungan}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#x1F49D;" FontSize="16" VerticalAlignment="Center" Margin="0,0,9,0"/>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Support Us" FontSize="12.5" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextBrush}"/>
-                                    <TextBlock Text="Dukungan donasi" FontSize="10.5"
+                                    <TextBlock Text="{Binding DukunganTampil}" FontSize="10.5"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Row="2" Grid.Column="2" Tag="mailto:inomixstudio@gmail.com"
-                                Style="{StaticResource TautanKartu}" MouseLeftButtonUp="Tautan_MouseLeftButtonUp">
+                        <Border Grid.Row="2" Grid.Column="2" Tag="{Binding EmailPengembang}"
+                                Style="{StaticResource TautanKartu}" MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
+                                ToolTip="{Binding EmailPengembangTampil}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#x2709;" FontSize="16" VerticalAlignment="Center" Margin="0,0,9,0"/>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Email Pengembang" FontSize="12.5" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextBrush}"/>
-                                    <TextBlock Text="inomixstudio@gmail.com" FontSize="10.5"
+                                    <TextBlock Text="{Binding EmailPengembangTampil}" FontSize="10.5"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 </StackPanel>
                             </StackPanel>
@@ -102,13 +105,13 @@
                     </StackPanel>
                     <TextBlock Text="Masukan Anda membantu aplikasi ini berkembang. Kirim langsung ke:"
                                FontSize="11.5" Foreground="{DynamicResource AccentTextBrush}" TextWrapping="Wrap"/>
-                    <Border Tag="mailto:desasumberjaya2020@gmail.com" Margin="0,8,0,0" HorizontalAlignment="Left"
+                    <Border Tag="{Binding EmailSaran}" Margin="0,8,0,0" HorizontalAlignment="Left"
                             Style="{StaticResource TautanKartuSurface}"
                             MouseLeftButtonUp="Tautan_MouseLeftButtonUp">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#x2709;" FontSize="13" VerticalAlignment="Center" Margin="0,0,7,0"
                                        Foreground="{DynamicResource AccentTextBrush}"/>
-                            <TextBlock Text="desasumberjaya2020@gmail.com" FontSize="12" FontWeight="SemiBold"
+                            <TextBlock Text="{Binding EmailSaranTampil}" FontSize="12" FontWeight="SemiBold"
                                        Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>

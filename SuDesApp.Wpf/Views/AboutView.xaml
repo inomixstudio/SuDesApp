@@ -54,7 +54,7 @@
                 <!-- Lencana versi + pengembang + ringkasan fitur/teknologi -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="#33FFFFFF" CornerRadius="12" Padding="10,5" Margin="0,0,8,0">
-                        <TextBlock Text="{Binding AssemblyVersion, StringFormat='v{0}'}" FontWeight="Bold" FontSize="12"
+                        <TextBlock Text="{Binding VersiTampil}" FontWeight="Bold" FontSize="12"
                                    Foreground="{DynamicResource HeaderTextBrush}"/>
                     </Border>
                     <Border Background="#22FFFFFF" CornerRadius="12" Padding="10,5" Margin="0,0,8,0">

@@ -40,6 +40,8 @@
     <PackageReference Include="PdfiumViewer.Updated" Version="2.14.5" />
     <PackageReference Include="PdfiumViewer.Native.x86_64.v8-xfa" Version="2018.4.8.256" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />
+    <!-- Ikuti Core: hanya provider SQLCipher yang boleh aktif di proses aplikasi. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" ExcludeAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

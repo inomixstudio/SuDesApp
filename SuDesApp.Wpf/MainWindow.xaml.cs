@@ -298,6 +298,24 @@ namespace SuDesApp.Wpf
         /// <summary>Benar bila penutupan final sedang berlangsung (alur penundaan tidak boleh jalan lagi).</summary>
         private bool _keluarFinal;
 
+        /// <summary>Benar bila penutupan ini disengaja tombol "Simpan & Mulai Ulang Sekarang".</summary>
+        private bool _keluarUntukMulaiUlang;
+
+        /// <summary>
+        /// Penutupan yang DISengaja oleh tombol "Simpan & Mulai Ulang Sekarang"
+        /// (Pengaturan Aplikasi → Database Desa): lewati dialog "Yakin ingin keluar?"
+        /// dan alur pemasangan otomatis pembaruan — pengguna sudah memastikan dari
+        /// dialog konfirmasi tombol itu sendiri, dan pembaruan kecil tidak boleh
+        /// menyusul di tengah proses pindah lokasi database. OnExit (backup Drive
+        /// saat keluar) tetap berjalan normal setelah ini.
+        /// </summary>
+        public void KeluarUntukMulaiUlang()
+        {
+            _keluarUntukMulaiUlang = true;
+            _keluarFinal = true;
+            Close();
+        }
+
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             // Penutupan final setelah pemasangan siap: izinkan lewat tanpa dialog.
@@ -321,8 +339,9 @@ namespace SuDesApp.Wpf
             // diunduh & diverifikasi (chip indikator di status bar berputar); setelah
             // itu aplikasi menutup diri untuk pemasangan. Bila fitur mati, tidak ada
             // penundaan sama sekali — penutupan tetap instan. Pembaruan besar TIDAK
-            // pernah ikut alur ini.
-            if (SuDesApp.Utilities.AppPreferenceStore.IsPasangOtomatisSaatKeluar())
+            // pernah ikut alur ini. Mulai ulang yang disengaja (pindah database)
+            // tidak boleh terganggu alur pembaruan.
+            if (!_keluarUntukMulaiUlang && SuDesApp.Utilities.AppPreferenceStore.IsPasangOtomatisSaatKeluar())
             {
                 e.Cancel = true;
                 _ = SiapkanPembaruanOtomatisSaatKeluarAsync();

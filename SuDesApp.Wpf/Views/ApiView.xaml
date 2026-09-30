@@ -1,0 +1,253 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.ApiView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             xmlns:input="clr-namespace:SuDesApp.Wpf.Input"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <UserControl.Resources>
+        <Style x:Key="KotakStatus" TargetType="Border">
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header + aksi utama -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Border Style="{StaticResource HeaderIconChip}">
+                        <TextBlock Text="{x:Static u:IkonMenu.Api}" FontSize="18"
+                                   FontFamily="{StaticResource AppIconFont}"
+                                   Foreground="{DynamicResource PrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
+                        <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"
+                                   TextWrapping="Wrap" MaxWidth="620"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{Binding LabelUji}" Command="{Binding UjiKoneksiCommand}"
+                            Style="{StaticResource HeaderGhostButton}" Height="32" Margin="0,0,8,0"
+                            ToolTip="Kirim permintaan nyata ke endpoint /status memakai kunci di bawah"/>
+                    <Button Content="Simpan" Command="{Binding SimpanCommand}"
+                            Style="{StaticResource HeaderActionButton}" Height="32"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Status listener -->
+        <Border Grid.Row="1" Style="{StaticResource KotakStatus}" Margin="0,12,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding AlamatStatus}" Margin="0,3,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding GalatText}" Margin="0,3,0,0" TextWrapping="Wrap"
+                               Foreground="{DynamicResource ErrorTextBrush}"
+                               Visibility="{Binding AdaGalat, Converter={StaticResource BoolToVis}}"/>
+                    <TextBlock Text="{Binding HasilTes}" Margin="0,3,0,0" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" Content="Muat Ulang" Command="{Binding MuatUlangCommand}"
+                        Style="{StaticResource OutlineButton}" Height="28" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Pengaturan + kunci, dan daftar endpoint -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource FormCard}" Padding="16" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="PENGATURAN" Style="{StaticResource FormSectionTitle}"/>
+
+                    <CheckBox Content="Aktifkan API" IsChecked="{Binding Aktif}" Margin="0,10,0,0"
+                              ToolTip="Bila tidak aktif, tidak ada port yang dibuka"/>
+                    <TextBlock Text="Bila aktif, listener menyalakan diri sendiri setiap aplikasi dibuka."
+                               Style="{StaticResource FieldLabel}" Margin="22,2,0,0" TextWrapping="Wrap"/>
+
+                    <TextBlock Text="Port" Style="{StaticResource FieldLabel}" Margin="0,14,0,0"/>
+                    <TextBox Text="{Binding Port}" Style="{StaticResource FieldBox}" Margin="0,4,0,0"
+                             ToolTip="1025 sampai 65535. Port di bawah 1024 butuh hak administrator"/>
+
+                    <TextBlock Text="Batas permintaan per menit per alamat" Style="{StaticResource FieldLabel}" Margin="0,14,0,0"/>
+                    <TextBox Text="{Binding BatasPermintaan}" Style="{StaticResource FieldBox}" Margin="0,4,0,0"
+                             ToolTip="Minimal 5, maksimal 600. Mencegah satu klien membebani aplikasi"/>
+
+                    <CheckBox Content="Izinkan akses dari jaringan" IsChecked="{Binding IzinkanJaringan}"
+                              Margin="0,14,0,0"
+                              ToolTip="Matikan bila API hanya dipakai dari komputer ini"/>
+                    <TextBlock Style="{StaticResource FieldLabel}" Margin="22,2,0,0" TextWrapping="Wrap"
+                               Text="Membuka untuk jaringan biasanya butuh aplikasi dijalankan sebagai administrator."/>
+
+                    <CheckBox Content="Catat pemanggilan API ke Riwayat Aktivitas"
+                              IsChecked="{Binding CatatAktivitas}" Margin="0,10,0,0"/>
+
+                    <Border Style="{StaticResource KotakStatus}" Margin="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="KUNCI API" Style="{StaticResource FormSectionTitle}" FontSize="12"/>
+                            <TextBlock Text="Dikirim di header X-Api-Key atau Authorization: Bearer."
+                                       Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+
+                            <!-- Mode=OneWay: TeksKunci properti hitung (bisa berupa
+                                 bintang saat disembunyikan) dan kotak ini memang
+                                 hanya-pembaca; binding TwoWay bawaan TextBox membuat
+                                 binding gagal dibuat sehingga kunci tidak tampil. -->
+                            <TextBox x:Name="KotakKunci" Text="{Binding TeksKunci, Mode=OneWay}"
+                                     FontSize="13" Padding="8,6" Margin="0,8,0,0"
+                                     IsReadOnly="True"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="{Binding LabelKunci}" Command="{Binding TampilkanKunciCommand}"
+                                        Style="{StaticResource SecondaryButton}" Height="28" Margin="0,0,8,0"/>
+                                <Button Content="Salin" Command="{Binding SalinKunciCommand}"
+                                        Style="{StaticResource SecondaryButton}" Height="28" Margin="0,0,8,0"/>
+                                <Button Content="Buat Kunci Baru" Command="{Binding BuatKunciCommand}"
+                                        Style="{StaticResource OutlineButton}" Height="28"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Kunci cakupan sempit: kunci tambahan untuk sistem luar
+                         (dashboard kecamatan, website desa) supaya bocornya satu
+                         kunci tidak membuka semua endpoint. -->
+                    <Border Style="{StaticResource KotakStatus}" Margin="0,8,0,0">
+                        <StackPanel>
+                            <TextBlock Text="KUNCI CAKUPAN" Style="{StaticResource FormSectionTitle}" FontSize="12"/>
+                            <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                       Text="Kunci sempit untuk sistem luar. Agregat hanya membaca statistik; Permintaan hanya mengirim/memantau surat online. Kunci utama tetap berwenang penuh."/>
+
+                            <TextBlock Text="Cakupan" Style="{StaticResource FieldLabel}" Margin="0,10,0,0"/>
+                            <ComboBox ItemsSource="{Binding PilihanCakupan}"
+                                      SelectedValue="{Binding CakupanTerpilih}"
+                                      SelectedValuePath="Nilai" DisplayMemberPath="Tampilan"
+                                      Style="{StaticResource FormCombo}" Margin="0,4,0,0"
+                                      ToolTip="Pilih cakupan kunci yang akan dibuat"/>
+
+                            <TextBlock Text="Nama pemegang (opsional)" Style="{StaticResource FieldLabel}" Margin="0,6,0,0"/>
+                            <TextBox Text="{Binding NamaKunciCakupan, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource FieldBox}" Margin="0,4,0,0"
+                                     ToolTip="Misalnya &quot;Dashboard Kecamatan&quot; — untuk mengenali siapa pemegang kunci"/>
+
+                            <Button Content="Buat Kunci Cakupan" Command="{Binding BuatKunciCakupanCommand}"
+                                    Style="{StaticResource PrimaryButton}" Height="28" Margin="0,8,0,0"
+                                    ToolTip="Simpan kunci baru dengan cakupan terpilih, lalu salin nilainya dari daftar di bawah"/>
+
+                            <TextBlock Text="Belum ada kunci cakupan."
+                                       Style="{StaticResource FieldLabel}" Margin="0,10,0,0"
+                                       Visibility="{Binding TidakAdaKunciCakupan, Converter={StaticResource BoolToVis}}"/>
+
+                            <ItemsControl ItemsSource="{Binding KunciCakupan}" Margin="0,6,0,0"
+                                          Visibility="{Binding AdaKunciCakupan, Converter={StaticResource BoolToVis}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,5,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding NamaTampil}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding RingkasTampil}" FontSize="11" TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            </StackPanel>
+
+                                            <!-- RelativeSource: tombol ada di dalam ItemTemplate,
+                                                 perintahnya milik DataContext halaman. -->
+                                            <Button Grid.Column="1" Content="Salin" Height="26" Padding="8,0" Margin="0,0,6,0"
+                                                    Style="{StaticResource SecondaryButton}"
+                                                    ToolTip="Salin nilai kunci lengkap ke papan klip"
+                                                    Command="{Binding DataContext.SalinKunciCakupanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                            <Button Grid.Column="2" Content="Hapus" Height="26" Padding="8,0"
+                                                    Style="{StaticResource DangerButton}"
+                                                    ToolTip="Hapus permanen kunci ini; sistem luar yang memakainya langsung ditolak"
+                                                    Command="{Binding DataContext.HapusKunciCakupanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource GridHostCard}" Margin="12,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="16,14,16,0">
+                        <TextBlock Text="ENDPOINT TERSEDIA" Style="{StaticResource FormSectionTitle}"/>
+                        <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                   Text="Semua endpoint memakai prefix yang sama. Endpoint ini tidak mengeluarkan NIK, alamat, atau nomor HP warga."/>
+                    </StackPanel>
+
+                    <!-- Keterangan endpoint melipat; tinggi barisnya dihitung per baris
+                         dari panjang teksnya (input:TinggiBarisDinamis) — keterangan
+                         sepanjang apa pun terbaca. RowHeight="Auto" TIDAK boleh dipakai
+                         di sini: sudah dicoba dan memicu loop layout tanpa henti
+                         (stack overflow), bahkan dengan scrollbar vertikal yang dipaku. -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Endpoint}" Margin="12,10,12,14"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              BorderThickness="0" CanUserResizeRows="True"
+                              input:TinggiBarisDinamis.Aktif="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Metode" Binding="{Binding Metode}" Width="70">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Endpoint" Binding="{Binding JalurPenuh}" Width="240"/>
+                            <DataGridTextColumn Header="Kategori" Binding="{Binding KategoriTampil}" Width="120"/>
+                            <DataGridTextColumn Header="Keterangan" Binding="{Binding Keterangan}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="ToolTip" Value="{Binding Keterangan}"/>
+                                        <Setter Property="TextWrapping" Value="Wrap"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

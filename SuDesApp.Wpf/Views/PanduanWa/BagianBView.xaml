@@ -54,7 +54,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource CalloutIcon}" Background="{DynamicResource SuccessBrush}">
-                                <TextBlock Text="&#x2713;" Foreground="White" FontWeight="Bold"
+                                <TextBlock Text="&#x2713;" Foreground="{DynamicResource OnSuccessTextBrush}" FontWeight="Bold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource SuccessTextBrush}" VerticalAlignment="Center">

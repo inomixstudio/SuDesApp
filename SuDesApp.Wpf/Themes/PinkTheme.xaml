@@ -6,13 +6,16 @@
          Bagian gelap memakai pink-700 (#BE185D) — lebih terang dari biru-900 pada
          tema Blue, sesuai prinsip "jangan terlalu gelap". -->
 
-    <Color x:Key="PrimaryColor">#DB2777</Color>
-    <Color x:Key="SecondaryColor">#BE185D</Color>
+    <!-- Header gradien digelapkan satu tingkat agar subjudul (putih 85%) tetap
+         lolos WCAG AA di atasnya — diperiksa KontrasTemaTests. -->
+    <Color x:Key="PrimaryColor">#BE185D</Color>
+    <Color x:Key="SecondaryColor">#9D174D</Color>
     <Color x:Key="AccentColor">#EC4899</Color>
     <Color x:Key="BackgroundColor">#FDF2F8</Color>
     <Color x:Key="SurfaceColor">#FFFFFF</Color>
     <Color x:Key="TextColor">#500724</Color>
-    <Color x:Key="TextSecondaryColor">#8F6680</Color>
+    <!-- Digelapkan agar teks sekunder tetap 4,5:1 di kartu, panel, dan baris zebra -->
+    <Color x:Key="TextSecondaryColor">#835E75</Color>
     <Color x:Key="TextSelectedColor">#BE185D</Color>
     <Color x:Key="BorderColor">#FBCFE8</Color>
     <Color x:Key="PanelColor">#FCE7F3</Color>
@@ -21,14 +24,14 @@
     <Color x:Key="ErrorColor">#DC2626</Color>
     <Color x:Key="MenuBackgroundColor">#BE185D</Color>
     <Color x:Key="MenuTextColor">#FFFFFF</Color>
-    <Color x:Key="AccentLightColor">#F9A8D4</Color>
+    <Color x:Key="AccentLightColor">#FCE7F3</Color>
     <Color x:Key="AccentDarkColor">#9D174D</Color>
     <Color x:Key="ShadowColor">#33BE185D</Color>
 
     <!-- Subtle badge colors -->
     <Color x:Key="SuccessSubtleColor">#DCFCE7</Color>
     <Color x:Key="WarningSubtleColor">#FEF3C7</Color>
-    <Color x:Key="ErrorSubtleColor">#FEE2E2</Color>
+    <Color x:Key="ErrorSubtleColor">#FEEAEA</Color>
     <Color x:Key="AccentSubtleColor">#FCE7F3</Color>
     <Color x:Key="ZebraColor">#FEF5F9</Color>
 
@@ -54,9 +57,11 @@
     <SolidColorBrush x:Key="AccentSubtleBrush" Color="{StaticResource AccentSubtleColor}"/>
     <SolidColorBrush x:Key="ZebraBrush" Color="{StaticResource ZebraColor}"/>
 
-    <SolidColorBrush x:Key="SuccessTextBrush" Color="{StaticResource SuccessColor}"/>
-    <SolidColorBrush x:Key="WarningTextBrush" Color="{StaticResource WarningColor}"/>
-    <SolidColorBrush x:Key="ErrorTextBrush" Color="{StaticResource ErrorColor}"/>
+    <!-- Warna teks status digelapkan: warna isian (SuccessColor/Warning/Error)
+         terlalu terang untuk teks — diperiksa KontrasTemaTests. -->
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#107836"/>
+    <SolidColorBrush x:Key="WarningTextBrush" Color="#9D5604"/>
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#C92020"/>
     <SolidColorBrush x:Key="AccentTextBrush" Color="{StaticResource PrimaryColor}"/>
 
     <!-- Sidebar / StatusBar (pink tua berteks putih, selaras dengan Blue) -->
@@ -76,7 +81,14 @@
 
     <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="OnPrimarySubtleBrush" Color="#FFFFFF" Opacity="0.85"/>
-    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#0F172A"/>
+
+    <!-- Teks di atas lencana/tombol status. Nilainya dipilih agar lolos WCAG AA
+         (>= 4,5:1 terhadap latarnya) — diperiksa Tools/check-kontras-wcag.ps1
+         dan dijaga otomatis oleh uji KontrasTemaTests. -->
+    <SolidColorBrush x:Key="OnSuccessTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnWarningTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnErrorTextBrush" Color="#FFFFFF"/>
 
     <!-- Font -->
     <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>

@@ -48,6 +48,10 @@ namespace SuDesApp.Wpf.Utilities
         /// <summary>Versi aplikasi berawalan "v" (mis. "v2.5.3"), dipakai chip status bar.</summary>
         public static string VersiDenganPrefiks => "v" + VersiSingkat;
 
+        /// <summary>Versi lengkap empat komponen (mis. "2.5.3.0") — nomor build.</summary>
+        public static string VersiLengkap
+            => AssemblyAplikasi.GetName().Version?.ToString() ?? string.Empty;
+
         /// <summary>
         /// Footer identitas ala Catatan Rilis / jendela login:
         /// "Surat Desa V.2.5.3  •  Sumberjaya Dev." — label merek dan versi dibaca

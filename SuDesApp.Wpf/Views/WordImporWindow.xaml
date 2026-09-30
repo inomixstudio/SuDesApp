@@ -140,10 +140,13 @@
                                                     <StackPanel>
                                                         <Image Source="{Binding GambarPratinjau, Mode=OneWay}"
                                                                Width="300" Stretch="Uniform" StretchDirection="DownOnly"/>
+                                                        <!-- Keterangan di atas kertas pratinjau yang SELALU putih: warnanya
+                                                             dipatok abu gelap, bukan token tema — kalau memakai token, di
+                                                             tema Gelap/Abu-abu tulisannya nyaris hilang di atas kertas putih. -->
                                                         <TextBlock Text="{Binding KeteranganPratinjau, Mode=OneWay}"
                                                                    FontSize="10" Margin="0,4,0,0"
                                                                    HorizontalAlignment="Center"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                                   Foreground="#4B5563"/>
                                                     </StackPanel>
                                                 </Border>
                                             </StackPanel>

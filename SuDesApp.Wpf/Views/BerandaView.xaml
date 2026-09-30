@@ -82,7 +82,7 @@
                             <TextBlock Text="SURAT HARI INI" FontSize="10.5" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Text="{Binding SuratHariIni}" FontSize="26" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryBrush}" Margin="0,4,0,0"/>
+                                       Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource StatCard}">

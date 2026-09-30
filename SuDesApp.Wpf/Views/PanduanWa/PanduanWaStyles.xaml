@@ -74,8 +74,10 @@
         <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
         <Setter Property="VerticalAlignment" Value="Top"/>
     </Style>
+    <!-- Teks di atas lencana StepBadge: memakai token "on" (bukan warna isiannya),
+         kalau tidak nomor langkah sejajar warna latarnya dan tidak terlihat. -->
     <Style x:Key="StepBadgeText" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>

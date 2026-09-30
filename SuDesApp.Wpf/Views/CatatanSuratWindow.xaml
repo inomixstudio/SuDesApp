@@ -1,0 +1,72 @@
+<Window x:Class="SuDesApp.Wpf.Views.CatatanSuratWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctrl="clr-namespace:SuDesApp.Wpf.Controls"
+        Title="Catatan Surat" Width="470" SizeToContent="Height" MaxWidth="620"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStyle="None"
+        Background="{DynamicResource SurfaceBrush}"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="30" ResizeBorderThickness="0" CornerRadius="0"
+                      UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+        <Grid Margin="20,10,20,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- ===== Title bar bertema ===== -->
+            <Border Grid.Row="0" Margin="-20,0,-20,10" Height="30"
+                    Background="{DynamicResource SidebarBackgroundBrush}"
+                    MouseLeftButtonDown="CaptionBorder_MouseLeftButtonDown">
+                <DockPanel LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Left" Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
+                               Style="{StaticResource WindowTitleText}" FontWeight="SemiBold"/>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource CloseCaptionButton}"
+                            Command="{x:Static ctrl:AppChromeCommands.Close}"
+                            ToolTip="Tutup (Esc)">
+                        <Path Data="M 0 0 L 8 8 M 8 0 L 0 8" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1"/>
+                    </Button>
+                </DockPanel>
+            </Border>
+
+            <!-- ===== Pertanyaan ===== -->
+            <TextBlock Grid.Row="1" x:Name="PromptText" Text="Catatan:"
+                       TextWrapping="Wrap" Margin="0,0,0,8"
+                       FontSize="14" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextBrush}"/>
+
+            <!-- ===== Isian catatan ===== -->
+            <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+                <TextBox x:Name="CatatanBox" MinHeight="96" MaxHeight="220"
+                         AcceptsReturn="True" TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         BorderThickness="0" Background="Transparent"
+                         Padding="8,6" FontSize="13"
+                         Foreground="{DynamicResource TextBrush}"/>
+            </Border>
+
+            <!-- ===== Keterangan galat (muncul bila catatan wajib kosong) ===== -->
+            <TextBlock Grid.Row="3" x:Name="GalatText" Margin="0,8,0,0"
+                       TextWrapping="Wrap" FontSize="12"
+                       Foreground="{DynamicResource ErrorTextBrush}"
+                       Visibility="Collapsed"/>
+
+            <!-- ===== Tombol ===== -->
+            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                <Button x:Name="BtnBatal" Content="Batal" Width="96" Height="32" Margin="0,0,8,0"
+                        IsCancel="True" Style="{StaticResource SecondaryButton}"/>
+                <Button x:Name="BtnSimpan" Content="Simpan" Width="110" Height="32"
+                        IsDefault="True" Style="{StaticResource PrimaryButton}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

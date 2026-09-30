@@ -80,6 +80,45 @@ namespace SuDesApp.Wpf
 
             _serviceProvider = ConfigureServices();
 
+            // ==== Enkripsi database (SQLCipher) ====
+            // Connection string dijadikan bentuk final SEBELUM koneksi pertama
+            // dibuka: berkas plaintext lama dicadangkan lalu dikonversi, berkas yang
+            // sudah terenkripsi disisipi kunci DPAPI mesin ini. Seluruh repository,
+            // SettingsManager, dan ActivityLogService membaca AppConfig yang sama —
+            // jadi satu titik ini cukup dan tidak boleh ditunda sampai ada koneksi
+            // yang telanjur terbuka tanpa kunci.
+            //
+            // Gagal di sini berarti data desa tidak bisa dibaca sama sekali; kalau
+            // diteruskan hanya muncul galat "file is not a database" yang
+            // membingungkan di setiap halaman, jadi aplikasi dihentikan dengan
+            // penjelasan yang bisa ditindaklanjuti.
+            try
+            {
+                var appConfig = _serviceProvider.GetRequiredService<AppConfig>();
+                appConfig.DatabaseConnectionString = EnkripsiDatabase.JaminTerkunci(
+                    appConfig.DatabaseConnectionString,
+                    _serviceProvider.GetRequiredService<ILogger<App>>());
+            }
+            catch (Exception ex)
+            {
+                _serviceProvider.GetRequiredService<ILogger<App>>()
+                    .LogError(ex, "Gagal menyiapkan enkripsi database");
+                try
+                {
+                    SuDesApp.Wpf.Views.MessageDialogWindow.Show(
+                        "Database", ex.Message,
+                        SuDesApp.Utilities.AppMessageButton.Ok,
+                        SuDesApp.Utilities.AppMessageIcon.Error);
+                }
+                catch
+                {
+                    MessageBox.Show(ex.Message, "Database",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                Shutdown();
+                return;
+            }
+
             // ==== Inisialisasi & migrasi database ====
             // Menjalankan skema desa.db.sql, menyemai daftar jenis surat dari
             // JenisSuratConfig.json (termasuk NTCR N1–N6 + N8), membuat tabel NTCR,
@@ -134,6 +173,14 @@ namespace SuDesApp.Wpf
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Closed += (_, _) => Shutdown();
             mainWindow.Show();
+
+            // Proses ini lahir dari tombol "Simpan & Mulai Ulang Sekarang" (Database
+            // Desa): penandanya sudah selesai dipakai — hapus supaya keluar-buka
+            // biasa berikutnya tidak salah dianggap hasil mulai ulang.
+            if (MulaiUlangAplikasi.AdanyaPenandaMulaiUlang)
+            {
+                MulaiUlangAplikasi.BersihkanPenanda();
+            }
 
             // Layanan WhatsApp: listener webhook pesan masuk (Meta Cloud API) +
             // poller jawaban Google Sheet (mode tautan). Keduanya aman walau
@@ -449,6 +496,40 @@ namespace SuDesApp.Wpf
             services.AddScoped<IArsipKeputusanRepository, ArsipKeputusanRepository>();
             services.AddScoped<IPermintaanWaRepository, PermintaanWaRepository>();
 
+            // ==== Perangkat Desa (data perangkat + SK Bupati) ====
+            // Repository/service scoped: keduanya memakai SqliteConnection scoped
+            // yang sama seperti repository surat lain, sehingga seluruh penulisan
+            // perangkat desa berada pada koneksi (dan transaksi) yang sudah dikenal.
+            services.AddScoped<IPerangkatDesaRepository, PerangkatDesaRepository>();
+            services.AddScoped<SuDesApp.Services.IPerangkatDesaService, SuDesApp.Services.PerangkatDesaService>();
+            services.AddScoped<SuDesApp.Services.SkPerangkatLampiranService>();
+
+            // ==== Data kependudukan ====
+            // Impor massal (Excel/CSV) dipakai halaman Data Warga; Laporan Penduduk
+            // memakai satu service scoped yang sama untuk layar, PDF, dan Excel
+            // supaya ketiga keluaran dihitung dari satu sumber angka.
+            services.AddScoped<SuDesApp.Services.IImporWargaService, SuDesApp.Services.ImporWargaService>();
+            services.AddScoped<SuDesApp.Services.ILaporanPendudukService, SuDesApp.Services.LaporanPendudukService>();
+
+            // ==== Akun, arsip tahunan, dan pusat dokumen ====
+            services.AddScoped<IPenggunaRepository, PenggunaRepository>();
+            services.AddScoped<SuDesApp.Services.IPenggunaService, SuDesApp.Services.PenggunaService>();
+            services.AddScoped<ITutupBukuTahunRepository, TutupBukuTahunRepository>();
+            services.AddScoped<SuDesApp.Services.IVerifikasiPenomoranService, SuDesApp.Services.VerifikasiPenomoranService>();
+            services.AddScoped<SuDesApp.Services.ITutupBukuTahunService, SuDesApp.Services.TutupBukuTahunService>();
+            services.AddScoped<SuDesApp.Services.IArsipRegisterTahunanService, SuDesApp.Services.ArsipRegisterTahunanService>();
+
+            // ==== API Desa (HTTP lokal) ====
+            // Layanan per permintaan dibuat lewat scope dari provider, jadi tidak
+            // ada layanan scoped yang ikut tertahan hidup selama listener berdiri.
+            services.AddScoped<SuDesApp.Api.IApiRingkasanService, SuDesApp.Api.ApiRingkasanService>();
+            services.AddScoped<SuDesApp.Api.IApiPermintaanService, SuDesApp.Api.ApiPermintaanService>();
+            services.AddScoped<SuDesApp.Services.IVerifikasiSuratService, SuDesApp.Services.VerifikasiSuratService>();
+            // Listener singleton: halaman API menyalakannya, dan pengaturannya
+            // dibaca dari preferensi (bukan database) agar bisa dibuka sebelum login.
+            services.AddSingleton(sp => new SuDesApp.Api.ApiListener(
+                () => sp, sp.GetRequiredService<ILogger<SuDesApp.Api.ApiListener>>()));
+
             // Inisialisasi & migrasi database saat startup (skema, jenis surat,
             // tabel NTCR, migrasi kolom) — dipanggil lewat scope di App.OnStartup.
             services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
@@ -556,11 +637,38 @@ namespace SuDesApp.Wpf
             services.AddTransient<BerandaViewModel>();
             services.AddTransient<WaPanelViewModel>();
             services.AddSingleton<PanduanWaViewModel>();
-            services.AddTransient<UbahSandiViewModel>();
             services.AddTransient<InputWindowViewModel>();
             services.AddTransient<RekeningKoranViewModel>();
             services.AddTransient<InputAgendaViewModel>();
             services.AddTransient<InputKeputusanViewModel>();
+
+            // Perangkat Desa: halaman data perangkat desa + penyusun SK Bupati.
+            // Transient seperti halaman lain karena dibuat dari scope baru pada
+            // ShowPerangkatDesaAsync; App.xaml memetakan view lewat DataTemplate
+            // untuk PerangkatDesaViewModel.
+            services.AddTransient<PerangkatDesaViewModel>();
+
+            // Data kependudukan & API Desa: halaman di area konten utama, dipetakan
+            // App.xaml lewat DataTemplate untuk masing-masing ViewModel.
+            services.AddTransient<WargaViewModel>();
+            services.AddTransient<LaporanViewModel>();
+            services.AddTransient<ApiViewModel>();
+
+            // Pusat dokumen (Dokumentasi) + pembaca dokumen. Pembaca selalu dibuka
+            // untuk satu dokumen tertentu, jadi ia dibuat lewat factory yang menerima
+            // judul, jalur berkas, dan aksi Kembali ke daftar dokumen.
+            services.AddTransient<DokumentasiViewModel>();
+            services.AddTransient<Func<string, string, Action?, DokumenBacaViewModel>>(sp =>
+                (judul, jalur, kembali) => new DokumenBacaViewModel(
+                    judul, jalur,
+                    sp.GetRequiredService<NavigationService>(),
+                    kembali,
+                    sp.GetRequiredService<ILogger<DokumenBacaViewModel>>()));
+
+            // Akun & arsip tahunan: halaman area konten utama (bukan jendela modal).
+            services.AddTransient<KelolaPenggunaViewModel>();
+            services.AddTransient<TutupBukuTahunViewModel>();
+            services.AddTransient<VerifikasiSuratViewModel>();
 
             // Template Surat: jenis surat buatan pengguna sendiri.
             services.AddScoped<ITemplateSuratRepository, TemplateSuratRepository>();
@@ -621,6 +729,11 @@ namespace SuDesApp.Wpf
             services.AddTransient<SuratRegisterGenerator>();
             services.AddTransient<RekeningKoranGenerator>();
             services.AddTransient<DaftarHadirGenerator>();
+            // Generator SK Bupati: tidak mewarisi SuratGeneratorBase, jadi ia
+            // mendaftarkan font "Times New Roman" sendiri lewat konstruktor
+            // (lihat SkPerangkatGenerator) supaya PDF tetap tercetak walau SK
+            // ini dokumen pertama pada sebuah sesi.
+            services.AddTransient<SuDesApp.GeneratorPdf.SkPerangkatGenerator>();
 
             // ==== Factory rekanan (harus di-resolve dalam scope) ====
             // Factory form edit surat: resolve InputWindowViewModel untuk ditampilkan

@@ -10,7 +10,8 @@
     <Color x:Key="BackgroundColor">#0F172A</Color>
     <Color x:Key="SurfaceColor">#1B2536</Color>
     <Color x:Key="TextColor">#F1F5F9</Color>
-    <Color x:Key="TextSecondaryColor">#9AA9BD</Color>
+    <!-- Diterangkan agar lolos 4,5:1 di chip status bar (#78350F) -->
+    <Color x:Key="TextSecondaryColor">#B0BCCC</Color>
     <Color x:Key="TextSelectedColor">#FCD34D</Color>
     <Color x:Key="BorderColor">#2E3B50</Color>
     <Color x:Key="PanelColor">#212D40</Color>
@@ -68,13 +69,20 @@
 
     <!-- Helper brushes -->
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#94A3B8"/>
+    <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#A3B0C2"/>
     <SolidColorBrush x:Key="LogoCircleBackgroundBrush" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="ErrorOverlayBrush" Color="{StaticResource ErrorColor}" Opacity="0.15"/>
 
     <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="OnPrimarySubtleBrush" Color="#FFFFFF" Opacity="0.85"/>
     <SolidColorBrush x:Key="OnAccentTextBrush" Color="#0F172A"/>
+
+    <!-- Teks di atas lencana/tombol status. Nilainya dipilih agar lolos WCAG AA
+         (>= 4,5:1 terhadap latarnya) — diperiksa Tools/check-kontras-wcag.ps1
+         dan dijaga otomatis oleh uji KontrasTemaTests. -->
+    <SolidColorBrush x:Key="OnSuccessTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnWarningTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnErrorTextBrush" Color="#0F172A"/>
 
     <!-- Font -->
     <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>

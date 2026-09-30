@@ -709,7 +709,7 @@
                         ToolTip="Aplikasi sedang menyiapkan pembaruan kecil; berkas akan diganti setelah aplikasi tertutup.">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock x:Name="AutoUpdateSpin" Text="{x:Static u:IkonMenu.Sinkron}" FontFamily="{StaticResource AppIconFont}" FontSize="11" VerticalAlignment="Center"
-                                   Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,5,0">
+                                   Foreground="{DynamicResource AccentTextBrush}" Margin="0,0,5,0">
                             <TextBlock.RenderTransform>
                                 <RotateTransform Angle="0"/>
                             </TextBlock.RenderTransform>
@@ -744,7 +744,7 @@
                                 Margin="0,-3,-4,0"
                                 Visibility="{Binding Notifications.HasUnread, Converter={StaticResource BoolToVis}}">
                             <TextBlock Text="{Binding Notifications.UnreadCountText}"
-                                       FontSize="9" FontWeight="Bold" Foreground="White"
+                                       FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OnErrorTextBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        TextAlignment="Center"/>
                         </Border>

@@ -119,7 +119,7 @@
                       AutoGenerateColumns="False" IsReadOnly="True"
                       SelectionMode="Single" SelectionUnit="FullRow"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                      BorderThickness="0" RowHeight="28">
+                      BorderThickness="0" RowHeight="36">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow" BasedOn="{StaticResource ModernDataGridRowStyle}">
                         <Style.Triggers>

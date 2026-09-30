@@ -1,0 +1,109 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Kontras Tinggi — hitam pekat + kuning terang, untuk pengguna yang butuh
+         keterbacaan maksimum (mis. low vision atau layar di ruang terang).
+
+         Tema ini adalah satu-satunya tema yang menargetkan WCAG 2.1 AAA:
+         setiap pasangan teks/latar di Tools/check-kontras-wcag.ps1 wajib
+         >= 7:1 (teks normal), bukan 4,5:1 seperti tema lain — dijaga uji
+         KontrasTemaTests.TemaKontrasTinggi_MemenuhiAmbangWcagAaa.
+
+         Catatan angka:
+         - BorderColor #595959 adalah nilai paling terang yang masih memberi
+           teks putih >= 7:1 di atasnya; karena itu tombol geser OFF (label
+           teks di atas BorderBrush) tetap terbaca di tema ini.
+         - Background dan Surface sama-sama hitam; pemisahan kartu dibawa
+           garis tepi + latar panel, seperti tema kontras tinggi Windows. -->
+
+    <Color x:Key="PrimaryColor">#003A8C</Color>
+    <Color x:Key="SecondaryColor">#001E4D</Color>
+    <Color x:Key="AccentColor">#FFD400</Color>
+    <Color x:Key="BackgroundColor">#000000</Color>
+    <Color x:Key="SurfaceColor">#000000</Color>
+    <Color x:Key="TextColor">#FFFFFF</Color>
+    <!-- Sekunder dijaga tetap >= 7:1 di atas semua latar (termasuk Zebra,
+         panel, dan kartu status berwarna), jadi tetap jauh di atas abu-abu
+         tema lain. -->
+    <Color x:Key="TextSecondaryColor">#D0D0D0</Color>
+    <Color x:Key="TextSelectedColor">#FFD400</Color>
+    <Color x:Key="BorderColor">#595959</Color>
+    <Color x:Key="PanelColor">#1A1A1A</Color>
+    <Color x:Key="SuccessColor">#00E676</Color>
+    <Color x:Key="WarningColor">#FFD400</Color>
+    <!-- Merah ini dipilih agar tinta hitam di atas lencana galat tetap >= 7:1;
+         merah jenuh seperti #FF5252 tidak bisa mencapai angka itu. -->
+    <Color x:Key="ErrorColor">#FF7070</Color>
+    <Color x:Key="MenuBackgroundColor">#000000</Color>
+    <Color x:Key="MenuTextColor">#FFFFFF</Color>
+    <Color x:Key="AccentLightColor">#FFD400</Color>
+    <Color x:Key="AccentDarkColor">#997A00</Color>
+    <Color x:Key="ShadowColor">#50000000</Color>
+
+    <!-- Subtle badge colors: dibuat sangat gelap agar teks terang di atasnya
+         tetap >= 7:1. -->
+    <Color x:Key="SuccessSubtleColor">#04331A</Color>
+    <Color x:Key="WarningSubtleColor">#2A1F00</Color>
+    <Color x:Key="ErrorSubtleColor">#3D0F10</Color>
+    <Color x:Key="AccentSubtleColor">#2A1F00</Color>
+    <Color x:Key="ZebraColor">#141414</Color>
+
+    <!-- Brushes -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource SecondaryColor}"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource BackgroundColor}"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/>
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="TextSelectedBrush" Color="{StaticResource TextSelectedColor}"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource PanelColor}"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}"/>
+
+    <!-- Subtle Badge & Chip Brushes -->
+    <SolidColorBrush x:Key="SuccessSubtleBrush" Color="{StaticResource SuccessSubtleColor}"/>
+    <SolidColorBrush x:Key="WarningSubtleBrush" Color="{StaticResource WarningSubtleColor}"/>
+    <SolidColorBrush x:Key="ErrorSubtleBrush" Color="{StaticResource ErrorSubtleColor}"/>
+    <SolidColorBrush x:Key="AccentSubtleBrush" Color="{StaticResource AccentSubtleColor}"/>
+    <SolidColorBrush x:Key="ZebraBrush" Color="{StaticResource ZebraColor}"/>
+
+    <!-- Warna teks status: terang agar lolos AAA di atas latar gelap. -->
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#69F0AE"/>
+    <SolidColorBrush x:Key="WarningTextBrush" Color="#FFD400"/>
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#FF9E9E"/>
+    <SolidColorBrush x:Key="AccentTextBrush" Color="#FFD400"/>
+
+    <!-- Sidebar / StatusBar -->
+    <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="{StaticResource MenuBackgroundColor}"/>
+    <SolidColorBrush x:Key="SidebarTextBrush" Color="{StaticResource MenuTextColor}"/>
+    <SolidColorBrush x:Key="SidebarAccentBrush" Color="{StaticResource AccentLightColor}"/>
+    <SolidColorBrush x:Key="SidebarHoverBrush" Color="White" Opacity="0.12"/>
+    <SolidColorBrush x:Key="SidebarPressedBrush" Color="White" Opacity="0.2"/>
+    <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="{StaticResource MenuBackgroundColor}"/>
+    <SolidColorBrush x:Key="StatusBarTextBrush" Color="{StaticResource MenuTextColor}"/>
+
+    <!-- Helper brushes -->
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#E6E6E6"/>
+    <SolidColorBrush x:Key="LogoCircleBackgroundBrush" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="ErrorOverlayBrush" Color="{StaticResource ErrorColor}" Opacity="0.15"/>
+
+    <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="OnPrimarySubtleBrush" Color="#FFFFFF" Opacity="0.85"/>
+    <!-- Tinta di atas aksen/lencana: hitam, karena latarnya terang menyala. -->
+    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#000000"/>
+
+    <!-- Teks di atas lencana/tombol status. Tema ini menargetkan WCAG AAA
+         (>= 7:1), bukan sekadar AA — diperiksa Tools/check-kontras-wcag.ps1
+         dan dijaga otomatis uji KontrasTemaTests. -->
+    <SolidColorBrush x:Key="OnSuccessTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="OnWarningTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="OnErrorTextBrush" Color="#000000"/>
+
+    <!-- Font -->
+    <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>
+
+</ResourceDictionary>

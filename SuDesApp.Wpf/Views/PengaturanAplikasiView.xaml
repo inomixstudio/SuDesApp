@@ -25,7 +25,7 @@
                                        Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Right" Margin="0,0,7,0"
                                        VerticalAlignment="Center"/>
                             <TextBlock x:Name="labelOn" Text="ON" FontSize="9" FontWeight="Bold"
-                                       Foreground="White" HorizontalAlignment="Left" Margin="9,0,0,0"
+                                       Foreground="{DynamicResource OnAccentTextBrush}" HorizontalAlignment="Left" Margin="9,0,0,0"
                                        VerticalAlignment="Center" Visibility="Collapsed"/>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -192,6 +192,40 @@
             <Setter Property="FontSize" Value="11.5"/>
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
         </Style>
+
+        <!-- Tombol pilihan cepat untuk baris pengaturan bernilai angka (mis. Ringkas /
+             Normal / Lega pada tinggi maksimum baris tabel). Pilihan yang sedang dipakai
+             ditandai aksen; angka lain tetap bisa diketik pada kotak isian di sebelahnya. -->
+        <Style x:Key="ChipAngkaStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Padding" Value="11,5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="chip" CornerRadius="13" Padding="{TemplateBinding Padding}"
+                                Background="{DynamicResource PanelBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding Aktif}" Value="True">
+                                <Setter TargetName="chip" Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="20" IsSharedSizeScope="True">
@@ -271,7 +305,7 @@
                                                             <TextBlock x:Name="teks" Grid.Column="1" Text="{Binding Judul}"
                                                                        Margin="8,0,2,0" TextTrimming="CharacterEllipsis"
                                                                        VerticalAlignment="Center"
-                                                                       Foreground="{DynamicResource SidebarTextBrush}"/>
+                                                                       Foreground="{DynamicResource TextBrush}"/>
                                                         </Grid>
                                                     </Border>
                                                 </Grid>
@@ -390,13 +424,35 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding Judul}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
                                                     <TextBlock Text="{Binding Keterangan}" FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}"
                                                                TextWrapping="Wrap" MaxWidth="560" Margin="0,2,16,0"/>
                                                 </StackPanel>
-                                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" Width="70"
+
+                                                <!-- Tombol pilihan cepat (muncul hanya bila baris punya pilihan). -->
+                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding PilihanCepat}"
+                                                              VerticalAlignment="Center" Margin="0,0,4,0"
+                                                              Visibility="{Binding AdaPilihanCepat, Converter={StaticResource BoolToVis}}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Button Style="{StaticResource ChipAngkaStyle}"
+                                                                    Content="{Binding Judul}"
+                                                                    Command="{Binding PakaiCommand}"
+                                                                    ToolTip="{Binding Nilai, StringFormat={}{0} piksel}"
+                                                                    AutomationProperties.Name="{Binding Judul}"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+
+                                                <TextBox Grid.Column="2" Style="{StaticResource SettingInput}" Width="70"
                                                          Text="{Binding TeksNilai, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
                                                          VerticalAlignment="Center"
                                                          AutomationProperties.Name="{Binding Judul}"/>
@@ -884,13 +940,18 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                                                     <Setter Property="Text" Value="1"/>
                                                     <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding WizardStep1Aktif}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+                                                        </DataTrigger>
                                                         <DataTrigger Binding="{Binding WizardStep1Selesai}" Value="True">
                                                             <Setter Property="Text" Value="✓"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -931,13 +992,18 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                                                     <Setter Property="Text" Value="2"/>
                                                     <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding WizardStep2Aktif}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+                                                        </DataTrigger>
                                                         <DataTrigger Binding="{Binding WizardStep2Selesai}" Value="True">
                                                             <Setter Property="Text" Value="✓"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -975,7 +1041,18 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock Text="3" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="3" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding WizardStep3Aktif}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
                                     </Border>
                                     <TextBlock Text="Verify Token Webhook" FontSize="10.5" HorizontalAlignment="Center" Margin="0,5,0,0"
                                                Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Center" TextWrapping="Wrap"/>
@@ -1269,6 +1346,103 @@
                 </Border>
 
                 </StackPanel><!-- /bagian Formulir & Sheet -->
+
+                <!-- ============ Bagian: Database Desa ============ -->
+                <StackPanel Visibility="{Binding BagianDatabase.Aktif, Converter={StaticResource BoolToVis}}">
+
+                <!-- ===== Lokasi berkas database ===== -->
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE74E;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Lokasi Berkas Database" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="Database desa boleh disimpan di foldernya sendiri — misalnya folder arsip desa di drive lain — supaya tidak tercampur dengan berkas aplikasi dan tidak perlu disalin ulang setiap aplikasi diperbarui."/>
+
+                            <TextBlock Style="{StaticResource SettingLabel}" Text="Dipakai sekarang"/>
+                            <Border Style="{StaticResource PathBox}" Margin="0,0,0,10">
+                                <TextBlock Style="{StaticResource PathText}" Text="{Binding LokasiDatabaseAktif}"
+                                           ToolTip="{Binding LokasiDatabaseAktif}"/>
+                            </Border>
+
+                            <TextBlock Style="{StaticResource SettingLabel}" Text="Lokasi bawaan aplikasi"/>
+                            <Border Style="{StaticResource PathBox}" Margin="0,0,0,4">
+                                <TextBlock Style="{StaticResource PathText}" Text="{Binding LokasiDatabaseBawaan}"
+                                           ToolTip="{Binding LokasiDatabaseBawaan}"/>
+                            </Border>
+
+                            <WrapPanel Margin="0,14,0,0">
+                                <Button Content="Pilih Berkas…" Height="30" MinWidth="130"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding PilihBerkasDatabaseCommand}"
+                                        ToolTip="Pilih berkas database desa yang akan dipakai aplikasi"
+                                        AutomationProperties.Name="Pilih berkas database desa"/>
+                                <Button Content="Kembali ke Bawaan" Height="30" MinWidth="150" Margin="8,0,0,0"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding PakaiDatabaseBawaanCommand}"
+                                        ToolTip="Batalkan pilihan lokasi dan pakai desa.db di folder aplikasi"
+                                        AutomationProperties.Name="Kembali ke lokasi database bawaan"/>
+                                <Button Content="Buka Folder" Height="30" MinWidth="110" Margin="8,0,0,0"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding BukaFolderDatabaseCommand}"
+                                        ToolTip="Buka folder yang memuat database desa ini"
+                                        AutomationProperties.Name="Buka folder database"/>
+                                <Button Content="Simpan &amp; Mulai Ulang Sekarang" Height="30" MinWidth="210" Margin="8,0,0,0"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding SimpanMulaiUlangDatabaseCommand}"
+                                        ToolTip="Tutup aplikasi dengan rapi lalu buka kembali sekarang juga supaya lokasi database baru langsung dipakai"
+                                        AutomationProperties.Name="Simpan dan mulai ulang sekarang"/>
+                            </WrapPanel>
+
+                            <!-- Pilihan yang sudah tersimpan tetapi belum berlaku -->
+                            <Border Style="{StaticResource InfoBox}" Margin="0,12,0,0"
+                                    Visibility="{Binding AdanyaDatabasePilihanTersimpan, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding DatabasePilihanTersimpan}"/>
+                            </Border>
+
+                            <!-- Hasil tindakan terakhir (pilih berkas / kembali ke bawaan) -->
+                            <Border Style="{StaticResource InfoBox}" Margin="0,8,0,0"
+                                    Visibility="{Binding AdanyaInfoDatabase, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding InfoDatabase}"/>
+                            </Border>
+
+                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,12,0,0"
+                                       Text="Perubahan lokasi berlaku setelah aplikasi ditutup lalu dibuka kembali — halaman ini tidak memindahkan berkas apa pun, hanya mencatat lokasi yang akan dipakai. Gunakan tombol “Simpan &amp; Mulai Ulang Sekarang” untuk menerapkannya seketika."/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== Hal yang perlu diketahui sebelum berpindah lokasi ===== -->
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE7BA;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Sebelum Berpindah Lokasi" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="1. Berkas database disimpan dalam keadaan terkunci (terenkripsi). Bila berkas yang dipilih masih database biasa, aplikasi mengenkripsinya saat dibuka dan lebih dahulu menyimpan cadangan bentuk aslinya (desa-plaintext-*.bak) di folder yang sama."/>
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="2. Kunci enkripsinya khusus untuk pengguna Windows di komputer ini. Berkas database dari komputer lain hanya bisa dibuka bila berkas kuncinya ikut disalin dari instalasi asal."/>
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="3. Aplikasi memakai berkas itu langsung — berkas tidak disalin ke folder aplikasi, jadi simpan di folder yang selalu tersedia (bukan folder sementara atau lampiran e-mail)."/>
+                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,0,0,0"
+                                       Text="4. Sebelum berpindah, buat cadangan lewat halaman Cadangkan &amp; Pulihkan supaya data desa tetap aman."/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                </StackPanel><!-- /bagian Database -->
 
                 <!-- ============ Bagian: Informasi ============ -->
                 <StackPanel Visibility="{Binding BagianInformasi.Aktif, Converter={StaticResource BoolToVis}}">

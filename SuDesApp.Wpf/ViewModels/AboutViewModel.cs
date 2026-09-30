@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.Logging;
+using SuDesApp.Configuration;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Utilities;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -23,14 +24,54 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly ILogger<AboutViewModel> _logger;
         private readonly Stopwatch _uptime = Stopwatch.StartNew();
 
-        public string AssemblyTitle { get; }
-        public string AssemblyVersion { get; }
-        public string AssemblyProduct { get; }
-        public string AssemblyCopyright { get; }
-        public string AssemblyCompany { get; }
+        // Identitas resmi dipinjam dari IdentitasAplikasi — sumber kebenaran yang
+        // sama dengan status bar, footer Catatan Rilis, dan jendela login, supaya
+        // versi di halaman ini tidak pernah berbeda dari status bar.
+        public string AssemblyTitle => IdentitasAplikasi.Nama;
+        public string AssemblyVersion => IdentitasAplikasi.VersiLengkap;
+        public string VersiTampil => IdentitasAplikasi.VersiDenganPrefiks;
+        public string VersiBuild => IdentitasAplikasi.VersiLengkap;
+        public string AssemblyProduct => IdentitasAplikasi.Nama;
+        public string AssemblyCopyright => IdentitasAplikasi.HakCipta;
+        public string AssemblyCompany => IdentitasAplikasi.Pengembang;
+
+        private readonly AppConfig? _appConfig;
+
+        /// <summary>Tautan repositori dari konfigurasi — sumber yang sama dengan pemeriksa pembaruan.</summary>
+        public string RepoUrl { get; }
+
+        /// <summary>Tautan dukungan/donasi dari konfigurasi; kosong bila tidak diisi.</summary>
+        public string UrlDukungan { get; }
+
+        /// <summary>Website resmi dari konfigurasi; kosong bila tidak diisi.</summary>
+        public string UrlWebsite { get; }
+
+        /// <summary>Surel pengembang untuk kritik dan saran.</summary>
+        public string EmailPengembang { get; }
+
+        /// <summary>Surel resmi desa untuk kritik dan saran.</summary>
+        public string EmailSaran { get; }
+
+        /// <summary>Teks repositori siap tampil (tanpa skema).</summary>
+        public string RepoTampil { get; }
+
+        /// <summary>Teks website siap tampil.</summary>
+        public string WebsiteTampil { get; }
+
+        /// <summary>Teks tautan dukungan siap tampil.</summary>
+        public string DukunganTampil { get; }
+
+        /// <summary>Teks surel pengembang siap tampil.</summary>
+        public string EmailPengembangTampil { get; }
+
+        /// <summary>Teks surel saran siap tampil.</summary>
+        public string EmailSaranTampil { get; }
+
+        /// <summary>Deskripsi lengkap aplikasi (disusun di konstruktor) — tampil di bagian "Detail Lengkap".</summary>
+        public string AssemblyDescription { get; }
 
         /// <summary>Deskripsi lengkap aplikasi — tampil di bagian "Detail Lengkap".</summary>
-        public string AssemblyDescription { get; }
+        public string DeskripsiLengkap => AssemblyDescription;
 
         /// <summary>Deskripsi satu kalimat untuk halaman utama.</summary>
         public string DeskripsiSingkat { get; } =
@@ -80,6 +121,14 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Lokasi data aplikasi di komputer ini (dihitung sekali, murah).</summary>
         public string LokasiData { get; }
 
+        /// <summary>
+        /// Lokasi berkas milik pengguna di luar folder aplikasi — preferensi,
+        /// kunci database (DPAPI), kunci API, token Google, dan riwayat pembaruan.
+        /// Dipisah dari <see cref="LokasiData"/> agar pengguna tidak mengira
+        /// mencadangkan folder aplikasi ikut menyelamatkan seluruh datanya.
+        /// </summary>
+        public string LokasiPreferensi { get; }
+
         /// <summary>Versi runtime .NET yang sedang dipakai.</summary>
         public string RuntimeVersi { get; } =
             System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
@@ -101,17 +150,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Dipanggil code-behind untuk menyegarkan teks uptime.</summary>
         public void RefreshUptime() => OnPropertyChanged(nameof(Uptime));
 
-        public AboutViewModel(ILogger<AboutViewModel> logger, GoogleDriveService? driveService = null)
+        public AboutViewModel(
+            ILogger<AboutViewModel> logger,
+            AppConfig? appConfig = null,
+            GoogleDriveService? driveService = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-            var assembly = Assembly.GetExecutingAssembly();
-            AssemblyTitle = assembly.GetCustomAttribute<AssemblyTitleAttribute>()?.Title
-                ?? System.IO.Path.GetFileNameWithoutExtension(assembly.Location);
-            AssemblyVersion = assembly.GetName().Version?.ToString() ?? "1.0.0.0";
-            AssemblyProduct = assembly.GetCustomAttribute<AssemblyProductAttribute>()?.Product ?? "";
-            AssemblyCopyright = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? "";
-            AssemblyCompany = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? "";
+            _appConfig = appConfig;
             // Paragraf dipisah "\n\n" — ditampilkan apa adanya oleh TextBlock di
             // BagianDetailLengkapView sehingga deskripsi terbaca per blok, bukan
             // satu dinding teks panjang.
@@ -127,9 +172,13 @@ namespace SuDesApp.Wpf.ViewModels
                 "Form/Sheet), manajemen formulir administrasi kependudukan, register surat desa " +
                 "dan register NTCR yang terpisah, arsip dan agenda digital (buku agenda surat " +
                 "masuk/keluar dengan lampiran PDF/gambar), serta buku SK/Perdes/Perkades dengan " +
-                "lampiran.\n\n" +
+                "lampiran. API Desa membuka layanan HTTP lokal bagi sistem lain untuk membaca " +
+                "angka agregat, mengirim permintaan surat ke antrean operator, dan memverifikasi " +
+                "keaslian surat terbit lewat kode verifikasinya.\n\n" +
                 "Pencadangan data otomatis ke Google Drive serta ekspor ke Excel, CSV, dan JSON. " +
-                "Kredensial Google disimpan terenkripsi di komputer.\n\n" +
+                "Kredensial Google disimpan terenkripsi di komputer, dan berkas database desa.db " +
+                "dijaga penuh oleh enkripsi SQLCipher dengan kuncinya tersimpan aman via DPAPI " +
+                "Windows — data warga tidak pernah tersimpan sebagai berkas SQLite biasa.\n\n" +
                 "Pembaruan aplikasi diunduh dari GitHub Releases dengan verifikasi SHA-256: " +
                 "perbaikan kecil datang sebagai pembaruan tambalan yang hanya mengganti berkas " +
                 "yang berubah (tanpa installer, data dan pengaturan pengguna tidak tersentuh), " +
@@ -150,24 +199,50 @@ namespace SuDesApp.Wpf.ViewModels
                 "Layanan permintaan surat daring via WhatsApp yang diproses otomatis",
                 "Pencadangan database dan formulir otomatis ke Google Drive",
                 "Kredensial Google tersimpan terenkripsi di komputer tanpa berkas kunci pada instalasi",
+                "Basis data desa.db terenkripsi penuh SQLCipher dengan kunci dijaga DPAPI Windows; lokasi berkas database dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa",
+                "API Desa: layanan HTTP lokal dengan kunci API ber-cakupan (Agregat/Permintaan/Penuh) untuk membaca statistik & data perangkat, menerima permintaan surat dari sistem luar, dan memverifikasi surat lewat kode verifikasinya",
                 "Pembaruan aplikasi dari GitHub Releases: perbaikan kecil dipasang sebagai pembaruan tambalan (hanya berkas yang berubah, tanpa installer) dan diperiksa otomatis saat aplikasi dibuka, sedangkan perubahan besar memakai installer penuh — seluruhnya dengan verifikasi SHA-256",
                 "Ekspor data ke Excel, CSV, dan JSON",
                 "Pengaturan aplikasi bernavigasi antar bagian, termasuk pengaturan penomoran surat: awalan nomor tiap jenis surat dapat diganti sendiri (mis. SKD 470 → 471) dan langsung berlaku tanpa menutup aplikasi",
-                "Multi-temakan modern (Light, Biru Office, Dark, Green, Pink, Slate)",
-                "Manajemen status surat dan riwayat aktivitas terpusat"
+                "Multi-temakan modern (Light, Biru Office, Dark, Green, Pink, Slate) plus tema Kontras Tinggi (hitam-kuning) yang memenuhi WCAG 2.1 AAA untuk pengguna low vision",
+                "Manajemen status surat dan riwayat aktivitas terpusat",
+                "Verifikasi surat: keaslian surat terbit dapat diperiksa dari kode verifikasinya",
+                "Lampiran tabel daftar nama pada SK perangkat desa: satu SK untuk banyak orang sekaligus, kolom data pribadi diambil dari data Warga lewat NIK dan dikelompokkan per unit (mis. Posyandu)",
+                "Data perangkat desa per kelompok jabatan lengkap dengan SK bawaan per kelompok",
+                "Dokumentasi bawaan aplikasi dapat dibuka tanpa koneksi internet"
             };
+
+            // Tautan dari konfigurasi (AppConfig) — sumber yang sama dengan
+            // pemeriksa pembaruan, sehingga repo di halaman ini dan repo unduhan
+            // pembaruan tidak mungkin menunjuk tempat berbeda.
+            var repo = _appConfig?.GithubRepo;
+            RepoUrl = string.IsNullOrWhiteSpace(repo)
+                ? string.Empty
+                : "https://github.com/" + repo;
+            UrlDukungan = "https://saweria.co/arieino";
+            UrlWebsite = "https://desa-sumberjaya.com";
+            EmailPengembang = "mailto:inomixstudio@gmail.com";
+            EmailSaran = "mailto:desasumberjaya2020@gmail.com";
+
+            // Teks siap tampil (tanpa skema) untuk kartu tautan.
+            RepoTampil = string.IsNullOrWhiteSpace(repo) ? "-" : repo;
+            WebsiteTampil = "desa-sumberjaya.com";
+            DukunganTampil = "saweria.co/arieino";
+            EmailPengembangTampil = "inomixstudio@gmail.com";
+            EmailSaranTampil = "desasumberjaya2020@gmail.com";
 
             Teknologi = new List<TeknologiItem>
             {
                 new("\U0001F5A5", "WPF (.NET 8)", "Desktop Windows", "https://dotnet.microsoft.com/apps/wpf"),
                 new("\u2699", "MVVM + Layanan", "DI & logging .NET", "https://learn.microsoft.com/dotnet/core/extensions/dependency-injection"),
-                new("\U0001F5C4", "SQLite", "Database lokal", "https://www.sqlite.org"),
+                new("\U0001F5C4", "SQLite + SQLCipher", "Database terenkripsi", "https://www.zetetic.net/sqlcipher/"),
                 new("\u26A1", "Dapper", "Akses data", "https://github.com/DapperLib/Dapper"),
                 new("\U0001F4C4", "QuestPDF", "Pembuatan PDF", "https://www.questpdf.com"),
-                new("\U0001F4D1", "Pdfium", "Pratinjau & cetak PDF", "https://github.com/pvginkel/PdfiumViewer"),
+                new("\U0001F4D1", "PdfiumViewer", "Pratinjau & cetak PDF", "https://github.com/pvginkel/PdfiumViewer"),
                 new("\U0001F4CA", "EPPlus", "Excel", "https://epplussoftware.com"),
                 new("\U0001F4C1", "Google Drive API", "Cadangan & arsip", "https://developers.google.com/drive"),
                 new("\U0001F4C8", "Google Sheets API", "Layanan online", "https://developers.google.com/sheets/api"),
+                new("\U0001F4DD", "Google Forms API", "Formulir daring", "https://developers.google.com/forms/api"),
                 new("\U0001F4E6", "Newtonsoft.Json", "Serialisasi", "https://www.newtonsoft.com/json"),
                 new("\U0001F510", "DPAPI", "Kredensial aman", "https://learn.microsoft.com/dotnet/api/system.security.cryptography.protecteddata"),
             };
@@ -190,6 +265,17 @@ namespace SuDesApp.Wpf.ViewModels
             catch
             {
                 LokasiData = "-";
+            }
+
+            try
+            {
+                LokasiPreferensi = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "SuDesApp");
+            }
+            catch
+            {
+                LokasiPreferensi = "-";
             }
 
             OpenUrlCommand = new RelayCommand<string>(OpenUrl);

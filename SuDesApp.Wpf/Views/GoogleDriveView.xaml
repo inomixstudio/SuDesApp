@@ -64,7 +64,7 @@
                       AutoGenerateColumns="False" IsReadOnly="True"
                       SelectionMode="Single" SelectionUnit="FullRow"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                      BorderThickness="0" RowHeight="28"
+                      BorderThickness="0" RowHeight="36"
                       MouseDoubleClick="DataGrid_MouseDoubleClick"
                       KeyDown="DataGrid_KeyDown">
                 <DataGrid.Columns>
@@ -98,7 +98,7 @@
         <!-- Status -->
         <Border Grid.Row="4" Background="{DynamicResource StatusBarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1" CornerRadius="8" Padding="10,6" Margin="0,8,0,0">
-            <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"/>
+            <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource StatusBarTextBrush}" FontSize="12"/>
         </Border>
     </Grid>
 </UserControl>

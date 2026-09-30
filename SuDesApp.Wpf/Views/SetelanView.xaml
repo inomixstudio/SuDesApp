@@ -401,7 +401,7 @@
                                 <TextBlock Text="DATA DESA" Style="{StaticResource FormSectionTitle}"/>
                             </StackPanel>
 
-                            <TextBlock Style="{StaticResource HeaderSubtitle}" TextWrapping="Wrap" Margin="0,0,0,10"
+                            <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10"
                                        Text="Nama desa, kecamatan, dan kabupaten dicetak pada kop surat; alamat dan kodepos melengkapinya, sedangkan email — bila diisi — dicetak biru di baris yang sama."/>
 
                             <Grid>
@@ -477,7 +477,7 @@
                                 <TextBlock Text="PEJABAT DESA" Style="{StaticResource FormSectionTitle}"/>
                             </StackPanel>
 
-                            <TextBlock Style="{StaticResource HeaderSubtitle}" TextWrapping="Wrap" Margin="0,0,0,10"
+                            <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10"
                                        Text="Nama pejabat dicetak pada blok tanda tangan surat — tulis lengkap dengan gelar bila perlu (mis. H. Suryana)."/>
 
                             <Grid>

@@ -76,6 +76,24 @@ namespace SuDesApp.Wpf.Utilities
         /// <summary>Silang jendela — Keluar.</summary>
         public const string Keluar = "\uE711";
 
+        // ==== Halaman fitur ====
+        /// <summary>Data kependudukan — halaman Data Warga (glyph "People").</summary>
+        public const string Warga = "\uE716";
+        /// <summary>Buku bacaan — halaman Dokumentasi &amp; pembaca dokumen.</summary>
+        public const string Dokumentasi = "\uE7BC";
+        /// <summary>Dokumen laporan — halaman Laporan (glyph "ReportDocument").</summary>
+        public const string Laporan = "\uE9F9";
+        /// <summary>Kode program — halaman API (glyph "Code").</summary>
+        public const string Api = "\uE943";
+        /// <summary>Mesin cetak — tombol/aksi cetak (glyph "Print").</summary>
+        public const string Cetak = "\uE749";
+        /// <summary>Akun lain — halaman Kelola Pengguna (glyph "OtherUser").</summary>
+        public const string Pengguna = "\uE7EE";
+        /// <summary>Tanda centang — halaman Verifikasi Surat (glyph "CheckMark").</summary>
+        public const string Verifikasi = "\uE73E";
+        /// <summary>Kalender — halaman Tutup Buku Tahunan (glyph "Calendar").</summary>
+        public const string TutupBuku = "\uE787";
+
         // ==== Elemen jendela (status bar, header sidebar) ====
         /// <summary>Tiga garis — tombol buka/tutup sidebar.</summary>
         public const string GeserSidebar = "\uE00F";

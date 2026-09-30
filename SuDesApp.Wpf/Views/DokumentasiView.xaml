@@ -1,0 +1,155 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.DokumentasiView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+    <!--
+        Halaman Dokumentasi (seksi BANTUAN): daftar dokumen bawaan aplikasi —
+        bukti regulasi (PDF Perbup), panduan, kebijakan, dan catatan teknis —
+        dengan tombol Baca per dokumen. Dokumen selalu dibaca DI DALAM aplikasi:
+        PDF pada pratinjau PDFium, berkas .md pada halaman baca dokumen. Tidak ada
+        berkas yang diserahkan ke aplikasi asosiasi Windows.
+    -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+            <!-- Satu kartu dokumen: lencana jenis berkas, judul + keterangan,
+                 ukuran berkas, dan tombol Buka. -->
+            <DataTemplate x:Key="KartuDokumen">
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="8" Padding="12,10" Margin="0,0,0,8"
+                        SnapsToDevicePixels="True">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Chip ikon: penanda visual bahwa baris ini sebuah dokumen. -->
+                        <Border Grid.Column="0" Width="34" Height="34" CornerRadius="8"
+                                Background="{DynamicResource AccentSubtleBrush}"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{x:Static u:IkonMenu.Dokumentasi}"
+                                       FontFamily="{StaticResource AppIconFont}" FontSize="15"
+                                       Foreground="{DynamicResource AccentTextBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Judul}" FontWeight="SemiBold"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/>
+                            <TextBlock Text="{Binding Keterangan}" FontSize="12" TextWrapping="Wrap"
+                                       Margin="0,3,0,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <!-- Jalur berkas ditampilkan apa adanya supaya teknisi tahu
+                                 berkas mana yang dicari saat dokumen tidak ditemukan. -->
+                            <TextBlock Text="{Binding JalurRelatif}" FontSize="11" Margin="0,4,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" Opacity="0.8"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
+                                    Background="{DynamicResource PanelBrush}"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding LabelJenis}" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Border>
+                            <TextBlock Text="{Binding StatusText}" FontSize="11" MinWidth="120"
+                                       Margin="0,0,10,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <Button Content="Baca" MinWidth="72" Style="{StaticResource SecondaryButton}"
+                                    IsEnabled="{Binding AdaBerkas}"
+                                    Command="{Binding DataContext.BukaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip="Baca di dalam aplikasi — tidak membuka aplikasi lain"
+                                    AutomationProperties.Name="{Binding Judul}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header halaman -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="{x:Static u:IkonMenu.Dokumentasi}"
+                               FontFamily="{StaticResource AppIconFont}" FontSize="20"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Text="{Binding Subtitle}" Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Bilah alat: jumlah dokumen, lokasi foldernya, tombol buka folder,
+             dan hasil tindakan terakhir. -->
+        <Border Grid.Row="1" Style="{StaticResource ToolbarCard}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding RingkasanText}" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextBrush}"/>
+                    <TextBlock Text="{Binding LokasiInfo}" FontSize="11" TextWrapping="Wrap"
+                               Margin="0,3,0,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding PesanStatus}" FontSize="11" TextWrapping="Wrap"
+                               Margin="0,4,0,0" Foreground="{DynamicResource AccentTextBrush}"
+                               Visibility="{Binding AdaPesan, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" Content="Buka Folder Dokumen" VerticalAlignment="Center"
+                        Margin="12,0,0,0" Style="{StaticResource SecondaryButton}"
+                        Command="{Binding BukaFolderCommand}"
+                        ToolTip="Buka folder dokumen di File Explorer — untuk menyalin atau memeriksa berkas, bukan untuk membaca"/>
+            </Grid>
+        </Border>
+
+        <!-- Daftar dokumen, dikelompokkan menurut jenisnya. -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Kelompok}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,0,14">
+                            <StackPanel Orientation="Horizontal" Margin="2,0,0,8">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="{Binding Nama}" FontSize="13.5" FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock Text="{Binding Keterangan}" FontSize="11.5" Margin="8,0,0,0"
+                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding Dokumen}"
+                                          ItemTemplate="{StaticResource KartuDokumen}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Statusbar halaman: identitas aplikasi, seragam dengan halaman lain. -->
+        <c:AppStatusBar Grid.Row="3" Margin="0,12,0,0"
+                        StatusText="{Binding VersionFooter, FallbackValue='Dokumentasi'}"/>
+    </Grid>
+</UserControl>

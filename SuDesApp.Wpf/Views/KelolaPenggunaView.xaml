@@ -1,0 +1,463 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.KelolaPenggunaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:SuDesApp.Wpf.Views"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <UserControl.Resources>
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <local:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVis"/>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header: judul halaman + tombol ubah kata sandi sendiri.
+             Tombol ini sengaja ada di header, bukan di dalam blok Administrator,
+             supaya SEMUA peran tetap bisa mengganti kata sandinya sendiri. -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Border Style="{StaticResource HeaderIconChip}">
+                        <TextBlock Text="{x:Static u:IkonMenu.Pengguna}" FontSize="18"
+                                   FontFamily="{StaticResource AppIconFont}"
+                                   Foreground="{DynamicResource PrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
+                        <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"
+                                   TextWrapping="Wrap" MaxWidth="560"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button Grid.Column="1" Style="{StaticResource HeaderGhostButton}"
+                        Command="{Binding BukaPanelSandiCommand}"
+                        VerticalAlignment="Center" Margin="16,0,0,0"
+                        ToolTip="Ganti kata sandi akun yang sedang dipakai — tersedia untuk semua peran"
+                        AutomationProperties.Name="Ubah kata sandi saya">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Static u:IkonMenu.KataSandi}" FontSize="14"
+                                   FontFamily="{StaticResource AppIconFont}"
+                                   VerticalAlignment="Center" Margin="0,0,7,0"/>
+                        <TextBlock Text="Ubah Kata Sandi Saya" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Kartu "Akun Saya": identitas akun yang sedang dipakai. Sengaja selalu tampil
+             — untuk SEMUA peran — karena halaman ini satu-satunya tempat pemakai melihat
+             nama, peran, dan status akunnya sendiri (halaman lain hanya menampilkan
+             potongan namanya di bilah status). -->
+        <Border Grid.Row="1" Style="{StaticResource FormCard}" Padding="14" Margin="0,12,0,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Avatar: inisial nama akun -->
+                <Border Grid.Column="0" Width="46" Height="46" CornerRadius="10"
+                        Background="{DynamicResource PrimaryBrush}" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding AkunSayaInisial, Mode=OneWay}"
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="{DynamicResource OnPrimaryTextBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               AutomationProperties.Name="Inisial akun yang sedang dipakai"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" Margin="14,0,10,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="AKUN SAYA" Style="{StaticResource FormSectionTitle}"/>
+
+                        <!-- Lencana status akun: hijau saat aktif, merah saat nonaktif -->
+                        <Border Margin="9,0,0,0" Padding="8,2" CornerRadius="10" BorderThickness="1"
+                                VerticalAlignment="Center">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AkunSayaAktif}" Value="False">
+                                            <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding AkunSayaStatus, Mode=OneWay}" FontSize="11" FontWeight="SemiBold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource OnSuccessTextBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding AkunSayaAktif}" Value="False">
+                                                <Setter Property="Foreground" Value="{DynamicResource OnErrorTextBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding AkunSayaNama, Mode=OneWay}" FontSize="15" FontWeight="SemiBold"
+                               Margin="0,6,0,0" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextBrush}"
+                               AutomationProperties.Name="Nama akun yang sedang dipakai"/>
+
+                    <TextBlock Margin="0,2,0,0" FontSize="12" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextSecondaryBrush}">
+                        <Run Text="{Binding AkunSaya, Mode=OneWay}"/>
+                        <Run Text=" · "/>
+                        <Run Text="{Binding AkunSayaMasuk, Mode=OneWay}"/>
+                    </TextBlock>
+
+                    <!-- Keterangan tambahan (mis. akun nonaktif atau belum terdaftar). -->
+                    <TextBlock Text="{Binding AkunSayaCatatan, Mode=OneWay}" TextWrapping="Wrap"
+                               FontSize="12" Margin="0,5,0,0"
+                               Foreground="{DynamicResource WarningTextBrush}"
+                               Visibility="{Binding AdaCatatanAkunSaya, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
+
+                <!-- Peran akun yang sedang dipakai -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock Text="PERAN" FontSize="10.5" FontWeight="Bold" HorizontalAlignment="Right"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <Border Margin="0,4,0,0" Padding="10,3" CornerRadius="10" HorizontalAlignment="Right"
+                            Background="{DynamicResource WindowBackgroundBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                        <TextBlock Text="{Binding AkunSayaPeran, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AccentTextBrush}"
+                                   AutomationProperties.Name="Peran akun yang sedang dipakai"/>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Isi halaman -->
+        <Grid Grid.Row="2">
+
+            <!-- Blok Administrator: daftar + form akun -->
+            <Grid Visibility="{Binding BolehAkses, Converter={StaticResource BoolToVis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="400"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Daftar akun -->
+                <Border Grid.Column="0" Style="{StaticResource FormCard}" Padding="14" Margin="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <TextBlock Text="DAFTAR AKUN" Style="{StaticResource FormSectionTitle}"/>
+                            <TextBlock Text="{Binding RingkasanDaftar}" HorizontalAlignment="Right"
+                                       VerticalAlignment="Center" FontSize="12"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </Grid>
+
+                        <!-- Pencarian: menyaring nama, nama akun, atau peran -->
+                        <Border Grid.Row="1" Margin="0,10,0,0" Height="34" CornerRadius="6"
+                                Background="{DynamicResource WindowBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="30"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="28"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="&#xE721;" FontSize="13"
+                                           FontFamily="{StaticResource AppIconFont}"
+                                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                                <TextBox x:Name="SearchBox" Grid.Column="1"
+                                         Text="{Binding CariTeks, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         VerticalContentAlignment="Center"
+                                         BorderThickness="0" Background="Transparent" FontSize="13"
+                                         Foreground="{DynamicResource TextBrush}"/>
+
+                                <TextBlock Grid.Column="1" Text="Cari nama, nama akun, atau peran..."
+                                           VerticalAlignment="Center" Margin="2,0,0,0" IsHitTestVisible="False"
+                                           Foreground="{DynamicResource TextSecondaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                                <Button Grid.Column="2" Content="&#xE711;" Width="20" Height="20"
+                                        FontFamily="{StaticResource AppIconFont}" FontSize="10"
+                                        Command="{Binding BersihkanCariCommand}"
+                                        ToolTip="Hapus pencarian">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <ListBox Grid.Row="2" Margin="0,10,0,0"
+                                 ItemsSource="{Binding Daftar}"
+                                 SelectedItem="{Binding Terpilih}"
+                                 Background="Transparent" BorderThickness="0"
+                                 HorizontalContentAlignment="Stretch"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,0,0,4"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="bd" CornerRadius="6" Padding="8,6"
+                                                        Background="Transparent"
+                                                        BorderBrush="Transparent" BorderThickness="1">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource WindowBackgroundBrush}"/>
+                                                        <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding NamaTampilan}" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Username}" FontSize="11.5"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+
+                                        <Border Grid.Column="1" Margin="10,0,0,0" Padding="8,2"
+                                                VerticalAlignment="Center" CornerRadius="10"
+                                                Background="{DynamicResource WindowBackgroundBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                            <TextBlock Text="{Binding PeranTampil}" FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </Border>
+
+                                        <Border Grid.Column="2" Margin="8,0,0,0" Padding="8,2"
+                                                VerticalAlignment="Center" CornerRadius="10" BorderThickness="1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Aktif}" Value="False">
+                                                            <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding StatusTampil}" FontSize="11" FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource OnSuccessTextBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Aktif}" Value="False">
+                                                                <Setter Property="Foreground" Value="{DynamicResource OnErrorTextBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="Akun Baru" Command="{Binding BaruCommand}"
+                                    Style="{StaticResource PrimaryButton}" Height="30"
+                                    ToolTip="Tambahkan akun pengguna baru"/>
+                            <TextBlock Text="{Binding Pesan}" Margin="12,0,0,0" VerticalAlignment="Center"
+                                       TextWrapping="Wrap" MaxWidth="380"
+                                       Visibility="{Binding AdaPesan, Converter={StaticResource BoolToVis}}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding AdaGalat}" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Form akun -->
+                <Border Grid.Column="1" Style="{StaticResource FormCard}" Padding="16"
+                        Margin="12,0,0,0" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="{Binding JudulForm}" Style="{StaticResource FormSectionTitle}"/>
+
+                        <TextBlock Text="Nama akun (untuk masuk)" Style="{StaticResource FieldLabel}" Margin="0,12,0,0"/>
+                        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldBox}" Margin="0,4,0,0"
+                                 IsEnabled="{Binding UsernameBisaDiubah}"
+                                 ToolTip="Huruf kecil, angka, titik, garis bawah, atau garis hubung. Tidak bisa diubah setelah dibuat."/>
+
+                        <TextBlock Text="Nama lengkap" Style="{StaticResource FieldLabel}" Margin="0,12,0,0"/>
+                        <TextBox Text="{Binding Nama, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldBox}" Margin="0,4,0,0"/>
+
+                        <TextBlock Text="Peran" Style="{StaticResource FieldLabel}" Margin="0,12,0,0"/>
+                        <ComboBox ItemsSource="{Binding DaftarPeran}"
+                                  DisplayMemberPath="Tampilan"
+                                  SelectedValuePath="Kode"
+                                  SelectedValue="{Binding Peran}"
+                                  Margin="0,4,0,0" Height="30"/>
+                        <TextBlock Text="{Binding KeteranganPeran}" Style="{StaticResource FieldLabel}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0"/>
+
+                        <TextBlock Text="Kata sandi baru (untuk akun baru atau reset)"
+                                   Style="{StaticResource FieldLabel}" Margin="0,12,0,0"/>
+                        <TextBox Text="{Binding KataSandi, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldBox}" Margin="0,4,0,0"
+                                 ToolTip="Minimal 8 karakter. Isi kolom ini lalu tekan Reset Kata Sandi untuk akun yang sudah ada."/>
+
+                        <CheckBox Content="Akun aktif (boleh masuk)" IsChecked="{Binding Aktif}" Margin="0,12,0,0"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <Button Content="Simpan" Command="{Binding SimpanCommand}"
+                                    Style="{StaticResource PrimaryButton}" Height="32" Margin="0,0,8,0"/>
+                            <Button Content="Reset Kata Sandi" Command="{Binding ResetSandiCommand}"
+                                    Style="{StaticResource OutlineButton}" Height="32" Margin="0,0,8,0"/>
+                            <Button Content="Hapus" Command="{Binding HapusCommand}"
+                                    Style="{StaticResource OutlineButton}" Height="32"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Tanpa izin: bukan Administrator. Kata sandi sendiri tetap bisa diubah
+                 lewat tombol di header halaman ini. -->
+            <Border Style="{StaticResource FormCard}" Padding="18" Margin="0" VerticalAlignment="Top"
+                    Visibility="{Binding BolehAkses, Converter={StaticResource InverseBoolToVis}}">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Static u:IkonMenu.Pengguna}" FontSize="16"
+                                   FontFamily="{StaticResource AppIconFont}"
+                                   Foreground="{DynamicResource WarningTextBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Tidak berhak mengelola akun" FontSize="16" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding PesanTidakBerhak}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="Anda tetap bisa mengganti kata sandi akun sendiri lewat tombol “Ubah Kata Sandi Saya” di kanan atas."
+                               TextWrapping="Wrap" Margin="0,6,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Overlay ubah kata sandi sendiri: pengganti menu "Ubah Kata Sandi"
+             yang dulu berdiri sendiri di sidebar. Hanya memerlukan status masuk,
+             bukan peran Administrator. -->
+        <Grid Grid.Row="1"
+              Background="{DynamicResource ErrorOverlayBrush}"
+              Visibility="{Binding IsPanelSandiTerbuka, Converter={StaticResource BoolToVis}}"
+              IsHitTestVisible="True">
+            <Border Style="{StaticResource FormCard}" Width="420"
+                    VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">
+                <StackPanel>
+                    <TextBlock Text="UBAH KATA SANDI" Style="{StaticResource FormSectionTitle}" FontSize="16"/>
+                    <TextBlock TextWrapping="Wrap" Margin="0,6,0,2" FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}">
+                        <Run Text="Ganti kata sandi untuk akun"/>
+                        <Run Text="{Binding AkunSaya, Mode=OneWay}" FontWeight="SemiBold"/>
+                        <Run Text="."/>
+                    </TextBlock>
+                    <TextBlock Text="Kata sandi baru minimal 8 karakter dan tidak sama dengan nama akun."
+                               TextWrapping="Wrap" Margin="0,0,8,0" FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                    <TextBlock Text="Kata Sandi Lama *" Style="{StaticResource FieldLabel}" Margin="0,10,0,0"/>
+                    <PasswordBox x:Name="SandiLamaBox" Height="30" Margin="0,4,0,0"/>
+
+                    <TextBlock Text="Kata Sandi Baru *" Style="{StaticResource FieldLabel}" Margin="0,12,0,0"/>
+                    <PasswordBox x:Name="SandiBaruBox" Height="30" Margin="0,4,0,0"/>
+
+                    <TextBlock Text="Konfirmasi Kata Sandi Baru *" Style="{StaticResource FieldLabel}" Margin="0,12,0,0"/>
+                    <PasswordBox x:Name="KonfirmasiSandiBox" Height="30" Margin="0,4,0,0"/>
+
+                    <TextBlock Text="{Binding PesanSandi}" TextWrapping="Wrap" Margin="0,12,0,0" FontWeight="Medium"
+                               Visibility="{Binding PesanSandi, Converter={StaticResource StringNotEmptyToVis}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding GalatSandi}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Content="Tutup" Command="{Binding TutupPanelSandiCommand}"
+                                Style="{StaticResource SecondaryButton}" Height="32" Width="90" Margin="0,0,8,0"/>
+                        <Button Content="Simpan Kata Sandi" Command="{Binding SimpanSandiCommand}"
+                                Style="{StaticResource PrimaryButton}" Height="32" Width="150"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

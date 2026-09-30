@@ -1,0 +1,626 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PerangkatDesaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:SuDesApp.Wpf.Views"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Teks kosong -> Visible, teks terisi -> Collapsed (kotak galat). -->
+        <local:StringToVisibilityConverter x:Key="StringToVis"/>
+
+        <Style x:Key="TengahCell" TargetType="DataGridCell" BasedOn="{StaticResource ModernDataGridCell}">
+            <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="16,12,16,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- 0: judul halaman -->
+            <RowDefinition Height="Auto"/> <!-- 1: kartu statistik -->
+            <RowDefinition Height="Auto"/> <!-- 2: toolbar cari dan aksi -->
+            <RowDefinition Height="Auto"/> <!-- 3: baris filter -->
+            <RowDefinition Height="Auto"/> <!-- 4: pesan status -->
+            <RowDefinition Height="*"/>    <!-- 5: isi (tabel / form / panel SK) -->
+        </Grid.RowDefinitions>
+
+        <!-- ============ 0: judul ============ -->
+        <!-- Latar PageHeader WAJIB ada: gaya HeaderTitle/HeaderSubtitle memakai tinta
+             putih, jadi tanpa latar bertema judul halaman tak terbaca di tema terang. -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel>
+                <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
+                <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"
+                           TextWrapping="Wrap" Margin="0,2,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ============ 1: kartu statistik ============ -->
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding KartuStatistik}" Margin="0,0,0,12">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" Columns="4"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,6,0">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Label}" FontSize="11" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding Nilai}" FontSize="22" FontWeight="Bold"
+                                       Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}"/>
+                            <TextBlock Text="{Binding Keterangan}" FontSize="11" Margin="0,2,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- ============ 2: toolbar ============ -->
+        <Border Grid.Row="2" Style="{StaticResource ToolbarCard}" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="SearchBox" Grid.Column="0"
+                         Style="{StaticResource ModernTextBox}"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Cari nama, jabatan, NIP, NIK, nomor HP, atau nomor SK"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
+                    <Button Content="🔄 Muat Ulang" Command="{Binding MuatUlangCommand}"
+                            Style="{StaticResource OutlineButton}" Margin="0,0,6,0"/>
+                    <Button Content="➕ Tambah Perangkat" Command="{Binding TambahCommand}"
+                            Style="{StaticResource PrimaryButton}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============ 3: filter ============ -->
+        <WrapPanel Grid.Row="3" Margin="0,0,0,8">
+            <ComboBox Style="{StaticResource ModernComboBox}" Width="220" Margin="0,0,8,8"
+                      ItemsSource="{Binding PilihanJabatanFilter}"
+                      SelectedItem="{Binding FilterJabatan, Mode=TwoWay}"
+                      ToolTip="Saring menurut jabatan"/>
+            <ComboBox Style="{StaticResource ModernComboBox}" Width="160" Margin="0,0,8,8"
+                      ItemsSource="{Binding PilihanKelompokFilter}"
+                      SelectedItem="{Binding FilterKelompok, Mode=TwoWay}"
+                      ToolTip="Saring menurut kelompok"/>
+            <ComboBox Style="{StaticResource ModernComboBox}" Width="150" Margin="0,0,8,8"
+                      ItemsSource="{Binding PilihanStatusFilter}"
+                      SelectedItem="{Binding FilterStatus, Mode=TwoWay}"
+                      ToolTip="Saring menurut status"/>
+            <ComboBox Style="{StaticResource ModernComboBox}" Width="180" Margin="0,0,8,8"
+                      ItemsSource="{Binding DaftarWilayah}"
+                      SelectedItem="{Binding FilterWilayah, Mode=TwoWay}"
+                      ToolTip="Saring menurut dusun/RT/RW"/>
+            <Button Content="🔍 Cari" Command="{Binding CariCommand}"
+                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
+            <Button Content="⚠️ Jabatan Inti Kosong" Command="{Binding TandaiIntiKosongCommand}"
+                    Style="{StaticResource OutlineButton}" Margin="0,0,0,8"
+                    ToolTip="Tampilkan jabatan inti yang belum ada orangnya"/>
+        </WrapPanel>
+
+        <!-- ============ 4: status baris ============ -->
+        <TextBlock Grid.Row="4" Text="{Binding StatusText}" Margin="2,0,0,8"
+                   Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+
+        <!-- ============ 5: isi ============ -->
+        <Grid Grid.Row="5">
+
+            <!-- tabel daftar (baris 0: panel SK per jabatan, baris 1: tabel) -->
+            <Grid Visibility="{Binding IsFormTerbuka, Converter={StaticResource BoolToVis}, ConverterParameter=Collapsed}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- ============ panel SK per jabatan ============
+                     Satu kartu per jabatan struktural: jumlah orangnya + tombol aksi
+                     yang sekaligus membuka SK siap cetak/pratinjau (atau arsip SKD
+                     untuk Kepala Desa). Kartu dari kelompok lain disembunyikan bila
+                     daftar sedang difilter satu kelompok. -->
+                <Border Grid.Row="0" Style="{StaticResource ToolbarCard}" Padding="12,10" Margin="0,0,0,8"
+                        Visibility="{Binding AdanyaPanelJabatan, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="SK PER JABATAN" Style="{StaticResource FormSectionTitle}"/>
+                            </StackPanel>
+                            <Button Content="✕ Tutup" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Style="{StaticResource OutlineButton}"
+                                    Command="{Binding TampilkanSemuaCommand}"
+                                    ToolTip="Sembunyikan panel ini dan tampilkan kembali seluruh kelompok"/>
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding KartuJabatanAksi}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource KpiCardStyle}" Width="185" Margin="0,0,8,8"
+                                            ToolTip="{Binding Keterangan}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding NamaTampil}" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextBrush}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding NamaTampil}"/>
+                                            <TextBlock Text="{Binding Ringkas}" FontSize="10.5"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <Button Content="{Binding LabelAksi}" Margin="0,8,0,0"
+                                                    Style="{StaticResource OutlineButton}"
+                                                    Command="{Binding DataContext.BukaPanelJabatanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <DataGrid x:Name="TabelPerangkat" Grid.Row="1"
+                          Style="{StaticResource ModernDataGrid}"
+                          ItemsSource="{Binding Items}"
+                          IsReadOnly="True" CanUserSortColumns="True"
+                          MouseDoubleClick="TabelPerangkat_MouseDoubleClick">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Nama" Binding="{Binding Nama}" Width="2*"/>
+                        <DataGridTextColumn Header="Jabatan" Binding="{Binding JabatanTampil}" Width="1.4*"/>
+                        <DataGridTextColumn Header="Kelompok" Binding="{Binding Kelompok}" Width="*"/>
+                        <DataGridTextColumn Header="Wilayah" Binding="{Binding WilayahRingkas}" Width="1.3*"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding StatusTampil}"
+                                            ElementStyle="{StaticResource TengahCell}" Width="110"/>
+                        <DataGridTextColumn Header="No. SK" Binding="{Binding LatarBelakangTampil}" Width="1.4*"/>
+                        <DataGridTemplateColumn Header="Aksi" Width="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Content="✏️" Width="28" Height="26" Margin="1"
+                                                Style="{StaticResource IconButton}"
+                                                ToolTip="Ubah data"
+                                                Command="{Binding DataContext.UbahCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"/>
+                                        <Button Content="📄" Width="28" Height="26" Margin="1"
+                                                Style="{StaticResource IconButton}"
+                                                ToolTip="{Binding ToolTipAksiSk}"
+                                                Command="{Binding DataContext.BukaPanelSkCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"/>
+                                        <Button Content="📂" Width="28" Height="26" Margin="1"
+                                                Style="{StaticResource IconButton}"
+                                                ToolTip="Buka berkas SK yang terarsip"
+                                                Command="{Binding DataContext.PratinjauBerkasSkCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"/>
+                                        <Button Content="🗑️" Width="28" Height="26" Margin="1"
+                                                Style="{StaticResource IconButton}"
+                                                ToolTip="Hapus data"
+                                                Command="{Binding DataContext.HapusCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- keadaan kosong -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Visibility="{Binding AdanyaData, Converter={StaticResource BoolToVis}, ConverterParameter=Collapsed}">
+                    <TextBlock Text="Belum ada perangkat desa yang tercatat."
+                               FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextBrush}"/>
+                    <TextBlock Text="Tekan “Tambah Perangkat” untuk mulai mencatat siapa yang memegang jabatan."
+                               Margin="0,6,0,0" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- form tambah/ubah -->
+            <Border Visibility="{Binding IsFormTerbuka, Converter={StaticResource BoolToVis}}"
+                    Style="{StaticResource FormCard}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="{Binding JudulForm}" Style="{StaticResource FormSectionTitle}" Margin="0,0,0,12"/>
+
+                        <!-- identitas -->
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0,0,0,8">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="Identitas" Style="{StaticResource FormSectionTitle}"/>
+                        </StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="Nama Lengkap *" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormNama, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="Jabatan *" Style="{StaticResource FormLabel}"/>
+                                <ComboBox Style="{StaticResource ModernComboBox}"
+                                          ItemsSource="{Binding DaftarJabatan}"
+                                          SelectedItem="{Binding FormJabatan, Mode=TwoWay}"
+                                          IsEditable="True"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="NIK" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormNik, UpdateSourceTrigger=PropertyChanged}"
+                                         MaxLength="16"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="NIP" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormNip, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="Jenis Kelamin" Style="{StaticResource FormLabel}"/>
+                                <ComboBox Style="{StaticResource ModernComboBox}"
+                                          ItemsSource="{Binding PilihanJenisKelamin}"
+                                          SelectedItem="{Binding FormJenisKelamin, Mode=TwoWay}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="Pendidikan" Style="{StaticResource FormLabel}"/>
+                                <ComboBox Style="{StaticResource ModernComboBox}"
+                                          ItemsSource="{Binding PilihanPendidikan}"
+                                          SelectedItem="{Binding FormPendidikan, Mode=TwoWay}"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="Tempat Lahir" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormTempatLahir, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="Tanggal Lahir" Style="{StaticResource FormLabel}"/>
+                                <DatePicker Style="{StaticResource ModernDatePicker}"
+                                            SelectedDate="{Binding FormTanggalLahir}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- wilayah &amp; kontak -->
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0,12,0,8">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="Wilayah &amp; Kontak" Style="{StaticResource FormSectionTitle}"/>
+                        </StackPanel>
+                        <TextBlock Text="Alamat" Style="{StaticResource FormLabel}"/>
+                        <TextBox Style="{StaticResource ModernTextBox}" Margin="0,0,0,10"
+                                 Text="{Binding FormAlamat, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="Dusun" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormDusun, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0">
+                                <TextBlock Text="RT" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormRt, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Margin="6,0,0,0">
+                                <TextBlock Text="RW" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormRw, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="Unit Kerja (untuk kader/anggota lembaga)"
+                                   Style="{StaticResource FormLabel}"/>
+                        <TextBox Style="{StaticResource ModernTextBox}" Margin="0,0,0,10"
+                                 Text="{Binding FormUnit, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="Nomor HP" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormNomorHp, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="WhatsApp" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormWhatsApp, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- jabatan &amp; masa jabatan -->
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0,12,0,8">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="Jabatan &amp; Masa Jabatan" Style="{StaticResource FormSectionTitle}"/>
+                        </StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="Nomor SK" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding FormNomorSk, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="Tanggal SK" Style="{StaticResource FormLabel}"/>
+                                <DatePicker Style="{StaticResource ModernDatePicker}"
+                                            SelectedDate="{Binding FormTanggalSk}"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="Masa Jabatan Mulai" Style="{StaticResource FormLabel}"/>
+                                <DatePicker Style="{StaticResource ModernDatePicker}"
+                                            SelectedDate="{Binding FormMasaJabatanMulai}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="Masa Jabatan Selesai" Style="{StaticResource FormLabel}"/>
+                                <DatePicker Style="{StaticResource ModernDatePicker}"
+                                            SelectedDate="{Binding FormMasaJabatanSelesai}"/>
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock Text="Status Jabatan" Style="{StaticResource FormLabel}"/>
+                            <ComboBox Style="{StaticResource ModernComboBox}"
+                                      ItemsSource="{Binding PilihanStatusForm}"
+                                      SelectedItem="{Binding FormStatus, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <TextBlock Text="Catatan" Style="{StaticResource FormLabel}"/>
+                        <TextBox Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"
+                                 Text="{Binding FormCatatan, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <!-- galat -->
+                        <Border Background="{DynamicResource ErrorSubtleBrush}" CornerRadius="6"
+                                Padding="10,6" Margin="0,0,0,12"
+                                Visibility="{Binding FormGalat, Converter={StaticResource StringToVis}}">
+                            <TextBlock Text="{Binding FormGalat}" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource ErrorTextBrush}"/>
+                        </Border>
+
+                        <!-- aksi form -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Batal" Command="{Binding BatalFormCommand}"
+                                    Style="{StaticResource OutlineButton}" Margin="0,0,8,0"/>
+                            <Button Content="💾 Simpan" Command="{Binding SimpanCommand}"
+                                    Style="{StaticResource PrimaryButton}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- panel Surat Keputusan -->
+            <Border Visibility="{Binding IsPanelSkTerbuka, Converter={StaticResource BoolToVis}}"
+                    Style="{StaticResource FormCard}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <TextBlock Text="{Binding JudulPanelSk}" Style="{StaticResource FormSectionTitle}"
+                                       VerticalAlignment="Center"/>
+                            <Button Content="✕ Tutup" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Command="{Binding TutupPanelSkCommand}"
+                                    Style="{StaticResource OutlineButton}"/>
+                        </Grid>
+
+                        <!-- mode arsip: SK diterbitkan Bupati -->
+                        <Border Background="{DynamicResource AccentSubtleBrush}" CornerRadius="6" Padding="10,8"
+                                Margin="0,0,0,12"
+                                Visibility="{Binding SkDiterbitkanBupati, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding SkModeArsipKeterangan}" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextBrush}"/>
+                        </Border>
+
+                        <!-- pilihan dasar SK -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="Jenis SK" Style="{StaticResource FormLabel}"/>
+                                <ComboBox Style="{StaticResource ModernComboBox}"
+                                          ItemsSource="{Binding PilihanSkJenis}"
+                                          SelectedItem="{Binding SkJenis, Mode=TwoWay}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="Kelompok" Style="{StaticResource FormLabel}"/>
+                                <ComboBox Style="{StaticResource ModernComboBox}"
+                                          ItemsSource="{Binding PilihanSkKelompok}"
+                                          SelectedItem="{Binding SkKelompok, Mode=TwoWay}"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="Nomor SK" Style="{StaticResource FormLabel}"/>
+                        <TextBox Style="{StaticResource ModernTextBox}" Margin="0,0,0,10"
+                                 Text="{Binding SkNomor, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <!-- identitas orang (mode cetak) -->
+                        <StackPanel Visibility="{Binding SkDiterbitkanBupati, Converter={StaticResource BoolToVis}, ConverterParameter=Collapsed}">
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                    <TextBlock Text="Nama" Style="{StaticResource FormLabel}"/>
+                                    <TextBox Style="{StaticResource ModernTextBox}"
+                                             Text="{Binding SkNama, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                    <TextBlock Text="NIK" Style="{StaticResource FormLabel}"/>
+                                    <TextBox Style="{StaticResource ModernTextBox}"
+                                             Text="{Binding SkNik, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                            </Grid>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                    <TextBlock Text="Jabatan" Style="{StaticResource FormLabel}"/>
+                                    <TextBox Style="{StaticResource ModernTextBox}"
+                                             Text="{Binding SkJabatan, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                    <TextBlock Text="Wilayah" Style="{StaticResource FormLabel}"/>
+                                    <TextBox Style="{StaticResource ModernTextBox}"
+                                             Text="{Binding SkWilayah, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- arsip berkas SK Bupati -->
+                        <Border Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="10,8"
+                                Margin="0,0,0,12"
+                                Visibility="{Binding SkDiterbitkanBupati, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Berkas SK dari Bupati (PDF)" Style="{StaticResource FormLabel}"/>
+                                <TextBlock Text="{Binding SkBerkasTerpilih}" TextWrapping="Wrap" Margin="0,0,0,8"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="📎 Pilih Berkas" Command="{Binding PilihBerkasSkCommand}"
+                                            Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                                    <Button Content="👁️ Pratinjau" Command="{Binding PratinjauBerkasSkCommand}"
+                                            Style="{StaticResource OutlineButton}" Margin="0,0,6,0"/>
+                                    <Button Content="Lepas" Command="{Binding LepasBerkasSkCommand}"
+                                            Style="{StaticResource DangerButton}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- tanggal -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="Tanggal SK" Style="{StaticResource FormLabel}"/>
+                                <DatePicker Style="{StaticResource ModernDatePicker}"
+                                            SelectedDate="{Binding SkTanggal}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="Catatan / Alasan" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding SkAlasan, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Dasar Hukum" Style="{StaticResource FormLabel}"/>
+                        <TextBlock Text="{Binding SkDasarHukum}" TextWrapping="Wrap" Margin="0,2,0,12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                        <!-- lampiran daftar nama -->
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0,0,0,8">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="{Binding SkDasarHukumJudul}" Style="{StaticResource FormSectionTitle}"/>
+                        </StackPanel>
+                        <WrapPanel Margin="0,0,0,8">
+                            <StackPanel Width="200" Margin="0,0,8,8">
+                                <TextBlock Text="NIK" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding SkLampiranNikBaru, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Width="180" Margin="0,0,8,8">
+                                <TextBlock Text="Peran" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding SkLampiranPeranBaru, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Width="180" Margin="0,0,8,8">
+                                <TextBlock Text="Unit" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource ModernTextBox}"
+                                         Text="{Binding SkLampiranUnitBaru, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </WrapPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="👥 Muat Anggota" Command="{Binding MuatAnggotaLampiranCommand}"
+                                    Style="{StaticResource OutlineButton}" Margin="0,0,6,0"/>
+                            <Button Content="➕ Tambah" Command="{Binding TambahLampiranCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                            <Button Content="Kosongkan" Command="{Binding KosongkanLampiranCommand}"
+                                    Style="{StaticResource DangerButton}"/>
+                        </StackPanel>
+
+                        <DataGrid Style="{StaticResource ModernDataGrid}" ItemsSource="{Binding SkLampiran}"
+                                  IsReadOnly="True" MaxHeight="240" Margin="0,0,0,8">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Nama" Binding="{Binding Nama}" Width="2*"/>
+                                <DataGridTextColumn Header="NIK" Binding="{Binding Nik}" Width="1.4*"/>
+                                <DataGridTextColumn Header="Peran" Binding="{Binding PeranTampil}" Width="*"/>
+                                <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="*"/>
+                                <DataGridTemplateColumn Header="" Width="40">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="✕" Style="{StaticResource IconButton}"
+                                                    Command="{Binding HapusCommand}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Text="{Binding RingkasanLampiran}" TextWrapping="Wrap" Margin="0,0,0,4"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding SkLampiranPesan}" TextWrapping="Wrap" Margin="0,0,0,12"
+                                   Foreground="{DynamicResource WarningTextBrush}"/>
+
+                        <!-- galat SK -->
+                        <Border Background="{DynamicResource ErrorSubtleBrush}" CornerRadius="6"
+                                Padding="10,6" Margin="0,0,0,12"
+                                Visibility="{Binding SkGalat, Converter={StaticResource StringToVis}}">
+                            <TextBlock Text="{Binding SkGalat}" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource ErrorTextBrush}"/>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="🖨️ Cetak SK" Command="{Binding CetakSkCommand}"
+                                    Style="{StaticResource PrimaryButton}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- busy -->
+            <Border Background="{DynamicResource SurfaceBrush}" Opacity="0.7"
+                    Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="Memproses…" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

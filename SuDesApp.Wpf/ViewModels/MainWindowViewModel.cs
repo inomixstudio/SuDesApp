@@ -260,7 +260,6 @@ namespace SuDesApp.Wpf.ViewModels
             ShowRegisterCommand = new AsyncRelayCommand(ShowRegisterSuratAsync);
             ShowSettingsCommand = new AsyncRelayCommand(ShowSettingsAsync);
             ShowFormulirCommand = new AsyncRelayCommand(ShowFormulirAsync);
-            ShowUbahSandiCommand = new AsyncRelayCommand(ShowUbahSandiAsync);
             ShowAboutCommand = new AsyncRelayCommand(ShowAboutAsync);
             ShowCatatanRilisCommand = new AsyncRelayCommand(ShowCatatanRilisAsync);
             BuildSidebar();
@@ -609,7 +608,6 @@ namespace SuDesApp.Wpf.ViewModels
         public AsyncRelayCommand ShowRegisterCommand { get; }
         public AsyncRelayCommand ShowSettingsCommand { get; }
         public AsyncRelayCommand ShowFormulirCommand { get; }
-        public AsyncRelayCommand ShowUbahSandiCommand { get; }
         public AsyncRelayCommand ShowAboutCommand { get; }
         public AsyncRelayCommand ShowCatatanRilisCommand { get; }
 
@@ -814,9 +812,18 @@ namespace SuDesApp.Wpf.ViewModels
             // Register NTCR terpisah dari Register Surat umum.
             MenuItems.Add(NavButton("Register NTCR", IkonMenu.Dokumen, () => { _ = ShowRegisterNtcrAsync(); }));
             MenuItems.Add(NavButton("Riwayat Aktivitas", IkonMenu.Riwayat, () => { _ = ShowRiwayatAsync(); }));
+            // Perangkat Desa: siapa yang memegang jabatan di desa + arsip/penyusun
+            // SK Bupati. Berdiri sendiri (bukan anak akordeon) agar mudah dicari.
+            MenuItems.Add(NavButton("Perangkat Desa", IkonMenu.Orang, () => { _ = ShowPerangkatDesaAsync(); }));
 
             _permintaanOnlineButton = NavButton("Layanan Online", IkonMenu.LayananOnline, () => { _ = ShowWaPanelAsync(); });
             MenuItems.Add(_permintaanOnlineButton);
+
+            // Kelompok data desa: sumber data penduduk dan rekapitulasi resminya.
+            // Dipisah dari kelompok surat supaya jelas ini data, bukan pembuatan surat.
+            MenuItems.Add(new NavItem { Title = "DATA DESA", IsSectionHeader = true });
+            MenuItems.Add(NavButton("Data Warga", IkonMenu.Warga, () => { _ = ShowWargaAsync(); }));
+            MenuItems.Add(NavButton("Laporan Penduduk", IkonMenu.Laporan, () => { _ = ShowLaporanAsync(); }));
 
             _formulirHeader = new NavItem { Title = "FORMULIR", IsSectionHeader = true };
             MenuItems.Add(_formulirHeader);
@@ -828,13 +835,21 @@ namespace SuDesApp.Wpf.ViewModels
             MenuItems.Add(NavButton("Pengaturan Aplikasi", IkonMenu.Pengaturan, () => { _ = ShowPengaturanAplikasiAsync(); }));
             MenuItems.Add(NavButton("Pengaturan Surat", IkonMenu.Pengaturan, () => { _ = ShowSettingsAsync(); }));
             MenuItems.Add(NavButton("Pengaturan Formulir", IkonMenu.Pengaturan, () => { _ = ShowFormulirAsync(); }));
-            MenuItems.Add(NavButton("Ubah Kata Sandi", IkonMenu.KataSandi, () => { _ = ShowUbahSandiAsync(); }));
+            // Kelola Pengguna hanya untuk Administrator; halaman & layanannya menolak
+            // peran lain sendiri (SessionContext.Wajib), jadi menu tetap aman dibuka.
+            // Halaman ini juga memuat pengganti menu "Ubah Kata Sandi" lama (tombol di
+            // header halaman) supaya semua akun — bukan hanya Administrator — tetap
+            // bisa mengganti kata sandinya sendiri.
             _googleNavButton = NavButton("Login dengan Google", IkonMenu.AkunGoogle, () => { _ = ShowGoogleLoginAsync(); });
             MenuItems.Add(_googleNavButton);
+            MenuItems.Add(NavButton("Kelola Pengguna", IkonMenu.Pengguna, () => { _ = ShowKelolaPenggunaAsync(); }));
 
             // Pencadangan database: satu halaman dengan dua kartu (Ekspor & Impor),
             // bukan lagi akordeon berisi dua menu terpisah — lebih sederhana dipakai.
             MenuItems.Add(NavButton("Cadangkan & Pulihkan", IkonMenu.Cadangkan, () => { _ = ShowExImdbAsync(); }));
+            // Tutup buku tahunan: menandai penomoran satu tahun sudah final, bisa
+            // dicetak sebagai rekap. Termasuk urusan arsip, bukan pekerjaan harian.
+            MenuItems.Add(NavButton("Tutup Buku Tahunan", IkonMenu.TutupBuku, ShowTutupBuku));
 
             MenuItems.Add(new NavItem { Title = "BANTUAN", IsSectionHeader = true });
 
@@ -875,7 +890,11 @@ namespace SuDesApp.Wpf.ViewModels
             _panduanAwalButton = NavButton("Panduan Awal", IkonMenu.Panduan, () => { _ = ShowPanduanAwalAsync(); });
             _panduanAwalButton.Description = "Langkah mengisi data desa, pejabat, dan nomor surat";
             MenuItems.Add(_panduanAwalButton);
+            MenuItems.Add(NavButton("Verifikasi Surat", IkonMenu.Verifikasi, ShowVerifikasiSurat));
+            MenuItems.Add(NavButton("Dokumentasi", IkonMenu.Dokumentasi, ShowDokumentasi));
             MenuItems.Add(NavButton("Panduan WhatsApp", IkonMenu.Dokumen, () => { _ = ShowPanduanWaAsync(); }));
+            // API Desa: listener HTTP lokal untuk membaca data desa (docs/api-desa.md).
+            MenuItems.Add(NavButton("API Desa", IkonMenu.Api, ShowApi));
             MenuItems.Add(NavButton("Catatan Rilis", IkonMenu.Peraturan, () => { _ = ShowCatatanRilisAsync(); }));
             MenuItems.Add(NavButton("Tentang", IkonMenu.Tentang, () => { _ = ShowAboutAsync(); }));
             MenuItems.Add(NavButton("Keluar", IkonMenu.Keluar, () => ExitRequested?.Invoke()));
@@ -1120,6 +1139,162 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 _logger.LogError(ex, "Gagal membuka Riwayat Aktivitas");
                 await _messageService.ShowErrorAsync("Gagal membuka Riwayat Aktivitas: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Buka halaman Perangkat Desa: daftar perangkat yang memegang jabatan,
+        /// arsip SK Bupati, dan penyusun SK baru. View dimuat App.xaml lewat
+        /// DataTemplate untuk <see cref="PerangkatDesaViewModel"/>.
+        /// </summary>
+        private async Task ShowPerangkatDesaAsync()
+        {
+            try
+            {
+                var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<PerangkatDesaViewModel>();
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka Perangkat Desa");
+                await _messageService.ShowErrorAsync("Gagal membuka Perangkat Desa: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Buka halaman Data Warga: pencarian, filter, mutasi status, Kartu
+        /// Keluarga, dan ekspor. View dipetakan App.xaml lewat DataTemplate untuk
+        /// <see cref="WargaViewModel"/>, jadi baris pertama langsung dimuat di sini
+        /// supaya tabel tidak tampak kosong saat halaman terbuka.
+        /// </summary>
+        private async Task ShowWargaAsync()
+        {
+            try
+            {
+                var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<WargaViewModel>();
+                await vm.LoadAsync();
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka Data Warga");
+                await _messageService.ShowErrorAsync("Gagal membuka Data Warga: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Buka halaman Laporan Penduduk: rekapitulasi yang bisa dicetak PDF atau
+        /// disimpan Excel dari satu sumber angka yang sama.
+        /// </summary>
+        private async Task ShowLaporanAsync()
+        {
+            try
+            {
+                var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<LaporanViewModel>();
+                await vm.LoadAsync();
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka Laporan Penduduk");
+                await _messageService.ShowErrorAsync("Gagal membuka Laporan Penduduk: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Buka halaman Kelola Pengguna: daftar akun, peran, dan reset kata sandi.
+        /// Hanya Administrator yang boleh memakainya (ditegakkan PenggunaService).
+        /// </summary>
+        private async Task ShowKelolaPenggunaAsync()
+        {
+            try
+            {
+                var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<KelolaPenggunaViewModel>();
+                await vm.MuatAsync();
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka Kelola Pengguna");
+                await _messageService.ShowErrorAsync("Gagal membuka Kelola Pengguna: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Buka halaman Tutup Buku Tahunan: status setiap tahun, verifikasi nomor,
+        /// dan rekap yang bisa dicetak. MuatCommand dijalankan lewat perintahnya
+        /// karena pemuatan di halaman ini memang dipicu dari tombol Muat.
+        /// </summary>
+        private void ShowTutupBuku()
+        {
+            try
+            {
+                var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<TutupBukuTahunViewModel>();
+                vm.MuatCommand.Execute(null);
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka Tutup Buku Tahunan");
+                _ = _messageService.ShowErrorAsync("Gagal membuka Tutup Buku Tahunan: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Buka halaman Verifikasi Surat: masukkan kode verifikasi yang tercetak di
+        /// surat untuk memeriksa keasliannya. Terbuka untuk semua peran, termasuk
+        /// Kades dan Auditor yang tidak membuat surat.
+        /// </summary>
+        private void ShowVerifikasiSurat()
+        {
+            try
+            {
+                var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<VerifikasiSuratViewModel>();
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka Verifikasi Surat");
+                _ = _messageService.ShowErrorAsync("Gagal membuka Verifikasi Surat: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Buka halaman Dokumentasi: daftar dokumen bawaan aplikasi (regulasi,
+        /// panduan, kebijakan). Membaca satu dokumen membuka halaman baca lewat
+        /// <see cref="DokumenBacaViewModel"/>, yang daftarnya tidak di sidebar.
+        /// </summary>
+        private void ShowDokumentasi()
+        {
+            try
+            {
+                var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<DokumentasiViewModel>();
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka Dokumentasi");
+                _ = _messageService.ShowErrorAsync("Gagal membuka Dokumentasi: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Buka halaman API Desa: nyala/mati listener HTTP lokal, port, dan kunci
+        /// API. Pengaturan dibaca ulang setiap halaman dibuka karena disimpan di
+        /// preferensi aplikasi, bukan di database.
+        /// </summary>
+        private void ShowApi()
+        {
+            try
+            {
+                var vm = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ApiViewModel>();
+                vm.MuatUlang();
+                _navigation.Navigate(vm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka API Desa");
+                _ = _messageService.ShowErrorAsync("Gagal membuka API Desa: " + ex.Message);
             }
         }
 
@@ -1739,23 +1914,6 @@ namespace SuDesApp.Wpf.ViewModels
             else
             {
                 _ = dispatcher.BeginInvoke(update);
-            }
-        }
-
-        private async Task ShowUbahSandiAsync()
-        {
-            _logger.LogInformation("ShowUbahSandiAsync called");
-            try
-            {
-                var scope = _scopeFactory.CreateScope();
-                var vm = scope.ServiceProvider.GetRequiredService<UbahSandiViewModel>();
-                var view = new Views.UbahSandiView { DataContext = vm };
-                _navigation.Navigate(view);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal membuka Ubah Sandi");
-                await _messageService.ShowErrorAsync("Gagal membuka Ubah Sandi: " + ex.Message);
             }
         }
 

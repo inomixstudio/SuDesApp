@@ -47,7 +47,7 @@
     <Setter Property="VerticalAlignment" Value="Center"/>
     <Style.Triggers>
         <Trigger Property="IsMouseOver" Value="True">
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
         </Trigger>
     </Style.Triggers>
 </Style>
@@ -70,7 +70,7 @@
     </Setter>
     <Style.Triggers>
         <Trigger Property="IsMouseOver" Value="True">
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
         </Trigger>
     </Style.Triggers>
 </Style>
@@ -145,9 +145,6 @@
             <DataTemplate DataType="{x:Type vm:GoogleDriveViewModel}">
                 <views:GoogleDriveView/>
             </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:UbahSandiViewModel}">
-                <views:UbahSandiView/>
-            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:TodoViewModel}">
                 <views:TodoView/>
             </DataTemplate>
@@ -170,6 +167,39 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:IsiTemplateSuratViewModel}">
                 <views:IsiTemplateSuratView/>
+            </DataTemplate>
+            <!-- Perangkat Desa: data perangkat desa, arsip SK, dan penyusun SK Bupati -->
+            <DataTemplate DataType="{x:Type vm:PerangkatDesaViewModel}">
+                <views:PerangkatDesaView/>
+            </DataTemplate>
+            <!-- Data kependudukan: daftar warga + rekapitulasi resminya -->
+            <DataTemplate DataType="{x:Type vm:WargaViewModel}">
+                <views:WargaView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:LaporanViewModel}">
+                <views:LaporanView/>
+            </DataTemplate>
+            <!-- API Desa: nyala/mati listener HTTP lokal + pengelolaan kunci -->
+            <DataTemplate DataType="{x:Type vm:ApiViewModel}">
+                <views:ApiView/>
+            </DataTemplate>
+            <!-- Pusat dokumen bawaan aplikasi + pembaca dokumennya. Halaman baca
+                 dipanggil lewat factory dari daftar dokumen, bukan dari sidebar. -->
+            <DataTemplate DataType="{x:Type vm:DokumentasiViewModel}">
+                <views:DokumentasiView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:DokumenBacaViewModel}">
+                <views:DokumenBacaView/>
+            </DataTemplate>
+            <!-- Akun, arsip tahunan, dan verifikasi keaslian surat -->
+            <DataTemplate DataType="{x:Type vm:KelolaPenggunaViewModel}">
+                <views:KelolaPenggunaView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:TutupBukuTahunViewModel}">
+                <views:TutupBukuTahunView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:VerifikasiSuratViewModel}">
+                <views:VerifikasiSuratView/>
             </DataTemplate>
             <!-- Alur paket NTCR (N1–N6 sekali isi): DataTemplate tepat per tipe ini
                  dipakai lebih dulu daripada template NtcrInputViewModel induknya. -->

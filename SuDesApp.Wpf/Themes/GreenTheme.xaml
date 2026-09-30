@@ -4,8 +4,10 @@
     <!-- Green Theme — Nuansa hijau segar khas pedesaan -->
     <!-- Palet: hijau hutan, aksen emerald -->
 
-    <Color x:Key="PrimaryColor">#15803D</Color>
-    <Color x:Key="SecondaryColor">#166534</Color>
+    <!-- Header gradien digelapkan satu tingkat agar subjudul (putih 85%) tetap
+         lolos WCAG AA di atasnya — diperiksa KontrasTemaTests. -->
+    <Color x:Key="PrimaryColor">#166534</Color>
+    <Color x:Key="SecondaryColor">#14532D</Color>
     <Color x:Key="AccentColor">#16A34A</Color>
     <Color x:Key="BackgroundColor">#F0FDF4</Color>
     <Color x:Key="SurfaceColor">#FFFFFF</Color>
@@ -52,9 +54,11 @@
     <SolidColorBrush x:Key="AccentSubtleBrush" Color="{StaticResource AccentSubtleColor}"/>
     <SolidColorBrush x:Key="ZebraBrush" Color="{StaticResource ZebraColor}"/>
 
-    <SolidColorBrush x:Key="SuccessTextBrush" Color="{StaticResource SuccessColor}"/>
-    <SolidColorBrush x:Key="WarningTextBrush" Color="{StaticResource WarningColor}"/>
-    <SolidColorBrush x:Key="ErrorTextBrush" Color="{StaticResource ErrorColor}"/>
+    <!-- Warna teks status digelapkan: warna isian (SuccessColor/Warning/Error)
+         terlalu terang untuk teks — diperiksa KontrasTemaTests. -->
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#117F3A"/>
+    <SolidColorBrush x:Key="WarningTextBrush" Color="#A15904"/>
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#C92020"/>
     <SolidColorBrush x:Key="AccentTextBrush" Color="{StaticResource PrimaryColor}"/>
 
     <!-- Sidebar / StatusBar -->
@@ -74,7 +78,14 @@
 
     <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="OnPrimarySubtleBrush" Color="#FFFFFF" Opacity="0.85"/>
-    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#0F172A"/>
+
+    <!-- Teks di atas lencana/tombol status. Nilainya dipilih agar lolos WCAG AA
+         (>= 4,5:1 terhadap latarnya) — diperiksa Tools/check-kontras-wcag.ps1
+         dan dijaga otomatis oleh uji KontrasTemaTests. -->
+    <SolidColorBrush x:Key="OnSuccessTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnWarningTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnErrorTextBrush" Color="#FFFFFF"/>
 
     <!-- Font -->
     <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>

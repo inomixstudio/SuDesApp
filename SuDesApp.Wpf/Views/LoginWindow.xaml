@@ -118,7 +118,7 @@
                     <Border Grid.Row="0" Background="{DynamicResource ErrorOverlayBrush}" CornerRadius="6"
                             Padding="10,8" Margin="0,0,0,12"
                             Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorBrush}"
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorTextBrush}"
                                    FontSize="12" TextWrapping="Wrap"/>
                     </Border>
 

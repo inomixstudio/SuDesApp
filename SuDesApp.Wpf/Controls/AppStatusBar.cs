@@ -17,7 +17,7 @@ namespace SuDesApp.Wpf.Controls
     /// identitas aplikasi — ikon, nama, versi, nama pengembang, bisa diklik untuk
     /// membuka Tentang Aplikasi — plus tombol aksi opsional (kanan).
     /// Dipakai di Pengaturan Aplikasi, Pengaturan Surat, Pengaturan Formulir,
-    /// Catatan Rilis, Panduan WhatsApp, Ubah Kata Sandi, dan Pembaruan.
+    /// Catatan Rilis, Panduan WhatsApp, dan Pembaruan.
     /// Nama/versi/pengembang dibaca dari atribut assembly sehingga ikut berubah
     /// begitu versi di csproj dinaikkan; nama pengembang ditulis apa adanya
     /// (mis. "Sumberjaya Dev.") tanpa label tambahan.

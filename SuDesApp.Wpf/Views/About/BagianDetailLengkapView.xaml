@@ -27,7 +27,7 @@
                                Foreground="{DynamicResource AccentTextBrush}"/>
                 </Border>
 
-                <TextBlock Text="{Binding AssemblyDescription}" TextWrapping="Wrap" LineHeight="22"
+                <TextBlock Text="{Binding DeskripsiLengkap}" TextWrapping="Wrap" LineHeight="22"
                            Foreground="{DynamicResource TextBrush}"/>
             </StackPanel>
         </Border>

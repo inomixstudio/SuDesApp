@@ -166,7 +166,7 @@
 
                     <TextBlock Text="PENANGGUNG JAWAB DI ALAMAT TUJUAN"
                                FontWeight="SemiBold" FontSize="12"
-                               Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,4"/>
+                               Foreground="{DynamicResource AccentTextBrush}" Margin="0,14,0,4"/>
 
                     <Grid>
                         <Grid.ColumnDefinitions>

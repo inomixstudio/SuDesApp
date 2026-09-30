@@ -122,7 +122,7 @@
                         <!-- Nomor surat otomatis: satu nomor per blanko yang dicentang -->
                         <TextBlock Text="{Binding NomorSuratRingkasan}" Margin="0,2,0,0" FontSize="11"
                                    TextWrapping="Wrap"
-                                   Foreground="{DynamicResource AccentBrush}"
+                                   Foreground="{DynamicResource AccentTextBrush}"
                                    ToolTip="Nomor surat diisi otomatis sesuai penomoran jenis surat di register"/>
                     </StackPanel>
                 </Border>

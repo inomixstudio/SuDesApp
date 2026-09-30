@@ -63,7 +63,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource CalloutIcon}" Background="{DynamicResource WarningBrush}">
-                                <TextBlock Text="&#x26A0;" Foreground="White" FontWeight="Bold"
+                                <TextBlock Text="&#x26A0;" Foreground="{DynamicResource OnWarningTextBrush}" FontWeight="Bold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource WarningTextBrush}">

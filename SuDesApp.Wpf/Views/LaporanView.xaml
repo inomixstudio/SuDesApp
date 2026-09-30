@@ -1,0 +1,188 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.LaporanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             xmlns:vm="clr-namespace:SuDesApp.Wpf.ViewModels"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header + aksi utama -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Border Style="{StaticResource HeaderIconChip}">
+                        <TextBlock Text="{x:Static u:IkonMenu.Laporan}" FontSize="18"
+                                   FontFamily="{StaticResource AppIconFont}"
+                                   Foreground="{DynamicResource PrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
+                        <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding CetakPdfCommand}"
+                            Style="{StaticResource HeaderActionButton}" Height="32" Margin="0,0,8,0"
+                            ToolTip="Simpan laporan sebagai berkas PDF">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Static u:IkonMenu.Cetak}" FontSize="13"
+                                       FontFamily="{StaticResource AppIconFont}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Cetak PDF" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Content="Simpan Excel" Command="{Binding SimpanExcelCommand}"
+                            Style="{StaticResource HeaderGhostButton}" Height="32" Margin="0,0,8,0"
+                            ToolTip="Simpan laporan sebagai berkas Excel (.xlsx)"/>
+                    <Button Content="Pratinjau" Command="{Binding PratinjauCommand}"
+                            Style="{StaticResource HeaderGhostButton}" Height="32" Margin="0,0,8,0"
+                            ToolTip="Buka pratinjau PDF di dalam aplikasi"/>
+                    <Button Content="Segarkan" Command="{Binding MuatUlangCommand}"
+                            Style="{StaticResource HeaderGhostButton}" Height="32"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Kartu rekapitulasi -->
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding KartuStatistik}" Margin="0,12,0,0">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,10,0" Padding="12,10">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11.5"/>
+                            <TextBlock Text="{Binding Nilai}" FontSize="21" FontWeight="Bold" Margin="0,2,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Tekankan}" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock Text="{Binding Keterangan}" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Pemilih isi laporan -->
+        <Border Grid.Row="2" Style="{StaticResource ToolbarCard}" Margin="0,12,0,0" Padding="12,10">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" FontWeight="SemiBold"
+                               Text="Isi laporan"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Content="Pilih semua" Command="{Binding AlihkanSemuaCommand}"
+                                Style="{StaticResource SecondaryButton}" Height="28" Margin="0,0,8,0"/>
+                        <Button Content="Hapus semua" Command="{Binding MatikanSemuaCommand}"
+                                Style="{StaticResource SecondaryButton}" Height="28"/>
+                    </StackPanel>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding PilihanTabel}" Margin="0,8,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,8,8" Padding="10,8"
+                                    MinWidth="230">
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding Dipakai}" VerticalAlignment="Top" Margin="0,1,8,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Judul}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Keterangan}" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   TextWrapping="Wrap" Margin="0,1,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- Pratinjau tabel -->
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,12,0,0" Padding="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Style="{StaticResource ToolbarCard}" Padding="12,9">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="{Binding StatusText}"/>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontWeight="SemiBold"
+                                   Text="{Binding PeriodeTampil}"/>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12,10">
+                    <ItemsControl ItemsSource="{Binding TabelPratinjau}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,16">
+                                    <TextBlock Text="{Binding Judul}" FontWeight="Bold" FontSize="13.5"/>
+                                    <TextBlock Text="{Binding Catatan}" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Margin="0,2,0,4" TextWrapping="Wrap"/>
+                                    <DataGrid ItemsSource="{Binding Baris}" Style="{StaticResource ModernDataGrid}"
+                                              IsReadOnly="True" CanUserSortColumns="False"
+                                              AutoGenerateColumns="False" MaxHeight="260">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Keterangan" Binding="{Binding Label}" Width="*"/>
+                                            <DataGridTextColumn Header="Jumlah" Binding="{Binding Nilai}" Width="140"/>
+                                            <DataGridTextColumn Header="Persentase" Binding="{Binding Persentase}" Width="110"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <TextBlock Grid.Row="2" Margin="12,0,12,10" FontSize="11" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Text="Angka pada layar, PDF, dan Excel dihitung dari satu sumber data yang sama saat tombol ditekan, sehingga hasil cetak selalu sama dengan yang tampil di sini."/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

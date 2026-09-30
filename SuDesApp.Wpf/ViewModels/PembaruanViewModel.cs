@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Wpf.Services;
+using SuDesApp.Wpf.Utilities;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -108,7 +109,10 @@ namespace SuDesApp.Wpf.ViewModels
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _notifications = notifications;
 
-            _currentVersionText = $"Versi Saat Ini: {GetCurrentVersion()}";
+            // Bentuk versi tampilan disamakan dengan status bar ("v2.5.4") — bukan
+            // 2.5.4.0 — supaya laporan pengguna mudah dicocokkan antar halaman.
+            // GetCurrentVersion() (empat komponen) tetap dipakai untuk membandingkan versi.
+            _currentVersionText = $"Versi Saat Ini: {IdentitasAplikasi.VersiDenganPrefiks}";
 
             Perbaikan = new ObservableCollection<string>();
             Riwayat = new ObservableCollection<BarisRiwayatPembaruan>();
@@ -541,10 +545,10 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (!IsNewerVersionAvailable())
                 {
-                    StatusText = $"Sudah menggunakan versi terbaru ({GetCurrentVersion()})";
+                    StatusText = $"Sudah menggunakan versi terbaru ({IdentitasAplikasi.VersiSingkat})";
                     TampilkanPesan(    JenisPesanInline.Sukses,
                         "Sudah versi terbaru",
-                        $"Anda memakai versi {GetCurrentVersion()}. Tidak ada pembaruan yang perlu dipasang saat ini.",
+                        $"Anda memakai versi {IdentitasAplikasi.VersiSingkat}. Tidak ada pembaruan yang perlu dipasang saat ini.",
                         "hasil-periksa");
                     return;
                 }

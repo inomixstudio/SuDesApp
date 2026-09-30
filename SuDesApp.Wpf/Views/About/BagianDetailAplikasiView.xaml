@@ -42,6 +42,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <!-- Produk -->
@@ -56,54 +58,75 @@
                         <TextBlock Text="&#x1F3F7;" Style="{StaticResource DetailIkonText}"/>
                     </Border>
                     <TextBlock Grid.Row="1" Grid.Column="1" Text="Versi" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
-                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding AssemblyVersion, StringFormat='v{0}'}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding VersiTampil}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
+
+                    <!-- Nomor build -->
+                    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F6E0;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Nomor build" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding VersiBuild}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
 
                     <!-- Pengembang -->
-                    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                    <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailIkon}">
                         <TextBlock Text="&#x1F464;" Style="{StaticResource DetailIkonText}"/>
                     </Border>
-                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Pengembang" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
-                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding AssemblyCompany}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Pengembang" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding AssemblyCompany}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
 
                     <!-- Copyright -->
-                    <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                    <Border Grid.Row="4" Grid.Column="0" Style="{StaticResource DetailIkon}">
                         <TextBlock Text="&#x00A9;" Style="{StaticResource DetailIkonText}"/>
                     </Border>
-                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Copyright" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
-                    <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding AssemblyCopyright}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1" Text="Copyright" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding AssemblyCopyright}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
 
                     <!-- Repository -->
-                    <Border Grid.Row="4" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                    <Border Grid.Row="5" Grid.Column="0" Style="{StaticResource DetailIkon}">
                         <TextBlock Text="&#x1F419;" Style="{StaticResource DetailIkonText}"/>
                     </Border>
-                    <TextBlock Grid.Row="4" Grid.Column="1" Text="Repository" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
-                    <Button Grid.Row="4" Grid.Column="2" Content="github.com/inomixstudio/SudesApp"
+                    <TextBlock Grid.Row="5" Grid.Column="1" Text="Repository" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
+                    <Button Grid.Row="5" Grid.Column="2" Content="{Binding RepoTampil}"
                             Command="{Binding OpenUrlCommand}"
-                            CommandParameter="https://github.com/inomixstudio/SudesApp"
-                            ToolTip="https://github.com/inomixstudio/SudesApp"
+                            CommandParameter="{Binding RepoUrl}"
+                            ToolTip="{Binding RepoUrl}"
                             Style="{StaticResource LinkButton}" HorizontalAlignment="Left" Padding="0"
                             Margin="0,-4,0,6" Background="Transparent" BorderThickness="0"/>
 
                     <!-- Runtime -->
-                    <Border Grid.Row="5" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                    <Border Grid.Row="6" Grid.Column="0" Style="{StaticResource DetailIkon}">
                         <TextBlock Text="&#x2699;" Style="{StaticResource DetailIkonText}"/>
                     </Border>
-                    <TextBlock Grid.Row="5" Grid.Column="1" Text="Runtime" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
-                    <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding RuntimeVersi}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="6" Grid.Column="1" Text="Runtime" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding RuntimeVersi}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
 
                     <!-- Berjalan selama -->
-                    <Border Grid.Row="6" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                    <Border Grid.Row="7" Grid.Column="0" Style="{StaticResource DetailIkon}">
                         <TextBlock Text="&#x23F1;" Style="{StaticResource DetailIkonText}"/>
                     </Border>
-                    <TextBlock Grid.Row="6" Grid.Column="1" Text="Berjalan selama" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
-                    <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding Uptime}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="7" Grid.Column="1" Text="Berjalan selama" Style="{StaticResource DetailLabel}" Margin="0,0,0,10"/>
+                    <TextBlock Grid.Row="7" Grid.Column="2" Text="{Binding Uptime}" Style="{StaticResource DetailNilai}" Margin="0,0,0,10"/>
 
-                    <!-- Lokasi data -->
-                    <Border Grid.Row="7" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                    <!-- Folder aplikasi: program + berkas database (desa.db).
+                         Lokasi database kini bisa dipindah lewat Pengaturan Aplikasi
+                         → Database Desa, jadi disebut juga di penjelasannya. -->
+                    <Border Grid.Row="8" Grid.Column="0" Style="{StaticResource DetailIkon}">
                         <TextBlock Text="&#x1F4C1;" Style="{StaticResource DetailIkonText}"/>
                     </Border>
-                    <TextBlock Grid.Row="7" Grid.Column="1" Text="Lokasi data" Style="{StaticResource DetailLabel}" VerticalAlignment="Top"/>
-                    <TextBlock Grid.Row="7" Grid.Column="2" Text="{Binding LokasiData}" Style="{StaticResource DetailNilai}"/>
+                    <TextBlock Grid.Row="8" Grid.Column="1" Text="Folder aplikasi" Style="{StaticResource DetailLabel}" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Row="8" Grid.Column="2" Text="{Binding LokasiData}"
+                               Style="{StaticResource DetailNilai}"
+                               ToolTip="Folder program aplikasi beserta berkas database desa.db. Lokasi database dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa."/>
+
+                    <!-- Preferensi & kunci: berkas milik pengguna di luar folder
+                         aplikasi — tidak ikut walau folder aplikasi dicadangkan. -->
+                    <Border Grid.Row="9" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F510;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="9" Grid.Column="1" Text="Preferensi &amp; kunci" Style="{StaticResource DetailLabel}" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Row="9" Grid.Column="2" Text="{Binding LokasiPreferensi}"
+                               Style="{StaticResource DetailNilai}"
+                               ToolTip="Preferensi aplikasi, kunci database (DPAPI), kunci API, kredensial Google, dan riwayat pembaruan — berkas milik pengguna di luar folder aplikasi, tidak ikut tersalin bila folder aplikasi dicadangkan."/>
                 </Grid>
             </StackPanel>
         </Border>

@@ -106,7 +106,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="{Binding JudulTipe}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock Text="{Binding JudulTipe}" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}"/>
                         <TextBox Text="{Binding Teks.Isi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  AcceptsReturn="True" TextWrapping="Wrap" MinHeight="46"
                                  VerticalScrollBarVisibility="Auto" Margin="0,6,0,0"
@@ -149,7 +149,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding JudulTipe}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"
+                            <TextBlock Text="{Binding JudulTipe}" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}"
                                        VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <Button Content="+ Field" Command="{Binding DataContext.TambahKolomBagianCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Height="26" Margin="0,0,8,0"
@@ -191,7 +191,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding JudulTipe}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"
+                            <TextBlock Text="{Binding JudulTipe}" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}"
                                        VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <Button Content="+ Kolom" Command="{Binding DataContext.TambahKolomBagianCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Height="26" Margin="0,0,8,0"

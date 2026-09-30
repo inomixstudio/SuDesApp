@@ -2,18 +2,21 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Dark Theme — Material dark + aksen hijau emerald: kanvas #121212,
-         kartu #1E1E1E, panel #242424 (Material); aksen emerald #059669 (tombol
-         utama, logo, seleksi), sidebar/statusbar hijau tua #14261F. Semua warna
-         statis di sini TIDAK ikut berubah saat pengguna mengganti tema berwarna. -->
+         kartu #1E1E1E, panel #242424 (Material); aksen emerald #34D399 (logo,
+         seleksi), header emerald tua #047857, sidebar/statusbar hijau tua
+         #14261F. Semua warna statis di sini TIDAK ikut berubah saat pengguna
+         mengganti tema berwarna. -->
 
-    <Color x:Key="PrimaryColor">#059669</Color>
-    <!-- Secondary = emerald-600: dipakai tombol utama (PrimaryButton) -->
-    <Color x:Key="SecondaryColor">#059669</Color>
+    <!-- Header/tombol digelapkan ke emerald-700/800 agar teks putih di atasnya
+         lolos WCAG AA — diperiksa KontrasTemaTests. -->
+    <Color x:Key="PrimaryColor">#047857</Color>
+    <!-- Secondary = emerald-800: dipakai tombol utama (PrimaryButton) -->
+    <Color x:Key="SecondaryColor">#065F46</Color>
     <Color x:Key="AccentColor">#34D399</Color>
     <Color x:Key="BackgroundColor">#121212</Color>
     <Color x:Key="SurfaceColor">#1E1E1E</Color>
     <Color x:Key="TextColor">#E0E0E0</Color>
-    <Color x:Key="TextSecondaryColor">#9E9E9E</Color>
+    <Color x:Key="TextSecondaryColor">#BDBDBD</Color>
     <Color x:Key="TextSelectedColor">#FFFFFF</Color>
     <Color x:Key="BorderColor">#2F3733</Color>
     <Color x:Key="PanelColor">#242424</Color>
@@ -71,13 +74,20 @@
 
     <!-- Helper brushes untuk teks di atas header berwarna -->
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#FAFAFA"/>
-    <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#A6A6A6"/>
+    <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#D1FAE5"/>
     <SolidColorBrush x:Key="LogoCircleBackgroundBrush" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="ErrorOverlayBrush" Color="{StaticResource ErrorColor}" Opacity="0.18"/>
 
     <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="OnPrimarySubtleBrush" Color="#FFFFFF" Opacity="0.85"/>
-    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#0F172A"/>
+
+    <!-- Teks di atas lencana/tombol status. Nilainya dipilih agar lolos WCAG AA
+         (>= 4,5:1 terhadap latarnya) — diperiksa Tools/check-kontras-wcag.ps1
+         dan dijaga otomatis oleh uji KontrasTemaTests. -->
+    <SolidColorBrush x:Key="OnSuccessTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnWarningTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnErrorTextBrush" Color="#0F172A"/>
 
     <!-- Font -->
     <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>

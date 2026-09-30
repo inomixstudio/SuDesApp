@@ -119,7 +119,7 @@
                                         Command="{Binding BersihkanRiwayatCommand}"
                                         Height="26" Padding="10,0" FontSize="11.5"
                                         Style="{StaticResource OutlineButton}"
-                                        Foreground="{DynamicResource ErrorBrush}"
+                                        Foreground="{DynamicResource ErrorTextBrush}"
                                         BorderBrush="{DynamicResource ErrorBrush}"
                                         ToolTip="Buang seluruh riwayat pembaruan yang tersimpan di komputer ini"
                                         AutomationProperties.Name="Bersihkan riwayat pembaruan"/>
@@ -167,7 +167,7 @@
                                                     <Border Background="{DynamicResource AccentSubtleBrush}" CornerRadius="4"
                                                             Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Jenis}" FontSize="10.5"
-                                                                   Foreground="{DynamicResource PrimaryBrush}"/>
+                                                                   Foreground="{DynamicResource AccentTextBrush}"/>
                                                     </Border>
                                                     <TextBlock Text="{Binding Berkas}" FontSize="12" Margin="12,0,0,0"
                                                                VerticalAlignment="Center"

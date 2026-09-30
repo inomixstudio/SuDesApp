@@ -5,8 +5,10 @@
     <!-- Palet: latar abu Material Grey-100, kartu putih, navigasi putih, aksen Material Blue -->
 
     <!-- Palette dasar -->
-    <Color x:Key="PrimaryColor">#1976D2</Color>
-    <Color x:Key="SecondaryColor">#1565C0</Color>
+    <!-- Header gradien digelapkan satu tingkat agar subjudul (putih 85%) tetap
+         lolos WCAG AA di atasnya — diperiksa KontrasTemaTests. -->
+    <Color x:Key="PrimaryColor">#1565C0</Color>
+    <Color x:Key="SecondaryColor">#0D47A1</Color>
     <Color x:Key="AccentColor">#2196F3</Color>
     <Color x:Key="BackgroundColor">#F5F5F5</Color>
     <Color x:Key="SurfaceColor">#FFFFFF</Color>
@@ -55,8 +57,10 @@
     <SolidColorBrush x:Key="AccentSubtleBrush" Color="{StaticResource AccentSubtleColor}"/>
     <SolidColorBrush x:Key="ZebraBrush" Color="{StaticResource ZebraColor}"/>
 
-    <SolidColorBrush x:Key="SuccessTextBrush" Color="{StaticResource SuccessColor}"/>
-    <SolidColorBrush x:Key="WarningTextBrush" Color="{StaticResource WarningColor}"/>
+    <!-- Warna teks status digelapkan: warna isian (SuccessColor/WarningColor)
+         terlalu terang untuk teks — diperiksa KontrasTemaTests. -->
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#2D7A31"/>
+    <SolidColorBrush x:Key="WarningTextBrush" Color="#AC4F01"/>
     <SolidColorBrush x:Key="ErrorTextBrush" Color="{StaticResource ErrorColor}"/>
     <SolidColorBrush x:Key="AccentTextBrush" Color="{StaticResource PrimaryColor}"/>
 
@@ -77,7 +81,14 @@
 
     <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="OnPrimarySubtleBrush" Color="#FFFFFF" Opacity="0.85"/>
-    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#0F172A"/>
+
+    <!-- Teks di atas lencana/tombol status. Nilainya dipilih agar lolos WCAG AA
+         (>= 4,5:1 terhadap latarnya) — diperiksa Tools/check-kontras-wcag.ps1
+         dan dijaga otomatis oleh uji KontrasTemaTests. -->
+    <SolidColorBrush x:Key="OnSuccessTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="OnWarningTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnErrorTextBrush" Color="#FFFFFF"/>
 
     <!-- Font -->
     <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>

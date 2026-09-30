@@ -47,7 +47,7 @@
                 <Border Grid.Column="0" x:Name="IconBadge" Width="40" Height="40" CornerRadius="20"
                         Background="{DynamicResource PrimaryBrush}">
                     <TextBlock x:Name="IconText" Text="i" FontSize="18" FontWeight="Bold"
-                               Foreground="White" FontFamily="Segoe UI Symbol"
+                               Foreground="{DynamicResource OnPrimaryTextBrush}" FontFamily="Segoe UI Symbol"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <TextBlock Grid.Column="1" x:Name="TitleText" Text="Judul" FontSize="15" FontWeight="SemiBold"
