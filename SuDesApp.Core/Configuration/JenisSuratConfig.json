@@ -31,16 +31,16 @@
     "KodeJenis": "SKU",
     "TemplateName": "SKU",
     "DisplayName": "SKU (Surat Ket. Usaha)",
-    "NomorFormat": "510/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
-    "IsKeteranganDesa": false
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
   },
   {
     "NamaJenis": "PENGANTAR_SKCK",
     "KodeJenis": "SKCK",
     "TemplateName": "PENGANTAR_SKCK",
     "DisplayName": "Pengantar SKCK",
-    "NomorFormat": "474/{0:D3}/Ds/{2:yyyy}",
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -49,8 +49,8 @@
     "KodeJenis": "IZIN",
     "TemplateName": "IZIN_ORTU",
     "DisplayName": "Izin Suami/Orang Tua",
-    "NomorFormat": "474.4/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {
@@ -58,8 +58,8 @@
     "KodeJenis": "GRP_SAW",
     "TemplateName": "GARAPAN_SAWAH",
     "DisplayName": "Ket. Garapan Sawah",
-    "NomorFormat": "593.2/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {
@@ -67,9 +67,9 @@
     "KodeJenis": "KEM",
     "TemplateName": "KEMATIAN",
     "DisplayName": "Surat Kematian",
-    "NomorFormat": "570/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
-    "IsKeteranganDesa": false
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "IsSharedNumbering": true,
+    "IsKeteranganDesa": true
   },
   {
     "NamaJenis": "SKTM",
@@ -94,7 +94,7 @@
     "KodeJenis": "KENAL_LAHIR",
     "TemplateName": "KENAL_LAHIR",
     "DisplayName": "Surat Kenal Lahir",
-    "NomorFormat": "474.2/{0:D3}/Ds/{2:yyyy}",
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -103,7 +103,7 @@
     "KodeJenis": "AHLI_WARIS",
     "TemplateName": "AHLI_WARIS",
     "DisplayName": "Keterangan Ahli Waris",
-    "NomorFormat": "474.2/{0:D3}/Ds/{2:yyyy}",
+    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -140,7 +140,7 @@
     "TemplateName": "NTCR_N1",
     "DisplayName": "Surat Pengantar Nikah (N1)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {
@@ -149,7 +149,7 @@
     "TemplateName": "NTCR_N2",
     "DisplayName": "Permohonan Kehendak Nikah (N2)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {
@@ -158,7 +158,7 @@
     "TemplateName": "NTCR_N3",
     "DisplayName": "Permohonan Pencatatan Isbat (N3)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {
@@ -167,7 +167,7 @@
     "TemplateName": "NTCR_N4",
     "DisplayName": "Persetujuan Calon Pengantin (N4)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {
@@ -176,7 +176,7 @@
     "TemplateName": "NTCR_N5",
     "DisplayName": "Surat Izin Orang Tua (N5)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {
@@ -185,7 +185,7 @@
     "TemplateName": "NTCR_N6",
     "DisplayName": "Keterangan Kematian Suami/Istri (N6)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
-    "IsSharedNumbering": false,
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {

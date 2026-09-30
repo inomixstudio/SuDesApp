@@ -574,6 +574,9 @@ namespace SuDesApp.Configuration
             // ? 1b. Migrasi kolom mode Google Sheet (Sumber, SheetToken, SheetRowId)
             await MigratePermintaanWaSheetColumnsAsync(connection);
 
+            // ? 1c. Tabel Perangkat Desa (dibuat + migrasi nama jabatan lama)
+            await EnsurePerangkatDesaTableAsync(connection);
+
             // ? 2. Create views jika belum ada
             await CreateViewsAsync(connection);
 
@@ -768,6 +771,26 @@ namespace SuDesApp.Configuration
 
             await connection.ExecuteAsync(sql);
             _logger.LogInformation("Tabel AuditLog dimigrasikan.");
+        }
+
+        /// <summary>
+        /// Pastikan tabel <c>PerangkatDesa</c> ada, kolom <c>BerkasSK</c> sudah
+        /// ada, indeksnya terbentuk, dan nama jabatan lama sudah dipetakan ke nama
+        /// resmi terbaru. Satu metode di repository yang menangani semuanya supaya
+        /// langkah-langkah ini tidak tercecer di banyak tempat.
+        /// </summary>
+        private async Task EnsurePerangkatDesaTableAsync(SqliteConnection connection)
+        {
+            try
+            {
+                await PerangkatDesaRepository.EnsurePerangkatDesaAsync(connection);
+                _logger.LogInformation("Tabel PerangkatDesa siap dipakai.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal menyiapkan tabel PerangkatDesa");
+                throw;
+            }
         }
 
         /// <summary>
@@ -1094,7 +1117,13 @@ namespace SuDesApp.Configuration
                 "Surat", "Warga", "JenisSurat", "InfoDesa", "Kematian",
                 "SKU", "SKTM", "IZIN", "Instansi", "Garapan", "AhliWaris",
                 "BedaNama", "KenalLahir", "IjinTinggal", "AuditLog", "SchemaVersion",
-                "NTCR"
+                "NTCR",
+                // Validasi berjalan setelah InitializeNewFeaturesAsync (langkah 8),
+                // jadi tabel ini selalu sudah dibuat lebih dulu. Memasukkannya di
+                // sini membuat instalasi yang benar-benar rusak (tabel hilang
+                // walau migrasi sempat jalan) terdeteksi, bukan baru terasa saat
+                // pengguna membuka menu Perangkat Desa.
+                "PerangkatDesa"
             };
 
             foreach (var table in essentialTables)

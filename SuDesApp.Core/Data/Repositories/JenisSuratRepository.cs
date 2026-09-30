@@ -22,8 +22,26 @@ namespace SuDesApp.Data.Repositories
         Task<List<string>> GetAvailableYearsAsync();
         Task<bool> HasExistingNomorSuratAsync(string namaJenis);
 
+        /// <summary>
+        /// Daftar surat yang sudah terbit beserta jenisnya, untuk pemeriksaan
+        /// keutuhan penomoran. <paramref name="tahun"/> null = semua tahun.
+        /// </summary>
+        Task<List<BarisNomorTerbit>> GetNomorTerbitAsync(int? tahun = null);
+
+        /// <summary>
+        /// Daftar surat satu tahun untuk arsip register, sudah dilengkapi
+        /// nama dan NIK warga tujuan.
+        /// </summary>
+        Task<List<BarisRegisterSurat>> GetRegisterSuratAsync(int tahun);
+
         Task<HashSet<string>> GetSharedNumberingGroupAsync();
         Task RefreshConfigurationAsync();
+
+        /// <summary>
+        /// Kosongkan cache register nomor terbit & register surat — dipanggil
+        /// repositori surat setiap ada penulisan surat baru/berubah.
+        /// </summary>
+        void TandaiRegisterBerubah();
     }
 
     public class JenisSuratRepository : BaseRepository<JenisSuratKelas>, IJenisSuratRepository
@@ -336,6 +354,73 @@ namespace SuDesApp.Data.Repositories
 
                 return yearList;
             }, TimeSpan.FromHours(1), new List<string> { DateTime.Now.Year.ToString() });
+        }
+
+        /// <summary>
+        /// Kosongkan cache register nomor terbit & register surat. Dipanggil
+        /// ketika ada surat baru/berubah, supaya angka tutup buku tidak pernah
+        /// mencerminkan keadaan sebelum surat itu tersimpan.
+        /// </summary>
+        public void TandaiRegisterBerubah()
+        {
+            _cacheService.RemoveByPrefixAsync("NomorTerbit_").GetAwaiter().GetResult();
+            _cacheService.RemoveByPrefixAsync("RegisterSurat_").GetAwaiter().GetResult();
+            _cacheService.RemoveByPrefixAsync("AvailableYears").GetAwaiter().GetResult();
+        }
+
+        public async Task<List<BarisNomorTerbit>> GetNomorTerbitAsync(int? tahun = null)
+        {
+            // Tahun masuk ke kunci cache: hasil untuk satu tahun tidak boleh
+            // dilayani ke permintaan tahun lain (mis. register 2026 mengembalikan
+            // data 2025 karena kunci sama).
+            string cacheKey = tahun is null ? "NomorTerbit_All" : $"NomorTerbit_{tahun}";
+
+            return await GetWithCacheAsync(cacheKey, async () =>
+            {
+                var baris = await SqlMapper.QueryAsync<BarisNomorTerbit>(
+                    _uow.Connection,
+                    @"SELECT s.ID_Surat, s.NomorSurat, s.TanggalSurat, js.NamaJenis
+                        FROM Surat s
+                        LEFT JOIN JenisSurat js ON s.ID_Jenis = js.ID_Jenis
+                       WHERE (@Tahun IS NULL OR CAST(strftime('%Y', s.TanggalSurat) AS INTEGER) = @Tahun)
+                       ORDER BY s.TanggalSurat, s.ID_Surat",
+                    new { Tahun = tahun },
+                    _uow.CurrentTransaction,
+                    null,
+                    null
+                );
+
+                return baris.ToList();
+            }, TimeSpan.FromMinutes(10));
+        }
+
+        public async Task<List<BarisRegisterSurat>> GetRegisterSuratAsync(int tahun)
+        {
+            if (tahun is < 1900 or > 3000)
+                throw new ArgumentOutOfRangeException(nameof(tahun), tahun, "Tahun tidak wajar.");
+
+            // Tahun wajib ada di kunci cache; register tiap tahun berdiri sendiri.
+            string cacheKey = $"RegisterSurat_{tahun}";
+
+            return await GetWithCacheAsync(cacheKey, async () =>
+            {
+                var baris = await SqlMapper.QueryAsync<BarisRegisterSurat>(
+                    _uow.Connection,
+                    @"SELECT s.ID_Surat, s.NomorSurat, s.TanggalSurat, s.Keperluan, s.Keterangan,
+                              js.NamaJenis, w.Nama AS NamaWarga, w.NIK AS NikWarga
+                        FROM Surat s
+                        LEFT JOIN JenisSurat js ON s.ID_Jenis = js.ID_Jenis
+                        LEFT JOIN Warga w       ON s.ID_Warga = w.ID_Warga
+                       WHERE CAST(strftime('%Y', s.TanggalSurat) AS INTEGER) = @Tahun
+                       ORDER BY s.NomorSurat, s.ID_Surat",
+                    new { Tahun = tahun },
+                    _uow.CurrentTransaction,
+                    null,
+                    null
+                );
+
+                return baris.ToList();
+            }, TimeSpan.FromMinutes(10));
         }
 
         // PERBAIKAN: Method untuk refresh konfigurasi

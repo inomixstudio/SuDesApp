@@ -36,6 +36,12 @@ namespace SuDesApp.Data.Repositories
         /// <summary>Menjamin kolom kolom mode Google Sheet tersedia (migrasi aman dijalankan berulang).</summary>
         Task MigrateSheetColumnsAsync(CancellationToken cancellationToken = default);
 
+        /// <summary>Cari permintaan berdasarkan referensi sistem pengirim (API desa); null bila tidak ada.</summary>
+        Task<PermintaanWa?> GetByReferensiAsync(string referensi, CancellationToken cancellationToken = default);
+
+        /// <summary>Cari permintaan berdasarkan kode permintaan (PMT-…); null bila tidak ada.</summary>
+        Task<PermintaanWa?> GetByKodeAsync(string kode, CancellationToken cancellationToken = default);
+
         /// <summary>Mengambil permintaan berdasarkan token prefill yang diberikan ke warga.</summary>
         Task<PermintaanWa?> GetBySheetTokenAsync(string token, CancellationToken cancellationToken = default);
 
@@ -79,7 +85,8 @@ namespace SuDesApp.Data.Repositories
                     PesanBalasan     TEXT,
                     Sumber           TEXT NOT NULL DEFAULT 'WA',
                     SheetToken       TEXT,
-                    SheetRowId       INTEGER
+                    SheetRowId       INTEGER,
+                    Referensi        TEXT
                 );
                 CREATE INDEX IF NOT EXISTS idx_permintaanwa_status ON PermintaanWa(Status);
                 CREATE INDEX IF NOT EXISTS idx_permintaanwa_wa ON PermintaanWa(NomorWA);
@@ -120,7 +127,8 @@ namespace SuDesApp.Data.Repositories
                 {
                     "Sumber TEXT NOT NULL DEFAULT 'WA'",
                     "SheetToken TEXT",
-                    "SheetRowId INTEGER"
+                    "SheetRowId INTEGER",
+                    "Referensi TEXT"
                 };
 
                 var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -167,9 +175,9 @@ namespace SuDesApp.Data.Repositories
 
             const string sql = @"
                 INSERT INTO PermintaanWa
-                    (KodePermintaan, NomorWA, NamaWarga, NIK, NamaJenis, PesanMentah, DataJson, Status, IdSurat, IsRead, TanggalPermintaan, TanggalDiproses, Catatan, PesanBalasan, Sumber, SheetToken, SheetRowId)
+                    (KodePermintaan, NomorWA, NamaWarga, NIK, NamaJenis, PesanMentah, DataJson, Status, IdSurat, IsRead, TanggalPermintaan, TanggalDiproses, Catatan, PesanBalasan, Sumber, SheetToken, SheetRowId, Referensi)
                 VALUES
-                    (@KodePermintaan, @NomorWA, @NamaWarga, @NIK, @NamaJenis, @PesanMentah, @DataJson, @Status, @IdSurat, @IsRead, @TanggalPermintaan, @TanggalDiproses, @Catatan, @PesanBalasan, @Sumber, @SheetToken, @SheetRowId);
+                    (@KodePermintaan, @NomorWA, @NamaWarga, @NIK, @NamaJenis, @PesanMentah, @DataJson, @Status, @IdSurat, @IsRead, @TanggalPermintaan, @TanggalDiproses, @Catatan, @PesanBalasan, @Sumber, @SheetToken, @SheetRowId, @Referensi);
                 SELECT last_insert_rowid();";
 
             if (_connection.State != System.Data.ConnectionState.Open)
@@ -192,7 +200,8 @@ namespace SuDesApp.Data.Repositories
                 p.PesanBalasan,
                 p.Sumber,
                 p.SheetToken,
-                p.SheetRowId
+                p.SheetRowId,
+                p.Referensi
             });
             return p.ID_Permintaan;
         }
@@ -206,7 +215,8 @@ namespace SuDesApp.Data.Repositories
                     IsRead = @IsRead,
                     TanggalDiproses = @TanggalDiproses,
                     Catatan = @Catatan,
-                    PesanBalasan = @PesanBalasan
+                    PesanBalasan = @PesanBalasan,
+                    DataJson = @DataJson
                 WHERE ID_Permintaan = @ID_Permintaan;";
 
             if (_connection.State != System.Data.ConnectionState.Open)
@@ -219,6 +229,7 @@ namespace SuDesApp.Data.Repositories
                 TanggalDiproses = p.TanggalDiproses?.ToString("yyyy-MM-dd HH:mm:ss"),
                 p.Catatan,
                 p.PesanBalasan,
+                p.DataJson,
                 p.ID_Permintaan
             });
             return rows > 0;
@@ -334,6 +345,30 @@ namespace SuDesApp.Data.Repositories
                 string.Format(sql, where),
                 string.IsNullOrWhiteSpace(statusFilter) ? null : new { status = statusFilter });
             return result.AsList();
+        }
+
+        public async Task<PermintaanWa?> GetByReferensiAsync(string referensi, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(referensi)) return null;
+
+            const string sql = @"
+                SELECT * FROM PermintaanWa
+                WHERE Referensi = @referensi
+                ORDER BY ID_Permintaan DESC
+                LIMIT 1;";
+            if (_connection.State != System.Data.ConnectionState.Open)
+                await _connection.OpenAsync(cancellationToken);
+            return await _connection.QuerySingleOrDefaultAsync<PermintaanWa>(sql, new { referensi = referensi.Trim() });
+        }
+
+        public async Task<PermintaanWa?> GetByKodeAsync(string kode, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(kode)) return null;
+
+            const string sql = "SELECT * FROM PermintaanWa WHERE KodePermintaan = @kode LIMIT 1;";
+            if (_connection.State != System.Data.ConnectionState.Open)
+                await _connection.OpenAsync(cancellationToken);
+            return await _connection.QuerySingleOrDefaultAsync<PermintaanWa>(sql, new { kode = kode.Trim() });
         }
 
         public async Task<List<PermintaanWa>> GetUnreadAsync(CancellationToken cancellationToken = default)

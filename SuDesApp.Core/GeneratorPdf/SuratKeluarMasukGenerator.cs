@@ -17,7 +17,7 @@ namespace SuDesApp.GeneratorPdf
             SuratGeneratorBase.DaftarkanFont();
 
             _desaInfo = desaInfo ?? new DesaData();
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPdfLisensi.Pastikan();
         }
 
         public void GenerateAllSuratPdf(Stream outputStream, List<SuratKeluarMasukData> data, string jenisSuratFilter, int? yearFilter)

@@ -26,7 +26,7 @@ namespace SuDesApp.GeneratorPdf
 
         static DaftarHadirGenerator()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPdfLisensi.Pastikan();
         }
 
         public DaftarHadirGenerator(

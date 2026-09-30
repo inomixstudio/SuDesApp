@@ -54,7 +54,7 @@ namespace SuDesApp.GeneratorPdf
 
         static SuratGeneratorBase()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPdfLisensi.Pastikan();
         }
 
         protected SuratGeneratorBase(

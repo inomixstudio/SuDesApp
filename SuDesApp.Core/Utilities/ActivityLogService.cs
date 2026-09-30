@@ -26,6 +26,11 @@ namespace SuDesApp.Utilities
         /// <summary>Waktu login sesi aktif.</summary>
         public static DateTime LoginTime { get; private set; } = DateTime.Now;
 
+        /// <summary>Peran sesi aktif (PeranPengguna). Bawaan Administrator: sesi
+        /// lama yang belum menyetel peran dianggap penuh — konsisten dengan
+        /// perilaku sebelum penegakan izin diperkenalkan.</summary>
+        public static string Peran { get; set; } = SuDesApp.Data.Models.PeranPengguna.Administrator;
+
         public static void Set(string user, string method)
         {
             CurrentUser = string.IsNullOrWhiteSpace(user) ? "admin" : user.Trim();
@@ -33,8 +38,138 @@ namespace SuDesApp.Utilities
             LoginTime = DateTime.Now;
         }
 
+        /// <summary>
+        /// Set identitas sesi lengkap sekaligus: akun, metode, peran, dan nama
+        /// tampilan. Dipakai ketika identitas lengkap sudah ada di tangan
+        /// (mis. dari API/pekerja latar) tanpa perlu dua panggilan terpisah.
+        /// </summary>
+        public static void Set(string user, string method, string? peran, string? namaTampilan)
+        {
+            Set(user, method);
+            _namaTampilan = string.IsNullOrWhiteSpace(namaTampilan) ? null : namaTampilan!.Trim();
+            Peran = SuDesApp.Data.Models.PeranPengguna.Normalisasi(peran);
+        }
+
         /// <summary>Tampilkan nama pendek untuk UI (email Google dipotong bila terlalu panjang).</summary>
         public static string Display => CurrentUser.Length <= 28 ? CurrentUser : CurrentUser.Substring(0, 27) + "…";
+
+        /// <summary>
+        /// Nama pendek untuk jejak persetujuan: NamaTampilan bila tersedia
+        /// (diset lewat <see cref="SetIdentitas"/>), kalau tidak CurrentUser.
+        /// </summary>
+        public static string NamaPanggil =>
+            string.IsNullOrWhiteSpace(_namaTampilan) ? CurrentUser : _namaTampilan;
+
+        private static string? _namaTampilan;
+
+        /// <summary>
+        /// Set identitas lengkap sesi: dipanggil saat login berhasil dengan akun
+        /// pengguna aplikasi (PenggunaService) yang punya nama tampilan &amp; peran.
+        /// </summary>
+        public static void SetIdentitas(string user, string method, string? namaTampilan, string? peran)
+        {
+            Set(user, method);
+            _namaTampilan = string.IsNullOrWhiteSpace(namaTampilan) ? null : namaTampilan!.Trim();
+            Peran = SuDesApp.Data.Models.PeranPengguna.Normalisasi(peran);
+        }
+
+        /// <summary>True bila sesi aktif boleh melakukan izin tersebut.</summary>
+        public static bool Boleh(SuDesApp.Data.Models.IzinAplikasi izin) =>
+            SuDesApp.Data.Models.HakAkses.Boleh(Peran, izin);
+
+        /// <summary>
+        /// Sakelar penegakan izin lapisan data. Bawaan FALSE: semua peran
+        /// lolos — jalur lama tetap utuh sampai seluruh pemanggil menyetel
+        /// identitas + peran sesi dengan benar.
+        /// </summary>
+        public static bool PenegakanAktif { get; private set; }
+
+        public static void SetPenegakanAktif(bool aktif) => PenegakanAktif = aktif;
+
+        /// <summary>
+        /// Tegakkan izin: lempar IzinDitolakException bila penegakan aktif dan
+        /// sesi aktif tidak memegang izin itu. Semua perubahan yang tersimpan
+        /// lewat layanan (bukan repository mentah) melewati sini.
+        /// Bila PenegakanAktif false (bawaan) atau aliran sedang berada di
+        /// dalam <see cref="SesiSistem"/>, semua peran lolos.
+        /// </summary>
+        public static void Wajib(SuDesApp.Data.Models.IzinAplikasi izin)
+        {
+            if (!PenegakanAktif) return;
+            if (DalamSesiSistem) return; // API desa / pekerja latar: bukan pengguna aplikasi
+            if (!Boleh(izin))
+                throw new IzinDitolakException(
+                    izin,
+                    $"Peran {SuDesApp.Data.Models.PeranPengguna.Tampilan(Peran)} ({Display}) tidak berwenang untuk aksi ini.");
+        }
+
+        /// <summary>
+        /// Penanda sesi sistem PER-ALIRAN (AsyncLocal), bukan sakelar global:
+        /// true hanya terlihat di aliran async di dalam blok using, tidak
+        /// bocor ke pekerja latar lain maupun sesi pengguna berikutnya.
+        /// </summary>
+        private static readonly AsyncLocal<bool?> _sesiSistem = new AsyncLocal<bool?>();
+
+        private static bool DalamSesiSistem => _sesiSistem.Value == true;
+
+        /// <summary>
+        /// Lingkup sesi sistem (API desa / pekerja latar): kunci API bukan
+        /// pengguna aplikasi, jadi penegakan izin lapisan data TIDAK boleh
+        /// mewarisi peran operator yang sedang masuk. Kembalikan IDisposable —
+        /// penanda dan peran sesi dipulihkan otomatis setelah blok using
+        /// selesai; bersifat per-aliran (AsyncLocal) sehingga aman dipakai
+        /// bersama permintaan pengguna yang berjalan pada aliran lain.
+        /// Contoh: using var _ = SessionContext.SesiSistem();
+        /// </summary>
+        public static IDisposable SesiSistem()
+        {
+            var flagSebelumnya = _sesiSistem.Value;
+            var peranSebelumnya = Peran;
+            _sesiSistem.Value = true;
+            Peran = SuDesApp.Data.Models.PeranPengguna.Administrator;
+            return new KembalikanSesiSistem(flagSebelumnya, peranSebelumnya);
+        }
+
+        private sealed class KembalikanSesiSistem : IDisposable
+        {
+            private readonly bool? _flagSebelumnya;
+            private readonly string _peranSebelumnya;
+
+            public KembalikanSesiSistem(bool? flagSebelumnya, string peranSebelumnya)
+            {
+                _flagSebelumnya = flagSebelumnya;
+                _peranSebelumnya = peranSebelumnya;
+            }
+
+            public void Dispose()
+            {
+                _sesiSistem.Value = _flagSebelumnya;
+                Peran = _peranSebelumnya;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Dilempar SessionContext.Wajib bila penegakan izin aktif dan sesi aktif
+    /// tidak memegang izin yang disyaratkan. Membawa izin yang ditolak supaya
+    /// pemanggil bisa memberi pesan yang tepat.
+    /// </summary>
+    public class IzinDitolakException : Exception
+    {
+        /// <summary>Izin yang ditolak.</summary>
+        public SuDesApp.Data.Models.IzinAplikasi Izin { get; }
+
+        public IzinDitolakException(SuDesApp.Data.Models.IzinAplikasi izin, string pesan)
+            : base(pesan)
+        {
+            Izin = izin;
+        }
+
+        public IzinDitolakException(SuDesApp.Data.Models.IzinAplikasi izin, string pesan, Exception inner)
+            : base(pesan, inner)
+        {
+            Izin = izin;
+        }
     }
 
     /// <summary>Baris riwayat aktivitas untuk tampilan.</summary>

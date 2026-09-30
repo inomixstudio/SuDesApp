@@ -62,7 +62,7 @@ namespace SuDesApp.GeneratorPdf
             // keluarga "Times New Roman" belum ada dan dokumen akan gagal dibuat.
             SuratGeneratorBase.DaftarkanFont(config, logger);
 
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPdfLisensi.Pastikan();
         }
 
         // Generate PDF berdasarkan ID surat

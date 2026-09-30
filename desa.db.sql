@@ -88,9 +88,21 @@ CREATE TABLE IF NOT EXISTS "Surat" (
     "TanggalSurat" DATE NOT NULL,
     "Keterangan" TEXT,
 	"Keperluan" TEXT,
+	-- Alur persetujuan opsional + keaslian surat (semuanya NULL sampai dipakai).
+	"StatusPersetujuan" TEXT,
+	"VerifikasiOleh" TEXT,
+	"VerifikasiPada" TEXT,
+	"DitandatanganiOleh" TEXT,
+	"DitandatanganiPada" TEXT,
+	"CatatanPersetujuan" TEXT,
+	"FileScanSurat" TEXT,
+	"JumlahCetak" INTEGER NOT NULL DEFAULT 0,
+	"KodeVerifikasi" TEXT,
+	"HashVerifikasi" TEXT,
     FOREIGN KEY("ID_Jenis") REFERENCES "JenisSurat"("ID_Jenis"),
     FOREIGN KEY("ID_Warga") REFERENCES "Warga"("ID_Warga") ON DELETE SET NULL
 );
+CREATE INDEX IF NOT EXISTS "idx_surat_kodeverifikasi" ON "Surat"("KodeVerifikasi");
 
 CREATE TABLE IF NOT EXISTS "Warga" (
 	"ID_Warga"	INTEGER,
@@ -105,8 +117,39 @@ CREATE TABLE IF NOT EXISTS "Warga" (
 	"Alamat"	TEXT,
 	"Pendidikan"	TEXT,
 	"Kewarganegaraan"	TEXT,
+	-- Kolom wilayah. Repository (WargaRepository) menulis kolom ini pada
+	-- INSERT/UPDATE, jadi harus ada sejak database pertama dibuat — bukan
+	-- hanya lewat migrasi. Database lama tetap dilayani oleh
+	-- WargaRepository.EnsureWargaSchemaAsync.
+	"Dusun"	TEXT,
+	"RT"	TEXT,
+	"RW"	TEXT,
+	"Desa"	TEXT,
+	"Kecamatan"	TEXT,
+	"Kabupaten"	TEXT,
+	-- Dipakai rekap demografi dan kolom isi lampiran SK.
+	"GolonganDarah"	TEXT,
+	"NomorHP"	TEXT,
+	"StatusWarga"	TEXT,
+	-- Data lengkap warga: orang tua, KK, detail alamat, catatan status.
+	"NamaAyah"	TEXT,
+	"NamaIbu"	TEXT,
+	"NoKK"	TEXT,
+	"AlamatDetail"	TEXT,
+	"TanggalStatus"	TEXT,
+	"KeteranganWarga"	TEXT,
+	-- Kedudukan dalam keluarga (Kepala Keluarga/Istri/Anak) — ditulis
+	-- WargaRepository pada INSERT/UPDATE, jadi harus ada sejak awal.
+	"StatusKeluarga"	TEXT,
+	"CreatedAt"	DATETIME DEFAULT CURRENT_TIMESTAMP,
+	"UpdatedAt"	DATETIME DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY("ID_Warga" AUTOINCREMENT)
 );
+CREATE INDEX IF NOT EXISTS "idx_warga_nik" ON "Warga"("NIK");
+CREATE TRIGGER IF NOT EXISTS "tr_warga_updated" AFTER UPDATE ON "Warga"
+FOR EACH ROW BEGIN
+	UPDATE "Warga" SET "UpdatedAt" = CURRENT_TIMESTAMP WHERE "ID_Warga" = NEW."ID_Warga";
+END;
 -- Insert Warga (if not exists)
 INSERT OR IGNORE INTO Warga (
     NIK, Nama, TempatLahir, TanggalLahir, JenisKelamin, Agama, StatusPerkawinan, Pekerjaan, Alamat, Pendidikan, Kewarganegaraan
@@ -192,7 +235,11 @@ CREATE TABLE IF NOT EXISTS "PermintaanWa" (
     "TanggalPermintaan" TEXT NOT NULL,
     "TanggalDiproses"  TEXT,
     "Catatan"          TEXT,
-    "PesanBalasan"     TEXT
+    "PesanBalasan"     TEXT,
+    "Sumber"           TEXT NOT NULL DEFAULT 'WA',
+    "SheetToken"       TEXT,
+    "SheetRowId"       INTEGER,
+    "Referensi"        TEXT
 );
 CREATE INDEX IF NOT EXISTS "idx_permintaanwa_status" ON "PermintaanWa"("Status");
 CREATE INDEX IF NOT EXISTS "idx_permintaanwa_wa" ON "PermintaanWa"("NomorWA");
@@ -219,4 +266,40 @@ CREATE TABLE IF NOT EXISTS "NTCR" (
     "DetailJson" TEXT,
     FOREIGN KEY("ID_Surat") REFERENCES "Surat"("ID_Surat") ON DELETE CASCADE
 );
+
+-- Perangkat desa: siapa yang memegang jabatan di desa. Daftar jabatan
+-- beserta kelompoknya ada di kode (JabatanPerangkat), bukan di tabel.
+-- BerkasSK menyimpan nama berkas PDF SK Bupati yang diarsipkan (tanpa jalur).
+CREATE TABLE IF NOT EXISTS "PerangkatDesa" (
+    "ID" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "Nama" TEXT NOT NULL,
+    "Jabatan" TEXT NOT NULL,
+    "NIP" TEXT,
+    "NIK" TEXT,
+    "JenisKelamin" TEXT,
+    "TempatLahir" TEXT,
+    "TanggalLahir" DATETIME,
+    "Pendidikan" TEXT,
+    "Alamat" TEXT,
+    "Dusun" TEXT,
+    "RT" TEXT,
+    "RW" TEXT,
+    "NomorHP" TEXT,
+    "WhatsApp" TEXT,
+    "Unit" TEXT,
+    "NomorSK" TEXT,
+    "TanggalSK" DATETIME,
+    "BerkasSK" TEXT,
+    "MasaJabatanMulai" DATETIME,
+    "MasaJabatanSelesai" DATETIME,
+    "Status" TEXT NOT NULL DEFAULT 'AKTIF',
+    "Catatan" TEXT,
+    "DibuatOleh" TEXT,
+    "DiperbaruiOleh" TEXT,
+    "CreatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
+    "UpdatedAt" DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS "IX_PerangkatDesa_Jabatan" ON "PerangkatDesa"("Jabatan");
+CREATE INDEX IF NOT EXISTS "IX_PerangkatDesa_Status" ON "PerangkatDesa"("Status");
+CREATE INDEX IF NOT EXISTS "IX_PerangkatDesa_Wilayah" ON "PerangkatDesa"("Dusun", "RT", "RW");
 COMMIT;

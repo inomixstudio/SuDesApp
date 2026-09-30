@@ -39,7 +39,7 @@ namespace SuDesApp.GeneratorPdf
 
         static TemplateSuratGenerator()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPdfLisensi.Pastikan();
         }
 
         public TemplateSuratGenerator(

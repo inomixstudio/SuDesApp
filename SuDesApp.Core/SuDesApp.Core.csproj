@@ -22,6 +22,12 @@
     <!-- Versi terakhir yang diterbitkan: 1.75.0.4178; aman dipakai bersama Drive.v3 1.76 (Google.Apis diunify). -->
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.75.0.4178" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <!-- Bundel native SQLCipher: EnkripsiDatabase memeriksa PRAGMA cipher_version
+         dan menolak jalan bila provider native e_sqlite3 biasa termuat (enkripsi
+         mati senyap). Bundel e_sqlite3 bawaan Microsoft.Data.Sqlite sengaja
+         dikeluarkan agar provider e_sqlcipher yang dipakai. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" ExcludeAssets="all" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.12" />
@@ -32,6 +38,8 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.12" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="QuestPDF" Version="2026.9.1" />
+    <!-- QR untuk kaki surat (QrCodeSurat) -->
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <!-- DPAPI utk kredensial klien OAuth Google (GoogleClientCredentials) -->
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />
   </ItemGroup>

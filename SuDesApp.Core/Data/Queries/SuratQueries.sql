@@ -237,10 +237,7 @@ SELECT
     w.NIK AS NIKPenjamin, w.Nama AS NamaPenjamin, w.Pekerjaan AS PekerjaanPenjamin
 FROM IjinTinggal ijt
 LEFT JOIN Warga w ON ijt.ID_Penjamin = w.ID_Warga
-WHERE ijt.ID_Surat = @ID_Surat;
-
-
--- InsertSurat
+WHERE ijt.ID_Surat = @ID_Surat;-- InsertSurat
 INSERT INTO Surat (
     ID_Jenis, NomorSurat, TanggalSurat, Keterangan, 
     Keperluan, ID_Warga, AdditionalData, Status
@@ -251,7 +248,7 @@ VALUES (
 );
 SELECT last_insert_rowid();
 
--- InsertSuratSimple
+-- InsertSurat
 INSERT INTO Surat (ID_Jenis, NomorSurat, TanggalSurat, Keterangan, Keperluan, ID_Warga)
 VALUES (@ID_Jenis, @NomorSurat, @TanggalSurat, @Keterangan, @Keperluan, @ID_Warga);
 SELECT last_insert_rowid();
@@ -281,6 +278,9 @@ SELECT
     s.ID_Surat, s.ID_Jenis, js.NamaJenis, js.KodeJenis,
     s.NomorSurat, s.TanggalSurat, s.Keterangan, s.Keperluan,
     s.ID_Warga, s.AdditionalData, s.Status, s.CreatedAt, s.UpdatedAt,
+    s.StatusPersetujuan, s.VerifikasiOleh, s.VerifikasiPada,
+    s.DitandatanganiOleh, s.DitandatanganiPada, s.CatatanPersetujuan,
+    s.FileScanSurat, s.JumlahCetak, s.KodeVerifikasi, s.HashVerifikasi,
     w.NIK, w.ID_Warga, w.Nama, w.TempatLahir, w.TanggalLahir, w.JenisKelamin,
     w.Agama, w.StatusPerkawinan, w.Pekerjaan, w.Dusun, w.Desa,
     w.Kecamatan, w.Kabupaten, w.Pendidikan, w.Kewarganegaraan,
@@ -297,6 +297,7 @@ SELECT
     UPPER(js.NamaJenis) AS NamaJenis, js.KodeJenis,
     s.NomorSurat, s.TanggalSurat, s.Keterangan, s.Keperluan,
     s.AdditionalData, s.Status, s.CreatedAt,
+    s.StatusPersetujuan, s.FileScanSurat, s.JumlahCetak, s.KodeVerifikasi,
     w.ID_Warga, w.NIK, w.Nama, w.TempatLahir, w.TanggalLahir,
     w.JenisKelamin, w.Agama, w.StatusPerkawinan, w.Pekerjaan,
     w.Dusun, w.Desa, w.Kecamatan, w.Kabupaten, w.Pendidikan, w.Kewarganegaraan,

@@ -48,6 +48,57 @@ namespace SuDesApp.Data.Models
         // ? KOLOM STATUS BARU
         public string? Status { get; set; } = "Draft"; // Draft, Active, Cancelled
 
+        // =====================================================================
+        // Alur persetujuan & keaslian surat (opsional per surat — lihat
+        // StatusPersetujuanSurat). Kolom tersimpan di tabel Surat; surat yang
+        // tidak memakai alur membiarkan nilainya null sehingga perilaku lama
+        // (cetak langsung tanpa alur) tidak berubah sama sekali.
+        // =====================================================================
+
+        /// <summary>Status alur: DIAJUKAN/DIVERIFIKASI/TERBIT/DITOLAK, atau null = tanpa alur.</summary>
+        public string? StatusPersetujuan { get; set; }
+
+        /// <summary>Siapa yang memverifikasi (Sekdes/pejabat).</summary>
+        public string? VerifikasiOleh { get; set; }
+
+        /// <summary>Kapan diverifikasi.</summary>
+        public DateTime? VerifikasiPada { get; set; }
+
+        /// <summary>Siapa yang menandatangani (Kades).</summary>
+        public string? DitandatanganiOleh { get; set; }
+
+        /// <summary>Kapan ditandatangani.</summary>
+        public DateTime? DitandatanganiPada { get; set; }
+
+        /// <summary>Catatan alur (alasan penolakan, dsb.).</summary>
+        public string? CatatanPersetujuan { get; set; }
+
+        /// <summary>Nama berkas scan surat bertanda tangan (di folder SuratScan).</summary>
+        public string? FileScanSurat { get; set; }
+
+        /// <summary>Jumlah cetakan yang tercatat (label SALINAN pada cetakan kedua dst.).</summary>
+        public int JumlahCetak { get; set; }
+
+        /// <summary>Kode verifikasi keaslian ("SD-XXXX-XXXX"); dibuat saat surat terbit.</summary>
+        public string? KodeVerifikasi { get; set; }
+
+        /// <summary>Cap dokumen (SHA-256 data inti) untuk deteksi perubahan setelah terbit.</summary>
+        public string? HashVerifikasi { get; set; }
+
+        // =====================================================================
+        // Properti turunan (tidak tersimpan di database) untuk tampilan dan
+        // penjagaan alur di lapisan layanan/antarmuka.
+        // =====================================================================
+
+        /// <summary>True bila surat pernah/sedang melewati alur persetujuan (status alur terisi).</summary>
+        public bool LewatPersetujuan => !string.IsNullOrWhiteSpace(StatusPersetujuan);
+
+        /// <summary>True bila berkas scan surat bertanda tangan sudah dilampirkan.</summary>
+        public bool PunyaScanSurat => !string.IsNullOrWhiteSpace(FileScanSurat);
+
+        /// <summary>Kalimat status persetujuan siap tampil (bentuk panjang, untuk register/detail).</summary>
+        public string StatusPersetujuanTampil => StatusPersetujuanSurat.Tampilan(StatusPersetujuan);
+
         // ? TIMESTAMP KOLOM BARU
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
@@ -372,6 +423,35 @@ namespace SuDesApp.Data.Models
         public bool IsActive { get; set; } = true; // ? KOLOM BARU
     }
 
+    /// <summary>
+    /// Satu baris surat yang sudah terbit, cukup untuk memeriksa keutuhan
+    /// penomoran (deret wajib mulai dari 001, tidak ada nomor ganda/hilang,
+    /// tahun pada nomor harus sama dengan tahun tanggal terbit).
+    /// </summary>
+    public class BarisNomorTerbit
+    {
+        public int ID_Surat { get; set; }
+        public string? NomorSurat { get; set; }
+        public string? TanggalSurat { get; set; }
+        public string? NamaJenis { get; set; }
+    }
+
+    /// <summary>
+    /// Satu baris untuk arsip register tahunan: data surat ditambah nama/NIK
+    /// warga tujuan, dipakai untuk mencetak register dan ekspor Excel.
+    /// </summary>
+    public class BarisRegisterSurat
+    {
+        public int ID_Surat { get; set; }
+        public string? NomorSurat { get; set; }
+        public string? TanggalSurat { get; set; }
+        public string? Keperluan { get; set; }
+        public string? Keterangan { get; set; }
+        public string? NamaJenis { get; set; }
+        public string? NamaWarga { get; set; }
+        public string? NikWarga { get; set; }
+    }
+
     // ==============================================
     // WARGA DATA (UPDATED)
     // ==============================================
@@ -399,11 +479,31 @@ namespace SuDesApp.Data.Models
         public string? Agama { get; set; }
         public string? StatusPerkawinan { get; set; }
 
+        /// <summary>
+        /// Kedudukan dalam keluarga (mis. "Kepala Keluarga", "Istri", "Anak")
+        /// sesuai kolom Kartu Keluarga; dipakai halaman Data Warga &amp; ekspor.
+        /// </summary>
+        [StringLength(30)]
+        public string? StatusKeluarga { get; set; }
+
         [StringLength(100)]
         public string? Pekerjaan { get; set; }
 
         [StringLength(100)]
         public string? Dusun { get; set; }
+
+        [StringLength(10)]
+        public string? RT { get; set; }
+
+        [StringLength(10)]
+        public string? RW { get; set; }
+
+        /// <summary>
+        /// Status warga (lihat <see cref="StatusWargaTipe"/>), mis. "AKTIF",
+        /// "BARU", "PINDAH", atau "MENINGGAL".
+        /// </summary>
+        [StringLength(20)]
+        public string? StatusWarga { get; set; }
 
         [Required]
         [StringLength(100)]
@@ -428,6 +528,48 @@ namespace SuDesApp.Data.Models
 
         [StringLength(100)]
         public string? Pendidikan { get; set; }
+
+        /// <summary>
+        /// Golongan darah (A/B/AB/O). Dipakai lampiran SK perangkat desa yang
+        /// meminta data pribadi warga, dan impor data warga.
+        /// </summary>
+        [StringLength(5)]
+        public string? GolonganDarah { get; set; }
+
+        /// <summary>
+        /// Nomor telepon/HP. Dipakai lampiran SK perangkat desa dan impor warga.
+        /// </summary>
+        [StringLength(20)]
+        public string? NomorHP { get; set; }
+
+        /// <summary>Nama ayah warga (data orang tua untuk impor &amp; lampiran).</summary>
+        [StringLength(100)]
+        public string? NamaAyah { get; set; }
+
+        /// <summary>Nama ibu warga (data orang tua untuk impor &amp; lampiran).</summary>
+        [StringLength(100)]
+        public string? NamaIbu { get; set; }
+
+        /// <summary>
+        /// Nomor Kartu Keluarga warga. Satu KK bisa menaungi beberapa baris warga,
+        /// jadi nomornya tersimpan pada baris warga (lihat KartuKeluargaData).
+        /// </summary>
+        [StringLength(16)]
+        public string? NoKK { get; set; }
+
+        /// <summary>
+        /// Detail alamat bebas (nama jalan dan sebagainya) di luar susunan
+        /// dusun/desa/kecamatan/kabupaten; dipakai impor data warga.
+        /// </summary>
+        [StringLength(300)]
+        public string? AlamatDetail { get; set; }
+
+        /// <summary>Tanggal perubahan status terakhir (pindah/meninggal, ISO yyyy-MM-dd).</summary>
+        [StringLength(10)]
+        public string? TanggalStatus { get; set; }
+
+        /// <summary>Keterangan bebas tentang warga (catatan operator/impor).</summary>
+        public string? KeteranganWarga { get; set; }
 
         [StringLength(100)]
         public string? Kewarganegaraan { get; set; }

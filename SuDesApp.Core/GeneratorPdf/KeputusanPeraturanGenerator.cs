@@ -16,7 +16,7 @@ namespace SuDesApp.GeneratorPdf
 
         static KeputusanPeraturanGenerator()
         {
-            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPdfLisensi.Pastikan();
         }
 
         public KeputusanPeraturanGenerator(DesaData desaInfo)

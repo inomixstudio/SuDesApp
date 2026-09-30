@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SuDesApp.Utilities;
 
 namespace SuDesApp
 {
@@ -15,6 +16,23 @@ namespace SuDesApp
 
         // Konfigurasi koneksi dan direktori aplikasi
         public string DatabaseConnectionString { get; set; }
+
+        /// <summary>
+        /// Lokasi berkas database yang sedang dipakai (absolut). Bila pengguna memilih
+        /// lokasi lain lewat Pengaturan Aplikasi → Database, nilainya adalah lokasi
+        /// pilihan itu; selain itu sama dengan <see cref="DatabasePathBawaan"/>.
+        /// </summary>
+        public string DatabasePath { get; private set; } = string.Empty;
+
+        /// <summary>
+        /// Lokasi database bawaan dari appsettings.json (desa.db di folder aplikasi).
+        /// Dipakai halaman pengaturan untuk menawarkan "kembali ke bawaan".
+        /// </summary>
+        public string DatabasePathBawaan { get; private set; } = string.Empty;
+
+        /// <summary>True bila lokasi database berasal dari pilihan pengguna, bukan appsettings.</summary>
+        public bool DatabaseKustom { get; private set; }
+
         public string TemplateFolder { get; set; }
         public string TempPdfFolder { get; set; }
         public string PdfOutputPath { get; set; }
@@ -235,9 +253,10 @@ namespace SuDesApp
         // Validasi dan buat path database jika belum ada
         private void ValidateDatabasePath()
         {
-            var dbPath = DatabaseConnectionString.Replace("Data Source=", "").Trim();
-            if (!Path.IsPathRooted(dbPath))
-                dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, dbPath); // Jadikan absolut
+            var sumber = DatabaseConnectionString.Replace("Data Source=", "").Trim();
+            var dbPath = Path.IsPathRooted(sumber)
+                ? sumber
+                : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, sumber); // Jadikan absolut
 
             var dir = Path.GetDirectoryName(dbPath);
             if (!string.IsNullOrEmpty(dir))
@@ -256,11 +275,73 @@ namespace SuDesApp
                 _logger.LogInformation($"Database path di-set ke base directory: {dbPath}");
             }
 
+            DatabasePathBawaan = dbPath;
+            DatabaseKustom = false;
+
+            // Pengguna boleh memilih lokasi database sendiri (Pengaturan Aplikasi →
+            // Database) — mis. folder data desa di drive lain, sehingga database desa
+            // nyata tidak perlu disalin ke folder aplikasi. Pilihannya disimpan di
+            // preferensi (bukan appsettings) supaya tidak hilang saat aplikasi
+            // diperbarui. Sumber non-berkas (:memory:, file:) tidak pernah ditimpa
+            // karena tidak punya "lokasi berkas" untuk dipindahkan.
+            if (ApakahSumberBerkas(sumber))
+            {
+                var pilihan = AppPreferenceStore.GetJalurDatabase();
+                if (pilihan != null)
+                {
+                    try
+                    {
+                        var jalurPilihan = Path.GetFullPath(pilihan);
+
+                        // Folder tujuan disiapkan LEBIH DAHULU dan lokasi baru hanya
+                        // dipakai bila persiapan itu berhasil. Preferensi yang menunjuk
+                        // jalur salah tidak boleh membuat aplikasi gagal membuka
+                        // database — lebih baik kembali ke lokasi bawaan.
+                        var dirPilihan = Path.GetDirectoryName(jalurPilihan);
+                        if (!string.IsNullOrEmpty(dirPilihan) && !Directory.Exists(dirPilihan))
+                        {
+                            Directory.CreateDirectory(dirPilihan);
+                            _logger.LogInformation($"Direktori database dibuat: {dirPilihan}");
+                        }
+
+                        if (!jalurPilihan.Equals(dbPath, StringComparison.OrdinalIgnoreCase))
+                        {
+                            dbPath = jalurPilihan;
+                            DatabaseKustom = true;
+                            if (File.Exists(dbPath))
+                                _logger.LogInformation("Database memakai lokasi pilihan pengguna: {Path}", dbPath);
+                            else
+                                _logger.LogWarning("Database pilihan pengguna belum ada, akan dibuat baru: {Path}", dbPath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Lokasi pilihan tidak sah (nilai rusak, folder tidak bisa dibuat,
+                        // dsb.) — jangan batalkan startup hanya karena preferensi.
+                        dbPath = DatabasePathBawaan;
+                        DatabaseKustom = false;
+                        _logger.LogWarning(ex,
+                            "Lokasi database pilihan pengguna tidak sah, kembali ke bawaan: {Path}", pilihan);
+                    }
+                }
+            }
+
             // Jangan buat file database otomatis - biarkan DatabaseInitializer menangani ini
             // Pastikan path database absolut agar konsisten terlepas dari working directory
+            DatabasePath = dbPath;
             DatabaseConnectionString = $"Data Source={dbPath}";
             _logger.LogInformation($"Database path valid: {dbPath}");
         }
+
+        /// <summary>
+        /// True bila nilai Data Source merujuk berkas sungguhan (bukan :memory: atau URI
+        /// file:) — hanya sumber seperti itu yang boleh dipindahkan ke lokasi pilihan
+        /// pengguna.
+        /// </summary>
+        private static bool ApakahSumberBerkas(string dataSource) =>
+            !string.IsNullOrWhiteSpace(dataSource) &&
+            !dataSource.Trim().Equals(":memory:", StringComparison.OrdinalIgnoreCase) &&
+            !dataSource.Trim().StartsWith("file:", StringComparison.OrdinalIgnoreCase);
 
         // Buat direktori yang diperlukan
         private void CreateDirectories()

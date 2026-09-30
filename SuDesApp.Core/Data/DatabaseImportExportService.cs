@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
@@ -74,7 +74,13 @@ public class DatabaseImportExportService
                 File.Copy(sourceDbPath, tempPath, true);
                 _logger.LogInformation("Sumber disalin ke file sementara: {TempPath}", tempPath);
 
-                using (var conn = new SqliteConnection($"Data Source={tempPath}"))
+                // Berkas impor bisa plaintext (ekspor lama) maupun sudah terenkripsi;
+                // koneksi yang tepat ditentukan dari bentuk berkasnya.
+                var tempConnectionString = EnkripsiDatabase.DeteksiKoneksi(tempPath)
+                    ?? throw new InvalidOperationException(
+                        "Berkas impor tidak bisa dibuka: rusak atau terenkripsi dengan kunci mesin lain.");
+
+                using (var conn = new SqliteConnection(tempConnectionString))
                 {
                     await conn.OpenAsync();
                     await MigrateDatabaseAsync(conn);
@@ -90,7 +96,7 @@ public class DatabaseImportExportService
                     // koneksi pool — handle lama yang masih memetakan berkas saat
                     // diganti adalah penyebab klasik korupsi indeks SQLite.
                     SqliteConnection.ClearAllPools();
-                    using (var conn = new SqliteConnection($"Data Source={currentDbPath}"))
+                    using (var conn = new SqliteConnection(_config.DatabaseConnectionString))
                     {
                         await conn.OpenAsync();
                         using var cmd = new SqliteCommand("PRAGMA wal_checkpoint(TRUNCATE);", conn);
@@ -113,6 +119,14 @@ public class DatabaseImportExportService
                 DeleteSidecarFiles(tempPath);
                 TryDeleteFile(tempPath);
             }
+
+            // Berkas hasil impor bisa berbentuk plaintext, sedangkan koneksi
+            // aplikasi yang sudah ber-kunci tidak akan bisa membukanya. Jadikan
+            // bentuk finalnya terenkripsi dengan kunci mesin ini sebelum dipakai;
+            // cadangan plaintext tidak dibuat lagi karena impor sudah mencadangkan
+            // database lama ke desa_backup_before_import_*.db.
+            _config.DatabaseConnectionString = EnkripsiDatabase.JaminTerkunci(
+                _config.DatabaseConnectionString, _logger, cadangkanPlaintext: false);
 
             // Panggil InitializeAsync setelah transaksi migrasi selesai
             await InitializeAsync();
@@ -152,7 +166,9 @@ public class DatabaseImportExportService
             if (File.Exists(targetDbPath))
                 File.Delete(targetDbPath);
 
-            using (var conn = new SqliteConnection($"Data Source={currentDbPath}"))
+            // Koneksi database aktif (bisa ber-kunci SQLCipher) — bukan jalur mentah,
+            // supaya VACUUM INTO tetap bisa membaca seluruh isi database.
+            using (var conn = new SqliteConnection(_config.DatabaseConnectionString))
             {
                 await conn.OpenAsync();
                 using var cmd = new SqliteCommand($"VACUUM INTO '{EscapeSqlString(targetDbPath)}'", conn);
@@ -271,7 +287,13 @@ public class DatabaseImportExportService
                 SELECT * FROM Warga;
             ", transaction);
 
-                // Buat tabel baru dengan struktur yang diinginkan
+                // Buat tabel baru dengan struktur yang diinginkan.
+                //
+                // Kolom di sini harus memuat SELURUH kolom yang dipakai aplikasi,
+                // bukan hanya kolom KTP dasar: tabel lama dibuang lalu diganti tabel
+                // ini, jadi kolom yang tidak dicantumkan hilang permanen bersama
+                // datanya. Kolom yang tidak dicantumkan hilang permanen: itu
+                // kehilangan data senyap, bukan sekadar kolom yang belum diisi.
                 await ExecuteNonQueryAsync(conn, @"
                 CREATE TABLE Warga_New (
                     ID_Warga INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -285,35 +307,51 @@ public class DatabaseImportExportService
                     Pekerjaan TEXT,
                     Alamat TEXT,
                     Pendidikan TEXT,
-                    Kewarganegaraan TEXT
+                    Kewarganegaraan TEXT,
+                    Dusun TEXT,
+                    RT TEXT,
+                    RW TEXT,
+                    Desa TEXT,
+                    Kecamatan TEXT,
+                    Kabupaten TEXT,
+                    GolonganDarah TEXT,
+                    NomorHP TEXT,
+                    StatusWarga TEXT,
+                    CreatedAt TEXT,
+                    UpdatedAt TEXT
                 );
             ", transaction);
 
-                // Pindahkan data dengan penanganan NIK null/kosong yang lebih baik
-                await ExecuteNonQueryAsync(conn, @"
-                INSERT INTO Warga_New (
-                    ID_Warga, NIK, Nama, TempatLahir, TanggalLahir, 
-                    JenisKelamin, Agama, StatusPerkawinan, Pekerjaan, 
-                    Alamat, Pendidikan, Kewarganegaraan
-                )
-                SELECT 
-                    ID_Warga,
-                    CASE 
-                        WHEN NIK IS NULL OR TRIM(NIK) = '' THEN 'NIK_'+ROWID 
-                        ELSE NIK 
-                    END,
-                    COALESCE(Nama, ''),
-                    TempatLahir, 
-                    TanggalLahir, 
-                    JenisKelamin, 
-                    Agama,
-                    StatusPerkawinan, 
-                    Pekerjaan, 
-                    Alamat, 
-                    Pendidikan, 
-                    Kewarganegaraan
-                FROM Warga_Backup;
-            ", transaction);
+                // Daftar kolom yang dipindahkan. Hanya kolom yang benar-benar ada
+                // di tabel sumber yang ikut: berkas cadangan dari versi lama belum
+                // punya kolom wilayah/lampiran, dan menyebutkannya di SELECT akan
+                // membuat pemulihannya gagal.
+                var kolomPindah = new[]
+                {
+                    "ID_Warga", "NIK", "Nama", "TempatLahir", "TanggalLahir",
+                    "JenisKelamin", "Agama", "StatusPerkawinan", "Pekerjaan",
+                    "Alamat", "Pendidikan", "Kewarganegaraan",
+                    "Dusun", "RT", "RW", "Desa", "Kecamatan", "Kabupaten",
+                    "GolonganDarah", "NomorHP", "StatusWarga", "CreatedAt", "UpdatedAt"
+                }.Where(wargaColumns.Contains).ToList();
+
+                // Pindahkan data. NIK dinormalkan lebih dulu (kosong -> NIK_<ROWID>)
+                // karena kolom itu kini NOT NULL UNIQUE. Kolom lain disalin apa
+                // adanya; NULL tetap sah dan tidak perlu dipaksa menjadi teks kosong.
+                var sqlPindah = new System.Text.StringBuilder();
+                sqlPindah.AppendLine("INSERT INTO Warga_New (" + string.Join(", ", kolomPindah) + ")");
+                sqlPindah.AppendLine("SELECT");
+                for (int i = 0; i < kolomPindah.Count; i++)
+                {
+                    if (i > 0) sqlPindah.Append(", ");
+                    sqlPindah.Append(kolomPindah[i] == "NIK"
+                        ? "CASE WHEN NIK IS NULL OR TRIM(NIK) = '' THEN 'NIK_' || ROWID ELSE NIK END"
+                        : kolomPindah[i]);
+                }
+                sqlPindah.AppendLine();
+                sqlPindah.AppendLine("FROM Warga_Backup;");
+
+                await ExecuteNonQueryAsync(conn, sqlPindah.ToString(), transaction);
 
                 // Hapus tabel lama dan ganti dengan yang baru
                 await ExecuteNonQueryAsync(conn, @"
@@ -322,7 +360,9 @@ public class DatabaseImportExportService
                 DROP TABLE Warga_Backup;
             ", transaction);
 
-                _logger.LogInformation("Tabel Warga dimigrasi dengan constraint NOT NULL dan UNIQUE pada NIK.");
+                _logger.LogInformation(
+                    "Tabel Warga dimigrasi dengan constraint NOT NULL dan UNIQUE pada NIK ({Jumlah} kolom dipindahkan).",
+                    kolomPindah.Count);
             }
 
             var izinColumns = await GetTableColumnsAsync(conn, "IZIN", transaction);
@@ -486,7 +526,11 @@ public class DatabaseImportExportService
 
     public string GetDatabasePath()
     {
-        var path = _config.DatabaseConnectionString.Replace("Data Source=", "").Trim();
+        // Connection string bisa memuat parameter lain (mis. Password= SQLCipher),
+        // jadi jalurnya dibaca lewat builder — bukan dengan membuang teks
+        // "Data Source=" yang akan menyisakan "...;Password=..." sebagai "jalur".
+        var path = new SqliteConnectionStringBuilder(_config.DatabaseConnectionString)
+            .DataSource.Trim();
         if (!Path.IsPathRooted(path))
         {
             path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
@@ -504,7 +548,13 @@ public class DatabaseImportExportService
 
         try
         {
-            using var conn = new SqliteConnection($"Data Source={dbPath}");
+            // Berkas kandidat boleh plaintext (ekspor lama) atau sudah terenkripsi
+            // (cadangan dari mesin ini); DeteksiKoneksi memilih bentuk yang terbaca.
+            var connectionString = EnkripsiDatabase.DeteksiKoneksi(dbPath)
+                ?? throw new InvalidOperationException(
+                    "Database tidak bisa dibuka: berkasnya rusak atau terenkripsi dengan kunci mesin lain.");
+
+            using var conn = new SqliteConnection(connectionString);
             await conn.OpenAsync();
             using var cmd = new SqliteCommand("SELECT name FROM sqlite_master WHERE type='table' AND name='Warga'", conn);
             var result = await cmd.ExecuteScalarAsync();

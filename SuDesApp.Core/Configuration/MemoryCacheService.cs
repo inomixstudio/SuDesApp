@@ -192,8 +192,13 @@ namespace SuDesApp.Configuration
         try
         {
             var prefixToMatch = $"{_keyPrefix}:{prefix}";
+            // Kunci tersimpan berbentuk "SuDesApp:{Tipe}:{kunci}" — cocokkan juga
+            // ":{prefix}" setelah segmen tipe, kalau tidak pembatalan cache
+            // berdasarkan prefix diam-diam tidak pernah menghapus apa pun.
+            var dalamSegmenTipe = $":{prefix}";
             var keysToRemove = _cacheKeys.Keys
-                .Where(k => k.StartsWith(prefixToMatch, StringComparison.OrdinalIgnoreCase))
+                .Where(k => k.StartsWith(prefixToMatch, StringComparison.OrdinalIgnoreCase)
+                            || k.Contains(dalamSegmenTipe, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             var removeTask = Task.Run(() =>

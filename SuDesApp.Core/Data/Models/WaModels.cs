@@ -22,10 +22,18 @@ namespace SuDesApp.Data.Models
         public const string SumberWhatsApp = "WA";
         /// <summary>Label sumber permintaan: warga mengisi Google Form/Sheet.</summary>
         public const string SumberGoogleSheet = "SHEET";
+        /// <summary>Label sumber permintaan: dikirim sistem luar lewat API desa.</summary>
+        public const string SumberApi = "API";
 
         /// <summary>Apakah label sumber dikenal (untuk tampilan aman di panel operator).</summary>
         public static string TampilanSumber(string? sumber)
-            => sumber == SumberGoogleSheet ? "Google Sheet" : "WhatsApp";
+            => sumber switch
+            {
+                SumberGoogleSheet => "Google Sheet",
+                SumberApi => "API",
+                SumberWhatsApp => "WhatsApp",
+                _ => "Lainnya"
+            };
 
         public static bool IsValid(string? status)
             => !string.IsNullOrWhiteSpace(status) && Array.IndexOf(All, status) >= 0;
@@ -53,12 +61,18 @@ namespace SuDesApp.Data.Models
         public string? Catatan { get; set; }
         public string? PesanBalasan { get; set; }
 
-        /// <summary>Asal permintaan: "WA" (percakapan) atau "SHEET" (Google Form/Sheet).</summary>
+        /// <summary>Asal permintaan: "WA" (percakapan), "SHEET" (Google Form/Sheet), atau "API" (sistem luar).</summary>
         public string Sumber { get; set; } = WaRequestStatus.SumberWhatsApp;
         /// <summary>Token prefill yang dikirim ke warga (mode Sheet); untuk menghubungkan balasan.</summary>
         public string? SheetToken { get; set; }
         /// <summary>Baris Sheet jawaban yang menghasilkan permintaan ini (mode Sheet).</summary>
         public int? SheetRowId { get; set; }
+
+        /// <summary>
+        /// Kode unik dari sistem pengirim lewat API desa. Pengiriman ulang dengan
+        /// referensi sama tidak menghasilkan permintaan ganda (idempoten).
+        /// </summary>
+        public string? Referensi { get; set; }
     }
 
     /// <summary>

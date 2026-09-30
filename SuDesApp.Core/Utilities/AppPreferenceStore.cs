@@ -13,8 +13,16 @@ namespace SuDesApp.Utilities
     /// </summary>
     public static class AppPreferenceStore
     {
+        /// <summary>
+        /// Penunjuk lokasi berkas preferensi untuk pengujian (dan skenario
+        /// khusus). Null = lokasi profil user yang normal. Pola sama dengan
+        /// ApiKunci.LokasiOverride / KunciDatabase.LokasiOverride.
+        /// </summary>
+        internal static Func<string>? LokasiOverride { get; set; }
+
         private static string PrefPath =>
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            LokasiOverride?.Invoke()
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "SuDesApp", "login_prefs.json");
 
         /// <summary>Ambil nilai boolean; default bila kunci tidak ada / berkas bermasalah.</summary>
@@ -141,6 +149,30 @@ namespace SuDesApp.Utilities
         /// kecepatan bawaan.
         /// </summary>
         public const string KeyKecepatanAnimasi = "kecepatanAnimasi";
+
+        /// <summary>
+        /// Lokasi berkas database desa yang dipilih pengguna (jalur absolut), mis. folder
+        /// data desa di drive D. Kosong/tidak ada = pakai lokasi bawaan dari appsettings
+        /// (desa.db di folder aplikasi). Dibaca <c>AppConfig</c> saat aplikasi dibuka,
+        /// jadi penggantiannya baru berlaku setelah aplikasi ditutup lalu dibuka lagi.
+        /// </summary>
+        public const string KeyJalurDatabase = "jalurDatabase";
+
+        /// <summary>
+        /// Lokasi database pilihan pengguna, atau null bila masih memakai lokasi bawaan.
+        /// </summary>
+        public static string? GetJalurDatabase()
+        {
+            var nilai = GetString(KeyJalurDatabase, null);
+            return string.IsNullOrWhiteSpace(nilai) ? null : nilai.Trim();
+        }
+
+        /// <summary>
+        /// Simpan lokasi database pilihan pengguna; null/kosong mengembalikannya ke
+        /// lokasi bawaan dari appsettings.
+        /// </summary>
+        public static void SetJalurDatabase(string? jalur) =>
+            SetString(KeyJalurDatabase, string.IsNullOrWhiteSpace(jalur) ? string.Empty : jalur.Trim());
 
         /// <summary>
         /// Panduan awal (langkah mengisi data desa, pejabat, dan nomor surat) sudah
@@ -286,6 +318,87 @@ namespace SuDesApp.Utilities
         }
 
         public static void SetStartupDiamDiamMenit(int v) => SetInt(KeyStartupDiamDiamMenit, v);
+
+        // =====================================================================
+        // Kunci otomatis saat idle (layar kunci)
+        // =====================================================================
+
+        public const string KeyKunciIdleAktif = "kunciIdleAktif";
+        public const string KeyKunciIdleMenit = "kunciIdleMenit";
+
+        /// <summary>
+        /// Kunci aplikasi otomatis setelah beberapa lama tidak dipakai
+        /// (default: AKTIF begitu fitur ini dirilis — batal lewat Pengaturan
+        /// bila tidak diinginkan).
+        /// </summary>
+        public static bool IsKunciIdleAktif() => GetBool(KeyKunciIdleAktif, true);
+
+        public static void SetKunciIdleAktif(bool v) => SetBool(KeyKunciIdleAktif, v);
+
+        /// <summary>
+        /// Batas waktu diam sebelum aplikasi mengunci dirinya, dalam menit
+        /// (1-120, bawaan 15). Nilai di luar rentang jatuh ke bawaan — 0 menit
+        /// akan mengunci seketika dan tidak boleh sah.
+        /// </summary>
+        public static int GetKunciIdleMenit()
+        {
+            int v = GetInt(KeyKunciIdleMenit, 15);
+            return v is < 1 or > 120 ? 15 : v;
+        }
+
+        public static void SetKunciIdleMenit(int v) => SetInt(KeyKunciIdleMenit, v);
+
+        // =====================================================================
+        // Tinggi maksimum baris tabel bertext panjang
+        // =====================================================================
+
+        public const string KeyTinggiBarisMaksimumPx = "tinggiBarisMaksimumPx";
+
+        /// <summary>Batas tinggi maksimum baris bawaan (piksel) — 200 px ≈ 10 baris teks.</summary>
+        public const int TinggiBarisMaksimumBawaanPx = 200;
+
+        /// <summary>
+        /// Batas terendah yang boleh dipilih operator. Sengaja di ATAS tinggi
+        /// minimum baris mesin tabel (38 px) supaya setelan serendah apa pun tetap
+        /// menyisakan ruang satu baris teks — bukan kolom yang terpotong.
+        /// </summary>
+        public const int TinggiBarisMaksimumTerendahPx = 40;
+
+        /// <summary>Batas tertinggi yang boleh dipilih operator (piksel).</summary>
+        public const int TinggiBarisMaksimumTertinggiPx = 600;
+
+        /// <summary>
+        /// Batas tinggi maksimum satu baris pada tabel bertext panjang (Register Surat,
+        /// Register NTCR, API Desa, Data Warga), 40-600 px, bawaan 200 px. Nilai di luar
+        /// rentang — termasuk berkas preferensi yang rusak — jatuh ke bawaan supaya tabel
+        /// tidak pernah menjadi nyaris tak terpakai (mis. tinggi 0) atau membengkak tak
+        /// terkendali.
+        /// </summary>
+        public static int GetTinggiBarisMaksimumPx()
+        {
+            int v = GetInt(KeyTinggiBarisMaksimumPx, TinggiBarisMaksimumBawaanPx);
+            return v is < TinggiBarisMaksimumTerendahPx or > TinggiBarisMaksimumTertinggiPx
+                ? TinggiBarisMaksimumBawaanPx
+                : v;
+        }
+
+        public static void SetTinggiBarisMaksimumPx(int v) => SetInt(KeyTinggiBarisMaksimumPx, v);
+
+        // =====================================================================
+        // Mode edit awalan nomor surat di halaman Pengaturan
+        // =====================================================================
+
+        public const string KeyModeEditAwalan = "modeEditAwalan";
+
+        /// <summary>
+        /// Halaman Pengaturan Aplikasi dibuka kembali dalam mode edit (kotak
+        /// isian awalan nomor surat tampil) atau mode tampilan biasa. Bawaan:
+        /// MATI — surat lebih aman bila pengguna sengaja meminta mengedit,
+        /// bukan dibuka langsung dalam keadaan bisa-disunting.
+        /// </summary>
+        public static bool IsModeEditAwalanAktif() => GetBool(KeyModeEditAwalan, false);
+
+        public static void SetModeEditAwalan(bool v) => SetBool(KeyModeEditAwalan, v);
     }
 
     /// <summary>

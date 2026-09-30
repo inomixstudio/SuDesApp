@@ -261,6 +261,42 @@ namespace SuDesApp.GeneratorPdf
                 .Underline();
         }
 
+        /// <summary>
+        /// Label status alur persetujuan di atas surat — mis. "DRAF — MENUNGGU
+        /// VERIFIKASI", "DITOLAK — TIDAK SAH, JANGAN DIPAKAI", atau "SALINAN —
+        /// CETAKAN KE-2" — digambar sebagai pita berbingkai di dalam kolom
+        /// yang diberikan. Label kosong berarti surat biasa: tidak menambah
+        /// apa pun sehingga cetakan resmi tidak pernah berubah.
+        /// Label peringatan dirender merah agar tidak tertukar dengan salinan.
+        /// </summary>
+        public static void LabelStatusSurat(IContainer container, string label, bool peringatan = false)
+        {
+            if (string.IsNullOrWhiteSpace(label))
+            {
+                // Surat biasa: slot tetap dikonsumsi (elemen kosong) supaya
+                // susunan kolom pemanggil tidak berubah sama sekali.
+                container.Element(_ => { });
+                return;
+            }
+
+            var warna = peringatan
+                ? QuestPDF.Helpers.Colors.Red.Medium
+                : QuestPDF.Helpers.Colors.Grey.Darken2;
+
+            container
+                .PaddingBottom(JarakBlok(6))
+                .Border(1)
+                .BorderColor(warna)
+                .Background(peringatan ? QuestPDF.Helpers.Colors.Red.Lighten5 : QuestPDF.Helpers.Colors.Grey.Lighten4)
+                .PaddingHorizontal(8)
+                .PaddingVertical(3)
+                .AlignCenter()
+                .Text(label.Trim().ToUpperInvariant())
+                .FontSize(8.5f)
+                .Bold()
+                .FontColor(warna);
+        }
+
         /// <summary>Satu paragraf teks dengan gaya surat desa.</summary>
         public static void Teks(
             IContainer container,
