@@ -20,6 +20,9 @@ Output/
 logs/
 pdf-gallery/
 
+# Keluaran uji yang dialihkan ke berkas (mis. dotnet test > hasil_test.txt)
+hasil_test*.txt
+
 # ===== IDE / OS =====
 .vs/
 .freebuff/
