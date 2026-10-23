@@ -1,0 +1,1500 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.PengaturanAplikasiView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:local="clr-namespace:SuDesApp.Wpf.Views"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <!-- String kosong → Collapsed; terisi → Visible (untuk pesan validasi wizard). -->
+        <local:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVis"/>
+
+        <!-- Tombol geser (toggle switch) ON/OFF — mengikuti tema aplikasi -->
+        <Style x:Key="SwitchStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Width="52" Height="28">
+                            <Border x:Name="track" CornerRadius="14" Background="{DynamicResource BorderBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"/>
+                            <Ellipse x:Name="thumb" Width="22" Height="22" Fill="{DynamicResource PutihBrush}"
+                                     Stroke="{DynamicResource TepiSwatchBrush}" StrokeThickness="0.5"
+                                     HorizontalAlignment="Left" Margin="3,0,0,0"/>
+                            <TextBlock x:Name="labelOff" Text="OFF" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Right" Margin="0,0,7,0"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock x:Name="labelOn" Text="ON" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource OnAccentTextBrush}" HorizontalAlignment="Left" Margin="9,0,0,0"
+                                       VerticalAlignment="Center" Visibility="Collapsed"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="track" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="thumb" Property="HorizontalAlignment" Value="Right"/>
+                                <Setter TargetName="thumb" Property="Margin" Value="0,0,3,0"/>
+                                <Setter TargetName="labelOff" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="labelOn" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Kartu pengaturan yang seragam (judul di strip atas) -->
+        <Style x:Key="SettingCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <!-- Strip judul kartu -->
+        <Style x:Key="SettingHead" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="16,11"/>
+        </Style>
+
+        <!-- Badan kartu -->
+        <Style x:Key="SettingBody" TargetType="StackPanel">
+            <Setter Property="Margin" Value="18,14,18,16"/>
+        </Style>
+
+        <!-- Ikon bagian -->
+        <Style x:Key="SectionIcon" TargetType="Border">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="SectionIconText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <!-- Font ikon aplikasi (Segoe Fluent/MDL2): glyph mengikuti warna tema,
+                 bukan emoji berwarna yang tidak ikut tema. -->
+            <Setter Property="FontFamily" Value="{StaticResource AppIconFont}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Judul bagian dalam kartu -->
+        <Style x:Key="SettingTitle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Penjelasan bagian -->
+        <Style x:Key="SettingDesc" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <!-- Label kolom kiri (sejajar antar bagian) -->
+        <Style x:Key="SettingLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Kolom label kiri yg konsisten -->
+        <Style x:Key="SettingLabelCol" TargetType="ColumnDefinition">
+            <Setter Property="Width" Value="140"/>
+        </Style>
+
+        <!-- Baris label + input -->
+        <Style x:Key="SettingRow" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <!-- Kotak input seragam (tetap pakai tema TextBox aplikasi). Tinggi 32
+             agar sejajar dengan tombol (MinHeight 32 dari tema) pada baris yang sama. -->
+        <Style x:Key="SettingInput" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="8,0"/>
+        </Style>
+
+        <!-- Kotak input kata sandi seragam (sejajar dengan kotak input lain) -->
+        <Style x:Key="SettingSecretInput" TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="8,0"/>
+        </Style>
+
+        <!-- Centang hari layanan (tetap pakai tema CheckBox aplikasi) -->
+        <Style x:Key="DayCheck" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+            <Setter Property="Margin" Value="0,0,18,8"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="MinWidth" Value="60"/>
+        </Style>
+
+        <!-- Kotak keterangan abu (opsional/langkah) -->
+        <Style x:Key="InlineNote" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="20"/>
+            <Setter Property="Margin" Value="140,6,0,0"/>
+        </Style>
+
+        <!-- Kotak jalur berkas (mono) -->
+        <Style x:Key="PathBox" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="10,8"/>
+        </Style>
+        <Style x:Key="PathText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+
+        <!-- Sub-judul dalam kartu (kelompok pengaturan) -->
+        <Style x:Key="SettingSub" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+            <Setter Property="Margin" Value="0,2,0,8"/>
+        </Style>
+
+        <!-- Pemisah antar kelompok -->
+        <Style x:Key="Divider" TargetType="Border">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="Margin" Value="0,6,0,14"/>
+        </Style>
+
+        <!-- Kotak hasil aksi (uji koneksi / buat otomatis), warna menyusul via DataTrigger nada -->
+        <Style x:Key="InfoBox" TargetType="Border">
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="Margin" Value="140,2,0,0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        </Style>
+        <Style x:Key="InfoBoxText" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="20"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+
+        <!-- Tombol pilihan cepat untuk baris pengaturan bernilai angka (mis. Ringkas /
+             Normal / Lega pada tinggi maksimum baris tabel). Pilihan yang sedang dipakai
+             ditandai aksen; angka lain tetap bisa diketik pada kotak isian di sebelahnya. -->
+        <Style x:Key="ChipAngkaStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Padding" Value="11,5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="chip" CornerRadius="13" Padding="{TemplateBinding Padding}"
+                                Background="{DynamicResource PanelBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding Aktif}" Value="True">
+                                <Setter TargetName="chip" Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20" IsSharedSizeScope="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <DockPanel>
+                <Border Style="{StaticResource HeaderIconChip}" DockPanel.Dock="Left">
+                    <TextBlock Text="&#xE713;" FontFamily="{StaticResource AppIconFont}" FontSize="20"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="PENGATURAN APLIKASI" Style="{StaticResource HeaderTitle}" AutomationProperties.Name="PENGATURAN APLIKASI"/>
+                    <TextBlock Text="{Binding SesiAktif}" Style="{StaticResource HeaderSubtitle}"
+                               TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Isi halaman: daftar bagian (kiri) + bagian yang dipilih (kanan).
+             Navigasi dipakai karena pengaturannya sudah banyak, sehingga tiap
+             bagian tidak perlu dicari dengan menggulir halaman panjang. -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="278"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ===== Navigasi bagian pengaturan ===== -->
+            <Border Grid.Column="0" Margin="0,0,16,0" CornerRadius="8" Padding="6"
+                    Background="{DynamicResource SidebarBackgroundBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                <DockPanel>
+                    <!-- Panel ini memakai latar sidebar (gelap di sebagian besar tema),
+                         jadi seluruh teksnya ikut keluarga kuas Sidebar* — bukan TextBrush
+                         yang gelap di tema terang dan akan menyatu dengan panel. -->
+                            <TextBlock DockPanel.Dock="Top" Text="BAGIAN PENGATURAN"
+                                       FontSize="13" FontWeight="Bold" Margin="10,8,10,8"
+                               Foreground="{DynamicResource SidebarTextBrush}" Opacity="0.75"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ListBox x:Name="DaftarBagian"
+                                 ItemsSource="{Binding Sections}"
+                                 SelectedItem="{Binding SelectedSection, Mode=TwoWay}"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 AutomationProperties.Name="Bagian pengaturan">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,1"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Grid>
+                                                    <!-- Pill aksen kiri sebagai penanda bagian aktif -->
+                                                    <Border x:Name="pill" Width="3" CornerRadius="1.5"
+                                                            HorizontalAlignment="Left" Margin="0,6"
+                                                            Background="{DynamicResource SidebarAccentBrush}"
+                                                            Opacity="0"/>
+                                                    <Border x:Name="bd" CornerRadius="7" Padding="10,9" Background="Transparent"
+                                                            ToolTip="{Binding Ringkasan}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding Ikon}" FontFamily="{StaticResource AppIconFont}"
+                                                                       FontSize="14"
+                                                                       Width="20" TextAlignment="Center"
+                                                                       VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource SidebarAccentBrush}" Opacity="0.9"/>
+                                                            <TextBlock x:Name="teks" Grid.Column="1" Text="{Binding Judul}"
+                                                                       Margin="8,0,2,0" TextTrimming="CharacterEllipsis"
+                                                                       VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource SidebarTextBrush}"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarHoverBrush}"/>
+                                                        <Setter TargetName="pill" Property="Opacity" Value="0.6"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource SidebarHoverBrush}"/>
+                                                        <Setter TargetName="pill" Property="Opacity" Value="1"/>
+                                                        <Setter TargetName="teks" Property="Foreground" Value="{DynamicResource SidebarAccentBrush}"/>
+                                                        <Setter TargetName="teks" Property="FontWeight" Value="SemiBold"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- ===== Bagian yang sedang dipilih ===== -->
+            <DockPanel Grid.Column="1">
+                <Border DockPanel.Dock="Top" Margin="0,0,0,14">
+                    <DockPanel>
+                        <!-- Bar aksen: menandai judul bagian yang sedang tampil -->
+                        <Border DockPanel.Dock="Left" Width="3" CornerRadius="1.5" Margin="0,3,11,3"
+                                VerticalAlignment="Stretch"
+                                Background="{DynamicResource AccentBrush}"/>
+                        <StackPanel>
+                            <TextBlock Text="{Binding JudulSeksiAktif}" FontSize="15" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextBrush}"/>
+                            <TextBlock Text="{Binding RingkasanSeksiAktif}" FontSize="13" Margin="0,4,0,0"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <ScrollViewer x:Name="IsiPengaturan" VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <!-- Tumpukan berisi ketujuh bagian pengaturan. Code-behind melepas
+                         bagian yang tidak terpilih dari pohon visual (hanya bagian yang
+                         sedang ditampilkan yang dirender/diukur), sehingga halaman tetap
+                         ringan dan gulirannya tidak tersendat. -->
+                    <StackPanel x:Name="TumpukanBagian">
+
+                <!-- ============ Bagian: Umum & preferensi ============ -->
+                <StackPanel Visibility="{Binding BagianUmum.Aktif, Converter={StaticResource BoolToVis}}">
+
+                <!-- ===== Pengaturan umum (tombol geser) ===== -->
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE713;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Preferensi Aplikasi" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <ItemsControl ItemsSource="{Binding Rows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <!-- Baris preferensi: latar lembut saat disorot agar baris panjang mudah diikuti -->
+                                        <Border CornerRadius="6" Padding="9,7" Margin="0,0,0,2">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Judul}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                                                    <TextBlock Text="{Binding Keterangan}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               TextWrapping="Wrap" MaxWidth="560" Margin="0,4,16,0" LineHeight="20"/>
+                                                </StackPanel>
+                                                <CheckBox Grid.Column="1" Style="{StaticResource SwitchStyle}"
+                                                          IsChecked="{Binding Nilai, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Baris pengaturan bernilai angka (kotak input kecil) -->
+                            <ItemsControl ItemsSource="{Binding RowsAngka}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <!-- Baris preferensi bernilai angka: sorotan lembut senada baris sakelar -->
+                                        <Border CornerRadius="6" Padding="9,7" Margin="0,0,0,2">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Judul}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                                                    <TextBlock Text="{Binding Keterangan}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               TextWrapping="Wrap" MaxWidth="560" Margin="0,2,16,0"/>
+                                                </StackPanel>
+
+                                                <!-- Tombol pilihan cepat (muncul hanya bila baris punya pilihan). -->
+                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding PilihanCepat}"
+                                                              VerticalAlignment="Center" Margin="0,0,4,0"
+                                                              Visibility="{Binding AdaPilihanCepat, Converter={StaticResource BoolToVis}}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Button Style="{StaticResource ChipAngkaStyle}"
+                                                                    Content="{Binding Judul}"
+                                                                    Command="{Binding PakaiCommand}"
+                                                                    ToolTip="{Binding Nilai, StringFormat={}{0} piksel}"
+                                                                    AutomationProperties.Name="{Binding Judul}"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+
+                                                <TextBox Grid.Column="2" Style="{StaticResource SettingInput}" Width="70"
+                                                         Text="{Binding TeksNilai, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         VerticalAlignment="Center"
+                                                         AutomationProperties.Name="{Binding Judul}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== Pemantauan data IDM ===== -->
+                <Border Style="{StaticResource SettingCard}" Tag="pemantauan-idm">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE823;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Pemantauan Data IDM" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource InfoBoxText}" Margin="0" MaxWidth="660"
+                                       Text="Pemantauan latar membandingkan data IDM yang tersimpan di perangkat dengan portal Kemendesa, lalu memberi tahu lewat lonceng notifikasi saat ada tahun penilaian baru. Pilihan di bawah menentukan seberapa sering pemeriksaan itu diulang; pilihan tersimpan otomatis dan langsung berlaku tanpa menutup aplikasi."/>
+
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="Seberapa sering portal diperiksa" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextBrush}"/>
+                                    <TextBlock Text="{Binding IntervalIdmKeterangan}" FontSize="11"
+                                               TextWrapping="Wrap" MaxWidth="560" Margin="0,2,16,0"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1" MinWidth="220" VerticalAlignment="Center"
+                                          ItemsSource="{Binding PilihanIntervalIdm}"
+                                          SelectedItem="{Binding IntervalIdmTerpilih, Mode=TwoWay}"
+                                          DisplayMemberPath="Judul"
+                                          AutomationProperties.Name="Interval pemantauan data IDM"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== Kecepatan animasi antarmuka ===== -->
+                <Border Style="{StaticResource SettingCard}" Tag="kecepatan-animasi">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x23F1;&#xFE0F;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Kecepatan Animasi Antarmuka" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource InfoBoxText}" Margin="0" MaxWidth="660"
+                                       Text="Menentukan lamanya gerakan antarmuka: lebar sidebar, daftar nama menu yang muncul saat kursor mendekat, dropdown grup menu, dan sorotan baris menu. Pilihan tersimpan otomatis dan langsung berlaku — tidak perlu menutup aplikasi. Animasi yang menerangkan keadaan (mis. lonceng notifikasi dan indikator proses) tidak ikut diperlambat."/>
+
+                            <!-- Tiga kartu pilihan; yang terpilih ditandai aksen -->
+                            <ListBox x:Name="DaftarKecepatanAnimasi" Margin="0,13,0,0"
+                                     ItemsSource="{Binding PilihanKecepatanAnimasi}"
+                                     SelectedItem="{Binding KecepatanAnimasiTerpilih, Mode=TwoWay}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     AutomationProperties.Name="Pilihan kecepatan animasi">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="1"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0,0,10,0"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                        <Setter Property="Cursor" Value="Hand"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border x:Name="kartu" CornerRadius="8" Padding="12,10"
+                                                            Background="{DynamicResource PanelBrush}"
+                                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                                            SnapsToDevicePixels="True">
+                                                        <StackPanel>
+                                                            <DockPanel>
+                                                                <TextBlock DockPanel.Dock="Left" Text="{Binding Ikon}" FontFamily="{StaticResource AppIconFont}"
+                                                                           FontSize="14"
+                                                                           Width="20" TextAlignment="Center" VerticalAlignment="Center"/>
+                                                                <TextBlock x:Name="judul" Text="{Binding Judul}" FontWeight="SemiBold"
+                                                                           Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                                                            </DockPanel>
+                                                            <TextBlock x:Name="faktor" Text="{Binding FaktorTeks}" FontSize="11" Margin="0,4,0,0"
+                                                                       Foreground="{DynamicResource AccentTextBrush}"/>
+                                                            <TextBlock Text="{Binding Keterangan}" FontSize="11" Margin="0,6,0,0"
+                                                                       TextWrapping="Wrap" LineHeight="16"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Text="{Binding ContohTeks}" FontSize="11" FontWeight="SemiBold"
+                                                                       Margin="0,8,0,0" TextWrapping="Wrap"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="kartu" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="kartu" Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                                            <Setter TargetName="kartu" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                            <Setter TargetName="kartu" Property="BorderThickness" Value="2"/>
+                                                            <Setter TargetName="judul" Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                                                            <Setter TargetName="faktor" Property="FontWeight" Value="Bold"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+
+                            <!-- ===== Contoh langsung: putar animasi memakai kecepatan terpilih ===== -->
+                            <Border Margin="0,14,0,0" CornerRadius="8" Padding="12"
+                                    Background="{DynamicResource PanelBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <DockPanel>
+                                        <Button x:Name="TombolContohAnimasi" DockPanel.Dock="Right"
+                                                Content="Putar contoh" Click="ContohAnimasi_Click"
+                                                Style="{StaticResource PrimaryButton}" Padding="14,5"
+                                                VerticalAlignment="Center"
+                                                AutomationProperties.Name="Putar contoh animasi"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Contoh animasi" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextBrush}"/>
+                                            <TextBlock Text="{Binding KecepatanAnimasiContohInfo}" FontSize="11"
+                                                       TextWrapping="Wrap" LineHeight="16" MaxWidth="500" Margin="0,3,14,0"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- (1) Sidebar tiruan: menyempit & melebar -->
+                                        <Border x:Name="ContohSidebar" Grid.Column="0" Width="196"
+                                                CornerRadius="7" Padding="7" VerticalAlignment="Top"
+                                                Background="{DynamicResource SidebarBackgroundBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                            <StackPanel>
+                                                <TextBlock x:Name="ContohSidebarJudul" Text="Navigasi utama" FontSize="11"
+                                                           FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource SidebarTextBrush}"/>
+                                                <Border Height="20" CornerRadius="5" Margin="0,7,0,0"
+                                                        Background="{DynamicResource SidebarHoverBrush}"/>
+                                                <Border Height="20" CornerRadius="5" Margin="0,4,0,0"
+                                                        Background="{DynamicResource SidebarHoverBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- (2) Dropdown grup tiruan: isi tumbuh/menyusut, panah berputar -->
+                                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Top">
+                                            <Border CornerRadius="7" Padding="9,7"
+                                                    Background="{DynamicResource SidebarBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                                <StackPanel>
+                                                    <DockPanel>
+                                                        <TextBlock x:Name="ContohChevron" DockPanel.Dock="Right" Text="&#xE76C;"
+                                                                   FontFamily="{StaticResource AppIconFont}"
+                                                                   FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource SidebarAccentBrush}">
+                                                            <TextBlock.RenderTransform>
+                                                                <RotateTransform Angle="0" CenterX="5" CenterY="6"/>
+                                                            </TextBlock.RenderTransform>
+                                                        </TextBlock>
+                                                        <TextBlock Text="Grup menu" FontSize="11" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource SidebarTextBrush}" VerticalAlignment="Center"/>
+                                                    </DockPanel>
+                                                    <StackPanel x:Name="ContohDropdown" MaxHeight="0" ClipToBounds="True">
+                                                        <Border Height="18" CornerRadius="5" Margin="0,7,0,0"
+                                                                Background="{DynamicResource SidebarHoverBrush}"/>
+                                                        <Border Height="18" CornerRadius="5" Margin="0,3,0,0"
+                                                                Background="{DynamicResource SidebarHoverBrush}"/>
+                                                        <Border Height="18" CornerRadius="5" Margin="0,3,0,0"
+                                                                Background="{DynamicResource SidebarHoverBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                            <TextBlock Margin="2,8,0,0" FontSize="11" TextWrapping="Wrap" LineHeight="16"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Text="Kiri: lebar sidebar saat diciutkan. Kanan: daftar menu dalam grup yang membuka &amp; menutup. Keduanya memakai durasi dari pilihan di atas, jadi bedanya bisa langsung dirasakan di sini juga."/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                </StackPanel><!-- /bagian Umum -->
+
+                <!-- ============ Bagian: Jam layanan WhatsApp ============ -->
+                <StackPanel Visibility="{Binding BagianLayananWa.Aktif, Converter={StaticResource BoolToVis}}">
+
+                <!-- ===== Jam layanan otomatis WhatsApp ===== -->
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE81C;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Jam &amp; Hari Layanan Otomatis" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="Menentukan hari dan jam pemrosesan otomatis permintaan surat dari WhatsApp. Hari yang tidak dicentang dianggap libur. Di luar jam layanan, permintaan warga tetap tercatat dan diproses otomatis saat layanan dibuka. Format jam HH:mm, misalnya 08:00 dan 16:00 — kosongkan kedua jam untuk layanan 24 jam."/>
+
+                            <!-- Hari layanan -->
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Hari layanan" VerticalAlignment="Top" ToolTip="Hari permintaan WhatsApp diproses otomatis"/>
+                                <ItemsControl Grid.Column="1" ItemsSource="{Binding HariLayanan}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Style="{StaticResource DayCheck}" Content="{Binding Nama}"
+                                                      IsChecked="{Binding Aktif, Mode=TwoWay}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+
+                            <!-- Jam buka -->
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Jam buka"/>
+                                <WrapPanel Grid.Column="1">
+                                    <TextBox Style="{StaticResource SettingInput}" Width="80"
+                                             Text="{Binding WaJamBuka, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Format HH:mm, misalnya 08:00. Kosong = layanan 24 jam."
+                                             AutomationProperties.Name="Jam buka layanan"/>
+                                    <TextBlock Text="Kosong = layanan 24 jam" FontSize="11" Margin="8,0,0,0"
+                                               VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </WrapPanel>
+                            </Grid>
+
+                            <!-- Jam tutup -->
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Jam tutup"/>
+                                <WrapPanel Grid.Column="1">
+                                    <TextBox Style="{StaticResource SettingInput}" Width="80"
+                                             Text="{Binding WaJamTutup, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Format HH:mm, misalnya 16:00. Kosong = layanan 24 jam."
+                                             AutomationProperties.Name="Jam tutup layanan"/>
+                                    <TextBlock Text="Kosong = layanan 24 jam" FontSize="11" Margin="8,0,0,0"
+                                               VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </WrapPanel>
+                            </Grid>
+
+                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,2,0,0"
+                                       Text="{Binding WaJamLayananInfo}" FontStyle="Italic" LineHeight="16"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                </StackPanel><!-- /bagian Jam layanan WhatsApp -->
+
+                <!-- ============ Bagian: Gateway WhatsApp ============ -->
+                <StackPanel Visibility="{Binding BagianGatewayWa.Aktif, Converter={StaticResource BoolToVis}}">
+
+                <!-- ===== Gateway WhatsApp ===== -->
+                <Border Style="{StaticResource SettingCard}" Tag="gateway-wa">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE774;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Gateway WhatsApp" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="WhatsApp Cloud API adalah API resmi dari Meta. Daftarkan aplikasi WhatsApp pada developers.facebook.com, lalu salin Access Token dan Phone Number ID ke kolom di bawah. Aplikasi hanya mengirim teks dan tautan (tautan formulir serta tautan unduh PDF), tidak pernah mengirim berkas. Pesan masuk dari warga memerlukan webhook HTTPS publik — lihat Panduan WhatsApp."/>
+
+                            <!-- ===== Wizard setup 3 langkah (token → Phone ID → verify token) ===== -->
+
+                            <!-- Indikator progres: lingkaran bernomor + garis penghubung + progress bar -->
+                            <Grid Margin="8,12,8,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="36"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="36"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Langkah 1 -->
+                                <StackPanel Grid.Column="0">
+                                    <Border Width="30" Height="30" CornerRadius="15" HorizontalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding WizardStep1Aktif}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WizardStep1Selesai}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Setter Property="Text" Value="1"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding WizardStep1Aktif}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding WizardStep1Selesai}" Value="True">
+                                                            <Setter Property="Text" Value="✓"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                    <TextBlock Text="Access Token" FontSize="11" HorizontalAlignment="Center" Margin="0,5,0,0"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Garis 1→2 -->
+                                <Border Grid.Column="1" Height="2" VerticalAlignment="Top" Margin="0,14,0,0">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep1Selesai}" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+
+                                <!-- Langkah 2 -->
+                                <StackPanel Grid.Column="2">
+                                    <Border Width="30" Height="30" CornerRadius="15" HorizontalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding WizardStep2Aktif}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WizardStep2Selesai}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Setter Property="Text" Value="2"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding WizardStep2Aktif}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding WizardStep2Selesai}" Value="True">
+                                                            <Setter Property="Text" Value="✓"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                    <TextBlock Text="Phone Number ID" FontSize="11" HorizontalAlignment="Center" Margin="0,5,0,0"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Center" TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <!-- Garis 2→3 -->
+                                <Border Grid.Column="3" Height="2" VerticalAlignment="Top" Margin="0,14,0,0">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep2Selesai}" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+
+                                <!-- Langkah 3 -->
+                                <StackPanel Grid.Column="4">
+                                    <Border Width="30" Height="30" CornerRadius="15" HorizontalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding WizardStep3Aktif}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="3" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding WizardStep3Aktif}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource OnAccentTextBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                    <TextBlock Text="Verify Token Webhook" FontSize="11" HorizontalAlignment="Center" Margin="0,5,0,0"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Center" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Progress bar -->
+                            <ProgressBar Minimum="0" Maximum="100" Value="{Binding WizardProgress, Mode=OneWay}" Height="4"
+                                         Margin="20,10,20,0" BorderThickness="0"/>
+                            <TextBlock Text="{Binding WizardStepText}" FontSize="11" FontWeight="SemiBold" Margin="20,6,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       AutomationProperties.Name="Langkah konfigurasi gateway"/>
+
+                            <!-- ===== Isi langkah ===== -->
+
+                            <!-- Langkah 1: Access token -->
+                            <StackPanel Visibility="{Binding WizardStep0Visible, Converter={StaticResource BoolToVis}}" Margin="4,10,4,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Access Token"/>
+                                    <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
+                                             HorizontalAlignment="Left" MinWidth="280"
+                                             Text="{Binding WaCloudApiToken, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Permanent access token dari System User pada Meta Business Settings"
+                                             AutomationProperties.Name="Access Token WhatsApp"/>
+                                </Grid>
+                                <TextBlock Style="{StaticResource InlineNote}"
+                                           Text="Salin permanent access token dari System User: Meta Business Settings → Users → System users → Generate Token (izin: whatsapp_business_messaging dan whatsapp_business_management). Langkah lengkap ada pada Panduan WhatsApp Bagian A butir 3."/>
+                            </StackPanel>
+
+                            <!-- Langkah 2: Phone Number ID -->
+                            <StackPanel Visibility="{Binding WizardStep1Visible, Converter={StaticResource BoolToVis}}" Margin="4,10,4,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Phone Number ID"/>
+                                    <WrapPanel Grid.Column="1">
+                                        <TextBox Style="{StaticResource SettingInput}" Width="240" MaxWidth="380"
+                                                 HorizontalAlignment="Left"
+                                                 Text="{Binding WaCloudApiPhoneId, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="Dari Meta for Developers → WhatsApp → API Setup"/>
+                                        <Button Content="Uji Koneksi" Command="{Binding UjiCloudApiCommand}" Width="120" Margin="10,0,0,0" VerticalAlignment="Center"
+                                                ToolTip="Memeriksa access token dan nomor pengirim langsung ke Graph API Meta"/>
+                                    </WrapPanel>
+                                </Grid>
+                                <TextBlock Style="{StaticResource InlineNote}"
+                                           Text="Deretan angka dari Meta for Developers → WhatsApp → API Setup (contoh: 123456789012345). Klik Uji Koneksi untuk memverifikasi token dan nomor secara langsung."/>
+                            </StackPanel>
+
+                            <!-- Langkah 3: Verify token + app secret webhook -->
+                            <StackPanel Visibility="{Binding WizardStep2Visible, Converter={StaticResource BoolToVis}}" Margin="4,10,4,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Verify Token Webhook"/>
+                                    <WrapPanel Grid.Column="1">
+                                        <TextBox Style="{StaticResource SettingInput}" Width="240" MaxWidth="380"
+                                                 HorizontalAlignment="Left"
+                                                 Text="{Binding WaCloudApiVerifyToken, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="Kata sandi yang Anda tentukan sendiri; harus sama dengan isian pada konfigurasi webhook Meta"
+                                                 AutomationProperties.Name="Verify token webhook"/>
+                                    </WrapPanel>
+                                </Grid>
+                                <TextBlock Style="{StaticResource InlineNote}"
+                                           Text="Kata sandi yang Anda tentukan sendiri, dipakai saat verifikasi webhook di Meta (WhatsApp → Configuration → Webhook) dan harus sama persis dengan isian pada dasbor Meta."/>
+
+                                <!-- App secret: WAJIB, bukan opsional.
+                                     Pesan yang salah ("kosongkan bila webhook diverifikasi
+                                     tanpa token") seharusnya tidak pernah ada: webhook
+                                     tanpa verifikasi tanda tangan berarti siapa pun bisa
+                                     menyuntikkan pesan masuk. -->
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="App Secret Webhook *"/>
+                                    <WrapPanel Grid.Column="1">
+                                        <TextBox Style="{StaticResource SettingInput}" Width="240" MaxWidth="380"
+                                                 HorizontalAlignment="Left"
+                                                 Text="{Binding WaCloudApiAppSecret, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="App secret dari Meta for Developers → WhatsApp → API Setup"
+                                                 AutomationProperties.Name="App secret webhook"/>
+                                    </WrapPanel>
+                                </Grid>
+                                <TextBlock Style="{StaticResource InlineNote}"
+                                           Text="WAJIB diisi. Berbeda dari verify token: verify token dipakai sekali saat mendaftarkan webhook, sedangkan app secret dipakai untuk membuktikan setiap pesan masuk benar-benar dikirim Meta. Tanpa isian ini pesan WhatsApp masuk akan ditolak. Ambil dari Meta for Developers → WhatsApp → API Setup."/>
+
+                                <!-- Peringatan terlihat hanya saat belum diisi -->
+                                <Border Background="{DynamicResource WarningSubtleBrush}" BorderBrush="{DynamicResource WarningBrush}"
+                                        BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="140,6,0,0"
+                                        Visibility="{Binding WaCloudApiAppSecretKosong, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="App secret belum diisi — pesan WhatsApp masuk belum bisa diterima. Isi dulu di kotak di atas, lalu pasang webhook di Meta."
+                                               TextWrapping="Wrap" LineHeight="16" Foreground="{DynamicResource TextBrush}"/>
+                                </Border>
+
+                                <!-- Ringkasan gateway siap -->
+                                <Border Background="{DynamicResource AccentSubtleBrush}" BorderBrush="{DynamicResource AccentBrush}"
+                                        BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="140,10,0,0"
+                                        Visibility="{Binding WaGatewayReady, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="Gateway siap — WhatsApp Cloud API aktif. Langkah terakhir: pasang webhook sesuai Panduan WhatsApp Bagian C (callback URL dan verify token, lalu berlangganan peristiwa 'messages')."
+                                               TextWrapping="Wrap" LineHeight="16" Foreground="{DynamicResource TextBrush}"/>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Validasi + navigasi wizard -->
+                            <TextBlock Text="{Binding WizardValidasiInfo}" FontSize="11" Margin="140,8,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource WarningTextBrush}"
+                                       Visibility="{Binding WizardValidasiInfo, Converter={StaticResource StringNotEmptyToVis}}"/>
+                            <WrapPanel Margin="140,8,0,4">
+                                <Button Content="← Kembali" Command="{Binding WizardKembaliCommand}" Width="110"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Visibility="{Binding WizardKembaliVisible, Converter={StaticResource BoolToVis}}"/>
+                                <Button Content="Lanjut →" Command="{Binding WizardLanjutCommand}" Width="110" Margin="8,0,0,0">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WizardStep2Visible}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <TextBlock Text="Gateway sudah dikonfigurasi." FontSize="11" FontStyle="Italic" Margin="10,0,0,0"
+                                           VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Visibility="{Binding WizardStep2Visible, Converter={StaticResource BoolToVis}}"/>
+                            </WrapPanel>
+
+                            <TextBlock Text="{Binding WaUjiKoneksiInfo}" FontSize="11" Margin="140,8,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding WaGatewayInfo}" FontSize="11" FontStyle="Italic" Margin="0,6,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="16"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                </StackPanel><!-- /bagian Gateway WhatsApp -->
+
+                <!-- ============ Bagian: Kredensial Google ============ -->
+                <!-- Bagian ini wajib ada lagi: paket yang dibangun tanpa berkas
+                     rahasia build (mis. hasil CI) tidak memuat kredensial OAuth
+                     tertanam, sehingga login Google di komputer pengguna hanya bisa
+                     dihidupkan dari sini (tersimpan terenkripsi per pengguna). -->
+                <StackPanel Visibility="{Binding BagianGoogleOauth.Aktif, Converter={StaticResource BoolToVis}}">
+
+                <!-- ===== Kredensial klien OAuth Google ===== -->
+                <Border Style="{StaticResource SettingCard}" Tag="google-oauth">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}"
+                                               Text="{x:Static u:IkonMenu.KataSandi}"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Kredensial Klien OAuth Google" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="Klien OAuth dari Google Cloud Console (tipe Desktop app) yang dipakai untuk login akun Google serta akses Drive, Formulir, dan Sheet. Nilai yang diisi di sini disimpan terenkripsi (DPAPI, khusus pengguna Windows ini) — bukan teks biasa pada appsettings.json — dan hanya dikirim ke Google saat login."/>
+
+                            <!-- Status paket: apakah installer yang terpasang membawa
+                                 kredensial tertanam, atau perlu diisi manual. -->
+                            <Border Margin="0,0,0,12">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource InfoBox}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding GoogleKredensialPaketTone}" Value="1">
+                                                <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding GoogleKredensialPaketTone}" Value="2">
+                                                <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding GoogleKredensialPaketInfo}"/>
+                            </Border>
+
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Client ID"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
+                                         HorizontalAlignment="Left" MinWidth="300"
+                                         Text="{Binding GoogleClientId, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Client ID dari Google Cloud Console → APIs &amp; Services → Credentials → OAuth 2.0 Client IDs (tipe Desktop app)"
+                                         AutomationProperties.Name="Google Client ID"/>
+                            </Grid>
+
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Client Secret"/>
+                                <PasswordBox x:Name="GoogleSecretBox" Grid.Column="1"
+                                             Style="{StaticResource SettingSecretInput}" MaxWidth="560"
+                                             HorizontalAlignment="Left" MinWidth="300"
+                                             PasswordChanged="GoogleSecretBox_PasswordChanged"
+                                             ToolTip="Client Secret dari halaman yang sama; disimpan terenkripsi dan hanya dikirim ke Google saat login."
+                                             AutomationProperties.Name="Google Client Secret"/>
+                            </Grid>
+
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text=""/>
+                                <WrapPanel Grid.Column="1">
+                                    <Button Content="Simpan Kredensial" Command="{Binding SimpanKredensialGoogleCommand}" MinWidth="150"
+                                            Style="{StaticResource PrimaryButton}"
+                                            ToolTip="Menyimpan Client ID dan Client Secret terenkripsi pada komputer ini"/>
+                                    <Button Content="Uji Koneksi" Command="{Binding UjiKredensialGoogleCommand}" MinWidth="130" Margin="10,0,0,0"
+                                            Style="{StaticResource SecondaryButton}"
+                                            ToolTip="Membuka login Google memakai kredensial tersimpan untuk memastikan pengaturan sudah benar"/>
+                                </WrapPanel>
+                            </Grid>
+
+                            <TextBlock Text="{Binding GoogleKredensialStatus}" FontSize="11" Margin="140,0,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+
+                            <!-- Hasil simpan/uji koneksi: warna mengikuti hasilnya -->                            <Border Margin="140,8,0,0" Visibility="{Binding GoogleKredensialInfo, Converter={StaticResource StringNotEmptyToVis}}">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource InfoBox}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding GoogleKredensialTone}" Value="1">
+                                                <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding GoogleKredensialTone}" Value="2">
+                                                <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding GoogleKredensialTone}" Value="3">
+                                                <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding GoogleKredensialInfo}"/>
+                            </Border>
+
+                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,14,0,0"
+                                       Text="Berkas kredensial terenkripsi (hanya dapat dibuka oleh pengguna Windows ini):"/>
+                            <Border Style="{StaticResource PathBox}">
+                                <TextBlock Style="{StaticResource PathText}" Text="{Binding GoogleKredensialLokasi}"
+                                           ToolTip="{Binding GoogleKredensialLokasi}"/>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                </StackPanel><!-- /bagian Kredensial Google -->
+
+                <!-- ============ Bagian: Formulir & Sheet ============ -->
+                <StackPanel Visibility="{Binding BagianGoogleSheet.Aktif, Converter={StaticResource BoolToVis}}">
+
+                <!-- ===== 1. Pembuatan Formulir & Sheet Otomatis ===== -->
+                <Border Style="{StaticResource SettingCard}" Tag="google-sheet">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE8F1;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Pembuatan Formulir &amp; Sheet Otomatis" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="Sekali klik: aplikasi membuat Google Sheet jawaban dan Google Formulir lengkap di akun desa (tanpa Apps Script), lalu mengisi kolom koneksi pada kartu di bawah dan mengaktifkan mode tautan secara otomatis."/>
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Buat otomatis" VerticalAlignment="Top" Margin="0,6,0,0"/>
+                                <StackPanel Grid.Column="1">
+                                    <WrapPanel>
+                                        <Button Content="Buat Formulir &amp; Sheet Otomatis" Command="{Binding BuatFormulirOtomatisCommand}" MinWidth="240"
+                                                Style="{StaticResource PrimaryButton}"
+                                                ToolTip="Membuat Google Formulir beserta Google Sheet jawabannya di akun Google desa secara otomatis. Hanya dibuat satu kali; klik berikutnya hanya menampilkan hasil yang sudah ada."/>
+                                        <Button Content="Buat Ulang (Ganti)" Command="{Binding BuatUlangFormulirCommand}" MinWidth="150" Margin="10,0,0,0"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Visibility="{Binding WaFormAutoSudahAda, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="Menghapus Formulir &amp; Sheet lama dari Google Drive, lalu membuat yang baru dari awal."/>
+                                    </WrapPanel>
+                                    <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" FontSize="11" LineHeight="16"
+                                               Foreground="{DynamicResource TextSecondaryBrush}">
+                                        Tombol ini hanya membuat <Run FontWeight="SemiBold">satu kali</Run>; klik berikutnya tidak membuat duplikat (gunakan &quot;Buat Ulang (Ganti)&quot; untuk menggantinya). Perlu akun Google yang terhubung: Formulir (tautan untuk warga), Sheet (jawaban yang dibaca aplikasi), dan Drive (penyimpanan PDF surat + tautan unduh). Masuk lewat <Run FontWeight="SemiBold">Login dengan Google</Run> di sidebar.
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Hasil pembuatan otomatis -->
+                            <Border Visibility="{Binding WaFormAutoInfo, Converter={StaticResource StringNotEmptyToVis}}">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource InfoBox}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WaFormAutoTone}" Value="1">
+                                                <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding WaFormAutoTone}" Value="2">
+                                                <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding WaFormAutoTone}" Value="3">
+                                                <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding WaFormAutoInfo}"/>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== 2. Koneksi Google Formulir & Jawaban ===== -->
+                <Border Style="{StaticResource SettingCard}" Tag="google-sheet-koneksi">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE774;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Koneksi Google Formulir &amp; Jawaban" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="Tautan yang dipakai aplikasi: URL Formulir dibalaskan kepada warga lewat WhatsApp, URL Sheet dibaca aplikasi untuk membuat surat PDF."/>
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="URL Google Formulir"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
+                                         HorizontalAlignment="Left" MinWidth="280"
+                                         Text="{Binding WaSheetFormUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Tautan Google Formulir yang diterima warga melalui WhatsApp (bentuk …/viewform). Diambil dari editor formulir: Kirim → ikon tautan."
+                                         AutomationProperties.Name="URL Google Formulir"/>
+                            </Grid>
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="URL Sheet jawaban"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
+                                         HorizontalAlignment="Left" MinWidth="280"
+                                         Text="{Binding WaSheetUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Google Sheet tempat jawaban terkumpul (URL dari peramban yang memuat /d/…/edit). Dibaca aplikasi untuk membuat surat dan tidak dikirim ke warga."
+                                         AutomationProperties.Name="URL Sheet jawaban"/>
+                            </Grid>
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Nama tab jawaban"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource SettingInput}" MaxWidth="560"
+                                         HorizontalAlignment="Left" MinWidth="280"
+                                         Text="{Binding WaSheetTabName, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Nama tab di bagian bawah Google Sheet; bawaan: Form Responses 1"
+                                         AutomationProperties.Name="Nama tab jawaban"/>
+                            </Grid>
+                            <Grid Style="{StaticResource SettingRow}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text="Mode tautan"/>
+                                <WrapPanel Grid.Column="1">
+                                    <CheckBox Content="Aktifkan mode tautan (balasan berupa tautan formulir)"
+                                              IsChecked="{Binding WaSheetMode, Mode=TwoWay}"
+                                              ToolTip="Saat aktif, warga mengisi Google Formulir; saat nonaktif, warga mengetik data sesuai format percakapan."/>
+                                </WrapPanel>
+                            </Grid>
+                            <TextBlock Text="{Binding WaSheetRingkasan}" FontSize="11" FontStyle="Italic" Margin="140,0,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="16"/>
+                            <Grid Style="{StaticResource SettingRow}" Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Style="{StaticResource SettingLabelCol}"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource SettingLabel}" Text=""/>
+                                <StackPanel Grid.Column="1">
+                                    <WrapPanel>
+                                        <Button Content="Uji Koneksi Formulir &amp; Sheet" Command="{Binding UjiWaSheetCommand}" MinWidth="220"
+                                                ToolTip="Memeriksa akses baca ke Sheet jawaban (Sheets API) sekaligus memastikan tautan Google Formulir dapat dibuka publik oleh warga"/>
+                                        <Button Content="Buka Panduan (Bagian D)" Command="{Binding BukaPanduanWaCommand}" MinWidth="170" Margin="10,0,0,0"
+                                                Style="{StaticResource SecondaryButton}"
+                                                ToolTip="Panduan lengkap: membuat Google Formulir, kolom yang wajib ada, berbagi Sheet, dan membaca kolom Status"/>
+                                    </WrapPanel>
+                                    <!-- Hasil uji koneksi (muncul tepat di bawah tombolnya) -->
+                                    <Border Margin="0,8,0,0" Visibility="{Binding WaSheetUjiInfo, Converter={StaticResource StringNotEmptyToVis}}">
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource InfoBox}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding WaSheetUjiTone}" Value="1">
+                                                        <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WaSheetUjiTone}" Value="2">
+                                                        <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding WaSheetUjiTone}" Value="3">
+                                                        <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding WaSheetUjiInfo}" TextAlignment="Left"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                </StackPanel><!-- /bagian Formulir & Sheet -->
+
+                <!-- ============ Bagian: Database Desa ============ -->
+                <StackPanel Visibility="{Binding BagianDatabase.Aktif, Converter={StaticResource BoolToVis}}">
+
+                <!-- ===== Lokasi berkas database ===== -->
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE74E;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Lokasi Berkas Database" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="Database desa boleh disimpan di foldernya sendiri — misalnya folder arsip desa di drive lain — supaya tidak tercampur dengan berkas aplikasi dan tidak perlu disalin ulang setiap aplikasi diperbarui."/>
+
+                            <TextBlock Style="{StaticResource SettingLabel}" Text="Dipakai sekarang"/>
+                            <Border Style="{StaticResource PathBox}" Margin="0,0,0,10">
+                                <TextBlock Style="{StaticResource PathText}" Text="{Binding LokasiDatabaseAktif}"
+                                           ToolTip="{Binding LokasiDatabaseAktif}"/>
+                            </Border>
+
+                            <TextBlock Style="{StaticResource SettingLabel}" Text="Lokasi bawaan aplikasi"/>
+                            <Border Style="{StaticResource PathBox}" Margin="0,0,0,4">
+                                <TextBlock Style="{StaticResource PathText}" Text="{Binding LokasiDatabaseBawaan}"
+                                           ToolTip="{Binding LokasiDatabaseBawaan}"/>
+                            </Border>
+
+                            <WrapPanel Margin="0,14,0,0">
+                                <Button Content="Pilih Berkas…" MinWidth="130"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding PilihBerkasDatabaseCommand}"
+                                        ToolTip="Pilih berkas database desa yang akan dipakai aplikasi"
+                                        AutomationProperties.Name="Pilih berkas database desa"/>
+                                <Button Content="Kembali ke Bawaan" MinWidth="150" Margin="8,0,0,0"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding PakaiDatabaseBawaanCommand}"
+                                        ToolTip="Batalkan pilihan lokasi dan pakai desa.db di folder aplikasi"
+                                        AutomationProperties.Name="Kembali ke lokasi database bawaan"/>
+                                <Button Content="Buka Folder" MinWidth="110" Margin="8,0,0,0"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding BukaFolderDatabaseCommand}"
+                                        ToolTip="Buka folder yang memuat database desa ini"
+                                        AutomationProperties.Name="Buka folder database"/>
+                                <Button Content="Simpan &amp; Mulai Ulang Sekarang" MinWidth="210" Margin="8,0,0,0"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding SimpanMulaiUlangDatabaseCommand}"
+                                        ToolTip="Tutup aplikasi dengan rapi lalu buka kembali sekarang juga supaya lokasi database baru langsung dipakai"
+                                        AutomationProperties.Name="Simpan dan mulai ulang sekarang"/>
+                            </WrapPanel>
+
+                            <!-- Pilihan yang sudah tersimpan tetapi belum berlaku -->
+                            <Border Style="{StaticResource InfoBox}" Margin="0,12,0,0"
+                                    Visibility="{Binding AdanyaDatabasePilihanTersimpan, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding DatabasePilihanTersimpan}"/>
+                            </Border>
+
+                            <!-- Hasil tindakan terakhir (pilih berkas / kembali ke bawaan) -->
+                            <Border Style="{StaticResource InfoBox}" Margin="0,8,0,0"
+                                    Visibility="{Binding AdanyaInfoDatabase, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding InfoDatabase}"/>
+                            </Border>
+
+                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,12,0,0"
+                                       Text="Perubahan lokasi berlaku setelah aplikasi ditutup lalu dibuka kembali — halaman ini tidak memindahkan berkas apa pun, hanya mencatat lokasi yang akan dipakai. Gunakan tombol “Simpan &amp; Mulai Ulang Sekarang” untuk menerapkannya seketika."/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== Hal yang perlu diketahui sebelum berpindah lokasi ===== -->
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE7BA;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Sebelum Berpindah Lokasi" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="1. Berkas database disimpan dalam keadaan terkunci (terenkripsi). Bila berkas yang dipilih masih database biasa, aplikasi mengenkripsinya saat dibuka dan lebih dahulu menyimpan cadangan bentuk aslinya (desa-plaintext-*.bak) di folder yang sama."/>
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="2. Kunci enkripsinya khusus untuk pengguna Windows di komputer ini. Berkas database dari komputer lain hanya bisa dibuka bila berkas kuncinya ikut disalin dari instalasi asal."/>
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="3. Aplikasi memakai berkas itu langsung — berkas tidak disalin ke folder aplikasi, jadi simpan di folder yang selalu tersedia (bukan folder sementara atau lampiran e-mail)."/>
+                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,0,0,0"
+                                       Text="4. Sebelum berpindah, buat cadangan lewat halaman Cadangkan &amp; Pulihkan supaya data desa tetap aman."/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                </StackPanel><!-- /bagian Database -->
+
+                <!-- ============ Bagian: Informasi ============ -->
+                <StackPanel Visibility="{Binding BagianInformasi.Aktif, Converter={StaticResource BoolToVis}}">
+
+                <!-- ===== Informasi ===== -->
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE946;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Sesi &amp; Lokasi Pengaturan" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="Preferensi tersimpan terpisah dari database dan berlaku untuk pengguna Windows ini, pada lokasi:"/>
+                            <Border Style="{StaticResource PathBox}" Margin="0,0,0,12">
+                                <TextBlock Style="{StaticResource PathText}" Text="{Binding LokasiPreferensi}"
+                                           ToolTip="{Binding LokasiPreferensi}"/>
+                            </Border>
+                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,0,0,0"
+                                       Text="Setiap tombol geser langsung tersimpan. Perubahannya berlaku pada login berikutnya atau saat aplikasi ditutup lalu dibuka kembali, sesuai fungsi masing-masing pilihan."/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                </StackPanel><!-- /bagian Informasi -->
+
+                    </StackPanel><!-- /lapisan bagian -->
+                </ScrollViewer>
+            </DockPanel>
+        </Grid>
+
+        <!-- ===== Statusbar halaman: pesan status + identitas aplikasi + tombol Tutup =====
+             Memakai kontrol bersama AppStatusBar supaya identitas aplikasi (ikon, nama,
+             versi, pengembang) tidak ditulis ulang di tiap halaman. -->
+        <c:AppStatusBar Grid.Row="2" Margin="0,16,0,0"
+                        StatusText="{Binding StatusMessage, FallbackValue='Siap'}">
+            <Button Content="Tutup" Command="{Binding BatalCommand}"
+                    Width="104" VerticalAlignment="Center"
+                    Style="{StaticResource SecondaryButton}"/>
+        </c:AppStatusBar>
+    </Grid>
+</UserControl>
+
+

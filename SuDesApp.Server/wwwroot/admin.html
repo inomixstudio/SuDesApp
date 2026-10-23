@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pusat Administer SuDesApp</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b6e4f'/%3E%3Cpath d='M9 17l5 5 9-10' stroke='%23fff' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --hijau: #0b6e4f;
+    --hijau-gelap: #084c36;
+    --latar: #f4f7f5;
+    --teks: #1e2b26;
+    --abu: #6b7a73;
+    --garis: #dbe5df;
+    --kuning: #f4b942;
+    --merah: #b3261e;
+    --putih: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--latar);
+    color: var(--teks);
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, var(--hijau) 0%, var(--hijau-gelap) 100%);
+    color: #fff;
+    padding: 26px 20px 22px;
+  }
+  header .isi { max-width: 1100px; margin: 0 auto; }
+  header h1 { margin: 0 0 4px; font-size: 1.35rem; font-weight: 600; }
+  header p { margin: 0; opacity: .92; font-size: .93rem; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+  .kartu {
+    background: var(--putih);
+    border: 1px solid var(--garis);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .kartu h2 { margin: 0 0 14px; font-size: 1.05rem; }
+  .pesan { display: none; margin: 0 0 14px; padding: 12px 14px; border-radius: 8px; font-size: .92rem; }
+  .pesan.info { display: block; background: #eaf5f0; border: 1px solid var(--hijau); }
+  .pesan.gagal { display: block; background: #fdecea; border: 1px solid var(--merah); color: var(--merah); }
+  label.baris { display: block; margin-bottom: 12px; }
+  label.baris span { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 4px; }
+  /* Formulir pengumuman: textarea & datetime meniru gaya input yang ada. */
+  textarea,
+  input[type=datetime-local] {
+    padding: 10px 12px;
+    font-size: .95rem;
+    border: 1px solid var(--garis);
+    border-radius: 9px;
+    background: var(--putih);
+    color: var(--teks);
+    font-family: inherit;
+  }
+  textarea { width: 100%; resize: vertical; }
+  textarea:focus,
+  input[type=datetime-local]:focus { outline: 2px solid var(--hijau); outline-offset: 1px; }
+
+  input[type=text], input[type=password], input[type=number] {
+    padding: 11px 12px;
+    font-size: 1rem;
+    border: 1px solid var(--garis);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--teks);
+  }
+  input[type=text], input[type=password] { width: 100%; }
+  input[type=number] { width: 90px; }
+  input:focus { outline: 2px solid var(--hijau); outline-offset: 1px; }
+  button {
+    padding: 11px 16px;
+    font-size: .95rem;
+    font-weight: 600;
+    border: 0;
+    border-radius: 9px;
+    cursor: pointer;
+    background: var(--hijau);
+    color: #fff;
+  }
+  button:hover { background: var(--hijau-gelap); }
+  button:disabled { background: var(--abu); cursor: not-allowed; }
+  button.kecil { padding: 7px 12px; font-size: .85rem; }
+  button.netral { background: #eef3f0; color: var(--teks); border: 1px solid var(--garis); }
+  button.netral:hover { background: #e2ebe6; }
+  button.bahaya { background: var(--merah); }
+  button.bahaya:hover { background: #8f1d17; }
+  .baris-aksi { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .statistik { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .stat {
+    flex: 1 1 150px;
+    background: var(--putih);
+    border: 1px solid var(--garis);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .stat .angka { font-size: 1.6rem; font-weight: 700; color: var(--hijau); }
+  .stat .label { font-size: .82rem; color: var(--abu); }
+  .alat { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .alat input[type=text] { flex: 1 1 220px; width: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--garis); vertical-align: middle; }
+  th { font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; color: var(--abu); }
+  tbody tr:hover { background: #f7faf8; }
+  tbody tr.penuh td:first-child { border-left: 3px solid var(--merah); }
+  td.mono, .mono { font-family: "Consolas", "Courier New", monospace; font-size: .86rem; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+  .badge-hijau { background: #eaf5f0; color: var(--hijau-gelap); }
+  .badge-merah { background: #fdecea; color: var(--merah); }
+  .badge-kuning { background: #fdf3dc; color: #7a5b00; }
+  .badge-abu { background: #eef1ef; color: var(--abu); }
+  select {
+    padding: 11px 12px;
+    font-size: .95rem;
+    font-weight: 600;
+    border: 1px solid var(--garis);
+    border-radius: 9px;
+    background: var(--putih);
+    color: var(--teks);
+  }
+  .bungkus-tabel { overflow-x: auto; }
+  .kosong { padding: 18px 4px; color: var(--abu); font-size: .92rem; }
+  .catatan { font-size: .85rem; color: var(--abu); }
+  #detail { display: none; }
+  #panel { display: none; }
+  #gate { display: none; }
+  .detail-kepala { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .detail-kepala h2 { margin: 0; }
+  details.kartu > summary { cursor: pointer; font-weight: 600; font-size: 1.05rem; }
+  details.kartu[open] > summary { margin-bottom: 14px; }
+  .formulir { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .formulir label.baris { flex: 1 1 190px; margin: 0; }
+  .sub-judul { margin: 22px 0 8px; font-size: .95rem; }
+  .sub-kepala { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin: 22px 0 8px; }
+  .sub-kepala .sub-judul { margin: 0; }
+  .catatan code { background: #eef3f0; padding: 1px 5px; border-radius: 4px; }
+  /* Lampiran bukti transfer: pratinjau gambar sebelum dikirim ke server. */
+  #bukti-pratinjau { display: none; align-items: center; gap: 12px; margin: 10px 0 0; }
+  #bukti-gambar { max-height: 120px; max-width: 220px; border: 1px solid var(--garis); border-radius: 9px; background: var(--putih); }
+  #bukti-keterangan { font-size: .85rem; color: var(--abu); }
+  td.nominal, th.nominal { text-align: right; white-space: nowrap; }
+  footer { max-width: 1100px; margin: 0 auto; padding: 0 16px 32px; font-size: .82rem; color: var(--abu); }
+</style>
+</head>
+<body>
+<header>
+  <div class="isi">
+    <h1>Pusat Administrasi SuDesApp</h1>
+    <p>Kelola perangkat per desa &amp; bebaskan kuota lisensi</p>
+  </div>
+</header>
+
+<main>
+  <div class="pesan" id="pesan"></div>
+
+  <div class="kartu" id="gate">
+    <h2>Masuk sebagai operator</h2>
+    <label class="baris">
+      <span>ID operator</span>
+      <input type="text" id="operator-id" autocomplete="off" spellcheck="false" placeholder="contoh: operator-tagihan">
+    </label>
+    <label class="baris">
+      <span>Token pribadi operator</span>
+      <input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="tempel token pribadi di sini">
+    </label>
+    <div class="baris-aksi">
+      <button id="tombol-masuk">Masuk</button>
+    </div>
+    <p class="catatan" id="catatan-sesi">
+      ID dan token hanya dipakai untuk sesi operator ini dan dikirim sebagai
+      header, tidak ditulis di alamat maupun cookie.
+    </p>
+  </div>
+
+  <div id="panel">
+    <p class="catatan" id="identitas-operator"></p>
+    <div class="statistik">
+      <div class="stat"><div class="angka" id="stat-desa">0</div><div class="label">Desa terdaftar</div></div>
+      <div class="stat"><div class="angka" id="stat-penuh">0</div><div class="label">Perangkat penuh</div></div>
+      <div class="stat"><div class="angka" id="stat-perangkat">0</div><div class="label">Perangkat tercatat</div></div>
+      <div class="stat"><div class="angka" id="stat-lewat">0</div><div class="label">Langganan ≤ 30 hari</div></div>
+    </div>
+
+    <!-- Aktivasi manual: jalur cepat untuk pembayaran QRIS statis/transfer yang
+         dikonfirmasi desa lewat WhatsApp — operator menempelkan kode aktivasi
+         dari pesan desa, tanpa harus mencari dan membuka desanya lebih dulu.
+         Pembukuannya memakai endpoint tandai-lunas yang sama dengan kartu di
+         detail desa, jadi aturan perpanjangan dan riwayatnya identik. -->
+    <details class="kartu" id="kartu-aktivasi-manual">
+      <summary>Aktivasi manual — tandai lunas dari kode aktivasi (tanpa buka desa)</summary>
+      <p class="catatan">
+        Untuk desa yang membayar lewat QRIS statis dan mengonfirmasi lewat
+        WhatsApp ke <strong>0851 1166 9951</strong>: tempelkan kode aktivasi dari
+        pesan desa, pilih paket, isi nominal yang benar-benar diterima, lalu
+        tekan tombol di bawah. Masa aktif desa langsung bertambah dan order-nya
+        berawalan <code>MANUAL</code>. Pastikan dana sudah masuk — tidak ada
+        gateway yang memeriksanya. (Lampiran bukti transfer tersedia di detail
+        desa, kartu "Tandai lunas".)
+      </p>
+      <div class="formulir">
+        <label class="baris">
+          <span>Kode aktivasi desa</span>
+          <input type="text" id="akt-kode" autocomplete="off" spellcheck="false" placeholder="mis. SUDES-K7Q2-4831">
+        </label>
+        <label class="baris" style="flex:0 0 auto">
+          <span>Paket</span>
+          <select id="akt-paket"></select>
+        </label>
+        <label class="baris" style="flex:0 0 auto">
+          <span>Nominal diterima (Rp)</span>
+          <input type="number" id="akt-nominal" min="1" step="1000">
+        </label>
+        <label class="baris" style="flex:1 1 260px">
+          <span>Catatan / referensi (opsional)</span>
+          <input type="text" id="akt-catatan" autocomplete="off" placeholder="mis. QRIS via WA 24/10 09:12">
+        </label>
+        <button id="tombol-aktivasi-manual">Aktivasi manual — tandai lunas &amp; perpanjang</button>
+      </div>
+      <p class="catatan" id="aktivasi-manual-hasil" style="display:none;font-weight:700"></p>
+    </details>
+
+    <details class="kartu" id="kartu-daftar">
+      <summary>Buat kode aktivasi — daftarkan desa baru</summary>
+      <div class="formulir">
+        <label class="baris">
+          <span>Kode aktivasi — diisi manual, atau kosongkan dan pakai tombol buat otomatis</span>
+          <input type="text" id="daf-kode" autocomplete="off" spellcheck="false" placeholder="mis. SUDES-0001">
+        </label>
+        <label class="baris">
+          <span>Nama desa</span>
+          <input type="text" id="daf-nama" autocomplete="off" placeholder="mis. Desa Sukamaju">
+        </label>
+        <label class="baris">
+          <span>Kontak (opsional)</span>
+          <input type="text" id="daf-kontak" autocomplete="off" placeholder="telepon / email">
+        </label>
+        <label class="baris" style="flex:0 0 auto">
+          <span>Batas perangkat</span>
+          <input type="number" id="daf-batas" min="1" max="100" value="2">
+        </label>
+        <button id="tombol-daftar-otomatis">Buat kode otomatis &amp; daftarkan</button>
+        <button id="tombol-daftar" class="netral">Daftarkan dengan kode di atas</button>
+      </div>
+      <!-- Hasil pendaftaran otomatis: kode ditaruh di input read-only supaya
+           bisa dipilih/disalin dengan Ctrl+C lalu ditempel ke pesan WhatsApp
+           untuk desa — tanpa bergantung pada Clipboard API peramban. -->
+      <div class="formulir" id="daftar-otomatis-hasil" style="display:none">
+        <label class="baris">
+          <span>Kode aktivasi baru (salin &amp; kirim ke desa lewat WhatsApp)</span>
+          <input type="text" id="daftar-otomatis-kode" readonly style="font-weight:700;letter-spacing:1px">
+        </label>
+      </div>
+      <p class="catatan">
+        Tombol <strong>Buat kode otomatis</strong>: server membuat kode unik
+        berbentuk <code>SUDES-XXXX-XXXX</code> (tanpa huruf yang mudah tertukar
+        saat dibacakan) — cukup isi nama desa. Mengetik kode sendiri tetap bisa.
+        Langganan baru AKTIF setelah pembayaran pertama masuk (lewat webhook
+        Midtrans, atau ditandai lewat <strong>Aktivasi Manual</strong> di atas).
+        Kode yang sudah ada tidak didaftarkan ulang.
+      </p>
+    </details>
+
+    <!-- ===== Pengumuman broadcast (tulis → semua aplikasi desa popup) ===== -->
+    <details class="kartu" id="kartu-pengumuman">
+      <summary>Terbitkan pengumuman ke seluruh desa</summary>
+      <div class="formulir">
+        <label class="baris" style="flex:1 1 100%">
+          <span>Judul</span>
+          <input type="text" id="pgm-judul" autocomplete="off" spellcheck="false" placeholder="mis. Jendela layanan WhatsApp malam ini" maxlength="150">
+        </label>
+        <label class="baris" style="flex:1 1 100%">
+          <span>Isi (opsional — boleh multi-baris)</span>
+          <textarea id="pgm-isi" rows="3" spellcheck="false" maxlength="4000" placeholder="Teks yang tampil di popup & lonceng aplikasi desa"></textarea>
+        </label>
+        <label class="baris" style="flex:0 0 auto">
+          <span>Jenis</span>
+          <select id="pgm-jenis">
+            <option value="info">Info</option>
+            <option value="peringatan">Peringatan</option>
+          </select>
+        </label>
+        <label class="baris" style="flex:0 0 auto">
+          <span>Mulai (opsional)</span>
+          <input type="datetime-local" id="pgm-mulai">
+        </label>
+        <label class="baris" style="flex:0 0 auto">
+          <span>Berhenti (opsional)</span>
+          <input type="datetime-local" id="pgm-sampai">
+        </label>
+        <button id="tombol-terbitkan">Terbitkan</button>
+      </div>
+      <p class="catatan">
+        Terbitkan sekarang → aplikasi desa yang berjalan menampilkan popup &amp; entri
+        lonceng dalam ±60 detik (tanpa memperbarui aplikasi). Kosongkan
+        Mulai/Berhenti untuk tampil sekarang sampai dihapus. Isi tabel pengumuman
+        tetap bisa disunting lewat SQL Editor (mis. <code>UPDATE pengumuman SET
+        aktif=false</code>).
+      </p>
+
+      <div class="sub-kepala">
+        <div class="sub-judul">Pengumuman yang pernah diterbitkan</div>
+        <button class="netral kecil" id="tombol-muat-pengumuman">Muat ulang</button>
+      </div>
+      <div class="bungkus-tabel">
+        <table>
+          <thead>
+            <tr>
+              <th>Judul</th><th>Jenis</th><th style="white-space:nowrap">Dibuat</th><th style="white-space:nowrap">Jendela</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="baris-pengumuman"></tbody>
+        </table>
+      </div>
+      <div class="kosong" id="kosong-pengumuman" style="display:none">Belum ada pengumuman.</div>
+    </details>
+
+    <div class="kartu">
+      <div class="alat">
+        <input type="text" id="cari" placeholder="Cari kode atau nama desa…" autocomplete="off">
+        <select id="saring" aria-label="Saring desa menurut status langganan">
+          <option value="semua">Semua status</option>
+          <option value="aktif">Aktif (&gt; 30 hari)</option>
+          <option value="akan-habis">Segera habis (≤ 30 hari)</option>
+          <option value="sudah-habis">Sudah habis</option>
+          <option value="belum-bayar">Belum bayar</option>
+        </select>
+        <button class="netral kecil" id="tombol-csv-desa">Unduh CSV desa</button>
+        <button class="netral kecil" id="tombol-muat">Muat ulang</button>
+        <button class="netral kecil" id="tombol-rekon">Rekonsiliasi pembayaran</button>
+        <button class="netral kecil" id="tombol-keluar">Keluar</button>
+      </div>
+      <div class="bungkus-tabel">
+        <table>
+          <thead>
+            <tr>
+              <th>Kode</th><th>Desa</th><th>Perangkat</th><th>Paket</th><th>Status langganan</th><th>Berlaku sampai</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="baris-desa"></tbody>
+        </table>
+      </div>
+      <div class="kosong" id="kosong" style="display:none">Tidak ada desa yang cocok.</div>
+    </div>
+
+    <div class="kartu" id="detail">
+      <div class="detail-kepala">
+        <h2 id="detail-judul">Perangkat desa</h2>
+        <button class="netral kecil" id="tombol-tutup-detail">Tutup</button>
+      </div>
+      <div class="baris-aksi" style="margin-bottom:16px">
+        <label class="baris" style="margin:0">
+          <span>Batas perangkat</span>
+          <input type="number" id="batas" min="1" max="100" value="2">
+        </label>
+        <button class="kecil" id="tombol-simpan-batas">Simpan batas</button>
+        <button class="bahaya kecil" id="tombol-reset">Reset semua perangkat</button>
+      </div>
+      <div class="bungkus-tabel">
+        <table>
+          <thead>
+            <tr><th>Id perangkat</th><th>Terakhir terlihat</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="baris-perangkat"></tbody>
+        </table>
+      </div>
+      <div class="kosong" id="perangkat-kosong" style="display:none">Belum ada perangkat tercatat.</div>
+
+      <div class="sub-kepala">
+        <h3 class="sub-judul">Riwayat pembayaran</h3>
+        <button class="netral kecil" id="tombol-csv">Unduh CSV</button>
+      </div>
+      <div class="bungkus-tabel">
+        <table>
+          <thead>
+            <tr><th>Order id</th><th>Paket</th><th class="nominal">Nominal</th><th>Status</th><th>Dicatat</th><th>Catatan</th><th>Bukti</th><th>Kuitansi</th></tr>
+          </thead>
+          <tbody id="baris-pembayaran"></tbody>
+        </table>
+      </div>
+      <div class="kosong" id="pembayaran-kosong" style="display:none">Belum ada pembayaran.</div>
+
+      <h3 class="sub-judul">Tandai lunas (QRIS manual / transfer)</h3>
+      <p class="catatan">
+        Untuk pembayaran yang masuk lewat QRIS statis atau transfer: dana sudah
+        Anda terima, jadi masa aktif desa ini bertambah <strong>sekarang</strong>.
+        Order-nya berawalan <code>MANUAL</code> sehingga terlihat beda dari
+        pembayaran gateway di riwayat di atas. Pastikan dananya benar-benar masuk
+        sebelum menekan tombol ini — tidak ada gateway yang memeriksanya.
+      </p>
+      <p class="catatan">
+        Bukti transfernya boleh dilampirkan sekaligus (foto atau tangkapan layar,
+        JPEG/PNG/WEBP, maksimum 2 MB — gambar besar dikecilkan otomatis di sini).
+        Lampirannya disimpan bersama baris pembayaran dan hanya bisa dibuka dari
+        halaman bertoken ini, jadi nama pengirim dan nominalnya tidak terbuka ke luar.
+      </p>
+      <div class="formulir">
+        <label class="baris" style="flex:0 0 auto">
+          <span>Paket</span>
+          <select id="lunas-paket"></select>
+        </label>
+        <label class="baris" style="flex:0 0 auto">
+          <span>Nominal diterima (Rp)</span>
+          <input type="number" id="lunas-nominal" min="1" step="1000">
+        </label>
+        <label class="baris" style="flex:1 1 260px">
+          <span>Catatan / referensi (opsional)</span>
+          <input type="text" id="lunas-catatan" autocomplete="off" placeholder="mis. QRIS 17/10 21:04">
+        </label>
+        <label class="baris" style="flex:1 1 260px">
+          <span>Bukti transfer — gambar (opsional)</span>
+          <input type="file" id="lunas-bukti" accept="image/jpeg,image/png,image/webp">
+        </label>
+        <button id="tombol-tandai-lunas">Tandai lunas &amp; perpanjang</button>
+      </div>
+      <div id="bukti-pratinjau">
+        <img id="bukti-gambar" alt="Pratinjau bukti transfer">
+        <span id="bukti-keterangan"></span>
+        <button class="netral kecil" type="button" id="tombol-hapus-bukti" style="display:none">Hapus lampiran</button>
+      </div>
+
+      <h3 class="sub-judul">Ubah data desa</h3>
+      <div class="formulir">
+        <label class="baris">
+          <span>Nama desa</span>
+          <input type="text" id="ubah-nama" autocomplete="off">
+        </label>
+        <label class="baris">
+          <span>Kontak (opsional)</span>
+          <input type="text" id="ubah-kontak" autocomplete="off" placeholder="telepon / email">
+        </label>
+        <button class="kecil" id="tombol-simpan-desa">Simpan</button>
+      </div>
+      <p class="catatan">
+        Kode aktivasi tidak bisa diubah — kode itulah yang diketik di aplikasi desa,
+        menggantinya berarti setiap PC desa ini harus mengaktivasi ulang.
+      </p>
+
+      <h3 class="sub-judul">Zona bahaya</h3>
+      <p class="catatan">
+        Menghapus desa membuang langganan, perangkat, tagihan, dan riwayat
+        pembayarannya. Desa yang masih punya tagihan/pembayaran <strong>ditolak</strong>
+        — ketik kode aktivasi persis untuk mengonfirmasi penghapusan paksa
+        beserta jejak uangnya. Data desa (surat, warga) ada di aplikasi lokal
+        dan tidak terpengaruh.
+      </p>
+      <div class="formulir">
+        <label class="baris">
+          <span>Ketik <code id="hapus-kode-label">kode desa</code> untuk konfirmasi</span>
+          <input type="text" id="hapus-konfirmasi" autocomplete="off" spellcheck="false">
+        </label>
+        <button class="bahaya kecil" id="tombol-hapus-desa" disabled>Hapus desa</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Halaman ini untuk operator SuDesApp: mendaftarkan, mengubah &amp; menghapus desa,
+  mengelola perangkat, melihat riwayat pembayaran, serta menjalankan
+  rekonsiliasi. Data desa (surat, warga) tidak pernah lewat halaman ini.
+  Jalankan server di HTTPS sebelum dipakai sungguhan.
+</footer>
+
+<script>
+"use strict";
+
+var SUDES_ADMIN_TERTANAM = new URLSearchParams(window.location.search).get("sudesEmbedded") === "1";
+var KUNCI_TOKEN = "sudes_admin_operator_token";
+var KUNCI_OPERATOR = "sudes_admin_operator_id";
+var operatorId = "";
+var token = "";
+var daftarDesa = [];
+var desaTerbuka = null;
+var pembayaranTerakhir = [];
+// Lampiran bukti transfer yang sudah disiapkan di peramban, siap ikut dikirim
+// bersama "Tandai lunas": { dataUrl, ukuran, nama }.
+var buktiTerpilih = null;
+
+var pesanEl = document.getElementById("pesan");
+var gate = document.getElementById("gate");
+var panel = document.getElementById("panel");
+var detail = document.getElementById("detail");
+
+// ---- util ----
+function el(tag, opsi, anak) {
+  var e = document.createElement(tag);
+  opsi = opsi || {};
+  if (opsi.kelas) e.className = opsi.kelas;
+  if (opsi.teks !== undefined) e.textContent = opsi.teks;
+  if (opsi.atribut) { for (var k in opsi.atribut) e.setAttribute(k, opsi.atribut[k]); }
+  if (opsi.on) { for (var ev in opsi.on) e.addEventListener(ev, opsi.on[ev]); }
+  if (anak) {
+    (Array.isArray(anak) ? anak : [anak]).forEach(function (a) { if (a) e.appendChild(a); });
+  }
+  return e;
+}
+
+function tampilPesan(teks, gagal) {
+  pesanEl.className = "pesan " + (gagal ? "gagal" : "info");
+  pesanEl.textContent = teks;
+}
+function bersihkanPesan() { pesanEl.className = "pesan"; pesanEl.textContent = ""; }
+
+function formatWaktu(iso) {
+  if (!iso) return "–";
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso);
+  return d.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function formatRupiah(n) {
+  if (typeof n !== "number" || isNaN(n)) return "–";
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency", currency: "IDR", maximumFractionDigits: 0
+  }).format(n);
+}
+
+// Status langganan berdasarkan tanggal: berapa hari lagi (negatif = sudah lewat).
+// <param name="kunci">Sekaligus nilai filter: aktif | akan-habis | sudah-habis | belum-bayar.</param>
+function statusLangganan(iso) {
+  if (!iso) return { kunci: "belum-bayar", label: "belum bayar", kelas: "badge-abu" };
+  var ms = new Date(iso).getTime() - Date.now();
+  if (isNaN(ms)) return { kunci: "aktif", label: "–", kelas: "badge-abu" };
+  var hari = Math.ceil(ms / 86400000);
+  if (hari < 0) return { kunci: "sudah-habis", label: "sudah habis", kelas: "badge-merah" };
+  if (hari <= 30) return { kunci: "akan-habis", label: "segera habis · " + hari + "h", kelas: "badge-kuning" };
+  return { kunci: "aktif", label: "aktif · " + hari + "h", kelas: "badge-hijau" };
+}
+
+// ---- CSV ----
+// Ubah larik baris menjadi teks CSV: nilai yang mengandung koma/kutip/baris baru
+// dikutip, kutip ganda menjadi "". Dipakai unduhan desa maupun pembayaran.
+function jadikanCsv(baris) {
+  return baris.map(function (r) {
+    return r.map(function (v) {
+      var s = String(v === null || v === undefined ? "" : v);
+      // CSV quoting alone does not stop spreadsheet apps evaluating formulas.
+      if (/^\s*[=+\-@]/.test(s) || /^[\t\r]/.test(s)) s = "'" + s;
+      return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }).join(",");
+  }).join("\r\n");
+}
+
+// Unduh berkas teks dari peramban. BOM di depan supaya Excel membaca UTF-8
+// dengan benar (tanpa BOM huruf beraksen jadi kacau di Excel Indonesia).
+function unduhTeks(namaBerkas, isi) {
+  var blob = new Blob(["\uFEFF" + isi], { type: "text/csv;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = el("a");
+  a.href = url;
+  a.download = namaBerkas;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---- HTTP ----
+// Token dikirim sebagai header, bukan cookie: karena itu tidak ada risiko CSRF
+// (situs lain tidak bisa membaca token maupun menyetel header ini).
+async function panggil(metode, jalur, body) {
+  var opsi = { method: metode, headers: { "Accept": "application/json" } };
+  if (operatorId) opsi.headers["X-Admin-Operator"] = operatorId;
+  if (token) opsi.headers["Authorization"] = "Bearer " + token;
+  if (body !== undefined) {
+    opsi.headers["Content-Type"] = "application/json";
+    opsi.body = JSON.stringify(body);
+  }
+
+  var resp = await fetch(jalur, opsi);
+  var data = null;
+  try { data = await resp.json(); } catch (e) { /* tubuh bukan JSON */ }
+
+  if (resp.status === 401) {
+    keluar();
+    throw new Error("Token tidak sah. Masuk kembali.");
+  }
+  if (!resp.ok) {
+    var msg = (data && (data.pesan || data.detail || data.title)) || ("Permintaan ditolak (HTTP " + resp.status + ").");
+    throw new Error(msg);
+  }
+  return data;
+}
+
+// ---- alur login ----
+async function masuk() {
+  var id = document.getElementById("operator-id").value.trim();
+  var t = document.getElementById("token").value.trim();
+  if (!id) { tampilPesan("Isi ID operator.", true); document.getElementById("operator-id").focus(); return; }
+  if (!t) { tampilPesan("Isi token pribadi operator.", true); document.getElementById("token").focus(); return; }
+  operatorId = id;
+  token = t;
+  if (!SUDES_ADMIN_TERTANAM) {
+    sessionStorage.setItem(KUNCI_OPERATOR, operatorId);
+    sessionStorage.setItem(KUNCI_TOKEN, token);
+  }
+  document.getElementById("operator-id").value = "";
+  document.getElementById("token").value = "";
+  bersihkanPesan();
+  await mulai();
+}
+
+function keluar() {
+  operatorId = "";
+  token = "";
+  sessionStorage.removeItem(KUNCI_OPERATOR);
+  sessionStorage.removeItem(KUNCI_TOKEN);
+  document.getElementById("operator-id").value = "";
+  document.getElementById("token").value = "";
+  desaTerbuka = null;
+  daftarDesa = [];
+  panel.style.display = "none";
+  detail.style.display = "none";
+  gate.style.display = "block";
+}
+
+async function mulai() {
+  if (!token || !operatorId) { keluar(); return; }
+  gate.style.display = "none";
+  panel.style.display = "block";
+  try {
+    var sesi = await panggil("GET", "/admin/sesi");
+    document.getElementById("identitas-operator").textContent =
+      "Masuk sebagai " + sesi.nama + " (" + sesi.id + "). Izin: " + sesi.izin.join(", ");
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message + " (" + (e.name || "Error") + ")", true);
+  }
+  // Daftar pengumuman muat terpisah: kegagalannya (mis. tabel belum dibuat)
+  // tidak menggagalkan daftar desa yang lebih penting.
+  try {
+    await muatPengumuman();
+  } catch (e) {
+    tampilPesan("Daftar pengumuman: " + e.message, true);
+  }
+  // Katalog paket untuk formulir "Tandai lunas": kegagalannya juga tidak
+  // menggagalkan apa pun — formulir tetap memakai paket bawaan.
+  await muatPaket();
+}
+
+// ---- daftar desa ----
+async function muatDesa() {
+  var hasil = await panggil("GET", "/admin/pelanggan");
+  daftarDesa = (hasil && hasil.pelanggan) || [];
+
+  var penuh = daftarDesa.filter(function (d) { return d.penuh; }).length;
+  var totalPerangkat = daftarDesa.reduce(function (a, d) { return a + (d.jumlahPerangkat || 0); }, 0);
+  var lewat = daftarDesa.filter(function (d) {
+    var s = statusLangganan(d.berlakuSampai);
+    return s.kunci === "akan-habis" || s.kunci === "sudah-habis";
+  }).length;
+  document.getElementById("stat-desa").textContent = daftarDesa.length;
+  document.getElementById("stat-penuh").textContent = penuh;
+  document.getElementById("stat-perangkat").textContent = totalPerangkat;
+  document.getElementById("stat-lewat").textContent = lewat;
+
+  renderDesa();
+  if (desaTerbuka) { await muatDetail(desaTerbuka); }
+}
+
+function renderDesa() {
+  var tbody = document.getElementById("baris-desa");
+  tbody.innerHTML = "";
+
+  // Saringan yang sama dipakai pengunduh CSV (lihat desaTersaring).
+  var tampil = desaTersaring();
+  document.getElementById("kosong").style.display = tampil.length ? "none" : "block";
+
+  tampil.forEach(function (d) {
+    var status = statusLangganan(d.berlakuSampai);
+    var tr = el("tr", { kelas: d.penuh ? "penuh" : "" });
+    tr.appendChild(el("td", { teks: d.kodeAktivasi, kelas: "mono" }));
+    tr.appendChild(el("td", { teks: d.namaDesa }));
+    tr.appendChild(el("td", null, el("span", {
+      teks: d.jumlahPerangkat + "/" + d.maxPerangkat,
+      kelas: "badge " + (d.penuh ? "badge-merah" : "badge-hijau")
+    })));
+    tr.appendChild(el("td", { teks: d.paket || "–" }));
+    tr.appendChild(el("td", null, el("span", { teks: status.label, kelas: "badge " + status.kelas })));
+    tr.appendChild(el("td", { teks: formatWaktu(d.berlakuSampai) }));
+    tr.appendChild(el("td", null, el("button", {
+      teks: desaTerbuka === d.kodeAktivasi ? "Tutup" : "Kelola",
+      kelas: "netral kecil",
+      on: { click: function () { bukaDesa(d.kodeAktivasi); } }
+    })));
+    tbody.appendChild(tr);
+  });
+}
+
+// ---- detail perangkat ----
+async function bukaDesa(kode) {
+  if (desaTerbuka === kode) {
+    desaTerbuka = null;
+    detail.style.display = "none";
+    renderDesa();
+    return;
+  }
+  desaTerbuka = kode;
+  renderDesa();
+  await muatDetail(kode);
+}
+
+async function muatDetail(kode) {
+  // Perangkat, riwayat pembayaran, dan data desa diambil bersamaan: semuanya
+  // bagian dari "kartu desa" yang sama, jadi operator cukup menunggu sekali.
+  await Promise.all([muatPerangkat(kode), muatPembayaran(kode), muatDataDesa(kode)]);
+}
+
+async function muatDataDesa(kode) {
+  // Formulir ubah diisi dari server (bukan dari baris tabel) supaya nilai yang
+  // tampil persis data tersimpan — daftar desa tidak memuat kontak.
+  var konf = document.getElementById("hapus-konfirmasi");
+  konf.value = "";
+  document.getElementById("tombol-hapus-desa").disabled = true;
+  document.getElementById("hapus-kode-label").textContent = kode;
+
+  var data;
+  try {
+    data = await panggil("GET", "/admin/pelanggan/" + encodeURIComponent(kode));
+  } catch (e) {
+    tampilPesan("Gagal memuat data desa: " + e.message, true);
+    return;
+  }
+  document.getElementById("ubah-nama").value = data.namaDesa || "";
+  document.getElementById("ubah-kontak").value = data.kontak || "";
+}
+
+async function muatPerangkat(kode) {
+  detail.style.display = "block";
+  document.getElementById("detail-judul").textContent = "Perangkat desa " + kode;
+
+  var tbody = document.getElementById("baris-perangkat");
+  var kosong = document.getElementById("perangkat-kosong");
+  tbody.innerHTML = "";
+  kosong.style.display = "none";
+  kosong.textContent = "Memuat…";
+  kosong.style.display = "block";
+
+  var data;
+  try {
+    data = await panggil("GET", "/admin/pelanggan/" + encodeURIComponent(kode) + "/perangkat");
+  } catch (e) {
+    kosong.textContent = "Gagal memuat perangkat: " + e.message;
+    return;
+  }
+
+  var desa = daftarDesa.filter(function (d) { return d.kodeAktivasi === kode; })[0];
+  if (desa) {
+    var input = document.getElementById("batas");
+    input.value = desa.maxPerangkat;
+    input.dataset.kode = kode;
+  }
+
+  var daftar = (data && data.perangkat) || [];
+  if (daftar.length === 0) {
+    kosong.textContent = "Belum ada perangkat tercatat.";
+    kosong.style.display = "block";
+    return;
+  }
+  kosong.style.display = "none";
+
+  daftar.forEach(function (p) {
+    var tr = el("tr");
+    tr.appendChild(el("td", { teks: p.id, kelas: "mono" }));
+    tr.appendChild(el("td", { teks: formatWaktu(p.terakhirLihat) }));
+    tr.appendChild(el("td", null, el("button", {
+      teks: "Hapus", kelas: "bahaya kecil",
+      on: { click: function () { hapusPerangkat(kode, p.id); } }
+    })));
+    tbody.appendChild(tr);
+  });
+}
+
+async function muatPembayaran(kode) {
+  var tbody = document.getElementById("baris-pembayaran");
+  var kosong = document.getElementById("pembayaran-kosong");
+  tbody.innerHTML = "";
+  kosong.textContent = "Memuat…";
+  kosong.style.display = "block";
+  pembayaranTerakhir = [];
+
+  var data;
+  try {
+    data = await panggil("GET", "/admin/pelanggan/" + encodeURIComponent(kode) + "/pembayaran");
+  } catch (e) {
+    kosong.textContent = "Gagal memuat riwayat pembayaran: " + e.message;
+    return;
+  }
+
+  var daftar = (data && data.pembayaran) || [];
+  pembayaranTerakhir = daftar;
+  if (daftar.length === 0) {
+    kosong.textContent = "Belum ada pembayaran.";
+    kosong.style.display = "block";
+    return;
+  }
+  kosong.style.display = "none";
+
+  daftar.forEach(function (b) {
+    var tr = el("tr");
+    tr.appendChild(el("td", { teks: b.orderId, kelas: "mono" }));
+    tr.appendChild(el("td", { teks: b.paket || "–" }));
+    tr.appendChild(el("td", { teks: formatRupiah(b.nominal), kelas: "nominal" }));
+    tr.appendChild(el("td", { teks: b.status }));
+    tr.appendChild(el("td", { teks: formatWaktu(b.dicatat) }));
+
+    // Catatan = referensi bukti bayar yang diketik operator saat menandai lunas
+    // (kosong pada pembayaran gateway). Dipotong supaya kolom tidak melebar;
+    // teks penuhnya muncul saat disorot.
+    var catatan = b.catatan || "–";
+    tr.appendChild(el("td", {
+      teks: catatan.length > 48 ? catatan.slice(0, 45) + "…" : catatan,
+      atribut: { title: catatan }
+    }));
+
+    // Lampiran bukti transfer (hanya ada pada pembukuan manual). Tautannya
+    // TIDAK menunjuk langsung ke endpoint /bukti: endpoint itu bertoken, dan
+    // tautan biasa tidak bisa membawa header Authorization — gambarnya diambil
+    // lewat fetch oleh bukaBukti, sama seperti kuitansi.
+    var tdBukti = el("td");
+    if (b.adaBukti) {
+      tdBukti.appendChild(el("a", {
+        teks: "Lihat bukti",
+        atribut: { href: "#", title: "Buka lampiran bukti transfer (" + (b.buktiTeks || "gambar") + ")" },
+        on: { click: function (ev) { ev.preventDefault(); bukaBukti(b.orderId); } }
+      }));
+    } else {
+      tdBukti.textContent = "–";
+    }
+    tr.appendChild(tdBukti);
+
+    // Kuitansi = bukti bayar siap cetak untuk bendahara desa. Tautan biasa
+    // tidak bisa membawa header Authorization, jadi isinya diambil lewat fetch
+    // (oleh bukaKuitansi) lalu ditulis ke tab baru.
+    var tdKuitansi = el("td");
+    tdKuitansi.appendChild(el("a", {
+      teks: "Kuitansi",
+      atribut: { href: "#", title: "Buka kuitansi siap cetak untuk pembayaran ini" },
+      on: { click: function (ev) { ev.preventDefault(); bukaKuitansi(b.orderId); } }
+    }));
+    tr.appendChild(tdKuitansi);
+    tbody.appendChild(tr);
+  });
+}
+
+// Buka kuitansi pembayaran di tab baru. HTML-nya dirender server dari catatan
+// pembayaran, bukan disusun di sini: angka yang tercetak harus angka yang
+// tersimpan, bukan hasil ketikan ulang.
+async function bukaKuitansi(orderId) {
+  if (!desaTerbuka) return;
+
+  var jendela = window.open("", "_blank");
+  if (!jendela) {
+    tampilPesan("Peramban memblokir tab baru. Izinkan pop-up untuk halaman ini lalu coba lagi.", true);
+    return;
+  }
+
+  // Kerangka dulu supaya tab tidak tampak kosong selama menunggu jawaban.
+  jendela.document.write("<!doctype html><title>Kuitansi…</title><body style=\"font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#46564e\">Memuat kuitansi…</body>");
+  jendela.document.close();
+
+  try {
+    var resp = await fetch("/admin/pelanggan/" + encodeURIComponent(desaTerbuka) +
+                           "/pembayaran/" + encodeURIComponent(orderId) + "/kuitansi",
+                           { headers: { "Authorization": "Bearer " + token, "X-Admin-Operator": operatorId } });
+    if (resp.status === 401) { keluar(); jendela.close(); return; }
+    if (!resp.ok) throw new Error("Kuitansi ditolak (HTTP " + resp.status + ").");
+
+    jendela.document.open();
+    jendela.document.write(await resp.text());
+    jendela.document.close();
+  } catch (e) {
+    jendela.document.open();
+    jendela.document.write("<!doctype html><title>Kuitansi gagal</title>");
+    jendela.document.close();
+    jendela.document.body.textContent = e.message;
+  }
+}
+
+// Buka lampiran bukti transfer di tab baru. Sama seperti kuitansi: gambarnya
+// diambil lewat fetch (header Authorization tidak bisa dibawa tautan biasa),
+// lalu blob-nya ditampilkan sebagai gambar di tab itu.
+async function bukaBukti(orderId) {
+  if (!desaTerbuka) return;
+
+  var jendela = window.open("", "_blank");
+  if (!jendela) {
+    tampilPesan("Peramban memblokir tab baru. Izinkan pop-up untuk halaman ini lalu coba lagi.", true);
+    return;
+  }
+
+  jendela.document.write("<!doctype html><title>Bukti…</title><body style=\"font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#46564e\">Memuat bukti…</body>");
+  jendela.document.close();
+
+  try {
+    var resp = await fetch("/admin/pelanggan/" + encodeURIComponent(desaTerbuka) +
+                           "/pembayaran/" + encodeURIComponent(orderId) + "/bukti",
+                           { headers: { "Authorization": "Bearer " + token, "X-Admin-Operator": operatorId } });
+    if (resp.status === 401) { keluar(); jendela.close(); return; }
+    if (!resp.ok) throw new Error("Bukti tidak bisa dibuka (HTTP " + resp.status + ").");
+
+    var alamat = URL.createObjectURL(await resp.blob());
+    jendela.document.open();
+    jendela.document.write("<!doctype html><title>Bukti transfer</title>" +
+      "<body style=\"margin:0;background:#f1f4f2;display:flex;justify-content:center;padding:16px\">" +
+      "<img alt=\"Bukti transfer\" style=\"max-width:100%;height:auto;border-radius:8px;" +
+      "box-shadow:0 6px 28px rgba(0,0,0,.22);background:#fff\" src=\"" + alamat + "\">");
+    jendela.document.close();
+  } catch (e) {
+    jendela.document.open();
+    jendela.document.write("<!doctype html><title>Bukti gagal</title>");
+    jendela.document.close();
+    jendela.document.body.textContent = e.message;
+  }
+}
+
+// Bangun isi CSV dari riwayat pembayaran. Dipisah dari unduhCsv supaya bisa
+// diuji tanpa memicu unduhan. Nilai yang mengandung koma/kutip/baris baru
+// dikutip; kutip ganda menjadi "".
+function csvPembayaran(daftar) {
+  // Urutan kolom harus sama dengan CsvLaporan.Pembayaran di server
+  // (order_id, paket, nominal, status, dicatat, catatan, bukti) supaya laporan
+  // dari peramban dan dari CLI tidak berbeda bentuk. Kolom bukti hanya memuat
+  // keterangan jenis & ukuran lampirannya, bukan gambarnya.
+  var baris = [["order_id", "paket", "nominal", "status", "dicatat", "catatan", "bukti"]];
+  daftar.forEach(function (b) {
+    baris.push([b.orderId, b.paket || "", b.nominal, b.status, b.dicatat, b.catatan || "",
+                b.buktiTeks || ""]);
+  });
+  return jadikanCsv(baris);
+}
+
+// Unduh riwayat pembayaran desa yang sedang dibuka sebagai CSV. Dibangun di
+// peramban dari data yang sudah dimuat — tidak ada endpoint unduh terpisah.
+function unduhCsv() {
+  if (!desaTerbuka) { tampilPesan("Pilih satu desa untuk mengunduh pembayarannya.", true); return; }
+  if (pembayaranTerakhir.length === 0) {
+    tampilPesan("Belum ada pembayaran untuk diunduh.", true);
+    return;
+  }
+  unduhTeks("pembayaran-" + desaTerbuka + ".csv", csvPembayaran(pembayaranTerakhir));
+  tampilPesan("Riwayat pembayaran " + desaTerbuka + " diunduh (" +
+    pembayaranTerakhir.length + " baris).", false);
+}
+
+// Saring hanya desa yang cocok dengan saringan & kotak pencarian yang aktif,
+// supaya CSV selalu berisi apa yang sedang dilihat operator. Fungsi inilah yang
+// dipakai tabel DAN pengunduh CSV — kalau keduanya punya aturan sendiri, berkas
+// unduhan bisa berbeda dari tampilan tanpa ada yang sadar.
+function desaTersaring() {
+  var q = document.getElementById("cari").value.trim().toLowerCase();
+  var saring = document.getElementById("saring").value;
+  return daftarDesa.filter(function (d) {
+    var status = statusLangganan(d.berlakuSampai);
+    if (saring !== "semua" && status.kunci !== saring) return false;
+    return !q || (d.kodeAktivasi + " " + d.namaDesa).toLowerCase().indexOf(q) >= 0;
+  });
+}
+
+// Unduh seluruh daftar desa (ikut status langganan) — bahan laporan berkala,
+// mis. desa mana yang harus disegarkan menjelang jatuh tempo.
+function csvSemuaDesa(daftar) {
+  var baris = [["kode_aktivasi", "nama_desa", "paket", "max_perangkat", "jumlah_perangkat",
+    "berlaku_sampai", "status"]];
+  daftar.forEach(function (d) {
+    baris.push([d.kodeAktivasi, d.namaDesa, d.paket || "", d.maxPerangkat,
+      d.jumlahPerangkat || 0, d.berlakuSampai || "", statusLangganan(d.berlakuSampai).label]);
+  });
+  return jadikanCsv(baris);
+}
+
+function unduhCsvDesa() {
+  var tampil = desaTersaring();
+  if (tampil.length === 0) { tampilPesan("Tidak ada desa untuk diunduh.", true); return; }
+  unduhTeks("daftar-desa-" + new Date().toISOString().slice(0, 10) + ".csv",
+    csvSemuaDesa(tampil));
+  tampilPesan("Daftar " + tampil.length + " desa diunduh.", false);
+}
+
+async function hapusPerangkat(kode, id) {
+  if (!window.confirm("Hapus perangkat " + id + " dari desa " + kode + "?\n\n" +
+        "Perangkat akan tercatat lagi saat komputer itu melakukan aktivasi.")) return;
+  try {
+    var hasil = await panggil("DELETE",
+      "/admin/pelanggan/" + encodeURIComponent(kode) + "/perangkat/" + encodeURIComponent(id));
+    tampilPesan(hasil.pesan + " (dihapus: " + hasil.dihapus + ")", false);
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  }
+}
+
+async function resetPerangkat(kode) {
+  if (!window.confirm("Reset SEMUA perangkat desa " + kode + "?\n\n" +
+        "Semua komputer harus mengaktivasi ulang; komputer yang tidak aktif " +
+        "tidak akan otomatis terdaftar lagi.")) return;
+  try {
+    var hasil = await panggil("DELETE", "/admin/pelanggan/" + encodeURIComponent(kode) + "/perangkat");
+    tampilPesan(hasil.pesan + " (dihapus: " + hasil.dihapus + ")", false);
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  }
+}
+
+async function simpanBatas(kode) {
+  var input = document.getElementById("batas");
+  var batas = parseInt(input.value, 10);
+  if (isNaN(batas) || batas < 1 || batas > 100) {
+    tampilPesan("Batas perangkat harus antara 1 dan 100.", true);
+    return;
+  }
+  try {
+    var hasil = await panggil("POST", "/admin/pelanggan/" + encodeURIComponent(kode) + "/batas", { batas: batas });
+    tampilPesan("Batas perangkat desa " + hasil.kode + " sekarang " + hasil.maxPerangkat + ".", false);
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  }
+}
+
+async function simpanDataDesa(kode) {
+  var nama = document.getElementById("ubah-nama").value.trim();
+  var kontak = document.getElementById("ubah-kontak").value.trim();
+  if (!nama) { tampilPesan("Nama desa wajib diisi.", true); document.getElementById("ubah-nama").focus(); return; }
+
+  try {
+    var hasil = await panggil("PUT", "/admin/pelanggan/" + encodeURIComponent(kode),
+      { namaDesa: nama, kontak: kontak });
+    tampilPesan(hasil.pesan + " (" + kode + ")", false);
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  }
+}
+
+async function hapusDesa(kode) {
+  var konf = document.getElementById("hapus-konfirmasi").value.trim();
+  if (konf !== kode) { tampilPesan("Ketik kode desa persis untuk konfirmasi.", true); return; }
+  if (!window.confirm("Hapus desa " + kode + " beserta langganan & perangkatnya?\n\n" +
+        "Tindakan ini tidak bisa dibatalkan. Ditolak bila desa masih punya " +
+        "tagihan atau pembayaran.")) return;
+
+  try {
+    // Kode yang diketik juga menjadi ?konfirmasi= — server hanya melanjutkan
+    // penghapusan paksa bila keduanya sama persis.
+    var hasil = await panggil("DELETE",
+      "/admin/pelanggan/" + encodeURIComponent(kode) + "?konfirmasi=" + encodeURIComponent(konf));
+    tampilPesan(hasil.pesan, false);
+    desaTerbuka = null;
+    detail.style.display = "none";
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  }
+}
+
+async function rekonsiliasi() {
+  if (!window.confirm("Jalankan rekonsiliasi pembayaran sekarang?")) return;
+  tampilPesan("Menjalankan rekonsiliasi…", false);
+  try {
+    var h = await panggil("POST", "/admin/rekonsiliasi");
+    tampilPesan("Rekonsiliasi: diperiksa " + h.diperiksa + ", diselesaikan " + h.diselesaikan +
+      ", sudah " + h.sudahDiselesaikan + ", belum bayar " + h.belumBayar +
+      ", perlu diperiksa " + h.perluDiperiksa + ", tidak pasti " + h.tidakPasti + ".", false);
+  } catch (e) {
+    tampilPesan(e.message, true);
+  }
+}
+
+// ---- pendaftaran desa ----
+async function daftarDesaBaru() {
+  var kode = document.getElementById("daf-kode").value.trim();
+  var nama = document.getElementById("daf-nama").value.trim();
+  var kontak = document.getElementById("daf-kontak").value.trim();
+  var batas = parseInt(document.getElementById("daf-batas").value, 10);
+
+  if (!kode) { tampilPesan("Kode aktivasi wajib diisi.", true); document.getElementById("daf-kode").focus(); return; }
+  if (!nama) { tampilPesan("Nama desa wajib diisi.", true); document.getElementById("daf-nama").focus(); return; }
+  if (isNaN(batas) || batas < 1 || batas > 100) {
+    tampilPesan("Batas perangkat harus antara 1 dan 100.", true); return;
+  }
+
+  var tombol = document.getElementById("tombol-daftar");
+  tombol.disabled = true;
+  try {
+    var hasil = await panggil("POST", "/admin/pelanggan", {
+      kodeAktivasi: kode, namaDesa: nama, kontak: kontak, maxPerangkat: batas
+    });
+    tampilPesan("Desa '" + hasil.namaDesa + "' (" + hasil.kodeAktivasi + ") terdaftar. " +
+      "Langganan aktif setelah pembayaran pertama masuk.", false);
+    document.getElementById("daf-kode").value = "";
+    document.getElementById("daf-nama").value = "";
+    document.getElementById("daf-kontak").value = "";
+    document.getElementById("daf-batas").value = "2";
+    document.getElementById("kartu-daftar").open = false;
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  } finally {
+    tombol.disabled = false;
+  }
+}
+
+// ---- pendaftaran dengan kode otomatis ----
+// Kode dibuat server (GeneratorKodeAktivasi, SUDES-XXXX-XXXX) supaya unik
+// terhadap database dan tanpa huruf rancu — operator tidak mengarang kode.
+async function daftarDenganKodeOtomatis() {
+  var nama = document.getElementById("daf-nama").value.trim();
+  var kontak = document.getElementById("daf-kontak").value.trim();
+  var batas = parseInt(document.getElementById("daf-batas").value, 10);
+
+  if (!nama) {
+    tampilPesan("Isi nama desa terlebih dahulu — kode dibuat server setelah nama desa ada.", true);
+    document.getElementById("daf-nama").focus();
+    return;
+  }
+  if (isNaN(batas) || batas < 1 || batas > 100) {
+    tampilPesan("Batas perangkat harus antara 1 dan 100.", true); return;
+  }
+
+  var tombol = document.getElementById("tombol-daftar-otomatis");
+  tombol.disabled = true;
+  try {
+    var hasil = await panggil("POST", "/admin/kode-aktivasi", {
+      namaDesa: nama, kontak: kontak, maxPerangkat: batas
+    });
+    // Kode ditaruh di input read-only, bukan hanya teks pesan: operator akan
+    // menyalinnya ke pesan WhatsApp untuk desa, jadi ia harus mudah dipilih.
+    document.getElementById("daftar-otomatis-kode").value = hasil.kodeAktivasi;
+    document.getElementById("daftar-otomatis-hasil").style.display = "";
+    tampilPesan("Desa '" + hasil.namaDesa + "' terdaftar dengan kode " + hasil.kodeAktivasi +
+      " — kirim kode itu ke desa, lalu tandai lunas pembayarannya lewat Aktivasi Manual.", false);
+    document.getElementById("daf-nama").value = "";
+    document.getElementById("daf-kontak").value = "";
+    document.getElementById("daf-batas").value = "2";
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  } finally {
+    tombol.disabled = false;
+  }
+}
+
+// ---- aktivasi manual tanpa membuka desa ----
+// Satu endpoint dengan tandai lunas di detail desa: aturan pembukuannya
+// (paket → hari, idempotensi, perpanjangan dari sisa masa aktif) tidak boleh
+// punya salinan kedua, jadi di sini hanya membungkus panggilan yang sama.
+async function aktivasiManual() {
+  var kode = document.getElementById("akt-kode").value.trim();
+  var paket = document.getElementById("akt-paket").value;
+  var nominal = parseInt(document.getElementById("akt-nominal").value, 10);
+  var catatan = document.getElementById("akt-catatan").value.trim();
+
+  if (!kode) { tampilPesan("Isi kode aktivasi desa.", true); document.getElementById("akt-kode").focus(); return; }
+  if (!paket) { tampilPesan("Pilih paket terlebih dahulu.", true); return; }
+  if (!(nominal > 0)) {
+    tampilPesan("Isi nominal yang benar-benar diterima.", true);
+    document.getElementById("akt-nominal").focus();
+    return;
+  }
+
+  if (!confirm("Aktivasi manual desa " + kode + " LUNAS untuk paket " + paket +
+               " (" + formatRupiah(nominal) + ")?\n\nMasa aktifnya langsung bertambah — " +
+               "pastikan dananya sudah masuk.")) return;
+
+  var tombol = document.getElementById("tombol-aktivasi-manual");
+  tombol.disabled = true;
+  try {
+    var hasil = await panggil("POST", "/admin/pelanggan/" + encodeURIComponent(kode) + "/tandai-lunas",
+      { paket: paket, nominal: nominal, catatan: catatan || null });
+    var hasilEl = document.getElementById("aktivasi-manual-hasil");
+    hasilEl.textContent = "✓ Desa " + (hasil.kode || kode) + " — order " + hasil.orderId +
+      ", " + formatRupiah(hasil.nominal) + ", berlaku s.d. " + formatWaktu(hasil.berlakuSampai) +
+      ". Kirim kabar ke desa lewat WhatsApp bahwa langganannya sudah aktif.";
+    hasilEl.style.display = "";
+    tampilPesan("Aktivasi manual berhasil — " + (hasil.kode || kode) + " berlaku s.d. " +
+      formatWaktu(hasil.berlakuSampai) + ".", false);
+    document.getElementById("akt-kode").value = "";
+    document.getElementById("akt-catatan").value = "";
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  } finally {
+    tombol.disabled = false;
+  }
+}
+
+// ---- pengumuman broadcast ----
+var daftarPengumuman = [];
+
+// datetime-local peramban berjalan di waktu LOKAL operator; dikirim sebagai
+// ISO-8601 UTC supaya kolom timestamptz di Supabase tidak menyimpang.
+function bacaDatetime(id) {
+  var raw = document.getElementById(id).value;
+  if (!raw) return null;
+  var d = new Date(raw);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function statusPengumuman(p) {
+  // aktif=false adalah hak veto operator: baris tetap terdaftar (dan bisa
+  // dihapus) tetapi tidak pernah tampil di aplikasi desa, apa pun jendelanya.
+  if (p.aktif === false) return "Nonaktif";
+  var now = Date.now();
+  var mulai = p.mulai ? Date.parse(p.mulai) : null;
+  var sampai = p.sampai ? Date.parse(p.sampai) : null;
+  if (mulai && mulai > now) return "Belum mulai";
+  if (sampai && sampai <= now) return "Sudah lewat";
+  return "Tampil";
+}
+
+function renderPengumuman() {
+  var baris = document.getElementById("baris-pengumuman");
+  baris.innerHTML = "";
+  document.getElementById("kosong-pengumuman").style.display =
+    daftarPengumuman.length ? "none" : "block";
+
+  daftarPengumuman.forEach(function (p) {
+    var tr = document.createElement("tr");
+    var tds = [
+      p.judul,
+      p.jenis === "peringatan" ? "Peringatan" : "Info",
+      (p.dibuat || "").replace("T", " ").slice(0, 16) + " UTC",
+      statusPengumuman(p),
+      null
+    ];
+    tds.slice(0, 4).forEach(function (teks) {
+      var td = document.createElement("td");
+      td.textContent = teks;
+      tr.appendChild(td);
+    });
+    var tdAksi = document.createElement("td");
+    var btn = document.createElement("button");
+    btn.className = "bahaya kecil";
+    btn.textContent = "Hapus";
+    btn.addEventListener("click", function () { hapusPengumuman(p.id, p.judul); });
+    tdAksi.appendChild(btn);
+    tr.appendChild(tdAksi);
+    baris.appendChild(tr);
+  });
+}
+
+async function muatPengumuman() {
+  var hasil = await panggil("GET", "/admin/pengumuman");
+  daftarPengumuman = (hasil && hasil.pengumuman) || [];
+  renderPengumuman();
+}
+
+async function terbitkanPengumuman() {
+  var judul = document.getElementById("pgm-judul").value.trim();
+  var isi = document.getElementById("pgm-isi").value.trim();
+  var jenis = document.getElementById("pgm-jenis").value;
+  var mulai = bacaDatetime("pgm-mulai");
+  var sampai = bacaDatetime("pgm-sampai");
+
+  if (!judul) { tampilPesan("Judul wajib diisi.", true); document.getElementById("pgm-judul").focus(); return; }
+
+  var tombol = document.getElementById("tombol-terbitkan");
+  tombol.disabled = true;
+  try {
+    var hasil = await panggil("POST", "/admin/pengumuman", {
+      judul: judul, isi: isi, jenis: jenis, mulai: mulai, sampai: sampai
+    });
+    tampilPesan(hasil.pesan || "Pengumuman terbit.", false);
+    document.getElementById("pgm-judul").value = "";
+    document.getElementById("pgm-isi").value = "";
+    document.getElementById("pgm-mulai").value = "";
+    document.getElementById("pgm-sampai").value = "";
+    await muatPengumuman();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  } finally {
+    tombol.disabled = false;
+  }
+}
+
+async function hapusPengumuman(id, judul) {
+  if (!confirm("Hapus pengumuman \"" + judul + "\" permanen?")) return;
+  try {
+    await panggil("DELETE", "/admin/pengumuman/" + encodeURIComponent(id));
+    tampilPesan("Pengumuman dihapus.", false);
+    await muatPengumuman();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  }
+}
+
+// ---- pembukuan manual (QRIS statis / transfer) ----
+// Katalog paket dimuat dari endpoint publik /paket supaya operator melihat
+// harga & hari yang SAMA dengan yang dipakai server. Bila katalog tak
+// terjangkau, paket bawaan tetap disediakan: server yang menentukan angka
+// sebenarnya, formulir ini hanya memilih kode paket.
+var paketKatalog = [];
+
+// Satu penyusun opsi untuk SEMUA select paket (detail desa dan aktivasi
+// manual): daftar paket tidak boleh berbeda antara dua formulir pembukuan.
+function isiOpsiPaket(idPilih) {
+  var pilih = document.getElementById(idPilih);
+  pilih.innerHTML = "";
+  if (!paketKatalog.length) {
+    pilih.appendChild(el("option", { atribut: { value: "bulanan" }, teks: "Bulanan (paket bawaan)" }));
+  } else {
+    paketKatalog.forEach(function (p) {
+      pilih.appendChild(el("option", {
+        atribut: { value: p.kode },
+        teks: p.nama + " — " + formatRupiah(p.harga) + " / " + p.hari + " hari"
+      }));
+    });
+  }
+}
+
+async function muatPaket() {
+  try {
+    var hasil = await panggil("GET", "/paket");
+    paketKatalog = Array.isArray(hasil) ? hasil : [];
+  } catch (e) {
+    paketKatalog = [];
+  }
+
+  isiOpsiPaket("lunas-paket");
+  isiOpsiPaket("akt-paket");
+  isiNominalPaket();
+  isiNominalAktivasi();
+}
+
+// Nominal mengikuti paket terpilih supaya operator tidak perlu mengingat harga,
+// tetapi tetap bisa diubah: yang dicatat adalah uang yang BENAR-BENAR diterima.
+function isiNominalPaket() {
+  var kode = document.getElementById("lunas-paket").value;
+  var paket = paketKatalog.filter(function (p) { return p.kode === kode; })[0];
+  var input = document.getElementById("lunas-nominal");
+  if (paket) input.value = paket.harga;
+}
+
+// Pasangan isiNominalPaket untuk formulir Aktivasi Manual — aturannya sama,
+// hanya kolomnya yang berbeda.
+function isiNominalAktivasi() {
+  var kode = document.getElementById("akt-paket").value;
+  var paket = paketKatalog.filter(function (p) { return p.kode === kode; })[0];
+  var input = document.getElementById("akt-nominal");
+  if (paket) input.value = paket.harga;
+}
+
+// ---- lampiran bukti transfer (pembukuan manual) ----
+// Server hanya menerima gambar <= 2 MB dan jenisnya dinilai dari ISI berkas
+// (BuktiTransfer.cs). Foto dari ponsel hampir selalu lebih besar dari itu, jadi
+// gambar besar dikecilkan DULU di sini (maks 1600 px, JPEG) — kalau tidak,
+// operator akan selalu ditolak hanya karena kameranya 12 MP.
+var BUKTI_MAKS = 2 * 1024 * 1024;
+var BUKTI_SISI_MAKS = 1600;
+var BUKTI_MUAT_SEKARANG = 1.5 * 1024 * 1024;
+
+function jenisBuktiDiizinkan(tipe) {
+  return tipe === "image/jpeg" || tipe === "image/png" || tipe === "image/webp";
+}
+
+function ukuranTeks(byte) {
+  if (byte >= 1024 * 1024) return (byte / 1024 / 1024).toFixed(1).replace(".", ",") + " MB";
+  return Math.max(1, Math.round(byte / 1024)) + " KB";
+}
+
+// Ukuran isi data URL tanpa harus mengubahnya jadi Blob lebih dulu.
+function ukuranDariDataUrl(dataUrl) {
+  var isi = (dataUrl.split(",")[1] || "");
+  var padding = (isi.match(/=+$/) || [""])[0].length;
+  return Math.floor(isi.length * 3 / 4) - padding;
+}
+
+function bacaDataUrl(berkas) {
+  return new Promise(function (selesai, gagal) {
+    var pembaca = new FileReader();
+    pembaca.onload = function () { selesai(String(pembaca.result)); };
+    pembaca.onerror = function () { gagal(new Error("Berkas tidak bisa dibaca peramban.")); };
+    pembaca.readAsDataURL(berkas);
+  });
+}
+
+function perkecilGambar(dataUrl, sisiMaks) {
+  return new Promise(function (selesai, gagal) {
+    var gambar = new Image();
+    gambar.onload = function () {
+      var skala = Math.min(1, sisiMaks / Math.max(gambar.width, gambar.height));
+      var kanvas = document.createElement("canvas");
+      kanvas.width = Math.max(1, Math.round(gambar.width * skala));
+      kanvas.height = Math.max(1, Math.round(gambar.height * skala));
+      kanvas.getContext("2d").drawImage(gambar, 0, 0, kanvas.width, kanvas.height);
+      var hasil = kanvas.toDataURL("image/jpeg", 0.85);
+      selesai({ dataUrl: hasil, ukuran: ukuranDariDataUrl(hasil) });
+    };
+    gambar.onerror = function () { gagal(new Error("Gambar tidak bisa dibaca peramban.")); };
+    gambar.src = dataUrl;
+  });
+}
+
+async function pilihBukti() {
+  var input = document.getElementById("lunas-bukti");
+  var berkas = input.files && input.files[0];
+  bersihkanPesan();
+
+  if (!berkas) { bersihkanBukti(); return; }
+
+  try {
+    var dataUrl = await bacaDataUrl(berkas);
+    var ukuran = ukuranDariDataUrl(dataUrl);
+    var tipe = berkas.type;
+
+    // Yang sudah kecil & jenisnya dikenal tidak perlu digambar ulang: hasil
+    // encode ulang hanya menambah ketidakjelasan pada bukti transfer.
+    if (!(jenisBuktiDiizinkan(tipe) && ukuran <= BUKTI_MUAT_SEKARANG)) {
+      var kecil = await perkecilGambar(dataUrl, BUKTI_SISI_MAKS);
+      dataUrl = kecil.dataUrl;
+      ukuran = kecil.ukuran;
+      tipe = "image/jpeg";
+    }
+
+    if (!jenisBuktiDiizinkan(tipe)) {
+      tampilPesan("Bukti harus gambar JPEG, PNG, atau WEBP.", true);
+      bersihkanBukti();
+      return;
+    }
+
+    if (ukuran > BUKTI_MAKS) {
+      tampilPesan("Bukti masih " + ukuranTeks(ukuran) + " setelah dikecilkan — maksimum " +
+                  ukuranTeks(BUKTI_MAKS) + ". Pilih gambar lain atau potong dulu.", true);
+      bersihkanBukti();
+      return;
+    }
+
+    buktiTerpilih = { dataUrl: dataUrl, ukuran: ukuran, tipe: tipe, nama: berkas.name };
+    document.getElementById("bukti-gambar").src = dataUrl;
+    document.getElementById("bukti-keterangan").textContent =
+      berkas.name + " — " + ukuranTeks(ukuran) + " · ikut terkirim saat menekan Tandai lunas";
+    document.getElementById("bukti-pratinjau").style.display = "flex";
+    document.getElementById("tombol-hapus-bukti").style.display = "inline-block";
+  } catch (e) {
+    tampilPesan(e.message, true);
+    bersihkanBukti();
+  }
+}
+
+function bersihkanBukti() {
+  buktiTerpilih = null;
+  var input = document.getElementById("lunas-bukti");
+  if (input) input.value = "";
+  document.getElementById("bukti-gambar").removeAttribute("src");
+  document.getElementById("bukti-keterangan").textContent = "";
+  document.getElementById("bukti-pratinjau").style.display = "none";
+  document.getElementById("tombol-hapus-bukti").style.display = "none";
+}
+
+async function tandaiLunas() {
+  if (!desaTerbuka) return;
+
+  var paket = document.getElementById("lunas-paket").value;
+  var nominal = parseInt(document.getElementById("lunas-nominal").value, 10);
+  var catatan = document.getElementById("lunas-catatan").value.trim();
+
+  if (!paket) { tampilPesan("Pilih paket terlebih dahulu.", true); return; }
+  if (!(nominal > 0)) {
+    tampilPesan("Isi nominal yang benar-benar diterima.", true);
+    document.getElementById("lunas-nominal").focus();
+    return;
+  }
+
+  if (!confirm("Tandai desa " + desaTerbuka + " LUNAS untuk paket " + paket +
+               " (" + formatRupiah(nominal) + ")?\n\nMasa aktif desa ini langsung bertambah — " +
+               "pastikan dananya sudah masuk.")) return;
+
+  var badan = { paket: paket, nominal: nominal, catatan: catatan || null };
+  if (buktiTerpilih) {
+    // Data URL apa adanya: server menilai jenisnya dari ISI berkas, bukan dari
+    // kata pengirim, jadi awalan data: tidak perlu dibersihkan di sini.
+    badan.buktiBase64 = buktiTerpilih.dataUrl;
+    badan.buktiNama = buktiTerpilih.nama || null;
+  }
+
+  var tombol = document.getElementById("tombol-tandai-lunas");
+  tombol.disabled = true;
+  try {
+    var hasil = await panggil("POST", "/admin/pelanggan/" + encodeURIComponent(desaTerbuka) + "/tandai-lunas",
+      badan);
+    // Sebut kuitansi di sini: saat menandai lunas, operator biasanya langsung
+    // perlu bukti bayar untuk dikirim ke bendahara desa. Tautannya ada di baris
+    // riwayat yang baru dimuat ulang di bawah.
+    tampilPesan(hasil.pesan + " Order " + hasil.orderId + " — berlaku s.d. " +
+      formatWaktu(hasil.berlakuSampai) +
+      ". Kuitansi siap dicetak lewat kolom Kuitansi di riwayat pembayaran.", false);
+    document.getElementById("lunas-catatan").value = "";
+    // Lampiran hanya sah untuk satu pembayaran: setelah tersimpan, inputnya
+    // dikosongkan supaya pembukuan berikutnya tidak ikut membawa bukti lama.
+    bersihkanBukti();
+    // muatDesa() juga menyegarkan detail desa yang sedang terbuka (status
+    // langganan + riwayat pembayaran) karena desaTerbuka masih diisi.
+    await muatDesa();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  } finally {
+    tombol.disabled = false;
+  }
+}
+
+// ---- pemasangan ----
+document.getElementById("tombol-masuk").addEventListener("click", masuk);
+document.getElementById("token").addEventListener("keydown", function (ev) {
+  if (ev.key === "Enter") masuk();
+});
+document.getElementById("operator-id").addEventListener("keydown", function (ev) {
+  if (ev.key === "Enter") masuk();
+});
+document.getElementById("tombol-keluar").addEventListener("click", keluar);
+document.getElementById("tombol-muat").addEventListener("click", function () {
+  bersihkanPesan();
+  mulai();
+});
+document.getElementById("tombol-rekon").addEventListener("click", rekonsiliasi);
+document.getElementById("cari").addEventListener("input", renderDesa);
+document.getElementById("tombol-tutup-detail").addEventListener("click", function () {
+  desaTerbuka = null;
+  detail.style.display = "none";
+  renderDesa();
+});
+document.getElementById("tombol-simpan-batas").addEventListener("click", function () {
+  if (desaTerbuka) simpanBatas(desaTerbuka);
+});
+document.getElementById("tombol-reset").addEventListener("click", function () {
+  if (desaTerbuka) resetPerangkat(desaTerbuka);
+});
+document.getElementById("tombol-csv").addEventListener("click", unduhCsv);
+document.getElementById("tombol-csv-desa").addEventListener("click", unduhCsvDesa);
+document.getElementById("saring").addEventListener("change", renderDesa);
+document.getElementById("tombol-simpan-desa").addEventListener("click", function () {
+  if (desaTerbuka) simpanDataDesa(desaTerbuka);
+});
+["ubah-nama", "ubah-kontak"].forEach(function (id) {
+  document.getElementById(id).addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" && desaTerbuka) simpanDataDesa(desaTerbuka);
+  });
+});
+// Tombol hapus desa baru aktif setelah kode desa diketik persis — pengaman
+// sederhana agar tidak terhapus karena salah klik.
+(function () {
+  var konf = document.getElementById("hapus-konfirmasi");
+  var tombol = document.getElementById("tombol-hapus-desa");
+  konf.addEventListener("input", function () {
+    tombol.disabled = !desaTerbuka || konf.value.trim() !== desaTerbuka;
+  });
+  konf.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" && desaTerbuka && konf.value.trim() === desaTerbuka) hapusDesa(desaTerbuka);
+  });
+  tombol.addEventListener("click", function () {
+    if (desaTerbuka) hapusDesa(desaTerbuka);
+  });
+})();
+document.getElementById("tombol-daftar").addEventListener("click", daftarDesaBaru);
+document.getElementById("tombol-daftar-otomatis").addEventListener("click", daftarDenganKodeOtomatis);
+// Enter di kolom pendaftaran: kode terisi = daftar manual, kode kosong = buat
+// otomatis — mengikuti tombol mana yang menjadi aksi utama keadaan itu.
+["daf-kode", "daf-nama", "daf-kontak", "daf-batas"].forEach(function (id) {
+  document.getElementById(id).addEventListener("keydown", function (ev) {
+    if (ev.key !== "Enter") return;
+    if (document.getElementById("daf-kode").value.trim()) daftarDesaBaru();
+    else daftarDenganKodeOtomatis();
+  });
+});
+// Aktivasi manual: Enter di kode/nominal = aktivasi (Ctrl+Enter untuk catatan),
+// dan ganti paket langsung mengisi nominal harga katalognya.
+document.getElementById("tombol-aktivasi-manual").addEventListener("click", aktivasiManual);
+document.getElementById("akt-paket").addEventListener("change", isiNominalAktivasi);
+["akt-kode", "akt-nominal"].forEach(function (id) {
+  document.getElementById(id).addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter") aktivasiManual();
+  });
+});
+document.getElementById("akt-catatan").addEventListener("keydown", function (ev) {
+  if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) aktivasiManual();
+});
+document.getElementById("tombol-terbitkan").addEventListener("click", terbitkanPengumuman);
+document.getElementById("tombol-muat-pengumuman").addEventListener("click", function () {
+  bersihkanPesan();
+  muatPengumuman().catch(function (e) { tampilPesan(e.message, true); });
+});
+// Ctrl+Enter di formulir pengumuman = Terbitkan, seperti kolom pendaftaran.
+["pgm-judul", "pgm-isi"].forEach(function (id) {
+  document.getElementById(id).addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) terbitkanPengumuman();
+  });
+});
+// Pembukuan manual: Enter di kolomnya = Tandai lunas (Ctrl+Enter untuk catatan).
+document.getElementById("lunas-paket").addEventListener("change", isiNominalPaket);
+document.getElementById("tombol-tandai-lunas").addEventListener("click", tandaiLunas);
+["lunas-paket", "lunas-nominal"].forEach(function (id) {
+  document.getElementById(id).addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter") tandaiLunas();
+  });
+});
+document.getElementById("lunas-catatan").addEventListener("keydown", function (ev) {
+  if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) tandaiLunas();
+});
+// Lampiran bukti: memilih berkas langsung menyiapkan pratinjaunya; tombol
+// hapus hanya tampil setelah ada lampiran, supaya formnya tetap sederhana.
+document.getElementById("lunas-bukti").addEventListener("change", function () {
+  pilihBukti().catch(function (e) { tampilPesan(e.message, true); bersihkanBukti(); });
+});
+document.getElementById("tombol-hapus-bukti").addEventListener("click", function () {
+  bersihkanBukti();
+  tampilPesan("Lampiran bukti dibatalkan.", false);
+});
+
+// Browser biasa boleh memulihkan sesi satu tab. Mode tertanam tidak pernah
+// membaca/menulis kredensial ke storage browser; token hanya ada di memori JS.
+if (SUDES_ADMIN_TERTANAM) {
+  sessionStorage.removeItem(KUNCI_OPERATOR);
+  sessionStorage.removeItem(KUNCI_TOKEN);
+  document.getElementById("catatan-sesi").textContent =
+    "ID operator dan token hanya berada di memori sesi ini, tidak disimpan oleh WebView2, dan dibersihkan saat halaman ditutup.";
+} else {
+  operatorId = sessionStorage.getItem(KUNCI_OPERATOR) || "";
+  token = sessionStorage.getItem(KUNCI_TOKEN) || "";
+}
+mulai();
+</script>
+</body>
+</html>

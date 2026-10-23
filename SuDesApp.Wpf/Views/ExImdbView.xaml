@@ -1,0 +1,823 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.ExImdbView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+    <!--
+        Halaman Cadangkan & Pulihkan.
+        Pola nav kiri sama dengan Tentang & Panduan WhatsApp, tetapi isinya
+        dipecah menjadi empat bagian: Database Aktif (ringkasan + aksi cepat),
+        Cadangan (riwayat .db di folder database), Ekspor, dan Impor.
+        Kabar hasil aksi tampil di ATAS konten, sehingga tetap terlihat
+        walau aksi dijalankan dari bagian mana pun.
+    -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <Style x:Key="JudulKartu" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="IsiKartu" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="18"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+
+        <Style x:Key="KeteranganKecil" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+
+        <!-- Kartu satu berkas cadangan. Garis tepi ikut menyala saat kursor
+             melintas supaya daftar terasa bisa diklik, bukan teks statis. -->
+        <Style x:Key="KartuCadangan" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+            <Setter Property="Padding" Value="14,12"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Chip kecil untuk daftar isi cadangan. -->
+        <Style x:Key="ChipIsi" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="9,4"/>
+            <Setter Property="Margin" Value="0,0,6,6"/>
+        </Style>
+
+        <Style x:Key="ChipIsiText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+        </Style>
+
+        <!-- Nomor langkah impor: lingkaran kecil agar urutan terbaca sekilas. -->
+        <Style x:Key="LangkahNomor" TargetType="Border">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,7,0"/>
+        </Style>
+
+        <Style x:Key="LangkahTeks" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="BadgeJenis" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="7,2"/>
+            <Setter Property="Margin" Value="8,1,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Jenis}" Value="Otomatis sebelum impor">
+                    <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="BadgeJenisText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Jenis}" Value="Otomatis sebelum impor">
+                    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== Kepala halaman ===== -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#x1F4BE;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="14,0,12,0" VerticalAlignment="Center">
+                    <TextBlock Text="CADANGKAN &amp; PULIHKAN" Style="{StaticResource HeaderTitle}"
+                               TextWrapping="Wrap"
+                               AutomationProperties.Name="CADANGKAN DAN PULIHKAN"/>
+                    <TextBlock Style="{StaticResource HeaderSubtitle}" TextWrapping="Wrap"
+                               Text="Buat cadangan sekali klik, lihat riwayat cadangan, atau pulihkan data dari berkas .db. Database aktif, ekspor, dan impor ada di satu halaman tanpa dialog popup."/>
+                </StackPanel>
+
+                <Border Grid.Column="2" CornerRadius="14" Padding="12,7" Margin="12,0,0,0"
+                        VerticalAlignment="Center" BorderThickness="1"
+                        Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        ToolTip="{Binding LokasiDatabase, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,7,0">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DatabaseAda}" Value="False">
+                                            <Setter Property="Fill" Value="{DynamicResource ErrorBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <StackPanel>
+                            <TextBlock Text="DATABASE" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding StatusDatabase}" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ===== Isi: nav kiri + konten ===== -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="236"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Panel navigasi kiri -->
+            <Border Grid.Column="0" Style="{StaticResource WaNavPanel}" Margin="0,0,14,0"
+                    VerticalAlignment="Top">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="PILIH BAGIAN" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,2,4,8"/>
+
+                    <TextBlock DockPanel.Dock="Bottom" Text="Tip: cadangan cepat selalu tersimpan di folder database."
+                               FontSize="11" TextWrapping="Wrap" Opacity="0.8"
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,10,6,2"/>
+
+                    <ItemsControl ItemsSource="{Binding Bagian}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Tag="{Binding}" Style="{StaticResource WaNavItem}"
+                                        ToolTip="{Binding DeskripsiStatus}"
+                                        MouseLeftButtonUp="NavBagian_MouseLeftButtonUp">
+                                    <StackPanel Orientation="Horizontal">
+                                        <!-- Penanda aksen: garis tipis di kiri item terpilih -->
+                                        <Border Style="{StaticResource WaNavSelBar}"/>
+                                        <TextBlock Text="{Binding Ikon}" Style="{StaticResource WaNavItemIcon}"
+                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource WaNavItemText}"
+                                                   VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </Border>
+
+            <!-- Konten bagian aktif -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Kabar hasil aksi: selalu di atas konten, terlihat dari bagian mana pun -->
+                <Border Grid.Row="0" Margin="0,0,0,12"
+                        Visibility="{Binding AdaPesan, Converter={StaticResource BoolToVis}}">
+                    <Border.Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource CardStyle}">
+                            <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PesanBerhasil}" Value="False">
+                                    <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" FontSize="15" Margin="0,0,10,0" VerticalAlignment="Top">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="&#x2714;"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding PesanBerhasil}" Value="False">
+                                            <Setter Property="Text" Value="&#x2715;"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding PesanJudul, Mode=OneWay}" Style="{StaticResource JudulKartu}"
+                                       AutomationProperties.Name="Kabar pencadangan database"/>
+                            <TextBlock Text="{Binding PesanIsi, Mode=OneWay}" Style="{StaticResource IsiKartu}"/>
+
+                            <ItemsControl ItemsSource="{Binding PesanRincian}" Margin="0,6,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="11"
+                                                   Margin="0,1,0,1" LineHeight="17"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <Button Grid.Column="2" Content="&#x2715;" Command="{Binding TutupTerakhirCommand}"
+                                Width="26" Height="26" VerticalAlignment="Top" BorderThickness="0"
+                                FontSize="13" Cursor="Hand" Background="Transparent"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                ToolTip="Tutup kabar ini" AutomationProperties.Name="Tutup kabar"/>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ContentControl Content="{Binding}">
+                        <ContentControl.Resources>
+                            <!-- ================= Ringkasan ================= -->
+                            <DataTemplate x:Key="BagianRingkasan">
+                                <StackPanel>
+                                    <!-- Kartu database aktif -->
+                                    <Border Style="{StaticResource CardStyle}" Padding="18,16" Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Grid.Column="0" Width="46" Height="46" CornerRadius="11"
+                                                    Background="{DynamicResource AccentSubtleBrush}" Margin="0,0,14,0"
+                                                    VerticalAlignment="Top">
+                                                <TextBlock Text="&#x1F4BE;" FontSize="24" HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="DATABASE AKTIF" FontSize="11" FontWeight="Bold"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                <TextBlock Text="{Binding NamaDatabase, Mode=OneWay}" FontSize="15"
+                                                           FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,2,0,0"
+                                                           Foreground="{DynamicResource TextBrush}"/>
+                                                <TextBlock Text="{Binding LokasiDatabase, Mode=OneWay}" FontSize="11"
+                                                           TextWrapping="Wrap" Margin="0,4,0,0" LineHeight="16"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           ToolTip="{Binding LokasiDatabase, Mode=OneWay}"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" Margin="12,0,0,0">
+                                                <Border Style="{StaticResource StatusBadgeStyle}" HorizontalAlignment="Right"
+                                                        Background="{DynamicResource AccentSubtleBrush}"
+                                                        BorderBrush="{DynamicResource AccentBrush}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}"
+                                                                 VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="{Binding StatusDatabase}" FontSize="11"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource AccentTextBrush}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Button Content="Salin lokasi" Command="{Binding SalinLokasiDatabaseCommand}"
+                                                        Style="{StaticResource OutlineButton}" Padding="10,4"
+                                                        Margin="0,8,0,0" HorizontalAlignment="Right" FontSize="11"
+                                                        ToolTip="Salin lokasi database ke papan klip"
+                                                        AutomationProperties.Name="Salin lokasi database"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Baris petak KPI -->
+                                    <UniformGrid Columns="4" Margin="0,0,0,6">
+                                        <Border Style="{StaticResource KpiTile}" Margin="0,0,10,10">
+                                            <StackPanel>
+                                                <TextBlock Text="UKURAN DATABASE" Style="{StaticResource KpiLabel}"/>
+                                                <TextBlock Text="{Binding UkuranDatabase, Mode=OneWay}"
+                                                           Style="{StaticResource KpiValue}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{StaticResource KpiTile}" Margin="0,0,10,10">
+                                            <StackPanel>
+                                                <TextBlock Text="TERAKHIR DIUBAH" Style="{StaticResource KpiLabel}"/>
+                                                <TextBlock Text="{Binding DiubahDatabase, Mode=OneWay}"
+                                                           Style="{StaticResource KpiValue}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{StaticResource KpiTile}" Margin="0,0,10,10">
+                                            <StackPanel>
+                                                <TextBlock Text="CADANGAN TERSEDIA" Style="{StaticResource KpiLabel}"/>
+                                                <TextBlock Text="{Binding JumlahCadangan, Mode=OneWay}"
+                                                           Style="{StaticResource KpiValue}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Style="{StaticResource KpiTile}" Margin="0,0,0,10">
+                                            <StackPanel>
+                                                <TextBlock Text="CADANGAN TERAKHIR" Style="{StaticResource KpiLabel}"/>
+                                                <TextBlock Text="{Binding CadanganTerakhir, Mode=OneWay}"
+                                                           Style="{StaticResource KpiValue}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+
+                                    <!-- Aksi cepat -->
+                                    <Border Style="{StaticResource FormCard}" Padding="16,14">
+                                        <StackPanel>
+                                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                                <TextBlock Text="AKSI CEPAT" Style="{StaticResource FormSectionTitle}"/>
+                                            </StackPanel>
+
+                                            <TextBlock Style="{StaticResource IsiKartu}" Margin="0,0,0,10"
+                                                       Text="Cadangan cepat membuat berkas bertanggal di folder database tanpa perlu memilih lokasi. Cocok dilakukan sebelum mengubah data penting."/>
+
+                                            <WrapPanel>
+                                                <Button Content="&#x1F4BE;  Buat Cadangan Cepat"
+                                                        Command="{Binding BuatCadanganCepatCommand}"
+                                                        Style="{StaticResource PrimaryButton}" Padding="14,0"
+                                                        Margin="0,0,8,8"
+                                                        AutomationProperties.Name="Buat cadangan cepat"/>
+                                                <Button Content="Segarkan Data"
+                                                        Command="{Binding MuatCadanganCommand}"
+                                                        Style="{StaticResource OutlineButton}" Padding="12,0"
+                                                        Margin="0,0,8,8"
+                                                        ToolTip="Baca ulang info database dan daftar cadangan"/>
+                                                <Button Content="Buka Folder Database"
+                                                        Command="{Binding BukaFolderDatabaseCommand}"
+                                                        Style="{StaticResource OutlineButton}" Padding="12,0"
+                                                        Margin="0,0,8,8"
+                                                        ToolTip="Buka folder penyimpanan database dan cadangan"/>
+                                            </WrapPanel>
+
+                                            <Border Background="{DynamicResource PanelBrush}" CornerRadius="8"
+                                                    Padding="10,8" Margin="0,4,0,0"
+                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                                <TextBlock Style="{StaticResource KeteranganKecil}" Margin="0"
+                                                           Text="Cadangan cepat disimpan di folder yang sama dengan database aktif, dengan nama bertanggal desa_cadangan_tanggal_jam.db."
+                                                           ToolTip="{Binding LokasiDatabase, Mode=OneWay}"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Panduan singkat menggantikan kartu informasi tetap di bawah halaman -->
+                                    <Border Style="{StaticResource FormCard}" Padding="16,14">
+                                        <StackPanel>
+                                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                                <TextBlock Text="YANG PERLU DIINGAT" Style="{StaticResource FormSectionTitle}"/>
+                                            </StackPanel>
+
+                                            <Grid Margin="0,2,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                                    <TextBlock Text="&#x1F4E6;  Isi cadangan" Style="{StaticResource JudulKartu}" FontSize="13"/>
+                                                    <TextBlock Style="{StaticResource KeteranganKecil}"
+                                                               Text="Surat &amp; register, agenda, buku SK/Peraturan, data warga, pengaturan desa, template, dan penomoran."/>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                                    <TextBlock Text="&#x1F6E1;  Sebelum impor" Style="{StaticResource JudulKartu}" FontSize="13"/>
+                                                    <TextBlock Style="{StaticResource KeteranganKecil}"
+                                                               Text="Database lama otomatis disalin sebagai desa_backup_before_import supaya masih bisa dikembalikan."/>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="2">
+                                                    <TextBlock Text="&#x2601;  Simpan di luar komputer" Style="{StaticResource JudulKartu}" FontSize="13"/>
+                                                    <TextBlock Style="{StaticResource KeteranganKecil}"
+                                                               Text="Salin berkas .db ke flashdisk atau Drive. Cadangan di komputer yang sama tidak ikut selamat bila perangkat rusak."/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <!-- ================= Cadangan ================= -->
+                            <DataTemplate x:Key="BagianCadangan">
+                                <Border Style="{StaticResource FormCard}" VerticalAlignment="Top">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0">
+                                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                                <TextBlock Text="CADANGAN DI FOLDER DATABASE" Style="{StaticResource FormSectionTitle}"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Content="&#x21BB;  Segarkan"
+                                                    Command="{Binding MuatCadanganCommand}"
+                                                    Style="{StaticResource OutlineButton}" Padding="10,3"
+                                                    VerticalAlignment="Center" FontSize="11"
+                                                    ToolTip="Pindai ulang folder database"/>
+                                        </Grid>
+
+                                        <TextBlock Text="{Binding KeteranganCadangan, Mode=OneWay}"
+                                                   Style="{StaticResource IsiKartu}" Margin="0,2,0,12"/>
+
+                                        <ItemsControl ItemsSource="{Binding CadanganTerbaru}"
+                                                      Visibility="{Binding AdaCadanganTerbaru, Converter={StaticResource BoolToVis}}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Style="{StaticResource KartuCadangan}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <Border Grid.Column="0" Style="{StaticResource KpiIconChip}"
+                                                                    Width="40" Height="40" Margin="0,0,12,0"
+                                                                    VerticalAlignment="Top">
+                                                                <TextBlock Text="{Binding Ikon}" FontSize="20"
+                                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+
+                                                            <StackPanel Grid.Column="1">
+                                                                <DockPanel>
+                                                                    <Border DockPanel.Dock="Left" Style="{StaticResource BadgeJenis}"
+                                                                            Margin="0,1,8,0">
+                                                                        <TextBlock Text="{Binding Jenis}"
+                                                                                   Style="{StaticResource BadgeJenisText}"/>
+                                                                    </Border>
+                                                                    <TextBlock Text="{Binding Nama}" Style="{StaticResource JudulKartu}"
+                                                                               FontSize="13" VerticalAlignment="Center"
+                                                                               TextTrimming="CharacterEllipsis"
+                                                                               ToolTip="{Binding Nama}"/>
+                                                                </DockPanel>
+
+                                                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                                                    <TextBlock Text="{Binding Ukuran}" FontSize="11"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                                    <TextBlock Text="  &#x2022;  " FontSize="11"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                                    <TextBlock Text="{Binding Diubah}" FontSize="11"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                                </StackPanel>
+
+                                                                <TextBlock Text="{Binding Path}" FontSize="11" Margin="0,3,0,0"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                           ToolTip="{Binding Path}"/>
+                                                            </StackPanel>
+
+                                                            <Button Grid.Column="2" Content="Pulihkan"
+                                                                    Command="{Binding DataContext.PulihkanCadanganCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource DangerButton}" Padding="12,4"
+                                                                    Margin="12,0,0,0" VerticalAlignment="Center" FontSize="11"
+                                                                    AutomationProperties.Name="Pulihkan dari cadangan ini"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <!-- Keadaan kosong -->
+                                        <Border Visibility="{Binding TidakAdaCadangan, Converter={StaticResource BoolToVis}}"
+                                                Background="{DynamicResource PanelBrush}" CornerRadius="10"
+                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                                Padding="24,22">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="&#x1F5C3;" FontSize="28" Opacity="0.55"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Belum ada cadangan di folder database"
+                                                           Style="{StaticResource JudulKartu}" FontSize="13"
+                                                           HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                                                <TextBlock Style="{StaticResource KeteranganKecil}"
+                                                           HorizontalAlignment="Center" TextAlignment="Center"
+                                                           MaxWidth="380"
+                                                           Text="Buat cadangan pertama lewat bagian Ekspor, atau tekan Buat Cadangan Cepat di Ringkasan. Berkas otomatis sebelum impor juga akan muncul di sini."/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Background="{DynamicResource WarningSubtleBrush}" CornerRadius="8"
+                                                Padding="10,8" Margin="0,12,0,0">
+                                            <TextBlock Text="&#x2139;  Cadangan bertanda “Otomatis sebelum impor” dibuat aplikasi sendiri dan aman dipakai untuk kembali ke keadaan sebelumnya."
+                                                       FontSize="11" TextWrapping="Wrap" LineHeight="17"
+                                                       Foreground="{DynamicResource WarningTextBrush}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+
+                            <!-- ================= Ekspor ================= -->
+                            <DataTemplate x:Key="BagianEkspor">
+                                <StackPanel>
+                                    <Border Style="{StaticResource FormCard}">
+                                        <StackPanel>
+                                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                                <TextBlock Text="EKSPOR — BUAT SALINAN CADANGAN" Style="{StaticResource FormSectionTitle}"/>
+                                            </StackPanel>
+
+                                            <TextBlock Style="{StaticResource IsiKartu}" Margin="0,0,0,12"
+                                                       Text="Salinan lengkap database disimpan ke berkas .db pilihan Anda. Berkas ini bisa dipulihkan lewat bagian Impor atau disimpan di flashdisk/Drive sebagai arsip aman."/>
+
+                                            <!-- Ringkasan tujuan sebelum berkas dibuat -->
+                                            <UniformGrid Columns="2" Margin="0,0,0,12">
+                                                <Border Style="{StaticResource KpiTile}" Margin="0,0,10,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="NAMA BERKAS" Style="{StaticResource KpiLabel}"/>
+                                                        <TextBlock Text="{Binding ExportNamaBerkas, Mode=OneWay}"
+                                                                   Style="{StaticResource KpiValue}" FontSize="13"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   ToolTip="{Binding ExportNamaBerkas, Mode=OneWay}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border Style="{StaticResource KpiTile}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="FOLDER TUJUAN" Style="{StaticResource KpiLabel}"/>
+                                                        <TextBlock Text="{Binding ExportFolder, Mode=OneWay}"
+                                                                   Style="{StaticResource KpiValue}" FontSize="13"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   ToolTip="{Binding ExportFolder, Mode=OneWay}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </UniformGrid>
+
+                                            <TextBlock Text="Lokasi berkas cadangan" Style="{StaticResource FormLabel}"/>
+                                            <DockPanel Margin="0,4,0,0">
+                                                <Button Content="Pilih Lokasi…" Command="{Binding PilihTujuanEksporCommand}"
+                                                        DockPanel.Dock="Right" Width="120" Margin="10,0,0,0"
+                                                        VerticalAlignment="Top"
+                                                        Style="{StaticResource SecondaryButton}"/>
+                                                <TextBox Style="{StaticResource FormField}"
+                                                         Text="{Binding ExportPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         AutomationProperties.Name="Lokasi berkas cadangan"/>
+                                            </DockPanel>
+                                            <TextBlock Text="{Binding KeteranganTujuanEkspor, Mode=OneWay}"
+                                                       Style="{StaticResource KeteranganKecil}"/>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                                <Button Content="Buat Cadangan Sekarang" Command="{Binding EksporCommand}"
+                                                        Padding="16,0" Style="{StaticResource PrimaryButton}"
+                                                        AutomationProperties.Name="Buat cadangan database"/>
+                                                <Button Content="Cadangan Cepat" Command="{Binding BuatCadanganCepatCommand}"
+                                                        Padding="14,0" Margin="8,0,0,0"
+                                                        Style="{StaticResource OutlineButton}"
+                                                        ToolTip="Simpan cadangan bertanggal di folder database tanpa dialog"/>
+                                                <Border Background="{DynamicResource AccentSubtleBrush}" CornerRadius="6"
+                                                        Padding="9,4" Margin="10,0,0,0" VerticalAlignment="Center"
+                                                        Visibility="{Binding IsExporting, Converter={StaticResource BoolToVis}}">
+                                                    <TextBlock Text="Membuat cadangan…" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource AccentTextBrush}"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Apa saja yang ikut tercadang -->
+                                    <Border Style="{StaticResource FormCard}" Padding="16,14">
+                                        <StackPanel>
+                                            <TextBlock Text="ISI CADANGAN" Style="{StaticResource SectionTitle}" FontSize="13"/>
+                                            <TextBlock Style="{StaticResource KeteranganKecil}" Margin="0,2,0,8"
+                                                       Text="Seluruh data aplikasi ikut tersalin — tidak ada yang perlu dipilih satu per satu."/>
+                                            <WrapPanel>
+                                                <Border Style="{StaticResource ChipIsi}"><TextBlock Text="Surat &amp; register" Style="{StaticResource ChipIsiText}"/></Border>
+                                                <Border Style="{StaticResource ChipIsi}"><TextBlock Text="Agenda" Style="{StaticResource ChipIsiText}"/></Border>
+                                                <Border Style="{StaticResource ChipIsi}"><TextBlock Text="Buku SK &amp; Peraturan" Style="{StaticResource ChipIsiText}"/></Border>
+                                                <Border Style="{StaticResource ChipIsi}"><TextBlock Text="Data warga" Style="{StaticResource ChipIsiText}"/></Border>
+                                                <Border Style="{StaticResource ChipIsi}"><TextBlock Text="Pengaturan desa" Style="{StaticResource ChipIsiText}"/></Border>
+                                                <Border Style="{StaticResource ChipIsi}"><TextBlock Text="Template surat" Style="{StaticResource ChipIsiText}"/></Border>
+                                                <Border Style="{StaticResource ChipIsi}"><TextBlock Text="Penomoran surat" Style="{StaticResource ChipIsiText}"/></Border>
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <!-- ================= Impor ================= -->
+                            <DataTemplate x:Key="BagianImpor">
+                                <StackPanel>
+                                    <Border Style="{StaticResource FormCard}">
+                                        <StackPanel>
+                                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                                <TextBlock Text="IMPOR — PULIHKAN DARI CADANGAN" Style="{StaticResource FormSectionTitle}"/>
+                                            </StackPanel>
+
+                                            <TextBlock Style="{StaticResource IsiKartu}" Margin="0,0,0,12"
+                                                       Text="Isi database saat ini diganti sepenuhnya dengan isi berkas cadangan. Sebelum penggantian, aplikasi otomatis menyimpan salinan database lama sebagai desa_backup_before_import."/>
+
+                                            <!-- Langkah pemulihan -->
+                                            <Border Background="{DynamicResource PanelBrush}" CornerRadius="8"
+                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                                    Padding="12,9" Margin="0,0,0,12">
+                                                <WrapPanel>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
+                                                        <Border Style="{StaticResource LangkahNomor}">
+                                                            <TextBlock Text="1" FontSize="11" FontWeight="Bold"
+                                                                       Foreground="{DynamicResource OnPrimaryTextBrush}"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <TextBlock Text="Pilih berkas" Style="{StaticResource LangkahTeks}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
+                                                        <Border Style="{StaticResource LangkahNomor}">
+                                                            <TextBlock Text="2" FontSize="11" FontWeight="Bold"
+                                                                       Foreground="{DynamicResource OnPrimaryTextBrush}"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <TextBlock Text="Periksa &amp; konfirmasi" Style="{StaticResource LangkahTeks}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Style="{StaticResource LangkahNomor}">
+                                                            <TextBlock Text="3" FontSize="11" FontWeight="Bold"
+                                                                       Foreground="{DynamicResource OnPrimaryTextBrush}"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <TextBlock Text="Data dipulihkan" Style="{StaticResource LangkahTeks}"/>
+                                                    </StackPanel>
+                                                </WrapPanel>
+                                            </Border>
+
+                                            <TextBlock Text="Berkas cadangan yang dipulihkan" Style="{StaticResource FormLabel}"/>
+                                            <DockPanel Margin="0,4,0,0">
+                                                <Button Content="Pilih Berkas…" Command="{Binding PilihSumberImporCommand}"
+                                                        DockPanel.Dock="Right" Width="120" Margin="10,0,0,0"
+                                                        VerticalAlignment="Top"
+                                                        Style="{StaticResource SecondaryButton}"/>
+                                                <TextBox Style="{StaticResource FormField}"
+                                                         Text="{Binding ImportPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         AutomationProperties.Name="Berkas cadangan yang dipulihkan"/>
+                                            </DockPanel>
+                                            <TextBlock Text="{Binding KeteranganSumberImpor, Mode=OneWay}"
+                                                       Style="{StaticResource KeteranganKecil}"/>
+
+                                            <!-- Ringkasan berkas yang dipilih -->
+                                            <UniformGrid Columns="3" Margin="0,10,0,0"
+                                                         Visibility="{Binding SumberImporDikenali, Converter={StaticResource BoolToVis}}">
+                                                <Border Style="{StaticResource KpiTile}" Margin="0,0,10,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="UKURAN BERKAS" Style="{StaticResource KpiLabel}"/>
+                                                        <TextBlock Text="{Binding SumberImporUkuran, Mode=OneWay}"
+                                                                   Style="{StaticResource KpiValue}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border Style="{StaticResource KpiTile}" Margin="0,0,10,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="TERAKHIR DIUBAH" Style="{StaticResource KpiLabel}"/>
+                                                        <TextBlock Text="{Binding SumberImporDiubah, Mode=OneWay}"
+                                                                   Style="{StaticResource KpiValue}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border Style="{StaticResource KpiTile}">
+                                                    <StackPanel>
+                                                        <TextBlock Text="STATUS" Style="{StaticResource KpiLabel}"/>
+                                                        <TextBlock Text="{Binding SumberImporStatus, Mode=OneWay}">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock" BasedOn="{StaticResource KpiValue}">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding SumberImporSiap}" Value="True">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                            </UniformGrid>
+
+                                            <!-- Kartu konfirmasi di dalam halaman (bukan dialog popup) -->
+                                            <Border Margin="0,12,0,0" CornerRadius="8" Padding="14,12"
+                                                    BorderThickness="1"
+                                                    Background="{DynamicResource WarningSubtleBrush}"
+                                                    BorderBrush="{DynamicResource WarningBrush}"
+                                                    Visibility="{Binding AdaKonfirmasiImpor, Converter={StaticResource BoolToVis}}">
+                                                <StackPanel>
+                                                    <TextBlock Text="&#x26A0;  Pulihkan database dari cadangan ini?"
+                                                               FontWeight="SemiBold" TextWrapping="Wrap"
+                                                               Foreground="{DynamicResource WarningTextBrush}"/>
+                                                    <TextBlock Text="Seluruh data yang ada sekarang akan diganti dengan isi berkas cadangan. Salinan database lama sebelum impor tetap dibuat otomatis, sehingga langkah ini masih bisa dibatalkan nanti dengan berkas cadangan tersebut."
+                                                               TextWrapping="Wrap" FontSize="13" Margin="0,6,0,0"
+                                                               Foreground="{DynamicResource WarningTextBrush}"/>
+                                                    <TextBlock Text="{Binding ImportPath, Mode=OneWay, StringFormat='Berkas: {0}'}"
+                                                               TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0"
+                                                               Foreground="{DynamicResource WarningTextBrush}"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding ImportPath, Mode=OneWay}"/>
+
+                                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                                        <Button Content="Ya, Pulihkan Sekarang" Command="{Binding KonfirmasiImporCommand}"
+                                                                Padding="14,0" Style="{StaticResource DangerButton}"
+                                                                AutomationProperties.Name="Konfirmasi pulihkan database"/>
+                                                        <Button Content="Batal" Command="{Binding BatalImporCommand}"
+                                                                Padding="14,0" Margin="8,0,0,0"
+                                                                Style="{StaticResource OutlineButton}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,14,0,0"
+                                                        Visibility="{Binding TampilTombolImpor, Converter={StaticResource BoolToVis}}">
+                                                <Button Content="Pulihkan Database" Command="{Binding ImporCommand}"
+                                                        Padding="16,0" Style="{StaticResource DangerButton}"
+                                                        AutomationProperties.Name="Pulihkan database dari cadangan"/>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,14,0,0"
+                                                        Visibility="{Binding IsImporting, Converter={StaticResource BoolToVis}}">
+                                                <Border Background="{DynamicResource AccentSubtleBrush}" CornerRadius="6" Padding="9,4">
+                                                    <TextBlock Text="Memulihkan database…" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource AccentTextBrush}"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Cara kembali setelah impor -->
+                                    <Border Style="{StaticResource FormCard}" Padding="16,14">
+                                        <StackPanel>
+                                            <TextBlock Text="&#x21A9;  Ingin kembali ke data sebelumnya?"
+                                                       Style="{StaticResource JudulKartu}" FontSize="13"/>
+                                            <TextBlock Style="{StaticResource KeteranganKecil}"
+                                                       Text="Buka bagian Cadangan, lalu pilih berkas desa_backup_before_import terbaru dan tekan Pulihkan. Berkas itu dibuat otomatis tepat sebelum setiap impor."/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ContentControl.Resources>
+
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="ContentTemplate" Value="{StaticResource BagianRingkasan}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding BagianAktif.Kunci}" Value="Cadangan">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource BagianCadangan}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BagianAktif.Kunci}" Value="Ekspor">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource BagianEkspor}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding BagianAktif.Kunci}" Value="Impor">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource BagianImpor}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                    </ContentControl>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- ===== Statusbar halaman ===== -->
+        <c:AppStatusBar Grid.Row="2" Margin="0,12,0,0"
+                        StatusText="{Binding StatusText, FallbackValue='Siap'}">
+            <c:AppStatusBar.Buttons>
+                <Button Content="Buka Folder Database" Command="{Binding BukaFolderDatabaseCommand}"
+                        Width="160" VerticalAlignment="Center"
+                        Style="{StaticResource OutlineButton}"
+                        ToolTip="Buka folder penyimpanan database untuk mencari berkas cadangan"/>
+            </c:AppStatusBar.Buttons>
+        </c:AppStatusBar>
+    </Grid>
+</UserControl>

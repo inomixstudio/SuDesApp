@@ -1,0 +1,119 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        PALET TETAP — warna yang SENGAJA tidak berubah saat tema diganti.
+
+        Tema (GreenTheme, DarkTheme, …) menjawab "warna apa yang dipakai
+        aplikasi ini"; palet ini menjawab "warna apa yang memang harus begitu
+        apa pun temanya":
+
+          * kertas pada pratinjau cetak harus putih — kertas tidak ikut gelap;
+          * latar QR harus putih — pembaca QR butuh kontras, bukan tema;
+          * tirai modal tetap hitam transparan;
+          * warna merek (logo Google, mockup terminal di panduan) tidak boleh
+            berubah karena pilihan tema pengguna.
+
+        Aturan pemakaian (dijaga uji TemaKonsistenTests):
+          * tampilan TIDAK boleh menulis warna literal (#RRGGBB, "White", …);
+          * warna yang berubah oleh tema wajib memakai kunci dari *Theme.xaml
+            lewat DynamicResource;
+          * warna yang memang tetap ditaruh di sini dan dipakai lewat
+            DynamicResource juga (agar tidak ada dua cara memuat warna).
+
+        Menambah warna di sini berarti menyatakan "ini tidak boleh mengikuti
+        tema" — kalau ragu, tambahkan ke kesebelas tema, bukan ke sini.
+    -->
+
+    <!-- ── Dasar: putih & lapisan di atas permukaan berwarna ─────────── -->
+    <Color x:Key="PutihColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="PutihBrush" Color="{StaticResource PutihColor}"/>
+
+    <!-- Lapisan putih transparan untuk chip/lencana di atas header bergradien.
+         Kekuatannya bertingkat supaya hierarki visual tetap terjaga. -->
+    <Color x:Key="LapisanTipisColor">#12FFFFFF</Color>
+    <SolidColorBrush x:Key="LapisanTipisBrush" Color="{StaticResource LapisanTipisColor}"/>
+    <Color x:Key="LapisanLembutColor">#22FFFFFF</Color>
+    <SolidColorBrush x:Key="LapisanLembutBrush" Color="{StaticResource LapisanLembutColor}"/>
+    <Color x:Key="LapisanSedangColor">#26FFFFFF</Color>
+    <SolidColorBrush x:Key="LapisanSedangBrush" Color="{StaticResource LapisanSedangColor}"/>
+    <Color x:Key="LapisanKuatColor">#33FFFFFF</Color>
+    <SolidColorBrush x:Key="LapisanKuatBrush" Color="{StaticResource LapisanKuatColor}"/>
+    <Color x:Key="LapisanHoverColor">#2EFFFFFF</Color>
+    <SolidColorBrush x:Key="LapisanHoverBrush" Color="{StaticResource LapisanHoverColor}"/>
+    <Color x:Key="LapisanAktifColor">#3AFFFFFF</Color>
+    <SolidColorBrush x:Key="LapisanAktifBrush" Color="{StaticResource LapisanAktifColor}"/>
+
+    <!-- Kilau diagonal (gradien sheen) pada header. -->
+    <Color x:Key="KilauAwalColor">#38FFFFFF</Color>
+    <Color x:Key="KilauHilangColor">#00FFFFFF</Color>
+
+    <!-- ── Pratinjau kertas (kop surat / dokumen Word) ────────────────── -->
+    <!-- Lembar surat dicetak di kertas putih; pratinjau meniru kertas, jadi
+         warnanya tetap walau aplikasi memakai tema gelap. -->
+    <Color x:Key="KertasColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="KertasBrush" Color="{StaticResource KertasColor}"/>
+    <Color x:Key="KertasTepiColor">#D7DDE5</Color>
+    <SolidColorBrush x:Key="KertasTepiBrush" Color="{StaticResource KertasTepiColor}"/>
+    <Color x:Key="KertasTintaColor">#111827</Color>
+    <SolidColorBrush x:Key="KertasTintaBrush" Color="{StaticResource KertasTintaColor}"/>
+    <Color x:Key="KertasTintaRedupColor">#4B5563</Color>
+    <SolidColorBrush x:Key="KertasTintaRedupBrush" Color="{StaticResource KertasTintaRedupColor}"/>
+    <Color x:Key="KertasTintaTersierColor">#6B7280</Color>
+    <SolidColorBrush x:Key="KertasTintaTersierBrush" Color="{StaticResource KertasTintaTersierColor}"/>
+    <Color x:Key="KertasTintaKuatColor">#374151</Color>
+    <SolidColorBrush x:Key="KertasTintaKuatBrush" Color="{StaticResource KertasTintaKuatColor}"/>
+    <Color x:Key="KertasCatatanColor">#FEF3C7</Color>
+    <SolidColorBrush x:Key="KertasCatatanBrush" Color="{StaticResource KertasCatatanColor}"/>
+    <Color x:Key="KertasCatatanTintaColor">#92400E</Color>
+    <SolidColorBrush x:Key="KertasCatatanTintaBrush" Color="{StaticResource KertasCatatanTintaColor}"/>
+
+    <!-- ── Fungsi khusus ─────────────────────────────────────────────── -->
+    <!-- Latar QR: pembaca QR butuh bidang putih, termasuk di tema gelap. -->
+    <Color x:Key="QrLatarColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="QrLatarBrush" Color="{StaticResource QrLatarColor}"/>
+
+    <!-- Tirai modal: menggelapkan halaman di belakang dialog. -->
+    <Color x:Key="TiraiColor">#80000000</Color>
+    <SolidColorBrush x:Key="TiraiBrush" Color="{StaticResource TiraiColor}"/>
+
+    <!-- Tepi bulatan pemilih warna (swatch) di Pengaturan Aplikasi. -->
+    <Color x:Key="TepiSwatchColor">#33000000</Color>
+    <SolidColorBrush x:Key="TepiSwatchBrush" Color="{StaticResource TepiSwatchColor}"/>
+
+    <!-- Tepi kartu putih di atas latar terang (halaman Tentang). -->
+    <Color x:Key="TepiKartuGelapColor">#24000000</Color>
+    <SolidColorBrush x:Key="TepiKartuGelapBrush" Color="{StaticResource TepiKartuGelapColor}"/>
+
+    <!-- Latar area pratinjau PDF: abu netral seperti pembaca PDF pada umumnya. -->
+    <Color x:Key="PdfLatarColor">#525659</Color>
+    <SolidColorBrush x:Key="PdfLatarBrush" Color="{StaticResource PdfLatarColor}"/>
+
+    <!-- Bayangan lembut: selalu hitam transparan; opasitasnya diatur GradientStop. -->
+    <Color x:Key="BayanganHitamColor">#000000</Color>
+
+    <!-- Tombol tutup jendela (konvensi Windows: merah saat disorot). -->
+    <Color x:Key="TutupCaptionColor">#E81123</Color>
+    <SolidColorBrush x:Key="TutupCaptionBrush" Color="{StaticResource TutupCaptionColor}"/>
+
+    <!-- ── Merek Google (logo "G" resmi, empat warna) ─────────────────── -->
+    <SolidColorBrush x:Key="GoogleBiruBrush" Color="#4285F4"/>
+    <SolidColorBrush x:Key="GoogleHijauBrush" Color="#34A853"/>
+    <SolidColorBrush x:Key="GoogleKuningBrush" Color="#FBBC05"/>
+    <SolidColorBrush x:Key="GoogleMerahBrush" Color="#EA4335"/>
+
+    <!-- ── Mockup panduan (peramban & terminal) ───────────────────────── -->
+    <!-- Tangkapan layar tiruan: warnanya meniru peramban/terminal sungguhan,
+         bukan warna aplikasi, jadi tidak ikut tema. -->
+    <SolidColorBrush x:Key="MockupMerahBrush" Color="#FF5F57"/>
+    <SolidColorBrush x:Key="MockupKuningBrush" Color="#FEBC2E"/>
+    <SolidColorBrush x:Key="MockupHijauBrush" Color="#28C840"/>
+    <Color x:Key="MockupLatarColor">#0D1117</Color>
+    <SolidColorBrush x:Key="MockupLatarBrush" Color="{StaticResource MockupLatarColor}"/>
+    <Color x:Key="MockupTepiColor">#30363D</Color>
+    <SolidColorBrush x:Key="MockupTepiBrush" Color="{StaticResource MockupTepiColor}"/>
+    <Color x:Key="MockupTeksColor">#E6EDF3</Color>
+    <SolidColorBrush x:Key="MockupTeksBrush" Color="{StaticResource MockupTeksColor}"/>
+    <SolidColorBrush x:Key="TerminalAksenBrush" Color="#7EE787"/>
+
+</ResourceDictionary>

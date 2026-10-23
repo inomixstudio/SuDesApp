@@ -1,0 +1,169 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.RiwayatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#128337;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Toolbar: pencarian + aksi -->
+        <Border Grid.Row="1" Style="{StaticResource ToolbarCard}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                         FontSize="13" Padding="8,6" VerticalContentAlignment="Center"
+                         ToolTip="Cari pengguna, jenis surat, nomor, aksi, atau detail">
+                    <TextBox.Style>
+                        <!-- Berdasarkan gaya TextBox tema supaya TIDAK memakai
+                             chrome bawaan Windows (kotak putih cekung sistem);
+                             pemicu teks kosong di bawah menimpa latar tema
+                             dengan petunjuk pencarian. -->
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Style.Resources>
+                                <VisualBrush x:Key="HintBrush" Stretch="None" AlignmentX="Left">
+                                    <VisualBrush.Visual>
+                                        <TextBlock Text="Cari: pengguna, jenis, nomor, aksi..." Margin="4,0,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
+                                    </VisualBrush.Visual>
+                                </VisualBrush>
+                            </Style.Resources>
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="">
+                                    <Setter Property="Background" Value="{StaticResource HintBrush}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+                <Button Grid.Column="1" Content="Segarkan" Command="{Binding RefreshCommand}" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"/>
+                <Button Grid.Column="2" Content="Bersihkan Riwayat" Command="{Binding ClearCommand}" Style="{StaticResource DangerButton}" Margin="8,0,0,0"
+                        ToolTip="Hapus seluruh riwayat aktivitas (tidak dapat dibatalkan)"/>
+                <Button Grid.Column="3" Content="Batal" Command="{Binding BatalCommand}" Style="{StaticResource OutlineButton}" Margin="8,0,0,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Daftar riwayat: pengguna, dokumen, dan detail boleh panjang — tiap baris
+             tabel tingginya mengikuti isi, jadi teks wrap penuh sampai tuntas
+             (kepala kolom ikut satu ScrollViewer sehingga selalu sejajar).
+             DataGrid sengaja tidak dipakai: RowHeight="Auto" memicu loop layout
+             (stack overflow), tinggi tetap memotong teks. -->
+        <Border Grid.Row="2" Style="{StaticResource GridHostCard}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <!-- Kepala kolom: lebar kolomnya sama persis dengan baris -->
+                    <Border Style="{StaticResource TabelKepalaPita}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="2*" MinWidth="140"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="2*" MinWidth="140"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="3*" MinWidth="180"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Waktu" FontWeight="Bold"
+                                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Grid.Column="1" Text="Pengguna" FontWeight="Bold"
+                                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Margin="0,0,12,0"/>
+                            <TextBlock Grid.Column="2" Text="Jenis" FontWeight="Bold"
+                                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Margin="0,0,12,0"/>
+                            <TextBlock Grid.Column="3" Text="Dokumen" FontWeight="Bold"
+                                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Margin="0,0,12,0"/>
+                            <TextBlock Grid.Column="4" Text="Aksi" FontWeight="Bold"
+                                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Margin="0,0,12,0"/>
+                            <TextBlock Grid.Column="5" Text="Detail" FontWeight="Bold"
+                                       FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </Grid>
+                    </Border>
+
+                    <ItemsControl ItemsSource="{Binding Items}" AlternationCount="4">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>                                    <Border BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="0,0,0,1" Padding="0,7">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <!-- Zebra: latar baris bergantian ZebraBrush.
+                                                     Wadah baris ItemsControl (ContentPresenter)
+                                                     tidak melukis Background sendiri, jadi zebra
+                                                     dipasang di border baris lewat DataTrigger
+                                                     yang membaca index bergantian dari wadah. -->
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Value="1">
+                                                        <Setter Property="Background" Value="{DynamicResource ZebraBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Value="3">
+                                                        <Setter Property="Background" Value="{DynamicResource ZebraBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="2*" MinWidth="140"/>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="2*" MinWidth="140"/>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="3*" MinWidth="180"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding WaktuDisplay}"
+                                                   VerticalAlignment="Top"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Pengguna}"
+                                                   FontWeight="SemiBold" TextWrapping="Wrap"
+                                                   VerticalAlignment="Top" Margin="0,0,12,0"
+                                                   ToolTip="{Binding Pengguna}"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding JenisDokumen}"
+                                                   TextWrapping="Wrap" VerticalAlignment="Top"
+                                                   Margin="0,0,12,0"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Dokumen}"
+                                                   TextWrapping="Wrap" VerticalAlignment="Top"
+                                                   Margin="0,0,12,0" ToolTip="{Binding Dokumen}"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding Aksi}"
+                                                   TextWrapping="Wrap" VerticalAlignment="Top"
+                                                   Margin="0,0,12,0"/>
+                                        <TextBlock Grid.Column="5" Text="{Binding Detail}"
+                                                   TextWrapping="Wrap" VerticalAlignment="Top"
+                                                   ToolTip="{Binding Detail}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Status -->
+        <TextBlock Grid.Row="3" Text="{Binding StatusText}" Foreground="{DynamicResource TextSecondaryBrush}"
+                   FontSize="13" Margin="0,8,0,0"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,575 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.TemplateSuratView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:local="clr-namespace:SuDesApp.Wpf.Views"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True"
+             PreviewKeyDown="Halaman_PreviewKeyDown">
+    <UserControl.InputBindings>
+        <KeyBinding Key="N" Modifiers="Control" Command="{Binding BuatBaruCommand}"/>
+        <KeyBinding Key="F5" Command="{Binding SegarkanCommand}"/>
+    </UserControl.InputBindings>
+
+    <UserControl.Resources>
+        <local:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVis"/>
+
+        <!-- Bilah pencarian: tombol silang ramping tanpa bingkai. Turun dari gaya
+             Button tema (bukan gaya kosong) supaya chrome Windows bawaan tidak
+             pernah muncul — tombol ini tetap mengikuti tema aktif. -->
+        <Style x:Key="BersihkanPencarianButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Pencarian}" Value="">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Lencana kecil pada kartu template (contoh, siap diisi, kop desa). -->
+        <Style x:Key="Lencana" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="7,1"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        </Style>
+
+        <Style x:Key="LencanaTeks" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+
+        <Style x:Key="LencanaContoh" TargetType="Border" BasedOn="{StaticResource Lencana}">
+            <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+        </Style>
+
+        <Style x:Key="LencanaSiap" TargetType="Border" BasedOn="{StaticResource Lencana}">
+            <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+
+        <!-- Teks metadata pada kartu: nomor, versi, kolom, kop. -->
+        <Style x:Key="MetaTeks" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,0,14,0"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Tombol pil untuk memilih sumber daftar. Pil aktif ditandai lewat
+             DataTrigger pada properti Filter* VM, bukan warna tetap. -->
+        <Style x:Key="FilterChip" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="13,4"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FilterChipSemua" TargetType="Button" BasedOn="{StaticResource FilterChip}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding FilterSemuaAktif}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="FilterChipTersimpan" TargetType="Button" BasedOn="{StaticResource FilterChip}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding FilterTersimpanAktif}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="FilterChipContoh" TargetType="Button" BasedOn="{StaticResource FilterChip}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding FilterContohAktif}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Satu baris template berbentuk kartu: ikon, keterangan, tombol cepat.
+             Sorotan pilihan memakai aksen lembut + garis aksen kiri, bukan latar
+             Primary penuh — teks sekunder di dalam baris tetap terbaca. -->
+        <Style x:Key="KartuTemplateItem" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="10" Padding="14,11" SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Aksen" Grid.Column="0" Width="3" CornerRadius="1.5"
+                                        Background="{DynamicResource AccentBrush}" Opacity="0"
+                                        Margin="0,2,11,2" HorizontalAlignment="Left"
+                                        VerticalAlignment="Stretch"/>
+                                <ContentPresenter Grid.Column="1" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PanelBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                <Setter TargetName="Aksen" Property="Opacity" Value="1"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Seluruh isi halaman menggulung bersama. Daftar tidak lagi menggulung
+             sendiri di dalam sisa tinggi yang bisa tinggal beberapa puluh piksel
+             pada jendela minimum (900 x 600): dengan satu penggulung, kepala,
+             ringkasan, bilah alat, dan daftar tetap dapat dijangkau berapa pun
+             tinggi jendela. -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+
+        <!-- Kepala halaman. Grid (bukan StackPanel horizontal) dipakai agar
+             keterangan panjang benar-benar membungkus di jendela sempit. -->
+        <Border Style="{StaticResource PageHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#128221;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="BUAT SURAT SENDIRI" Style="{StaticResource HeaderTitle}"
+                               AutomationProperties.Name="BUAT SURAT SENDIRI"/>
+                    <TextBlock Style="{StaticResource HeaderSubtitle}"
+                               Text="Susun jenis surat yang belum tersedia di menu Buat Surat — dari nol lewat wizard, atau ambil susunannya dari berkas Word (.docx/.doc). Isi, pratinjau, lalu cetak; setiap surat tercatat di Register Surat."/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Pemberitahuan inline: hasil pembacaan berkas Word, sebab sebuah tombol
+             tidak bisa dilanjutkan, dan kegagalan daftar/pratinjau tampil di dalam
+             halaman ini — bukan sebagai dialog popup. -->
+        <ItemsControl ItemsSource="{Binding Pesan}"
+                      Visibility="{Binding Pesan.Ada, Converter={StaticResource BoolToVis}}"
+                      ItemTemplate="{StaticResource KartuPesanInline}"
+                      Margin="0,0,0,12"
+                      AutomationProperties.Name="Pemberitahuan template surat"/>
+
+        <!-- Ringkasan -->
+        <!-- Tiga ringkasan yang benar-benar dipakai memilih template. Jumlah total
+             tidak dibuat kartu tersendiri karena sudah tertulis di bilah status. -->
+        <Grid Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Grid Auto + bintang (bukan StackPanel mendatar): StackPanel mendatar
+                 mengukur anaknya tanpa batas lebar, sehingga label KPI tidak pernah
+                 membungkus dan terpotong pada jendela sempit. -->
+            <Border Grid.Column="0" Style="{StaticResource KpiCardStyle}" Margin="0,0,8,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource KpiIconChip}">
+                        <TextBlock Text="&#128451;" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AccentTextBrush}"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource KpiValue}">
+                            <Run Text="{Binding JumlahTersimpan, Mode=OneWay}"/><Run Text=" template"/>
+                        </TextBlock>
+                        <TextBlock Text="Tersimpan" Style="{StaticResource KpiLabel}"
+                                   ToolTip="Template yang sudah tersimpan di database desa"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource KpiCardStyle}" Margin="0,0,8,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Background="{DynamicResource WarningSubtleBrush}">
+                        <TextBlock Text="&#10024;" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource WarningTextBrush}"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource KpiValue}">
+                            <Run Text="{Binding JumlahContoh, Mode=OneWay}"/><Run Text=" contoh"/>
+                        </TextBlock>
+                        <TextBlock Text="Siap pakai" Style="{StaticResource KpiLabel}"
+                                   ToolTip="Contoh aplikasi yang belum disalin — tinggal diisi lalu dicetak"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource KpiCardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Background="{DynamicResource SuccessSubtleBrush}">
+                        <TextBlock Text="&#9997;" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SuccessTextBrush}"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource KpiValue}">
+                            <Run Text="{Binding JumlahBerkolom, Mode=OneWay}"/><Run Text=" siap"/>
+                        </TextBlock>
+                        <TextBlock Text="Punya kolom isian" Style="{StaticResource KpiLabel}"
+                                   ToolTip="Template yang formulir isiannya sudah siap dipakai"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        </Grid>
+
+        <!-- Bilah alat: pencarian + filter sumber, lalu deretan aksi, lalu panduan
+             baris terpilih. -->
+        <Border Style="{StaticResource ToolbarCard}" Padding="12,10" Margin="0,0,0,12">
+            <StackPanel>
+                <!-- Keterangan contoh bawaan yang baru disiapkan (tampil sekali saja) -->
+                <Border Background="{DynamicResource AccentSubtleBrush}" CornerRadius="6" Padding="10,8" Margin="0,0,0,10"
+                        Visibility="{Binding AdaInfoBawaan, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{Binding InfoBawaan, Mode=OneWay}" TextWrapping="Wrap" FontSize="13"
+                               Foreground="{DynamicResource AccentTextBrush}"/>
+                </Border>
+
+                <!-- Baris pencarian & filter: kotak cari selebar mungkin, pil sumber di kanan. -->
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="180"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Height="38" CornerRadius="8" Margin="0,0,12,0"
+                            Background="{DynamicResource WindowBackgroundBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#128269;" FontSize="13" Margin="10,0,6,0"
+                                       VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <Grid Grid.Column="1">
+                                <TextBox x:Name="KotakCari" BorderThickness="0" Background="Transparent"
+                                         VerticalContentAlignment="Center" FontSize="14"
+                                         Text="{Binding Pencarian, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         KeyDown="KotakCari_KeyDown"
+                                         AutomationProperties.Name="Cari template surat"/>
+                                <TextBlock Text="Cari nama, judul, atau nomor surat…"
+                                           VerticalAlignment="Center" IsHitTestVisible="False"
+                                           Foreground="{DynamicResource TextSecondaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Pencarian}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                            <Button Grid.Column="2" Content="✕" Command="{Binding BersihkanPencarianCommand}"
+                                    Style="{StaticResource BersihkanPencarianButton}"
+                                    ToolTip="Bersihkan pencarian"/>
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Semua" Command="{Binding PilihFilterCommand}" CommandParameter="SEMUA"
+                                Style="{StaticResource FilterChipSemua}"
+                                ToolTip="Tampilkan seluruh template"/>
+                        <Button Content="Tersimpan" Command="{Binding PilihFilterCommand}" CommandParameter="TERSIMPAN"
+                                Style="{StaticResource FilterChipTersimpan}"
+                                ToolTip="Hanya template yang sudah tersimpan di database"/>
+                        <Button Content="Contoh" Command="{Binding PilihFilterCommand}" CommandParameter="CONTOH"
+                                Style="{StaticResource FilterChipContoh}" Margin="0"
+                                ToolTip="Hanya contoh aplikasi yang belum disalin"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- WrapPanel: delapan tombol aksi tidak muat dalam satu baris pada
+                     jendela sempit. Tiap tombol membungkus sendiri ke baris berikut,
+                     jadi tidak ada aksi yang terdorong keluar halaman. -->
+                <WrapPanel Orientation="Horizontal">
+                    <Button Content="+ Buat Template Baru" Command="{Binding BuatBaruCommand}"
+                            Style="{StaticResource PrimaryButton}" MinWidth="170" Margin="0,0,8,6"
+                            ToolTip="Buka wizard: kop, judul, nomor, teks, kolom isian, hingga tanda tangan (Ctrl+N)"/>
+                    <Button Content="Buat dari File Word" Command="{Binding BuatDariWordCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,6"
+                            ToolTip="Buat template surat dari berkas Word (.docx atau .doc lama — berkas lama dikonversi otomatis). Berkas yang memuat beberapa surat (beberapa halaman) bisa disimpan sekaligus sebagai beberapa template"/>
+                    <Button Content="Isi Surat" Command="{Binding IsiCommand}"
+                            Style="{StaticResource SuccessButton}" Margin="0,0,8,6"
+                            ToolTip="Isi dan cetak surat memakai template terpilih"/>
+                    <Button Content="Pratinjau" Command="{Binding PratinjauCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,6"
+                            ToolTip="Lihat contoh surat dari template terpilih"/>
+                    <Button Content="{Binding TeksEdit}" Command="{Binding EditCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,6"
+                            ToolTip="Ubah template terpilih; contoh bawaan disalin dahulu agar contoh asli tetap utuh"/>
+                    <Button Content="Duplikat" Command="{Binding DuplikatCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,6"
+                            ToolTip="Buat salinan template terpilih"/>
+                    <Button Content="Hapus" Command="{Binding HapusCommand}"
+                            Style="{StaticResource DangerButton}" Margin="0,0,8,6"
+                            ToolTip="Hapus template terpilih (hanya untuk template yang sudah tersimpan)"/>
+                    <Button Content="Segarkan" Command="{Binding SegarkanCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,0,6"
+                            ToolTip="Muat ulang daftar template dari database (F5)"/>
+                </WrapPanel>
+
+                <!-- Panduan singkat: berubah mengikuti baris yang sedang dipilih. -->
+                <Border Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="10,8" Margin="0,2,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#8505;" FontSize="15" Margin="0,0,8,0"
+                                   VerticalAlignment="Top" Foreground="{DynamicResource AccentTextBrush}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding StatusPilihan, Mode=OneWay}"
+                                   TextWrapping="Wrap" FontSize="13"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Column="2" Text="Enter isi · F2 ubah" FontSize="11"
+                                   Margin="12,2,0,0" VerticalAlignment="Top"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   ToolTip="Pintasan: Enter mengisi surat dari baris terpilih, F2 menyunting, Ctrl+N template baru, F5 menyegarkan daftar."/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Daftar template. Kartu (bukan tabel berkolom tetap) dipakai supaya
+             keterangan panjang membungkus dan tidak terpotong di jendela sempit.
+             Tinggi minimum menjaga keadaan kosong/beberapa baris tetap terbaca
+             meski isi daftar pendek. -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="2,0,2,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource AccentSectionBar}"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="DAFTAR TEMPLAT" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="{Binding RingkasanTampil, Mode=OneWay}" FontSize="11" Margin="12,0,0,0"
+                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Urutkan" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding DaftarUrutan}" DisplayMemberPath="Label"
+                              SelectedValuePath="Nilai" SelectedValue="{Binding Urutan, Mode=TwoWay}"
+                              Width="180" MinHeight="0" Padding="8,3" FontSize="13"
+                              AutomationProperties.Name="Urutkan daftar template"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="1" MinHeight="220">
+                <!-- Tanda bahwa daftar masih dimuat, bukan benar-benar kosong. -->
+                <ProgressBar Panel.ZIndex="5" Height="3" IsIndeterminate="True"
+                             VerticalAlignment="Top"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"
+                             Foreground="{DynamicResource PrimaryBrush}"/>
+
+                <ListBox x:Name="DaftarTemplate" ItemsSource="{Binding Items}"
+                         SelectedItem="{Binding Terpilih, Mode=TwoWay}"
+                         SelectionMode="Single"
+                         ItemContainerStyle="{StaticResource KartuTemplateItem}"
+                         BorderThickness="0" Background="Transparent" Padding="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                         AutomationProperties.Name="Daftar template surat"
+                         MouseDoubleClick="DaftarTemplate_MouseDoubleClick"
+                         KeyDown="DaftarTemplate_KeyDown">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Ikon template -->
+                                <Border Grid.Column="0" Width="36" Height="36" CornerRadius="9"
+                                        Background="{DynamicResource AccentSubtleBrush}"
+                                        VerticalAlignment="Top" Margin="0,1,12,0">
+                                    <TextBlock Text="&#128221;" FontSize="15"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource AccentTextBrush}"/>
+                                </Border>
+
+                                <!-- Keterangan template -->
+                                <StackPanel Grid.Column="1" Margin="0,0,14,0">
+                                    <WrapPanel>
+                                        <TextBlock Text="{Binding NamaTampil}" FontSize="14" FontWeight="SemiBold"
+                                                   TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"
+                                                   VerticalAlignment="Center" Margin="0,0,8,0"
+                                                   ToolTip="{Binding NamaTampil}"/>
+                                        <Border Style="{StaticResource LencanaContoh}"
+                                                Visibility="{Binding LabelSumber, Converter={StaticResource StringNotEmptyToVis}}">
+                                            <TextBlock Text="{Binding LabelSumber}" Style="{StaticResource LencanaTeks}"
+                                                       Foreground="{DynamicResource WarningTextBrush}"/>
+                                        </Border>
+                                        <Border Style="{StaticResource LencanaSiap}"
+                                                Visibility="{Binding AdaKolom, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Siap diisi" Style="{StaticResource LencanaTeks}"
+                                                       Foreground="{DynamicResource SuccessTextBrush}"/>
+                                        </Border>
+                                    </WrapPanel>
+
+                                    <TextBlock Text="{Binding Judul}" FontSize="13" Margin="0,4,0,0"
+                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               ToolTip="{Binding Judul}"
+                                               Visibility="{Binding Judul, Converter={StaticResource StringNotEmptyToVis}}"/>
+
+                                    <WrapPanel Margin="0,6,0,0"
+                                               ToolTip="{Binding RingkasanSusunan}">
+                                        <TextBlock Style="{StaticResource MetaTeks}"
+                                                   ToolTip="Nomor surat berikutnya menurut pola template">
+                                            <Run Text="Nomor: "/><Run Text="{Binding NomorBerikutnyaTampil, Mode=OneWay}"/>
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource MetaTeks}"
+                                                   ToolTip="Versi definisi template">
+                                            <Run Text="Versi format "/><Run Text="{Binding VersiFormat, Mode=OneWay}"/>
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource MetaTeks}"
+                                                   ToolTip="Jumlah kolom isian">
+                                            <Run Text="{Binding JumlahKolom, Mode=OneWay}"/><Run Text=" kolom"/>
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource MetaTeks}"
+                                                   ToolTip="Apakah surat memakai kop desa">
+                                            <Run Text="Kop "/><Run Text="{Binding LabelKop, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </WrapPanel>
+                                </StackPanel>
+
+                                <!-- Tombol cepat per baris: isi, pratinjau, ubah —
+                                     tanpa harus memilih lalu mencari bilah alat. -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="Isi" Click="IsiBaris_Click"
+                                            Style="{StaticResource SuccessButton}" MinWidth="54" Margin="0,0,6,0"
+                                            ToolTip="Isi surat memakai template ini"/>
+                                    <Button Content="Lihat" Click="PratinjauBaris_Click"
+                                            Style="{StaticResource SecondaryButton}" MinWidth="58" Margin="0,0,6,0"
+                                            ToolTip="Pratinjau contoh surat dari template ini"/>
+                                    <Button Content="Ubah" Click="UbahBaris_Click"
+                                            Style="{StaticResource SecondaryButton}" MinWidth="58"
+                                            ToolTip="Sunting template ini; contoh aplikasi disalin lebih dulu"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <c:EmptyStateView Pesan="{Binding PesanKosong, Mode=OneWay}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                 Visibility="{Binding AdaPesanKosong, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
+        </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Bilah status: ringkasan jumlah template + identitas aplikasi. -->
+        <c:AppStatusBar Grid.Row="1" Margin="0,12,0,0" StatusText="{Binding PesanStatus, Mode=OneWay}"/>
+    </Grid>
+</UserControl>

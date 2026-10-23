@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Uji Pembayaran SuDesApp</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b6e4f'/%3E%3Cpath d='M9 17l5 5 9-10' stroke='%23fff' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --hijau: #0b6e4f;
+    --hijau-gelap: #084c36;
+    --latar: #f4f7f5;
+    --teks: #1e2b26;
+    --abu: #6b7a73;
+    --garis: #dbe5df;
+    --kuning: #f4b942;
+    --merah: #b3261e;
+    --putih: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--latar);
+    color: var(--teks);
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, var(--hijau) 0%, var(--hijau-gelap) 100%);
+    color: #fff;
+    padding: 26px 20px 22px;
+  }
+  header .isi { max-width: 980px; margin: 0 auto; }
+  header h1 { margin: 0 0 4px; font-size: 1.35rem; font-weight: 600; }
+  header p { margin: 0; opacity: .92; font-size: .93rem; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 48px; }
+  .kartu {
+    background: var(--putih);
+    border: 1px solid var(--garis);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .kartu h2 { margin: 0 0 14px; font-size: 1.05rem; }
+  .pesan { display: none; margin: 0 0 14px; padding: 12px 14px; border-radius: 8px; font-size: .92rem; }
+  .pesan.info { display: block; background: #eaf5f0; border: 1px solid var(--hijau); }
+  .pesan.gagal { display: block; background: #fdecea; border: 1px solid var(--merah); color: var(--merah); }
+  label.baris { display: block; margin-bottom: 12px; }
+  label.baris span { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 4px; }
+  input[type=text], input[type=password], select {
+    padding: 11px 12px;
+    font-size: .95rem;
+    font-weight: 600;
+    border: 1px solid var(--garis);
+    border-radius: 9px;
+    background: var(--putih);
+    color: var(--teks);
+    font-family: inherit;
+  }
+  input[type=text], input[type=password] { width: 100%; }
+  input:focus, select:focus { outline: 2px solid var(--hijau); outline-offset: 1px; }
+  button {
+    padding: 11px 16px;
+    font-size: .95rem;
+    font-weight: 600;
+    border: 0;
+    border-radius: 9px;
+    cursor: pointer;
+    background: var(--hijau);
+    color: #fff;
+  }
+  button:hover { background: var(--hijau-gelap); }
+  button:disabled { background: var(--abu); cursor: not-allowed; }
+  button.kecil { padding: 7px 12px; font-size: .85rem; }
+  button.netral { background: #eef3f0; color: var(--teks); border: 1px solid var(--garis); }
+  button.netral:hover { background: #e2ebe6; }
+  button.bahaya { background: var(--merah); }
+  button.bahaya:hover { background: #8f1d17; }
+  .baris-aksi { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .formulir { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .formulir label.baris { flex: 1 1 200px; margin: 0; }
+  .statistik { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .stat { flex: 1 1 170px; background: var(--putih); border: 1px solid var(--garis); border-radius: 12px; padding: 14px 16px; }
+  .stat .angka { font-size: 1.25rem; font-weight: 700; color: var(--hijau); word-break: break-all; }
+  .stat .label { font-size: .82rem; color: var(--abu); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--garis); vertical-align: top; }
+  th { font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; color: var(--abu); }
+  .bungkus-tabel { overflow-x: auto; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+  .badge-hijau { background: #eaf5f0; color: var(--hijau-gelap); }
+  .badge-merah { background: #fdecea; color: var(--merah); }
+  .badge-kuning { background: #fdf3dc; color: #7a5b00; }
+  .badge-abu { background: #eef1ef; color: var(--abu); }
+  .catatan { font-size: .85rem; color: var(--abu); }
+  .mono { font-family: "Consolas", "Courier New", monospace; font-size: .86rem; }
+  #panel { display: none; }
+  #gate { display: none; }
+  .kosong { padding: 14px 4px; color: var(--abu); font-size: .92rem; }
+  .peringatan { border-left: 4px solid var(--kuning); background: #fdf3dc; padding: 10px 12px; border-radius: 6px; font-size: .88rem; margin-bottom: 12px; }
+  footer { max-width: 980px; margin: 0 auto; padding: 0 16px 32px; font-size: .82rem; color: var(--abu); }
+</style>
+</head>
+<body>
+<header>
+  <div class="isi">
+    <h1>Uji Pembayaran SuDesApp</h1>
+    <p>Transaksi Snap sungguhan &rarr; bayar di Midtrans &rarr; lihat notifikasi webhook yang masuk</p>
+  </div>
+</header>
+
+<main>
+  <div class="pesan" id="pesan"></div>
+
+  <div class="kartu" id="gate">
+    <h2>Masuk sebagai operator</h2>
+    <label class="baris">
+      <span>ID operator</span>
+      <input type="text" id="operator-id" autocomplete="off" spellcheck="false" placeholder="contoh: operator-tagihan">
+    </label>
+    <label class="baris">
+      <span>Token pribadi operator</span>
+      <input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="tempel token pribadi di sini">
+    </label>
+    <div class="baris-aksi">
+      <button id="tombol-masuk">Masuk</button>
+    </div>
+    <p class="catatan">
+      Butuh izin <span class="mono">payments.test</span>. ID dan token hanya dipakai
+      untuk sesi ini dan dikirim sebagai header — tidak ditulis di alamat halaman
+      maupun cookie.
+    </p>
+  </div>
+
+  <div id="panel">
+    <p class="catatan" id="identitas-operator"></p>
+
+    <div class="statistik">
+      <div class="stat"><div class="angka" id="stat-lingkungan">–</div><div class="label">Lingkungan gateway</div></div>
+      <div class="stat"><div class="angka" id="stat-notifikasi">–</div><div class="label">Arah notifikasi</div></div>
+      <div class="stat"><div class="angka" id="stat-order">–</div><div class="label">Order id</div></div>
+      <div class="stat"><div class="angka" id="stat-status">–</div><div class="label">Status transaksi</div></div>
+    </div>
+
+    <div class="kartu">
+      <h2>1 &middot; Buat transaksi uji</h2>
+      <div class="formulir">
+        <label class="baris">
+          <span>Kode aktivasi desa uji</span>
+          <input type="text" id="kode-desa" autocomplete="off" spellcheck="false" placeholder="kosongkan untuk membuat kode uji">
+        </label>
+        <label class="baris" style="flex:0 0 auto">
+          <span>Paket</span>
+          <select id="paket"></select>
+        </label>
+        <label class="baris" style="flex:0 0 auto">
+          <span>Notifikasi</span>
+          <select id="notifikasi">
+            <option value="1">Arahkan ke server ini</option>
+            <option value="0">Ikuti URL dashboard akun</option>
+          </select>
+        </label>
+        <button id="tombol-buat">Buat transaksi uji</button>
+      </div>
+      <p class="catatan">
+        Harga &amp; durasi selalu dari katalog server. Desa uji didaftarkan otomatis
+        bila kodenya belum ada. Transaksi yang dibuat SUNGGAUHAN (bukan demo) —
+        bayar di halaman Midtrans untuk menuntaskan uji.
+      </p>
+      <div id="hasil-buat" style="display:none">
+        <p class="catatan">
+          <a id="tautan-bayar" href="#" target="_blank" rel="noopener">Buka halaman pembayaran Midtrans</a>
+          &nbsp;&middot;&nbsp; order <span class="mono" id="order-id"></span>
+          &nbsp;&middot;&nbsp; token <span class="mono" id="token-snap"></span>
+        </p>
+        <button class="netral kecil" id="tombol-hapus-desa">Hapus desa uji (bersihkan data)</button>
+      </div>
+    </div>
+
+    <div class="kartu">
+      <h2>2 &middot; Pantau notifikasi</h2>
+      <p class="catatan" id="ringkas-status">Belum ada transaksi uji dipantau.</p>
+      <div class="bungkus-tabel">
+        <table>
+          <thead>
+            <tr>
+              <th>Waktu (UTC)</th><th>Order</th><th>Status transaksi</th><th>Kanal</th>
+              <th>Signature</th><th>Balasan server</th><th>Hari ditambah</th><th>Pesan</th>
+            </tr>
+          </thead>
+          <tbody id="baris-notifikasi"></tbody>
+        </table>
+      </div>
+      <div class="kosong" id="notifikasi-kosong">Belum ada notifikasi webhook masuk.</div>
+      <p class="catatan" style="margin-top:12px">
+        Halaman ini menyegarkan status tiap 5 detik. Notifikasi yang tercatat
+        hanya yang masuk ke server ini selama server hidup (jejak di memori).
+      </p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Halaman operator untuk membuktikan alur pembayaran Snap &rarr; webhook secara
+  nyata. Jalankan server di HTTPS sebelum dipakai sungguhan.
+</footer>
+
+<script>
+"use strict";
+
+var KUNCI_TOKEN = "sudes_uji_operator_token";
+var KUNCI_OPERATOR = "sudes_uji_operator_id";
+var operatorId = "";
+var token = "";
+var orderIdDipantau = "";
+var kodeDesaUji = "";
+var timerPantau = null;
+
+var pesanEl = document.getElementById("pesan");
+var gate = document.getElementById("gate");
+var panel = document.getElementById("panel");
+
+function el(tag, opsi, anak) {
+  var e = document.createElement(tag);
+  opsi = opsi || {};
+  if (opsi.kelas) e.className = opsi.kelas;
+  if (opsi.teks !== undefined) e.textContent = opsi.teks;
+  if (opsi.atribut) { for (var k in opsi.atribut) e.setAttribute(k, opsi.atribut[k]); }
+  if (opsi.on) { for (var ev in opsi.on) e.addEventListener(ev, opsi.on[ev]); }
+  if (anak) {
+    (Array.isArray(anak) ? anak : [anak]).forEach(function (a) { if (a) e.appendChild(a); });
+  }
+  return e;
+}
+
+function tampilPesan(teks, gagal) {
+  pesanEl.className = "pesan " + (gagal ? "gagal" : "info");
+  pesanEl.textContent = teks;
+}
+function bersihkanPesan() { pesanEl.className = "pesan"; pesanEl.textContent = ""; }
+
+function formatWaktu(iso) {
+  if (!iso) return "–";
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso);
+  return d.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "medium" });
+}
+
+function formatRupiah(n) {
+  if (typeof n !== "number" || isNaN(n)) return "–";
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency", currency: "IDR", maximumFractionDigits: 0
+  }).format(n);
+}
+
+function badge(teks, kelas) {
+  return el("span", { teks: teks, kelas: "badge " + kelas });
+}
+
+// Token dikirim sebagai header, bukan cookie: tidak ada risiko CSRF, dan
+// token tidak pernah tersimpan di luar sesi tab ini.
+async function panggil(metode, jalur, body) {
+  var opsi = { method: metode, headers: { "Accept": "application/json" } };
+  if (operatorId) opsi.headers["X-Admin-Operator"] = operatorId;
+  if (token) opsi.headers["Authorization"] = "Bearer " + token;
+  if (body !== undefined) {
+    opsi.headers["Content-Type"] = "application/json";
+    opsi.body = JSON.stringify(body);
+  }
+
+  var resp = await fetch(jalur, opsi);
+  var data = null;
+  try { data = await resp.json(); } catch (e) { /* tubuh bukan JSON */ }
+
+  if (resp.status === 401) { keluar(); throw new Error("Token tidak sah. Masuk kembali."); }
+  if (resp.status === 403) throw new Error("Izin operator tidak cukup (butuh payments.test).");
+  if (!resp.ok) {
+    var msg = (data && (data.pesan || data.detail || data.title)) || ("Permintaan ditolak (HTTP " + resp.status + ").");
+    throw new Error(msg);
+  }
+  return data;
+}
+
+async function masuk() {
+  var id = document.getElementById("operator-id").value.trim();
+  var t = document.getElementById("token").value.trim();
+  if (!id) { tampilPesan("Isi ID operator.", true); return; }
+  if (!t) { tampilPesan("Isi token pribadi operator.", true); return; }
+  operatorId = id;
+  token = t;
+  sessionStorage.setItem(KUNCI_OPERATOR, operatorId);
+  sessionStorage.setItem(KUNCI_TOKEN, token);
+  document.getElementById("operator-id").value = "";
+  document.getElementById("token").value = "";
+  bersihkanPesan();
+  await mulai();
+}
+
+function keluar() {
+  operatorId = "";
+  token = "";
+  sessionStorage.removeItem(KUNCI_OPERATOR);
+  sessionStorage.removeItem(KUNCI_TOKEN);
+  if (timerPantau) { clearInterval(timerPantau); timerPantau = null; }
+  orderIdDipantau = "";
+  panel.style.display = "none";
+  gate.style.display = "block";
+}
+
+async function mulai() {
+  if (!token || !operatorId) { keluar(); return; }
+  gate.style.display = "none";
+  panel.style.display = "block";
+  try {
+    var sesi = await panggil("GET", "/admin/sesi");
+    document.getElementById("identitas-operator").textContent =
+      "Masuk sebagai " + sesi.nama + " (" + sesi.id + "). Izin: " + sesi.izin.join(", ");
+  } catch (e) {
+    tampilPesan(e.message, true);
+    keluar();
+    return;
+  }
+
+  await muatInfo();
+  await muatPaket();
+}
+
+async function muatInfo() {
+  try {
+    var info = await panggil("GET", "/admin/uji-pembayaran");
+    document.getElementById("stat-lingkungan").textContent = info.lingkungan;
+    document.getElementById("stat-notifikasi").textContent =
+      info.notifikasiDialihkan ? "server ini" : "dashboard akun";
+    if (!info.gatewayAktif) {
+      tampilPesan("ServerKey Midtrans belum diisi — transaksi uji tidak bisa dibuat.", true);
+    }
+    if (!info.notifikasiDialihkan) {
+      tampilPesan(
+        "MIDTRANS_NOTIFICATION_URL belum diisi, jadi notifikasi transaksi uji mengikuti " +
+        "'Payment Notification URL' di dashboard akun Midtrans. Setel env itu ke URL " +
+        "publik server ini supaya notifikasinya benar-benar tertangkap di sini.", false);
+    }
+  } catch (e) {
+    tampilPesan(e.message, true);
+  }
+}
+
+async function muatPaket() {
+  var daftar = [];
+  try { daftar = await panggil("GET", "/paket"); } catch (e) { daftar = []; }
+  var pilih = document.getElementById("paket");
+  pilih.innerHTML = "";
+  if (!daftar.length) {
+    pilih.appendChild(el("option", { atribut: { value: "bulanan" }, teks: "Bulanan (paket bawaan)" }));
+    return;
+  }
+  daftar.forEach(function (p) {
+    pilih.appendChild(el("option", {
+      atribut: { value: p.kode },
+      teks: p.nama + " — " + formatRupiah(p.harga) + " / " + p.hari + " hari"
+    }));
+  });
+}
+
+function kodeUjiBaru() {
+  var d = new Date();
+  var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  return "UJI-" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "-" +
+    pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+}
+
+async function buatTagihan() {
+  var kode = document.getElementById("kode-desa").value.trim();
+  if (!kode) {
+    kode = kodeUjiBaru();
+    document.getElementById("kode-desa").value = kode;
+  }
+  var tombol = document.getElementById("tombol-buat");
+  tombol.disabled = true;
+  try {
+    var hasil = await panggil("POST", "/admin/uji-pembayaran", {
+      kodeAktivasi: kode,
+      paket: document.getElementById("paket").value,
+      overrideNotifikasi: document.getElementById("notifikasi").value === "1"
+    });
+
+    kodeDesaUji = hasil.kodeAktivasi;
+    orderIdDipantau = hasil.orderId;
+    document.getElementById("hasil-buat").style.display = "block";
+    document.getElementById("tautan-bayar").href = hasil.linkPembayaran;
+    document.getElementById("order-id").textContent = hasil.orderId;
+    document.getElementById("token-snap").textContent = hasil.token || "–";
+    document.getElementById("stat-order").textContent = hasil.orderId;
+
+    tampilPesan(
+      "Transaksi " + hasil.orderId + " dibuat (" + hasil.lingkungan + ", " +
+      formatRupiah(hasil.nominal) + "). Bayar di halaman Midtrans, lalu tunggu " +
+      "notifikasi masuk. Notifikasi dikirim ke: " + hasil.urlNotifikasi, false);
+
+    await pantau();
+    mulaiPantau();
+  } catch (e) {
+    tampilPesan(e.message, true);
+  } finally {
+    tombol.disabled = false;
+  }
+}
+
+function mulaiPantau() {
+  if (timerPantau) clearInterval(timerPantau);
+  timerPantau = setInterval(pantau, 5000);
+}
+
+async function pantau() {
+  if (!orderIdDipantau) return;
+  try {
+    var s = await panggil("GET", "/admin/uji-pembayaran/" + encodeURIComponent(orderIdDipantau));
+    document.getElementById("stat-status").textContent =
+      (s.gateway.transactionStatus || (s.gateway.ditemukan ? "?" : "belum ada"));
+
+    var ringkas = "Order " + s.orderId + " · " + formatRupiah(s.nominal) + " (" + s.paketNama +
+      ", " + s.hari + " hari) · desa " + (s.namaDesa || s.kodeAktivasi) +
+      " · berlaku sampai " + formatWaktu(s.berlakuSampai) +
+      " · notifikasi masuk: " + (s.webhookMasuk ? (s.webhookDiterima ? "ya, diterima" : "ya, DITOLAK") : "belum");
+    document.getElementById("ringkas-status").textContent = ringkas;
+
+    renderNotifikasi(s.notifikasi || []);
+  } catch (e) {
+    document.getElementById("ringkas-status").textContent = "Gagal memuat status: " + e.message;
+  }
+}
+
+function renderNotifikasi(daftar) {
+  var tbody = document.getElementById("baris-notifikasi");
+  tbody.innerHTML = "";
+  document.getElementById("notifikasi-kosong").style.display = daftar.length ? "none" : "block";
+
+  daftar.forEach(function (n) {
+    var tr = el("tr");
+    tr.appendChild(el("td", { teks: formatWaktu(n.waktu) }));
+    tr.appendChild(el("td", { teks: n.orderId, kelas: "mono" }));
+    tr.appendChild(el("td", { teks: n.transactionStatus || "–" }));
+    tr.appendChild(el("td", { teks: n.paymentType || "–" }));
+
+    var sig = n.signatureValid === true ? badge("sah", "badge-hijau")
+            : n.signatureValid === false ? badge("tidak sah", "badge-merah")
+            : badge("belum dinilai", "badge-abu");
+    tr.appendChild(el("td", null, sig));
+
+    var tdBalasan = el("td");
+    tdBalasan.appendChild(badge("HTTP " + n.statusBalasan,
+      n.statusBalasan === 200 ? "badge-hijau" : "badge-merah"));
+    tr.appendChild(tdBalasan);
+
+    tr.appendChild(el("td", { teks: n.hariDitambah === null || n.hariDitambah === undefined ? "–" : n.hariDitambah + " hari" }));
+    tr.appendChild(el("td", { teks: n.pesan || "–" }));
+    tbody.appendChild(tr);
+  });
+}
+
+async function hapusDesaUji() {
+  if (!kodeDesaUji) { tampilPesan("Belum ada desa uji untuk dihapus.", true); return; }
+  if (!window.confirm("Hapus desa uji " + kodeDesaUji + " beserta tagihan & pembayarannya?\n\n" +
+        "Jejak uang ikut terhapus — konfirmasi dilakukan paksa.")) return;
+  try {
+    var hasil = await panggil("DELETE",
+      "/admin/pelanggan/" + encodeURIComponent(kodeDesaUji) + "?konfirmasi=" + encodeURIComponent(kodeDesaUji));
+    tampilPesan(hasil.pesan || ("Desa uji " + kodeDesaUji + " dihapus."), false);
+    orderIdDipantau = "";
+    kodeDesaUji = "";
+    document.getElementById("hasil-buat").style.display = "none";
+    if (timerPantau) { clearInterval(timerPantau); timerPantau = null; }
+  } catch (e) {
+    tampilPesan(e.message, true);
+  }
+}
+
+document.getElementById("tombol-masuk").addEventListener("click", masuk);
+document.getElementById("tombol-buat").addEventListener("click", buatTagihan);
+document.getElementById("tombol-hapus-desa").addEventListener("click", hapusDesaUji);
+
+// Sesi operator bertahan selama tab ini terbuka (sessionStorage), seperti
+// halaman /admin — token tidak pernah ditulis ke localStorage.
+(function pulihkanSesi() {
+  var id = sessionStorage.getItem(KUNCI_OPERATOR);
+  var t = sessionStorage.getItem(KUNCI_TOKEN);
+  if (!id || !t) { gate.style.display = "block"; return; }
+  operatorId = id;
+  token = t;
+  mulai();
+})();
+</script>
+</body>
+</html>

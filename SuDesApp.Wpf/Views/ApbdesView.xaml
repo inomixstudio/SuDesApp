@@ -1,0 +1,444 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.ApbdesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             xmlns:vm="clr-namespace:SuDesApp.Wpf.ViewModels"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             xml:lang="id-ID"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <!-- Tata letak memakai Grid dengan kolom bintang, bukan StackPanel horizontal:
+         StackPanel memberi anaknya lebar tak terhingga, sehingga judul, ringkasan
+         angka, dan deretan tombol meluber keluar kartu pada jendela sempit
+         (jendela minimum 900 px menyisakan ± 640 px untuk isi halaman). -->
+    <c:DataPageFrame Margin="20">
+        <!-- Kepala halaman: chip ikon Auto, teks bintang agar membungkus. -->
+        <c:DataPageFrame.HeaderContent>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}" Margin="0,0,14,0">
+                    <TextBlock Text="{x:Static u:IkonMenu.Keuangan}" FontSize="20"
+                               FontFamily="{StaticResource AppIconFont}"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </Grid>
+        </c:DataPageFrame.HeaderContent>
+
+        <c:DataPageFrame.PageContent>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+        <!-- Alat halaman: tahun anggaran, tombol aksi (membungkus bila sempit),
+             ringkasan angka, lalu pesan keadaan. -->
+        <Border Grid.Row="1" Style="{StaticResource ToolbarCard}" Margin="0,12,0,0" Padding="16">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0">
+                        <TextBlock Text="Ringkasan APBDes" FontSize="17" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
+                        <TextBlock Text="Pilih tahun dan kelola dokumen anggaran desa."
+                                   FontSize="13" Margin="0,2,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                    <WrapPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <StackPanel Margin="0,0,8,0">
+                            <TextBlock Text="TAHUN ANGGARAN" FontSize="11" FontWeight="SemiBold"
+                                       Margin="2,0,0,3" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <ComboBox Width="150" Style="{StaticResource FormCombo}" Margin="0"
+                                      ItemsSource="{Binding TahunPilihan}" DisplayMemberPath="Label"
+                                      SelectedValuePath="Nilai" SelectedValue="{Binding Tahun, Mode=TwoWay}"
+                                      AutomationProperties.Name="Tahun anggaran"/>
+                        </StackPanel>
+                        <Button Content="Tambah Dokumen" Command="{Binding TambahCommand}"
+                                Style="{StaticResource PrimaryButton}" Margin="0,18,0,0"/>
+                        <Button Content="Impor dari Word" Command="{Binding ImporWordCommand}"
+                                Style="{StaticResource OutlineButton}" Margin="8,18,0,0"/>
+                        <Button Content="Simpan" Command="{Binding SimpanCommand}"
+                                Style="{StaticResource PrimaryButton}" Margin="8,18,0,0"/>
+                        <Button Content="Muat Ulang" Command="{Binding MuatUlangCommand}"
+                                Style="{StaticResource OutlineButton}" Margin="8,18,0,0"/>
+                    </WrapPanel>
+                </Grid>
+
+                <TextBlock Text="{Binding StatusMemuat}" TextWrapping="Wrap" Margin="0,8,0,0"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                <UniformGrid Columns="3" Rows="2" Margin="-4,12,-4,0">
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                        <StackPanel><TextBlock Text="Pendapatan" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding PendapatanTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
+                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                        <StackPanel><TextBlock Text="Belanja" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding BelanjaTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
+                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                        <StackPanel><TextBlock Text="Pembiayaan" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding PembiayaanTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
+                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                        <StackPanel><TextBlock Text="Total anggaran" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalAnggaranTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
+                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                        <StackPanel><TextBlock Text="Realisasi" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalRealisasiTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
+                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
+                        <StackPanel><TextBlock Text="Sisa anggaran" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding SisaTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
+                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <TextBlock Text="{Binding Pesan}" Foreground="{DynamicResource SuccessTextBrush}"
+                           TextWrapping="Wrap" Margin="0,8,0,0"
+                           Visibility="{Binding AdaPesan, Converter={StaticResource BoolToVis}}"/>
+                <TextBlock Text="{Binding PesanPeringatan}" Foreground="{DynamicResource WarningTextBrush}"
+                           TextWrapping="Wrap" Margin="0,6,0,0"
+                           Visibility="{Binding AdaPeringatan, Converter={StaticResource BoolToVis}}"/>
+                <TextBlock Text="{Binding PesanGalat}" Foreground="{DynamicResource ErrorTextBrush}"
+                           TextWrapping="Wrap" Margin="0,6,0,0"
+                           Visibility="{Binding AdaGalat, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Daftar dokumen (kiri) + isi dokumen terpilih (kanan). -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource FormCard}" Padding="10" Margin="0,0,12,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="{Binding JudulDaftarDokumen}" Style="{StaticResource FormSectionTitle}"/>
+                        <TextBlock Text="Pilih dokumen untuk dibaca atau disunting." TextWrapping="Wrap"
+                                   FontSize="12" Margin="0,3,0,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <Grid Grid.Row="1" Margin="0,5,0,0">
+                        <!-- Guliran mendatar dimatikan: bila aktif, item diberi lebar
+                             tak terhingga sehingga judul panjang terpotong di tepi
+                             kartu alih-alih membungkus. -->
+                        <ListView BorderThickness="0" Background="Transparent"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ItemsSource="{Binding Dokumen}"
+                                  SelectedItem="{Binding DokumenTerpilih, Mode=TwoWay}"
+                                  AutomationProperties.Name="Daftar dokumen APBDes">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="2,3" Padding="9,8" CornerRadius="7"
+                                            Background="{DynamicResource SurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold"
+                                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding Label}"/>
+                                            <TextBlock Text="{Binding Judul}" FontSize="12" Margin="0,3,0,0"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding Judul}"/>
+                                            <DockPanel LastChildFill="True" Margin="0,5,0,0">
+                                                <TextBlock DockPanel.Dock="Right" Text="{Binding TotalTampil, Mode=OneWay}"
+                                                           FontSize="11" FontWeight="SemiBold" Margin="8,0,0,0"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding TotalTampil, Mode=OneWay}"/>
+                                                <TextBlock Text="{Binding PosTampil, Mode=OneWay}" FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding PosTampil, Mode=OneWay}"/>
+                                            </DockPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <!-- Keadaan kosong: daftar tidak boleh tampak seperti halaman rusak. -->
+                        <StackPanel VerticalAlignment="Top" Margin="0,6,0,0"
+                                    Visibility="{Binding TidakAdaDokumen, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Belum ada dokumen untuk tahun ini." FontWeight="SemiBold"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="Tambahkan lewat tombol Tambah Dokumen, atau pilih tahun lain di atas."
+                                       TextWrapping="Wrap" FontSize="13" Margin="0,4,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Grid.Row="2" Margin="0,6,0,0">
+                        <TextBlock TextWrapping="Wrap" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="Tahapan: Rancangan · Awal · Perubahan · LPJ · Pelaksanaan · Realisasi. Perubahan biasanya satu kali setahun."/>
+                        <Button Content="Hapus Dokumen" Command="{Binding HapusDokumenCommand}"
+                                Style="{StaticResource OutlineButton}" Margin="0,6,0,0"
+                                HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Column="1">
+                <!-- Panel sambutan saat belum ada dokumen terpilih. -->
+                <Border Style="{StaticResource FormCard}" Padding="18" VerticalAlignment="Top"
+                        Visibility="{Binding TidakAdaDokumenTerpilih, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="BELUM ADA DOKUMEN YANG DIPILIH" Style="{StaticResource FormSectionTitle}"/>
+                        <TextBlock TextWrapping="Wrap" Margin="0,8,0,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="Pilih salah satu dokumen di daftar kiri untuk melihat identitas, berkas sumber, dan rincian anggarannya. Untuk tahun yang masih kosong, tambahkan dokumen baru lewat tombol Tambah Dokumen."/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Identitas, berkas, dan rincian ditumpuk dalam satu kolom bergulir:
+                     dua kartu berdampingan tidak muat di jendela minimum. -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Visibility="{Binding AdaDokumenTerpilih, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <!-- Identitas dokumen -->
+                        <Border Style="{StaticResource FormCard}" Padding="18" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="IDENTITAS DOKUMEN" Style="{StaticResource FormSectionTitle}"/>
+                                <TextBlock Text="{Binding JudulTampilan}" FontWeight="SemiBold"
+                                           TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                <TextBlock Text="{Binding DokumenTampil}" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                                <!-- Label di atas isian, bukan kolom 140 px: kolom tetap
+                                     menyisakan terlalu sedikit ruang di jendela sempit. -->
+                                <TextBlock Text="Tahapan" Style="{StaticResource FormLabel}" Margin="0,10,0,0"/>
+                                <ComboBox Style="{StaticResource FormCombo}" Margin="0"
+                                          FontSize="12" MaxDropDownHeight="220"
+                                          ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                          ItemsSource="{x:Static vm:ApbdesViewModel.JenisDaftar}"
+                                          SelectedItem="{Binding DokumenTerpilih.Jenis, Mode=TwoWay}"
+                                          AutomationProperties.Name="Tahapan dokumen"/>
+
+                                <StackPanel Visibility="{Binding PerluUrutanPerubahan, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="Perubahan ke" Style="{StaticResource FormLabel}" Margin="0,10,0,0"/>
+                                    <ComboBox Style="{StaticResource FormCombo}" Margin="0" Width="90"
+                                              HorizontalAlignment="Left"
+                                              ItemsSource="{Binding UrutanPerubahanPilihan}"
+                                              SelectedItem="{Binding DokumenTerpilih.PerubahanKe, Mode=TwoWay}"
+                                              AutomationProperties.Name="Perubahan ke"/>
+                                </StackPanel>
+
+                                <!-- Nomor dan tanggal berbagi satu baris supaya kartu tidak
+                                     memanjang dan tabel rincian lebih cepat terlihat. -->
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Nomor" Style="{StaticResource FormLabel}" Margin="0,0,0,4"/>
+                                        <TextBox Style="{StaticResource FieldBox}" Margin="0"
+                                                 Text="{Binding DokumenTerpilih.Nomor, UpdateSourceTrigger=PropertyChanged}"
+                                                 AutomationProperties.Name="Nomor dokumen"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Tanggal" Style="{StaticResource FormLabel}" Margin="0,0,0,4"/>
+                                        <DatePicker Style="{StaticResource FormDate}" Margin="0"
+                                                    SelectedDate="{Binding DokumenTerpilih.Tanggal, Mode=TwoWay}"
+                                                    AutomationProperties.Name="Tanggal dokumen"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="Judul" Style="{StaticResource FormLabel}" Margin="0,10,0,0"/>
+                                <TextBox Style="{StaticResource FieldBox}" Margin="0"
+                                         Text="{Binding DokumenTerpilih.Judul, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Judul dokumen"/>
+
+                                <TextBlock Text="Keterangan" Style="{StaticResource FormLabel}" Margin="0,10,0,0"/>
+                                <TextBox Style="{StaticResource FieldBox}" Margin="0" Height="60"
+                                         AcceptsReturn="True" TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Text="{Binding DokumenTerpilih.Keterangan, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Keterangan dokumen"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Berkas sumber + teks yang terbaca -->
+                        <Border Style="{StaticResource FormCard}" Padding="18" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="BERKAS SUMBER" Style="{StaticResource FormSectionTitle}"/>
+                                <TextBlock Text="{Binding BerkasTampil}" TextWrapping="Wrap"
+                                           Margin="0,8,0,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                                <!-- WrapPanel: tombol turun baris bila kartu sempit. -->
+                                <WrapPanel Margin="0,10,0,0">
+                                    <Button Content="Impor dari Word" Command="{Binding ImporWordCommand}"
+                                            Style="{StaticResource PrimaryButton}"/>
+                                    <Button Content="Lampirkan Berkas" Command="{Binding LampirkanBerkasCommand}"
+                                            Style="{StaticResource OutlineButton}" Margin="8,0,0,0"/>
+                                    <Button Content="Pratinjau" Command="{Binding PratinjauBerkasCommand}"
+                                            Style="{StaticResource PrimaryButton}" Margin="8,0,0,0"
+                                            ToolTip="{Binding KeteranganPratinjau}"
+                                            ToolTipService.ShowOnDisabled="True"
+                                            AutomationProperties.Name="Pratinjau berkas PDF di dalam aplikasi"/>
+                                    <Button Content="Buka berkas" Command="{Binding BukaBerkasCommand}"
+                                            Style="{StaticResource OutlineButton}" Margin="8,0,0,0"
+                                            ToolTip="Buka berkas lampiran dengan aplikasi luar (Word/Excel/PDF)"/>
+                                    <Button Content="Hapus berkas" Command="{Binding HapusBerkasCommand}"
+                                            Style="{StaticResource OutlineButton}" Margin="8,0,0,0"/>
+                                </WrapPanel>
+
+                                <TextBlock Margin="0,10,0,0" FontSize="13" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Text="Impor dari Word membaca berkasnya: teks dipandang di bawah dan baris kode rekening + uraian + angka menjadi tabel rincian. Lampirkan Berkas menyimpan berkas apa adanya (PDF/Excel hasil cetak Siskeudes). Berkasnya disalin ke arsip agar tidak hilang bila berkas asli dipindah. Pratinjau membuka lampiran PDF di dalam aplikasi; Word/Excel tetap dibuka lewat Buka berkas."/>
+
+                                <TextBlock Text="TEKS BERKAS YANG TERBACA"
+                                           Style="{StaticResource FormSectionTitle}" Margin="0,12,0,0"
+                                           Visibility="{Binding AdaTeks, Converter={StaticResource BoolToVis}}"/>
+                                <TextBox Margin="0,6,0,0" IsReadOnly="True" IsReadOnlyCaretVisible="False"
+                                         TextWrapping="Wrap" AcceptsReturn="True"
+                                         MinHeight="110" MaxHeight="240"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Text="{Binding TeksTampil, Mode=OneWay}"
+                                         Visibility="{Binding AdaTeks, Converter={StaticResource BoolToVis}}"
+                                         AutomationProperties.Name="Teks berkas APBDes"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Rincian anggaran dokumen terpilih -->
+                        <Border Style="{StaticResource FormCard}" Padding="16" Margin="0">
+                            <StackPanel>
+                                <TextBlock Text="RINCIAN ANGGARAN DOKUMEN INI"
+                                           Style="{StaticResource FormSectionTitle}"/>
+                                <TextBlock TextWrapping="Wrap" FontSize="13"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Text="Kode rekening (4 Pendapatan, 5 Belanja, 6 Pembiayaan), uraian, anggaran, dan realisasi apa adanya dari dokumen. Angka boleh disunting langsung: ketik tanpa titik, contoh 150000 = Rp150.000. Kolom Lebih/(Kurang) dan % dihitung dari baris ini."/>
+
+                                <!-- Tabel bisa digulir mendatar; kolomnya tidak dipaksa
+                                     mengecil sampai judul kolom terpotong. -->
+                                <Grid Margin="0,10,0,0">
+                                <DataGrid Margin="0"
+                                          Style="{StaticResource EditableDataGrid}"
+                                          ItemsSource="{Binding Pos}"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False" CanUserDeleteRows="False"
+                                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                          Background="Transparent" BorderThickness="0"
+                                          MinHeight="160" MaxHeight="340"
+                                          RowHeight="{x:Static sys:Double.NaN}" MinRowHeight="40"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                          AutomationProperties.Name="Rincian anggaran APBDes">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Kode" Width="110" MinWidth="90"
+                                                            Binding="{Binding Kode, UpdateSourceTrigger=LostFocus}"/>
+                                        <!-- Uraian membungkus ke baris berikutnya: teks panjang
+                                             tidak dipotong di tepi kolom. -->
+                                        <DataGridTextColumn Header="Uraian" Width="*" MinWidth="220"
+                                                            Binding="{Binding Uraian, UpdateSourceTrigger=LostFocus}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Anggaran (Rp)" Width="140" MinWidth="120"
+                                                            Binding="{Binding Anggaran, UpdateSourceTrigger=LostFocus}"/>
+                                        <DataGridTextColumn Header="Realisasi (Rp)" Width="140" MinWidth="120"
+                                                            Binding="{Binding Realisasi, UpdateSourceTrigger=LostFocus}"/>
+                                        <DataGridTextColumn Header="Lebih/(Kurang)" Width="140" MinWidth="120" IsReadOnly="True"
+                                                            Binding="{Binding LebihKurangTampil, Mode=OneWay}"/>
+                                        <DataGridTextColumn Header="%" Width="70" MinWidth="60" IsReadOnly="True"
+                                                            Binding="{Binding PersenTampil, Mode=OneWay}"/>
+                                        <DataGridTextColumn Header="Keterangan" Width="160" MinWidth="120"
+                                                            Binding="{Binding Keterangan, UpdateSourceTrigger=LostFocus}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTemplateColumn Width="90">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="Hapus" Command="{Binding HapusCommand}"
+                                                            Style="{StaticResource OutlineButton}" Padding="6,2"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <!-- Keadaan kosong di dalam tabel: area kosong diberi keterangan. -->
+                                <TextBlock Text="Belum ada baris rincian. Tambahkan baris dengan tombol Tambah Baris, atau impor berkas Word agar tabelnya terbaca."
+                                           TextWrapping="Wrap" MaxWidth="360" TextAlignment="Center"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           IsHitTestVisible="False" Margin="0,30,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Visibility="{Binding TidakAdaPos, Converter={StaticResource BoolToVis}}"/>
+                                </Grid>
+
+                                <!-- DockPanel: tombol di kiri, ringkasan mengisi sisa baris
+                                     dan membungkus — StackPanel horizontal akan meluber. -->
+                                <DockPanel Margin="0,12,0,0" LastChildFill="True">
+                                    <Button DockPanel.Dock="Left" Content="Tambah Baris"
+                                            Command="{Binding TambahPosCommand}"
+                                            Style="{StaticResource OutlineButton}" VerticalAlignment="Top"/>
+                                    <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextSecondaryBrush}">
+                                        <Run Text="Baris kosong diabaikan saat disimpan."/>
+                                        <Run Text=" Total anggaran: "/>
+                                        <Run Text="{Binding TotalAnggaranTampil, Mode=OneWay}" FontWeight="SemiBold"/>
+                                        <Run Text="   ·   Realisasi: "/>
+                                        <Run Text="{Binding TotalRealisasiTampil, Mode=OneWay}" FontWeight="SemiBold"/>
+                                    </TextBlock>
+                                </DockPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+        </Grid>
+        </c:DataPageFrame.PageContent>
+    </c:DataPageFrame>
+</UserControl>

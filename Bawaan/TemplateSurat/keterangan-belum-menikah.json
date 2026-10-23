@@ -1,0 +1,438 @@
+{
+  "Kode": "keterangan-belum-menikah",
+  "Kategori": "Keterangan",
+  "Keterangan": "Keterangan status belum menikah warga, umumnya untuk syarat administrasi perkawinan.",
+  "Template": {
+    "Id": 0,
+    "Nama": "Surat Keterangan Belum Menikah",
+    "Deskripsi": "Keterangan status belum menikah warga, umumnya untuk syarat administrasi perkawinan.",
+    "FormatContoh": true,
+    "VersiFormat": 1,
+    "LabelSumber": "Contoh aplikasi",
+    "PakaiKop": true,
+    "Judul": "SURAT KETERANGAN BELUM MENIKAH",
+    "SubJudul": "",
+    "PakaiNomor": true,
+    "AwalanNomor": "473",
+    "PolaNomor": "{awalan}/{urut:000}/Ds/{tahun}",
+    "PakaiTempatTanggal": false,
+    "Blok": [
+      {
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Sampai dengan diterbitkannya surat keterangan ini, yang bersangkutan berstatus BELUM PERNAH KAWIN, tidak pernah menikah secara resmi maupun tidak resmi, dan tercatat sebagai warga yang berdomisili di wilayah kami.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Apabila di kemudian hari terdapat ketidaksesuaian data, yang bersangkutan bersedia bertanggung jawab menurut peraturan perundang-undangan yang berlaku.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Demikian surat keterangan ini dibuat dengan sebenarnya agar dapat dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      }
+    ],
+    "Bagian": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_tempat_lahir",
+            "Label": "Tempat Lahir",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_tanggal_lahir",
+            "Label": "Tanggal Lahir",
+            "Tipe": 3,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Sampai dengan diterbitkannya surat keterangan ini, yang bersangkutan berstatus BELUM PERNAH KAWIN, tidak pernah menikah secara resmi maupun tidak resmi, dan tercatat sebagai warga yang berdomisili di wilayah kami.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Keperluan",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "keperluan",
+            "Label": "Keperluan",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Melengkapi persyaratan administrasi perkawinan di KUA",
+            "Kelompok": "Keperluan",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Apabila di kemudian hari terdapat ketidaksesuaian data, yang bersangkutan bersedia bertanggung jawab menurut peraturan perundang-undangan yang berlaku.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat keterangan ini dibuat dengan sebenarnya agar dapat dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "Kolom": [
+      {
+        "Kunci": "datadiri0_nama",
+        "Label": "Nama",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_nik",
+        "Label": "NIK",
+        "Tipe": 1,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "NIK (16 angka)"
+      },
+      {
+        "Kunci": "datadiri0_tempat_lahir",
+        "Label": "Tempat Lahir",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_tanggal_lahir",
+        "Label": "Tanggal Lahir",
+        "Tipe": 3,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Tanggal"
+      },
+      {
+        "Kunci": "datadiri0_pekerjaan",
+        "Label": "Pekerjaan",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_alamat",
+        "Label": "Alamat",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Paragraf"
+      },
+      {
+        "Kunci": "keperluan",
+        "Label": "Keperluan",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Melengkapi persyaratan administrasi perkawinan di KUA",
+        "Kelompok": "Keperluan",
+        "TipeLabel": "Paragraf"
+      }
+    ],
+    "PakaiGrid": false,
+    "NomorManual": false,
+    "PenandatanganDariDataDiri": false,
+    "KunciPenandatanganDataDiri": "",
+    "PakaiTandaTangan": true,
+    "JabatanPenandatangan": "",
+    "PakaiTeksKaki": false,
+    "TeksKaki": "",
+    "NomorTerakhir": 0,
+    "TahunNomor": 0,
+    "Dibuat": "0001-01-01T00:00:00",
+    "Diubah": "0001-01-01T00:00:00",
+    "DibuatOleh": "",
+    "NamaTampil": "Surat Keterangan Belum Menikah",
+    "AdaKolom": true,
+    "JumlahKolom": 7,
+    "AdaBagian": true,
+    "BagianEfektif": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_tempat_lahir",
+            "Label": "Tempat Lahir",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_tanggal_lahir",
+            "Label": "Tanggal Lahir",
+            "Tipe": 3,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Sampai dengan diterbitkannya surat keterangan ini, yang bersangkutan berstatus BELUM PERNAH KAWIN, tidak pernah menikah secara resmi maupun tidak resmi, dan tercatat sebagai warga yang berdomisili di wilayah kami.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Keperluan",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "keperluan",
+            "Label": "Keperluan",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Melengkapi persyaratan administrasi perkawinan di KUA",
+            "Kelompok": "Keperluan",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Apabila di kemudian hari terdapat ketidaksesuaian data, yang bersangkutan bersedia bertanggung jawab menurut peraturan perundang-undangan yang berlaku.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat keterangan ini dibuat dengan sebenarnya agar dapat dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "LabelKop": "Ada",
+    "LabelNomor": "Ada",
+    "NomorBerikutnyaTampil": "473/001/Ds/2026",
+    "AdaBlok": true,
+    "JumlahElemen": 10,
+    "RingkasanSusunan": "kop desa \u2022 judul \u2022 nomor \u2022 4 teks \u2022 1 data diri \u2022 1 kolom \u2022 tanda tangan",
+    "JabatanTampil": "Kepala Desa"
+  }
+}
