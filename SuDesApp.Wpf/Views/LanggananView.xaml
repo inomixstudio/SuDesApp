@@ -1,0 +1,836 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.LanggananView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+    <!--
+        Halaman Langganan — status masa aktif lisensi desa dan perpanjangannya.
+        Hanya urusan masa aktif aplikasi yang diurus di sini; data desa, surat,
+        dan lampiran tetap tersimpan di komputer desa.
+
+        Susunan (atas → bawah):
+          1. Header gradien + lencana keadaan (Demo / Full Service / Baca-saja).
+          2. Kartu status: banner keadaan + petak ringkasan (paket, berakhir,
+             sisa hari, terakhir diperiksa) + peringatan bila baca-saja.
+          3. Dua kolom: pilihan paket (kiri) dan panduan memperpanjang (kanan).
+          4. Kode aktivasi.
+          5. Server lisensi.
+
+        Lencana dan petak ringkasan semuanya membaca nilai yang sudah
+        diverifikasi tanda tangannya oleh LisensiManager — tampilan tidak pernah
+        menghitung sendiri kelayakan lisensi.
+    -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Kartu section utama -->
+        <Style x:Key="LanggananCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+        </Style>
+
+        <!-- Header kartu -->
+        <Style x:Key="LanggananCardHeader" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="18,14"/>
+        </Style>
+
+        <!-- Ikon section memakai KpiIconChip dari Themes/ThemeStyles.xaml; yang
+             tersisa di sini hanya isi ikonnya (ukuran & warna huruf). -->
+        <Style x:Key="LanggananIconText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontFamily" Value="{StaticResource AppIconFont}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Judul section memakai SectionTitleLarge dari Themes/ThemeStyles.xaml. -->
+
+        <!-- Body kartu -->
+        <Style x:Key="LanggananCardBody" TargetType="StackPanel">
+            <Setter Property="Margin" Value="20,16,20,18"/>
+        </Style>
+
+        <!-- Teks deskripsi -->
+        <Style x:Key="LanggananDesc" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <!-- InfoBox netral -->
+        <Style x:Key="LanggananInfoBox" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14,11"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        </Style>
+
+        <!-- Lencana di header: latar putih tipis, titik warna keadaan -->
+        <Style x:Key="HeaderChip" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource LapisanSedangBrush}"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="13,7"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Titik warna keadaan -->
+        <Style x:Key="TitikKeadaan" TargetType="Border">
+            <Setter Property="Width" Value="9"/>
+            <Setter Property="Height" Value="9"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Background" Value="{DynamicResource HeaderSubtitleBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding KeadaanTone}" Value="1">
+                    <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding KeadaanTone}" Value="2">
+                    <Setter Property="Background" Value="{DynamicResource WarningBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding KeadaanTone}" Value="3">
+                    <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Petak KPI, label, dan angkanya memakai KpiTile/KpiLabel/KpiValue dari
+             Themes/ThemeStyles.xaml — sama dengan halaman Daftar Hadir. -->
+
+        <!-- Paket kartu: bisa dipilih, dengan hover + penanda pilihan -->
+        <Style x:Key="PaketKartu" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,12,12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                    <Setter Property="Effect" Value="{StaticResource BayanganLembut}"/>
+                </DataTrigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Badge "PALING HEMAT" / "PAKET AKTIF" -->
+        <Style x:Key="BadgePaket" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Nomor langkah panduan -->
+        <Style x:Key="LangkahNomor" TargetType="Border">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Margin" Value="0,0,12,0"/>
+        </Style>
+
+        <Style x:Key="LangkahNomorTeks" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="LangkahTeks" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="19"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== Header dengan lencana keadaan ===== -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="{x:Static u:IkonMenu.Langganan}" FontFamily="{StaticResource AppIconFont}"
+                               FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" Margin="14,0,16,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
+                    <!-- Tanpa batas lebar buatan: subjudul mengisi ruang sampai
+                         lencana di kanan, jadi tepi kanannya sejajar dan tidak
+                         menyisakan rongga kosong di tengah header. -->
+                    <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+
+                <Border Grid.Column="2" Style="{StaticResource HeaderChip}">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Style="{StaticResource TitikKeadaan}"/>
+                        <TextBlock Text="{Binding KeadaanLabel}" FontWeight="Bold" FontSize="13"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource HeaderTextBrush}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ===== Isi ===== -->
+        <ScrollViewer Grid.Row="1" Margin="0,14,0,0"
+                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+
+                <!-- ===== Status langganan ===== -->
+                <Border Style="{StaticResource LanggananCard}">
+                    <StackPanel>
+                        <Border Style="{StaticResource LanggananCardHeader}">
+                            <DockPanel>
+                                <Border Style="{StaticResource KpiIconChip}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource LanggananIconText}" Text="{x:Static u:IkonMenu.Verifikasi}"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SectionTitleLarge}" Text="Status Langganan" Margin="12,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource LanggananCardBody}">
+                            <TextBlock Style="{StaticResource LanggananDesc}"
+                                       Text="Aplikasi ini dilisensikan per desa. Status dicek ke server lisensi; bila internet putus, status terakhir tetap sah selama masa tenggang 7 hari."/>
+
+                            <!-- Banner keadaan -->
+                            <Border Margin="0,0,0,16">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource LanggananInfoBox}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding LanggananTone}" Value="1">
+                                                <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding LanggananTone}" Value="2">
+                                                <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding LanggananTone}" Value="3">
+                                                <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <TextBlock FontWeight="Bold" FontSize="15" Text="{Binding LanggananStatus}"
+                                               Foreground="{DynamicResource TextBrush}"/>
+                                    <TextBlock FontSize="13" Margin="0,5,0,0" TextWrapping="Wrap" LineHeight="20"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Text="{Binding LanggananInfo}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Petak ringkasan: 4 petak sama lebar, rapat ke tepi,
+                                 celah diatur kolom pengisi agar sejajar dengan
+                                 elemen lain di kartu. -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource KpiTile}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource KpiLabel}" Text="PAKET"/>
+                                        <TextBlock Style="{StaticResource KpiValue}" Text="{Binding PaketNama}"/>
+                                    </StackPanel>
+                                </Border>
+                                <!-- "SAH SAMPAI", bukan "BERAKHIR": nilainya batas sah
+                                     efektif — saat tanggal bayar sudah lewat, aplikasi masih
+                                     sah karena masa tenggang 7 hari, dan label "BERAKHIR"
+                                     dengan tanggal yang sudah lewat terbaca seolah statusnya
+                                     tidak aktif. -->
+                                <Border Grid.Column="2" Style="{StaticResource KpiTile}"
+                                        ToolTip="Batas sah efektif: tanggal bayar, atau tanggal cek terakhir + masa tenggang 7 hari — mana yang lebih akhir.">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource KpiLabel}" Text="SAH SAMPAI"/>
+                                        <TextBlock Style="{StaticResource KpiValue}" Text="{Binding BerlakuSampaiTampil}"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="4" Style="{StaticResource KpiTile}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource KpiLabel}" Text="SISA HARI"/>
+                                        <TextBlock Style="{StaticResource KpiValue}" Text="{Binding SisaHariTampil}"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="6" Style="{StaticResource KpiTile}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource KpiLabel}" Text="TERAKHIR DIPERIKSA"/>
+                                        <TextBlock Style="{StaticResource KpiValue}" FontSize="13"
+                                                   Text="{Binding TerakhirDiperiksaTampil}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Peringatan baca-saja: cara keluar dari mode terkunci -->
+                            <Border CornerRadius="8" Padding="14,11" Margin="0,6,0,0"
+                                    BorderThickness="1"
+                                    Background="{DynamicResource ErrorSubtleBrush}"
+                                    BorderBrush="{DynamicResource ErrorBrush}"
+                                    Visibility="{Binding BacaSaja, Converter={StaticResource BoolToVis}}">
+                                <!-- Grid (Auto/*), bukan StackPanel horizontal: kalimat
+                                     peringatan harus membungkus, dan StackPanel horizontal
+                                     mengukur anaknya tanpa batas sehingga tidak pernah
+                                     membungkus — teksnya terpotong di tepi kartu. -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Static u:IkonMenu.Peringatan}"
+                                               FontFamily="{StaticResource AppIconFont}" FontSize="15"
+                                               Foreground="{DynamicResource ErrorTextBrush}"
+                                               VerticalAlignment="Top" Margin="0,1,10,0"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding PesanBacaSaja}" FontSize="13"
+                                               TextWrapping="Wrap" LineHeight="19"
+                                               Foreground="{DynamicResource ErrorTextBrush}"/>
+                                </Grid>
+                            </Border>
+
+                            <WrapPanel Orientation="Horizontal">
+                                <Button Content="Cek Status" Command="{Binding CekLanggananCommand}" MinWidth="140"
+                                        Margin="0,16,8,0"
+                                        HorizontalAlignment="Left" Style="{StaticResource SecondaryButton}"
+                                        ToolTip="Periksa status langganan ke server lisensi"/>
+                                <!-- Selama trial: jalan keluar langsung ke Full Service,
+                                     tanpa mencari tombol bayar di kartu paket di bawah.
+                                     Perintahnya BayarLanggananCommand yang sama, jadi
+                                     penjagaan kode aktivasi & tagihan tetap satu salinan. -->
+                                <Button Content="Bayar / Berlangganan (Full Service)" Command="{Binding BayarLanggananCommand}"
+                                        MinWidth="240" Margin="0,16,0,0"
+                                        HorizontalAlignment="Left" Style="{StaticResource PrimaryButton}"
+                                        ToolTip="Pilih paket lalu buat tagihan pembayaran — bila kode aktivasi belum diisi, isi dulu kode itu sebelum membayar"
+                                        Visibility="{Binding SedangTrial, Converter={StaticResource BoolToVis}}"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== Dua kolom: paket (kiri) + panduan (kanan) ===== -->
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Pilihan paket -->
+                    <Border Grid.Column="0" Style="{StaticResource LanggananCard}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Border Style="{StaticResource LanggananCardHeader}">
+                                <DockPanel>
+                                    <Border Style="{StaticResource KpiIconChip}" DockPanel.Dock="Left">
+                                        <TextBlock Style="{StaticResource LanggananIconText}" Text="{x:Static u:IkonMenu.Langganan}"/>
+                                    </Border>
+                                    <TextBlock Style="{StaticResource SectionTitleLarge}" Text="Paket Langganan" Margin="12,0,0,0"/>
+                                </DockPanel>
+                            </Border>
+                            <StackPanel Style="{StaticResource LanggananCardBody}">
+                                <TextBlock Style="{StaticResource LanggananDesc}" Text="{Binding KeteranganHarga}"/>
+                                <ListBox ItemsSource="{Binding PilihanPaket}"
+                                         SelectedItem="{Binding PaketTerpilihOpsi, Mode=TwoWay}"
+                                         Background="Transparent" BorderThickness="0"
+                                         Margin="0,0,-12,0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <!-- Satu baris, lebar dibagi rata: tiga kartu
+                                                 paket tampil berdampingan tanpa tersisa
+                                                 satu kartu menggantung di baris kedua. -->
+                                            <UniformGrid Rows="1"/>
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Border Style="{StaticResource PaketKartu}">
+                                                            <StackPanel Margin="16,14">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="15"
+                                                                               FontWeight="Bold" VerticalAlignment="Center"
+                                                                               TextWrapping="Wrap"
+                                                                               Foreground="{DynamicResource TextBrush}"/>
+                                                                    <TextBlock Grid.Column="1" Text="{x:Static u:IkonMenu.Verifikasi}"
+                                                                               FontFamily="{StaticResource AppIconFont}"
+                                                                               FontSize="15" VerticalAlignment="Center"
+                                                                               Foreground="{DynamicResource AccentBrush}"
+                                                                               Visibility="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolToVis}}"/>
+                                                                </Grid>
+
+                                                                <TextBlock Text="{Binding HargaTampil}" FontSize="20" FontWeight="Bold"
+                                                                           Margin="0,8,0,0" TextWrapping="Wrap"
+                                                                           Foreground="{DynamicResource TextBrush}"/>
+                                                                <TextBlock Text="{Binding HargaPerHariTampil}" FontSize="11"
+                                                                           Margin="0,2,0,0" TextWrapping="Wrap"
+                                                                           Foreground="{DynamicResource AccentTextBrush}"
+                                                                           Visibility="{Binding AdaHargaPerHari, Converter={StaticResource BoolToVis}}"/>
+                                                                <TextBlock Text="{Binding Durasi}" FontSize="13" Margin="0,4,0,0"
+                                                                           TextWrapping="Wrap"
+                                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                                <TextBlock Text="{Binding Catatan}" FontSize="11" Margin="0,3,0,0"
+                                                                           TextWrapping="Wrap"
+                                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                           FontStyle="Italic"/>
+
+                                                                <WrapPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                                                    <Border Style="{StaticResource BadgePaket}"
+                                                                            Background="{DynamicResource AccentBrush}"
+                                                                            Visibility="{Binding Disorot, Converter={StaticResource BoolToVis}}">
+                                                                        <TextBlock Text="PALING HEMAT" FontSize="10" FontWeight="Bold"
+                                                                                   Foreground="{DynamicResource OnAccentTextBrush}"/>
+                                                                    </Border>
+                                                                    <Border Style="{StaticResource BadgePaket}"
+                                                                            Background="{DynamicResource SuccessBrush}"
+                                                                            Visibility="{Binding SedangAktif, Converter={StaticResource BoolToVis}}">
+                                                                        <TextBlock Text="PAKET AKTIF" FontSize="10" FontWeight="Bold"
+                                                                                   Foreground="{DynamicResource OnSuccessTextBrush}"/>
+                                                                    </Border>
+                                                                </WrapPanel>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                </ListBox>
+                                <!-- ===== Dua jalur pembayaran =====
+                                     Jalur dipisah jelas supaya pengguna tidak menebak
+                                     mana tombol untuk cara bayar mana: otomatis
+                                     (gateway, status berubah sendiri) dan manual
+                                     (QRIS statis di layar + konfirmasi admin via
+                                     WhatsApp). Perintahnya tetap yang lama — hanya
+                                     penempatan dan penjelasannya yang baru. -->
+
+                                <!-- JALUR 1 — OTOMATIS: tagihan QRIS/VA lewat gateway.
+                                     Server memverifikasi lewat webhook, jadi tidak ada
+                                     langkah menghubungi siapa pun. -->
+                                <Border Margin="0,6,0,0" Padding="14,12" CornerRadius="8"
+                                        Background="{DynamicResource PanelBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="JALUR 1 — OTOMATIS" FontSize="12" FontWeight="Bold"
+                                                   Foreground="{DynamicResource AccentTextBrush}"/>
+                                        <TextBlock Style="{StaticResource LanggananDesc}" Margin="0,4,0,10"
+                                                   Text="Buat tagihan QRIS/VA lewat gateway pembayaran, selesaikan di peramban. Status berubah otomatis setelah pembayaran terkonfirmasi — tanpa perlu menghubungi admin."/>
+                                        <!-- WrapPanel: bila lebarnya sempit, tombol kedua turun ke
+                                             baris berikutnya. StackPanel horizontal akan memaksa
+                                             keduanya satu baris dan memotong tombol di tepi kartu
+                                             (kartu ini ClipToBounds). -->
+                                        <WrapPanel Orientation="Horizontal">
+                                            <!-- Trial hanya bagi yang belum aktif dan belum pernah
+                                                 memakai trial di komputer ini. Tombol ini TIDAK
+                                                 meminta kode aktivasi: kode yang sudah diisi dipakai
+                                                 bila ada (trial server), selain itu trial lokal —
+                                                 jalur yang sama dengan popup saat aplikasi dibuka. -->
+                                            <Button Content="Mulai Trial 14 Hari" Command="{Binding MulaiTrialCommand}"
+                                                    MinWidth="170" Margin="0,0,8,0"
+                                                    HorizontalAlignment="Left" Style="{StaticResource SecondaryButton}"
+                                                    ToolTip="Mulai masa uji coba 14 hari tanpa pembayaran dan tanpa kode aktivasi. Bila kode sudah diisi dan server terjangkau, trial dicatat server; bila offline, trial berlaku di komputer ini."
+                                                    Visibility="{Binding TampilTombolTrial, Converter={StaticResource BoolToVis}}"/>
+                                            <Button Content="Bayar / Perpanjang" Command="{Binding BayarLanggananCommand}"
+                                                    MinWidth="180"
+                                                    HorizontalAlignment="Left" Style="{StaticResource PrimaryButton}"
+                                                    ToolTip="Buat tagihan QRIS/VA sesuai paket yang dipilih dan buka di peramban"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- JALUR 2 — MANUAL: QRIS statis merchant ditampilkan di
+                                     layar ini, pembayaran diverifikasi admin (bukan
+                                     gateway). Kalimatnya sengaja menyebut WhatsApp dan
+                                     bahwa langganan aktif setelah admin menandai lunas. -->
+                                <Border Margin="0,10,0,0" Padding="14,12" CornerRadius="8"
+                                        Background="{DynamicResource PanelBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="JALUR 2 — MANUAL (SCAN QRIS + WHATSAPP)" FontSize="12" FontWeight="Bold"
+                                                   Foreground="{DynamicResource AccentTextBrush}"/>
+                                        <TextBlock Style="{StaticResource LanggananDesc}" Margin="0,4,0,10"
+                                                   TextWrapping="Wrap" LineHeight="19"
+                                                   Text="Tampilkan QRIS di layar, scan dengan aplikasi bank/e-wallet, bayar nominal yang tertera, lalu hubungi admin via WhatsApp ke nomor 0851 1166 9951 dan kirim bukti pembayaran. Langganan aktif setelah admin menandai lunas."/>
+                                        <WrapPanel Orientation="Horizontal">
+                                            <Button Content="Tampilkan QRIS (scan &amp; bayar)"
+                                                    Command="{Binding TampilkanQrisCommand}"
+                                                    MinWidth="230" HorizontalAlignment="Left"
+                                                    Style="{StaticResource SecondaryButton}"
+                                                    ToolTip="Tampilkan QRIS merchant untuk dipindai dari aplikasi bank/e-wallet, tanpa peramban"/>
+                                            <Button Content="Hubungi Admin via WhatsApp" Command="{Binding BukaWaAdminCommand}"
+                                                    MinWidth="230" Margin="8,0,0,0"
+                                                    Style="{StaticResource SecondaryButton}"
+                                                    ToolTip="Buka WhatsApp ke admin (0851 1166 9951) dengan rincian pembayaran sudah terisi"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource LanggananInfoBox}" Margin="0,10,0,0"
+                                        Visibility="{Binding TampilQris, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitleLarge}"
+                                                   Text="Pembayaran QRIS" Margin="0,0,0,10"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Latar putih di belakang QR: pembaca QR butuh
+                                                 kontras tinggi, sedangkan panel ini berlatar
+                                                 tema (bisa gelap). -->
+                                            <Border Grid.Column="0" Background="{DynamicResource QrLatarBrush}" CornerRadius="8"
+                                                    Padding="6" BorderThickness="1"
+                                                    BorderBrush="{DynamicResource BorderBrush}">
+                                                <Image Source="{Binding QrisGambar}" Width="210"
+                                                       Stretch="Uniform"
+                                                       RenderOptions.BitmapScalingMode="HighQuality">
+                                                    <Image.ToolTip>
+                                                        <TextBlock Text="QRIS merchant — pastikan nama penerima di bawah sesuai sebelum membayar."/>
+                                                    </Image.ToolTip>
+                                                </Image>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                                                <TextBlock Style="{StaticResource LanggananDesc}" Text="Nominal yang harus dibayar"/>
+                                                <TextBlock Text="{Binding QrisNominal}" FontSize="20" FontWeight="Bold"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource TextBrush}"/>
+
+                                                <TextBlock Style="{StaticResource LanggananDesc}" Margin="0,10,0,0"
+                                                           Text="Nama penerima (cek di aplikasi bank sebelum bayar)"/>
+                                                <TextBlock Text="{Binding QrisPenerima}" FontSize="13" FontWeight="SemiBold"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource TextBrush}"/>
+
+                                                <!-- Langkah bernomor: alur manual dibaca
+                                                     atas-ke-bawah, nomornya memakai gaya
+                                                     LangkahNomor yang sama dengan kartu
+                                                     panduan di sebelah kanan. -->
+                                                <Grid Margin="0,10,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.Column="0" Style="{StaticResource LangkahNomor}">
+                                                        <TextBlock Style="{StaticResource LangkahNomorTeks}" Text="1"/>
+                                                    </Border>
+                                                    <TextBlock Grid.Column="1" Style="{StaticResource LangkahTeks}" VerticalAlignment="Center"
+                                                               Text="Scan dengan aplikasi bank/e-wallet ber-QRIS, masukkan nominal PERSIS seperti di atas."/>
+                                                </Grid>
+                                                <Grid Margin="0,8,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.Column="0" Style="{StaticResource LangkahNomor}">
+                                                        <TextBlock Style="{StaticResource LangkahNomorTeks}" Text="2"/>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Style="{StaticResource LangkahTeks}" Margin="0,0,0,6"
+                                                                   Text="Hubungi admin via WhatsApp dan kirim bukti pembayaran — tombol di bawah membuka WhatsApp dengan rincian sudah terisi:"/>
+                                                        <WrapPanel Orientation="Horizontal">
+                                                            <Button Content="Hubungi Admin via WhatsApp" Command="{Binding BukaWaAdminCommand}"
+                                                                    MinWidth="230" HorizontalAlignment="Left"
+                                                                    Style="{StaticResource PrimaryButton}"
+                                                                    ToolTip="Buka WhatsApp ke admin (0851 1166 9951) dengan rincian pembayaran sudah terisi"/>
+                                                            <Button Content="Salin rincian"
+                                                                    Command="{Binding SalinRincianQrisCommand}"
+                                                                    Margin="8,0,0,0" HorizontalAlignment="Left" MinWidth="130"
+                                                                    Style="{StaticResource SecondaryButton}"
+                                                                    ToolTip="Salin kode aktivasi, paket, nominal, dan nama penerima untuk dikirim ke admin"/>
+                                                        </WrapPanel>
+                                                        <TextBlock FontSize="12" FontWeight="SemiBold" Margin="0,6,0,0"
+                                                                   TextWrapping="Wrap"
+                                                                   Foreground="{DynamicResource TextBrush}"
+                                                                   Text="{Binding NomorWaAdmin}"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                                <Grid Margin="0,8,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.Column="0" Style="{StaticResource LangkahNomor}">
+                                                        <TextBlock Style="{StaticResource LangkahNomorTeks}" Text="3"/>
+                                                    </Border>
+                                                    <TextBlock Grid.Column="1" Style="{StaticResource LangkahTeks}"
+                                                               Text="Tunggu admin menandai lunas, lalu tekan Cek Status sampai status berubah menjadi Aktif."/>
+                                                </Grid>
+
+                                                <TextBlock Style="{StaticResource LanggananDesc}" Margin="0,10,0,0"
+                                                           TextWrapping="Wrap"
+                                                           Text="{Binding QrisReferensi}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Panduan memperpanjang -->
+                    <Border Grid.Column="2" Style="{StaticResource LanggananCard}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <Border Style="{StaticResource LanggananCardHeader}">
+                                <DockPanel>
+                                    <Border Style="{StaticResource KpiIconChip}" DockPanel.Dock="Left">
+                                        <TextBlock Style="{StaticResource LanggananIconText}" Text="{x:Static u:IkonMenu.Panduan}"/>
+                                    </Border>
+                                    <TextBlock Style="{StaticResource SectionTitleLarge}" Text="Cara Memperpanjang" Margin="12,0,0,0"/>
+                                </DockPanel>
+                            </Border>
+                            <StackPanel Style="{StaticResource LanggananCardBody}">
+                                <!-- Grid, bukan StackPanel horizontal: teks langkah harus
+                                     bisa MEMBUNGKUS. Di StackPanel horizontal lebar anak
+                                     diukur tanpa batas, jadi TextWrapping tidak pernah
+                                     aktif dan kalimat panjang terpotong di tepi kartu. -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Style="{StaticResource LangkahNomor}">
+                                        <TextBlock Style="{StaticResource LangkahNomorTeks}" Text="1"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Style="{StaticResource LangkahTeks}"
+                                               Text="Isi alamat server lisensi di bagian bawah halaman ini, lalu tekan Simpan &amp; Uji."/>
+                                </Grid>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Style="{StaticResource LangkahNomor}">
+                                        <TextBlock Style="{StaticResource LangkahNomorTeks}" Text="2"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Style="{StaticResource LangkahTeks}"
+                                               Text="Masukkan kode aktivasi desa pada kartu Aktivasi Manual."/>
+                                </Grid>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Style="{StaticResource LangkahNomor}">
+                                        <TextBlock Style="{StaticResource LangkahNomorTeks}" Text="3"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Style="{StaticResource LangkahTeks}"
+                                               Text="Pilih paket (Bulanan, 6 Bulan, atau Tahunan), lalu pilih jalur — Jalur 1 Otomatis: tekan Bayar / Perpanjang, tagihan terbuka di peramban; ATAU Jalur 2 Manual: Tampilkan QRIS, scan &amp; bayar, lalu hubungi admin via WhatsApp ke 0851 1166 9951."/>
+                                </Grid>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Style="{StaticResource LangkahNomor}">
+                                        <TextBlock Style="{StaticResource LangkahNomorTeks}" Text="4"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Style="{StaticResource LangkahTeks}"
+                                               Text="Jalur otomatis: status berubah sendiri setelah gateway mengonfirmasi. Jalur manual: tunggu admin menandai lunas, lalu tekan Cek Status sampai status berubah menjadi Aktif."/>
+                                </Grid>
+
+                                <Border Style="{StaticResource LanggananInfoBox}" Padding="12,10">
+                                    <TextBlock Text="Butuh bantuan? Hubungi admin via WhatsApp ke 0851 1166 9951 bila kode aktivasi belum diterima atau pembayaran tidak kunjung terbaca."
+                                               FontSize="11" TextWrapping="Wrap" LineHeight="18"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- ===== Kode aktivasi + server lisensi berdampingan ===== -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Kode aktivasi -->
+                    <Border Grid.Column="0" Style="{StaticResource LanggananCard}">
+                        <StackPanel>
+                            <Border Style="{StaticResource LanggananCardHeader}">
+                                <DockPanel>
+                                    <Border Style="{StaticResource KpiIconChip}" DockPanel.Dock="Left">
+                                        <TextBlock Style="{StaticResource LanggananIconText}" Text="{x:Static u:IkonMenu.KataSandi}"/>
+                                    </Border>
+                                    <TextBlock Style="{StaticResource SectionTitleLarge}" Text="Aktivasi Manual" Margin="12,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource LanggananCardBody}">
+                                <TextBlock Style="{StaticResource LanggananDesc}"
+                                           Text="Aktivasi manual memakai kode aktivasi yang diberikan admin — lewat WhatsApp ke 0851 1166 9951 — setelah pembayaran manual (QRIS/transfer) dikonfirmasi. Kode ini berfungsi sebagai identitas desa, bukan rahasia. Masukkan kode di bawah, lalu tekan Simpan &amp; Cek sampai status berubah menjadi Aktif."/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Kode aktivasi" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBox VerticalContentAlignment="Center"
+                                                 Text="{Binding KodeAktivasi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="Contoh: SUDES-XXXX-001"/>
+                                        <Button Content="Simpan &amp; Cek" Command="{Binding SimpanLanggananCommand}" MinWidth="150"
+                                                Margin="0,12,0,0" HorizontalAlignment="Left" Style="{StaticResource SecondaryButton}"
+                                                ToolTip="Simpan kode aktivasi lalu periksa status langganan"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Server lisensi -->
+                    <Border Grid.Column="2" Style="{StaticResource LanggananCard}">
+                        <StackPanel>
+                            <Border Style="{StaticResource LanggananCardHeader}">
+                                <DockPanel>
+                                    <Border Style="{StaticResource KpiIconChip}" DockPanel.Dock="Left">
+                                        <TextBlock Style="{StaticResource LanggananIconText}" Text="{x:Static u:IkonMenu.Api}"/>
+                                    </Border>
+                                    <TextBlock Style="{StaticResource SectionTitleLarge}" Text="Server Lisensi" Margin="12,0,0,0"/>
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                            CornerRadius="10" Padding="10,3">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ServerBelumTersambung}" Value="False">
+                                                        <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding ServerChipTeks}" FontSize="11" FontWeight="Bold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ServerBelumTersambung}" Value="False">
+                                                            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DockPanel>
+                            </Border>
+                            <StackPanel Style="{StaticResource LanggananCardBody}">
+                                <TextBlock Style="{StaticResource LanggananDesc}"
+                                           Text="Alamat server tempat status langganan dan tagihan diperiksa. Isi alamat hasil pemasangan server lisensi (panduan langkah demi langkah ada di docs/deploy-server.md), lalu tekan Simpan &amp; Uji."/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Alamat server" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBox VerticalContentAlignment="Center"
+                                                 Text="{Binding UrlServer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 IsReadOnly="{Binding UrlServerTerkunci}"
+                                                 ToolTip="Contoh: https://lisensi.contoh.go.id"/>
+                                        <!-- Pesannya mengikuti keadaan sambungan yang sebenarnya
+                                             (PesanServer), bukan sekadar "alamatnya masih localhost" —
+                                             server yang benar-benar menjawab tidak lagi dilabeli
+                                             "pembayaran akan gagal". -->
+                                        <TextBlock Text="{Binding PesanServer}"
+                                                   FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                                                   Foreground="{DynamicResource WarningTextBrush}"
+                                                   Visibility="{Binding ServerBelumTersambung, Converter={StaticResource BoolToVis}}"/>
+                                        <TextBlock Text="{Binding CatatanAlamatServer}"
+                                                   FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   Visibility="{Binding UrlServerTerkunci, Converter={StaticResource BoolToVis}}"/>
+                                        <WrapPanel Margin="0,12,0,0">
+                                            <Button Content="Simpan &amp; Uji" Command="{Binding SimpanServerCommand}" MinWidth="150"
+                                                    Style="{StaticResource SecondaryButton}"
+                                                    IsEnabled="{Binding UrlServerDapatDiubah}"
+                                                    ToolTip="Simpan alamat server lalu langsung memeriksa status langganan"/>
+                                            <Button Content="Ubah alamat" Command="{Binding BukaKunciServerCommand}"
+                                                    MinWidth="120" Margin="8,0,0,0"
+                                                    Style="{StaticResource SecondaryButton}"
+                                                    Visibility="{Binding TampilBukaKunciServer, Converter={StaticResource BoolToVis}}"
+                                                    ToolTip="Buka kunci alamat untuk sesi ini, lalu ganti dan uji alamat baru"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Catatan jujur soal data -->
+                <Border Style="{StaticResource LanggananInfoBox}" Margin="0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{x:Static u:IkonMenu.Info}"
+                                   FontFamily="{StaticResource AppIconFont}" FontSize="14"
+                                   Foreground="{DynamicResource AccentTextBrush}"
+                                   VerticalAlignment="Top" Margin="0,1,10,0"/>
+                        <TextBlock Grid.Column="1" Text="Catatan: yang diurus di halaman ini hanya masa aktif aplikasinya. Data desa, surat, dan lampiran tetap tersimpan di komputer desa dan tetap bisa dibuka/dicadangkan tanpa internet."
+                                   FontSize="11" TextWrapping="Wrap" LineHeight="19"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Statusbar -->
+        <c:AppStatusBar Grid.Row="2" Margin="0,16,0,0"
+                        StatusText="{Binding StatusMessage, FallbackValue='Siap'}"/>
+    </Grid>
+</UserControl>

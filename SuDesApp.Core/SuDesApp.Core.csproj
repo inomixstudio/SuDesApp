@@ -1,0 +1,104 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SuDesApp</RootNamespace>
+    <AssemblyName>SuDesApp.Core</AssemblyName>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    <!-- TreatWarningsAsErrors untuk mencegah kode mati; nullability + legacy warnings tetap warning -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>CS8601;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8625;CS8629;CS0108;CS0618;CS0168</WarningsNotAsErrors>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <!-- Folder artifacts menyimpan keluaran build/verifikasi. Karena berada di dalam proyek,
+         file C# generated di sana harus dikecualikan dari kompilasi source. -->
+    <Compile Remove="artifacts\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Dapat diuji dari SuDesApp.Tests tanpa harus membuka API internal ke
+         publik. Diperlukan untuk menguji aturan yang tidak boleh bocor lewat
+         pintu lain, mis. MetaWebhookListener.VerifiTandaTangan. HARPUS
+         berbentuk ItemGroup: sebagai <PropertyGroup>, properti ini diabaikan
+         MSBuild tanpa peringatan sehingga attribute tidak ter-generate dan
+         test gagal dengan CS0117. -->
+    <InternalsVisibleTo Include="SuDesApp.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.89" />
+    <PackageReference Include="EPPlus" Version="8.7.2" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.77.0.4301" />
+    <PackageReference Include="Google.Apis.Forms.v1" Version="1.74.0.3764" />
+    <!-- Sheets API untuk mode layanan online Google Sheet/Form (baca jawaban + tulis status). -->
+    <!-- Dipin ke lini 1.77 agar selaras dengan Drive.v3 dan Google.Apis yang ditarik transitif. -->
+    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.77.0.4290" />
+    <!-- Dipin ke 10.0.12 (lini 10 LTS). Tervalidasi dari nuspec NuGet: paket ini
+         menarik SQLitePCLRaw 2.1.12 (bundle_e_sqlite3 + core) — identik dengan
+         9.0.x — sehingga provider SQLCipher tetap menang saat resolusi aset.
+         AWAS jangan sampai SQLitePCLRaw 3.0.x masuk (mis. lewat pembaruan
+         bundle_e_sqlite3 ke 3.x): provider SQLCipher (bundle_e_sqlcipher) hanya
+         pernah terbit sampai 2.1.11. Bila yang mendaftar di Batteries_V2.Init()
+         e_sqlite3 biasa, PRAGMA cipher_version kosong (enkripsi mati senyap).
+         Terverifikasi empiris pada 10.0.12: cipher_version = 4.5.2 community,
+         uji enkripsi at-rest (tulis, tolak tanpa password, baca) lulus. -->
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.13" />
+    <!-- Bundel native SQLCipher: EnkripsiDatabase memeriksa PRAGMA cipher_version
+         dan menolak jalan bila provider native e_sqlite3 biasa termuat (enkripsi
+         mati senyap). Bundel e_sqlite3 bawaan Microsoft.Data.Sqlite sengaja
+         dikeluarkan (ExcludeAssets=all) agar provider e_sqlcipher yang daftar
+         lewat Batteries_V2.Init — berkas lib-nya sama persis
+         (SQLitePCLRaw.batteries_v2.dll) dan yang menang dalam resolusi konflik
+         aset-lah yang menentukan provider aktif.
+
+         Versinya WAJIB sama dengan yang diminta Microsoft.Data.Sqlite 10.0.12
+         (2.1.12) dan sama dengan pin di proyek uji: selisih versi memicu NU1605
+         pada setiap clone bersih, sedangkan 3.0.x membuat provider SQLCipher
+         gagal dimuat. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.13" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="QuestPDF" Version="2026.9.1" />
+    <!-- QR untuk kaki surat (QrCodeSurat) -->
+    <PackageReference Include="QRCoder" Version="1.8.1" />
+    <!-- DPAPI utk kredensial klien OAuth Google (GoogleClientCredentials) -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.13" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Gambar Garuda Pancasila ditanam (embedded) di assembly: dipakai kepala
+         naskah SK sesuai format naskah dinas (Perbup 74/2020) tanpa bergantung
+         pada berkas di folder instalasi. -->
+    <EmbeddedResource Include="Resources\GarudaPancasila.png" />
+    <None Remove="Resources\GarudaPancasila.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- File yang sengaja dikecualikan (sama seperti proyek utama) -->
+    <Compile Remove="GeneratorPdf\NonClosingStreamWrapper.cs" />
+    <Compile Remove="Configuration\DapperExtensions.cs" />
+    <Compile Remove="db\DatabaseMigrator.cs" />
+  </ItemGroup>
+
+  <!-- Kredensial OAuth Google tertanam: nilai asli hidup DI LUAR git di
+       Utilities/GoogleClientCredentialsBawaan.lokal.cs (terdaftar di .gitignore;
+       ikut compile otomatis lewat globbing SDK). Saat berkas lokal ada, simbol
+       GOOGLE_KREDENSIAL_LOKAL membuat placeholder di GoogleClientCredentialsBawaan.cs
+       menjadi kosong — source yang ter-commit tidak pernah memuat rahasia. -->
+  <PropertyGroup Condition="Exists('Utilities\GoogleClientCredentialsBawaan.lokal.cs')">
+    <DefineConstants>$(DefineConstants);GOOGLE_KREDENSIAL_LOKAL</DefineConstants>
+  </PropertyGroup>
+
+</Project>

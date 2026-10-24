@@ -1,0 +1,306 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PengaturanNomorSuratView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <!-- gaya kartu disalin dari PengaturanAplikasiView (disana tetap dipakai
+         bagian lain) supaya tampilan halaman mandiri ini identik dengan
+         kartu pengaturan yang dulu memuat seksi penomoran. -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Kartu pengaturan yang seragam (judul di strip atas) -->
+        <Style x:Key="SettingCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <!-- Strip judul kartu -->
+        <Style x:Key="SettingHead" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="16,11"/>
+        </Style>
+
+        <!-- Badan kartu -->
+        <Style x:Key="SettingBody" TargetType="StackPanel">
+            <Setter Property="Margin" Value="18,14,18,16"/>
+        </Style>
+
+        <!-- Ikon bagian -->
+        <Style x:Key="SectionIcon" TargetType="Border">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="SectionIconText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <!-- Font ikon aplikasi (Segoe Fluent/MDL2): glyph mengikuti warna tema,
+                 bukan emoji berwarna yang tidak ikut tema. -->
+            <Setter Property="FontFamily" Value="{StaticResource AppIconFont}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Judul bagian dalam kartu -->
+        <Style x:Key="SettingTitle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Penjelasan bagian -->
+        <Style x:Key="SettingDesc" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <!-- Kotak input seragam (tetap pakai tema TextBox aplikasi). Tinggi 32
+             agar sejajar dengan tombol (MinHeight 32 dari tema) pada baris yang sama. -->
+        <Style x:Key="SettingInput" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="8,0"/>
+        </Style>
+
+        <!-- Kotak jalur berkas (mono) -->
+        <Style x:Key="PathBox" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="10,8"/>
+        </Style>
+        <Style x:Key="PathText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+
+        <!-- Sub-judul dalam kartu (kelompok pengaturan) -->
+        <Style x:Key="SettingSub" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+            <Setter Property="Margin" Value="0,2,0,8"/>
+        </Style>
+
+        <!-- Kotak hasil aksi -->
+        <Style x:Key="InfoBoxText" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="20"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <DockPanel>
+                <Border Style="{StaticResource HeaderIconChip}" DockPanel.Dock="Left">
+                    <TextBlock Text="&#xE8F1;" FontFamily="{StaticResource AppIconFont}" FontSize="20"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="PENGATURAN NOMOR SURAT" Style="{StaticResource HeaderTitle}"
+                               AutomationProperties.Name="PENGATURAN NOMOR SURAT"/>
+                    <TextBlock Text="Pola nomor penuh tiap jenis surat (awalan &amp; urutan) pada database desa aktif."
+                               Style="{StaticResource HeaderSubtitle}" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Isi halaman: satu kartu format nomor per jenis surat. -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+
+                <!-- ===== Penomoran surat per jenis ===== -->
+                <Border Style="{StaticResource SettingCard}">
+                    <StackPanel>
+                        <Border Style="{StaticResource SettingHead}">
+                            <DockPanel>
+                                <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE8F1;"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Format Nomor per Jenis Surat" Margin="10,0,0,0"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Style="{StaticResource SettingBody}">
+                            <TextBlock Style="{StaticResource SettingDesc}"
+                                       Text="Sesuaikan pola nomor surat untuk wilayah aktif. Format nomor yang sudah terbit tidak berubah; pola baru berlaku untuk surat yang dibuat setelah disimpan."/>
+
+                            <Border Margin="0,10,0,0" CornerRadius="8" Padding="12"
+                                    Background="{DynamicResource AccentSubtleBrush}"
+                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="Panduan mengubah pola" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextBrush}"/>
+                                    <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" LineHeight="18"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Text="1. Pastikan wilayah aktif di bawah sesuai dengan pilihan pada Pengaturan Surat; perubahan kabupaten/kota mulai dipakai setelah Pengaturan Surat disimpan.&#x0a;2. Ubah hanya bagian yang diwajibkan aturan setempat dan pertahankan penanda {0:D3} (nomor urut) serta {2:yyyy} (tahun). Penanda {1} diisi kode jenis surat bila dipakai.&#x0a;3. Periksa contoh dan peringatan awalan kembar.&#x0a;4. Tekan Simpan Penomoran. Untuk membatalkan perubahan satu jenis surat, tekan Bawaan pada baris tersebut."/>
+                                    <TextBlock Text="Pola penomoran bukan pengesahan kepatuhan hukum. Periksa naskah terbaru di JDIH kabupaten/kota dan aturan sektoral sebelum menerapkan perubahan."
+                                               Margin="0,6,0,0" TextWrapping="Wrap" LineHeight="18"
+                                               Foreground="{DynamicResource WarningTextBrush}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Kartu per jenis surat: susunan bertingkat tetap terbaca pada panel sempit. -->
+                            <Border Margin="0,10,0,0" CornerRadius="8"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                <ItemsControl ItemsSource="{Binding Penomoran}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                                                    Padding="14,12">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Row="0" Grid.Column="0">
+                                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"
+                                                                   TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/>
+                                                        <TextBlock FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}">
+                                                            <Run Text="{Binding KodeJenis, Mode=OneWay}"/>
+                                                            <Run Text=" • "/>
+                                                            <Run Text="{Binding KeteranganUrutan, Mode=OneWay}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                    <Button Grid.Row="0" Grid.Column="1" Content="Bawaan" Padding="10,0"
+                                                            FontSize="11" Margin="8,0,0,0" VerticalAlignment="Top"
+                                                            Style="{StaticResource SecondaryButton}"
+                                                            Command="{Binding KembalikanBawaanCommand}"
+                                                            Visibility="{Binding Disesuaikan, Converter={StaticResource BoolToVis}}"
+                                                            ToolTip="Kembalikan jenis surat ini ke pola bawaan aplikasi"/>
+                                                    <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0"
+                                                             Text="{Binding Format, UpdateSourceTrigger=PropertyChanged}"
+                                                             TextWrapping="Wrap" MinHeight="36"
+                                                             ToolTip="Pola lengkap. Pertahankan {0:D3} untuk urutan dan {2:yyyy} untuk tahun. {1} diisi kode jenis surat."
+                                                             AutomationProperties.Name="Pola nomor surat">
+                                                        <TextBox.Style>
+                                                            <Style TargetType="TextBox" BasedOn="{StaticResource SettingInput}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding AdaKesalahan}" Value="True">
+                                                                        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBox.Style>
+                                                    </TextBox>
+                                                    <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,7,0,0"
+                                                            CornerRadius="5" Padding="9,6"
+                                                            Background="{DynamicResource PanelBrush}"
+                                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                                        <StackPanel>
+                                                            <TextBlock Text="CONTOH NOMOR" FontSize="10" FontWeight="Bold"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Text="{Binding Contoh, Mode=OneWay}" FontFamily="Consolas"
+                                                                       FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"
+                                                                       Foreground="{DynamicResource TextBrush}"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,7,0,0">
+                                                        <TextBlock Text="{Binding PesanKesalahan}" FontSize="11" TextWrapping="Wrap"
+                                                                   Foreground="{DynamicResource ErrorTextBrush}"
+                                                                   Visibility="{Binding AdaKesalahan, Converter={StaticResource BoolToVis}}"/>
+                                                        <TextBlock Text="Belum disimpan — tekan Simpan Penomoran untuk menerapkan."
+                                                                   FontSize="11" TextWrapping="Wrap"
+                                                                   Foreground="{DynamicResource WarningTextBrush}"
+                                                                   Visibility="{Binding Terubah, Converter={StaticResource BoolToVis}}"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+
+                            <!-- Peringatan awalan kembar (nomor berpotensi sama) -->
+                            <Border Margin="0,12,0,0" CornerRadius="6" Padding="12,9" BorderThickness="1"
+                                    Background="{DynamicResource WarningSubtleBrush}"
+                                    BorderBrush="{DynamicResource WarningBrush}"
+                                    Visibility="{Binding AdaPeringatanPenomoran, Converter={StaticResource BoolToVis}}">
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource InfoBoxText}" FontWeight="SemiBold"
+                                               Text="Periksa awalan berikut — dipakai oleh lebih dari satu jenis surat:"/>
+                                    <TextBlock Style="{StaticResource InfoBoxText}" Text="{Binding PenomoranPeringatan}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <WrapPanel Margin="0,14,0,0">
+                                <Button Content="Simpan Penomoran" Width="160"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding SimpanPenomoranCommand}"
+                                        AutomationProperties.Name="Simpan penomoran surat"/>
+                                <Button Content="Muat Ulang" Width="120" Margin="8,0,0,0"
+                                        Style="{StaticResource SecondaryButton}"
+                                        AutomationProperties.Name="Muat ulang penomoran surat"
+                                        Command="{Binding MuatUlangPenomoranCommand}"
+                                        ToolTip="Buang perubahan yang belum disimpan dan muat nilai tersimpan"/>
+                                <TextBlock Text="Menyimpan…" Margin="12,0,0,0" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Visibility="{Binding PenomoranSibuk, Converter={StaticResource BoolToVis}}"/>
+                            </WrapPanel>
+
+                            <TextBlock Text="{Binding PenomoranInfo}" FontSize="11" Margin="0,8,0,0"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       AutomationProperties.Name="Status penomoran surat"/>
+                            <TextBlock Text="{Binding PenomoranVersiInfo, Mode=OneWay}" FontSize="11" Margin="0,5,0,0"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource AccentTextBrush}"
+                                       AutomationProperties.Name="Versi pola nomor yang berlaku"/>
+                            <Border Margin="0,10,0,0" CornerRadius="8" Padding="12"
+                                    Background="{DynamicResource WarningSubtleBrush}"
+                                    BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="Wilayah aktif dan acuan regulasi" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextBrush}"/>
+                                    <TextBlock Text="{Binding PenomoranCakupanInfo, Mode=OneWay}" FontSize="12"
+                                               Margin="0,4,0,0" TextWrapping="Wrap" LineHeight="18"
+                                               Foreground="{DynamicResource WarningTextBrush}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Style="{StaticResource SettingSub}" Margin="0,12,0,4"
+                                       Text="Berkas penyesuaian untuk database desa aktif (terpisah dari berkas bawaan aplikasi):"/>
+                            <Border Style="{StaticResource PathBox}">
+                                <TextBlock Style="{StaticResource PathText}" Text="{Binding PenomoranLokasiBerkas}"
+                                           ToolTip="{Binding PenomoranLokasiBerkas}"/>
+                            </Border>
+                            <TextBlock Text="Pola bawaan aplikasi hanya acuan. Tinjau dan sesuaikan dengan peraturan desa/kabupaten; tiap database desa memakai pengaturannya sendiri dan salinan sebelumnya tetap dicadangkan."
+                                       FontSize="11" Margin="0,6,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

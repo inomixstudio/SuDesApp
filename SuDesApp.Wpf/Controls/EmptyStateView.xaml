@@ -1,0 +1,89 @@
+<UserControl x:Class="SuDesApp.Wpf.Controls.EmptyStateView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="220" d:DesignWidth="440"
+             IsTabStop="False">
+    <!--
+        Panel keadaan kosong seragam untuk semua halaman data:
+        chip ikon bulat → judul singkat → pesan bantuan → aksi opsional.
+        Halaman hanya mengisi Ikon/Judul/Pesan/Aksi; gaya dan susunan selalu
+        sama di semua halaman. Ikon memakai glyph AppIconFont dari IkonMenu —
+        jangan emoji, karena tampil berbeda antar Windows dan tidak mengikuti
+        warna tema.
+
+        Judul/Pesan yang kosong otomatis disembunyikan (mis. halaman yang hanya
+        menampilkan pesan dinamis dari view model).
+    -->
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+
+        <!-- Chip ikon bulat: latar tint aksen supaya menonjol di atas kartu
+             maupun di atas overlay gradien, di semua tema. -->
+        <Border Width="64" Height="64" CornerRadius="32"
+                Background="{DynamicResource AccentSubtleBrush}"
+                HorizontalAlignment="Center">
+            <TextBlock Text="{Binding Ikon, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       FontFamily="{StaticResource AppIconFont}"
+                       FontSize="24" Foreground="{DynamicResource AccentBrush}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
+        <TextBlock FontSize="15" FontWeight="SemiBold"
+                   TextAlignment="Center" TextWrapping="Wrap" MaxWidth="440"
+                   Margin="0,12,0,0" HorizontalAlignment="Center"
+                   Foreground="{DynamicResource TextBrush}"
+                   Text="{Binding Judul, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <Trigger Property="Text" Value="">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="Text" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <TextBlock FontSize="13" TextAlignment="Center" TextWrapping="Wrap"
+                   MaxWidth="420" Margin="0,6,0,0" HorizontalAlignment="Center"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   Text="{Binding Pesan, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <Trigger Property="Text" Value="">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="Text" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <!-- Slot aksi opsional (mis. tombol "Tambah Orang"): bila kosong
+             langsung disembunyikan supaya tidak menyisakan jarak mati. -->
+        <ContentPresenter Margin="0,14,0,0" HorizontalAlignment="Center"
+                          Content="{Binding Aksi, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <ContentPresenter.Style>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Aksi, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                     Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ContentPresenter.Style>
+        </ContentPresenter>
+    </StackPanel>
+</UserControl>

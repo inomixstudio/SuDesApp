@@ -1,0 +1,66 @@
+[
+  {
+    "berkas": "AppIcon.ico",
+    "deskripsi": "Ikon aplikasi multi-ukuran (256/64/48/32/24/16 px): ikon jendela, dagu ikon, dan pemasang",
+    "jenis_sumber": "generasi-skrip",
+    "sumber": "Tools/generate-app-icon.ps1 — rasancang vektor v3 dirender lewat WPF; pembaruan wajib jalankan skrip lalu Tools/verifikasi-aset-gambar.py --perbarui",
+    "sha256": "fd3002242840e4389c80bb82e8d9a05fa6b20027610e1c808d60af763bdd0d58",
+    "diperiksa": "2026-10-18"
+  },
+  {
+    "berkas": "AppIcon-256.png",
+    "deskripsi": "Versi 256 px ikon aplikasi untuk tampilan login, splash, dan halaman Tentang",
+    "jenis_sumber": "generasi-skrip",
+    "sumber": "Tools/generate-app-icon.ps1 — dirender dari desain yang sama dengan AppIcon.ico",
+    "sha256": "b19d6a56f2a4e6a0b677bf996d882bd1e12132a382e36308e3f1002a62c976e7",
+    "diperiksa": "2026-10-18"
+  },
+  {
+    "berkas": "logo.png",
+    "deskripsi": "Logo bawaan kop surat: dipakai bila desa belum mengunggah logo sendiri (appsettings logoPath)",
+    "jenis_sumber": "aset-internal",
+    "sumber": "Aset bawaan sejak commit pertama SuDesApp; tanpa URL publik — bawaan aplikasi",
+    "sha256": "41d33f78d88bab3e064790f8673c202f9ed4cc4910790a2d0b32ade3e989d69d",
+    "diperiksa": "2026-10-18"
+  },
+  {
+    "berkas": "Qris-Pembayaran.png",
+    "deskripsi": "Kode QRIS statis untuk pembayaran langganan di halaman Langganan",
+    "jenis_sumber": "aset-perusahaan",
+    "sumber": "QRIS merchant PT Duta Publik Dwitama; isinya dijaga lebih ketat oleh uji QrTerbundel_BerisiNmidMerchantYangDiharapkan (NMID diuraikan dari payload EMVCo)",
+    "sha256": "6feb2870615da75cc720d9acac323610f56aee61115ffd4c2db11215dfc9dd72",
+    "diperiksa": "2026-10-18"
+  },
+  {
+    "berkas": "Logo-SumberjayaDev.png",
+    "deskripsi": "Logo lengkap merek pengembang di halaman Tentang → Perusahaan",
+    "jenis_sumber": "aset-perusahaan",
+    "sumber": "Aset merek Sumberjaya Dev (identitas) — internal, tanpa URL publik",
+    "sha256": "d02bd49512e4125e9535e4dc64f2d301bb8e366384f58b4a40c5b307099cfa2a",
+    "diperiksa": "2026-10-18"
+  },
+  {
+    "berkas": "Ikon-SumberjayaDev.png",
+    "deskripsi": "Versi ringkas merek Sumberjaya Dev di halaman Tentang",
+    "jenis_sumber": "aset-perusahaan",
+    "sumber": "Aset merek Sumberjaya Dev — internal, tanpa URL publik",
+    "sha256": "f290603f60d002e9f6216fa02baf42c3d1bffe0fd89f2653519fb069c961c834",
+    "diperiksa": "2026-10-18"
+  },
+  {
+    "berkas": "Logo-DutaPublik.png",
+    "deskripsi": "Logo PT Duta Publik (perusahaan induk) di halaman Tentang",
+    "jenis_sumber": "aset-perusahaan",
+    "sumber": "Aset merek PT Duta Publik — internal, tanpa URL publik",
+    "sha256": "4e877d53684026ce2aec239d1b370b658e7f1559401ada85bc2f7fc4042dae6f",
+    "diperiksa": "2026-10-18"
+  },
+  {
+    "berkas": "Ikon-DutaPublik.png",
+    "deskripsi": "Versi ikon merek PT Duta Publik di halaman Tentang",
+    "jenis_sumber": "aset-perusahaan",
+    "sumber": "Aset merek PT Duta Publik — internal, tanpa URL publik",
+    "sha256": "efdccb4fedb0093f74e45598da7e22e65a17f423854eafcdcdfb83424f7b3c28",
+    "diperiksa": "2026-10-18"
+  }
+]

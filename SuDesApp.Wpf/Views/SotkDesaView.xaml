@@ -1,0 +1,175 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.SotkDesaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             FontSize="13" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Margin="18,14,18,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}" Margin="0,0,14,0">
+                    <TextBlock Text="{x:Static u:IkonMenu.Halaman}" FontSize="19"
+                               FontFamily="{StaticResource AppIconFont}"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="SOTK DESA" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Text="Susunan organisasi, pejabat aktif, dan rancangan Peraturan Desa."
+                               Style="{StaticResource HeaderSubtitle}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Style="{StaticResource ToolbarCard}" Margin="0,0,0,12" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Ringkasan}" FontWeight="SemiBold" FontSize="14"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding StatusText}" Margin="0,3,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Pratinjau SOTK"
+                        Command="{Binding PratinjauCommand}"
+                        Style="{StaticResource PrimaryButton}"
+                        VerticalAlignment="Center" Margin="16,0,0,0"
+                        ToolTip="Buat PDF SOTK dari data perangkat aktif"/>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel MaxWidth="1500" HorizontalAlignment="Center">
+                <!-- Kartu ditata PanelKartuResponsif — pemilik kebijakan jumlah
+                     kolom (dua kolom pada jendela lebar, menumpuk selebar halaman
+                     pada jendela sempit), jarak antar kartu, dan tinggi baris
+                     (kartu bersebelahan selalu rata atas dan rata bawah). -->
+                <c:PanelKartuResponsif Jarak="12" AmbangDuaKolom="1000">
+
+                    <!-- KARTU 1: RANCANGAN PERDES — form identitas & dasar hukum. -->
+                    <Border Style="{StaticResource GridHostCard}" Padding="18">
+                        <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="RANCANGAN PERDES SOTK" FontWeight="Bold"
+                                       FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Lengkapi identitas peraturan dan dasar hukum daerah sebelum membuat pratinjau."
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1.2*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <TextBlock Text="Nomor Perdes" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource FormField}"
+                                         Text="{Binding NomorPerdes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Nomor peraturan, misalnya 2; tahun diambil dari tanggal Perdes."/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <TextBlock Text="Tanggal Perdes (dd-mm-yyyy)" Style="{StaticResource FormLabel}"/>
+                                <TextBox Style="{StaticResource FormField}"
+                                         Text="{Binding TanggalPerdes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Dasar hukum daerah" Style="{StaticResource FormLabel}"/>
+                        <TextBlock Text="Cantumkan Perda/Perbup yang berlaku, satu rujukan per baris."
+                                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" Margin="0,0,0,6"/>
+                        <TextBox Style="{StaticResource FormField}" MinHeight="132"
+                                 AcceptsReturn="True" TextWrapping="Wrap"
+                                 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"
+                                 Text="{Binding RujukanDaerah, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Masukkan rujukan Perda/Perbup SOTK yang benar-benar berlaku di daerah ini."/>
+
+                        <TextBlock Margin="0,12,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}">
+                            Tempat penetapan mengikuti Pengaturan Surat: <Run Text="{Binding NamaDesa, Mode=OneWay}"/>
+                        </TextBlock>
+                        <Border Margin="0,12,0,0" Padding="11,9" CornerRadius="8"
+                                Background="{DynamicResource AccentSubtleBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="BUKU PERDES" FontWeight="Bold" FontSize="11"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding StatusArsipPerdes}" Margin="0,3,0,0"
+                                           TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{Binding StatusPerdes}" Margin="0,8,0,0"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                            <Button Content="Simpan Draf" Command="{Binding SimpanPerdesCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
+                                    ToolTip="Simpan isian agar tidak hilang saat halaman ditutup"/>
+                            <Button Content="Pratinjau Perdes" Command="{Binding PratinjauPerdesCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                            <Button Content="Simpan ke Buku Perdes" Command="{Binding SimpanKeBukuPerdesCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    ToolTip="Terbitkan naskah SOTK sebagai arsip PERDES beserta PDF-nya"/>
+                        </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                </c:PanelKartuResponsif>
+
+                <!-- Kartu informasi berdampingan: penjelasan SOTK dan isi
+                     dokumen — dua kolom pada jendela lebar, menumpuk pada jendela
+                     sempit seperti kartu Rancangan Perdes di atasnya. -->
+                <c:PanelKartuResponsif Jarak="12" AmbangDuaKolom="1000">
+                    <Border Style="{StaticResource GridHostCard}" Padding="16,15">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="TENTANG SOTK" FontWeight="Bold" FontSize="13"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding InfoSotk}" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource GridHostCard}" Padding="16,15">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="ISI DOKUMEN" FontWeight="Bold" FontSize="13"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="BAB I · Ketentuan umum" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <TextBlock Text="Ruang lingkup dan pengertian dalam Perdes."
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                            <TextBlock Text="BAB II · Susunan organisasi" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <TextBlock Text="Jabatan dan nama pejabat aktif dari menu Perangkat Desa. Jabatan kosong ditandai dengan tanda hubung."
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                            <TextBlock Text="BAB III · Tugas dan hubungan kerja" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <TextBlock Text="Mengacu pada peraturan perundang-undangan dan dasar hukum daerah yang dicantumkan."
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                            <TextBlock Text="BAB IV · Ketentuan penutup" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                            <TextBlock Text="Memuat penutup dan blok penetapan Kepala Desa. Ukuran cetak mengikuti Pengaturan Cetak (A4/F4)."
+                                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </c:PanelKartuResponsif>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

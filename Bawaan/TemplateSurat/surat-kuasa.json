@@ -1,0 +1,745 @@
+{
+  "Kode": "surat-kuasa",
+  "Kategori": "Kuasa",
+  "Keterangan": "Surat pemberian kuasa dari warga (pemberi kuasa) kepada orang lain (penerima kuasa) untuk mengurus atau mewakili suatu kepentingan tertentu.",
+  "Template": {
+    "Id": 0,
+    "Nama": "Surat Kuasa",
+    "Deskripsi": "Surat pemberian kuasa dari warga (pemberi kuasa) kepada orang lain (penerima kuasa) untuk mengurus atau mewakili suatu kepentingan tertentu.",
+    "FormatContoh": true,
+    "VersiFormat": 1,
+    "LabelSumber": "Contoh aplikasi",
+    "PakaiKop": false,
+    "Judul": "SURAT KUASA",
+    "SubJudul": "",
+    "PakaiNomor": true,
+    "AwalanNomor": "591",
+    "PolaNomor": "{awalan}/{urut:000}/Ds/{tahun}",
+    "PakaiTempatTanggal": false,
+    "Blok": [
+      {
+        "Isi": "Yang bertanda tangan di bawah ini:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Dalam hal ini bertindak untuk dan atas nama diri sendiri, selanjutnya disebut sebagai PEMBERI KUASA, dengan ini memberikan kuasa kepada:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Untuk selanjutnya disebut sebagai PENERIMA KUASA, khusus untuk:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Penerima kuasa tidak berhak melimpahkan (menguasakan kembali) kuasa ini kepada pihak lain, kecuali dengan persetujuan tertulis lebih dahulu dari pemberi kuasa.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Pemberi kuasa dapat mencabut surat kuasa ini sewaktu-waktu selama kepentingan yang dikuasakan belum selesai dilaksanakan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Demikian surat kuasa ini dibuat dengan sebenarnya di atas materai secukupnya sesuai ketentuan peraturan perundang-undangan yang berlaku, untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      }
+    ],
+    "Bagian": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemberi Kuasa",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_tempat_lahir",
+            "Label": "Tempat Lahir",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_tanggal_lahir",
+            "Label": "Tanggal Lahir",
+            "Tipe": 3,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "datadiri0_jenis_kelamin",
+            "Label": "Jenis Kelamin",
+            "Tipe": 5,
+            "Wajib": false,
+            "Pilihan": [
+              "Laki-laki",
+              "Perempuan"
+            ],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_jabatan",
+            "Label": "Jabatan",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Dalam hal ini bertindak untuk dan atas nama diri sendiri, selanjutnya disebut sebagai PEMBERI KUASA, dengan ini memberikan kuasa kepada:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Penerima Kuasa",
+        "Kunci": "datadiri1",
+        "Kolom": [
+          {
+            "Kunci": "datadiri1_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Penerima Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri1_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Penerima Kuasa",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri1_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Penerima Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri1_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Penerima Kuasa",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Untuk selanjutnya disebut sebagai PENERIMA KUASA, khusus untuk:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Isi Kuasa",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "hal_yang_dikuasakan",
+            "Label": "Hal yang Dikuasakan",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Mewakili pemberi kuasa mengurus penerimaan dan/atau penandatanganan dokumen di instansi terkait",
+            "Kelompok": "Isi Kuasa",
+            "TipeLabel": "Paragraf"
+          },
+          {
+            "Kunci": "masa_berlaku",
+            "Label": "Masa Berlaku",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "6 (enam) bulan sejak surat kuasa ini diterbitkan",
+            "Kelompok": "Isi Kuasa",
+            "TipeLabel": "Teks"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Penerima kuasa tidak berhak melimpahkan (menguasakan kembali) kuasa ini kepada pihak lain, kecuali dengan persetujuan tertulis lebih dahulu dari pemberi kuasa.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Pemberi kuasa dapat mencabut surat kuasa ini sewaktu-waktu selama kepentingan yang dikuasakan belum selesai dilaksanakan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat kuasa ini dibuat dengan sebenarnya di atas materai secukupnya sesuai ketentuan peraturan perundang-undangan yang berlaku, untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "Kolom": [
+      {
+        "Kunci": "datadiri0_nama",
+        "Label": "Nama",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemberi Kuasa",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_nik",
+        "Label": "NIK",
+        "Tipe": 1,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemberi Kuasa",
+        "TipeLabel": "NIK (16 angka)"
+      },
+      {
+        "Kunci": "datadiri0_tempat_lahir",
+        "Label": "Tempat Lahir",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemberi Kuasa",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_tanggal_lahir",
+        "Label": "Tanggal Lahir",
+        "Tipe": 3,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemberi Kuasa",
+        "TipeLabel": "Tanggal"
+      },
+      {
+        "Kunci": "datadiri0_jenis_kelamin",
+        "Label": "Jenis Kelamin",
+        "Tipe": 5,
+        "Wajib": false,
+        "Pilihan": [
+          "Laki-laki",
+          "Perempuan"
+        ],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemberi Kuasa",
+        "TipeLabel": "Pilihan (dropdown)"
+      },
+      {
+        "Kunci": "datadiri0_pekerjaan",
+        "Label": "Pekerjaan",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemberi Kuasa",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_jabatan",
+        "Label": "Jabatan",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemberi Kuasa",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_alamat",
+        "Label": "Alamat",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemberi Kuasa",
+        "TipeLabel": "Paragraf"
+      },
+      {
+        "Kunci": "datadiri1_nama",
+        "Label": "Nama",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Penerima Kuasa",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri1_nik",
+        "Label": "NIK",
+        "Tipe": 1,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Penerima Kuasa",
+        "TipeLabel": "NIK (16 angka)"
+      },
+      {
+        "Kunci": "datadiri1_pekerjaan",
+        "Label": "Pekerjaan",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Penerima Kuasa",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri1_alamat",
+        "Label": "Alamat",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Penerima Kuasa",
+        "TipeLabel": "Paragraf"
+      },
+      {
+        "Kunci": "hal_yang_dikuasakan",
+        "Label": "Hal yang Dikuasakan",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Mewakili pemberi kuasa mengurus penerimaan dan/atau penandatanganan dokumen di instansi terkait",
+        "Kelompok": "Isi Kuasa",
+        "TipeLabel": "Paragraf"
+      },
+      {
+        "Kunci": "masa_berlaku",
+        "Label": "Masa Berlaku",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "6 (enam) bulan sejak surat kuasa ini diterbitkan",
+        "Kelompok": "Isi Kuasa",
+        "TipeLabel": "Teks"
+      }
+    ],
+    "PakaiGrid": false,
+    "NomorManual": false,
+    "PenandatanganDariDataDiri": true,
+    "KunciPenandatanganDataDiri": "datadiri0",
+    "PakaiTandaTangan": true,
+    "JabatanPenandatangan": "Pemberi Kuasa",
+    "PakaiTeksKaki": false,
+    "TeksKaki": "",
+    "NomorTerakhir": 0,
+    "TahunNomor": 0,
+    "Dibuat": "0001-01-01T00:00:00",
+    "Diubah": "0001-01-01T00:00:00",
+    "DibuatOleh": "",
+    "NamaTampil": "Surat Kuasa",
+    "AdaKolom": true,
+    "JumlahKolom": 14,
+    "AdaBagian": true,
+    "BagianEfektif": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemberi Kuasa",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_tempat_lahir",
+            "Label": "Tempat Lahir",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_tanggal_lahir",
+            "Label": "Tanggal Lahir",
+            "Tipe": 3,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "datadiri0_jenis_kelamin",
+            "Label": "Jenis Kelamin",
+            "Tipe": 5,
+            "Wajib": false,
+            "Pilihan": [
+              "Laki-laki",
+              "Perempuan"
+            ],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_jabatan",
+            "Label": "Jabatan",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemberi Kuasa",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Dalam hal ini bertindak untuk dan atas nama diri sendiri, selanjutnya disebut sebagai PEMBERI KUASA, dengan ini memberikan kuasa kepada:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Penerima Kuasa",
+        "Kunci": "datadiri1",
+        "Kolom": [
+          {
+            "Kunci": "datadiri1_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Penerima Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri1_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Penerima Kuasa",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri1_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Penerima Kuasa",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri1_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Penerima Kuasa",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Untuk selanjutnya disebut sebagai PENERIMA KUASA, khusus untuk:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Isi Kuasa",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "hal_yang_dikuasakan",
+            "Label": "Hal yang Dikuasakan",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Mewakili pemberi kuasa mengurus penerimaan dan/atau penandatanganan dokumen di instansi terkait",
+            "Kelompok": "Isi Kuasa",
+            "TipeLabel": "Paragraf"
+          },
+          {
+            "Kunci": "masa_berlaku",
+            "Label": "Masa Berlaku",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "6 (enam) bulan sejak surat kuasa ini diterbitkan",
+            "Kelompok": "Isi Kuasa",
+            "TipeLabel": "Teks"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Penerima kuasa tidak berhak melimpahkan (menguasakan kembali) kuasa ini kepada pihak lain, kecuali dengan persetujuan tertulis lebih dahulu dari pemberi kuasa.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Pemberi kuasa dapat mencabut surat kuasa ini sewaktu-waktu selama kepentingan yang dikuasakan belum selesai dilaksanakan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat kuasa ini dibuat dengan sebenarnya di atas materai secukupnya sesuai ketentuan peraturan perundang-undangan yang berlaku, untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "LabelKop": "Tanpa",
+    "LabelNomor": "Ada",
+    "NomorBerikutnyaTampil": "591/001/Ds/2026",
+    "AdaBlok": true,
+    "JumlahElemen": 12,
+    "RingkasanSusunan": "judul \u2022 nomor \u2022 6 teks \u2022 2 data diri \u2022 1 kolom \u2022 ttd (data diri)",
+    "JabatanTampil": "Pemberi Kuasa"
+  }
+}

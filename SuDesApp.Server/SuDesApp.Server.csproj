@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SuDesApp.Server</RootNamespace>
+    <AssemblyName>SuDesApp.Server</AssemblyName>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Semua warning, termasuk saran analyzer, harus dibereskan sebelum build lulus. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Jangan kompilasi file generated dari hasil build/verifikasi bersarang. -->
+    <Compile Remove="artifacts\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- appsettings.lokal.json memuat kredensial Supabase asli. Web SDK
+         otomatis menyalin appsettings*.json ke output publish, jadi tanpa
+         dua baris ini password DB ikut terbawa ke /app di dalam image Docker.
+         .dockerignore adalah lapis pertama; ini lapis kedua yang menyala dari
+         dalam proyek, jadi tetap aman walau .dockerignore terlupa. -->
+    <Content Remove="appsettings.lokal.json" />
+    <None Include="appsettings.lokal.json" CopyToOutputDirectory="Never" />
+    <Content Remove="appsettings.lokal.template.json" />
+    <None Include="appsettings.lokal.template.json" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Skema ditanam ke assembly: server menjalankan berkas yang SAMA dengan
+         yang dijalankan operator di SQL Editor, jadi tidak ada dua salinan
+         DDL yang bisa menyimpang. -->
+    <EmbeddedResource Include="schema.sql" />
+  </ItemGroup>
+
+</Project>
