@@ -1,0 +1,92 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Ember Theme — palet diadaptasi dari preset tema desain populer
+         (id preset: "ember"): latar #1D1310, aksen #F0A066, teks #F3E5DA.
+         Seluruh kunci di bawah wajib sama dengan tema lain (dijaga uji
+         TemaKonsistenTests); nilai diturunkan dari tiga warna ciri preset
+         dengan aturan yang sama seperti Green (terang) / Dark (gelap).
+         Warna teks sekunder/status digelapkan otomatis sampai lolos WCAG AA
+         di semua permukaan tema (kartu, panel, zebra, chip status). -->
+
+    <Color x:Key="PrimaryColor">#9C6842</Color>
+    <Color x:Key="SecondaryColor">#785033</Color>
+    <Color x:Key="AccentColor">#F0A066</Color>
+    <Color x:Key="BackgroundColor">#1D1310</Color>
+    <Color x:Key="SurfaceColor">#2B211E</Color>
+    <Color x:Key="TextColor">#F3E5DA</Color>
+    <Color x:Key="TextSecondaryColor">#B7AAA1</Color>
+    <Color x:Key="TextSelectedColor">#F5EAE1</Color>
+    <Color x:Key="BorderColor">#462E20</Color>
+    <Color x:Key="PanelColor">#342B28</Color>
+    <Color x:Key="SuccessColor">#22C55E</Color>
+    <Color x:Key="WarningColor">#F59E0B</Color>
+    <Color x:Key="ErrorColor">#EF4444</Color>
+    <Color x:Key="MenuBackgroundColor">#1C130E</Color>
+    <Color x:Key="MenuTextColor">#F5E9E0</Color>
+    <Color x:Key="AccentLightColor">#F4B88C</Color>
+    <Color x:Key="AccentDarkColor">#9C6842</Color>
+    <Color x:Key="ShadowColor">#50000000</Color>
+
+    <!-- Subtle badge colors -->
+    <Color x:Key="SuccessSubtleColor">#1E331E</Color>
+    <Color x:Key="WarningSubtleColor">#3B260F</Color>
+    <Color x:Key="ErrorSubtleColor">#3D1A18</Color>
+    <Color x:Key="AccentSubtleColor">#3B271C</Color>
+    <Color x:Key="ZebraColor">#271E1B</Color>
+
+    <!-- Brushes -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource SecondaryColor}"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource BackgroundColor}"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/>
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="TextSelectedBrush" Color="{StaticResource TextSelectedColor}"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource PanelColor}"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}"/>
+
+    <!-- Subtle Badge & Chip Brushes -->
+    <SolidColorBrush x:Key="SuccessSubtleBrush" Color="{StaticResource SuccessSubtleColor}"/>
+    <SolidColorBrush x:Key="WarningSubtleBrush" Color="{StaticResource WarningSubtleColor}"/>
+    <SolidColorBrush x:Key="ErrorSubtleBrush" Color="{StaticResource ErrorSubtleColor}"/>
+    <SolidColorBrush x:Key="AccentSubtleBrush" Color="{StaticResource AccentSubtleColor}"/>
+    <SolidColorBrush x:Key="ZebraBrush" Color="{StaticResource ZebraColor}"/>
+
+    <!-- Warna teks status dipisah dari warna isian agar kontrasnya aman (WCAG AA). -->
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#4ADE80"/>
+    <SolidColorBrush x:Key="WarningTextBrush" Color="#FCD34D"/>
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#FCA5A5"/>
+    <SolidColorBrush x:Key="AccentTextBrush" Color="#F2AE7D"/>
+
+    <!-- Sidebar / StatusBar -->
+    <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="{StaticResource MenuBackgroundColor}"/>
+    <SolidColorBrush x:Key="SidebarTextBrush" Color="{StaticResource MenuTextColor}"/>
+    <SolidColorBrush x:Key="SidebarAccentBrush" Color="{StaticResource AccentLightColor}"/>
+    <SolidColorBrush x:Key="SidebarHoverBrush" Color="#F0A066" Opacity="0.15"/>
+    <SolidColorBrush x:Key="SidebarPressedBrush" Color="#F0A066" Opacity="0.25"/>
+    <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="{StaticResource MenuBackgroundColor}"/>
+    <SolidColorBrush x:Key="StatusBarTextBrush" Color="{StaticResource MenuTextColor}"/>
+
+    <!-- Helper brushes -->
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="#FAFAFA"/>
+    <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="LogoCircleBackgroundBrush" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="ErrorOverlayBrush" Color="{StaticResource ErrorColor}" Opacity="0.18"/>
+
+    <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="OnPrimarySubtleBrush" Color="#FFFFFF" Opacity="0.85"/>
+    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#0F172A"/>
+
+    <SolidColorBrush x:Key="OnSuccessTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnWarningTextBrush" Color="#0F172A"/>
+    <SolidColorBrush x:Key="OnErrorTextBrush" Color="#0F172A"/>
+
+    <!-- Font -->
+    <FontFamily x:Key="AppFontFamily">pack://application:,,,/SuDesApp;component/Fonts/GoogleSans.ttc#Google Sans, Segoe UI Variable, Segoe UI</FontFamily>
+
+</ResourceDictionary>

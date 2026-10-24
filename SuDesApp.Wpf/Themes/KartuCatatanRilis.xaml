@@ -1,0 +1,184 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:SuDesApp.Wpf.ViewModels">
+    <BooleanToVisibilityConverter x:Key="RilisVis"/>
+
+    <!-- Badge TERBARU: kecil, tegas, dengan bayangan lembut. Padding samping
+         dikunci supaya lebar badge tidak bergantung pada pembulatan teks. -->
+    <Style x:Key="BadgeTerbaru" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="10,3"/>
+        <Setter Property="MinWidth" Value="64"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Effect" Value="{StaticResource BayanganLembut}"/>
+    </Style>
+
+    <!-- Badge jenis sub-bagian (FITUR BARU / PENINGKATAN / …). Width mengikuti
+         teks, TIDAK boleh menyusut: di Grid, kolom Auto pada kartu sempit bisa
+         dipaksa mengecil sehingga hurufnya terpotong. -->
+    <Style x:Key="BadgeJenisRilis" TargetType="Border">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="10,3"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Header baris sub-bagian: judul di kiri, badge jenis di kanan. Bila
+         ruang tidak cukup (jendela sempit, teks diperbesar), badge pindah ke
+         baris berikutnya alih-alih terpotong — WrapPanel mengukur badge dengan
+         lebar alaminya, sedangkan kolom Auto milik Grid masih bisa dipaksa
+         lebih sempit dari isinya. -->
+    <Style x:Key="HeaderSubBagian" TargetType="WrapPanel">
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    </Style>
+
+    <!-- Kartu versi: lebih besar dari kartu biasa, ada hover effect -->
+    <Style x:Key="KartuVersi" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="Margin" Value="0,0,0,16"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                <Setter Property="Effect" Value="{StaticResource BayanganLembut}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <DataTemplate x:Key="KartuCatatanRilis">
+        <Border Style="{StaticResource KartuVersi}">
+            <StackPanel>
+                <!-- Judul versi + badge TERBARU -->
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="10" Margin="0,0,12,0"
+                            Background="{DynamicResource AccentSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="&#x1F4CC;" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="{Binding VersionText}" FontWeight="Bold"
+                               FontSize="15" Foreground="{DynamicResource TextBrush}"
+                               VerticalAlignment="Center" Margin="0,0,12,0" TextWrapping="Wrap"/>
+                    <Border Grid.Column="2" Style="{StaticResource BadgeTerbaru}"
+                            Visibility="{Binding IsLatest, Converter={StaticResource RilisVis}}">
+                        <TextBlock Text="TERBARU" FontSize="10" FontWeight="Bold"
+                                   TextWrapping="NoWrap"
+                                   Foreground="{DynamicResource OnAccentTextBrush}"/>
+                    </Border>
+                </Grid>
+
+                <!-- Garis pemisah -->
+                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,0,0,14" Opacity="0.5"/>
+
+                <!-- Bagian di dalam satu versi -->
+                <ItemsControl ItemsSource="{Binding Sections}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,0,14">
+                                <WrapPanel Style="{StaticResource HeaderSubBagian}">
+                                    <!-- Bar aksen kiri + judul. Judul memakai lebar
+                                         bintang di dalam Grid tersendiri supaya tetap
+                                         membungkus, sementara badge di sebelahnya
+                                         memakai lebar alaminya dan turun sendiri bila
+                                         tidak muat (WrapPanel). -->
+                                    <Grid MinWidth="220">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0" Width="4" Height="16" CornerRadius="2"
+                                                Margin="0,0,10,0" VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Jenis}" Value="{x:Static local:GayaRilisCatatan.FiturBaru}">
+                                                            <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Jenis}" Value="{x:Static local:GayaRilisCatatan.Perbaikan}">
+                                                            <Setter Property="Background" Value="{DynamicResource WarningBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                        </Border>
+
+                                        <TextBlock Grid.Column="1" Text="{Binding Heading}" FontWeight="SemiBold"
+                                                   FontSize="14" Foreground="{DynamicResource TextBrush}"
+                                                   VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                    </Grid>
+
+                                    <!-- Badge jenis sub-bagian -->
+                                    <Border Margin="12,0,0,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource BadgeJenisRilis}">
+                                                <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Jenis}" Value="{x:Static local:GayaRilisCatatan.FiturBaru}">
+                                                        <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Jenis}" Value="{x:Static local:GayaRilisCatatan.Perbaikan}">
+                                                        <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding LabelJenis}" FontSize="10" FontWeight="Bold"
+                                                   TextWrapping="NoWrap">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Jenis}" Value="{x:Static local:GayaRilisCatatan.FiturBaru}">
+                                                            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Jenis}" Value="{x:Static local:GayaRilisCatatan.Perbaikan}">
+                                                            <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </WrapPanel>
+
+                                <ItemsControl ItemsSource="{Binding Points}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="14,0,0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="&#x2022;"
+                                                           Foreground="{DynamicResource AccentTextBrush}"
+                                                           FontWeight="Bold" FontSize="13"
+                                                           Margin="0,0,10,0" VerticalAlignment="Top"/>
+                                                <!-- LineStackingStrategy BlockLineHeight: baris kedua dan
+                                                     seterusnya dijarakkan 22 px dari dasar baris sebelumnya,
+                                                     sehingga LineHeight tidak memotong huruf berdiakritik pada
+                                                     pembungkus yang tidak menetapkan tinggi baris sendiri. -->
+                                                <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           FontSize="13" LineHeight="22"
+                                                           LineStackingStrategy="BlockLineHeight"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+</ResourceDictionary>

@@ -1,0 +1,132 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.InputSuratHostView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             FontSize="14"
+             SnapsToDevicePixels="True"
+             UseLayoutRounding="True">
+
+    <Grid>
+        <!-- Form isian. Disembunyikan (bukan dibuang) saat pratinjau dibuka, supaya
+             isian dan kontrol yang sedang dipegang tetap hidup: menutup pratinjau
+             kembali ke keadaan persis seperti sebelumnya. -->
+        <DockPanel Background="{DynamicResource WindowBackgroundBrush}"
+                   Visibility="{Binding TampilForm, Converter={StaticResource BoolToVis}}">
+        <!-- Peringatan data desa contoh: surat yang dibuat sekarang akan memakai
+             nama desa/pejabat contoh, jadi pengguna diberi tahu sebelum menyimpan. -->
+        <Border DockPanel.Dock="Top" Margin="20,10,20,0"
+                Background="{DynamicResource WarningSubtleBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="10" Padding="14,10"
+                Visibility="{Binding TampilPeringatanDataContoh, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="&#9888;" FontSize="15" Margin="0,0,10,0"
+                           VerticalAlignment="Top"
+                           Foreground="{DynamicResource WarningTextBrush}"/>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="Surat ini akan dibuat dengan data desa contoh"
+                               FontWeight="SemiBold" TextWrapping="Wrap"
+                               Foreground="{DynamicResource WarningTextBrush}"
+                               AutomationProperties.Name="Peringatan data desa contoh"/>
+                    <TextBlock Text="{Binding PesanPeringatanDataContoh, Mode=OneWay}"
+                               TextWrapping="Wrap" FontSize="13" Margin="0,3,0,0"
+                               Foreground="{DynamicResource WarningTextBrush}"/>
+                </StackPanel>
+
+                <Button Grid.Column="2" Content="Isi Data Desa" Padding="12,0"
+                        Margin="12,0,0,0" VerticalAlignment="Center"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding BukaPengaturanSuratCommand}"
+                        ToolTip="Buka Pengaturan Surat bagian Data Desa"/>
+            </Grid>
+        </Border>
+
+        <!-- Kop: kartu header seragam (PageHeader) seperti halaman lain.
+             Margin sisi 20; konten & panel bawah menyesuaikan agar total 20px. -->
+        <Border DockPanel.Dock="Top" Style="{StaticResource PageHeader}" Margin="20,20,20,10">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="{x:Static u:IkonMenu.Blanko}" FontFamily="{StaticResource AppIconFont}"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Text="Lengkapi data bertanda * lalu klik Simpan untuk membuat surat."
+                               Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Pemberitahuan inline: hasil simpan, isian yang belum lengkap, dan kegagalan
+             membuat PDF tampil di dalam form ini — bukan sebagai dialog popup yang
+             menutupi isian yang sedang dikerjakan. -->
+        <ItemsControl DockPanel.Dock="Top" Margin="20,0,20,0"
+                      ItemsSource="{Binding Pesan}"
+                      Visibility="{Binding Pesan.Ada, Converter={StaticResource BoolToVis}}"
+                      ItemTemplate="{StaticResource KartuPesanInline}"
+                      AutomationProperties.Name="Pemberitahuan form surat"/>
+
+        <!-- Panel bawah: kartu aksi seragam (ToolbarCard) -->
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource ToolbarCard}" Margin="20,0,20,20">
+            <!-- Grid 2 kolom: teks info memakai * (terpotong rapi) dan tombol Auto,
+                 supaya tombol Simpan/Batal selalu utuh walau jendela sempit. -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Text="Nomor surat otomatis terisi (bisa diedit)."
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           Margin="0,0,12,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Pratinjau" Width="120" Margin="0,0,8,0"
+                            Command="{Binding PratinjauCommand}"
+                            Style="{StaticResource OutlineButton}"
+                            ToolTip="Lihat kerangka PDF surat yang sedang diisi — kolom kosong tampil sebagai titik-titik. Belum disimpan ke register dan nomor suratnya belum dipakai."
+                            AutomationProperties.Name="Pratinjau surat sebelum disimpan"/>
+                    <!-- IsCancel/IsDefault dimatikan saat pratinjau tampil: tombol form
+                         yang tersembunyi tidak boleh menyimpan surat di balik pratinjau. -->
+                    <Button Content="Batal" Width="110" Margin="0,0,8,0"
+                            Command="{Binding CancelCommand}"
+                            IsCancel="{Binding TampilForm}"
+                            Style="{StaticResource OutlineButton}"/>
+                    <Button Content="{Binding SaveButtonText}" Width="150"
+                            Command="{Binding SaveCommand}"
+                            IsDefault="{Binding TampilForm}"
+                            Style="{StaticResource PrimaryButton}"
+                            AutomationProperties.Name="Simpan surat"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+<!-- Area konten: form input surat.
+              HANYA scroll vertikal (HorizontalScrollBarVisibility=Disabled):
+              isi form wajib muat lebar jendela — kolom nilai memakai * sehingga
+              ikut menyusut, tanpa scroll kiri-kanan. Grid pembungkus menjaga
+              ContentControl meregang selebar viewport. -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="0,0,0,4">
+            <Grid>
+                <ContentControl Content="{Binding InputView}" Margin="20,0,20,4"/>
+            </Grid>
+        </ScrollViewer>
+        </DockPanel>
+
+        <!-- Pratinjau PDF: halaman pratinjau yang sama dengan IDM/Agenda Surat,
+             tetapi dipasang DI DALAM form sehingga isian tidak hilang. Tombol Batal
+             pada pratinjau kembali ke isian (lihat TutupPratinjau di ViewModel). -->
+        <ContentControl Content="{Binding Pratinjau}"
+                        Visibility="{Binding PratinjauAktif, Converter={StaticResource BoolToVis}}"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,162 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SuDesApp.Wpf</RootNamespace>
+    <AssemblyName>SuDesApp</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    <AssemblyVersion>2.7.1.0</AssemblyVersion>
+    <FileVersion>2.7.1.0</FileVersion>
+    <!-- Identitas aplikasi: tampil di halaman Tentang (detail aplikasi) -->
+    <Product>SuDesApp</Product>
+    <Company>Sumberjaya Dev.</Company>
+    <Copyright>Copyright © 2026 Sumberjaya Dev.</Copyright>
+    <!-- Ikon aplikasi: file .ico multi-ukuran hasil Tools\generate-app-icon.ps1
+         (vector art WPF: tile emerald + amplop + segel lilin "SD"). -->
+    <ApplicationIcon>..\Resources\AppIcon.ico</ApplicationIcon>
+    <!-- TreatWarningsAsErrors untuk mencegah kode mati; nullability + legacy warnings tetap warning -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8625;CS8629;CS0108;CS0618;CS0168;CS8765</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <!-- Store di Wpf (ApbdesStore) punya FolderOverride internal yang
+       diisi uji; pola HARPUS sama seperti Core (lihat catatan di csproj itu):
+       wajib <ItemGroup>, bukan PropertyGroup — sebagai PropertyGroup elemen
+       ini diabaikan MSBuild dan uji gagal CS0117 dengan alasan yang tak jelas. -->
+  <ItemGroup>
+    <!-- Keluaran verifikasi/build yang berada di bawah proyek bukan source aplikasi. -->
+    <Compile Remove="artifacts\**\*.cs" />
+    <InternalsVisibleTo Include="SuDesApp.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WinForms (referensi framework saja, bukan UseWindowsForms) dibutuhkan khusus
+         untuk dialog cetak Windows standar (System.Windows.Forms.PrintDialog) + 
+         PdfiumViewer CreatePrintDocument — padanan alur cetak aplikasi lama. -->
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.13" />
+    <PackageReference Include="PdfiumViewer.Updated" Version="2.14.5" />
+    <PackageReference Include="PdfiumViewer.Native.x86_64.v8-xfa" Version="2018.4.8.256" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SuDesApp.Core\SuDesApp.Core.csproj" />
+  </ItemGroup>
+
+  <!-- File runtime yang di-share dengan proyek WinForms (data query, konfigurasi, aset). -->
+  <ItemGroup>
+    <None Include="..\appsettings.json" Link="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\desa.db.sql" Link="desa.db.sql" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\SuDesApp.Core\Data\Queries\SuratQueries.sql" Link="Data\Queries\SuratQueries.sql" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\SuDesApp.Core\Configuration\JenisSuratConfig.json" Link="Configuration\JenisSuratConfig.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Resources\logo.png" Link="Resources\logo.png" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Ikon aplikasi + versi PNG besar (dibundel sebagai resource WPF). -->
+    <Resource Include="..\Resources\AppIcon.ico" Link="Resources\AppIcon.ico" />
+    <Resource Include="..\Resources\AppIcon-256.png" Link="Resources\AppIcon-256.png" />
+    <!-- Font antarmuka Google Sans (subset latin, SIL OFL 1.1) — font yang sama
+         dengan yang dipakai antarmuka modern. Berkas .ttc berisi dua muka
+         (Regular 400 + Bold 700) sehingga tebal asli tersedia di WPF; dirakit
+         oleh Tools/embed-google-sans.py dari subset WOFF2 font aslinya.
+         OFL.txt ikut ditanam supaya lisensi selalu ikut berdistribusi.
+         Dirujuk semua tema lewat kunci AppFontFamily. -->
+    <Resource Include="Fonts\GoogleSans.ttc" />
+    <Resource Include="Fonts\OFL.txt" />
+    <!-- QRIS statis merchant untuk pembayaran manual di halaman Langganan
+         (tombol "Tampilkan QRIS"). Isinya HANYA kode QR-nya: dipotong dari
+         poster QRIS lalu dibuat hitam-putih supaya modulnya tajam, jadi yang
+         tampil di aplikasi benar-benar cuma QR (tanpa poster & logonya).
+         SENGAJA ditanam sebagai resource rakitan, BUKAN berkas di folder
+         instalasi: gambar yang bisa ditukar dari disk berarti pembayaran desa
+         bisa dialihkan ke rekening lain tanpa jejak. Mengganti QR = rilis
+         baru; teks QrisPenerima di LanggananViewModel harus diperbarui
+         bersamaan supaya nama penerima tidak menyesatkan. -->
+    <Resource Include="..\Resources\Qris-Pembayaran.png" Link="Resources\Qris-Pembayaran.png" />
+    <!-- Logo perusahaan di halaman Tentang Aplikasi (bagian Perusahaan).
+         Sumberjaya Dev adalah unit pengembangan perangkat lunak di bawah
+         naungan PT Duta Publik; kedua logo tampil beserta bagan naungannya.
+         Berkas "Ikon-*" adalah monogram untuk piring kecil di bagan —
+         dipisah supaya teks di dalam logo merek tidak diperkecil sampai
+         tak terbaca. Sumbernya PNG berkualitas tinggi dari pemilik merek,
+         tepinya sudah dipangkas agar tidak ada bantalan putih menganggur. -->
+    <Resource Include="..\Resources\Logo-SumberjayaDev.png" Link="Resources\Logo-SumberjayaDev.png" />
+    <Resource Include="..\Resources\Ikon-SumberjayaDev.png" Link="Resources\Ikon-SumberjayaDev.png" />
+    <Resource Include="..\Resources\Logo-DutaPublik.png" Link="Resources\Logo-DutaPublik.png" />
+    <Resource Include="..\Resources\Ikon-DutaPublik.png" Link="Resources\Ikon-DutaPublik.png" />
+    <!-- (Ikon "surat terbuka" lama sudah tidak dipakai — diganti AppIcon-256.png di
+         header sidebar & login agar identitas visual konsisten dengan ikon aplikasi.) -->
+    <!-- Kunci service account Google (Resources/sudesapp.json) SENGAJA tidak lagi
+         disalin ke folder keluaran: sumber pembaruan memakai updateCheckUrl HTTPS
+         publik. Jangan tambahkan kembali baris CopyToOutput untuk berkas kunci. -->
+    <!-- Lambang kabupaten/kota untuk pilihan logo kop surat (Pengaturan Surat →
+         Cetak & Logo → Sumber logo). Pengguna menaruh berkas bernama kode
+         Kemendagri kabupaten (mis. 32.15.png); README ikut tersalin supaya
+         petunjuk penamaan selalu tersedia di folder instalasi. Isinya milik
+         pengguna setelah terpasang — tambalan pembaruan tidak menggantinya
+         (awalan 'resources/logoskabupaten/' ada di daftar dilindungi). -->
+    <None Include="..\Resources\LogosKabupaten\**" Link="Resources\LogosKabupaten\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Resources\Fonts\**" Link="Resources\Fonts\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!--
+         Dokumen bawaan aplikasi (folder docs): kebijakan privasi & syarat
+         ketentuan, panduan, dan lampiran regulasi. Halaman Dokumentasi membaca
+         berkas ini dari folder aplikasi; tanpa baris ini dokumen hanya ditemukan
+         saat aplikasi dijalankan dari source, sedangkan instalasi nyata selalu
+         menampilkan "berkas tidak ditemukan". Installer mengemas seluruh
+         artifacts/publish, jadi dokumen otomatis ikut terpasang dan ikut di
+         paket portable. Dokumen milik aplikasi (bukan data pengguna) sehingga
+         boleh diperbarui lewat tambalan.
+    -->
+    <None Include="..\docs\**" Link="docs\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Contoh Perdes disertakan sebagai isian awal formulir Buku Perdes dari menu SOTK Desa. -->
+    <None Include="..\Templates\Perdes\**" Link="Templates\Perdes\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Contoh Template Surat & formulir PDF (folder Templates) ikut terbundel ke
+         hasil build/publish supaya instalasi baru tidak kosong - pengguna tidak
+         perlu membuat template sendiri dari nol. Skrip installer (SuDesApp.iss)
+         mengemas seluruh artifacts/publish, jadi berkas ini otomatis ikut terpasang.
+         Sesudah terpasang, isi folder ini milik pengguna: tambalan pembaruan kecil
+         tidak menyentuhnya (awalan 'templates/' ada di daftar dilindungi). -->
+    <None Include="..\Templates\**" Link="Templates\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!--
+         Folder Bawaan: contoh Template Surat (JSON) MILIK APLIKASI, bukan pengguna.
+         Disemai sekali ke database dengan penanda (BawaanStore), sehingga hapusan
+         pengguna menempel sementara contoh baru dari pembaruan tetap disiapkan.
+         BUKAN bagian dari daftar dilindungi tambalan — patch boleh menambah/mengganti
+         isinya tanpa mengganti DLL. -->
+    <None Include="..\Bawaan\**" Link="Bawaan\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!--
+         Data wilayah administratif Indonesia (provinsi s.d. desa/kelurahan + kode
+         pos saran) untuk pilihan berjenjang pada Pengaturan Surat. Berkas ini hasil
+         Tools/WilayahGen dari sumber cahyadsn/wilayah (lisensi MIT, acuan
+         Kepmendagri) — bukan data pengguna, jadi boleh diganti tambalan pembaruan.
+         Pilihan wilayah dibaca dari salinan ini supaya kantor desa tidak bergantung
+         pada internet.
+    -->
+    <None Include="..\Data\Wilayah\**" Link="Data\Wilayah\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Skrip otomatisasi (PowerShell/Python) untuk ScriptAutomationService -->
+  </ItemGroup>
+
+  <!--
+    CATATAN MIGRASI:
+    HandyControl (https://github.com/HandyOrg/HandyControl) opsional untuk UI modern:
+    <PackageReference Include="HandyControl" Version="3.6.0" />
+
+    CommunityToolkit.Mvvm opsional untuk Source Generator MVVM:
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+
+    Pratinjau PDF memakai PDFium (PdfiumViewer.Updated + native), bukan WebView2.
+    PdfiumViewer.Updated = 2.14.5, native x64 v8-xfa = 2018.4.8.256
+  -->
+
+</Project>

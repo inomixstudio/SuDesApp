@@ -1,0 +1,551 @@
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$Version,
+    [switch]$SkipInstaller,
+
+    # Paket yang memang tanpa kredensial Google (mis. uji internal) tetap boleh dibuat,
+    # tetapi harus disebutkan terus terang di sini — gerbang kredensial Google di
+    # bawah akan menolak publish yang tanpa kredensial tertanam.
+    [switch]$IzinkanTanpaKredensial,
+
+    # Pembaruan kecil (opsional): isi versi rilis sebelumnya, maka skrip membuat
+    # patch.json + patch-<versi>.zip dari perbandingan hasil publish. Pembandingnya
+    # diambil dari -PublishLama, dari zip portable rilis lama di artifacts/
+    # (SuDesApp_<versiLama>_win-x64.zip), atau bila keduanya kosong - diunduh
+    # sendiri dari rilis GitHub (dengan verifikasi sha256 terhadap digest aset).
+    [string]$VersiLama,
+    [string]$PublishLama,
+    [string]$Ringkasan,
+    [switch]$Besar,
+
+    # Jangan berhenti walau working tree masih kotor (hanya untuk uji coba).
+    [switch]$LewatiPemeriksaan,
+
+    # Unggah langsung ke GitHub Releases setelah aset siap: rilis dicari/dibuat
+    # sebagai draft, aset bernama sama diganti, lalu rilis diterbitkan
+    # (draft=false, make_latest=true). Token diambil dari env GITHUB_TOKEN /
+    # GH_TOKEN, atau dari kredensial github.com yang tersimpan di Git Credential
+    # Manager (token yang sama dipakai push).
+    [switch]$Unggah,
+
+    # Repo GitHub tujuan unggah (pemilik/nama).
+    [string]$Repo = 'inomixstudio/SuDesApp'
+)
+
+$ErrorActionPreference = 'Stop'
+$repoRoot = Split-Path -Parent $PSScriptRoot
+Set-Location $repoRoot
+
+# Jangan pernah menghasilkan installer yang diam-diam menunjuk server lokal,
+# HTTP, atau akar kunci yang tidak cocok dengan server aktivasi produksi.
+# Pemeriksaan dijalankan sebelum folder output publish lama disentuh.
+$appSettingsPath = Join-Path $repoRoot 'appsettings.json'
+if (-not (Test-Path -LiteralPath $appSettingsPath)) {
+    throw 'Publish dibatalkan: appsettings.json tidak ditemukan.'
+}
+$appSettings = Get-Content -LiteralPath $appSettingsPath -Raw | ConvertFrom-Json
+$urlLisensi = [string]$appSettings.Lisensi.UrlServer
+$kunciPublik = [string]$appSettings.Lisensi.KunciPublik
+$uriLisensi = $null
+if (-not [Uri]::TryCreate($urlLisensi, [UriKind]::Absolute, [ref]$uriLisensi)) {
+    throw 'Publish dibatalkan: Lisensi:UrlServer harus berupa URL absolut server produksi.'
+}
+if ($uriLisensi.Scheme -cne 'https' -or $uriLisensi.IsLoopback -or
+    $uriLisensi.Host.EndsWith('.local', [StringComparison]::OrdinalIgnoreCase) -or
+    $uriLisensi.UserInfo -or $uriLisensi.Query -or $uriLisensi.Fragment -or
+    $uriLisensi.AbsolutePath.TrimEnd('/') -ne '') {
+    throw 'Publish dibatalkan: Lisensi:UrlServer harus HTTPS dan tidak boleh mengarah ke loopback atau host .local.'
+}
+if ([string]::IsNullOrWhiteSpace($kunciPublik)) {
+    throw 'Publish dibatalkan: Lisensi:KunciPublik harus berisi kunci ES256 server produksi.'
+}
+
+$urlKunci = $urlLisensi.TrimEnd('/') + '/kunci-publik'
+try {
+    $jawabanKunci = Invoke-RestMethod -Uri $urlKunci -Method Get -TimeoutSec 10 `
+        -MaximumRedirection 0 -ErrorAction Stop
+} catch {
+    throw "Publish dibatalkan: server lisensi tidak dapat diverifikasi di $urlKunci. Pastikan server produksi aktif."
+}
+if ([string]$jawabanKunci.algoritma -cne 'ES256' -or
+    [string]$jawabanKunci.kunci -cne $kunciPublik.Trim()) {
+    throw 'Publish dibatalkan: Lisensi:KunciPublik tidak cocok dengan kunci ES256 yang disajikan server lisensi.'
+}
+Write-Host ('Server lisensi produksi terverifikasi: ' + $uriLisensi.GetLeftPart([UriPartial]::Authority)) -ForegroundColor Green
+
+$Version = $Version.Trim().TrimStart('v', 'V')
+if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "Versi tidak valid: '$Version' (harus x.y.z, mis. 2.2.0)" }
+$assemblyVersion = (($Version.Split('.') + @('0'))[0..3] -join '.')
+
+$publishDir    = Join-Path $repoRoot 'artifacts/publish'
+$installerDir  = Join-Path $repoRoot 'artifacts/installer'
+$zipPath       = Join-Path $repoRoot ("artifacts/SuDesApp_{0}_win-x64.zip" -f $Version)
+$manifestPatch = Join-Path $repoRoot 'artifacts/patch.json'
+$unggahTxt     = Join-Path $repoRoot 'artifacts/UNGGAH.txt'
+$halamanRilis  = 'https://github.com/inomixstudio/SuDesApp/releases/new?tag=v' + $Version
+
+# ---------- pembantu GitHub ----------
+# Didefinisikan di atas supaya bisa dipakai blok tambalan (unduh pembanding)
+# maupun blok unggah di bawah - PowerShell menjalankan skrip dari atas ke bawah.
+
+# Token GitHub: env GITHUB_TOKEN / GH_TOKEN lebih dulu, lalu kredensial
+# github.com yang tersimpan di Git Credential Manager (token yang sama dipakai
+# push - tidak perlu menyalin token ke berkas mana pun).
+function AmbilTokenGitHub {
+    if ($env:GITHUB_TOKEN -and $env:GITHUB_TOKEN.Trim().Length -gt 0) { return $env:GITHUB_TOKEN.Trim() }
+    if ($env:GH_TOKEN -and $env:GH_TOKEN.Trim().Length -gt 0) { return $env:GH_TOKEN.Trim() }
+
+    $interaktifLama = $env:GCM_INTERACTIVE
+    $promptLama     = $env:GIT_TERMINAL_PROMPT
+    $env:GCM_INTERACTIVE = 'never'
+    $env:GIT_TERMINAL_PROMPT = '0'
+    try {
+        $isian = ("protocol=https`nhost=github.com`n`n" | & git credential fill 2>$null)
+        foreach ($baris in $isian) {
+            if ($baris -match '^password=(.+)$') { return $Matches[1].Trim() }
+        }
+    } catch {
+    } finally {
+        $env:GCM_INTERACTIVE = $interaktifLama
+        $env:GIT_TERMINAL_PROMPT = $promptLama
+    }
+    return ''
+}
+
+# Panggilan REST API GitHub dengan pesan galat yang bisa dibaca (kode HTTP +
+# badan balasan GitHub) - dipakai untuk unduh pembanding maupun unggah aset.
+function KirimApiGitHub {
+    param([string]$Metode, [string]$Uri, [hashtable]$Kepala, [string]$Json, [string]$Berkas)
+    $arg = @{ Method = $Metode; Uri = $Uri; Headers = $Kepala; ErrorAction = 'Stop' }
+    if ($Json)   { $arg['Body']   = $Json;   $arg['ContentType'] = 'application/json; charset=utf-8' }
+    if ($Berkas) { $arg['InFile'] = $Berkas; $arg['ContentType'] = 'application/octet-stream' }
+    try {
+        $hasil = Invoke-RestMethod @arg
+        # PS 5.1: balasan JSON berupa larik kembali sebagai SATU objek larik, dan
+        # `return` meneruskannya utuh sehingga pemanggil mendapat larik bersarang
+        # (filter tag tidak akan pernah cocok). Lewatkan lewat pipeline supaya
+        # pemanggil selalu memperoleh daftar datar.
+        return $hasil | ForEach-Object { $_ }
+    } catch {
+        $galat = $_
+        $kode = '(?)'
+        try { $kode = [int]$galat.Exception.Response.StatusCode } catch { }
+        $rinci = ''
+        try {
+            $aliran = $galat.Exception.Response.GetResponseStream()
+            $rinci = (New-Object System.IO.StreamReader($aliran)).ReadToEnd()
+        } catch { }
+        throw ('GitHub API ' + $Metode + ' ' + $Uri + ' gagal (HTTP ' + $kode + '): ' + $galat.Exception.Message + ' ' + $rinci)
+    }
+}
+
+# Unduh zip portable rilis lama dari GitHub sebagai pembanding tambalan - supaya
+# pembaruan kecil bisa dibuat dari komputer mana pun tanpa unduhan manual.
+# Hasil disimpan di jalur canonic artifacts/SuDesApp_<versi>_win-x64.zip sekaligus
+# menjadi cache untuk unggahan berikutnya.
+function UnduhZipRilisLama {
+    param([string]$Versi, [string]$Tujuan)
+
+    $tag = 'v' + $Versi
+    Write-Host ("Mengunduh zip portable {0} dari rilis GitHub..." -f $tag) -ForegroundColor Cyan
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    $api = 'https://api.github.com/repos/' + $Repo
+    $kepala = @{ Accept = 'application/vnd.github+json'; 'User-Agent' = 'SuDesApp-publish-release' }
+    $token = AmbilTokenGitHub
+    if ($token) { $kepala['Authorization'] = 'Bearer ' + $token }
+
+    # Cari lewat daftar, bukan endpoint releases/tags/{tag} - endpoint itu tidak
+    # mengembalikan rilis draft (balas 404).
+    $daftar = @(KirimApiGitHub -Metode 'Get' -Uri ($api + '/releases?per_page=50') -Kepala $kepala)
+    $rilis = $daftar | Where-Object { $_.tag_name -eq $tag -and -not $_.draft } | Select-Object -First 1
+    if (-not $rilis) { throw ("rilis {0} tidak ditemukan di GitHub (atau masih draft)" -f $tag) }
+
+    $aset = @($rilis.assets) | Where-Object { $_.name -like 'SuDesApp_*_win-x64.zip' } | Select-Object -First 1
+    if (-not $aset) { throw ("rilis {0} tidak memuat zip portable SuDesApp_*_win-x64.zip" -f $tag) }
+
+    # Dua jalur unduh: URL unduh langsung tanpa header (paling tahan redirect untuk
+    # repo publik), bila gagal memakai endpoint API asset + token (repo privat).
+    $lamaProg = $ProgressPreference
+    $ProgressPreference = 'SilentlyContinue'
+    $galat = $null
+    try {
+        try {
+            Invoke-WebRequest -Uri $aset.browser_download_url -OutFile $Tujuan -UseBasicParsing -TimeoutSec 600
+        } catch {
+            if ($token) {
+                $kepalaAsset = @{
+                    Accept        = 'application/octet-stream'
+                    'User-Agent'  = 'SuDesApp-publish-release'
+                    Authorization = 'Bearer ' + $token
+                }
+                Invoke-RestMethod -Uri $aset.url -Headers $kepalaAsset -OutFile $Tujuan -TimeoutSec 600
+            } else {
+                throw
+            }
+        }
+    } catch {
+        $galat = $_
+    } finally {
+        $ProgressPreference = $lamaProg
+    }
+    if ($galat) {
+        # Berkas sebagian jangan ditinggalkan - unggahan berikutnya akan salah
+        # menganggapnya zip utuh.
+        if (Test-Path -LiteralPath $Tujuan) { Remove-Item -LiteralPath $Tujuan -Force -ErrorAction SilentlyContinue }
+        throw ('unduhan zip pembanding gagal: ' + $galat.Exception.Message)
+    }
+
+    # Verifikasi sha256 terhadap digest yang dicatat GitHub (bila tersedia).
+    if ($aset.digest -and $aset.digest.StartsWith('sha256:')) {
+        $harap = $aset.digest.Substring(7)
+        $dapat = (Get-FileHash -LiteralPath $Tujuan -Algorithm SHA256).Hash.ToLower()
+        if ($dapat -ne $harap) {
+            Remove-Item -LiteralPath $Tujuan -Force
+            throw ("sha256 zip hasil unduhan tidak cocok dengan digest rilis ({0})" -f $harap)
+        }
+    } else {
+        Write-Host '   digest aset tidak tersedia - sha256 tidak bisa diverifikasi.' -ForegroundColor Yellow
+    }
+
+    $ukuran = (Get-Item -LiteralPath $Tujuan).Length
+    Write-Host ("   terunduh: {0}  ({1:N0} byte, sha256 cocok dengan rilis)" -f (Split-Path -Leaf $Tujuan), $ukuran) -ForegroundColor Green
+}
+
+# Ringkasan pembaruan kecil: judul commit sejak tag rilis lama - saluran yang sama
+# dengan langkah "Paket pembaruan kecil" di release.yml. Berkas hasilnya
+# dikembalikan; string kosong bila tidak ada judul yang bisa diambil.
+function BuatRingkasanOtomatis {
+    param([string]$VersiLama)
+
+    $keluaran = Join-Path $repoRoot 'artifacts/RINGKASAN.txt'
+    $tagLama  = 'v' + $VersiLama
+    $adaTag = & git -c ('safe.directory=' + $repoRoot) rev-parse -q --verify ('refs/tags/' + $tagLama) 2>$null
+    if (-not $adaTag) {
+        # Tag lama tidak ada lokal (repo shallow / mesin baru) - ambil dulu seperti CI.
+        & git -c ('safe.directory=' + $repoRoot) fetch --tags --quiet 2>$null
+        $adaTag = & git -c ('safe.directory=' + $repoRoot) rev-parse -q --verify ('refs/tags/' + $tagLama) 2>$null
+    }
+
+    $judul = @()
+    if ($adaTag) {
+        $judul = @(& git -c ('safe.directory=' + $repoRoot) log --pretty=format:%s ('{0}..HEAD' -f $tagLama) 2>$null)
+    } else {
+        $judul = @(& git -c ('safe.directory=' + $repoRoot) log -n 15 --pretty=format:%s 2>$null)
+    }
+    $judul = @($judul | Where-Object { $_ -and $_.Trim().Length -gt 0 } | Select-Object -First 20)
+    if ($judul.Count -eq 0) { return '' }
+
+    $judul | Set-Content -LiteralPath $keluaran -Encoding UTF8
+    Write-Host ("Ringkasan   : {0} ({1} butir sejak {2})" -f (Split-Path -Leaf $keluaran), $judul.Count, $tagLama)
+    return $keluaran
+}
+
+Write-Host ''
+Write-Host "== Publish SuDesApp $Version ==" -ForegroundColor Cyan
+
+# Aset yang dibangun saat working tree kotor tidak akan sama dengan isi tag yang
+# dipakai aplikasi membandingkan versi — ingatkan terus terang.
+if (-not $LewatiPemeriksaan) {
+    try {
+        $kotor = (& git -c ('safe.directory=' + $repoRoot) status --porcelain 2>$null | Out-String).Trim()
+    } catch {
+        $kotor = ''
+    }
+    if ($kotor.Length -gt 0) {
+        Write-Host 'Peringatan: masih ada perubahan yang belum di-commit — aset yang dibangun tidak akan sama dengan isi tag.' -ForegroundColor Yellow
+        Write-Host 'Commit dulu, atau pakai -LewatiPemeriksaan bila memang uji coba.' -ForegroundColor Yellow
+    }
+}
+
+if (Test-Path $publishDir) { Remove-Item -Recurse -Force $publishDir }
+
+dotnet publish (Join-Path $repoRoot 'SuDesApp.Wpf/SuDesApp.Wpf.csproj') `
+    -c Release -r win-x64 --self-contained true `
+    -p:Version=$Version -p:AssemblyVersion=$assemblyVersion -p:FileVersion=$assemblyVersion `
+    -o $publishDir
+if ($LASTEXITCODE -ne 0) { throw "dotnet publish gagal (exit $LASTEXITCODE)" }
+
+if (-not (Test-Path (Join-Path $publishDir 'SuDesApp.exe'))) { throw "SuDesApp.exe tidak ditemukan di hasil publish" }
+
+# Gerbang kredensial Google: hasil publish yang tidak memuat kredensial OAuth
+# tertanam akan membuat fitur Google (Formulir/Sheet/Drive) tidak bisa menyambung
+# setelah dipasang (versi sebelumnya sempat
+# terbit begitu karena dibangun tanpa berkas rahasia build). Pemeriksaan ini
+# memastikan aset rilis tidak pernah keluar dalam keadaan seperti itu.
+$statusKredensial = 'Kredensial Google tertanam - koneksi akun Google siap dipakai.'
+$cekArg = @{}
+if ($IzinkanTanpaKredensial) { $cekArg['IzinkanTanpaKredensial'] = $true }
+& (Join-Path $PSScriptRoot 'check-kredensial-google.ps1') -Folder $publishDir @cekArg
+if ($LASTEXITCODE -ne 0) {
+    throw "Publish dibatalkan: hasil publish tidak memuat kredensial OAuth Google, sehingga aplikasi terpasang tidak bisa menyambungkan akun Google (Formulir/Sheet/Drive). Bangun aset rilis di komputer yang memiliki berkas rahasia build Utilities/GoogleClientCredentialsBawaan.lokal.cs, atau tambahkan -IzinkanTanpaKredensial bila rilis tanpa kredensial Google memang disengaja."
+}
+if ($IzinkanTanpaKredensial) {
+    $statusKredensial = 'Kredensial Google TIDAK tertanam - teknisi mengisinya di Pengaturan Aplikasi -> Kredensial Google pada tiap komputer.'
+}
+
+if (Test-Path $zipPath) { Remove-Item -Force $zipPath }
+Compress-Archive -Path (Join-Path $publishDir '*') -DestinationPath $zipPath
+Write-Host ("Portable  : " + $zipPath) -ForegroundColor Green
+
+$setup = $null
+if (-not $SkipInstaller) {
+    $iscc = @(
+        "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+        "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+        "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
+    ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    if (-not $iscc) {
+        $cmd = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+        if ($cmd) { $iscc = $cmd.Source }
+    }
+
+    if ($iscc) {
+        New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
+        # VersionInfoVersion di skrip Inno hanya menerima angka (x.y.z[.w]);
+        # prarilis seperti 2.7.1-rc1 memakai bentuk numeriknya.
+        $numericParts = @((($Version -replace '-.*$', '').Split('.')) + @('0', '0', '0'))
+        $appVersionNumeric = $numericParts[0..3] -join '.'
+        & $iscc "/DAppVersion=$Version" "/DAppVersionNumeric=$appVersionNumeric" (Join-Path $repoRoot 'installer/SuDesApp.iss')
+        if ($LASTEXITCODE -ne 0) { throw "ISCC gagal (exit $LASTEXITCODE)" }
+        $setup = Get-ChildItem -LiteralPath $installerDir -Filter ("SuDesApp_{0}_Setup.exe" -f $Version) -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $setup) { throw "Installer tidak terbentuk di $installerDir" }
+    } else {
+        Write-Host 'Inno Setup (ISCC.exe) tidak ditemukan.' -ForegroundColor Yellow
+        Write-Host 'Install gratis dari https://jrsoftware.org/isdl.php lalu jalankan ulang skrip ini.' -ForegroundColor Yellow
+    }
+}
+
+Write-Host ''
+Write-Host '== Ringkasan ==' -ForegroundColor Cyan
+$lines = @("Rilis SuDesApp $Version.", "")
+if ($setup) {
+    $hash = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLower()
+    Write-Host ("Installer : " + $setup.FullName)
+    Write-Host ("SHA-256   : " + $hash)
+    $lines += ('Installer: `{0}`' -f $setup.Name)
+    $lines += ('SHA-256 `{0}`: `{1}`' -f $setup.Name, $hash)
+} else {
+    Write-Host 'Installer : (tidak dibuat)'
+}
+$lines += ('Portable: `{0}`' -f (Split-Path -Leaf $zipPath))
+$lines += ''
+$lines += $statusKredensial
+Write-Host ("Portable  : " + $zipPath)
+Write-Host ("Kredensial: " + $statusKredensial)
+
+# ---------- tambalan (pembaruan kecil) ----------
+# Bandingkan hasil publish ini dengan hasil publish rilis lama. Pembanding bisa
+# diberikan lewat -PublishLama, dipakai dari zip portable rilis lama di artifacts/
+# bila ada, atau diunduh dari rilis GitHub bila belum ada di mesin ini.
+if ($VersiLama) {
+    if (-not $PublishLama) {
+        $zipLama = Join-Path $repoRoot ("artifacts/SuDesApp_{0}_win-x64.zip" -f $VersiLama)
+        if (-not (Test-Path -LiteralPath $zipLama)) {
+            try {
+                UnduhZipRilisLama -Versi $VersiLama -Tujuan $zipLama
+            } catch {
+                # Kegagalan lingkungan (jaringan/token/rilis tak ada) tidak boleh
+                # mematikan rilis: tambalan dilewati, patch.json jatuh ke "besar".
+                Write-Host ('Pembanding tidak tersedia: ' + $_.Exception.Message) -ForegroundColor Yellow
+                Write-Host 'Tambalan dilewati - patch.json akan berjenis "besar" (installer penuh).' -ForegroundColor Yellow
+                $VersiLama = ''
+            }
+        }
+    }
+}
+
+if ($VersiLama) {
+    if (-not $PublishLama) {
+        $PublishLama = Join-Path $repoRoot 'artifacts/publish-lama'
+        if (Test-Path -LiteralPath $PublishLama) { Remove-Item -LiteralPath $PublishLama -Recurse -Force }
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($zipLama, $PublishLama)
+        Write-Host ("Pembanding: {0} diekstrak ke {1}" -f $zipLama, $PublishLama)
+    }
+    # Ringkasan otomatis dari judul commit sejak tag rilis lama (bila -Ringkasan
+    # tidak diberi) - dipakai Buat-Tambalan dan, bila tambalan gagal, badan
+    # patch.json fallback.
+    if (-not $Ringkasan) {
+        $Ringkasan = BuatRingkasanOtomatis -VersiLama $VersiLama
+    }
+    # Hashtable splat: -Ringkasan/-Besar harus diteruskan sebagai argumen bernama.
+    # Array splat memposisikan argumen dan path RINGKASAN.txt mendarat di parameter
+    # int lain (BatasBerkasPersen).
+    $argTambalan = @{
+        Versi       = $Version
+        VersiLama   = $VersiLama
+        PublishBaru = $publishDir
+        PublishLama = $PublishLama
+        Keluaran    = (Join-Path $repoRoot 'artifacts')
+    }
+    if ($Ringkasan) { $argTambalan['Ringkasan'] = $Ringkasan }
+    if ($Besar)     { $argTambalan['Besar'] = $true }
+
+    & (Join-Path $PSScriptRoot 'Buat-Tambalan.ps1') @argTambalan
+    if ($LASTEXITCODE -ne 0) { throw "Pembuatan tambalan gagal (exit $LASTEXITCODE)" }
+}
+
+# ---------- patch.json selalu tersedia untuk versi ini ----------
+# Aplikasi terpasang membaca patch.json dari halaman rilis; tanpa berkas itu ia
+# meminta installer penuh. Bila belum ada patch.json untuk versi ini (mis. tanpa
+# pembanding), tulis manifest "besar" sebagai jaring pengaman — sama seperti
+# langkah "Pastikan patch.json tersedia" di .github/workflows/release.yml.
+$isiPatch = $null
+if (Test-Path -LiteralPath $manifestPatch) {
+    $isiPatch = Get-Content -LiteralPath $manifestPatch -Raw | ConvertFrom-Json
+    if ($isiPatch.versi -ne $Version) { $isiPatch = $null }
+}
+if (-not $isiPatch) {
+    $ringkasanFallback = @()
+    if ($Ringkasan -and (Test-Path -LiteralPath $Ringkasan)) {
+        $ringkasanFallback = @(Get-Content -LiteralPath $Ringkasan |
+            ForEach-Object { $_.Trim().TrimStart('-', '*', ' ') } |
+            Where-Object { $_.Length -gt 0 } |
+            Select-Object -First 25)
+    }
+    $fallback = [ordered]@{
+        versi         = $Version
+        dariVersi     = @()
+        jenis         = 'besar'
+        ringkasan     = $ringkasanFallback
+        berkasPatch   = ''
+        sha256Patch   = ''
+        berkas        = @()
+        berkasDihapus = @()
+        catatan       = 'Rilis ini memakai installer penuh.'
+    }
+    $fallback | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPatch -Encoding UTF8
+    Write-Host ("patch.json fallback (jenis besar) ditulis: {0}" -f $manifestPatch) -ForegroundColor Yellow
+    $isiPatch = Get-Content -LiteralPath $manifestPatch -Raw | ConvertFrom-Json
+}
+$lines += ('Pembaruan: `{0}` jenis {1} (dari {2}, {3} berkas)' -f $isiPatch.versi, $isiPatch.jenis, ($isiPatch.dariVersi -join ', '), @($isiPatch.berkas).Count)
+if ($isiPatch.jenis -eq 'kecil') { $lines += ('Tambalan: `{0}`' -f $isiPatch.berkasPatch) }
+Write-Host ("Tambalan  : " + $manifestPatch) -ForegroundColor Green
+
+# ---------- catatan rilis ----------
+$releaseNotes = Join-Path $repoRoot 'artifacts/RELEASE.md'
+Set-Content -LiteralPath $releaseNotes -Value $lines -Encoding UTF8
+Write-Host ("Catatan   : " + $releaseNotes)
+
+# ---------- daftar aset untuk diunggah ----------
+$daftarAset = @()
+if ($setup) { $daftarAset += $setup.FullName }
+$daftarAset += $zipPath
+$daftarAset += $manifestPatch
+$patchZip = Join-Path $repoRoot ("artifacts/patch-{0}.zip" -f $Version)
+if (Test-Path -LiteralPath $patchZip) { $daftarAset += $patchZip }
+
+$barisUnggah = @(
+    "Daftar aset rilis SuDesApp $Version - unggah ke:",
+    $halamanRilis,
+    ""
+)
+foreach ($berkas in $daftarAset) {
+    $item = Get-Item -LiteralPath $berkas
+    $hash = (Get-FileHash -LiteralPath $berkas -Algorithm SHA256).Hash.ToLower()
+    $barisUnggah += ('- {0}  ({1:N0} byte)  sha256: {2}' -f $item.Name, $item.Length, $hash)
+}
+$barisUnggah += ''
+$barisUnggah += 'patch.json wajib ikut diunggah - tanpa berkas itu aplikasi terpasang meminta installer penuh.'
+Set-Content -LiteralPath $unggahTxt -Value $barisUnggah -Encoding UTF8
+Write-Host ("Daftar    : " + $unggahTxt)
+
+Write-Host ''
+# ---------- unggah ke GitHub Releases (opsional) ----------
+# Memakai REST API langsung supaya tidak butuh gh CLI. Urutannya: pastikan tag
+# sudah ada di origin -> cari rilis v<versi> (atau buat sebagai draft) -> ganti
+# aset bernama sama -> unggah semua aset -> terbitkan. Rilis draft baru terlihat
+# pengguna setelah seluruh aset lengkap. Fungsi AmbilTokenGitHub/KirimApiGitHub
+# sudah didefinisikan di bagian atas skrip.
+if ($Unggah) {
+    Write-Host ''
+    Write-Host '== Unggah ke GitHub Releases ==' -ForegroundColor Cyan
+
+    $tagRilis = 'v' + $Version
+
+    # Tag harus sudah ada di origin. Tanpa itu GitHub membuat tag dari cabang
+    # default, sehingga rilis menunjuk commit yang salah - lebih baik berhenti.
+    $tagDiOrigin = (& git -c ('safe.directory=' + $repoRoot) ls-remote --tags origin ('refs/tags/' + $tagRilis) 2>$null | Out-String).Trim()
+    if (-not $tagDiOrigin) {
+        throw ('Tag ' + $tagRilis + ' belum ada di origin. Dorong dulu (git push origin ' + $tagRilis + ') - tanpa itu GitHub membuat tag dari cabang default dan rilis menunjuk commit yang salah.')
+    }
+
+    $token = AmbilTokenGitHub
+    if (-not $token) {
+        throw ('Token GitHub tidak ditemukan. Set GITHUB_TOKEN (PAT scope repo) atau pastikan Git Credential Manager ' +
+               'menyimpan kredensial github.com (git config --get credential.helper).')
+    }
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    $kepala = @{
+        Authorization = 'Bearer ' + $token
+        Accept        = 'application/vnd.github+json'
+        'User-Agent'  = 'SuDesApp-publish-release'
+    }
+    $api = 'https://api.github.com/repos/' + $Repo
+
+    # Cari lewat daftar rilis, bukan "releases/tags/{tag}": endpoint tag TIDAK
+    # mengembalikan rilis draft (balas 404), sehingga draft yang sudah ada bisa
+    # terlihat "tidak ada" dan justru dibuat ulang. Daftar ber-token memuat draft.
+    $daftarRilis = @(KirimApiGitHub -Metode 'Get' -Uri ($api + '/releases?per_page=100') -Kepala $kepala)
+    $rilis = $daftarRilis | Where-Object { $_.tag_name -eq $tagRilis } | Select-Object -First 1
+
+    $catatanRilis = ''
+    if (Test-Path -LiteralPath $releaseNotes) {
+        $catatanRilis = (Get-Content -LiteralPath $releaseNotes -Raw).Trim()
+    }
+
+    if ($rilis) {
+        Write-Host ('Rilis ' + $tagRilis + ' sudah ada (' + $rilis.html_url + ', draft=' + $rilis.draft + ') - aset akan diganti.')
+        if (-not $rilis.draft) {
+            # Jadikan draft dulu: selama aset lama diganti, pengguna umum tidak
+            # melihat rilis berisi aset lengkap yang setengah terganti.
+            $badan = @{ draft = $true } | ConvertTo-Json
+            $rilis = KirimApiGitHub -Metode 'Patch' -Uri ($api + '/releases/' + $rilis.id) -Kepala $kepala -Json $badan
+            Write-Host '   rilis disetel ke draft sementara - penggantian aset berjalan tertutup.'
+        }
+    } else {
+        $badan = @{
+            tag_name = $tagRilis
+            name     = 'SuDesApp ' + $Version
+            body     = $catatanRilis
+            draft    = $true
+        } | ConvertTo-Json
+        $rilis = KirimApiGitHub -Metode 'Post' -Uri ($api + '/releases') -Kepala $kepala -Json $badan
+        Write-Host ('Draft rilis dibuat: ' + $rilis.html_url)
+    }
+
+    # GitHub menolak nama aset kembar (422) - ganti aset lama yang namanya sama
+    # supaya skrip ini bisa dijalankan ulang dengan aman.
+    foreach ($berkas in $daftarAset) {
+        $namaAset = Split-Path -Leaf $berkas
+        foreach ($aset in @($rilis.assets)) {
+            if ($aset.name -eq $namaAset) {
+                KirimApiGitHub -Metode 'Delete' -Uri ($api + '/releases/assets/' + $aset.id) -Kepala $kepala | Out-Null
+                Write-Host ('   aset lama diganti: ' + $namaAset)
+            }
+        }
+    }
+
+    $unggahKe = [string]$rilis.upload_url
+    $unggahKe = $unggahKe.Substring(0, $unggahKe.IndexOf('{'))
+    foreach ($berkas in $daftarAset) {
+        $namaAset = Split-Path -Leaf $berkas
+        $uri = $unggahKe + '?name=' + [uri]::EscapeDataString($namaAset)
+        KirimApiGitHub -Metode 'Post' -Uri $uri -Kepala $kepala -Berkas $berkas | Out-Null
+        Write-Host ('   terunggah: ' + $namaAset) -ForegroundColor Green
+    }
+
+    $badan = @{ draft = $false; make_latest = 'true'; body = $catatanRilis } | ConvertTo-Json
+    $rilis = KirimApiGitHub -Metode 'Patch' -Uri ($api + '/releases/' + $rilis.id) -Kepala $kepala -Json $badan
+    Write-Host ''
+    Write-Host ('Rilis terbit: ' + $rilis.html_url) -ForegroundColor Green
+    Write-Host 'Aset yang terpasang:'
+    foreach ($aset in @($rilis.assets)) {
+        Write-Host ('   - {0}  ({1:N0} byte)' -f $aset.name, $aset.size)
+    }
+} else {
+    Write-Host ('Upload manual: ' + $halamanRilis) -ForegroundColor Green
+}

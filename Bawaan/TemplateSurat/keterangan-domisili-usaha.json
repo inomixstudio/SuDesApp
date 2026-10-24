@@ -1,0 +1,508 @@
+{
+  "Kode": "keterangan-domisili-usaha",
+  "Kategori": "Keterangan",
+  "Keterangan": "Contoh keterangan lokasi usaha. Persyaratan, dasar pemeriksaan, dan masa berlaku perlu disesuaikan dengan aturan desa/kabupaten serta instansi tujuan.",
+  "Template": {
+    "Id": 0,
+    "Nama": "Surat Keterangan Domisili Usaha",
+    "Deskripsi": "Contoh keterangan lokasi usaha. Persyaratan, dasar pemeriksaan, dan masa berlaku perlu disesuaikan dengan aturan desa/kabupaten serta instansi tujuan.",
+    "FormatContoh": true,
+    "VersiFormat": 1,
+    "LabelSumber": "Contoh aplikasi",
+    "PakaiKop": true,
+    "Judul": "SURAT KETERANGAN DOMISILI USAHA",
+    "SubJudul": "",
+    "PakaiNomor": true,
+    "AwalanNomor": "471",
+    "PolaNomor": "{awalan}/{urut:000}/Ds/{tahun}",
+    "PakaiTempatTanggal": false,
+    "Blok": [
+      {
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Adalah benar memiliki usaha dan berdomisili di wilayah Desa tersebut di atas, dengan keterangan sebagai berikut:",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Keterangan mengenai kondisi usaha diisi berdasarkan pemeriksaan yang benar-benar dilakukan dan dicatat oleh petugas.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Masa berlaku dan penggunaan surat, bila dipersyaratkan, mengikuti ketentuan instansi tujuan dan aturan lokal yang berlaku.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      }
+    ],
+    "Bagian": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Adalah benar memiliki usaha dan berdomisili di wilayah Desa tersebut di atas, dengan keterangan sebagai berikut:",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Data Usaha",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "nama_usaha",
+            "Label": "Nama Usaha",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Usaha",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "bentuk_usaha",
+            "Label": "Bentuk Usaha",
+            "Tipe": 5,
+            "Wajib": true,
+            "Pilihan": [
+              "Perorangan",
+              "Badan usaha"
+            ],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Usaha",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "jenis_usaha",
+            "Label": "Jenis Usaha",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Warung kelontong",
+            "Kelompok": "Data Usaha",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "alamat_usaha",
+            "Label": "Alamat Usaha",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Usaha",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Keterangan mengenai kondisi usaha diisi berdasarkan pemeriksaan yang benar-benar dilakukan dan dicatat oleh petugas.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Masa berlaku dan penggunaan surat, bila dipersyaratkan, mengikuti ketentuan instansi tujuan dan aturan lokal yang berlaku.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "Kolom": [
+      {
+        "Kunci": "datadiri0_nama",
+        "Label": "Nama",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_nik",
+        "Label": "NIK",
+        "Tipe": 1,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "NIK (16 angka)"
+      },
+      {
+        "Kunci": "datadiri0_pekerjaan",
+        "Label": "Pekerjaan",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_alamat",
+        "Label": "Alamat",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Paragraf"
+      },
+      {
+        "Kunci": "nama_usaha",
+        "Label": "Nama Usaha",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Data Usaha",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "bentuk_usaha",
+        "Label": "Bentuk Usaha",
+        "Tipe": 5,
+        "Wajib": true,
+        "Pilihan": [
+          "Perorangan",
+          "Badan usaha"
+        ],
+        "NilaiBawaan": "",
+        "Kelompok": "Data Usaha",
+        "TipeLabel": "Pilihan (dropdown)"
+      },
+      {
+        "Kunci": "jenis_usaha",
+        "Label": "Jenis Usaha",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Warung kelontong",
+        "Kelompok": "Data Usaha",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "alamat_usaha",
+        "Label": "Alamat Usaha",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Data Usaha",
+        "TipeLabel": "Paragraf"
+      }
+    ],
+    "PakaiGrid": false,
+    "NomorManual": false,
+    "PenandatanganDariDataDiri": false,
+    "KunciPenandatanganDataDiri": "",
+    "PakaiTandaTangan": true,
+    "JabatanPenandatangan": "",
+    "PakaiTeksKaki": false,
+    "TeksKaki": "",
+    "NomorTerakhir": 0,
+    "TahunNomor": 0,
+    "Dibuat": "0001-01-01T00:00:00",
+    "Diubah": "0001-01-01T00:00:00",
+    "DibuatOleh": "",
+    "NamaTampil": "Surat Keterangan Domisili Usaha",
+    "AdaKolom": true,
+    "JumlahKolom": 8,
+    "AdaBagian": true,
+    "BagianEfektif": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Adalah benar memiliki usaha dan berdomisili di wilayah Desa tersebut di atas, dengan keterangan sebagai berikut:",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Data Usaha",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "nama_usaha",
+            "Label": "Nama Usaha",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Usaha",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "bentuk_usaha",
+            "Label": "Bentuk Usaha",
+            "Tipe": 5,
+            "Wajib": true,
+            "Pilihan": [
+              "Perorangan",
+              "Badan usaha"
+            ],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Usaha",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "jenis_usaha",
+            "Label": "Jenis Usaha",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Warung kelontong",
+            "Kelompok": "Data Usaha",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "alamat_usaha",
+            "Label": "Alamat Usaha",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Usaha",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Keterangan mengenai kondisi usaha diisi berdasarkan pemeriksaan yang benar-benar dilakukan dan dicatat oleh petugas.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Masa berlaku dan penggunaan surat, bila dipersyaratkan, mengikuti ketentuan instansi tujuan dan aturan lokal yang berlaku.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "LabelKop": "Ada",
+    "LabelNomor": "Ada",
+    "NomorBerikutnyaTampil": "471/001/Ds/2026",
+    "AdaBlok": true,
+    "JumlahElemen": 11,
+    "RingkasanSusunan": "kop desa \u2022 judul \u2022 nomor \u2022 5 teks \u2022 1 data diri \u2022 1 kolom \u2022 tanda tangan",
+    "JabatanTampil": "Kepala Desa"
+  }
+}

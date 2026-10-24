@@ -1,0 +1,324 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.GarapanInputView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="900"
+             FontSize="14"
+             SnapsToDevicePixels="True"
+             UseLayoutRounding="True"
+            >
+
+    <Grid IsSharedSizeScope="True">
+        <StackPanel>
+
+            <c:NomorSuratCard/>
+
+            <!-- DATA PENGGARAP -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="DATA PENGGARAP" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="NIK *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Name="Nik" LostFocus="OnNikLostFocus"
+                                 Text="{Binding Nik, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="16" ToolTip="NIK Warga (16 digit angka)"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Nama *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Nama, UpdateSourceTrigger=PropertyChanged}"
+                                 CharacterCasing="Upper" ToolTip="Nama Lengkap (huruf saja)"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Tempat Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding TempatLahir, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}"
+                                 ToolTip="Format: DD-MM-YYYY"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Jenis Kelamin *" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding JenisKelaminOptions}"
+                                  SelectedItem="{Binding JenisKelamin, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Agama *" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding AgamaOptions}"
+                                  SelectedItem="{Binding Agama, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Pekerjaan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="6" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Pekerjaan, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <!-- Dusun/Jalan, RT, dan RW dalam satu baris. Label berada DI SAMPING
+                             kotak isian (bukan di atas) sehingga sama dengan baris-baris lain;
+                             RT/RW sengaja sempit karena hanya memuat 3 angka. Deret ini
+                             memakai ColumnSpan="2" agar label pertamanya rata dengan label
+                             baris lain, dan RowSpan 2 agar nomor baris di bawahnya tetap. -->
+                        <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0" Margin="0,0,12,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Dusun/Jalan *" Style="{StaticResource FormLabel}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource FormField}"
+                                         Text="{Binding Dusun, UpdateSourceTrigger=LostFocus}"
+                                         ToolTip="Alamat asal (jln./dusun)"/>
+                            </Grid>
+
+                            <Grid Grid.Column="1" Margin="0,0,12,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="RT" Style="{StaticResource FormLabel}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource FormField}" Width="88" MaxLength="3"
+                                         Text="{Binding Rt, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Nomor RT"/>
+                            </Grid>
+
+                            <Grid Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="RW" Style="{StaticResource FormLabel}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource FormField}" Width="88" MaxLength="3"
+                                         Text="{Binding Rw, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Nomor RW"/>
+                            </Grid>
+                        </Grid>
+
+                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Desa *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="9" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Desa, UpdateSourceTrigger=LostFocus}"/>
+
+                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Kecamatan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="10" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Kecamatan, UpdateSourceTrigger=LostFocus}"/>
+
+                        <TextBlock Grid.Row="11" Grid.Column="0" Text="Kabupaten *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="11" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Kabupaten, UpdateSourceTrigger=LostFocus}"/>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+
+            <!-- DETAIL TANAH GARAPAN -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="DETAIL TANAH GARAPAN" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Lokasi Tanah *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Lokasi, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="200" ToolTip="Masukkan lokasi tanah garapan"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="No. Persil" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding NomorPersil, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="50" ToolTip="Masukkan nomor persil tanah"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Luas (M2) *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Luas, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Masukkan luas tanah dalam meter persegi (contoh: 1000)"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Keterangan *" Style="{StaticResource FormLabel}"/>
+                        <ComboBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormCombo}"
+                                  ItemsSource="{Binding KeteranganGarapanOptions}"
+                                  SelectedItem="{Binding KeteranganGarapan, UpdateSourceTrigger=PropertyChanged}"
+                                  ToolTip="Pilih status garapan (Garap/Sewa/Hak Milik)"/>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+
+            <!-- TANAH GARAPAN TAMBAHAN -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="TANAH GARAPAN TAMBAHAN (BIDANG KE-2 DST.)" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource FormLabel}" VerticalAlignment="Center"
+                                   TextWrapping="Wrap" Margin="0,0,12,0"
+                                   Text="Kosongkan bila garapan hanya satu. Klik sel untuk mengedit — baris kosong otomatis dilewati saat disimpan:"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="＋ Tambah Bidang" Padding="10,2" MinWidth="110"
+                                    Command="{Binding AddRincianCommand}"
+                                    ToolTip="Tambah baris bidang garapan tambahan"/>
+                            <Button Content="Hapus" Padding="10,2" MinWidth="70" Margin="6,0,0,0"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding RemoveRincianCommand}"
+                                    CommandParameter="{Binding SelectedRincian}"
+                                    ToolTip="Hapus baris yang dipilih"/>
+                            <Button Content="↻" Padding="6,2" Width="34" Margin="6,0,0,0"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding ClearRincianCommand}"
+                                    ToolTip="Kosongkan daftar bidang tambahan"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Kolom grid memakai * (proporsional) supaya SELALU muat lebar kartu. -->
+                    <DataGrid x:Name="RincianGrid"
+                              ItemsSource="{Binding RincianItems}"
+                              SelectedItem="{Binding SelectedRincian, Mode=TwoWay}"
+                              Style="{StaticResource EditableDataGrid}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserReorderColumns="False"
+                              CanUserResizeColumns="True"
+                              SelectionMode="Single"
+                              HeadersVisibility="Column"
+                              Height="170"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Lokasi Tanah" Width="*" MinWidth="120"
+                                                Binding="{Binding Lokasi, UpdateSourceTrigger=PropertyChanged}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="ToolTip" Value="{Binding Lokasi}"/>
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="No. Persil" Width="0.7*" MinWidth="80"
+                                                Binding="{Binding NomorPersil, UpdateSourceTrigger=PropertyChanged}"/>
+                            <DataGridTextColumn Header="Luas (M2)" Width="0.7*" MinWidth="70"
+                                                Binding="{Binding Luas, UpdateSourceTrigger=PropertyChanged}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextAlignment" Value="Right"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Keterangan" Width="*" MinWidth="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding KeteranganGarapan}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="2,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataContext.KeteranganGarapanOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SelectedItem="{Binding KeteranganGarapan, UpdateSourceTrigger=PropertyChanged}"
+                                                  VerticalContentAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Aksi" Width="64" MinWidth="64" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Hapus" Margin="2" Padding="6,2"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Command="{Binding DataContext.RemoveRincianCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Hapus baris ini"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- KEPERLUAN SURAT -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="KEPERLUAN SURAT" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Keperluan *" Style="{StaticResource FormLabel}"/>
+                        <TextBox Grid.Column="1" Style="{StaticResource FormField}"
+                                 Text="{Binding Keperluan, UpdateSourceTrigger=PropertyChanged}"
+                                 CharacterCasing="Upper"
+                                 ToolTip="Masukkan keperluan surat (contoh: Pengajuan Pinjaman)"/>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+
+            <!-- PEJABAT PENANDATANGAN -->
+            <Border Style="{StaticResource FormCard}">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="PEJABAT PENANDATANGAN" Style="{StaticResource FormSectionTitle}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Content="Kepala Desa" GroupName="pejabat" Margin="0,0,24,0"
+                                     VerticalAlignment="Center"
+                                     IsChecked="{Binding IsKadesSelected, Mode=TwoWay}"/>
+                        <RadioButton Content="Sekretaris Desa" GroupName="pejabat"
+                                     VerticalAlignment="Center"
+                                     IsChecked="{Binding IsSekdesSelected, Mode=TwoWay}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

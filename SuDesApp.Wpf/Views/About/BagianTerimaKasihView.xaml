@@ -1,0 +1,161 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.About.BagianTerimaKasihView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="AboutStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!--
+        Bagian "Thanks to" (dulu "Ucapan terima kasih").
+
+        Isinya tetap data-driven dari AboutViewModel.UcapanTerimaKasih: satu
+        kartu per kelompok, dengan ikon kelompok di piring kecil dan butir
+        yang dibungkus rapi.
+    -->
+    <!-- Root menegaskan ulang DataContext ke VM halaman (lihat BagianDetailAplikasiView). -->
+    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:AboutView}}">
+        <StackPanel>
+            <!-- Pembuka -->
+            <Border Style="{StaticResource AboutCard}" Margin="0,0,0,14">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <Border Style="{StaticResource AccentSectionBar}"/>
+                        <TextBlock Text="THANKS TO" Style="{StaticResource SectionTitle}"/>
+                    </StackPanel>
+                    <TextBlock Text="SuDesApp tidak dibangun sendirian. Terima kasih kepada seluruh pihak yang menopang terbangunnya aplikasi ini — dari perangkat lunak yang dipakai gratis, masukan yang memperbaiki setiap rilis, hingga dukungan yang menjaga pengembangannya tetap berjalan."
+                               Style="{StaticResource SectionSubtitle}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Daftar kelompok (data dari AboutViewModel.UcapanTerimaKasih) -->
+            <ItemsControl ItemsSource="{Binding UcapanTerimaKasih}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource AboutCard}" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Width="28" Height="28" CornerRadius="9"
+                                            Background="{DynamicResource AccentSubtleBrush}"
+                                            VerticalAlignment="Center" Margin="0,0,10,0">
+                                        <TextBlock Text="{Binding Ikon}" FontSize="13"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Judul}" FontSize="13" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <ItemsControl ItemsSource="{Binding Butir}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <!-- Grid Auto+* (pola BagianFiturView) agar teks membungkus dengan benar. -->
+                                            <Grid Margin="0,0,0,7">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="&#x2022;" FontSize="13" FontWeight="Bold"
+                                                           Foreground="{DynamicResource AccentTextBrush}"
+                                                           VerticalAlignment="Top" Margin="0,1,9,0"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" LineHeight="20"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Tautan unduhan formulir — sebagai rasa terima kasih.
+
+                 Ada DUA tautan berbeda di sini dan keduanya tidak boleh tertukar:
+                 1. sumber formulir Kabupaten Karawang (INSAN Karawang) — tautan
+                    yang dipakai petugas desa untuk mengunduh blanko;
+                 2. contoh sumber kabupaten lain, karena formulir adminduk mengikuti
+                    Permendagri 109/2019 yang sama untuk seluruh Indonesia.
+
+                 Website pengembang (sumberjaya.freedev.app) sengaja TIDAK dipakai
+                 di kartu ini karena situs itu tidak memuat formulir.
+
+                 Background TIDAK dikunci "White": teks di dalamnya memakai
+                 AccentTextBrush yang terang di tema gelap/slate (#6EE7B7 / #FCD34D),
+                 sehingga kartu putih membuatnya nyaris tak terbaca dan jadi
+                 objek paling menyilaukan di halaman. AccentSubtleBrush sudah aman
+                 untuk semua tema. -->
+            <Border Style="{StaticResource AboutCard}" Background="{DynamicResource AccentSubtleBrush}"
+                    BorderBrush="{DynamicResource AccentBrush}" Margin="0,0,0,14">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="&#x1F4E5;" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"
+                                   Foreground="{DynamicResource AccentTextBrush}"/>
+                        <TextBlock Text="UNDUH FORMULIR RESMI" FontWeight="Bold" FontSize="13"
+                                   Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="Sebagai rasa terima kasih, formulir administrasi kependudukan dan blanko surat resmi desa untuk Kabupaten Karawang dapat diunduh gratis melalui INSAN Karawang (Info Sadar Adminduk Karawang):"
+                               FontSize="11" Foreground="{DynamicResource AccentTextBrush}" TextWrapping="Wrap"/>
+                    <Border Tag="{Binding UrlFormulirKarawang}" Margin="0,8,0,0" HorizontalAlignment="Left"
+                            Style="{StaticResource TautanKartuSurface}"
+                            MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
+                            ToolTip="{Binding UrlFormulirKarawang}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#x1F4C2;" FontSize="13" VerticalAlignment="Center" Margin="0,0,7,0"
+                                       Foreground="{DynamicResource AccentTextBrush}"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="INSAN Karawang — Formulir Kabupaten Karawang" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AccentTextBrush}"/>
+                                <TextBlock Text="{Binding FormulirKarawangTampil}" FontSize="11"
+                                           Foreground="{DynamicResource AccentTextBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="Formulir kabupaten lain" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentTextBrush}" Margin="0,12,0,2"/>
+                    <TextBlock Text="Formulir adminduk mengikuti Permendagri 109/2019, jadi isinya sama di seluruh kabupaten. Contoh sumber unduhan daerah lain:"
+                               FontSize="11" Foreground="{DynamicResource AccentTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                    <ItemsControl ItemsSource="{Binding FormulirKabupatenLain}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Tag="{Binding Url}" Style="{StaticResource TautanKartuSurface}"
+                                        Padding="12,8" Margin="0,0,0,6"
+                                        MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
+                                        ToolTip="{Binding Url}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Nama}" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TautanTampil}" FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Penutup -->
+            <Border Style="{StaticResource AboutCard}" Background="{DynamicResource AccentSubtleBrush}"
+                    BorderBrush="{DynamicResource AccentBrush}">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="&#x1F64F;" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                    <TextBlock Text="THANK YOU" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource AccentTextBrush}"/>
+                    <TextBlock Text="Terima kasih telah menjadikan SuDesApp lebih baik — satu surat dan satu baris kode pada satu waktu."
+                               FontSize="11" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

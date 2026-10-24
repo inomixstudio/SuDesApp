@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Pembuat & pemeriksa berkas contoh Template Surat pada folder Bawaan.
+    Katalog C# (TemplateSuratBawaan.KatalogTertanam) adalah sumber kebenaran;
+    folder Bawaan/TemplateSurat berisi JSON hasil ekspor yang ikut terkirim
+    aplikasi dan dapat diperbarui lewat tambalan.
+
+    Cara pakai (dotnet run dengan proyek ini):
+      tanpa argumen  tulis/segarkan JSON dari katalog (jalankan saat katalog berubah)
+      argumen "cek"  exit 1 bila JSON hilang, rusak, atau basi (dipakai check-rilis)
+
+    Proyek ini sengaja TIDAK dimasukkan ke SuDesApp.slnx: tidak ikut build gate
+    dan tidak pernah masuk paket rilis; hanya dipanggil saat katalog berubah
+    dan oleh check-rilis.ps1 untuk memastikan JSON tidak basi.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SuDesApp.Core\SuDesApp.Core.csproj" />
+  </ItemGroup>
+
+</Project>

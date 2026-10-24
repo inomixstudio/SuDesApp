@@ -1,0 +1,56 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PusatAdministrasiView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{DynamicResource PanelBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                Padding="18,12">
+            <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button x:Name="OpenBrowserButton" Content="Buka di Browser"
+                            Padding="14,7" Margin="12,0,0,0" Click="OpenBrowserButton_Click"
+                            Style="{DynamicResource SecondaryButton}"
+                            ToolTip="Buka halaman yang sama di peramban bawaan — jalur cadangan bila WebView2 tidak tersedia"/>
+                    <Button x:Name="RefreshButton" Content="Muat Ulang"
+                            Padding="14,7" Margin="8,0,0,0" Click="RefreshButton_Click"
+                            Style="{DynamicResource SecondaryButton}"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="PUSAT ADMINISTRASI" FontSize="15" FontWeight="Bold"
+                               Foreground="{DynamicResource TextBrush}"/>
+                    <TextBlock x:Name="StatusText" Text="Menghubungkan ke server lisensi…"
+                               Margin="0,3,0,0" FontSize="11" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <wv2:WebView2 x:Name="AdminBrowser" Visibility="Collapsed"/>
+            <Border x:Name="ErrorPanel" Visibility="Collapsed" Padding="28"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="680">
+                <StackPanel>
+                    <TextBlock Text="Pusat Administrasi tidak dapat dimuat" FontSize="20"
+                               FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"
+                               TextWrapping="Wrap"/>
+                    <TextBlock x:Name="ErrorText" Margin="0,10,0,16" FontSize="13"
+                               TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <WrapPanel>
+                        <Button Content="Coba Lagi" Padding="16,8"
+                                Click="RefreshButton_Click" Style="{DynamicResource SecondaryButton}"/>
+                        <Button Content="Buka di Browser" Padding="16,8" Margin="8,0,0,0"
+                                Click="OpenBrowserButton_Click" Style="{DynamicResource SecondaryButton}"
+                                ToolTip="Buka halaman admin langsung di peramban bawaan"/>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

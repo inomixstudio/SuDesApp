@@ -1,0 +1,105 @@
+# ===== Build & publish =====
+# Catatan: pola lama (bin-verify/, bin-*/, *-verify/) TIDAK cocok dengan
+# direktori nyata "binverify/" (tanpa tanda hubung) sehingga 193 MB hasil build
+# sempat ikut terlacak. Pola di bawah menutup semua varian dengan/tanpa hubung.
+[Bb]in/
+[Oo]bj/
+[Bb]in*/
+[Oo]bj*/
+*-verify/
+*_verify/
+artifacts/
+TestResults/
+*.trx
+coverage*.xml
+coverage*.json
+
+# ===== Kredensial — JANGAN pernah di-commit =====
+Resources/sudesapp.json
+**/sudesapp.json
+GoogleClientCredentials.bin
+
+# ===== Data / hasil runtime =====
+desa.db
+desa.db-*
+TempPDF/
+Output/
+logs/
+pdf-gallery/
+
+# Keluaran uji yang dialihkan ke berkas (mis. dotnet test > hasil_test.txt)
+hasil_test*.txt
+
+# ===== IDE / OS =====
+.vs/
+*.user
+*.suo
+Thumbs.db
+desktop.ini
+
+# ===== Rahasia build lokal (TIDAK PERNAH ter-commit) =====
+# Sandi akun pusat (provisioning mesin) dan berkas sementara alat bantu.
+Pusat.kunci
+Pusat.kunci.txt
+.zcode/
+.log-server-lisensi.txt
+# Kredensial OAuth Google asli — salin manual antar mesin build, jangan via git.
+SuDesApp.Core/Utilities/GoogleClientCredentialsBawaan.lokal.cs
+
+# Kredensial Supabase server lisensi (host + password DB) — jangan via git.
+SuDesApp.Server/appsettings.lokal.json
+
+# Status lokal Supabase CLI: menyimpan ref proyek yang terhubung dan bisa
+# memuat token. Folder .temp selalu hasil kerja mesin, bukan sumber.
+supabase/.temp/
+
+# Berkas konfigurasi apa pun yang bisa memuat secret di masa depan.
+**/appsettings.Production.json
+**/appsettings.Development.json
+**/appsettings.*.lokal.json
+.env
+.env.*
+
+# Kunci privat penandatangan lisensi. JANGAN pernah di-commit: siapa pun yang
+# memegang berkas ini bisa membuat token langganan palsu untuk aplikasi mana
+# pun. Kehilangan berkas ini tidak merusak apa pun (server membuat yang baru),
+# tapi kebocorannya berarti seluruh lisensi bisa dipalsukan — rotasi bila bocor.
+SuDesApp.Server/keys/
+
+# Kunci privat apa pun (pfx/p12/snk/pem) dan terbitan uji.
+*.pfx
+*.p12
+*.snk
+*.pem
+*.key
+*.jks
+
+# Hasil pemrosesan upgrade project (mesin) — ringkasanzc human-readable tetap
+# disimpan di docs/adr/, hanya blob .json/.csv yang dibuang.
+.github/upgrades/**/assessment.json
+.github/upgrades/**/assessment.csv
+
+# ===== Hasil build/publish, cache & probe installer lokal =====
+# Di luar pola [Bb]in*/[Oo]bj*: publish mandiri dan cache Advanced Installer
+# membuat ratusan MB ikut muncul sebagai untracked.
+_idm-build-check/
+**/.build-google-auth/
+installer/SuDesApp-Advanced-SetupFiles/
+installer/SuDesApp-Advanced-v24-cache/
+installer/SuDesApp-Advanced-v24-backups/
+installer/_*-backups/
+
+# Proyek .aip dibuat ulang oleh Tools/Buat-Installer-Advanced.ps1 (skrip
+# menolak jalan bila berkasnya sudah ada), jadi ini keluaran, bukan sumber.
+# Bila konfigurasi ingin disimpan, tambahkan sadar lewat `git add -f`.
+installer/*.aip
+
+# Cache Python dari alat di Tools/
+__pycache__/
+*.pyc
+
+# Tangkapan render visual untuk pemeriksaan lokal (bukan aset aplikasi)
+.uji-render/
+
+# Berkas kerja sementara (probe, log uji, skrip sekali pakai) — jangan ikut repo.
+.tmp-render/

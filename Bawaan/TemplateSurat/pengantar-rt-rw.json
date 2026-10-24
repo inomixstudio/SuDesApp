@@ -1,0 +1,477 @@
+{
+  "Kode": "pengantar-rt-rw",
+  "Kategori": "Pengantar",
+  "Keterangan": "Pengantar resmi desa bagi warga yang mengurus dokumen atau surat menyurat di instansi lain.",
+  "Template": {
+    "Id": 0,
+    "Nama": "Surat Pengantar RT/RW",
+    "Deskripsi": "Pengantar resmi desa bagi warga yang mengurus dokumen atau surat menyurat di instansi lain.",
+    "FormatContoh": true,
+    "VersiFormat": 1,
+    "LabelSumber": "Contoh aplikasi",
+    "PakaiKop": true,
+    "Judul": "SURAT PENGANTAR",
+    "SubJudul": "",
+    "PakaiNomor": true,
+    "AwalanNomor": "475",
+    "PolaNomor": "{awalan}/{urut:000}/Ds/{tahun}",
+    "PakaiTempatTanggal": false,
+    "Blok": [
+      {
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Adalah benar warga Desa tersebut di atas, berkelakuan baik, dan tidak pernah terlibat dalam tindak pidana maupun pelanggaran ketertiban umum di wilayah kami.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Surat pengantar ini juga disampaikan kepada Ketua RT setempat dan disimpan sebagai arsip desa.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Demikian surat pengantar ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      }
+    ],
+    "Bagian": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_tempat_lahir",
+            "Label": "Tempat Lahir",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_tanggal_lahir",
+            "Label": "Tanggal Lahir",
+            "Tipe": 3,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "datadiri0_jenis_kelamin",
+            "Label": "Jenis Kelamin",
+            "Tipe": 5,
+            "Wajib": false,
+            "Pilihan": [
+              "Laki-laki",
+              "Perempuan"
+            ],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Adalah benar warga Desa tersebut di atas, berkelakuan baik, dan tidak pernah terlibat dalam tindak pidana maupun pelanggaran ketertiban umum di wilayah kami.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Keperluan",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "keperluan",
+            "Label": "Keperluan",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Melengkapi persyaratan pengurusan dokumen di instansi terkait",
+            "Kelompok": "Keperluan",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Surat pengantar ini juga disampaikan kepada Ketua RT setempat dan disimpan sebagai arsip desa.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat pengantar ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "Kolom": [
+      {
+        "Kunci": "datadiri0_nama",
+        "Label": "Nama",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_nik",
+        "Label": "NIK",
+        "Tipe": 1,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "NIK (16 angka)"
+      },
+      {
+        "Kunci": "datadiri0_tempat_lahir",
+        "Label": "Tempat Lahir",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_tanggal_lahir",
+        "Label": "Tanggal Lahir",
+        "Tipe": 3,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Tanggal"
+      },
+      {
+        "Kunci": "datadiri0_jenis_kelamin",
+        "Label": "Jenis Kelamin",
+        "Tipe": 5,
+        "Wajib": false,
+        "Pilihan": [
+          "Laki-laki",
+          "Perempuan"
+        ],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Pilihan (dropdown)"
+      },
+      {
+        "Kunci": "datadiri0_pekerjaan",
+        "Label": "Pekerjaan",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_alamat",
+        "Label": "Alamat",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Paragraf"
+      },
+      {
+        "Kunci": "keperluan",
+        "Label": "Keperluan",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Melengkapi persyaratan pengurusan dokumen di instansi terkait",
+        "Kelompok": "Keperluan",
+        "TipeLabel": "Paragraf"
+      }
+    ],
+    "PakaiGrid": false,
+    "NomorManual": false,
+    "PenandatanganDariDataDiri": false,
+    "KunciPenandatanganDataDiri": "",
+    "PakaiTandaTangan": true,
+    "JabatanPenandatangan": "",
+    "PakaiTeksKaki": false,
+    "TeksKaki": "",
+    "NomorTerakhir": 0,
+    "TahunNomor": 0,
+    "Dibuat": "0001-01-01T00:00:00",
+    "Diubah": "0001-01-01T00:00:00",
+    "DibuatOleh": "",
+    "NamaTampil": "Surat Pengantar RT/RW",
+    "AdaKolom": true,
+    "JumlahKolom": 8,
+    "AdaBagian": true,
+    "BagianEfektif": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_tempat_lahir",
+            "Label": "Tempat Lahir",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_tanggal_lahir",
+            "Label": "Tanggal Lahir",
+            "Tipe": 3,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "datadiri0_jenis_kelamin",
+            "Label": "Jenis Kelamin",
+            "Tipe": 5,
+            "Wajib": false,
+            "Pilihan": [
+              "Laki-laki",
+              "Perempuan"
+            ],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Adalah benar warga Desa tersebut di atas, berkelakuan baik, dan tidak pernah terlibat dalam tindak pidana maupun pelanggaran ketertiban umum di wilayah kami.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Keperluan",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "keperluan",
+            "Label": "Keperluan",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Melengkapi persyaratan pengurusan dokumen di instansi terkait",
+            "Kelompok": "Keperluan",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Surat pengantar ini juga disampaikan kepada Ketua RT setempat dan disimpan sebagai arsip desa.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat pengantar ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "LabelKop": "Ada",
+    "LabelNomor": "Ada",
+    "NomorBerikutnyaTampil": "475/001/Ds/2026",
+    "AdaBlok": true,
+    "JumlahElemen": 10,
+    "RingkasanSusunan": "kop desa \u2022 judul \u2022 nomor \u2022 4 teks \u2022 1 data diri \u2022 1 kolom \u2022 tanda tangan",
+    "JabatanTampil": "Kepala Desa"
+  }
+}

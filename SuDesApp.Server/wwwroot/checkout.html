@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Langganan SuDesApp</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b6e4f'/%3E%3Cpath d='M9 17l5 5 9-10' stroke='%23fff' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --hijau: #0b6e4f;
+    --hijau-gelap: #084c36;
+    --latar: #f4f7f5;
+    --teks: #1e2b26;
+    --abu: #6b7a73;
+    --garis: #dbe5df;
+    --kuning: #f4b942;
+    --merah: #b3261e;
+    --putih: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--latar);
+    color: var(--teks);
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, var(--hijau) 0%, var(--hijau-gelap) 100%);
+    color: #fff;
+    padding: 28px 20px 24px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 4px; font-size: 1.4rem; font-weight: 600; }
+  header p { margin: 0; opacity: .92; font-size: .95rem; }
+  main { max-width: 720px; margin: 0 auto; padding: 22px 16px 48px; }
+  .kartu {
+    background: var(--putih);
+    border: 1px solid var(--garis);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .kartu h2 { margin: 0 0 14px; font-size: 1.05rem; }
+  .paket-pilihan { display: grid; gap: 10px; }
+  label.paket {
+    display: block;
+    border: 2px solid var(--garis);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  label.paket:hover { border-color: var(--hijau); }
+  label.paket.pilih {
+    border-color: var(--hijau);
+    background: #eaf5f0;
+  }
+  label.paket input { display: none; }
+  .paket-nama { font-weight: 600; }
+  .paket-keterangan { font-size: .88rem; color: var(--abu); }
+  .paket-harga { float: right; font-weight: 700; color: var(--hijau); }
+  label.baris { display: block; margin-bottom: 12px; }
+  label.baris span { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 4px; }
+  input[type=text] {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 1rem;
+    border: 1px solid var(--garis);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--teks);
+  }
+  input[type=text]:focus { outline: 2px solid var(--hijau); outline-offset: 1px; }
+  button {
+    width: 100%;
+    padding: 13px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 0;
+    border-radius: 10px;
+    cursor: pointer;
+    background: var(--hijau);
+    color: #fff;
+  }
+  button:hover { background: var(--hijau-gelap); }
+  button:disabled { background: var(--abu); cursor: not-allowed; }
+  .pesan { margin-top: 12px; padding: 12px 14px; border-radius: 8px; font-size: .92rem; display: none; }
+  .pesan.info { display: block; background: #eaf5f0; border: 1px solid var(--hijau); }
+  .pesan.gagal { display: block; background: #fdecea; border: 1px solid var(--merah); color: var(--merah); }
+  .ringkas-bayar { display: none; margin-top: 16px; }
+  .ringkas-bayar.tampil { display: block; }
+  .ringkas-bayar .nominal { font-size: 1.3rem; font-weight: 700; color: var(--hijau); }
+  .ringkas-bayar .detail { color: var(--abu); font-size: .9rem; margin: 2px 0 12px; }
+  a.tombol-bayar {
+    display: block;
+    text-align: center;
+    padding: 13px 16px;
+    border-radius: 10px;
+    background: var(--kuning);
+    color: #3a2a00;
+    text-decoration: none;
+    font-weight: 700;
+  }
+  a.tombol-bayar:visited { color: #3a2a00; }
+  .catatan { font-size: .85rem; color: var(--abu); margin-top: 18px; }
+  footer { max-width: 720px; margin: 0 auto; padding: 0 16px 32px; font-size: .82rem; color: var(--abu); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Langganan SuDesApp</h1>
+  <p>Perpanjang masa aktif aplikasi surat desa Anda</p>
+</header>
+
+<main>
+  <div class="kartu">
+    <h2>1. Pilih paket</h2>
+    <div id="daftar-paket" class="paket-pilihan">
+      <p class="catatan" style="margin:0">Memuat daftar paket…</p>
+    </div>
+  </div>
+
+  <div class="kartu">
+    <h2>2. Kode aktivasi desa <span style="font-weight:400;color:var(--abu)">— untuk PERPANJANG</span></h2>
+    <label class="baris">
+      <span>Kode aktivasi (contoh: SUDES-XXXX-XXXX) — kosongkan bila desa belum pernah berlangganan</span>
+      <input type="text" id="kode" autocomplete="off" spellcheck="false" placeholder="SUDES-XXXX-XXXX">
+    </label>
+    <p class="catatan" style="margin-top:8px">Belum punya kode? Isi nama desa di bawah, lalu kode aktivasi otomatis akan diterbitkan setelah tagihan dibuat — aktif setelah pembayaran lunas.</p>
+    <label class="baris">
+      <span>Nama desa — untuk BERLANGGANAN AWAL</span>
+      <input type="text" id="nama-desa" autocomplete="off" spellcheck="false" placeholder="Contoh: Sukamaju">
+    </label>
+    <button id="tombol-buat" disabled>Buat tagihan</button>
+    <div class="pesan" id="pesan"></div>
+  </div>    <div class="ringkas-bayar kartu" id="ringkas">
+    <h2>3. Selesaikan pembayaran</h2>
+    <div class="nominal" id="nominal"></div>
+    <div id="kode-baru-blok" style="display:none;margin:14px 0;padding:12px 16px;border-radius:10px;background:var(--kuning);color:#3a2a00">
+      <div style="font-weight:800;font-size:.9rem">KODE AKTIVASI ANDA (baru diterbitkan)</div>
+      <div id="kode-baru" style="font-weight:700;letter-spacing:2px;font-size:1.3rem;margin-top:4px">—</div>
+      <div style="font-size:.8rem;margin-top:6px">Langganan baru aktif setelah pembayaran lunas.
+        Salin dan simpan kode ini — dipakai di aplikasi (menu Langganan) untuk aktivasi dan perpanjangan berikutnya.</div>
+    </div>
+    <div class="detail" id="detail-order"></div>
+    <a class="tombol-bayar" id="link-bayar" href="#" target="_blank" rel="noopener">Bayar sekarang</a>
+    <p class="catatan">
+      Setelah pembayaran selesai, buka <strong>SuDesApp → menu Langganan → Cek Status</strong>.
+      Akses bertambah begitu pembayaran lunas.
+    </p>
+  </div>
+
+  <p class="catatan" id="mode-tagihan" style="display:none"></p>
+</main>
+
+<footer>
+  Halaman ini hanya untuk memilih paket dan membuat tagihan pembayaran.
+  Data desa Anda tetap tersimpan di komputer masing-masing; tidak ada data desa
+  yang dikirim lewat halaman ini.
+</footer>
+
+<script>
+"use strict";
+
+var paketTerpilih = null;
+var tombol = document.getElementById("tombol-buat");
+var pesan = document.getElementById("pesan");
+var ringkas = document.getElementById("ringkas");
+
+function formatRupiah(nilai) {
+  return "Rp" + new Intl.NumberFormat("id-ID").format(nilai);
+}
+
+function tampilPesan(teks, gagal) {
+  pesan.className = "pesan " + (gagal ? "gagal" : "info");
+  pesan.textContent = teks;
+}
+
+function tandaiPaket(elem, kode) {
+  paketTerpilih = kode;
+  var semua = document.querySelectorAll("label.paket");
+  for (var i = 0; i < semua.length; i++) {
+    semua[i].classList.toggle("pilih", semua[i].dataset.kode === kode);
+  }
+  tombol.disabled = false;
+}
+
+async function muatPaket() {
+  var el = document.getElementById("daftar-paket");
+  try {
+    var resp = await fetch("/paket", { headers: { "Accept": "application/json" } });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    var daftar = await resp.json();
+    if (!daftar || daftar.length === 0) throw new Error("daftar kosong");
+
+    el.innerHTML = "";
+    daftar.forEach(function (p) {
+      var label = document.createElement("label");
+      label.className = "paket";
+      label.dataset.kode = p.kode;
+      label.onclick = function () { tandaiPaket(label, p.kode); };
+
+      var nama = document.createElement("span");
+      nama.className = "paket-nama";
+      nama.textContent = p.nama;
+
+      var harga = document.createElement("span");
+      harga.className = "paket-harga";
+      harga.textContent = formatRupiah(p.harga);
+
+      var ket = document.createElement("div");
+      ket.className = "paket-keterangan";
+      ket.textContent = "Masa aktif +" + p.hari + " hari";
+
+      var radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "paket";
+      radio.value = p.kode;
+      label.appendChild(radio);
+      label.appendChild(nama);
+      label.appendChild(harga);
+      label.appendChild(ket);
+      el.appendChild(label);
+    });
+  } catch (err) {
+    el.innerHTML = '<p class="catatan" style="margin:0">Gagal memuat daftar paket: ' +
+      (err && err.message ? err.message : err) + ".</p>";
+  }
+}
+
+async function buatTagihan() {
+  var kode = document.getElementById("kode").value.trim();
+  var namaDesa = document.getElementById("nama-desa").value.trim();
+  if (!kode && !namaDesa) {
+    tampilPesan(
+      "Perpanjang: isi kode aktivasi. Berlangganan awal: isi nama desa.",
+      true);
+    return;
+  }
+  if (!paketTerpilih) {
+    tampilPesan("Pilih paket terlebih dahulu.", true);
+    return;
+  }
+
+  tombol.disabled = true;
+  ringkas.classList.remove("tampil");
+  tampilPesan("Membuat tagihan…", false);
+
+  try {
+    var resp = await fetch("/buat-tagihan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(
+        kode
+          ? { kodeAktivasi: kode, paket: paketTerpilih }
+          : { kodeAktivasi: "", namaDesa: namaDesa, paket: paketTerpilih })
+    });
+    var data = null;
+    try { data = await resp.json(); } catch (e) { /* tubuh bukan JSON */ }
+
+    if (!resp.ok) {
+      var teks = data && data.pesan ? data.pesan : pesanTunggalUntuk(resp.status);
+      tampilPesan(teks, true);
+      return;
+    }
+    if (!data) {
+      tampilPesan("Server membalas tanpa isi yang terbaca.", true);
+      return;
+    }
+
+    var link = data.link_pembayaran || "";
+    var mode = document.getElementById("mode-tagihan");
+
+    if (data.mode === "demo") {
+      mode.style.display = "block";
+      mode.textContent = "Server dalam mode uji (ServerKey Midtrans belum diisi) — ini tagihan percobaan, bukan pembayaran sungguhan.";
+      ringkas.classList.remove("tampil");
+      tampilPesan("Tagihan percobaan dibuat. Server belum disambungkan ke gateway pembayaran.", true);
+      return;
+    }
+    mode.style.display = "none";
+
+    // Nama paket dibaca dari balasan server; bila tidak ada, pakai nama
+    // paket yang sedang terpilih di halaman sebagai pengganti.
+    var namaPaket = data.paketNama ||
+      (document.querySelector('label.paket.pilih .paket-nama') || {}).textContent ||
+      "Paket";
+    document.getElementById("nominal").textContent = formatRupiah(data.nominal);
+    document.getElementById("detail-order").textContent =
+      namaPaket + " — " + data.hari + " hari · No. tagihan " + data.orderId;
+
+    // Kode aktivasi baru: diterbitkan server hanya untuk berlangganan awal.
+    // Ditampilkan menonjol desa bisa menyimpannya; perpanjangan tidak
+    // mengubah kode yang sudah ada.
+    var blokKode = document.getElementById("kode-baru-blok");
+    if (data.kode_aktivasi) {
+      document.getElementById("kode-baru").textContent = data.kode_aktivasi;
+      blokKode.style.display = "block";
+    } else {
+      blokKode.style.display = "none";
+    }
+
+    var tombolBayar = document.getElementById("link-bayar");
+    tombolBayar.textContent = "Bayar " + formatRupiah(data.nominal);
+    if (link) {
+      // Penting: bersihkan handler pemblokir dari tagihan sebelumnya, kalau
+      // tidak klik berikutnya akan dibatalkan walau link sudah ada.
+      tombolBayar.onclick = null;
+      tombolBayar.href = link;
+    } else {
+      tombolBayar.href = "#";
+      tombolBayar.textContent = "Hubungi admin (link pembayaran belum tersedia)";
+      tombolBayar.onclick = function () { return false; };
+    }
+    ringkas.classList.add("tampil");
+    pesan.className = "pesan";
+    pesan.textContent = "";
+  } catch (err) {
+    tampilPesan("Gagal menghubungi server: " + (err && err.message ? err.message : err) +
+      ". Coba lagi.", true);
+  } finally {
+    tombol.disabled = false;
+  }
+}
+
+function pesanTunggalUntuk(status) {
+  if (status === 404) return "Kode aktivasi tidak dikenal.";
+  if (status === 429) return "Terlalu banyak permintaan — tunggu sebentar lalu coba lagi.";
+  if (status >= 500) return "Server sedang bermasalah. Coba lagi beberapa saat lagi.";
+  return "Permintaan ditolak server (HTTP " + status + ").";
+}
+
+tombol.addEventListener("click", buatTagihan);
+document.getElementById("kode").addEventListener("keydown", function (ev) {
+  if (ev.key === "Enter") buatTagihan();
+});
+muatPaket();
+</script>
+</body>
+</html>

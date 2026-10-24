@@ -1,0 +1,290 @@
+{
+  "Kode": "pengumuman-warga",
+  "Kategori": "Pengumuman",
+  "Keterangan": "Pengumuman resmi desa kepada warga, mis. jadwal kegiatan, kerja bakti, atau pemberitahuan penting.",
+  "Template": {
+    "Id": 0,
+    "Nama": "Surat Pengumuman Warga",
+    "Deskripsi": "Pengumuman resmi desa kepada warga, mis. jadwal kegiatan, kerja bakti, atau pemberitahuan penting.",
+    "FormatContoh": true,
+    "VersiFormat": 1,
+    "LabelSumber": "Contoh aplikasi",
+    "PakaiKop": true,
+    "Judul": "PENGUMUMAN",
+    "SubJudul": "",
+    "PakaiNomor": true,
+    "AwalanNomor": "504",
+    "PolaNomor": "{awalan}/{urut:000}/Ds/{tahun}",
+    "PakaiTempatTanggal": false,
+    "Blok": [
+      {
+        "Isi": "Dengan ini disampaikan kepada seluruh warga Desa bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Demikian pengumuman ini disampaikan untuk diketahui dan dilaksanakan dengan penuh tanggung jawab. Atas perhatian dan kerja samanya, kami ucapkan terima kasih.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      }
+    ],
+    "Bagian": [
+      {
+        "Tipe": 0,
+        "Isi": "Dengan ini disampaikan kepada seluruh warga Desa bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Isi Pengumuman",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "perihal",
+            "Label": "Perihal",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Kerja bakti pembersihan lingkungan",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "hari_tanggal_pelaksanaan",
+            "Label": "Hari/Tanggal Pelaksanaan",
+            "Tipe": 3,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "waktu_pelaksanaan",
+            "Label": "Waktu Pelaksanaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "07.00 WIB s.d. selesai",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "tempat",
+            "Label": "Tempat",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "Seluruh jalan lingkungan desa",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "isi_pengumuman",
+            "Label": "Isi Pengumuman",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Seluruh warga dimohon hadir membawa peralatan kebersihan masing-masing dan mengikuti arahan koordinator lingkungan. Kegiatan berlangsung meskipun hujan ringan.",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian pengumuman ini disampaikan untuk diketahui dan dilaksanakan dengan penuh tanggung jawab. Atas perhatian dan kerja samanya, kami ucapkan terima kasih.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "Kolom": [
+      {
+        "Kunci": "perihal",
+        "Label": "Perihal",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Kerja bakti pembersihan lingkungan",
+        "Kelompok": "Isi Pengumuman",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "hari_tanggal_pelaksanaan",
+        "Label": "Hari/Tanggal Pelaksanaan",
+        "Tipe": 3,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Isi Pengumuman",
+        "TipeLabel": "Tanggal"
+      },
+      {
+        "Kunci": "waktu_pelaksanaan",
+        "Label": "Waktu Pelaksanaan",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "07.00 WIB s.d. selesai",
+        "Kelompok": "Isi Pengumuman",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "tempat",
+        "Label": "Tempat",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "Seluruh jalan lingkungan desa",
+        "Kelompok": "Isi Pengumuman",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "isi_pengumuman",
+        "Label": "Isi Pengumuman",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Seluruh warga dimohon hadir membawa peralatan kebersihan masing-masing dan mengikuti arahan koordinator lingkungan. Kegiatan berlangsung meskipun hujan ringan.",
+        "Kelompok": "Isi Pengumuman",
+        "TipeLabel": "Paragraf"
+      }
+    ],
+    "PakaiGrid": false,
+    "NomorManual": false,
+    "PenandatanganDariDataDiri": false,
+    "KunciPenandatanganDataDiri": "",
+    "PakaiTandaTangan": true,
+    "JabatanPenandatangan": "",
+    "PakaiTeksKaki": false,
+    "TeksKaki": "",
+    "NomorTerakhir": 0,
+    "TahunNomor": 0,
+    "Dibuat": "0001-01-01T00:00:00",
+    "Diubah": "0001-01-01T00:00:00",
+    "DibuatOleh": "",
+    "NamaTampil": "Surat Pengumuman Warga",
+    "AdaKolom": true,
+    "JumlahKolom": 5,
+    "AdaBagian": true,
+    "BagianEfektif": [
+      {
+        "Tipe": 0,
+        "Isi": "Dengan ini disampaikan kepada seluruh warga Desa bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Isi Pengumuman",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "perihal",
+            "Label": "Perihal",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Kerja bakti pembersihan lingkungan",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "hari_tanggal_pelaksanaan",
+            "Label": "Hari/Tanggal Pelaksanaan",
+            "Tipe": 3,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "waktu_pelaksanaan",
+            "Label": "Waktu Pelaksanaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "07.00 WIB s.d. selesai",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "tempat",
+            "Label": "Tempat",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "Seluruh jalan lingkungan desa",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "isi_pengumuman",
+            "Label": "Isi Pengumuman",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Seluruh warga dimohon hadir membawa peralatan kebersihan masing-masing dan mengikuti arahan koordinator lingkungan. Kegiatan berlangsung meskipun hujan ringan.",
+            "Kelompok": "Isi Pengumuman",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian pengumuman ini disampaikan untuk diketahui dan dilaksanakan dengan penuh tanggung jawab. Atas perhatian dan kerja samanya, kami ucapkan terima kasih.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "LabelKop": "Ada",
+    "LabelNomor": "Ada",
+    "NomorBerikutnyaTampil": "504/001/Ds/2026",
+    "AdaBlok": true,
+    "JumlahElemen": 7,
+    "RingkasanSusunan": "kop desa \u2022 judul \u2022 nomor \u2022 2 teks \u2022 1 kolom \u2022 tanda tangan",
+    "JabatanTampil": "Kepala Desa"
+  }
+}

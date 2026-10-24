@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build and test (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install pinned .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.401
+
+      - name: Restore solution
+        run: dotnet restore SuDesApp.slnx
+
+      - name: Build solution
+        run: dotnet build SuDesApp.slnx --no-restore --configuration Release
+
+      - name: Run automated tests
+        run: dotnet test SuDesApp.Tests/SuDesApp.Tests.csproj --no-build --no-restore --configuration Release
+
+      # Uji E2E trial server: menyalakan server lisensi lokal (mode memori)
+      # lalu menjalankan harness klien Tools/UjiTrialServerE2E — alur pendaftaran
+      # desa, permintaan trial, token bertanda tangan, dan penolakan trial
+      # perangkat kedua teruji otomatis di setiap push.
+      # Runner Windows memakai pwsh secara bawaan, jadi shell: bash eksplisit
+      # agar skripnya dijalankan di Git Bash seperti di mesin pengembang.
+      - name: Uji E2E trial server
+        shell: bash
+        timeout-minutes: 10
+        run: bash Tools/uji-e2e-trial-server.sh

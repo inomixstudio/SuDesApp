@@ -1,0 +1,67 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PanduanWa.BagianEView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="PanduanWaStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!-- Root menegaskan ulang DataContext ke VM halaman (pola Views/About). -->
+    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:PanduanWaView}}">
+        <Border Style="{StaticResource GuideCard}">
+            <StackPanel>
+                <Border Style="{StaticResource CardHead}">
+                    <DockPanel>
+                        <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left">
+                            <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x2705;"/>
+                        </Border>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="BAGIAN E — UJI ALUR PENUH" Margin="10,0,0,0"/>
+                    </DockPanel>
+                </Border>
+                <StackPanel Style="{StaticResource CardBody}">
+                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10">
+                        Mode tautan (Google Formulir &amp; Sheet jawaban, aktif dari Pengaturan Aplikasi):
+                    </TextBlock>
+                    <StackPanel Margin="0,0,0,0">
+                        <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">1.</Run> Dari WhatsApp pribadi Anda, kirim pesan apa pun (mis. &quot;halo&quot;) ke nomor desa → balasan berisi <Run FontWeight="SemiBold">tautan Google Formulir</Run> + Token.
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">2.</Run> Buka tautan, isi form, klik Kirim → jawaban tersimpan di Google Formulir (pada cara otomatis, aplikasi menyalinnya ke Google Sheet dalam ± 30 detik).
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">3.</Run> Aplikasi membaca Sheet (± 30 detik), menyimpan permohonan, dan menulis status di kolom <Run FontWeight="SemiBold">Status</Run> pada Sheet.
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">4.</Run> PDF surat dibuat otomatis → WhatsApp Anda menerima <Run FontWeight="SemiBold">tautan unduh PDF</Run> (berkas tersimpan juga di folder Drive &quot;Surat Online&quot;).
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,6" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}">5.</Run> Surat tercatat di Register Surat seperti surat buatan biasa; kolom Status di Sheet berubah menjadi SELESAI.
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                            Mode percakapan (bila mode tautan dimatikan): kirim FORMAT SKTM → isi format → YA.
+                        </TextBlock>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource Callout}" Background="{DynamicResource AccentSubtleBrush}"
+                            BorderBrush="{DynamicResource AccentBrush}" Margin="0,10,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#x1F552;" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
+                                       VerticalAlignment="Top" Margin="0,0,10,0"/>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="{DynamicResource AccentTextBrush}">
+                                <Run FontWeight="Bold">Catatan Cloud API:</Run> balasan teks/tautan dalam 24 jam sejak pesan warga terakhir <Run FontWeight="SemiBold">gratis</Run>. Selama jam &amp; hari layanan tutup, permintaan tetap tercatat dan diproses otomatis saat layanan dibuka.
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,42 @@
+# Konteks build Docker untuk SuDesApp lisensi server.
+#
+# Tanpa berkas ini, `docker build` mengunggah SELURUH working tree sebagai build
+# context — termasuk .git, hasil build, dan yang paling penting: berkas yang
+# berisi kredensial. Lihat docs/deploy-server.md.
+
+# ===== Rahasia — jangan pernah masuk build context =====
+**/appsettings.lokal.json
+**/appsettings.*.lokal.json
+**/appsettings.Production.json
+**/appsettings.Development.json
+.env
+.env.*
+**/keys/
+*.pfx
+*.p12
+*.pem
+*.snk
+*.key
+
+# ===== Hasil build & dependensi =====
+**/bin/
+**/bin*/
+**/obj/
+**/obj*/
+artifacts/
+TestResults/
+**/.vs/
+**/.vscode/
+
+# ===== VCS & dokumentasi =====
+.git/
+.gitignore
+.github/
+**/*.md
+docs/
+Templates/
+Bawaan/
+Resources/
+Tools/
+SuDesApp.Wpf/
+SuDesApp.Tests/

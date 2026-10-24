@@ -1,0 +1,921 @@
+{
+  "Kode": "izin-keramaian",
+  "Kategori": "Pengantar",
+  "Keterangan": "Contoh surat pengantar/pendataan kegiatan. Surat ini bukan izin final; kewenangan dan persyaratan kegiatan harus dikonfirmasi ke instansi berwenang setempat.",
+  "Template": {
+    "Id": 0,
+    "Nama": "Surat Pengantar Permohonan Keramaian",
+    "Deskripsi": "Contoh surat pengantar/pendataan kegiatan. Surat ini bukan izin final; kewenangan dan persyaratan kegiatan harus dikonfirmasi ke instansi berwenang setempat.",
+    "FormatContoh": true,
+    "VersiFormat": 1,
+    "LabelSumber": "Contoh aplikasi",
+    "PakaiKop": true,
+    "Judul": "SURAT PENGANTAR PERMOHONAN KEGIATAN/KERAMAIAN",
+    "SubJudul": "",
+    "PakaiNomor": true,
+    "AwalanNomor": "476",
+    "PolaNomor": "{awalan}/{urut:000}/Ds/{tahun}",
+    "PakaiTempatTanggal": false,
+    "Blok": [
+      {
+        "Isi": "Pemerintah Desa menerima permohonan pencatatan/pengantar kegiatan dari warga dengan data sebagai berikut:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Maksud mengadakan keramaian:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Catatan pelaksanaan berikut merupakan pengingat umum dan perlu disesuaikan dengan ketentuan wilayah serta arahan instansi berwenang:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "1. Pada waktu dilaksanakan rame-rame, ketentraman dan ketertiban lingkungan wajib dijaga, baik terhadap tetangga, menghargai waktu ibadah untuk menciptakan kerukunan umat beragama, maupun kebersihan lingkungan setelah rame-rame selesai.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "2. Pada waktu dilaksanakan rame-rame, tidak dibenarkan melakukan hal-hal yang bertentangan dengan ketentuan yang berlaku dan adat istiadat setempat.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "3. Pemohon mengurus izin/persetujuan lain yang diwajibkan sebelum kegiatan dilaksanakan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Surat ini hanya berfungsi sebagai pengantar/pendataan dari desa dan tidak menggantikan izin atau persetujuan instansi yang berwenang.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Demikian surat pengantar permohonan kegiatan ini dibuat untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      }
+    ],
+    "Bagian": [
+      {
+        "Tipe": 0,
+        "Isi": "Pemerintah Desa menerima permohonan pencatatan/pengantar kegiatan dari warga dengan data sebagai berikut:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_tempat_lahir",
+            "Label": "Tempat Lahir",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_tanggal_lahir",
+            "Label": "Tanggal Lahir",
+            "Tipe": 3,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_agama",
+            "Label": "Agama",
+            "Tipe": 5,
+            "Wajib": false,
+            "Pilihan": [
+              "Islam",
+              "Kristen",
+              "Katolik",
+              "Hindu",
+              "Buddha",
+              "Konghucu"
+            ],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Maksud mengadakan keramaian:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Rincian Keramaian",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "hari_tanggal_acara",
+            "Label": "Hari/Tanggal Acara",
+            "Tipe": 3,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "acara_hiburan",
+            "Label": "Acara/Hiburan",
+            "Tipe": 5,
+            "Wajib": true,
+            "Pilihan": [
+              "Organ Tunggal",
+              "Wayang Kulit",
+              "Dangdut",
+              "Musik Keyboard",
+              "Panggung Hiburan",
+              "Lainnya"
+            ],
+            "NilaiBawaan": "Organ Tunggal",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "perayaan_acara",
+            "Label": "Perayaan/Acara",
+            "Tipe": 5,
+            "Wajib": true,
+            "Pilihan": [
+              "Resepsi Pernikahan",
+              "Khitanan/Sunatan",
+              "Tasyakuran",
+              "Ulang Tahun",
+              "Peringatan Hari Besar",
+              "Lainnya"
+            ],
+            "NilaiBawaan": "Resepsi Pernikahan",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "tempat_acara",
+            "Label": "Tempat Acara",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Kediaman pemohon, alamat tersebut di atas",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "jumlah_undangan",
+            "Label": "Jumlah Undangan",
+            "Tipe": 2,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "150",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Angka"
+          },
+          {
+            "Kunci": "penanggung_jawab",
+            "Label": "Penanggung Jawab",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Pemohon (nama tersebut di atas)",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Teks"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Catatan pelaksanaan berikut merupakan pengingat umum dan perlu disesuaikan dengan ketentuan wilayah serta arahan instansi berwenang:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "1. Pada waktu dilaksanakan rame-rame, ketentraman dan ketertiban lingkungan wajib dijaga, baik terhadap tetangga, menghargai waktu ibadah untuk menciptakan kerukunan umat beragama, maupun kebersihan lingkungan setelah rame-rame selesai.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "2. Pada waktu dilaksanakan rame-rame, tidak dibenarkan melakukan hal-hal yang bertentangan dengan ketentuan yang berlaku dan adat istiadat setempat.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "3. Pemohon mengurus izin/persetujuan lain yang diwajibkan sebelum kegiatan dilaksanakan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Catatan Instansi Terkait",
+        "Kunci": "kelompok1",
+        "Kolom": [
+          {
+            "Kunci": "nama_instansi_pejabat",
+            "Label": "Nama Instansi / Pejabat",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Catatan Instansi Terkait",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "nomor_surat_atau_persetujuan",
+            "Label": "Nomor surat atau persetujuan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Catatan Instansi Terkait",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "catatan",
+            "Label": "Catatan",
+            "Tipe": 4,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Catatan Instansi Terkait",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Surat ini hanya berfungsi sebagai pengantar/pendataan dari desa dan tidak menggantikan izin atau persetujuan instansi yang berwenang.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat pengantar permohonan kegiatan ini dibuat untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "Kolom": [
+      {
+        "Kunci": "datadiri0_nama",
+        "Label": "Nama",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_nik",
+        "Label": "NIK",
+        "Tipe": 1,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "NIK (16 angka)"
+      },
+      {
+        "Kunci": "datadiri0_tempat_lahir",
+        "Label": "Tempat Lahir",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_tanggal_lahir",
+        "Label": "Tanggal Lahir",
+        "Tipe": 3,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Tanggal"
+      },
+      {
+        "Kunci": "datadiri0_pekerjaan",
+        "Label": "Pekerjaan",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_agama",
+        "Label": "Agama",
+        "Tipe": 5,
+        "Wajib": false,
+        "Pilihan": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Pilihan (dropdown)"
+      },
+      {
+        "Kunci": "datadiri0_alamat",
+        "Label": "Alamat",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Paragraf"
+      },
+      {
+        "Kunci": "hari_tanggal_acara",
+        "Label": "Hari/Tanggal Acara",
+        "Tipe": 3,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Rincian Keramaian",
+        "TipeLabel": "Tanggal"
+      },
+      {
+        "Kunci": "acara_hiburan",
+        "Label": "Acara/Hiburan",
+        "Tipe": 5,
+        "Wajib": true,
+        "Pilihan": [
+          "Organ Tunggal",
+          "Wayang Kulit",
+          "Dangdut",
+          "Musik Keyboard",
+          "Panggung Hiburan",
+          "Lainnya"
+        ],
+        "NilaiBawaan": "Organ Tunggal",
+        "Kelompok": "Rincian Keramaian",
+        "TipeLabel": "Pilihan (dropdown)"
+      },
+      {
+        "Kunci": "perayaan_acara",
+        "Label": "Perayaan/Acara",
+        "Tipe": 5,
+        "Wajib": true,
+        "Pilihan": [
+          "Resepsi Pernikahan",
+          "Khitanan/Sunatan",
+          "Tasyakuran",
+          "Ulang Tahun",
+          "Peringatan Hari Besar",
+          "Lainnya"
+        ],
+        "NilaiBawaan": "Resepsi Pernikahan",
+        "Kelompok": "Rincian Keramaian",
+        "TipeLabel": "Pilihan (dropdown)"
+      },
+      {
+        "Kunci": "tempat_acara",
+        "Label": "Tempat Acara",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Kediaman pemohon, alamat tersebut di atas",
+        "Kelompok": "Rincian Keramaian",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "jumlah_undangan",
+        "Label": "Jumlah Undangan",
+        "Tipe": 2,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "150",
+        "Kelompok": "Rincian Keramaian",
+        "TipeLabel": "Angka"
+      },
+      {
+        "Kunci": "penanggung_jawab",
+        "Label": "Penanggung Jawab",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Pemohon (nama tersebut di atas)",
+        "Kelompok": "Rincian Keramaian",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "nama_instansi_pejabat",
+        "Label": "Nama Instansi / Pejabat",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Catatan Instansi Terkait",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "nomor_surat_atau_persetujuan",
+        "Label": "Nomor surat atau persetujuan",
+        "Tipe": 0,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Catatan Instansi Terkait",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "catatan",
+        "Label": "Catatan",
+        "Tipe": 4,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Catatan Instansi Terkait",
+        "TipeLabel": "Paragraf"
+      }
+    ],
+    "PakaiGrid": false,
+    "NomorManual": false,
+    "PenandatanganDariDataDiri": false,
+    "KunciPenandatanganDataDiri": "",
+    "PakaiTandaTangan": true,
+    "JabatanPenandatangan": "",
+    "PakaiTeksKaki": false,
+    "TeksKaki": "",
+    "NomorTerakhir": 0,
+    "TahunNomor": 0,
+    "Dibuat": "0001-01-01T00:00:00",
+    "Diubah": "0001-01-01T00:00:00",
+    "DibuatOleh": "",
+    "NamaTampil": "Surat Pengantar Permohonan Keramaian",
+    "AdaKolom": true,
+    "JumlahKolom": 16,
+    "AdaBagian": true,
+    "BagianEfektif": [
+      {
+        "Tipe": 0,
+        "Isi": "Pemerintah Desa menerima permohonan pencatatan/pengantar kegiatan dari warga dengan data sebagai berikut:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_tempat_lahir",
+            "Label": "Tempat Lahir",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_tanggal_lahir",
+            "Label": "Tanggal Lahir",
+            "Tipe": 3,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "datadiri0_pekerjaan",
+            "Label": "Pekerjaan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_agama",
+            "Label": "Agama",
+            "Tipe": 5,
+            "Wajib": false,
+            "Pilihan": [
+              "Islam",
+              "Kristen",
+              "Katolik",
+              "Hindu",
+              "Buddha",
+              "Konghucu"
+            ],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Maksud mengadakan keramaian:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Rincian Keramaian",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "hari_tanggal_acara",
+            "Label": "Hari/Tanggal Acara",
+            "Tipe": 3,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "acara_hiburan",
+            "Label": "Acara/Hiburan",
+            "Tipe": 5,
+            "Wajib": true,
+            "Pilihan": [
+              "Organ Tunggal",
+              "Wayang Kulit",
+              "Dangdut",
+              "Musik Keyboard",
+              "Panggung Hiburan",
+              "Lainnya"
+            ],
+            "NilaiBawaan": "Organ Tunggal",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "perayaan_acara",
+            "Label": "Perayaan/Acara",
+            "Tipe": 5,
+            "Wajib": true,
+            "Pilihan": [
+              "Resepsi Pernikahan",
+              "Khitanan/Sunatan",
+              "Tasyakuran",
+              "Ulang Tahun",
+              "Peringatan Hari Besar",
+              "Lainnya"
+            ],
+            "NilaiBawaan": "Resepsi Pernikahan",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Pilihan (dropdown)"
+          },
+          {
+            "Kunci": "tempat_acara",
+            "Label": "Tempat Acara",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Kediaman pemohon, alamat tersebut di atas",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "jumlah_undangan",
+            "Label": "Jumlah Undangan",
+            "Tipe": 2,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "150",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Angka"
+          },
+          {
+            "Kunci": "penanggung_jawab",
+            "Label": "Penanggung Jawab",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Pemohon (nama tersebut di atas)",
+            "Kelompok": "Rincian Keramaian",
+            "TipeLabel": "Teks"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Catatan pelaksanaan berikut merupakan pengingat umum dan perlu disesuaikan dengan ketentuan wilayah serta arahan instansi berwenang:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "1. Pada waktu dilaksanakan rame-rame, ketentraman dan ketertiban lingkungan wajib dijaga, baik terhadap tetangga, menghargai waktu ibadah untuk menciptakan kerukunan umat beragama, maupun kebersihan lingkungan setelah rame-rame selesai.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "2. Pada waktu dilaksanakan rame-rame, tidak dibenarkan melakukan hal-hal yang bertentangan dengan ketentuan yang berlaku dan adat istiadat setempat.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "3. Pemohon mengurus izin/persetujuan lain yang diwajibkan sebelum kegiatan dilaksanakan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Catatan Instansi Terkait",
+        "Kunci": "kelompok1",
+        "Kolom": [
+          {
+            "Kunci": "nama_instansi_pejabat",
+            "Label": "Nama Instansi / Pejabat",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Catatan Instansi Terkait",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "nomor_surat_atau_persetujuan",
+            "Label": "Nomor surat atau persetujuan",
+            "Tipe": 0,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Catatan Instansi Terkait",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "catatan",
+            "Label": "Catatan",
+            "Tipe": 4,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Catatan Instansi Terkait",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Surat ini hanya berfungsi sebagai pengantar/pendataan dari desa dan tidak menggantikan izin atau persetujuan instansi yang berwenang.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat pengantar permohonan kegiatan ini dibuat untuk dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "LabelKop": "Ada",
+    "LabelNomor": "Ada",
+    "NomorBerikutnyaTampil": "476/001/Ds/2026",
+    "AdaBlok": true,
+    "JumlahElemen": 15,
+    "RingkasanSusunan": "kop desa \u2022 judul \u2022 nomor \u2022 8 teks \u2022 1 data diri \u2022 2 kolom \u2022 tanda tangan",
+    "JabatanTampil": "Kepala Desa"
+  }
+}

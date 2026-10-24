@@ -1,0 +1,394 @@
+{
+  "Kode": "undangan-rapat",
+  "Kategori": "Undangan",
+  "Keterangan": "Undangan kegiatan atau rapat desa untuk warga, perangkat, maupun lembaga desa.",
+  "Template": {
+    "Id": 0,
+    "Nama": "Surat Undangan Rapat",
+    "Deskripsi": "Undangan kegiatan atau rapat desa untuk warga, perangkat, maupun lembaga desa.",
+    "FormatContoh": true,
+    "VersiFormat": 1,
+    "LabelSumber": "Contoh aplikasi",
+    "PakaiKop": true,
+    "Judul": "SURAT UNDANGAN",
+    "SubJudul": "",
+    "PakaiNomor": true,
+    "AwalanNomor": "503",
+    "PolaNomor": "{awalan}/{urut:000}/Ds/{tahun}",
+    "PakaiTempatTanggal": false,
+    "Blok": [
+      {
+        "Isi": "Dengan hormat,",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Sehubungan dengan akan dilaksanakannya kegiatan desa, dengan ini kami mengharap kehadiran Bapak/Ibu/Saudara pada:",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Mengingat pentingnya acara dimaksud, kami mengharapkan kehadiran Bapak/Ibu/Saudara tepat waktu dan tanpa diwakilkan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Demikian undangan ini disampaikan untuk dilaksanakan sebagaimana mestinya. Atas perhatian dan kehadirannya kami ucapkan terima kasih.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      }
+    ],
+    "Bagian": [
+      {
+        "Tipe": 0,
+        "Isi": "Dengan hormat,",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Sehubungan dengan akan dilaksanakannya kegiatan desa, dengan ini kami mengharap kehadiran Bapak/Ibu/Saudara pada:",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Rincian Kegiatan",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "acara",
+            "Label": "Acara",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Rapat koordinasi dengan perangkat desa",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "hari_tanggal",
+            "Label": "Hari/Tanggal",
+            "Tipe": 3,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "waktu",
+            "Label": "Waktu",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "09.00 WIB s.d. selesai",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "tempat",
+            "Label": "Tempat",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Balai Desa",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "agenda",
+            "Label": "Agenda",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "1. Penyampaian program kerja; 2. Evaluasi kegiatan berjalan; 3. Persiapan kegiatan mendatang.",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Paragraf"
+          },
+          {
+            "Kunci": "pakaian",
+            "Label": "Pakaian",
+            "Tipe": 5,
+            "Wajib": false,
+            "Pilihan": [
+              "Kemeja/ Batik",
+              "Bebas rapi",
+              "Seragam lapangan"
+            ],
+            "NilaiBawaan": "Kemeja/ Batik",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Pilihan (dropdown)"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Mengingat pentingnya acara dimaksud, kami mengharapkan kehadiran Bapak/Ibu/Saudara tepat waktu dan tanpa diwakilkan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian undangan ini disampaikan untuk dilaksanakan sebagaimana mestinya. Atas perhatian dan kehadirannya kami ucapkan terima kasih.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "Kolom": [
+      {
+        "Kunci": "acara",
+        "Label": "Acara",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Rapat koordinasi dengan perangkat desa",
+        "Kelompok": "Rincian Kegiatan",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "hari_tanggal",
+        "Label": "Hari/Tanggal",
+        "Tipe": 3,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Rincian Kegiatan",
+        "TipeLabel": "Tanggal"
+      },
+      {
+        "Kunci": "waktu",
+        "Label": "Waktu",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "09.00 WIB s.d. selesai",
+        "Kelompok": "Rincian Kegiatan",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "tempat",
+        "Label": "Tempat",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "Balai Desa",
+        "Kelompok": "Rincian Kegiatan",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "agenda",
+        "Label": "Agenda",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "1. Penyampaian program kerja; 2. Evaluasi kegiatan berjalan; 3. Persiapan kegiatan mendatang.",
+        "Kelompok": "Rincian Kegiatan",
+        "TipeLabel": "Paragraf"
+      },
+      {
+        "Kunci": "pakaian",
+        "Label": "Pakaian",
+        "Tipe": 5,
+        "Wajib": false,
+        "Pilihan": [
+          "Kemeja/ Batik",
+          "Bebas rapi",
+          "Seragam lapangan"
+        ],
+        "NilaiBawaan": "Kemeja/ Batik",
+        "Kelompok": "Rincian Kegiatan",
+        "TipeLabel": "Pilihan (dropdown)"
+      }
+    ],
+    "PakaiGrid": false,
+    "NomorManual": false,
+    "PenandatanganDariDataDiri": false,
+    "KunciPenandatanganDataDiri": "",
+    "PakaiTandaTangan": true,
+    "JabatanPenandatangan": "",
+    "PakaiTeksKaki": false,
+    "TeksKaki": "",
+    "NomorTerakhir": 0,
+    "TahunNomor": 0,
+    "Dibuat": "0001-01-01T00:00:00",
+    "Diubah": "0001-01-01T00:00:00",
+    "DibuatOleh": "",
+    "NamaTampil": "Surat Undangan Rapat",
+    "AdaKolom": true,
+    "JumlahKolom": 6,
+    "AdaBagian": true,
+    "BagianEfektif": [
+      {
+        "Tipe": 0,
+        "Isi": "Dengan hormat,",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Sehubungan dengan akan dilaksanakannya kegiatan desa, dengan ini kami mengharap kehadiran Bapak/Ibu/Saudara pada:",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Rincian Kegiatan",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "acara",
+            "Label": "Acara",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Rapat koordinasi dengan perangkat desa",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "hari_tanggal",
+            "Label": "Hari/Tanggal",
+            "Tipe": 3,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Tanggal"
+          },
+          {
+            "Kunci": "waktu",
+            "Label": "Waktu",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "09.00 WIB s.d. selesai",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "tempat",
+            "Label": "Tempat",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "Balai Desa",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "agenda",
+            "Label": "Agenda",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "1. Penyampaian program kerja; 2. Evaluasi kegiatan berjalan; 3. Persiapan kegiatan mendatang.",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Paragraf"
+          },
+          {
+            "Kunci": "pakaian",
+            "Label": "Pakaian",
+            "Tipe": 5,
+            "Wajib": false,
+            "Pilihan": [
+              "Kemeja/ Batik",
+              "Bebas rapi",
+              "Seragam lapangan"
+            ],
+            "NilaiBawaan": "Kemeja/ Batik",
+            "Kelompok": "Rincian Kegiatan",
+            "TipeLabel": "Pilihan (dropdown)"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Mengingat pentingnya acara dimaksud, kami mengharapkan kehadiran Bapak/Ibu/Saudara tepat waktu dan tanpa diwakilkan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian undangan ini disampaikan untuk dilaksanakan sebagaimana mestinya. Atas perhatian dan kehadirannya kami ucapkan terima kasih.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "LabelKop": "Ada",
+    "LabelNomor": "Ada",
+    "NomorBerikutnyaTampil": "503/001/Ds/2026",
+    "AdaBlok": true,
+    "JumlahElemen": 9,
+    "RingkasanSusunan": "kop desa \u2022 judul \u2022 nomor \u2022 4 teks \u2022 1 kolom \u2022 tanda tangan",
+    "JabatanTampil": "Kepala Desa"
+  }
+}

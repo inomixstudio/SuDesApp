@@ -1,0 +1,77 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.CatatanRilisView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <UserControl.Resources>
+        <!-- Konverter lokal: halaman ini juga dirender alat uji tanpa App.xaml
+             penuh, jadi jangan bergantung pada BoolToVis milik Application. -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header: Grid dua kolom, bukan DockPanel — DockPanel memberi sisa
+             ruang hanya beberapa piksel kepada judul (selebar ikon), sehingga
+             judul dan subjudul tertimpa chip ikon pada jendela sempit. -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}" Margin="0,0,14,0">
+                    <TextBlock Text="{x:Static u:IkonMenu.Pembaruan}" FontFamily="{StaticResource AppIconFont}"
+                               FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <!-- Judul dan subjudul dibind ke ViewModel: dulu teksnya ditulis
+                         ulang di sini dan berbeda dari properti ViewModel-nya. -->
+                    <TextBlock Text="{Binding Title, FallbackValue='CATATAN RILIS'}"
+                               Style="{StaticResource HeaderTitle}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Subtitle}"
+                               Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Ringkasan riwayat: berapa versi tampil dari total. Teks footer versi
+             tidak diulang di sini — sudah tampil di status bar di bawah halaman. -->
+        <TextBlock Grid.Row="1" Margin="0" FontSize="13"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   TextWrapping="Wrap"
+                   Text="{Binding RingkasanRiwayat}"/>
+
+        <!-- Daftar kartu versi -->
+        <ScrollViewer Grid.Row="2" Margin="0,10,0,0"
+                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Entries}"
+                          ItemTemplate="{StaticResource KartuCatatanRilis}"/>
+        </ScrollViewer>
+
+        <!-- Muat batch versi lama berikutnya; hilang sendiri saat seluruh riwayat
+             sudah tampil (dan tombolnya ikut nonaktif lewat CanExecute). -->
+        <Button Grid.Row="3" Content="Muat versi lebih lama"
+                Command="{Binding MuatVersiLamaCommand}"
+                Style="{StaticResource SecondaryButton}"
+                HorizontalAlignment="Left" Margin="0,12,0,0"
+                ToolTip="Tampilkan tiga versi lama berikutnya dari riwayat rilis"
+                Visibility="{Binding AdaSisaVersi, Converter={StaticResource BoolToVis}}"
+                AutomationProperties.Name="Muat versi lebih lama"/>
+
+        <!-- Statusbar -->
+        <c:AppStatusBar Grid.Row="4" Margin="0,16,0,0"
+                        StatusText="{Binding VersionFooter, FallbackValue='Catatan rilis'}"/>
+    </Grid>
+</UserControl>

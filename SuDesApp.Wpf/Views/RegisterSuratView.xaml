@@ -1,0 +1,760 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.RegisterSuratView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <CollectionViewSource x:Key="JenisSuratItemsView" Source="{Binding JenisSuratItems}"/>
+
+        <views:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
+        <views:StatusToBorderConverter x:Key="StatusToBorderConverter"/>
+        <views:StatusToForegroundConverter x:Key="StatusToForegroundConverter"/>
+
+        <!-- Status Pill Badge Template -->
+        <DataTemplate x:Key="StatusCellTemplate">
+            <Border CornerRadius="12" Padding="8,3" Margin="2"
+                    Background="{Binding Status, Converter={StaticResource StatusToBackgroundConverter}}"
+                    BorderBrush="{Binding Status, Converter={StaticResource StatusToBorderConverter}}"
+                    BorderThickness="1"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="● " FontSize="10" Margin="0,0,3,0"
+                               Foreground="{Binding Status, Converter={StaticResource StatusToForegroundConverter}}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding StatusDisplay}"
+                               Foreground="{Binding Status, Converter={StaticResource StatusToForegroundConverter}}"
+                               FontSize="11" FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- Action Column Template -->
+        <DataTemplate x:Key="ActionCellTemplate">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Command="{Binding DataContext.PreviewSuratCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                        CommandParameter="{Binding}"
+                        ToolTip="Buka Pratinjau PDF"
+                        Width="28" Height="26" Margin="1"
+                        Style="{StaticResource IconButton}">
+                    <TextBlock Text="👁️" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                <Button Command="{Binding DataContext.EditSuratCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                        CommandParameter="{Binding}"
+                        ToolTip="Edit Surat"
+                        Width="28" Height="26" Margin="1"
+                        Style="{StaticResource IconButton}">
+                    <TextBlock Text="✏️" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                <Button Command="{Binding DataContext.ExportSuratPdfCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                        CommandParameter="{Binding}"
+                        ToolTip="Ekspor ke PDF (Simpan Sebagai)"
+                        Width="28" Height="26" Margin="1"
+                        Style="{StaticResource IconButton}">
+                    <TextBlock Text="📤" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                <Button Command="{Binding DataContext.PrintSuratCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                        CommandParameter="{Binding}"
+                        ToolTip="Cetak Dokumen"
+                        Width="28" Height="26" Margin="1"
+                        Style="{StaticResource IconButton}">
+                    <TextBlock Text="🖨️" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- PENTING: ContextMenu berada di pohon visual popup TERPISAH sehingga
+             TIDAK mewarisi DataContext window; binding AncestorType pun tidak bisa
+             menembus keluar popup. Solasi standar: DataContext ContextMenu diikat
+             ke PlacementTarget.Tag, dan style baris mengisi Tag item dengan
+             DataContext ListBox (ViewModel). CommandParameter pratinjau/cetak memakai
+             PlacementTarget.DataContext = model baris yang di-klik kanan. -->
+        <ContextMenu x:Key="StatusContextMenu"
+                     DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+            <MenuItem Header="👁️ Pratinjau PDF" FontWeight="SemiBold"
+                      Command="{Binding PreviewSuratCommand}"
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+            <MenuItem Header="✏️ Edit Surat"
+                      Command="{Binding EditSuratCommand}"
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+            <MenuItem Header="📤 Ekspor ke PDF..."
+                      Command="{Binding ExportSuratPdfCommand}"
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+            <MenuItem Header="🖨️ Cetak Dokumen"
+                      Command="{Binding PrintSuratCommand}"
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+            <Separator/>
+            <MenuItem Header="Ubah Status ke Aktif ✓" Tag="Active"
+                      Command="{Binding ChangeStatusCommand}"
+                      CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}"/>
+            <MenuItem Header="Ubah Status ke Draft 📝" Tag="Draft"
+                      Command="{Binding ChangeStatusCommand}"
+                      CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}"/>
+            <MenuItem Header="Batalkan Surat ✕" Tag="Cancelled"
+                      Command="{Binding ChangeStatusCommand}"
+                      CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}"/>
+        </ContextMenu>
+
+        <!-- Baris register: tinggi ikuti isi (bukan DataGrid).
+             Penyelarasan dasar dan zebra (baris bergantian ZebraBrush)
+             dari gaya bersama TabelBarisZebra; Tag = ViewModel dibaca
+             ContextMenu via PlacementTarget.Tag. Daftar pakai
+             AlternationCount=4. -->
+        <Style x:Key="RegisterRowStyle" TargetType="ListBoxItem" BasedOn="{StaticResource TabelBarisZebra}">
+            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+            <Setter Property="ContextMenu" Value="{StaticResource StatusContextMenu}"/>
+        </Style>
+
+        <!-- Tombol kepala kolom: memicu sortir server-side lewat SortCommand
+             dan menampilkan panah arah urut. Berdasarkan gaya tombol tema
+             supaya TIDAK memakai chrome bawaan Windows (tanpa dasar ini,
+             tombol kepala memakai template WPF bawaan yang efek hover-nya
+             warna sistem); Margin/MinHeight dikembalikan nol karena gaya
+             dasar menyetel keduai untuk tombol biasa. -->
+        <Style x:Key="TabelKepala" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <views:UrutArahConverter x:Key="UrutArah"/>
+    </UserControl.Resources>
+
+    <Grid Margin="16,12,16,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- 0: Page Title -->
+            <RowDefinition Height="Auto"/> <!-- 1: Pemberitahuan inline (kartu, bukan popup) -->
+            <RowDefinition Height="Auto"/> <!-- 2: KPI Cards -->
+            <RowDefinition Height="Auto"/> <!-- 3: Action & Search Toolbar -->
+            <RowDefinition Height="Auto"/> <!-- 4: Category Filter Bar -->
+            <RowDefinition Height="Auto"/> <!-- 5: Progress Bar -->
+            <RowDefinition Height="*"/>    <!-- 6: Daftar register & Empty State -->
+            <RowDefinition Height="Auto"/> <!-- 7: Footer & Paging -->
+        </Grid.RowDefinitions>
+
+        <!-- ===== Row 1: Pemberitahuan inline =====
+             Hasil ekspor, statistik, kegagalan cetak, dan sebab sebuah tombol tidak
+             bisa dilanjutkan tampil di sini — bukan sebagai dialog popup yang harus
+             ditutup lebih dulu sebelum melihat daftar surat. -->
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Pesan}"
+                      Visibility="{Binding Pesan.Ada, Converter={StaticResource BoolToVis}}"
+                      ItemTemplate="{StaticResource KartuPesanInline}"
+                      Margin="0,0,0,12"
+                      AutomationProperties.Name="Pemberitahuan register surat"/>
+
+        <!-- ===== Row 0: Page Header ===== -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource HeaderIconChip}">
+                    <TextBlock Text="&#x1F4CB;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding PageTitle}" Style="{StaticResource HeaderTitle}"/>
+                    <TextBlock Text="Buku register surat yang telah dibuat (database SQLite)"
+                               Style="{StaticResource HeaderSubtitle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== Row 1: Top KPI Metric Cards ===== -->
+        <Grid Grid.Row="2" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Card 1: Total Surat -->
+            <Border Grid.Column="0" Style="{StaticResource KpiCardStyle}" Margin="0,0,6,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="TOTAL SURAT" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TotalSuratCount}" FontSize="20" FontWeight="Bold" Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource AccentSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="📋" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Card 2: Surat Aktif -->
+            <Border Grid.Column="1" Style="{StaticResource KpiCardStyle}" Margin="6,0,6,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="SURAT AKTIF" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SuccessTextBrush}"/>
+                        <TextBlock Text="{Binding ActiveSuratCount}" FontSize="20" FontWeight="Bold" Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource SuccessSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="✓" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource SuccessTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Card 3: Draft Surat -->
+            <Border Grid.Column="2" Style="{StaticResource KpiCardStyle}" Margin="6,0,6,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="DRAFT SURAT" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource WarningTextBrush}"/>
+                        <TextBlock Text="{Binding DraftSuratCount}" FontSize="20" FontWeight="Bold" Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource WarningSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="📝" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Card 4: Surat Dibatalkan -->
+            <Border Grid.Column="3" Style="{StaticResource KpiCardStyle}" Margin="6,0,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="DIBATALKAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ErrorTextBrush}"/>
+                        <TextBlock Text="{Binding CancelledSuratCount}" FontSize="20" FontWeight="Bold" Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource ErrorSubtleBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="✕" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ErrorTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ===== Row 1: Action & Search Toolbar ===== -->
+        <Border Grid.Row="3" Style="{StaticResource ToolbarCard}">
+            <!-- WrapPanel, bukan Grid berkolom Auto: di lebar minimum (900 − sidebar 264
+                 = ±604 px) kotak cari 320 + empat tombol aksi (±526 px) tidak muat
+                 berjejer. Kolom Auto tidak bisa menyusut sehingga bilah meluber keluar
+                 kartu dan "🖨️ Cetak Register (PDF)" tampak di luar jendela — tidak
+                 terlihat dan tidak bisa diklik. Perlakuan sama dengan RegisterNtcrView. -->
+            <WrapPanel Orientation="Horizontal">
+
+                <!-- Search Box with Clear Button -->
+                <Border Width="320" MinWidth="200" Margin="0,2,8,2" Background="{DynamicResource WindowBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="6" Height="36">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="32"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="28"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="🔍" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBox x:Name="SearchBox" Grid.Column="1"
+                                 Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 TextChanged="SearchBox_TextChanged"
+                                 VerticalContentAlignment="Center"
+                                 BorderThickness="0" Background="Transparent"
+                                 FontSize="13"
+                                 Foreground="{DynamicResource TextBrush}"/>
+                        <!-- Watermark -->
+                        <TextBlock Grid.Column="1" Text="Cari nomor, nama, alamat..."
+                                   VerticalAlignment="Center" IsHitTestVisible="False"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <Button Grid.Column="2" Content="✕" Command="{Binding ClearSearchCommand}"
+                                Width="20" Height="20"
+                                ToolTip="Hapus pencarian">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Draft quick filter + badge penghitung draft yang belum selesai -->
+                <Button Command="{Binding DraftFilterCommand}" Padding="12,0" Margin="0,2,8,2" VerticalAlignment="Center"
+                        ToolTip="Tampilkan hanya surat berstatus Draft (klik lagi untuk semua status)">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                            <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDraftFilterActive}" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource WarningBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource OnWarningTextBrush}"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📝" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Draft" VerticalAlignment="Center"/>
+                        <Border Background="{DynamicResource WarningBrush}"
+                                CornerRadius="9" MinWidth="18" Height="18" Margin="8,0,0,0">
+                            <TextBlock Text="{Binding DraftBadgeText}" FontSize="11" FontWeight="Bold"
+                                       Foreground="{DynamicResource OnWarningTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Padding="4,0"/>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasDraftBadge}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                    </StackPanel>
+                </Button>
+
+                <!-- Right Action Buttons -->
+                <Button Content="🔄 Segarkan" Command="{Binding LoadCommand}"
+                        Style="{StaticResource SecondaryButton}" Margin="0,2,6,2"
+                        VerticalAlignment="Center"
+                        ToolTip="Muat ulang data surat"/>
+                <Button Content="📊 Statistik" Command="{Binding StatisticsCommand}"
+                        Style="{StaticResource SecondaryButton}" Margin="0,2,6,2"
+                        VerticalAlignment="Center"
+                        ToolTip="Lihat ringkasan statistik database"/>
+                <Button Content="📤 Ekspor" Command="{Binding ExportCommand}"
+                        Style="{StaticResource SecondaryButton}" Margin="0,2,6,2"
+                        VerticalAlignment="Center"
+                        ToolTip="Ekspor data ke Excel (.xlsx), CSV, atau JSON"/>
+                <Button Content="🖨️ Cetak Register (PDF)" Command="{Binding PrintRegisterCommand}"
+                        Style="{StaticResource PrimaryButton}" Margin="0,2,6,2"
+                        VerticalAlignment="Center"
+                        ToolTip="Buat PDF buku register lalu buka di pratinjau — bisa disimpan (Ekspor PDF) atau dicetak dari sana"/>
+            </WrapPanel>
+        </Border>
+
+        <!-- ===== Row 2: Category Filter Bar ===== -->
+        <Border Grid.Row="4" Style="{StaticResource ToolbarCard}" Padding="12,8">
+            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Jenis Surat -->
+                <StackPanel Orientation="Horizontal" Margin="0,2,16,2" VerticalAlignment="Center">
+                    <TextBlock Text="Jenis Surat:" VerticalAlignment="Center" Margin="0,0,6,0"
+                               FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding JenisSuratItems}"
+                              SelectedItem="{Binding SelectedJenisSurat, Mode=TwoWay}"
+                              SelectionChanged="FilterComboBox_SelectionChanged"
+                              Width="210" DisplayMemberPath="DisplayName"
+                              Style="{StaticResource ModernComboBox}"/>
+                </StackPanel>
+
+                <!-- Status -->
+                <StackPanel Orientation="Horizontal" Margin="0,2,16,2" VerticalAlignment="Center">
+                    <TextBlock Text="Status:" VerticalAlignment="Center" Margin="0,0,6,0"
+                               FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding StatusItems}"
+                              SelectedItem="{Binding SelectedStatus, Mode=TwoWay}"
+                              SelectionChanged="FilterComboBox_SelectionChanged"
+                              Width="140" DisplayMemberPath="DisplayName"
+                              Style="{StaticResource ModernComboBox}"/>
+                </StackPanel>
+
+                <!-- Tahun -->
+                <StackPanel Orientation="Horizontal" Margin="0,2,16,2" VerticalAlignment="Center">
+                    <TextBlock Text="Tahun:" VerticalAlignment="Center" Margin="0,0,6,0"
+                               FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding TahunItems}"
+                              SelectedItem="{Binding SelectedTahun, Mode=TwoWay}"
+                              SelectionChanged="FilterComboBox_SelectionChanged"
+                              Width="120"
+                              Style="{StaticResource ModernComboBox}"/>
+                </StackPanel>
+
+                <!-- Rentang Tanggal -->
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,2" VerticalAlignment="Center">
+                    <CheckBox Content="Filter Tanggal:" IsChecked="{Binding IsDateFilterEnabled, Mode=TwoWay}"
+                              Checked="DateFilter_Checked" Unchecked="DateFilter_Unchecked"
+                              VerticalAlignment="Center" Margin="0,0,8,0"
+                              FontWeight="Medium" Foreground="{DynamicResource TextBrush}"/>
+                    <TextBox Text="{Binding TanggalMulai, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Width="125" IsEnabled="{Binding IsDateFilterEnabled}"
+                             Style="{StaticResource ModernTextBox}"
+                             VerticalContentAlignment="Center"
+                             LostFocus="TanggalFilter_LostFocus"
+                             ToolTip="Tulis tanggal mulai filter dengan format dd-mm-yyyy, mis. 17-08-2026"
+                             AutomationProperties.Name="Tanggal Mulai Filter"/>
+                    <TextBlock Text="s/d" VerticalAlignment="Center" Margin="6,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBox Text="{Binding TanggalSelesai, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Width="125" IsEnabled="{Binding IsDateFilterEnabled}"
+                             Style="{StaticResource ModernTextBox}"
+                             VerticalContentAlignment="Center"
+                             LostFocus="TanggalFilter_LostFocus"
+                             ToolTip="Tulis tanggal selesai filter dengan format dd-mm-yyyy, mis. 17-08-2026"
+                             AutomationProperties.Name="Tanggal Selesai Filter"/>
+                </StackPanel>
+            </WrapPanel>
+        </Border>
+
+        <!-- ===== Row 3: Indeterminate ProgressBar ===== -->
+        <ProgressBar Grid.Row="5" IsIndeterminate="True" Height="3" Margin="0,-4,0,6"
+                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+                     Foreground="{DynamicResource PrimaryBrush}"/>
+
+        <!-- ===== Row 4: Daftar register & Empty State ===== -->
+        <Border Grid.Row="6" Style="{StaticResource GridHostCard}">
+            <Grid>
+            <!-- Overlay spinner: tampil saat PDF surat sedang di-generate (pratinjau/cetak/ekspor).
+                 Rotasi via RenderTransform (tanpa re-layout), transparan 85% menutupi grid. -->
+            <Border x:Name="PdfSpinnerOverlay"
+                    Panel.ZIndex="9"
+                    Background="{DynamicResource SurfaceBrush}"
+                    Visibility="{Binding IsGeneratingPdf, Converter={StaticResource BoolToVis}}"
+                    IsHitTestVisible="True">
+                <Border.Resources>
+                    <Storyboard x:Key="SpinnerSpin" RepeatBehavior="Forever">
+                        <DoubleAnimation Storyboard.TargetName="SpinnerDisc"
+                                         Storyboard.TargetProperty="(Ellipse.RenderTransform).(RotateTransform.Angle)"
+                                         From="0" To="360" Duration="0:0:1"/>
+                    </Storyboard>
+                </Border.Resources>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid Width="52" Height="52" Margin="0,0,0,10">
+                        <Ellipse x:Name="SpinnerDisc" StrokeThickness="4"
+                                 Stroke="{DynamicResource PrimaryBrush}"
+                                 StrokeDashArray="12 6" StrokeDashCap="Round"
+                                 RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.RenderTransform>
+                                <RotateTransform x:Name="SpinnerRotate" Angle="0"/>
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+                    </Grid>
+                    <TextBlock Text="Membuat PDF surat…" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextBrush}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Mohon tunggu sebentar" FontSize="13"
+                               Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                </StackPanel>
+                <Border.Triggers>
+                    <EventTrigger RoutedEvent="Border.Loaded">
+                        <BeginStoryboard Storyboard="{StaticResource SpinnerSpin}"/>
+                    </EventTrigger>
+                </Border.Triggers>
+            </Border>
+            <Grid>
+                <!-- Daftar register: tinggi baris ikuti isi. ScrollViewer
+                     vertikal membungkus kepala kolom + ListBox; tiap baris
+                     berupa Border pemisah dengan Grid kolom sejajar kepala,
+                     sehingga teks panjang membungkus alih-alih terpotong. -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                              Padding="0,2,0,0">
+                    <StackPanel>
+                        <!-- Kepala kolom: ColumnDefinitions identik dengan baris.
+                             Tombol kepala memicu sortir server-side (SortCommand);
+                             kolom tanpa kriteria urut hanya berupa label. -->
+                        <Border Style="{StaticResource TabelKepalaPita}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="50"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="1.6*" MinWidth="150"/>
+                                    <ColumnDefinition Width="2*" MinWidth="160"/>
+                                    <ColumnDefinition Width="1.6*" MinWidth="150"/>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="3.8*" MinWidth="170"/>
+                                    <ColumnDefinition Width="2.2*" MinWidth="150"/>
+                                    <ColumnDefinition Width="1.8*" MinWidth="150"/>
+                                    <ColumnDefinition Width="105"/>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="126"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
+                                        Command="{Binding SortCommand}" CommandParameter="ID_Surat">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="No"/>
+                                        <TextBlock Margin="3,0,0,0">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource UrutArah}">
+                                                    <Binding Path="SortColumnTampil"/>
+                                                    <Binding Path="IsSortedAscending"/>
+                                                    <Binding Source="ID_Surat"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
+                                        Command="{Binding SortCommand}" CommandParameter="TanggalSurat">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Tanggal" TextWrapping="Wrap"/>
+                                        <TextBlock Margin="3,0,0,0">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource UrutArah}">
+                                                    <Binding Path="SortColumnTampil"/>
+                                                    <Binding Path="IsSortedAscending"/>
+                                                    <Binding Source="TanggalSurat"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="2" Style="{StaticResource TabelKepala}"
+                                        Command="{Binding SortCommand}" CommandParameter="NomorSurat">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Nomor Surat" TextWrapping="Wrap"/>
+                                        <TextBlock Margin="3,0,0,0">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource UrutArah}">
+                                                    <Binding Path="SortColumnTampil"/>
+                                                    <Binding Path="IsSortedAscending"/>
+                                                    <Binding Source="NomorSurat"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="3" Style="{StaticResource TabelKepala}"
+                                        Command="{Binding SortCommand}" CommandParameter="NamaDisplay">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Nama Pemohon / Instansi"/>
+                                        <TextBlock Margin="3,0,0,0">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource UrutArah}">
+                                                    <Binding Path="SortColumnTampil"/>
+                                                    <Binding Path="IsSortedAscending"/>
+                                                    <Binding Source="NamaDisplay"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Grid.Column="4" Text="Tempat/Tgl Lahir" VerticalAlignment="Center" TextWrapping="Wrap"
+                                           FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="5" Text="JK" TextAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
+                                           FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="6" Text="Alamat" VerticalAlignment="Center" TextWrapping="Wrap"
+                                           FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="7" Text="Keperluan" VerticalAlignment="Center" TextWrapping="Wrap"
+                                           FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <Button Grid.Column="8" Style="{StaticResource TabelKepala}"
+                                        Command="{Binding SortCommand}" CommandParameter="NamaJenis">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Jenis Surat" TextWrapping="Wrap"/>
+                                        <TextBlock Margin="3,0,0,0">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource UrutArah}">
+                                                    <Binding Path="SortColumnTampil"/>
+                                                    <Binding Path="IsSortedAscending"/>
+                                                    <Binding Source="NamaJenis"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="9" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
+                                        Command="{Binding SortCommand}" CommandParameter="Status">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Status"/>
+                                        <TextBlock Margin="3,0,0,0">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource UrutArah}">
+                                                    <Binding Path="SortColumnTampil"/>
+                                                    <Binding Path="IsSortedAscending"/>
+                                                    <Binding Source="Status"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="10" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
+                                        Command="{Binding SortCommand}" CommandParameter="CreatedAt">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Dibuat"/>
+                                        <TextBlock Margin="3,0,0,0">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource UrutArah}">
+                                                    <Binding Path="SortColumnTampil"/>
+                                                    <Binding Path="IsSortedAscending"/>
+                                                    <Binding Source="CreatedAt"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Grid.Column="11" Text="Aksi" TextAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
+                                           FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Daftar isi: tinggi baris mengikuti isi teks
+                             yang membungkus (tidak ada tinggi baris tetap). -->
+                        <ListBox x:Name="TabelRegister" ItemsSource="{Binding SuratItems}"
+                                 ItemContainerStyle="{StaticResource RegisterRowStyle}"
+                                 AlternationCount="4"
+                                 BorderThickness="0" Background="Transparent" Padding="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 SelectionMode="Single"
+                                 SelectedItem="{Binding SelectedSurat, Mode=TwoWay}"
+                                 MouseDoubleClick="TabelRegister_MouseDoubleClick"
+                                 ContextMenuOpening="TabelRegister_ContextMenuOpening">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,7">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="1.6*" MinWidth="150"/>
+                                                <ColumnDefinition Width="2*" MinWidth="160"/>
+                                                <ColumnDefinition Width="1.6*" MinWidth="150"/>
+                                                <ColumnDefinition Width="40"/>
+                                                <ColumnDefinition Width="3.8*" MinWidth="170"/>
+                                                <ColumnDefinition Width="2.2*" MinWidth="150"/>
+                                                <ColumnDefinition Width="1.8*" MinWidth="150"/>
+                                                <ColumnDefinition Width="105"/>
+                                                <ColumnDefinition Width="130"/>
+                                                <ColumnDefinition Width="126"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding ID_Surat}" TextAlignment="Center"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding TanggalSurat, StringFormat='dd-MM-yyyy'}"
+                                                       TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding NomorSurat}" FontWeight="Medium"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding NomorSurat}"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding NamaDisplay}" FontWeight="SemiBold"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding NamaDisplay}"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding TTLDisplay}"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding TTLDisplay}"/>
+                                            <TextBlock Grid.Column="5" Text="{Binding JenisKelaminDisplay}" TextAlignment="Center"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="6" Text="{Binding AlamatDisplay}"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding AlamatDisplay}"/>
+                                            <TextBlock Grid.Column="7" Text="{Binding Keperluan}"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding Keperluan}"/>
+                                            <TextBlock Grid.Column="8" Text="{Binding JenisSuratLabel}"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding JenisSuratLabel}"/>
+                                            <ContentControl Grid.Column="9" Content="{Binding}"
+                                                            ContentTemplate="{StaticResource StatusCellTemplate}"
+                                                            VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="10" Text="{Binding CreatedAt, StringFormat='dd-MM-yyyy HH:mm'}"
+                                                       TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                            <ContentControl Grid.Column="11" Content="{Binding}"
+                                                            ContentTemplate="{StaticResource ActionCellTemplate}"
+                                                            VerticalAlignment="Top"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Empty State Overlay — visibilitas FULL dari Style.Triggers di bawah
+                     (JANGAN pakai atribut lokal Visibility: local value selalu mengalahkan
+                     style trigger, dan BooleanToVisibilityConverter tidak dukung "invert"
+                     sehingga overlay malah tampil saat data ADA). -->
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="32">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasData}" Value="False"/>
+                                        <Condition Binding="{Binding IsLoading}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <c:EmptyStateView Judul="Belum ada surat di register"
+                                     Pesan="Coba sesuaikan kata kunci pencarian atau filter status dan tanggal."/>
+                </Border>
+            </Grid>
+            </Grid>
+        </Border>
+
+        <!-- ===== Row 5: Footer & Pagination Bar ===== -->
+        <Border Grid.Row="7" Background="Transparent" Padding="0,10,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Status summary text -->
+                <TextBlock Grid.Column="0" Text="{Binding StatusSummary}"
+                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center"/>
+
+                <!-- Right: Pagination Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding PageInfo}" VerticalAlignment="Center" Margin="0,0,14,0"
+                               FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <Button Content="⏮" Command="{Binding FirstPageCommand}"
+                            Width="36" Margin="0,0,3,0"
+                            ToolTip="Halaman Pertama" Style="{StaticResource SecondaryButton}"
+                            IsEnabled="{Binding CanPreviousPage}"/>
+                    <!-- MinWidth, bukan Width: gaya SecondaryButton memberi Padding
+                         14,7 sehingga label "◀ Sebelumnya" tidak muat di 105 px dan
+                         terpotong — makin parah saat skala teks Windows/dpi dinaikkan. -->
+                    <Button Content="◀ Sebelumnya" Command="{Binding PreviousPageCommand}"
+                            MinWidth="105" Margin="0,0,3,0"
+                            Style="{StaticResource SecondaryButton}"
+                            IsEnabled="{Binding CanPreviousPage}"/>
+                    <Button Content="Berikutnya ▶" Command="{Binding NextPageCommand}"
+                            MinWidth="105" Margin="0,0,3,0"
+                            Style="{StaticResource SecondaryButton}"
+                            IsEnabled="{Binding CanNextPage}"/>
+                    <Button Content="⏭" Command="{Binding LastPageCommand}"
+                            Width="36"
+                            ToolTip="Halaman Terakhir" Style="{StaticResource SecondaryButton}"
+                            IsEnabled="{Binding CanNextPage}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

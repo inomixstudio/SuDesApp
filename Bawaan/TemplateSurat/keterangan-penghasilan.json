@@ -1,0 +1,408 @@
+{
+  "Kode": "keterangan-penghasilan",
+  "Kategori": "Keterangan",
+  "Keterangan": "Contoh pencatatan keterangan penghasilan. Nilai dan kalimat kelayakan harus didasarkan pada data/pemeriksaan dan persyaratan program setempat.",
+  "Template": {
+    "Id": 0,
+    "Nama": "Surat Keterangan Penghasilan",
+    "Deskripsi": "Contoh pencatatan keterangan penghasilan. Nilai dan kalimat kelayakan harus didasarkan pada data/pemeriksaan dan persyaratan program setempat.",
+    "FormatContoh": true,
+    "VersiFormat": 1,
+    "LabelSumber": "Contoh aplikasi",
+    "PakaiKop": true,
+    "Judul": "SURAT KETERANGAN PENGHASILAN",
+    "SubJudul": "",
+    "PakaiNomor": true,
+    "AwalanNomor": "472",
+    "PolaNomor": "{awalan}/{urut:000}/Ds/{tahun}",
+    "PakaiTempatTanggal": false,
+    "Blok": [
+      {
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Keterangan penghasilan di atas dicatat berdasarkan keterangan pemohon dan/atau pemeriksaan yang benar-benar dilakukan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Surat ini menerangkan data penghasilan; surat ini bukan penetapan kelayakan bantuan atau program tertentu.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      },
+      {
+        "Isi": "Demikian surat keterangan ini dibuat dengan sebenarnya untuk keperluan pengajuan beasiswa/bantuan sosial dan dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "BarisBaru": false
+      }
+    ],
+    "Bagian": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Data Penghasilan",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "pekerjaan_usaha",
+            "Label": "Pekerjaan/Usaha",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Penghasilan",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "penghasilan_per_bulan",
+            "Label": "Penghasilan per Bulan",
+            "Tipe": 2,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Penghasilan",
+            "TipeLabel": "Angka"
+          },
+          {
+            "Kunci": "jumlah_tanggungan",
+            "Label": "Jumlah Tanggungan",
+            "Tipe": 2,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Penghasilan",
+            "TipeLabel": "Angka"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Keterangan penghasilan di atas dicatat berdasarkan keterangan pemohon dan/atau pemeriksaan yang benar-benar dilakukan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Surat ini menerangkan data penghasilan; surat ini bukan penetapan kelayakan bantuan atau program tertentu.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat keterangan ini dibuat dengan sebenarnya untuk keperluan pengajuan beasiswa/bantuan sosial dan dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "Kolom": [
+      {
+        "Kunci": "datadiri0_nama",
+        "Label": "Nama",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "datadiri0_nik",
+        "Label": "NIK",
+        "Tipe": 1,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "NIK (16 angka)"
+      },
+      {
+        "Kunci": "datadiri0_alamat",
+        "Label": "Alamat",
+        "Tipe": 4,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Pemohon",
+        "TipeLabel": "Paragraf"
+      },
+      {
+        "Kunci": "pekerjaan_usaha",
+        "Label": "Pekerjaan/Usaha",
+        "Tipe": 0,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Data Penghasilan",
+        "TipeLabel": "Teks"
+      },
+      {
+        "Kunci": "penghasilan_per_bulan",
+        "Label": "Penghasilan per Bulan",
+        "Tipe": 2,
+        "Wajib": true,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Data Penghasilan",
+        "TipeLabel": "Angka"
+      },
+      {
+        "Kunci": "jumlah_tanggungan",
+        "Label": "Jumlah Tanggungan",
+        "Tipe": 2,
+        "Wajib": false,
+        "Pilihan": [],
+        "NilaiBawaan": "",
+        "Kelompok": "Data Penghasilan",
+        "TipeLabel": "Angka"
+      }
+    ],
+    "PakaiGrid": false,
+    "NomorManual": false,
+    "PenandatanganDariDataDiri": false,
+    "KunciPenandatanganDataDiri": "",
+    "PakaiTandaTangan": true,
+    "JabatanPenandatangan": "",
+    "PakaiTeksKaki": false,
+    "TeksKaki": "",
+    "NomorTerakhir": 0,
+    "TahunNomor": 0,
+    "Dibuat": "0001-01-01T00:00:00",
+    "Diubah": "0001-01-01T00:00:00",
+    "DibuatOleh": "",
+    "NamaTampil": "Surat Keterangan Penghasilan",
+    "AdaKolom": true,
+    "JumlahKolom": 6,
+    "AdaBagian": true,
+    "BagianEfektif": [
+      {
+        "Tipe": 0,
+        "Isi": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 1,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Pemohon",
+        "Kunci": "datadiri0",
+        "Kolom": [
+          {
+            "Kunci": "datadiri0_nama",
+            "Label": "Nama",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "datadiri0_nik",
+            "Label": "NIK",
+            "Tipe": 1,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "NIK (16 angka)"
+          },
+          {
+            "Kunci": "datadiri0_alamat",
+            "Label": "Alamat",
+            "Tipe": 4,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Pemohon",
+            "TipeLabel": "Paragraf"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Data Diri"
+      },
+      {
+        "Tipe": 2,
+        "Isi": "",
+        "Rata": 0,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "Data Penghasilan",
+        "Kunci": "kelompok0",
+        "Kolom": [
+          {
+            "Kunci": "pekerjaan_usaha",
+            "Label": "Pekerjaan/Usaha",
+            "Tipe": 0,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Penghasilan",
+            "TipeLabel": "Teks"
+          },
+          {
+            "Kunci": "penghasilan_per_bulan",
+            "Label": "Penghasilan per Bulan",
+            "Tipe": 2,
+            "Wajib": true,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Penghasilan",
+            "TipeLabel": "Angka"
+          },
+          {
+            "Kunci": "jumlah_tanggungan",
+            "Label": "Jumlah Tanggungan",
+            "Tipe": 2,
+            "Wajib": false,
+            "Pilihan": [],
+            "NilaiBawaan": "",
+            "Kelompok": "Data Penghasilan",
+            "TipeLabel": "Angka"
+          }
+        ],
+        "Grid": false,
+        "TipeLabel": "Kolom Isian"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Keterangan penghasilan di atas dicatat berdasarkan keterangan pemohon dan/atau pemeriksaan yang benar-benar dilakukan.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Surat ini menerangkan data penghasilan; surat ini bukan penetapan kelayakan bantuan atau program tertentu.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      },
+      {
+        "Tipe": 0,
+        "Isi": "Demikian surat keterangan ini dibuat dengan sebenarnya untuk keperluan pengajuan beasiswa/bantuan sosial dan dipergunakan sebagaimana mestinya.",
+        "Rata": 3,
+        "Tebal": false,
+        "Miring": false,
+        "JudulKelompok": "",
+        "Kunci": "",
+        "Kolom": [],
+        "Grid": false,
+        "TipeLabel": "Teks"
+      }
+    ],
+    "LabelKop": "Ada",
+    "LabelNomor": "Ada",
+    "NomorBerikutnyaTampil": "472/001/Ds/2026",
+    "AdaBlok": true,
+    "JumlahElemen": 10,
+    "RingkasanSusunan": "kop desa \u2022 judul \u2022 nomor \u2022 4 teks \u2022 1 data diri \u2022 1 kolom \u2022 tanda tangan",
+    "JabatanTampil": "Kepala Desa"
+  }
+}

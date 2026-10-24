@@ -1,0 +1,715 @@
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.FormulirView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:local="clr-namespace:SuDesApp.Wpf.Views"
+             FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+
+        <!-- Baris daftar formulir: kartu ringkas yang menyala saat disentuh kursor. -->
+        <Style x:Key="BarisFormulir" TargetType="Border">
+            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Kotak centang bulat bertema (sama seperti daftar fitur di halaman lain). -->
+        <Style x:Key="CentangFormulir" TargetType="CheckBox">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="Box" Width="18" Height="18" CornerRadius="4"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                VerticalAlignment="Center">
+                            <TextBlock x:Name="CheckMark" Text="&#x2713;" FontSize="11" FontWeight="Bold"
+                                       Foreground="{DynamicResource OnPrimaryTextBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="Collapsed"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Chip keadaan sumber: hijau = bisa diunduh otomatis, kuning = unduh
+             manual dari situs resmi, netral = belum ada tautan/perlu diatur. -->
+        <Style x:Key="ChipSumber" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="9,3"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding UnduhanOtomatis}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding UnduhManual}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="TeksChipSumber" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding UnduhanOtomatis}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding UnduhManual}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Keterangan pendukung (kartu informasi di bawah daftar). -->
+        <Style x:Key="InformasiJudul" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="InformasiIsi" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="18"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== Kepala halaman =====
+             Kolom kanan menampilkan kabupaten yang sedang dipakai, sehingga
+             sumber unduhan di bawahnya tidak pernah terasa "entah dari mana". -->
+        <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Grid, bukan StackPanel horizontal: StackPanel memberi teks
+                     lebar tak terhingga sehingga judul meluber di bawah chip. -->
+                <Grid Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}" VerticalAlignment="Center">
+                        <TextBlock Text="&#x1F4C1;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="PENGATURAN FORMULIR" Style="{StaticResource HeaderTitle}"
+                                   AutomationProperties.Name="PENGATURAN FORMULIR"/>
+                        <TextBlock Style="{StaticResource HeaderSubtitle}" TextWrapping="Wrap"
+                                   Text="Kelola template formulir PDF yang dipakai menu Formulir. Sumber unduhan mengikuti kabupaten pada Pengaturan Surat — tambah berkas sendiri, unduh formulir resmi, atau cadangkan ke Google Drive."/>
+                    </StackPanel>
+                </Grid>
+
+                <Border Grid.Column="1" Background="{DynamicResource LapisanKuatBrush}" CornerRadius="14"
+                        Padding="12,7" Margin="12,0,0,0" VerticalAlignment="Center"
+                        ToolTip="{Binding IdentitasDesaAktif, Mode=OneWay}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#x1F3DB;" FontSize="13" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                            <TextBlock Text="{Binding KabupatenAktif, Mode=OneWay}" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource HeaderTextBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding NamaDesaAktif, Mode=OneWay}" FontSize="10" Margin="20,2,0,0"
+                                   Foreground="{DynamicResource HeaderSubtitleBrush}"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="220"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ===== Isi halaman ===== -->
+        <ScrollViewer Grid.Row="1" Margin="0,12,0,0" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+
+                <!-- Papan angka: tiga kartu KPI yang sama rupanya dengan halaman
+                     lain (KpiCard/KpiLabel/KpiValue), membungkus di jendela sempit. -->
+                <WrapPanel Margin="0,0,0,12">
+                    <Border Style="{StaticResource KpiCard}" MinWidth="220" Margin="0,0,12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Margin="0,0,10,0">
+                                <TextBlock Text="&#x1F4C4;" FontSize="15" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Formulir tersedia" Style="{StaticResource KpiLabel}"/>
+                                <TextBlock Text="{Binding RingkasanJumlah, Mode=OneWay}" Style="{StaticResource KpiValue}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource KpiCard}" MinWidth="220" Margin="0,0,12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Margin="0,0,10,0">
+                                <TextBlock Text="&#x2713;" FontSize="15" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" Foreground="{DynamicResource AccentTextBrush}"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Pilihan Anda" Style="{StaticResource KpiLabel}"/>
+                                <TextBlock Text="{Binding TeksTerpilih, Mode=OneWay}" Style="{StaticResource KpiValue}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource KpiCard}" MinWidth="220" Margin="0,0,0,8"
+                            ToolTip="{Binding KeteranganCadanganDrive, Mode=OneWay}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Margin="0,0,10,0">
+                                <TextBlock Text="&#x2601;" FontSize="15" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Cadangan Google Drive" Style="{StaticResource KpiLabel}"/>
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource KpiValue}">
+                                            <Setter Property="Text" Value="Nonaktif"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CadanganDriveAktif}" Value="True">
+                                                    <Setter Property="Text" Value="Aktif"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </WrapPanel>
+
+                <!-- ===== Kartu sumber formulir desa =====
+                     Halaman ini mengikuti kabupaten pada Pengaturan Surat. Tiga
+                     keadaan: bisa diunduh otomatis (Karawang), ada situs resmi
+                     tetapi harus diunduh manual, atau belum ada tautan sehingga
+                     pengguna diarahkan menambah berkas sendiri. -->
+                <Border Margin="0,0,0,12" Padding="0">
+                    <Border.Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource CardStyle}">
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UnduhanOtomatis}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding UnduhManual}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Pita keadaan: hijau (otomatis), kuning (manual), aksen (perlu diatur). -->
+                        <Border Grid.Column="0" CornerRadius="8,0,0,8">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding UnduhanOtomatis}" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding UnduhManual}" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource WarningBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+
+                        <Grid Grid.Column="1" Margin="14,12,14,12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Baris 1: ikon, identitas desa, chip keadaan -->
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Margin="0,0,10,0">
+                                    <TextBlock Text="&#x1F3DB;" FontSize="15" HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock FontSize="11" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Text="SUMBER FORMULIR DESA ANDA"/>
+                                    <TextBlock Text="{Binding KabupatenAktif, Mode=OneWay}" FontSize="15"
+                                               FontWeight="SemiBold" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextBrush}" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding NamaDesaAktif, Mode=OneWay}" FontSize="11"
+                                               TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Margin="0,2,0,0"/>
+                                </StackPanel>
+
+                                <Border Grid.Column="2" Style="{StaticResource ChipSumber}" Margin="12,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding IkonStatusSumber, Mode=OneWay}"
+                                                   Style="{StaticResource TeksChipSumber}" Margin="0,0,6,0"/>
+                                        <TextBlock Text="{Binding StatusSumberTeks, Mode=OneWay}"
+                                                   Style="{StaticResource TeksChipSumber}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Baris 2: penjelasan keadaan -->
+                            <TextBlock Grid.Row="1" Text="{Binding KeteranganSumber, Mode=OneWay}"
+                                       TextWrapping="Wrap" FontSize="13" LineHeight="19" Margin="0,10,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                            <!-- Baris 3: alamat sumber yang sedang berlaku -->
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                                <TextBlock Text="SUMBER" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding SumberAktifTeks, Mode=OneWay}" FontSize="11"
+                                           FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AccentTextBrush}"
+                                           Visibility="{Binding AdaSumberDaerah, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Text="Belum ada tautan resmi untuk kabupaten ini" FontSize="11"
+                                           Margin="8,0,0,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource WarningTextBrush}"
+                                           Visibility="{Binding AdaSumberDaerah, Converter={StaticResource InverseBoolToVis}}"/>
+                            </StackPanel>
+
+                            <!-- Baris 4: tindakan yang relevan dengan keadaan -->
+                            <WrapPanel Grid.Row="3" Margin="0,10,0,0">
+                                <Button Content="Unduh dari Sumber" Command="{Binding DownloadCommand}"
+                                        Style="{StaticResource SuccessButton}" Padding="16,0" Margin="0,0,8,6"
+                                        ToolTip="Ambil daftar formulir resmi, lalu unduh yang belum ada di folder Templates"
+                                        AutomationProperties.Name="Unduh formulir dari sumber"
+                                        Visibility="{Binding UnduhanOtomatis, Converter={StaticResource BoolToVis}}"/>
+
+                                <Button Content="Buka Situs Formulir" Command="{Binding BukaSitusCommand}"
+                                        Style="{StaticResource OutlineButton}" Padding="16,0" Margin="0,0,8,6"
+                                        ToolTip="{Binding SumberAktifTeks, Mode=OneWay}"
+                                        AutomationProperties.Name="Buka situs formulir resmi"
+                                        Visibility="{Binding UnduhManual, Converter={StaticResource BoolToVis}}"/>
+
+                                <Button Content="Tambah Formulir" Command="{Binding AddCommand}"
+                                        Style="{StaticResource PrimaryButton}" Padding="16,0" Margin="0,0,8,6"
+                                        ToolTip="Salin satu berkas PDF dari komputer ke folder Templates"
+                                        AutomationProperties.Name="Tambah formulir"/>
+                            </WrapPanel>
+
+                            <!-- Baris 5: bantuan untuk keadaan tanpa tautan / belum diatur.
+                                 Dua kartu berbagi baris; hanya satu yang tampil. -->
+                            <StackPanel Grid.Row="4">
+                                <Border CornerRadius="8" Padding="11,9" Margin="0,4,0,0" BorderThickness="1"
+                                        Background="{DynamicResource WarningSubtleBrush}"
+                                        BorderBrush="{DynamicResource WarningBrush}"
+                                        Visibility="{Binding SumberTidakTersedia, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel>
+                                        <TextBlock Text="Tambahkan formulir secara manual"
+                                                   FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource WarningTextBrush}"/>
+                                        <TextBlock Text="{Binding PetunjukManual, Mode=OneWay}"
+                                                   FontSize="11" LineHeight="17" TextWrapping="Wrap" Margin="0,3,0,0"
+                                                   Foreground="{DynamicResource WarningTextBrush}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border CornerRadius="8" Padding="11,9" Margin="0,4,0,0" BorderThickness="1"
+                                        Background="{DynamicResource AccentSubtleBrush}"
+                                        BorderBrush="{DynamicResource AccentBrush}"
+                                        Visibility="{Binding KabupatenBelumDiatur, Converter={StaticResource BoolToVis}}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Kabupaten belum dipilih"
+                                                       FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource AccentTextBrush}"/>
+                                            <TextBlock Text="Pilih kabupaten/kota pada Pengaturan Surat → Data Desa agar tautan unduhan formulir yang tepat bisa ditampilkan. Sementara itu, formulir tetap bisa ditambahkan manual lewat tombol Tambah Formulir."
+                                                       FontSize="11" LineHeight="17" TextWrapping="Wrap" Margin="0,3,0,0"
+                                                       Foreground="{DynamicResource AccentTextBrush}"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="Atur di Pengaturan Surat"
+                                                Command="{Binding BukaPengaturanDesaCommand}"
+                                                Style="{StaticResource OutlineButton}" Padding="14,0"
+                                                Margin="12,0,0,0" VerticalAlignment="Center"
+                                                ToolTip="Pilih kabupaten/kota pada Pengaturan Surat → Data Desa"
+                                                AutomationProperties.Name="Atur kabupaten di Pengaturan Surat"/>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Kartu tawaran unduh (menggantikan popup otomatis) -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12"
+                        Background="{DynamicResource WarningSubtleBrush}"
+                        Visibility="{Binding AdaTawaranUnduh, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="&#x26A0;" FontSize="20" Margin="0,0,10,0"
+                                   VerticalAlignment="Top" Foreground="{DynamicResource WarningTextBrush}"/>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Formulir belum lengkap" FontWeight="SemiBold" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource WarningTextBrush}"
+                                       AutomationProperties.Name="Tawaran unduh formulir"/>
+                            <TextBlock Text="{Binding TawaranUnduhTeks, Mode=OneWay}" TextWrapping="Wrap"
+                                       FontSize="13" Margin="0,4,0,0"
+                                       Foreground="{DynamicResource WarningTextBrush}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="12,0,0,0">
+                            <Button Content="Unduh Sekarang" Command="{Binding TerimaTawaranUnduhCommand}" Padding="12,0" Style="{StaticResource PrimaryButton}"/>
+                            <Button Content="Nanti" Command="{Binding TutupTawaranUnduhCommand}" Padding="12,0" Margin="8,0,0,0"
+                                    Style="{StaticResource OutlineButton}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Kartu hasil unduhan / kesalahan terakhir (menggantikan dialog kabar) -->
+                <Border Margin="0,0,0,12"
+                        Visibility="{Binding AdaHasilUnduhan, Converter={StaticResource BoolToVis}}">
+                    <Border.Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource CardStyle}">
+                            <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasilUnduhanBerhasil}" Value="False">
+                                    <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" FontSize="15" Margin="0,0,10,0" VerticalAlignment="Top">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="&#x2714;"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasilUnduhanBerhasil}" Value="False">
+                                            <Setter Property="Text" Value="&#x2715;"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding HasilUnduhanJudul, Mode=OneWay}" FontWeight="SemiBold"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"
+                                       AutomationProperties.Name="Hasil unduh formulir"/>
+                            <TextBlock Text="{Binding HasilUnduhanRingkas, Mode=OneWay}" TextWrapping="Wrap"
+                                       FontSize="13" Margin="0,4,0,0" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                            <ItemsControl ItemsSource="{Binding HasilUnduhanRincian}" Margin="0,6,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="11"
+                                                   Margin="0,1,0,1" LineHeight="17"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <Button Grid.Column="2" Content="&#x2715;" Command="{Binding TutupHasilUnduhanCommand}"
+                                Width="26" Height="26" VerticalAlignment="Top" BorderThickness="0"
+                                FontSize="13" Cursor="Hand" ToolTip="Tutup ringkasan ini"
+                                Background="Transparent"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                AutomationProperties.Name="Tutup ringkasan unduhan"/>
+                    </Grid>
+                </Border>
+
+                <!-- ===== Kartu daftar formulir ===== -->
+                <Border Style="{StaticResource CardStyle}" Padding="14">
+                    <StackPanel>
+                        <!-- Judul daftar + jumlah formulir yang sedang tersimpan -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="DAFTAR FORMULIR" Style="{StaticResource FormSectionTitle}"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Background="{DynamicResource PanelBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                    CornerRadius="10" Padding="9,3">
+                                <TextBlock Text="{Binding RingkasanJumlah, Mode=OneWay}" FontSize="11"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Baris alat: pencarian + tombol pilih semua & buka folder -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                <TextBox Style="{StaticResource FormField}"
+                                         Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Cari nama formulir atau kodenya, mis. SKTM atau F-1"
+                                         AutomationProperties.Name="Cari formulir"/>
+                                <TextBlock FontSize="11" Margin="0,4,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Text="Ketik nama atau kode formulir untuk menyaring daftar di bawah."/>
+                            </StackPanel>
+
+                            <Button Grid.Column="1" Content="{Binding TeksPilihSemua, Mode=OneWay}"
+                                    Command="{Binding TogglePilihSemuaCommand}" Padding="14,0" Margin="0,0,8,0" VerticalAlignment="Top"
+                                    Style="{StaticResource OutlineButton}"
+                                    ToolTip="Centang/hapus centang semua formulir yang sedang tampil"
+                                    AutomationProperties.Name="Pilih semua formulir tampil"/>
+
+                            <Button Grid.Column="2" Content="Buka Folder"
+                                    Command="{Binding BukaFolderCommand}" Padding="14,0" VerticalAlignment="Top"
+                                    Style="{StaticResource OutlineButton}"
+                                    ToolTip="{Binding FolderTemplates, Mode=OneWay}"
+                                    AutomationProperties.Name="Buka folder Templates"/>
+                        </Grid>
+
+                        <!-- Daftar formulir -->
+                        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8"
+                                Visibility="{Binding HasTemplates, Converter={StaticResource BoolToVis}}">
+                            <ListBox ItemsSource="{Binding TemplatesTampil}"
+                                     BorderThickness="0" Margin="4"
+                                     SelectionMode="Single"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     MaxHeight="330"
+                                     Background="Transparent">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource BarisFormulir}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox Grid.Column="0" Style="{StaticResource CentangFormulir}"
+                                                          IsChecked="{Binding IsChecked}"
+                                                          AutomationProperties.Name="{Binding NamaBerkas, Mode=OneWay}"
+                                                          ToolTip="Centang untuk memilih formulir ini"/>
+
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Border CornerRadius="5" Padding="7,2" Margin="0,0,8,0"
+                                                            VerticalAlignment="Center"
+                                                            Background="{DynamicResource AccentSubtleBrush}"
+                                                            Visibility="{Binding AdaKode, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="{Binding KodeFormulir, Mode=OneWay}" FontSize="11"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource AccentTextBrush}"/>
+                                                    </Border>
+
+                                                    <Button Content="Pratinjau" Command="{Binding BukaCommand}" Padding="10,0" BorderThickness="0"
+                                                            Cursor="Hand" Background="Transparent"
+                                                            Foreground="{DynamicResource AccentTextBrush}"
+                                                            ToolTip="Buka pratinjau PDF formulir ini di dalam aplikasi"
+                                                            AutomationProperties.Name="Pratinjau formulir"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+
+                        <!-- Daftar kosong (belum ada berkas atau pencarian tanpa hasil) -->
+                        <c:EmptyStateView Judul="{Binding JudulKosong, Mode=OneWay}"
+                                          Pesan="{Binding PesanKosong, Mode=OneWay}"
+                                          Visibility="{Binding KosongTanpaFormulir, Converter={StaticResource BoolToVis}}"/>
+
+                        <c:EmptyStateView Pesan="{Binding PesanCari, Mode=OneWay}"
+                                          Visibility="{Binding KosongKarenaPencarian, Converter={StaticResource BoolToVis}}"/>
+
+                        <!-- Aksi daftar: tombol Tambah saja. Unduhan sumber sudah
+                             punya kartunya sendiri di atas, jadi tidak diulang di sini. -->
+                        <WrapPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button Content="Tambah" Command="{Binding AddCommand}" Padding="16,0" Margin="0,0,8,8"
+                                    Style="{StaticResource PrimaryButton}"
+                                    ToolTip="Salin satu berkas PDF dari komputer ke folder Templates"
+                                    AutomationProperties.Name="Tambah formulir"/>
+                        </WrapPanel>
+
+                        <TextBlock FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="Tombol Segarkan dan Hapus Terpilih ada di bilah bawah halaman. Formulir yang dicentang hanya ditandai; berkasnya benar-benar dihapus setelah Anda menekan Hapus Terpilih dan menyetujui konfirmasi."/>
+
+                        <!-- Penanda pekerjaan berjalan (unduh/segarkan) tanpa dialog -->
+                        <Border Margin="0,6,0,0" CornerRadius="6" Padding="8,3"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource AccentSubtleBrush}"
+                                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Sedang bekerja — lihat keterangan di bilah bawah" FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AccentTextBrush}"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== Kartu informasi ===== -->
+                <Border Style="{StaticResource FormCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="INFORMASI PENGGUNAAN" Style="{StaticResource FormSectionTitle}"/>
+                        </StackPanel>
+
+                        <!-- Sumber formulir: satu blok selebar kartu karena teksnya
+                             kini menjelaskan berkas konfigurasi yang bisa disunting. -->
+                        <Border Background="{DynamicResource PanelBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="&#x1F310;  Sumber Menurut Kabupaten" Style="{StaticResource InformasiJudul}"/>
+                                <TextBlock Style="{StaticResource InformasiIsi}"
+                                           Text="{Binding KeteranganSumber, Mode=OneWay}"/>
+                                <TextBlock Style="{StaticResource InformasiIsi}" FontSize="11"
+                                           Text="{Binding SumberAktifTeks, Mode=OneWay}"
+                                           Foreground="{DynamicResource AccentTextBrush}" TextWrapping="Wrap"
+                                           Visibility="{Binding AdaSumberDaerah, Converter={StaticResource BoolToVis}}"
+                                           Margin="0,6,0,0"/>
+                                <TextBlock Style="{StaticResource InformasiIsi}" FontSize="11"
+                                           Text="{Binding KonfigurasiSumberTeks, Mode=OneWay}"
+                                           TextWrapping="Wrap" Margin="0,4,0,0"
+                                           ToolTip="Berkas JSON di profil pengguna — sunting lalu tekan Segarkan"/>
+                                <TextBlock Style="{StaticResource InformasiIsi}" FontSize="11"
+                                           Text="Formulir adminduk mengikuti Permendagri 109/2019, jadi isinya sama di seluruh kabupaten. Sumber daerah lain ada di halaman Tentang → Thanks to." TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock Text="&#x1F4C4;  Folder Templates" Style="{StaticResource InformasiJudul}"/>
+                                <TextBlock Style="{StaticResource InformasiIsi}"
+                                           Text="Setiap berkas PDF di folder Templates menjadi satu formulir pada menu Formulir. Nama berkas digunakan sebagai nama formulir — ganti nama berkas jika ingin nama yang lebih rapi."/>
+                                <TextBlock Style="{StaticResource InformasiIsi}" FontSize="13" FontWeight="SemiBold"
+                                           Text="{Binding NamaFolderTemplates, Mode=OneWay}"/>
+                                <TextBlock Style="{StaticResource InformasiIsi}" FontSize="11"
+                                           Text="{Binding FolderTemplates, Mode=OneWay}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                                <TextBlock Text="&#x2601;  Cadangan Google Drive" Style="{StaticResource InformasiJudul}"/>
+                                <TextBlock Style="{StaticResource InformasiIsi}"
+                                           Text="{Binding KeteranganCadanganDrive, Mode=OneWay}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="&#x1F6E1;  Keamanan Data" Style="{StaticResource InformasiJudul}"/>
+                                <TextBlock Style="{StaticResource InformasiIsi}"
+                                           Text="Halaman ini hanya mengelola berkas formulir. Database surat, template surat, dan pengaturan desa tidak pernah diubah oleh operasi tambah, unduh, maupun hapus formulir. Sebelum berkas dihapus, aplikasi selalu meminta konfirmasi terlebih dahulu."/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock FontSize="11" Margin="0,10,0,0" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Text="Catatan: formulir bertanda kode (mis. F-1.01) adalah formulir resmi Dukcapil; formulir tanpa kode adalah berkas yang Anda tambahkan sendiri."/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ===== Statusbar halaman (kontrol bersama, sama seperti Pengaturan Aplikasi) ===== -->
+        <c:AppStatusBar Grid.Row="2" Margin="0,12,0,0"
+                        StatusText="{Binding StatusText, FallbackValue='Siap'}">
+            <c:AppStatusBar.Buttons>
+                <Button Content="Segarkan" Command="{Binding RefreshCommand}"
+                        Width="104" Margin="0,0,8,0" VerticalAlignment="Center"
+                        Style="{StaticResource OutlineButton}"/>
+                <Button Content="Hapus Terpilih" Command="{Binding DeleteCommand}"
+                        Width="120" VerticalAlignment="Center"
+                        Style="{StaticResource DangerButton}"/>
+            </c:AppStatusBar.Buttons>
+        </c:AppStatusBar>
+    </Grid>
+</UserControl>

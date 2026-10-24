@@ -1,0 +1,190 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.About.BagianDetailAplikasiView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="AboutStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!--
+        Bagian "Detail aplikasi".
+
+        Dua kartu berdampingan, bukan satu daftar panjang: kartu kiri memuat
+        identitas resmi (dibaca dari metadata rilis), kartu kanan memuat keadaan
+        instalasi di komputer ini. Pemisahan itu membuat pengguna langsung tahu
+        mana yang sama di semua desa dan mana yang khas komputernya sendiri.
+    -->
+    <!-- Root menegaskan ulang DataContext ke VM halaman: UserControl ini dirender
+         lewat ContentControl Content="{Binding}" yang terikat ke AboutViewModel,
+         tapi binding relatif dipakai supaya bekerja juga bila dirender mandiri. -->
+    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:AboutView}}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="16"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ===================== Identitas resmi ===================== -->
+        <Border Grid.Column="0" Style="{StaticResource AboutCard}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Border Style="{StaticResource AccentSectionBar}"/>
+                    <TextBlock Text="IDENTITAS APLIKASI" Style="{StaticResource SectionTitle}"/>
+                </StackPanel>
+                <TextBlock Text="Dibaca langsung dari metadata rilis, jadi selalu sama dengan yang terpasang."
+                           Style="{StaticResource SectionSubtitle}" Margin="0,0,0,16"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="128"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Produk -->
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F4E6;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="Produk" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding AssemblyProduct}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
+
+                    <!-- Versi -->
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F3F7;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Versi" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding VersiTampil}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
+
+                    <!-- Nomor build -->
+                    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F6E0;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Nomor build" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding VersiBuild}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
+
+                    <!-- Pengembang -->
+                    <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F464;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Pengembang" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
+                    <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding AssemblyCompany}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
+
+                    <!-- Perusahaan induk — ditulis di sini sekaligus sebagai penunjuk
+                         ke bagian "Perusahaan" yang memuat logo & penjelasannya. -->
+                    <Border Grid.Row="4" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F3E2;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="4" Grid.Column="1" Text="Perusahaan induk" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding PerusahaanInduk}"
+                               Style="{StaticResource DetailNilai}" Margin="0,4,0,12"
+                               ToolTip="Pengembang aplikasi ini, Sumberjaya Dev, berada di bawah naungan perusahaan ini. Lihat bagian Perusahaan untuk logo dan penjelasan lengkapnya."/>
+
+                    <!-- Copyright -->
+                    <Border Grid.Row="5" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x00A9;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="5" Grid.Column="1" Text="Copyright" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
+                    <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding AssemblyCopyright}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
+
+                    <!-- Repository -->
+                    <Border Grid.Row="6" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F419;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="6" Grid.Column="1" Text="Repository" Style="{StaticResource DetailLabel}" Margin="0,4,0,0"/>
+                    <Button Grid.Row="6" Grid.Column="2" Content="{Binding RepoTampil}"
+                            Command="{Binding OpenUrlCommand}"
+                            CommandParameter="{Binding RepoUrl}"
+                            ToolTip="{Binding RepoUrl}"
+                            Style="{StaticResource LinkButton}" HorizontalAlignment="Left"
+                            Padding="0" Margin="0,0,0,0" Background="Transparent" BorderThickness="0"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ================== Instalasi di komputer ini ================== -->
+        <Border Grid.Column="2" Style="{StaticResource AboutCard}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Border Style="{StaticResource AccentSectionBar}"/>
+                    <TextBlock Text="INSTALASI INI" Style="{StaticResource SectionTitle}"/>
+                </StackPanel>
+                <TextBlock Text="Keadaan aplikasi di komputer ini — tidak ikut tersalin bila folder aplikasi dicadangkan."
+                           Style="{StaticResource SectionSubtitle}" Margin="0,0,0,16"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="128"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Runtime -->
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x2699;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="Runtime" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding RuntimeVersi}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
+
+                    <!-- Berjalan selama -->
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x23F1;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Berjalan selama" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Uptime}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
+
+                    <!-- Folder aplikasi: program + berkas database (desa.db). -->
+                    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F4C1;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Folder aplikasi" Style="{StaticResource DetailLabel}" VerticalAlignment="Top" Margin="0,4,0,12"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding LokasiData}"
+                               Style="{StaticResource DetailNilai}" Margin="0,4,0,12"
+                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding LokasiData}"/>
+
+                    <!-- Preferensi & kunci: berkas milik pengguna di luar folder aplikasi. -->
+                    <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailIkon}">
+                        <TextBlock Text="&#x1F510;" Style="{StaticResource DetailIkonText}"/>
+                    </Border>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Preferensi &amp; kunci" Style="{StaticResource DetailLabel}" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                    <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding LokasiPreferensi}"
+                               Style="{StaticResource DetailNilai}"
+                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding LokasiPreferensi}"/>
+                </Grid>
+
+                <!-- Catatan pemindahan database: satu-satunya pengaturan yang
+                     mengubah isi baris "Folder aplikasi" di atas. -->
+                <Border Margin="0,16,0,0" Padding="12,10" CornerRadius="8"
+                        Background="{DynamicResource AccentSubtleBrush}"
+                        BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Lokasi database bisa dipindah" FontSize="11" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentTextBrush}"/>
+                        <TextBlock Margin="0,3,0,0" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AccentTextBrush}"
+                                   Text="Berkas desa.db dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa. Folder di atas adalah lokasi bawaannya."/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

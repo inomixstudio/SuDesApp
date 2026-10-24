@@ -1,0 +1,236 @@
+﻿<Window x:Class="SuDesApp.Wpf.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
+        Title="Login Surat Desa"
+        Icon="pack://application:,,,/Resources/AppIcon.ico"
+        Width="400" SizeToContent="Height" VerticalAlignment="Center"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="True"
+        FontFamily="{DynamicResource AppFontFamily}">
+
+    <!--
+        Tema & style diwarisi dari App.xaml (ThemeStyles.xaml + dictionary tema aktif).
+        Kartu login memakai radius 14 + bayangan lembut — disamakan persis dengan
+        kartu SplashStartupWindow agar konsisten dari layar awal sampai login
+        (radius 8 pada CardStyle halaman dalam tetap dipertahankan).
+
+        Satu jalur masuk saja: akun aplikasi (username + kata sandi). Koneksi
+        akun Google TIDAK dipakai untuk masuk — akun Google hanya disambungkan
+        SETELAH masuk, dari halaman Layanan Online, untuk fitur Drive/Sheets/
+        WhatsApp. Pemasangan baru memakai kata sandi administrator acak yang
+        ditampilkan sekali di kartu "Catat kredensial administrator".
+    -->
+    <Border CornerRadius="14" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+            ClipToBounds="True" Effect="{StaticResource BayanganTebal}">
+
+        <Grid>
+            <!-- ================= Konten utama (form manual) ================= -->
+            <Grid x:Name="MainContent">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- ===== Header (PrimaryBrush, padanan header sidebar/DataGrid) ===== -->
+                <Border x:Name="HeaderBorder" Grid.Row="0" Background="{DynamicResource PrimaryBrush}" CornerRadius="14,14,0,0"
+                        ClipToBounds="True"
+                        MouseLeftButtonDown="HeaderBorder_MouseLeftButtonDown">
+                    <Grid>
+                        <!-- Aksen dekoratif lembut agar header tidak datar -->
+                        <Ellipse Width="200" Height="200" Fill="{DynamicResource PutihBrush}" Opacity="0.07"
+                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-70,-90,0,0"/>
+                        <Ellipse Width="150" Height="150" Fill="{DynamicResource PutihBrush}" Opacity="0.07"
+                                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-55,-75"/>
+                        <StackPanel VerticalAlignment="Center" Margin="0,18,0,18">
+                            <!-- Logo = ikon aplikasi baru (amplop + segel) — identitas visual konsisten -->
+                            <Border Width="52" Height="52" CornerRadius="12"
+                                    Background="Transparent" HorizontalAlignment="Center" Margin="0,0,0,10">
+                                <Image Source="pack://application:,,,/Resources/AppIcon-256.png" Stretch="Uniform"/>
+                            </Border>
+                            <TextBlock Text="SURAT DESA" Foreground="{DynamicResource HeaderTextBrush}"
+                                       FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Sistem Cetak Surat Desa" Foreground="{DynamicResource HeaderSubtitleBrush}"
+                                       FontSize="11" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                        </StackPanel>
+                        <!-- Tombol tutup untuk window tanpa border -->
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Margin="0,8,10,0" Padding="8,4"
+                                Click="Cancel_Click" ToolTip="Tutup">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                        CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource ToggleHoverBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <TextBlock Text="&#10005;" FontSize="15" FontWeight="Bold"
+                                       Foreground="{DynamicResource HeaderTextBrush}"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- ===== Form login ===== -->
+                <Grid Grid.Row="1" Margin="32,16,32,6">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Kredensial awal (pemasangan baru / rotasi sandi bawaan):
+                         ditampilkan sekali. Teksnya hanya hidup di memori — tidak
+                         pernah ditulis ke berkas maupun log. -->
+                    <Border Grid.Row="0" Background="{DynamicResource PanelBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="6" Padding="10,8" Margin="0,0,0,12"
+                            Visibility="{Binding HasInfoKredensial, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="Catat kredensial administrator" FontWeight="SemiBold"
+                                       FontSize="12" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding InfoKredensialAwal, Mode=OneWay}" IsReadOnly="True"
+                                     TextWrapping="Wrap" BorderThickness="0" Background="Transparent"
+                                     Foreground="{DynamicResource TextBrush}" FontSize="12"
+                                     IsTabStop="False"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Error message -->
+                    <Border Grid.Row="1" Background="{DynamicResource ErrorOverlayBrush}" CornerRadius="6"
+                            Padding="10,8" Margin="0,0,0,12"
+                            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource ErrorTextBrush}"
+                                   FontSize="13" TextWrapping="Wrap"/>
+                    </Border>
+
+                    <!-- Username -->
+                    <TextBlock Grid.Row="2" Text="Username" FontWeight="SemiBold" FontSize="13"
+                               Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6"/>
+                    <TextBox x:Name="UsernameBox" Grid.Row="3"
+                             Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="14" Padding="10,9" VerticalContentAlignment="Center"/>
+
+                    <!-- Password -->
+                    <TextBlock Grid.Row="4" Text="Kata Sandi" FontWeight="SemiBold" FontSize="13"
+                               Foreground="{DynamicResource TextBrush}" Margin="0,12,0,6"/>
+                    <Grid Grid.Row="5">
+                        <!-- Kotak sandi dan kotak teks biasa menempati sel yang sama; tombol
+                             mata hanya menukar mana yang terlihat (ShowPass_Changed). Bantalan
+                             kanan 40 menyisakan ruang tombol supaya sandi panjang tidak
+                             tertutup ikon saat kolomnya digulir. -->
+                        <PasswordBox x:Name="PasswordBox"
+                                     FontSize="14" Padding="10,9,40,9" VerticalContentAlignment="Center"
+                                     PasswordChanged="PasswordBox_PasswordChanged"/>
+
+                        <TextBox x:Name="RevealBox" FontSize="14" Padding="10,9,40,9"
+                                 VerticalContentAlignment="Center" Visibility="Collapsed"
+                                 TextChanged="RevealBox_TextChanged"/>
+
+                        <!-- Tombol mata di DALAM kolom sandi, bukan ceklis di bawahnya:
+                             ukurannya sengaja ringkas (26 px, glyph 14) supaya sepadan dengan
+                             tinggi kolom dan tidak mencolok. -->
+                        <!-- ToolTip & nama otomasi diisi lewat pemicu template, bukan atribut
+                             lokal di sini: nilai lokal mengalahkan pemicu, sehingga
+                             petunjuknya tidak akan ikut berubah saat sandi terlihat. -->
+                        <ToggleButton x:Name="ShowPassCheck" Width="26" Height="26"
+                                      HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"
+                                      Cursor="Hand"
+                                      Checked="ShowPass_Changed" Unchecked="ShowPass_Changed">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="bd" Background="Transparent" CornerRadius="4">
+                                        <TextBlock x:Name="glyph" Text="{x:Static u:IkonMenu.LihatSandi}"
+                                                   FontFamily="{StaticResource AppIconFont}" FontSize="14"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                            <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                        </Trigger>
+                                        <!-- Sandi tersembunyi (keadaan awal): mata terbuka. -->
+                                        <Trigger Property="IsChecked" Value="False">
+                                            <Setter TargetName="glyph" Property="Text" Value="{x:Static u:IkonMenu.LihatSandi}"/>
+                                            <Setter Property="ToolTip" Value="Lihat sandi"/>
+                                            <Setter Property="AutomationProperties.Name" Value="Lihat sandi"/>
+                                        </Trigger>
+                                        <!-- Sandi terlihat: mata bercoret + warna aksen, dan
+                                             petunjuk berubah ke arah sebaliknya. -->
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="glyph" Property="Text" Value="{x:Static u:IkonMenu.SembunyikanSandi}"/>
+                                            <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                                            <Setter Property="ToolTip" Value="Sembunyikan sandi"/>
+                                            <Setter Property="AutomationProperties.Name" Value="Sembunyikan sandi"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                    </Grid>
+
+                    <!-- Login button (style global: PrimaryBrush + OnPrimaryTextBrush) -->
+                    <Button Grid.Row="6" Content="Masuk" Click="Login_Click"
+                            FontSize="15" FontWeight="Bold" Padding="0,12" Margin="0,14,0,0" IsDefault="True"/>
+
+                    <!-- Batal: tautan sekunder di bagian bawah -->
+                    <Button Grid.Row="7" Content="Batal" Click="Cancel_Click" IsCancel="True"
+                            FontSize="13" Padding="0,7" Margin="0,8,0,0" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                    CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+
+                <!-- ===== Teks versi (otomatis dari assembly/csproj) ===== -->
+                <TextBlock Grid.Row="2" Text="{Binding FooterVersi, FallbackValue=''}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10"
+                           HorizontalAlignment="Center" Margin="0,0,0,14"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

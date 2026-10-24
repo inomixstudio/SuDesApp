@@ -1,0 +1,33 @@
+<UserControl x:Class="SuDesApp.Wpf.Views.PanduanWa.BagianCatatanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="PanduanWaStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!-- Root menegaskan ulang DataContext ke VM halaman (pola Views/About). -->
+    <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:PanduanWaView}}">
+        <Border Style="{StaticResource GuideCard}" Margin="0">
+            <StackPanel>
+                <Border Style="{StaticResource CardHead}">
+                    <DockPanel>
+                        <Border Style="{StaticResource IconBadge}" DockPanel.Dock="Left"
+                                Background="{DynamicResource WarningSubtleBrush}">
+                            <TextBlock Style="{StaticResource IconBadgeText}" Text="&#x26A0;&#xFE0F;"/>
+                        </Border>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="CATATAN PENTING" Margin="10,0,0,0"/>
+                    </DockPanel>
+                </Border>
+                <StackPanel Style="{StaticResource CardBody}">
+                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}">
+                        Cloud API adalah jalur RESMI Meta — nomor desa tidak berisiko diblokir seperti gateway tidak resmi. Tetap hindari mengirim pesan massal ke nomor yang tidak pernah menghubungi desa (bisa terkena penilaian kualitas Meta). Pola layanan surat ini — warga chat duluan, aplikasi membalas — adalah pola paling aman dan sebagian besar gratis.
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
