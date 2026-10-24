@@ -8,6 +8,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -236,8 +237,55 @@
             </WrapPanel>
         </Border>
 
+        <!-- Kartu Contoh Perdes: hanya tampil di tab PERDES -->
+        <Border Grid.Row="3" Padding="16,14" Margin="0,0,0,12">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource GridHostCard}">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsPerdes}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <Border Style="{StaticResource AccentSectionBar}"/>
+                    <TextBlock Text="CONTOH PERDES" FontWeight="Bold" FontSize="13"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Text="Pilih contoh untuk membuka formulir PERDES. Salinan contoh otomatis diisi identitas desa dari Pengaturan Surat, lalu dapat disunting dan disimpan sesuai skema arsip PERDES."
+                           TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,0,0,10"/>
+                <ItemsControl ItemsSource="{Binding ContohPerdes}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding DataContext.BukaContohPerdesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    IsEnabled="{Binding BerkasAda}"
+                                    HorizontalContentAlignment="Left"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Padding="10,7" Margin="0,0,6,6"
+                                    ToolTip="Buka contoh ini di formulir PERDES">
+                                <TextBlock Text="{Binding Judul}" TextWrapping="Wrap"/>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="Contoh bukan peraturan yang berlaku. Periksa nomor, tanggal, dasar hukum, dan isi sebelum disimpan ke Buku Perdes."
+                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" Margin="0,2,0,0"/>
+            </StackPanel>
+        </Border>
+
         <!-- Grid data -->
-        <Border Grid.Row="3" Style="{StaticResource GridHostCard}" Padding="1">
+        <Border Grid.Row="4" Style="{StaticResource GridHostCard}" Padding="1">
             <Grid>
                 <!-- Halaman tampil lebih dulu; data menyusul — garis ini menandai
                      bahwa arsip masih dimuat (bukan benar-benar kosong). -->

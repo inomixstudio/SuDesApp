@@ -1,0 +1,39 @@
+Using launch settings from D:\Aplikasi\DesaApp\SuDesApp.Server\Properties\launchSettings.json...
+info: SuDesApp.Server.SupabaseStore[19]
+      Skema, RLS, role, dan fungsi pencarian diterapkan lewat koneksi migrasi.
+info: SuDesApp.Server.SupabaseStore[21]
+      Isolasi RLS terverifikasi: role 'sudes_server' tidak istimewa, 7/7 tabel ber-RLS, fungsi pencarian siap.
+info: SuDesApp.Server.SigningService[34]
+      Kunci penandatangan lisensi dimuat dari D:\Aplikasi\DesaApp\SuDesApp.Server\keys\lisensi-signing.key
+info: SuDesApp.Server.RekonsiliasiLatar[38]
+      Rekonsiliasi latar aktif: tiap 15 menit, umur tagihan 10 menit sampai 30 hari, maksimum 25 per putaran.
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://127.0.0.1:5110
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: D:\Aplikasi\DesaApp\SuDesApp.Server
+info: SuDesApp.Server.LayananRekonsiliasi[42]
+      Rekonsiliasi: tidak ada tagihan menunggu pembayaran.
+info: SuDesApp.AdminAudit[18]
+      Admin action deny: operator anonymous (unknown), permission session.read, GET /admin/sesi, HTTP 401, trace 0HNPHF5VDT5A6:00000001
+info: SuDesApp.AdminAudit[18]
+      Admin action deny: operator anonymous (unknown), permission customers.read, GET /admin/pelanggan, HTTP 401, trace 0HNPHF5VDT5A7:00000001
+info: SuDesApp.AdminAudit[18]
+      Admin action started: operator operatorpusat (Pusat Administrasi), permission session.read, GET /admin/sesi, HTTP 202, trace 0HNPHF5VDT5A8:00000001
+info: SuDesApp.AdminAudit[18]
+      Admin action allow: operator operatorpusat (Pusat Administrasi), permission session.read, GET /admin/sesi, HTTP 200, trace 0HNPHF5VDT5A8:00000001
+info: SuDesApp.AdminAudit[18]
+      Admin action started: operator operatorpusat (Pusat Administrasi), permission customers.read, GET /admin/pelanggan, HTTP 202, trace 0HNPHF5VDT5A9:00000001
+info: SuDesApp.AdminAudit[18]
+      Admin action allow: operator operatorpusat (Pusat Administrasi), permission customers.read, GET /admin/pelanggan, HTTP 200, trace 0HNPHF5VDT5A9:00000001
+info: SuDesApp.AdminAudit[18]
+      Admin action deny: operator anonymous (unknown), permission session.read, GET /admin/sesi, HTTP 401, trace 0HNPHF5VDT5AH:00000001
+info: SuDesApp.AdminAudit[18]
+      Admin action deny: operator anonymous (unknown), permission customers.read, GET /admin/pelanggan, HTTP 401, trace 0HNPHF5VDT5AI:00000001
+info: SuDesApp.AdminAudit[18]
+      Admin action deny: operator anonymous (unknown), permission session.read, GET /admin/sesi, HTTP 401, trace 0HNPHF5VDT5AJ:00000001
+info: SuDesApp.AdminAudit[18]
+      Admin action deny: operator anonymous (unknown), permission customers.read, GET /admin/pelanggan, HTTP 401, trace 0HNPHF5VDT5AK:00000001

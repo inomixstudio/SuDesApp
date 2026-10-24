@@ -261,7 +261,12 @@ namespace SuDesApp.Services
     /// ia dilempar sebagai pengecualian supaya pemanggil bisa menampilkan
     /// pesannya sendiri.
     /// </summary>
-    public sealed record HasilTagihan(TagihanLangganan? Tagihan, int StatusHttp)
+    /// <summary>
+    /// Hasil buat tagihan. <c>KodeAktivasi</c> TERISI hanya pada berlangganan
+    /// awal — server menerbitkan kode baru untuk desa yang belum terdaftar;
+    /// pada perpanjangan nilainya null (kode desa tidak berubah).
+    /// </summary>
+    public sealed record HasilTagihan(TagihanLangganan? Tagihan, int StatusHttp, string? KodeAktivasi = null)
     {
         internal static HasilTagihan Ditolak(int statusHttp) => new(null, statusHttp);
     }
@@ -407,14 +412,20 @@ namespace SuDesApp.Services
         /// Buat tagihan untuk satu paket. Paket saja yang dikirim; nominal TIDAK —
         /// server meneguhkan harganya dari katalognya sendiri, jadi angka yang
         /// tampil dan yang ditagih tidak bisa berbeda.
+        ///
+        /// Dua jalur (paralel dengan server): kode aktivasi terisi = pasjangan;
+        /// kode kosong + <paramref name="namaDesa"/> terisi = berlangganan awal —
+        /// server mendaftarkan desa baru dan menerbitkan kode aktivasi yang
+        /// dikembalikan pada <see cref="HasilTagihan.KodeAktivasi"/>.
         /// </summary>
         public async Task<HasilTagihan> BuatTagihanAsync(
-            string kodePaket, string kodeAktivasi, CancellationToken ct = default)
+            string kodePaket, string kodeAktivasi, string? namaDesa = null, CancellationToken ct = default)
         {
             var payload = JsonSerializer.Serialize(new
             {
                 kodeAktivasi = (kodeAktivasi ?? string.Empty).Trim(),
-                paket = kodePaket
+                paket = kodePaket,
+                namaDesa = string.IsNullOrWhiteSpace(namaDesa) ? null : namaDesa.Trim()
             });
 
             using var konten = new StringContent(payload, Encoding.UTF8, "application/json");
@@ -441,8 +452,13 @@ namespace SuDesApp.Services
             int? hari = root.TryGetProperty("hari", out var hr) && hr.ValueKind == JsonValueKind.Number
                 ? hr.GetInt32()
                 : null;
+            var kodeBaru = root.TryGetProperty("kode_aktivasi", out var ka) && ka.ValueKind == JsonValueKind.String
+                && !string.IsNullOrWhiteSpace(ka.GetString())
+                    ? ka.GetString()!
+                    : null;
 
-            return new HasilTagihan(new TagihanLangganan(orderId, nominal, hari, link), (int)resp.StatusCode);
+            return new HasilTagihan(
+                new TagihanLangganan(orderId, nominal, hari, link), (int)resp.StatusCode, kodeBaru);
         }
 
         /// <summary>

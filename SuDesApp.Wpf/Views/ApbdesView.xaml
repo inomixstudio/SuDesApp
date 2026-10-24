@@ -44,6 +44,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -76,6 +77,9 @@
                                 Style="{StaticResource PrimaryButton}" Margin="0,18,0,0"/>
                         <Button Content="Impor dari Word" Command="{Binding ImporWordCommand}"
                                 Style="{StaticResource OutlineButton}" Margin="8,18,0,0"/>
+                        <Button Content="Impor Publikasi" Command="{Binding ImporPublikasiCommand}"
+                                Style="{StaticResource OutlineButton}" Margin="8,18,0,0"
+                                ToolTip="Masukkan angka publikasi APBDes dari data pemerintah pusat (Excel/CSV hasil unduhan PELITA/SIKD/PPID) sebagai pembanding riwayat tahun sebelumnya"/>
                         <Button Content="Simpan" Command="{Binding SimpanCommand}"
                                 Style="{StaticResource PrimaryButton}" Margin="8,18,0,0"/>
                         <Button Content="Muat Ulang" Command="{Binding MuatUlangCommand}"
@@ -137,8 +141,77 @@
             </StackPanel>
         </Border>
 
+        <!-- Riwayat APBDES: tahun-tahun sebelumnya berdamping dengan anggaran
+             publikasi pemerintah pusat (Prodeskel) yang ditarik otomatis — kartu
+             tetap tampil walau belum ada baris, supaya tombol "Muat dari Pusat"
+             selalu bisa ditekan. -->
+        <Border Grid.Row="2" Style="{StaticResource FormCard}" Padding="16" Margin="0,12,0,0">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="RIWAYAT ANGGARAN TAHUN SEBELUMNYA" Style="{StaticResource FormSectionTitle}"/>
+                        <TextBlock Text="{Binding RiwayatRingkas}" TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                    <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button Content="Muat dari Pusat" Command="{Binding MuatDariPusatCommand}"
+                                Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"
+                                ToolTip="Tarik anggaran dan realisasi yang sudah dipublikasikan pemerintah pusat (Prodeskel Kemendagri) otomatis per desa per tahun — tanpa impor berkas"/>
+                        <Button Content="Impor Publikasi" Command="{Binding ImporPublikasiCommand}"
+                                Style="{StaticResource OutlineButton}"
+                                ToolTip="Cadangan: masukkan Excel/CSV data publikasi pemerintah bila situs pusat tak terjangkau"/>
+                    </WrapPanel>
+                </Grid>
+
+                <!-- Keadaan penarikan pusat: sumber & tahun yang berhasil dimuat,
+                     atau alasan kegagalannya (format halaman berubah, offline, …). -->
+                <TextBlock Text="{Binding StatusPusat}" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Visibility="{Binding AdaRiwayat, Converter={StaticResource BoolToVis}}">
+                    <Run Text="Angka asal arsip dokumen aplikasi; angka publikasi asal situs pusat (Prodeskel) yang ditarik otomatis — Impor Publikasi tetap tersedia sebagai cadangan."/>
+                    <Run Text=" Selisih = rangkuman arsip − publikasi, berguna mengecek perbedaan angka."/>
+                </TextBlock>
+
+                <DataGrid Margin="0,10,0,0"
+                          Visibility="{Binding AdaRiwayat, Converter={StaticResource BoolToVis}}"
+                          Style="{StaticResource ModernDataGrid}"
+                          ItemsSource="{Binding Riwayat}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False" CanUserDeleteRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          Background="Transparent" BorderThickness="0"
+                          MaxHeight="260" IsReadOnly="True"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          AutomationProperties.Name="Riwayat anggaran tahun sebelumnya">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Tahun" Width="80" MinWidth="70"
+                                            Binding="{Binding TahunLabel}" FontWeight="SemiBold"/>
+                        <DataGridTextColumn Header="Arsip acuan" Width="*" MinWidth="170"
+                                            Binding="{Binding AcuanTampil}"/>
+                        <DataGridTextColumn Header="Anggaran arsip" Width="150" MinWidth="130"
+                                            Binding="{Binding AnggaranArsipTampil}"/>
+                        <DataGridTextColumn Header="Realisasi arsip" Width="150" MinWidth="130"
+                                            Binding="{Binding RealisasiArsipTampil}"/>
+                        <DataGridTextColumn Header="Anggaran publikasi" Width="150" MinWidth="130"
+                                            Binding="{Binding PublikasiAnggaranTampil}"/>
+                        <DataGridTextColumn Header="Realisasi publikasi" Width="150" MinWidth="130"
+                                            Binding="{Binding PublikasiRealisasiTampil}"/>
+                        <DataGridTextColumn Header="Selisih" Width="150" MinWidth="130"
+                                            Binding="{Binding SelisihTampil}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+
         <!-- Daftar dokumen (kiri) + isi dokumen terpilih (kanan). -->
-        <Grid Grid.Row="2" Margin="0,12,0,0">
+        <Grid Grid.Row="3" Margin="0,12,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="300"/>
                 <ColumnDefinition Width="*"/>

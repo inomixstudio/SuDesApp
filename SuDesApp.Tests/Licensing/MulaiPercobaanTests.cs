@@ -145,6 +145,20 @@ namespace SuDesApp.Tests.Licensing
         }
 
         [Fact]
+        public async Task BalasanServerRusak_TrialLokalSebagaiCadangan()
+        {
+            // 200 tetapi bukan JSON (mis. halaman galat proxy): server "tidak
+            // terjangkau" secara fungsional, jadi cadangan lokal tetap diberikan.
+            var handler = new HandlerPalsu(_ => Jawab(200, "<html>bukan json</html>"));
+            var penjaga = BuatPenjaga(handler, "KODE-DESA");
+
+            var hasil = await penjaga.MulaiPercobaanAsync();
+
+            Assert.Equal(AsalPercobaan.Lokal, hasil.Asal);
+            Assert.True(TrialLokalTercatat);
+        }
+
+        [Fact]
         public async Task ServerMenerima_TapiTokenBelumTiba_TidakDiberiTrialLokal()
         {
             var handler = new HandlerPalsu(permintaan =>

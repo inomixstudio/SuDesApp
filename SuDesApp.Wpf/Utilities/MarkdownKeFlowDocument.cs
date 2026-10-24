@@ -29,15 +29,32 @@ namespace SuDesApp.Wpf.Utilities
             "`[^`]+`|\\*\\*[^*]+\\*\\*|\\*[^*]+\\*|\\[[^\\]]+\\]\\([^)]+\\)",
             RegexOptions.Compiled);
 
-        private static readonly FontFamily FontIsi = new("Segoe UI");
         private static readonly FontFamily FontKode = new("Consolas");
+
+        /// <summary>
+        /// Font isi dokumen: sama dengan seluruh antarmuka aplikasi — Google Sans
+        /// yang ditanam di aplikasi dan disajikan lewat kunci <c>AppFontFamily</c>
+        /// (lihat Themes/*.xaml). Cadangan dipakai apabila tema belum dimuat saat
+        /// dokumen disusun.
+        /// Dokumen disusun ulang setiap kali dibuka, jadi pergantian tema ikut terbawa.
+        /// </summary>
+        private static FontFamily FontIsi()
+        {
+            if (Application.Current?.TryFindResource("AppFontFamily") is FontFamily keluarga)
+            {
+                return keluarga;
+            }
+
+            // Cadangan sama dengan isi kunci AppFontFamily pada Themes/*.xaml.
+            return new FontFamily("pack://application:,,,/SuDesApp;component/Fonts/GoogleSans.ttc#Google Sans, Segoe UI Variable, Segoe UI");
+        }
 
         /// <summary>Susun daftar blok Markdown menjadi dokumen siap baca.</summary>
         public static FlowDocument Susun(IReadOnlyList<BlokMarkdown>? blok)
         {
             var dokumen = new FlowDocument
             {
-                FontFamily = FontIsi,
+                FontFamily = FontIsi(),
                 FontSize = 13,
                 Foreground = Kuas("TextBrush", Color.FromRgb(0x1F, 0x24, 0x2B)),
                 LineHeight = 20,

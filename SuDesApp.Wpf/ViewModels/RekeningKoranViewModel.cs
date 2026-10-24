@@ -81,7 +81,8 @@ namespace SuDesApp.Wpf.ViewModels
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
             _penjaga = penjaga;
 
-            SaveCommand = new AsyncRelayCommand(SaveAsync);
+            SaveCommand = new AsyncRelayCommand(SaveAsync, () => !IsBusy);
+            PratinjauCommand = new AsyncRelayCommand(PratinjauAsync, () => !IsBusy);
             CancelCommand = new RelayCommand(Cancel);
 
             _ = InitializeAsync();
@@ -145,7 +146,59 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         public AsyncRelayCommand SaveCommand { get; }
+        public AsyncRelayCommand PratinjauCommand { get; }
         public RelayCommand CancelCommand { get; }
+
+        /// <summary>
+        /// Tombol Pratinjau: buat PDF permohonan dari isian yang SEDANG ada di form
+        /// lalu tampilkan di halaman pratinjau — tanpa mencatat ke register dan tanpa
+        /// memakai nomor surat, jadi aman dilihat berulang sebelum benar-benar disimpan.
+        /// Ini hanya pratinjau; Simpan tetap wajib untuk mencatat permohonan.
+        /// </summary>
+        private async Task PratinjauAsync()
+        {
+            if (IsBusy) return;
+
+            if (!ValidateInputs(out DateTime periodeMulai, out DateTime periodeSelesai, out var error))
+            {
+                await _messageService.ShowWarningAsync(error);
+                return;
+            }
+
+            IsBusy = true;
+            try
+            {
+                var data = CreateData(periodeMulai, periodeSelesai);
+                _logger.LogInformation("Membuat pratinjau PDF Rekening Koran NomorSurat={NomorSurat}", data.NomorSurat);
+
+                using var memoryStream = new MemoryStream();
+                await _pdfGenerator.GeneratePdfAsync(memoryStream, data);
+                var pdfBytes = memoryStream.ToArray();
+                if (pdfBytes.Length == 0)
+                {
+                    await _messageService.ShowErrorAsync("Gagal menghasilkan PDF atau PDF kosong.");
+                    return;
+                }
+
+                string folder = _appConfig.TempPdfFolder;
+                Directory.CreateDirectory(folder);
+                var path = Path.Combine(folder, $"Pratinjau_Rekening_Koran_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                await File.WriteAllBytesAsync(path, pdfBytes);
+
+                var preview = _previewFactory(
+                    $"Pratinjau Permohonan Rekening Koran — {data.NomorSurat}", path);
+                _navigation.Navigate(preview);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuat pratinjau PDF Rekening Koran");
+                await _messageService.ShowErrorAsync("Gagal membuat pratinjau Rekening Koran: " + ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
         private async Task InitializeAsync()
         {

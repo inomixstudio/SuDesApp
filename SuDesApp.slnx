@@ -3,4 +3,5 @@
   <Project Path="SuDesApp.Server/SuDesApp.Server.csproj" />
   <Project Path="SuDesApp.Wpf/SuDesApp.Wpf.csproj" />
   <Project Path="SuDesApp.Tests/SuDesApp.Tests.csproj" />
+  <Project Path="Tools/UjiTrialServerE2E/UjiTrialServerE2E.csproj" />
 </Solution>

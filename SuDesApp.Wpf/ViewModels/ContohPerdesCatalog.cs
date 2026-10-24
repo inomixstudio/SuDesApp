@@ -41,9 +41,9 @@ namespace SuDesApp.Wpf.ViewModels
     }
 
     /// <summary>
-    /// Katalog contoh Perdes. Daftar ini dipakai halaman SOTK Desa; setiap
-    /// contoh diteruskan ke formulir Perdes supaya pengguna dapat mengubah
-    /// isian lalu menyimpannya ke Buku Perdes.
+    /// Katalog contoh Perdes. Daftar ini dipakai halaman PERDES di menu Surat
+    /// Keputusan; setiap contoh dibuka di formulir Perdes supaya pengguna dapat
+    /// mengubah isian lalu menyimpannya ke Buku Perdes.
     /// </summary>
     public static class ContohPerdesCatalog
     {

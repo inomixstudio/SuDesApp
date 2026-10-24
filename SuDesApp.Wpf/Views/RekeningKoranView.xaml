@@ -240,6 +240,10 @@
                            Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
                            VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Pratinjau" Width="120" Margin="0,0,8,0"
+                            Command="{Binding PratinjauCommand}"
+                            Style="{StaticResource OutlineButton}"
+                            ToolTip="Lihat PDF permohonan dari isian yang sedang diisi sebelum dibuat. Tidak dicatat ke register dan nomor suratnya belum terpakai."/>
                     <Button Content="Buat PDF" Width="120" Margin="0,0,8,0"
                             Command="{Binding SaveCommand}"
                             Style="{StaticResource SuccessButton}"/>

@@ -56,7 +56,7 @@ namespace SuDesApp.WhatsApp
         public static readonly IReadOnlyList<(string[] KataKunci, string NamaJenis)> KatalogSurat = new (string[], string)[]
         {
             (new[] { "sktm", "tidak mampu", "kurang mampu" }, SuratConstants.SKTM),
-            (new[] { "skd umum", "surat keterangan umum", "skd" }, SuratConstants.SKD_UMUM),
+            (new[] { "skd umum", "surat keterangan umum", "skd", "skd belum menikah", "keterangan belum menikah" }, SuratConstants.SKD_UMUM),
             (new[] { "domisili warga", "domisili" }, SuratConstants.DOMISILI_WARGA),
             (new[] { "pengantar skck", "skck" }, SuratConstants.PENGANTAR_SKCK),
             (new[] { "keterangan usaha", "surat usaha", "sku" }, SuratConstants.SKU),
