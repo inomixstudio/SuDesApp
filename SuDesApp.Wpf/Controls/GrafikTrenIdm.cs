@@ -154,8 +154,17 @@ namespace SuDesApp.Wpf.Controls
 
         // ===================== Gambar =====================
 
+        // Font label grafik: Google Sans — sama dengan seluruh antarmuka aplikasi
+        // (kunci AppFontFamily di Themes/*.xaml). Resolusi dilakukan sekali saat
+        // kelas dipakai pertama kali (grafik baru dirender setelah jendela terbuka,
+        // jadi tema sudah termuat); cadangan pack URI identik dengan isi kunci itu,
+        // sehingga label tetap Google Sans walau resource belum tersedia.
         private static readonly Typeface Huruf =
-            new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+            new(
+                Application.Current?.TryFindResource("AppFontFamily") is FontFamily fontAntarmuka
+                    ? fontAntarmuka
+                    : new FontFamily("pack://application:,,,/SuDesApp;component/Fonts/GoogleSans.ttc#Google Sans, Segoe UI Variable, Segoe UI"),
+                FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
 
         private static readonly CultureInfo Budaya = CultureInfo.GetCultureInfo("id-ID");
 

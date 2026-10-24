@@ -271,6 +271,18 @@ namespace SuDesApp.Services
             _ => "Demo"
         };
 
+        /// <summary>
+        /// Keadaan yang ditampilkan ke pengguna. Token trial server secara teknis
+        /// adalah langganan sah (keadaan <see cref="KeadaanLisensi.Berlangganan"/>),
+        /// tetapi menyebutnya "Full Service" membuat desa mengira sudah membayar —
+        /// selama paketnya <c>trial</c>, chip dan lencana harus berbunyi Trial.
+        /// </summary>
+        public static KeadaanLisensi KeadaanTampil(KeadaanLisensi keadaan, string? paket) =>
+            keadaan == KeadaanLisensi.Berlangganan &&
+            string.Equals(paket, "trial", StringComparison.OrdinalIgnoreCase)
+                ? KeadaanLisensi.Trial
+                : keadaan;
+
         /// <summary>Nada warna chip: 1 = aktif (hijau), 2 = Demo/Trial (kuning), 3 = baca-saja (merah).</summary>
         public static int NadaKeadaan(KeadaanLisensi keadaan) => keadaan switch
         {
@@ -439,8 +451,15 @@ namespace SuDesApp.Services
                 {
                     throw;
                 }
-                catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+                catch (Exception ex) when (ex is HttpRequestException
+                    or TaskCanceledException
+                    or System.Text.Json.JsonException
+                    or UriFormatException
+                    or InvalidOperationException)
                 {
+                    // Termasuk alamat server yang tidak valid dan balasan 200 yang
+                    // bukan JSON: server dianggap sedang bermasalah, bukan menolak —
+                    // desa tetap mendapat trial lokal.
                     _logger.LogWarning(ex,
                         "Server trial tidak terjangkau; memakai trial lokal sebagai cadangan.");
                 }

@@ -37,3 +37,14 @@ jobs:
 
       - name: Run automated tests
         run: dotnet test SuDesApp.Tests/SuDesApp.Tests.csproj --no-build --no-restore --configuration Release
+
+      # Uji E2E trial server: menyalakan server lisensi lokal (mode memori)
+      # lalu menjalankan harness klien Tools/UjiTrialServerE2E — alur pendaftaran
+      # desa, permintaan trial, token bertanda tangan, dan penolakan trial
+      # perangkat kedua teruji otomatis di setiap push.
+      # Runner Windows memakai pwsh secara bawaan, jadi shell: bash eksplisit
+      # agar skripnya dijalankan di Git Bash seperti di mesin pengembang.
+      - name: Uji E2E trial server
+        shell: bash
+        timeout-minutes: 10
+        run: bash Tools/uji-e2e-trial-server.sh

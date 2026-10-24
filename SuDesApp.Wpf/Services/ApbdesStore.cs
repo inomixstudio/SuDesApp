@@ -28,6 +28,13 @@ namespace SuDesApp.Services
         /// <summary>Versi format berkas yang ditulis sekarang.</summary>
         public const int VersiBerkas = 2;
 
+        /// <summary>
+        /// Jenis dokumen yang menampung angka dari berkas publikasi pemerintah
+        /// (Excel/CSV hasil unduhan PELITA/SIKD/PPID/pemda) — tampil sebagai
+        /// kolom "publikasi" pada panel riwayat APBDES.
+        /// </summary>
+        public const string JenisPublikasi = "Data Publikasi Pusat";
+
         /// <summary>Tahapan dokumen yang dipakai halaman APBDES.</summary>
         public static readonly string[] JenisDaftar =
         {
@@ -37,6 +44,7 @@ namespace SuDesApp.Services
             "APBDes Pertanggungjawaban (LPJ)",
             "Dokumen Pelaksanaan (DPA/DPPA/DPAL)",
             "Laporan Realisasi / Semester",
+            JenisPublikasi,
             "Lainnya",
         };
 

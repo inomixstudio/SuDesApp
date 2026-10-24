@@ -1145,26 +1145,40 @@ namespace SuDesApp.Wpf.ViewModels
 
             // Teks & nada berasal dari kebijakan Core (teruji); di sini hanya
             // kalimat tooltip yang khas UI. Sisa hari memakai sumber yang tepat:
-            // trial punya hitungannya sendiri, langganan memakai masa tenggang.
+            // trial lokal punya hitungannya sendiri, trial server & langganan
+            // memakai masa tenggang token.
             int sisaHari = penjaga.Keadaan == SuDesApp.Services.KeadaanLisensi.Trial
                 ? penjaga.SisaHariTrial
                 : penjaga.Status?.SisaHariTenggang ?? 0;
-            LanggananStatus = SuDesApp.Services.PenjagaLisensi.LabelChip(penjaga.Keadaan, sisaHari);
-            LanggananTone = SuDesApp.Services.PenjagaLisensi.NadaKeadaan(penjaga.Keadaan);
+
+            // Trial server sah sebagai token, tetapi bukan "Full Service" yang
+            // sudah dibayar — chip harus tetap berbunyi Trial selama paket trial.
+            var keadaanTampil = SuDesApp.Services.PenjagaLisensi.KeadaanTampil(
+                penjaga.Keadaan, penjaga.Status?.Paket);
+            LanggananStatus = SuDesApp.Services.PenjagaLisensi.LabelChip(keadaanTampil, sisaHari);
+            LanggananTone = SuDesApp.Services.PenjagaLisensi.NadaKeadaan(keadaanTampil);
 
             var sampai = penjaga.Status?.BerlakuSampai?.ToLocalTime().ToString("dd MMM yyyy");
             var trialSampai = penjaga.TrialBerakhirUtc?.ToLocalTime().ToString("dd MMM yyyy");
-            LanggananStatusTooltip = penjaga.Keadaan switch
+            LanggananStatusTooltip = keadaanTampil switch
             {
                 SuDesApp.Services.KeadaanLisensi.Berlangganan =>
                     "Langganan desa aktif" +
                     (sampai is null ? "" : $" s.d. {sampai}") +
                     ". Klik untuk membuka halaman Langganan.",
 
-                SuDesApp.Services.KeadaanLisensi.Trial =>
-                    "Trial 14 hari aktif" +
+                // Trial lokal dan trial server dibedakan supaya tanggal yang
+                // disebut benar-benar tanggal berakhir trial yang sedang berlaku.
+                SuDesApp.Services.KeadaanLisensi.Trial when penjaga.Keadaan
+                    == SuDesApp.Services.KeadaanLisensi.Trial =>
+                    "Trial lokal 14 hari aktif" +
                     (trialSampai is null ? "" : $" sampai {trialSampai}") +
                     $" (sisa {penjaga.SisaHariTrial} hari). Klik untuk membuka halaman Langganan.",
+
+                SuDesApp.Services.KeadaanLisensi.Trial =>
+                    "Trial server aktif" +
+                    (sampai is null ? "" : $" s.d. {sampai}") +
+                    $" (sisa {sisaHari} hari). Setelah berakhir, selesaikan pembayaran di halaman Langganan.",
 
                 SuDesApp.Services.KeadaanLisensi.BacaSaja =>
                     SuDesApp.Services.PenjagaLisensi.PesanTrialHabis +
@@ -1309,12 +1323,6 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 var vm = BuatScopeHalaman().GetRequiredService<SotkDesaViewModel>();
-
-                // Contoh Perdes dan naskah SOTK memakai jalur Buku Perdes yang
-                // sama: isian awal dibuka di formulir PERDES, bukan dokumen
-                // terpisah di halaman SOTK.
-                vm.BukaPerdesUntukDisuntingAsync = BukaPerdesDariSotkAsync;
-                vm.BukaBukuPerdesAsync = () => ShowKeputusanAsync("PERDES");
                 await vm.LoadAsync();
                 _navigation.Navigate(vm);
             }
@@ -1677,28 +1685,6 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 _logger.LogError(ex, "Gagal membuka buku SK/Peraturan {Jenis}", jenisKeputusan);
                 await _messageService.ShowErrorAsync("Gagal membuka buku SK/Peraturan: " + ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Buka formulir Buku Perdes dari menu SOTK Desa. Dipakai oleh contoh
-        /// Perdes (isian awal + lampiran contoh) dan oleh tautan "Buka Buku
-        /// Perdes". Setelah disimpan, pengguna tetap berada di halaman PERDES
-        /// seperti alur peraturan desa biasa.
-        /// </summary>
-        private async Task BukaPerdesDariSotkAsync(DataKeputusan prefill, string? lampiranContohPath)
-        {
-            try
-            {
-                var vm = BuatScopeHalaman().GetRequiredService<KeputusanViewModel>();
-                _navigation.Navigate(vm);
-                await vm.SetJenisAsync("PERDES");
-                await vm.TambahDenganIsianAsync(prefill, lampiranContohPath);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal membuka formulir Perdes dari SOTK Desa");
-                await _messageService.ShowErrorAsync("Gagal membuka formulir Perdes: " + ex.Message);
             }
         }
 

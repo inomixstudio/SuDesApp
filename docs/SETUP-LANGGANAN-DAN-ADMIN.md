@@ -17,7 +17,7 @@ Dokumen ini menjelaskan bagaimana menu Langganan dan Pusat Administrasi di SuDes
    - Verifikasi kode aktivasi (`POST /aktivasi`)
    - Cek status langganan
    - Memuat katalog harga (`GET /paket`)
-   - Membuat tagihan pembayaran (`POST /buat-tagihan`)
+   - Membuat tagihan pembayaran (`POST /buat-tagihan`) — dua jalur: **berlangganan awal** (belum punya kode → kode aktivasi baru diterbitkan otomatis) atau **perpanjangan** (kode sudah dimiliki)
 4. Server menghubungi Supabase untuk menyimpan/membaca:
    - Status pelanggan (kolom `pelanggan`)
    - Riwayat pembayaran (kolom `pembayaran`)
@@ -186,7 +186,7 @@ dotnet run --project SuDesApp.Server
 |---|---|---|---|
 | `/aktivasi` | POST | Aktivasi desa dengan kode | Kode Aktivasi |
 | `/aktifkan-trial` | POST | Mulai trial 14 hari | Kode Aktivasi |
-| `/buat-tagihan` | POST | Buat invoice Midtrans | Kode Aktivasi |
+| `/buat-tagihan` | POST | Buat tagihan Midtrans — **berlangganan awal** (`kodeAktivasi` kosong + `namaDesa` → desa terdaftar & kode baru terbit, balasan memuat `kode_aktivasi`) atau **perpanjangan** (kode harus dikenal) | Berlangganan awal tanpa kode; perpanjangan dengan Kode Aktivasi |
 | `/paket` | GET | Daftar paket & harga | Publik |
 | `/pengumuman` | GET | Pengumuman broadcast | Publik |
 
@@ -207,6 +207,44 @@ dotnet run --project SuDesApp.Server
 | `/admin/rekonsiliasi` | POST | Jalankan rekonsiliasi pembayaran |
 
 Semua endpoint admin memerlukan header `Authorization: Bearer TOKEN_OPERATOR`.
+
+## Alur Langganan: Berlangganan Awal vs Perpanjangan
+
+Dua jalur pembayaran di menu Langganan berbeda sesuai kepemilikan kode aktivasi — operator perlu tahu bahwa **kode justru terbit dari berlangganan awal, bukan dipakai untuk memulainya**:
+
+| | Berlangganan awal | Perpanjangan |
+|---|---|---|
+| Kondisi | Desa **belum punya** kode aktivasi | Desa **sudah punya** kode aktivasi |
+| Isian pengguna | Nama desa (otomatis dari Pengaturan Surat) | Kode aktivasi |
+| Hasil `POST /buat-tagihan` | Desa terdaftar + **kode baru diterbitkan otomatis** + tagihan dibuat | Tagihan dibuat atas kode yang sudah dikenal |
+| Balasan server | Medan `kode_aktivasi` berisi kode baru (`null` pada perpanjangan) | `kode_aktivasi: null` |
+| Setelah pembayaran lunas | Langganan desa baru aktif (webhook/rekonsiliasi) | Langganan berlanjut |
+
+### Berlangganan awal (belum punya kode)
+
+1. Pengguna menekan **Bayar** tanpa mengisi kode. Aplikasi mengambil nama desa dari profil (Pengaturan Surat) lalu mengirim `POST /buat-tagihan` dengan `kodeAktivasi: ""`, `namaDesa` terisi (maksimum 120 karakter), dan `paket` pilihan.
+2. Server mendaftarkan desa baru lewat `DaftarkanDenganKodeBaruAsync`, menerbitkan kode aktivasi unik `SUDES-XXXX-XXXX` (dicek ke database, dengan pembatasan percobaan), mencatat log `TagihanBerlanggananAwal` (Warning), lalu membuat tagihan. Harga & durasi tetap dari katalog server — klien tidak pernah menentukan nominal.
+3. Pengguna melihat kode barunya di dua tempat:
+   - Halaman checkout publik menampilkannya menonjol: **"KODE AKTIVASI ANDA (baru diterbitkan)"** dengan perintah menyimpannya.
+   - Aplikasi WPF menyimpannya langsung ke preferensi lokal dan menampilkannya di kotak Kode Aktivasi dengan banner bahwa kode aktif setelah pembayaran lunas.
+4. **Pendaftaran tidak memberi akses**: langganan desa baru masih kosong dan hanya menyala setelah pembayaran lunas lewat webhook/rekonsiliasi — kode bisa terbit lebih dulu tanpa celah akses gratis.
+
+### Perpanjangan (sudah punya kode)
+
+1. Pengguna mengisi kode aktivasi yang sudah dimiliki lalu menekan Bayar (`kodeAktivasi` terisi).
+2. Kode harus dikenal server; bila tidak → **404** `"Kode aktivasi tidak dikenal."` dan gateway pembayaran tidak dipanggil.
+3. Setelah lunas, langganan lama diperpanjang lewat `PerpanjangAsync` yang sama dengan webhook — aturan idempotensi & perpanjangan tetap satu salinan.
+
+### Galat & log
+
+| Keadaan | HTTP | Keterangan |
+|---|---|---|
+| Kode & nama desa sama-sama kosong | 400 | Pesan menjelaskan dua jalur di atas |
+| Nama desa > 120 karakter | 400 | Batas penamaan desa |
+| Pendaftaran desa baru gagal | 500 | Log `TagihanBerlanggananAwalGagal` (Error) |
+| Kode perpanjangan tidak dikenal | 404 | Tanpa panggilan gateway |
+
+Untuk operator Pusat Administrasi: desa hasil berlangganan awal langsung terlihat di `GET /admin/pelanggan` dengan langganan masih kosong; pembayaran manual bisa dicatat via `POST /admin/pelanggan/{kode}/tandai-lunas` setelah uang diterima.
 
 ## Troubleshooting
 

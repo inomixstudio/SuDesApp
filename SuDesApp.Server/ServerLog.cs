@@ -57,6 +57,12 @@ internal static partial class ServerLog
     [LoggerMessage(16, LogLevel.Error, "Gateway gagal membuat tagihan {Order} ({Paket} Rp{Harga}) — tagihan tetap tercatat dan rekonsiliasi akan menyusul bila pembayarannya ternyata masuk.")]
     internal static partial void TagihanGatewayGagal(ILogger logger, string order, string paket, long harga);
 
+    [LoggerMessage(42, LogLevel.Warning, "Berlangganan awal: desa '{Kode}' ({Nama}) didaftarkan dari jalur buat-tagihan — kode aktif setelah pembayaran lunas.")]
+    internal static partial void TagihanBerlanggananAwal(ILogger logger, string kode, string nama);
+
+    [LoggerMessage(43, LogLevel.Error, "Berlangganan awal gagal mendaftarkan desa '{Nama}'.")]
+    internal static partial void TagihanBerlanggananAwalGagal(ILogger logger, Exception exception, string nama);
+
     [LoggerMessage(17, LogLevel.Critical, "Gagal menyimpan audit admin durable untuk trace {TraceId}")]
     internal static partial void AuditAdminGagal(ILogger logger, Exception exception, string traceId);
 

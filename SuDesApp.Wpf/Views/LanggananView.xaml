@@ -326,10 +326,21 @@
                                 </Grid>
                             </Border>
 
-                            <Button Content="Cek Status" Command="{Binding CekLanggananCommand}" MinWidth="140"
-                                    Margin="0,16,0,0"
-                                    HorizontalAlignment="Left" Style="{StaticResource SecondaryButton}"
-                                    ToolTip="Periksa status langganan ke server lisensi"/>
+                            <WrapPanel Orientation="Horizontal">
+                                <Button Content="Cek Status" Command="{Binding CekLanggananCommand}" MinWidth="140"
+                                        Margin="0,16,8,0"
+                                        HorizontalAlignment="Left" Style="{StaticResource SecondaryButton}"
+                                        ToolTip="Periksa status langganan ke server lisensi"/>
+                                <!-- Selama trial: jalan keluar langsung ke Full Service,
+                                     tanpa mencari tombol bayar di kartu paket di bawah.
+                                     Perintahnya BayarLanggananCommand yang sama, jadi
+                                     penjagaan kode aktivasi & tagihan tetap satu salinan. -->
+                                <Button Content="Bayar / Berlangganan (Full Service)" Command="{Binding BayarLanggananCommand}"
+                                        MinWidth="240" Margin="0,16,0,0"
+                                        HorizontalAlignment="Left" Style="{StaticResource PrimaryButton}"
+                                        ToolTip="Pilih paket lalu buat tagihan pembayaran — bila kode aktivasi belum diisi, isi dulu kode itu sebelum membayar"
+                                        Visibility="{Binding SedangTrial, Converter={StaticResource BoolToVis}}"/>
+                            </WrapPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -456,13 +467,15 @@
                                              keduanya satu baris dan memotong tombol di tepi kartu
                                              (kartu ini ClipToBounds). -->
                                         <WrapPanel Orientation="Horizontal">
-                                            <!-- Trial hanya bagi yang belum aktif; server yang
-                                                 menahan sekali-per-desa, jadi tombol yang
-                                                 tertekan dua kali tetap aman. -->
-                                            <Button Content="Coba Gratis 14 Hari" Command="{Binding MulaiTrialCommand}"
+                                            <!-- Trial hanya bagi yang belum aktif dan belum pernah
+                                                 memakai trial di komputer ini. Tombol ini TIDAK
+                                                 meminta kode aktivasi: kode yang sudah diisi dipakai
+                                                 bila ada (trial server), selain itu trial lokal —
+                                                 jalur yang sama dengan popup saat aplikasi dibuka. -->
+                                            <Button Content="Mulai Trial 14 Hari" Command="{Binding MulaiTrialCommand}"
                                                     MinWidth="170" Margin="0,0,8,0"
                                                     HorizontalAlignment="Left" Style="{StaticResource SecondaryButton}"
-                                                    ToolTip="Aktifkan masa percobaan 14 hari tanpa pembayaran — satu kali per desa"
+                                                    ToolTip="Mulai masa uji coba 14 hari tanpa pembayaran dan tanpa kode aktivasi. Bila kode sudah diisi dan server terjangkau, trial dicatat server; bila offline, trial berlaku di komputer ini."
                                                     Visibility="{Binding TampilTombolTrial, Converter={StaticResource BoolToVis}}"/>
                                             <Button Content="Bayar / Perpanjang" Command="{Binding BayarLanggananCommand}"
                                                     MinWidth="180"

@@ -16,6 +16,7 @@ public sealed record HasilTagihanBaru(
     string? Token = null,
     string? LinkPembayaran = null,
     string? Mode = null,
+    string? KodeAktivasi = null,
     string? Pesan = null)
 {
     public static HasilTagihanBaru Ditolak(int status, string pesan) => new(status, Pesan: pesan);
@@ -30,8 +31,10 @@ public sealed record HasilTagihanBaru(
 ///
 /// Aturan yang dijaga di sini:
 /// <list type="number">
-/// <item>kode aktivasi wajib dan harus dikenal (tagihan adalah kredensial);
-/// </item>
+/// <item>dua jalur: kode aktivasi TERISI = perpanjang (harus dikenal, tagihan
+/// adalah kredensial); kode KOSONG = berlangganan awal — wajib membawa
+/// NamaDesa, desa baru didaftarkan dengan kode otomatis yang tidak
+/// memberi akses sampai pembayaran lunas;</item>
 /// <item><b>harga &amp; durasi selalu dari katalog server</b> — permintaan klien
 /// hanya memilih NAMA paket. Kode paket yang tidak dikenal jatuh ke paket
 /// bawaan, bukan ke paket gratis;</item>
@@ -52,29 +55,72 @@ public sealed class LayananTagihan
     private readonly IPembuatTagihan _gateway;
     private readonly ILogger<LayananTagihan> _logger;
     private readonly TimeProvider _waktu;
+    private readonly LayananAdmin _pendaftarDesa;
 
     public LayananTagihan(
         IRepositoryLangganan repo,
         KatalogPaket katalog,
         IPembuatTagihan gateway,
         ILogger<LayananTagihan> logger,
-        TimeProvider? waktu = null)
+        TimeProvider? waktu = null,
+        LayananAdmin? pendaftarDesa = null)
     {
         _repo = repo;
         _katalog = katalog;
         _gateway = gateway;
         _logger = logger;
         _waktu = waktu ?? TimeProvider.System;
+        // Jalur "berlangganan awal" mendaftarkan desa baru dengan kode
+        // otomatis — aturan pembuatan kode unik dipakai dari LayananAdmin
+        // supaya aturannya tetap SATU salinan (percobaan terbatas, log
+        // pendaftaran). Pendaftaran di sini TIDAK memberi akses: langganan
+        // desa baru masih kosong dan hanya menyala setelah pembayaran
+        // lunas lewat webhook/rekonsiliasi.
+        _pendaftarDesa = pendaftarDesa ?? throw new ArgumentNullException(nameof(pendaftarDesa));
     }
 
     public async Task<HasilTagihanBaru> BuatAsync(BuatTagihanRequest req, CancellationToken ct = default)
     {
+        // Dua jalur pembayaran (lihat BuatTagihanRequest):
+        //   kode terisi → PERPANJANG (desa sudah terdaftar);
+        //   kode kosong → BERLANGGANAN AWAL (desa baru, kode diterbitkan).
+        Pelanggan pelanggan;
+        string? kodeBaru = null;
         if (string.IsNullOrWhiteSpace(req.KodeAktivasi))
-            return HasilTagihanBaru.Ditolak(400, "Kode aktivasi wajib diisi.");
+        {
+            if (string.IsNullOrWhiteSpace(req.NamaDesa))
+                return HasilTagihanBaru.Ditolak(400,
+                    "Untuk berlangganan awal, isi nama desa (belum punya kode aktivasi). " +
+                    "Desa yang sudah punya kode, isi kodenya untuk perpanjangan.");
 
-        var pelanggan = await _repo.CariByKodeAsync(req.KodeAktivasi).ConfigureAwait(false);
-        if (pelanggan is null)
-            return HasilTagihanBaru.Ditolak(404, "Kode aktivasi tidak dikenal.");
+            var nama = req.NamaDesa.Trim();
+            if (nama.Length > 120)
+                return HasilTagihanBaru.Ditolak(400, "Nama desa terlalu panjang (maksimum 120 karakter).");
+
+            try
+            {
+                // Pendaftaran MEMBERI data pelanggan, TIDAK memberi akses:
+                // langganan desa baru masih kosong; masa aktifnya baru mulai
+                // setelah pembayaran lunas lewat webhook/rekonsiliasi.
+                pelanggan = await _pendaftarDesa.DaftarkanDenganKodeBaruAsync(nama, kontak: "", maxPerangkat: 2)
+                    .ConfigureAwait(false);
+                kodeBaru = pelanggan.KodeAktivasi;
+                ServerLog.TagihanBerlanggananAwal(_logger, kodeBaru, nama);
+            }
+            catch (Exception ex)
+            {
+                ServerLog.TagihanBerlanggananAwalGagal(_logger, ex, nama);
+                return HasilTagihanBaru.Ditolak(500,
+                    "Pendaftaran desa baru gagal — lihat log server.");
+            }
+        }
+        else
+        {
+            var ditemukan = await _repo.CariByKodeAsync(req.KodeAktivasi.Trim()).ConfigureAwait(false);
+            if (ditemukan is null)
+                return HasilTagihanBaru.Ditolak(404, "Kode aktivasi tidak dikenal.");
+            pelanggan = ditemukan;
+        }
 
         // Paket dipilih klien, HARGA selalu milik server. Kode tak dikenal →
         // paket bawaan (paling murah), bukan paket termahal dan bukan gratis.
@@ -93,7 +139,8 @@ public sealed class LayananTagihan
                 OrderId: orderId,
                 Paket: paket,
                 LinkPembayaran: $"contoh://qris/{orderId}/{paket.Harga}",
-                Mode: "demo");
+                Mode: "demo",
+                KodeAktivasi: kodeBaru);
         }
 
         var tagihan = await _gateway.BuatTagihanAsync(orderId, paket.Harga, $"{pelanggan.NamaDesa} - {paket.Nama}")
@@ -112,7 +159,8 @@ public sealed class LayananTagihan
             Paket: paket,
             Token: tagihan.Token,
             LinkPembayaran: tagihan.RedirectUrl,
-            Mode: "midtrans");
+            Mode: "midtrans",
+            KodeAktivasi: kodeBaru);
     }
 
     /// <summary>

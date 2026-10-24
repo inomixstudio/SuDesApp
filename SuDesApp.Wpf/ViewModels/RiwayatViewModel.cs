@@ -53,7 +53,6 @@ namespace SuDesApp.Wpf.ViewModels
             _logger = logger;
             _navigation = navigation;
 
-            RefreshCommand = new AsyncRelayCommand(() => LoadAsync());
             ClearCommand = new AsyncRelayCommand(ClearAsync, () => !IsBusy && Items.Count > 0);
             BatalCommand = new RelayCommand(() => _navigation.ShowDefault());
         }
@@ -75,6 +74,9 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
+
+        /// <summary>Tabel Riwayat meliput keadaan kosong: tidak ada satu baris pun.</summary>
+        public bool TidakAdaAktivitas => Items.Count == 0;
 
         /// <summary>Pencarian bebas: pengguna, jenis, nomor dokumen, aksi, atau detail.</summary>
         public string SearchText
@@ -125,12 +127,24 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        public ICommand RefreshCommand { get; }
         public ICommand ClearCommand { get; }
         public ICommand BatalCommand { get; }
 
-        /// <summary>Muat riwayat (dipanggil saat halaman dibuka dan saat mencari).</summary>
+        /// <summary>
+        /// Muat riwayat (dipanggil saat halaman dibuka dan saat mencari).
+        /// </summary>
         public async Task LoadAsync()
+        {
+            if (IsBusy) return;
+            await MuatIntiAsync();
+        }
+
+        /// <summary>
+        /// Muat tanpa penjagaan IsBusy: dipanggil juga dari Bersihkan Riwayat
+        /// (yang sedang menahan IsBusy) supaya tabel ikut kosong begitu riwayat
+        /// dibersihkan, tidak menunggu tombol lain ditekan.
+        /// </summary>
+        private async Task MuatIntiAsync()
         {
             if (IsBusy) return;
             IsBusy = true;
@@ -156,6 +170,7 @@ namespace SuDesApp.Wpf.ViewModels
                 // Sekali ganti untuk seluruh baris (bukan ratusan notifikasi ke UI).
                 Items = new ObservableCollection<ActivityRow>(baris);
                 OnPropertyChanged(nameof(Items));
+                OnPropertyChanged(nameof(TidakAdaAktivitas));
                 StatusText = Items.Count == 0
                     ? "Belum ada aktivitas tercatat."
                     : $"Menampilkan {Items.Count} aktivitas terakhir.";
@@ -183,7 +198,7 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 await _activityLog.ClearAsync();
-                await LoadAsync();
+                await MuatIntiAsync(); // tanpa penjagaan IsBusy: tabel ikut dikosongkan
             }
             catch (Exception ex)
             {

@@ -246,6 +246,21 @@ namespace SuDesApp.Tests.Licensing
             Assert.True(penjaga.Terkunci);
         }
 
+        [Theory]
+        [InlineData(KeadaanLisensi.Berlangganan, "trial", KeadaanLisensi.Trial)]
+        [InlineData(KeadaanLisensi.Berlangganan, "TRIAL", KeadaanLisensi.Trial)]
+        [InlineData(KeadaanLisensi.Berlangganan, "tahunan", KeadaanLisensi.Berlangganan)]
+        [InlineData(KeadaanLisensi.Berlangganan, null, KeadaanLisensi.Berlangganan)]
+        [InlineData(KeadaanLisensi.Demo, "trial", KeadaanLisensi.Demo)]
+        [InlineData(KeadaanLisensi.BacaSaja, "trial", KeadaanLisensi.BacaSaja)]
+        public void KeadaanTampil_TrialServer_TetapDibacaTrial(
+            KeadaanLisensi keadaan, string? paket, KeadaanLisensi harapan)
+        {
+            // Token trial server sah sebagai langganan, tetapi desa belum membayar:
+            // lencana "Full Service" akan menyesatkan.
+            Assert.Equal(harapan, PenjagaLisensi.KeadaanTampil(keadaan, paket));
+        }
+
         [Fact]
         public void ChipStatus_MenyebutSisaHariSelamaAda()
         {

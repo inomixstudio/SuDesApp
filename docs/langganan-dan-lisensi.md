@@ -219,9 +219,13 @@ benar-benar membaca payload, bukan sekadar membandingkan konstanta dengan
 dirinya sendiri.
 
 Aplikasi tidak pernah mengklaim langganan aktif sendiri di jalur ini; kalimat
-yang tampil selalu "aktif setelah admin menandai lunas". Kode aktivasi wajib
-sudah terisi sebelum panel QRIS terbuka: itulah satu-satunya penanda desa yang
-bisa dicocokkan operator, sebab QRIS statis tidak punya nomor tagihan.
+yang tampil selalu "aktif setelah admin menandai lunas". Tombol **Tampilkan
+QRIS** SELALU menampilkan kode QR saat ditekan (dulu kode kosong hanya beri
+peringatan dan QR tak pernah tampil); bila kode aktivasi masih kosong,
+pengingatnya berbunyi di kalimat pengarah yang sama — kode itulah satu-satunya
+penanda desa yang bisa dicocokkan operator, sebab QRIS statis tidak punya
+nomor tagihan, dan baris rincian menampakannya sebagai "(kode aktivasi belum
+diisi)".
 
 Membukukannya (halaman `/admin`, panel desa → *Tandai lunas*, atau endpoint):
 
@@ -584,10 +588,14 @@ Halaman terdiri dari empat kartu bertumpuk:
    Rp750.000 / Tahunan Rp1.200.000), masing-masing menyebut harga per hari dan
    penghematannya, dengan satu kartu bertanda **PALING HEMAT**. Harga dan durasi
    diisi dari `GET /paket` (katalog server); sebelum server menjawab, kartu
-   menampilkan teks tanpa angka. Di bawah kartu ada **Coba Gratis 14 Hari**
-   (hanya tampil selama langganan belum aktif) dan tombol **Bayar /
-   Perpanjang** yang memanggil `POST /buat-tagihan` lalu membuka link
-   pembayaran QRIS/VA di peramban. Teks kartu dan langkah panduan memakai
+   menampilkan teks tanpa angka. Di bawah kartu ada **Mulai Trial 14 Hari**
+   yang **tidak meminta kode aktivasi** (sama dengan popup saat aplikasi
+   dibuka: `PenjagaLisensi.MulaiPercobaanAsync` — trial server bila kode sudah
+   diisi & server terjangkau, trial lokal bila belum/offline) dan tombol
+   **Bayar / Perpanjang** yang memanggil `POST /buat-tagihan` lalu membuka link
+   pembayaran QRIS/VA di peramban. Tombol trial hanya tampil selama langganan
+   belum aktif dan trial lokal belum pernah dipakai; selama trial lokal berjalan
+   banner memakai `RingkasanLangganan.DariTrial` (bukan "Tidak aktif"). Teks kartu dan langkah panduan memakai
    `TextWrapping` di dalam Grid — bukan StackPanel horizontal — supaya kalimat
    panjang membungkus, bukan terpotong di tepi kartu.
 
@@ -828,6 +836,11 @@ tanpa trial lokal; trial lokal yang sudah dipakai tidak diulang; dan status HTTP
 yang dianggap penolakan tegas (400/401/403/409) dipisahkan dari gangguan sesaat
 (404/408/429/5xx).
 
+**`MulaiTrialLanggananTests`** — tombol **Mulai Trial 14 Hari** di halaman
+Langganan ditekan tanpa kode aktivasi saat server mati: trial lokal aktif,
+tombol hilang, banner berbunyi “Trial 14 hari aktif”, dan lencana keadaan
+menjadi Trial — bukan “Tidak aktif” atau “Full Service”.
+
 **`StatusMidtransTests`** — pembacaan status transaksi dari Core API, diuji
 dengan HTTP palsu (tanpa jaringan): jawaban "order belum ada" — yang
 sebenarnya dibalas Midtrans sebagai **HTTP 200** dengan
@@ -835,6 +848,33 @@ sebenarnya dibalas Midtrans sebagai **HTTP 200** dengan
 berarti "tidak bisa dipastikan", **bukan** "transaksi ditemukan"; jawaban
 yang benar-benar memuat status diteruskan apa adanya, dengan `gross_amount`
 tetap TEKS asli (`"150000.00"`, bukan `150000`).
+
+### Uji end-to-end trial server (permanen, sebelum rilis)
+
+`Tools/uji-e2e-trial-server.sh` adalah pemeriksaan E2E yang ringan dan
+**idempoten**: skrip membangun lalu menyalakan server lisensi lokal dalam mode
+Development dengan penyimpanan **memori** (tanpa Supabase/Midtrans), kemudian
+harness `Tools/UjiTrialServerE2E` memakai klien lisensi yang SAMA dengan
+aplikasi untuk membuktikan:
+
+1. desa uji didaftarkan lewat endpoint admin,
+2. `MulaiPercobaanAsync` meminta trial ke SERVER (bukan trial lokal),
+3. token v1 bertanda tangan tersimpan, dan kunci publik untuk memverifikasinya
+   diambil dari `/kunci-publik` — bukan ditanam di klien,
+4. setelah trial aktif: menu terbuka, chip berbunyi `Trial • sisa N hari`
+   (bukan "Full Service"), sisa hari ±14,
+5. trial kedua dari "perangkat lain" DITOLAK server **tanpa** cadangan trial
+   lokal di perangkat itu.
+
+```bash
+Tools/uji-e2e-trial-server.sh                  # port bawaan 5199
+UJI_PORT=5391 UJI_KODE=UJI-UDES-2 Tools/uji-e2e-trial-server.sh
+```
+
+Artefak log disimpan di folder %TEMP% per putaran; tidak ada yang menyentuh
+repo maupun cache lisensi pengguna. Jalankan ini sebelum rilis karena
+perubahan pada kebijakan trial, tanda tangan, atau chip status langsung
+terlihat di sini.
 
 ### Uji end-to-end ke Supabase & Midtrans sungguhan
 
@@ -1407,7 +1447,11 @@ sama (`LoadSuratAsync`), jadi tidak ada jalan memutar.
 Chip keadaan di status bar (bisa diklik → halaman Langganan) selalu tampil dan
 membedakan keempat keadaan dari satu sumber (`PenjagaLisensi.Keadaan`):
 **Full Service** (hijau), **Trial** (kuning, “sisa N hari”), **Demo** (kuning),
-dan **Baca-saja** (merah). Status dipantau detak lisensi tiap 6 jam, dan halaman
+dan **Baca-saja** (merah). Chip memakai *keadaan tampil*
+(`PenjagaLisensi.KeadaanTampil`): token trial server secara teknis langganan
+sah, tetapi selama paketnya `trial` chip tetap berbunyi **Trial • sisa N hari**
+— bukan “Full Service” yang membuat desa mengira sudah membayar. Lencana yang
+sama dipakai halaman Langganan, jadi keduanya tidak bisa berbeda. Status dipantau detak lisensi tiap 6 jam, dan halaman
 Langganan menerapkannya seketika setelah Cek Status — pengguna yang baru bayar
 tidak menunggu detak berikutnya. Karena aturannya statis (`HitungKeadaan`),
 keputusan “terkunci?” tidak bergantung pada jaringan: offline saat tenggang

@@ -42,7 +42,7 @@ namespace SuDesApp.Utilities
         public static IReadOnlyList<string> DaftarJenis { get; } = new[]
         {
             "SKTM",
-            "SKD Umum",
+            "SKD Belum Menikah (KUA)",
             "Domisili Warga",
             "Pengantar SKCK",
             "SKU (Keterangan Usaha)",

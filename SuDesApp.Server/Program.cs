@@ -171,7 +171,8 @@ builder.Services.AddSingleton(sp => new LayananTagihan(
     sp.GetRequiredService<IRepositoryLangganan>(),
     katalog,
     sp.GetRequiredService<IPembuatTagihan>(),
-    sp.GetRequiredService<ILogger<LayananTagihan>>()));
+    sp.GetRequiredService<ILogger<LayananTagihan>>(),
+    pendaftarDesa: sp.GetRequiredService<LayananAdmin>()));
 
 // === Pusat administer (kelola perangkat per desa) ===
 // Dipisah jadi layanan supaya aksi yang MEMBUKA kuota lisensi bisa diuji tanpa
@@ -522,6 +523,10 @@ app.MapPost("/buat-tagihan", async (BuatTagihanRequest req, LayananTagihan layan
     // dan mode midtrans mengirim token + tautan Snap. Klien lama membaca bentuk
     // ini apa adanya, jadi mempersatukannya menjadi satu objek berisi
     // "token": null adalah perubahan format yang tidak perlu.
+    //
+    // kode_aktivasi: hanya jalur BERLANGGANAN AWAL (desa baru) yang
+    // menerbitkan kode — null pada perpanjangan, sehingga klien dapat
+    // menyimpan kode itu saat pertama kali dibayar.
     return hasil.Mode == "demo"
         ? Results.Ok(new
         {
@@ -530,6 +535,7 @@ app.MapPost("/buat-tagihan", async (BuatTagihanRequest req, LayananTagihan layan
             paketNama = paket.Nama,
             nominal = paket.Harga,
             hari = paket.Hari,
+            kode_aktivasi = hasil.KodeAktivasi,
             link_pembayaran = hasil.LinkPembayaran,
             mode = "demo"
         })
@@ -541,6 +547,7 @@ app.MapPost("/buat-tagihan", async (BuatTagihanRequest req, LayananTagihan layan
             nominal = paket.Harga,
             hari = paket.Hari,
             token = hasil.Token,
+            kode_aktivasi = hasil.KodeAktivasi,
             link_pembayaran = hasil.LinkPembayaran,
             mode = "midtrans"
         });

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.Logging;
+using SuDesApp.ControlSurat;
 using SuDesApp.Services;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
@@ -47,6 +48,7 @@ namespace SuDesApp.Wpf.ViewModels
     public class LanggananViewModel : ObservableObject
     {
         private readonly ILogger<LanggananViewModel> _logger;
+        private readonly SettingsManager? _pengaturanDesa;
         private readonly LisensiManager _lisensi;
         private readonly PenjagaLisensi _penjaga;
         private readonly LanggananKlien _klien;
@@ -57,7 +59,8 @@ namespace SuDesApp.Wpf.ViewModels
             LisensiManager lisensi,
             PenjagaLisensi penjaga,
             LanggananKlien klien,
-            SambunganServerLisensi sambungan)
+            SambunganServerLisensi sambungan,
+            SettingsManager? pengaturanDesa = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _lisensi = lisensi ?? throw new ArgumentNullException(nameof(lisensi));
@@ -65,6 +68,11 @@ namespace SuDesApp.Wpf.ViewModels
             _klien = klien ?? throw new ArgumentNullException(nameof(klien));
 
             _sambungan = sambungan ?? throw new ArgumentNullException(nameof(sambungan));
+            // Profil desa lokal: sumber nama desa untuk jalur BERLANGGANAN AWAL
+            // (desa belum punya kode aktivasi — nama desa dikirim ke server dan
+            // kode baru diterbitkan otomatis setelah tagihan dibuat). Boleh null
+            // pada uji: AmbilNamaDesaProfilAsync mundur ke string kosong.
+            _pengaturanDesa = pengaturanDesa;
 
             // Server yang menyala belakangan harus membuat chip pulih tanpa
             // membuka ulang halaman. Langganannya lemah: halaman ini transient
@@ -194,11 +202,19 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private RingkasanLangganan _ringkasan = RingkasanLangganan.BelumDiperiksa;
 
-        /// <summary>Label keadaan untuk lencana di header: "Full Service", "Baca-saja", atau "Demo".</summary>
-        public string KeadaanLabel => PenjagaLisensi.LabelKeadaan(_penjaga.Keadaan);
+        /// <summary>
+        /// Label keadaan untuk lencana di header. Trial server memakai token sah,
+        /// tetapi tetap tampil "Trial" (bukan "Full Service") karena desa belum
+        /// membayar apa pun — aturannya di <see cref="PenjagaLisensi.KeadaanTampil"/>.
+        /// </summary>
+        public string KeadaanLabel => PenjagaLisensi.LabelKeadaan(KeadaanTampil);
 
-        /// <summary>Nada lencana keadaan: 1 aktif (hijau), 2 Demo (kuning), 3 baca-saja (merah).</summary>
-        public int KeadaanTone => PenjagaLisensi.NadaKeadaan(_penjaga.Keadaan);
+        /// <summary>Nada lencana keadaan: 1 aktif (hijau), 2 Demo/Trial (kuning), 3 baca-saja (merah).</summary>
+        public int KeadaanTone => PenjagaLisensi.NadaKeadaan(KeadaanTampil);
+
+        /// <summary>Keadaan yang ditampilkan (trial server dibaca sebagai Trial).</summary>
+        private SuDesApp.Services.KeadaanLisensi KeadaanTampil =>
+            PenjagaLisensi.KeadaanTampil(_penjaga.Keadaan, _penjaga.Status?.Paket);
 
         /// <summary>True bila aplikasi sedang baca-saja karena langganan benar-benar berakhir.</summary>
         public bool BacaSaja => _penjaga.BacaSaja;
@@ -234,7 +250,17 @@ namespace SuDesApp.Wpf.ViewModels
         /// sudah Full Service tidak perlu trial, dan server pun akan menolak.
         /// Sebelum ada status terbaca, tombol tampil.
         /// </summary>
-        public bool TampilTombolTrial => _ringkasan.TampilTombolTrial;
+        public bool TampilTombolTrial => _ringkasan.TampilTombolTrial && !_penjaga.TrialPernahDimulai;
+
+        /// <summary>
+        /// True selama trial berjalan (lokal maupun server). Kartu Status memakai
+        /// ini untuk memasang tombol "Bayar / Berlangganan" langsung di samping
+        /// Cek Status — supaya desa yang sedang uji coba tidak perlu mencari
+        /// tombol bayar di kartu paket di bawahnya. Perintahnya tetap
+        /// <see cref="BayarLanggananCommand"/> yang sama, jadi aturan pembayaran
+        /// (termasuk penjagaan kode aktivasi) tinggal satu salinan.
+        /// </summary>
+        public bool SedangTrial => _ringkasan.SelamaTrial;
 
         private bool _langgananSibuk;
 
@@ -713,9 +739,14 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>
         /// Satu-satunya tempat kalimat pengarah QRIS disusun — dipakai saat panel
         /// dibuka dan setiap kali nominalnya berubah, supaya keduanya tidak bisa
-        /// berbeda.
+        /// berbeda. Kode aktivasi yang kosong ikut diingatkan di kalimat yang sama
+        /// (bukan sebagai pesan terpisah), supaya pengingat itu tidak membuang
+        /// petunjuk scan/nominal/WhatsApp di bawahnya.
         /// </summary>
         private void TampilkanPesanQris() => Beritahu(2,
+            (string.IsNullOrWhiteSpace(KodeAktivasi)
+                ? "Isi kode aktivasi terlebih dahulu — kode itulah yang dipakai admin untuk mencocokkan pembayaran dengan desa ini. "
+                : "") +
             $"Scan QRIS di layar dengan aplikasi bank/e-wallet, masukkan nominal {QrisNominal}, " +
             $"lalu hubungi admin via WhatsApp ({NomorWaAdminTampil}) — tombol di panel. " +
             "Langganan aktif setelah admin menandai lunas.");
@@ -1112,78 +1143,135 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Aktifkan trial 14 hari (gratis) — lepas dari pembayaran Midtrans:
-        /// server yang menahan sekali-per-desa dan "belum sedang aktif". Setelah
-        /// server menerima, token trial langsung diminta lewat CekAsync biasa
-        /// supaya cache lisensi menyimpannya dengan cara yang sama persis
-        /// seperti langganan berbayar — klien tidak punya jalur simpan kedua.
+        /// Mulai masa uji coba 14 hari dari halaman ini — TANPA memaksa kode
+        /// aktivasi, sama seperti popup saat aplikasi dibuka.
+        ///
+        /// Aturannya satu dan dipakai bersama (<see cref="PenjagaLisensi.MulaiPercobaanAsync"/>):
+        /// bila kode sudah diisi dan server terjangkau, trial dicatat SERVER
+        /// (sekali per desa, token bertanda tangan); bila kode belum ada atau
+        /// server tidak terjangkau, trial LOKAL yang dipakai supaya desa tetap
+        /// bisa mencoba saat offline. Server yang menjawab MENOLAK tidak diberi
+        /// cadangan lokal — dua jalur trial tidak boleh dijumlahkan.
         /// </summary>
         private async Task MulaiTrialAsync()
         {
-            // Trial lokal 14 hari yang sudah dipakai (mis. karena saat instalasi
-            // pertama belum ada kode) menutup trial server juga: dua jalur trial
-            // yang sama-sama 14 hari tidak boleh dijumlahkan menjadi 28 hari.
+            // Trial lokal yang sudah dipakai menutup trial server juga: dua jalur
+            // trial yang sama-sama 14 hari tidak boleh menjadi 28 hari.
             if (_penjaga.TrialPernahDimulai)
             {
                 Beritahu(2, "Masa uji coba 14 hari sudah pernah dipakai di komputer ini. " +
                     "Selesaikan pembayaran lisensi untuk melanjutkan.");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(KodeAktivasi))
-            {
-                Beritahu(2, "Isi kode aktivasi terlebih dahulu sebelum memulai trial.");
+                StatusMessage = "Trial tidak diaktifkan.";
                 return;
             }
 
             try
             {
-                // Trial dan cek status harus memakai kode & id perangkat yang sama
-                // dengan jalur Kanthi lisensi — LisensiManager pemilik keduanya.
-                _lisensi.KodeAktivasi = KodeAktivasi!.Trim();
-                StatusMessage = "Mengaktifkan trial 14 hari…";
-
-                var hasil = await _klien.MulaiTrialAsync(_lisensi.KodeAktivasi, _lisensi.IdPerangkat);
-                if (!hasil.Aktif)
+                // Kode yang sudah diketik (belum disimpan) ikut dipakai supaya
+                // trial server bisa dipilih saat server memang terjangkau.
+                if (!string.IsNullOrWhiteSpace(KodeAktivasi))
                 {
-                    Beritahu(2, hasil.Pesan ?? $"Server menolak trial (HTTP {hasil.StatusHttp}).");
-                    StatusMessage = "Trial tidak diaktifkan.";
-                    await MuatKatalogAsync(paksa: true);
-                    return;
+                    _lisensi.KodeAktivasi = KodeAktivasi!.Trim();
                 }
 
-                // Trial diterima server — minta token & simpan cache lewat jalur
-                // aktivasi biasa, lalu tampilkan statusnya.
-                var status = await _lisensi.CekAsync();
+                StatusMessage = "Menyiapkan masa uji coba 14 hari…";
+
+                var percobaan = await _penjaga.MulaiPercobaanAsync();
+                var (judul, pesan) = PenjagaLisensi.JelaskanPercobaan(percobaan);
+                if (percobaan.BerlakuSampai is DateTime sampai)
+                {
+                    pesan += $" Berlaku sampai {sampai.ToLocalTime():dd MMM yyyy}.";
+                }
+
+                bool ditolak = percobaan.Asal
+                    is AsalPercobaan.DitolakServer or AsalPercobaan.SudahPernahTrial;
+
+                // Tampilkan status terbaru: trial server sudah membawa token,
+                // trial lokal belum — banner memakai ringkasan trial (lihat
+                // TampilkanStatusLangganan) supaya tidak terbaca "Tidak aktif"
+                // padahal menu sudah terbuka.
+                var status = _penjaga.Status ?? await _lisensi.CekAsync();
                 _penjaga.Terapkan(status);
                 TampilkanStatusLangganan(status);
-                StatusMessage = "Trial 14 hari aktif.";
+
+                // Banner di atas sudah menampilkan keadaan (trial/aktif). Yang
+                // hanya terbaca di sini: ALASAN penolakan server, dan tanggal
+                // berakhir hasil percobaan.
+                if (ditolak)
+                {
+                    Beritahu(2, judul + " — " + pesan);
+                }
+
+                StatusMessage = ditolak
+                    ? "Trial tidak diaktifkan."
+                    : percobaan.BerlakuSampai is DateTime berakhir
+                        ? $"{judul} s.d. {berakhir.ToLocalTime():dd MMM yyyy}."
+                        : judul + ".";
+
+                if (status.Aktif)
+                {
+                    CatatPersetujuanSaatAktivasi();
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Aktifkan trial gagal");
-                Beritahu(3, "Gagal menghubungi server lisensi: " + ex.Message);
+                Beritahu(3, "Gagal menyiapkan trial: " + ex.Message);
                 StatusMessage = "Trial gagal diaktifkan.";
             }
         }
 
+        /// <summary>
+        /// Buat tagihan pembayaran. Dua jalur, sama seperti aturan server:
+        /// <list type="number">
+        /// <item>kode aktivasi terisi = TERPANJANG — desa yang sudah punya kode
+        /// memperpanjang masa aktifnya;</item>
+        /// <item>kode kosong = BERLANGGANAN AWAL — nama desa diambil dari profil
+        /// desa lokal, dan server memberi kode aktivasi baru; kode itu disimpan
+        /// ke preferensi seketika supaya tidak hilang, lalu layak untuk
+        /// aktivasi setelah pembayaran lunas.</item>
+        /// </list>
+        /// Paket ikut dikirim; nominal TIDAK — server yang menentukan harga
+        /// supaya tidak bisa dimanipulasi dari sisi klien.
+        /// </summary>
         private async Task BayarLanggananAsync()
         {
+            string? namaDesa = null;
             if (string.IsNullOrWhiteSpace(KodeAktivasi))
             {
-                Beritahu(2, "Isi kode aktivasi terlebih dahulu sebelum membayar.");
-                return;
+                // Berlangganan awal: tanpa kode, nama desa wajib. Sumbernya
+                // profil desa lokal (Pengaturan aplikasi), bukan ketikan ulang.
+                namaDesa = (await AmbilNamaDesaProfilAsync()).Trim();
+                if (namaDesa.Length == 0)
+                {
+                    Beritahu(2,
+                        "Desa belum punya kode aktivasi. Isi nama desa di Pengaturan Aplikasi " +
+                        "terlebih dahulu, lalu tekan Bayar lagi — kode aktivasi akan diterbitkan otomatis " +
+                        "setelah tagihan dibuat.");
+                    return;
+                }
             }
 
             try
             {
-                // Paket ikut dikirim; nominal TIDAK — server yang menentukan harga
-                // supaya tidak bisa dimanipulasi dari sisi klien.
-                var hasil = await _klien.BuatTagihanAsync(PaketTerpilih, KodeAktivasi);
+                var hasil = await _klien.BuatTagihanAsync(PaketTerpilih, KodeAktivasi, namaDesa);
                 if (hasil.Tagihan is null)
                 {
                     Beritahu(3, $"Gagal membuat tagihan (HTTP {hasil.StatusHttp}).");
                     return;
+                }
+
+                // Kode baru dari berlangganan awal: simpan SEKETIKA dan tampil di
+                // halaman ini (kotak Kode Aktivasi yang sama), supaya desa tidak
+                // kehilangan aksesnya sebelum sempat membuat catatan.
+                if (!string.IsNullOrWhiteSpace(hasil.KodeAktivasi) &&
+                    !string.Equals(hasil.KodeAktivasi, KodeAktivasi, StringComparison.Ordinal))
+                {
+                    KodeAktivasi = hasil.KodeAktivasi;
+                    AppPreferenceStore.SetKodeAktivasi(hasil.KodeAktivasi);
+                    Beritahu(2,
+                        $"KODE AKTIVASI BARU: {hasil.KodeAktivasi} — telah disimpan otomatis. " +
+                        "Aktif setelah pembayaran lunas; tekan Cek Status setelahnya.");
                 }
 
                 var tagihan = hasil.Tagihan;
@@ -1218,6 +1306,30 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
+        /// Nama desa dari profil lokal untuk jalur berlangganan awal. Profil
+        /// desa kosong dianggap wajar (instalasi baru yang belum diisi), jadi
+        /// pemanggil menyaungkan kalimat panduan bila hasilnya kosong.
+        /// </summary>
+        private async Task<string> AmbilNamaDesaProfilAsync()
+        {
+            if (_pengaturanDesa is null)
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                var desa = await _pengaturanDesa.GetSettingsAsync().ConfigureAwait(false);
+                return desa?.NamaDesa?.Trim() ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Profil desa tidak bisa dibaca untuk berlangganan awal");
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
         /// Buka link pembayaran di peramban bawaan. Dipisah supaya kegagalannya
         /// tidak pernah terbaca sebagai "gagal membuat tagihan": saat ini terjadi
         /// tagihannya SUDAH tercatat di server, dan pesan yang salah membuat desa
@@ -1242,19 +1354,15 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Buka/tutup panel QRIS. Kode aktivasi wajib diisi lebih dulu: tanpa itu
-        /// admin tidak punya cara mencocokkan dana yang masuk dengan desa mana pun,
-        /// karena QRIS statis tidak membawa nomor tagihan seperti gateway.
+        /// Buka/tutup panel QRIS. Panel SELALU terbuka saat tombol ditekan — inilah
+        /// isi tombolnya, "tampilkan QR"; dulu kode kosong hanya memunculkan
+        /// peringatan dan QR tak pernah tampil. Kode aktivasi tetap diingatkan
+        /// saat kosong (di kalimat yang sama, bukan menimpa — satu penulis
+        /// banner), karena QRIS statis tidak membawa nomor tagihan: kode itulah
+        /// satu-satunya penanda desa yang bisa dicocokkan admin.
         /// </summary>
         private void AlihTampilQris()
         {
-            if (string.IsNullOrWhiteSpace(KodeAktivasi))
-            {
-                Beritahu(2, "Isi kode aktivasi terlebih dahulu sebelum menampilkan QRIS — " +
-                    "kode itulah yang dipakai admin untuk mencocokkan pembayaran dengan desa ini.");
-                return;
-            }
-
             TampilQris = !TampilQris;
             if (!TampilQris) return;
 
@@ -1332,9 +1440,15 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private void TampilkanStatusLangganan(StatusLisensi hasil)
         {
-            _ringkasan = RingkasanLangganan.Dari(hasil, KodeAktivasi);
+            // Trial lokal belum punya token: banner langganan biasa akan berbunyi
+            // "Tidak aktif" padahal menu vital sudah terbuka. Ringkasan trial
+            // menjelaskan sisa harinya dan tetap menawarkan pembayaran.
+            _ringkasan = _penjaga.Keadaan == KeadaanLisensi.Trial
+                ? RingkasanLangganan.DariTrial(_penjaga.TrialBerakhirUtc, _penjaga.SisaHariTrial)
+                : RingkasanLangganan.Dari(hasil, KodeAktivasi);
             LanggananStatus = _ringkasan.Judul;
             Beritahu(_ringkasan.Nada, _ringkasan.Keterangan);
+            OnPropertyChanged(nameof(SedangTrial));
 
             // Sudah aktif = tidak ada lagi yang perlu dibayar di layar ini; panel
             // QRIS yang masih terbuka dari percobaan sebelumnya hanya

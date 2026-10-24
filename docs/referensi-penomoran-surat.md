@@ -100,7 +100,7 @@ Perbup 74/2020.
 
 | Jenis Surat | Kode Jenis | Format Lama | Format bawaan aplikasi (perlu peninjauan) |
 |---|---|---|---|
-| SKD Umum | SKD | 470 (deret bersama) | 470 (deret bersama) — *tetap* |
+| SKD Belum Menikah (KUA) | SKD | 470 (deret bersama) | 470 (deret bersama) — *tetap* |
 | Domisili Warga | DOM_WRG | 470 (deret bersama) | 470 — *tetap* |
 | Domisili Instansi | DOM_INS | 470 (deret bersama) | 470 — *tetap* |
 | SKU (Surat Ket. Usaha) | SKU | **510** (deret sendiri) | **470 (deret bersama)** |

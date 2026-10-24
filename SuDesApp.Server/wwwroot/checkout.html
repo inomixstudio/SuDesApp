@@ -123,18 +123,27 @@
   </div>
 
   <div class="kartu">
-    <h2>2. Kode aktivasi desa</h2>
+    <h2>2. Kode aktivasi desa <span style="font-weight:400;color:var(--abu)">— untuk PERPANJANG</span></h2>
     <label class="baris">
-      <span>Kode aktivasi (contoh: SUDES-XXXX)</span>
-      <input type="text" id="kode" autocomplete="off" spellcheck="false" placeholder="SUDES-XXXX">
+      <span>Kode aktivasi (contoh: SUDES-XXXX-XXXX) — kosongkan bila desa belum pernah berlangganan</span>
+      <input type="text" id="kode" autocomplete="off" spellcheck="false" placeholder="SUDES-XXXX-XXXX">
+    </label>
+    <p class="catatan" style="margin-top:8px">Belum punya kode? Isi nama desa di bawah, lalu kode aktivasi otomatis akan diterbitkan setelah tagihan dibuat — aktif setelah pembayaran lunas.</p>
+    <label class="baris">
+      <span>Nama desa — untuk BERLANGGANAN AWAL</span>
+      <input type="text" id="nama-desa" autocomplete="off" spellcheck="false" placeholder="Contoh: Sukamaju">
     </label>
     <button id="tombol-buat" disabled>Buat tagihan</button>
     <div class="pesan" id="pesan"></div>
-  </div>
-
-  <div class="ringkas-bayar kartu" id="ringkas">
+  </div>    <div class="ringkas-bayar kartu" id="ringkas">
     <h2>3. Selesaikan pembayaran</h2>
     <div class="nominal" id="nominal"></div>
+    <div id="kode-baru-blok" style="display:none;margin:14px 0;padding:12px 16px;border-radius:10px;background:var(--kuning);color:#3a2a00">
+      <div style="font-weight:800;font-size:.9rem">KODE AKTIVASI ANDA (baru diterbitkan)</div>
+      <div id="kode-baru" style="font-weight:700;letter-spacing:2px;font-size:1.3rem;margin-top:4px">—</div>
+      <div style="font-size:.8rem;margin-top:6px">Langganan baru aktif setelah pembayaran lunas.
+        Salin dan simpan kode ini — dipakai di aplikasi (menu Langganan) untuk aktivasi dan perpanjangan berikutnya.</div>
+    </div>
     <div class="detail" id="detail-order"></div>
     <a class="tombol-bayar" id="link-bayar" href="#" target="_blank" rel="noopener">Bayar sekarang</a>
     <p class="catatan">
@@ -223,9 +232,11 @@ async function muatPaket() {
 
 async function buatTagihan() {
   var kode = document.getElementById("kode").value.trim();
-  if (!kode) {
-    tampilPesan("Isi kode aktivasi terlebih dahulu.", true);
-    document.getElementById("kode").focus();
+  var namaDesa = document.getElementById("nama-desa").value.trim();
+  if (!kode && !namaDesa) {
+    tampilPesan(
+      "Perpanjang: isi kode aktivasi. Berlangganan awal: isi nama desa.",
+      true);
     return;
   }
   if (!paketTerpilih) {
@@ -241,7 +252,10 @@ async function buatTagihan() {
     var resp = await fetch("/buat-tagihan", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({ kodeAktivasi: kode, paket: paketTerpilih })
+      body: JSON.stringify(
+        kode
+          ? { kodeAktivasi: kode, paket: paketTerpilih }
+          : { kodeAktivasi: "", namaDesa: namaDesa, paket: paketTerpilih })
     });
     var data = null;
     try { data = await resp.json(); } catch (e) { /* tubuh bukan JSON */ }
@@ -276,6 +290,18 @@ async function buatTagihan() {
     document.getElementById("nominal").textContent = formatRupiah(data.nominal);
     document.getElementById("detail-order").textContent =
       namaPaket + " — " + data.hari + " hari · No. tagihan " + data.orderId;
+
+    // Kode aktivasi baru: diterbitkan server hanya untuk berlangganan awal.
+    // Ditampilkan menonjol desa bisa menyimpannya; perpanjangan tidak
+    // mengubah kode yang sudah ada.
+    var blokKode = document.getElementById("kode-baru-blok");
+    if (data.kode_aktivasi) {
+      document.getElementById("kode-baru").textContent = data.kode_aktivasi;
+      blokKode.style.display = "block";
+    } else {
+      blokKode.style.display = "none";
+    }
+
     var tombolBayar = document.getElementById("link-bayar");
     tombolBayar.textContent = "Bayar " + formatRupiah(data.nominal);
     if (link) {

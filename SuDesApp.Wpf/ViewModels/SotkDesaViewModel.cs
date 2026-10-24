@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -88,22 +87,7 @@ namespace SuDesApp.Wpf.ViewModels
             PratinjauPerdesCommand = new AsyncRelayCommand(PratinjauPerdesAsync, () => !IsBusy);
             SimpanPerdesCommand = new AsyncRelayCommand(SimpanPerdesAsync, () => !IsBusy);
             SimpanKeBukuPerdesCommand = new AsyncRelayCommand(SimpanKeBukuPerdesAsync, () => !IsBusy);
-            BukaBukuPerdesCommand = new AsyncRelayCommand(BukaBukuPerdesSekarangAsync, () => !IsBusy);
-            BukaContohPerdesCommand = new AsyncRelayCommand<ContohPerdesDokumen?>(BukaContohPerdesAsync, _ => !IsBusy);
         }
-
-        /// <summary>
-        /// Dipasang MainWindowViewModel: membuka formulir tambah Perdes di Buku
-        /// Perdes dengan isian awal (dan lampiran contoh, bila ada).
-        /// </summary>
-        public Func<DataKeputusan, string?, Task>? BukaPerdesUntukDisuntingAsync { get; set; }
-
-        /// <summary>Dipasang MainWindowViewModel: membuka daftar Buku Perdes.</summary>
-        public Func<Task>? BukaBukuPerdesAsync { get; set; }
-
-        /// <summary>Contoh Perdes yang bisa dijadikan isian awal Buku Perdes.</summary>
-        public ObservableCollection<ContohPerdesDokumen> ContohPerdes { get; } =
-            new(ContohPerdesCatalog.Semua);
 
         public string InfoSotk =>
             "Dokumen merangkum susunan jabatan dan pejabat aktif dari menu Perangkat Desa. "
@@ -169,8 +153,6 @@ namespace SuDesApp.Wpf.ViewModels
                     PratinjauPerdesCommand.RaiseCanExecuteChanged();
                     SimpanPerdesCommand.RaiseCanExecuteChanged();
                     SimpanKeBukuPerdesCommand.RaiseCanExecuteChanged();
-                    BukaBukuPerdesCommand.RaiseCanExecuteChanged();
-                    BukaContohPerdesCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -183,10 +165,6 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>Simpan naskah SOTK menjadi baris Buku Perdes beserta PDF-nya.</summary>
         public AsyncRelayCommand SimpanKeBukuPerdesCommand { get; }
-
-        public AsyncRelayCommand BukaBukuPerdesCommand { get; }
-
-        public AsyncRelayCommand<ContohPerdesDokumen?> BukaContohPerdesCommand { get; }
 
         /// <summary>Muat data perangkat; dipanggil MainWindowViewModel sebelum navigasi.</summary>
         public async Task LoadAsync()
@@ -508,107 +486,6 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 IsBusy = false;
             }
-        }
-
-        /// <summary>Buka contoh Perdes di formulir Buku Perdes dengan isian awal dari katalog.</summary>
-        private async Task BukaContohPerdesAsync(ContohPerdesDokumen? contoh)
-        {
-            if (contoh == null) return;
-            if (BukaPerdesUntukDisuntingAsync == null)
-            {
-                await _messageService.ShowWarningAsync("Halaman Buku Perdes tidak tersedia dari menu ini.");
-                return;
-            }
-
-            try
-            {
-                IsBusy = true;
-                if (!contoh.BerkasAda)
-                {
-                    await _messageService.ShowWarningAsync(
-                        "Berkas contoh Perdes tidak ditemukan. Jalankan pembaruan atau instal ulang aplikasi.");
-                    return;
-                }
-
-                // Salinan contoh diisi dengan identitas desa & kabupaten dari
-                // Pengaturan Surat (nama desa, kecamatan, kabupaten/kota, gelar
-                // Bupati/Wali Kota) SEKALIGUS nomor & tanggal dari isian halaman
-                // ini, sehingga naskah yang terbit siap dipakai dan konsisten
-                // dengan formulir Buku Perdes — bukan berkas contoh yang
-                // ditampilkan apa adanya. Berkas asli tidak disentuh; yang
-                // dilampirkan adalah salinan terisi di folder sementara. Bila
-                // pengisian gagal, berkas asli tetap dipakai apa adanya supaya
-                // alur tidak terhenti.
-                string jalurContoh = contoh.JalurBerkas;
-                string? identitasTerisi = null;
-
-                DateTime tanggal = DateTime.Today;
-                if (TanggalIsian.Baca(TanggalPerdes, "Tanggal Perdes", out DateTime? tanggalIsian, out _)
-                    && tanggalIsian.HasValue)
-                {
-                    tanggal = tanggalIsian.Value;
-                }
-
-                string nomor = !string.IsNullOrWhiteSpace(NomorPerdes)
-                    ? NomorPerdes.Trim()
-                    : contoh.Nomor;
-
-                try
-                {
-                    var desa = await _desaRepo.GetInfoDesaAsync().ConfigureAwait(true);
-                    if (desa != null)
-                    {
-                        var folder = Path.Combine(_appConfig.TempPdfFolder, "TemplatePerdes");
-                        jalurContoh = TemplatePerdesFiller.Isi(contoh.JalurBerkas, desa, folder,
-                            new TemplatePerdesFiller.PerdesTemplateIsian(nomor, tanggal));
-                        identitasTerisi = KopSurat.DesaBersih(desa).NamaDesa;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex,
-                        "Gagal mengisi naskah contoh Perdes {NamaFile}; berkas contoh asli dipakai apa adanya.",
-                        contoh.NamaFile);
-                }
-
-                var prefill = new DataKeputusan
-                {
-                    JenisKeputusan = "PERDES",
-                    Nomor = nomor,
-                    Tanggal = tanggal,
-                    Tentang = contoh.Tentang,
-                    Keterangan = contoh.Keterangan
-                };
-
-                StatusPerdes = identitasTerisi != null
-                    ? $"Contoh \"{contoh.Judul}\" dibuka di formulir Buku Perdes. Naskahnya sudah diisi identitas "
-                        + $"Desa {identitasTerisi}, nomor {nomor}, dan tanggal {tanggal:dd-MM-yyyy} sehingga siap dipakai; "
-                        + "periksa isian, sunting, dan ganti berkasnya dengan naskah desa Anda bila sudah final "
-                        + "sebelum menyimpan."
-                    : $"Contoh \"{contoh.Judul}\" dibuka di formulir Buku Perdes. "
-                        + "Berkas contoh ikut dilampirkan; periksa isian, sunting, dan ganti berkasnya "
-                        + "dengan naskah desa Anda bila sudah final sebelum menyimpan.";
-                await BukaPerdesUntukDisuntingAsync(prefill, jalurContoh).ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal membuka contoh Perdes {NamaFile}", contoh.NamaFile);
-                await _messageService.ShowErrorAsync("Gagal membuka contoh Perdes: " + ex.Message);
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-
-        private async Task BukaBukuPerdesSekarangAsync()
-        {
-            if (BukaBukuPerdesAsync == null)
-            {
-                await _messageService.ShowWarningAsync("Halaman Buku Perdes tidak tersedia dari menu ini.");
-                return;
-            }
-            await BukaBukuPerdesAsync().ConfigureAwait(true);
         }
 
         /// <summary>Periksa apakah baris Buku Perdes yang tertaut masih ada.</summary>

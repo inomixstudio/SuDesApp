@@ -103,6 +103,78 @@ public sealed class RingkasanLanggananTests
     }
 
     [Fact]
+    public void Trial_lokal_memakai_ringkasan_trial_bukan_tidak_aktif()
+    {
+        // Trial lokal belum punya token, jadi status server masih "tidak aktif".
+        // Banner biasa akan berbunyi "Tidak aktif" padahal menu sudah terbuka.
+        var berakhir = Sekarang.AddDays(9);
+
+        var ringkasan = RingkasanLangganan.DariTrial(berakhir, 9);
+
+        Assert.Equal("Trial 14 hari aktif", ringkasan.Judul);
+        Assert.Equal(2, ringkasan.Nada);
+        Assert.False(ringkasan.TampilTombolTrial);
+        Assert.Equal("Trial 14 hari", ringkasan.PaketNama);
+        Assert.Equal("9 hari", ringkasan.SisaHariTampil);
+        Assert.Equal(berakhir.ToLocalTime().ToString("dd MMM yyyy"), ringkasan.SahSampaiTampil);
+        Assert.Contains("kode aktivasi", ringkasan.Keterangan, StringComparison.Ordinal);
+        Assert.True(ringkasan.SelamaTrial);
+    }
+
+    [Fact]
+    public void Trial_server_memakai_ringkasan_trial_bukan_aktif_berbayar()
+    {
+        // Token trial server SAH (status aktif, paket "trial"). Menampilkan itu
+        // sebagai "Aktif s.d. …" membuat desa mengira sudah membayar Full
+        // Service, sementara lencana chipnya Trial — banner harus memakai
+        // ringkasan trial dengan tanggal & sisa dari STATUS, bukan trial lokal.
+        var berakhir = Sekarang.AddDays(9);
+        var status = new StatusLisensi
+        {
+            Aktif = true,
+            NamaDesa = "Sumberjaya",
+            Paket = "trial",
+            BerlakuSampai = berakhir,
+            SahSampai = berakhir,
+            SisaHariTenggang = 9,
+            CekTerakhir = Sekarang
+        };
+
+        var ringkasan = RingkasanLangganan.Dari(status, "SUDES-1");
+
+        Assert.Equal("Trial 14 hari aktif", ringkasan.Judul);
+        Assert.Equal(2, ringkasan.Nada);
+        Assert.False(ringkasan.TampilTombolTrial);
+        Assert.True(ringkasan.SelamaTrial);
+        Assert.Equal("Trial 14 hari", ringkasan.PaketNama);
+        Assert.Equal("9 hari", ringkasan.SisaHariTampil);
+        Assert.Equal(berakhir.ToLocalTime().ToString("dd MMM yyyy"), ringkasan.SahSampaiTampil);
+        Assert.Contains("uji coba", ringkasan.Keterangan, StringComparison.Ordinal);
+        Assert.Contains("bayar", ringkasan.Keterangan, StringComparison.Ordinal);
+        // Sumber tanggal & sisa tetap keterbacaan status: terakhir diperiksa tampil,
+        // bukan "—" seperti trial lokal (yang tidak punya status server sama sekali).
+        Assert.StartsWith(Sekarang.ToLocalTime().ToString("dd MMM yyyy"),
+            ringkasan.TerakhirDiperiksaTampil, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Keadaan_selain_trial_tidak_ditandai_selama_trial()
+    {
+        var status = new StatusLisensi
+        {
+            Aktif = true,
+            Paket = "tahunan",
+            BerlakuSampai = Sekarang.AddDays(300),
+            SahSampai = Sekarang.AddDays(300),
+            SisaHariTenggang = 7,
+            CekTerakhir = Sekarang
+        };
+
+        Assert.False(RingkasanLangganan.Dari(status, "SUDES-1").SelamaTrial);
+        Assert.False(RingkasanLangganan.BelumDiperiksa.SelamaTrial);
+    }
+
+    [Fact]
     public void Status_kosong_menampilkan_strip_bukan_angka_palsu()
     {
         var ringkasan = RingkasanLangganan.Dari(new StatusLisensi { CekTerakhir = DateTime.MinValue }, null);

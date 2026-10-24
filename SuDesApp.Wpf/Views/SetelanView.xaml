@@ -179,7 +179,7 @@
                                 <Rectangle Height="2.4" Fill="{DynamicResource KertasTintaBrush}" Margin="0,2,0,0"/>
 
                                 <TextBlock Text="Blok tanda tangan di bagian bawah surat" FontSize="10"
-                                           FontFamily="Segoe UI" Margin="0,8,0,0" Foreground="{DynamicResource KertasTintaTersierBrush}"/>
+                                           FontFamily="{DynamicResource AppFontFamily}" Margin="0,8,0,0" Foreground="{DynamicResource KertasTintaTersierBrush}"/>
 
                                 <ItemsControl ItemsSource="{Binding PratinjauPejabat}" Margin="0,4,0,0">
                                     <ItemsControl.ItemsPanel>
@@ -192,13 +192,13 @@
                                             <StackPanel Margin="0,0,16,0">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="{Binding Judul, Mode=OneWay}" FontSize="10"
-                                                               FontWeight="SemiBold" FontFamily="Segoe UI"
+                                                               FontWeight="SemiBold" FontFamily="{DynamicResource AppFontFamily}"
                                                                Foreground="{DynamicResource KertasTintaRedupBrush}"/>
                                                     <Border CornerRadius="8" Padding="6,1" Margin="6,0,0,0"
                                                             Background="{DynamicResource KertasCatatanBrush}"
                                                             Visibility="{Binding Kosong, Converter={StaticResource BoolToVis}}">
                                                         <TextBlock Text="belum diisi" FontSize="10"
-                                                                   FontFamily="Segoe UI" Foreground="{DynamicResource KertasCatatanTintaBrush}"/>
+                                                                   FontFamily="{DynamicResource AppFontFamily}" Foreground="{DynamicResource KertasCatatanTintaBrush}"/>
                                                     </Border>
                                                 </StackPanel>
                                                 <TextBlock Text="{Binding Jabatan, Mode=OneWay}" FontSize="11"
