@@ -23,7 +23,7 @@ var JUDUL_SPREADSHEET = 'Jawaban Formulir Layanan Surat Desa';
 // Pilihan jenis surat - HARUS sama dengan yang dikenali aplikasi.
 var DAFTAR_JENIS = [
   'SKTM',
-  'SKD Umum',
+  'SKD Belum Menikah (KUA)',
   'Domisili Warga',
   'Pengantar SKCK',
   'SKU (Keterangan Usaha)',

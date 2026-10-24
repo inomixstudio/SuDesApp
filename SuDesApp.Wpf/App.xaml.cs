@@ -695,21 +695,23 @@ namespace SuDesApp.Wpf
                     {
                         case SuDesApp.Services.KeadaanLisensi.Demo:
                             {
-                                bool mulai = SuDesApp.Wpf.Views.MessageDialogWindow.Show(
+                                // Popup pemberitahuan memakai jendela bergaya splash
+                                // (ukuran & kepala yang sama) — bukan dialog pesan umum,
+                                // supaya transisi splash → pemberitahuan trial terasa
+                                // satu layar yang berlanjut.
+                                bool mulai = SuDesApp.Wpf.Views.TrialPemberitahuanWindow.Pilih(
                                     "Mulai masa uji coba 14 hari",
                                     SuDesApp.Services.PenjagaLisensi.PesanMulaiTrial,
-                                    SuDesApp.Utilities.AppMessageButton.YesNo,
-                                    SuDesApp.Utilities.AppMessageIcon.Question) == true;
+                                    "Mulai Trial", "Nanti Saja");
 
                                 if (!mulai)
                                 {
                                     // Menolak trial: menu vital tetap terkunci, dan
                                     // pengguna diberi tahu jalan keluarnya.
-                                    SuDesApp.Wpf.Views.MessageDialogWindow.Show(
+                                    SuDesApp.Wpf.Views.TrialPemberitahuanWindow.Pesan(
                                         "Menu vital terkunci",
                                         SuDesApp.Services.PenjagaLisensi.PesanBelumTrial,
-                                        SuDesApp.Utilities.AppMessageButton.Ok,
-                                        SuDesApp.Utilities.AppMessageIcon.Warning);
+                                        nadaPeringatan: true);
                                     break;
                                 }
 
@@ -728,13 +730,10 @@ namespace SuDesApp.Wpf
                                     is SuDesApp.Services.AsalPercobaan.DitolakServer
                                     or SuDesApp.Services.AsalPercobaan.SudahPernahTrial;
 
-                                SuDesApp.Wpf.Views.MessageDialogWindow.Show(
+                                SuDesApp.Wpf.Views.TrialPemberitahuanWindow.Pesan(
                                     judulPercobaan,
                                     pesanPercobaan,
-                                    SuDesApp.Utilities.AppMessageButton.Ok,
-                                    ditolak
-                                        ? SuDesApp.Utilities.AppMessageIcon.Warning
-                                        : SuDesApp.Utilities.AppMessageIcon.Info);
+                                    nadaPeringatan: ditolak);
                                 break;
                             }
 
@@ -748,11 +747,12 @@ namespace SuDesApp.Wpf
                                     ? SuDesApp.Services.PenjagaLisensi.PesanTrialHabis
                                     : SuDesApp.Services.PenjagaLisensi.PesanAksesDikunci;
 
-                                bool bukaLangganan = SuDesApp.Wpf.Views.MessageDialogWindow.Show(
+                                // Popup pemberitahuan memakai jendela bergaya splash
+                                // yang sama (lihat cabang Demo di atas).
+                                bool bukaLangganan = SuDesApp.Wpf.Views.TrialPemberitahuanWindow.Pilih(
                                     judul,
                                     pesan + "\n\nBuka halaman Langganan sekarang untuk menyelesaikan pembayaran?",
-                                    SuDesApp.Utilities.AppMessageButton.YesNo,
-                                    SuDesApp.Utilities.AppMessageIcon.Warning) == true;
+                                    "Buka Langganan", "Nanti Saja");
 
                                 if (bukaLangganan && owner.DataContext is SuDesApp.Wpf.ViewModels.MainWindowViewModel vm)
                                 {
@@ -984,6 +984,15 @@ namespace SuDesApp.Wpf
                     new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(25) },
                     sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SuDesApp.Services.IdmKemendesaKlien>>()));
             services.AddSingleton<SuDesApp.Services.IIndeksDesa2025Klien, SuDesApp.Services.IndeksDesa2025Klien>();
+
+            // Klien publikasi APBDes pemerintah pusat (prodeskel.binapemdes.kemendagri.go.id).
+            // Sendiri, seperti klien IDM: endpoint tetap per desa per tahun, parser
+            // ketat di parser sendiri (ApbdesProdeskelBaca) supaya format halaman
+            // pusat yang berubah menghasilkan pesan, bukan angka salah.
+            services.AddSingleton<SuDesApp.Services.IKlienApbdesPusat>(sp =>
+                new SuDesApp.Services.ApbdesProdeskelKlien(
+                    new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(25) },
+                    sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SuDesApp.Services.ApbdesProdeskelKlien>>()));
 
             // Klien pengumuman broadcast (informasi terbaru dari penyedia):
             // alamat server dari LisensiManager yang sama, HttpClient singleton.

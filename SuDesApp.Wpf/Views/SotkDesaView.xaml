@@ -62,7 +62,7 @@
 
                     <!-- KARTU 1: RANCANGAN PERDES — form identitas & dasar hukum. -->
                     <Border Style="{StaticResource GridHostCard}" Padding="18">
-                    <StackPanel>
+                        <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <Border Style="{StaticResource AccentSectionBar}"/>
                             <TextBlock Text="RANCANGAN PERDES SOTK" FontWeight="Bold"
@@ -127,60 +127,27 @@
                                     Style="{StaticResource PrimaryButton}"
                                     ToolTip="Terbitkan naskah SOTK sebagai arsip PERDES beserta PDF-nya"/>
                         </WrapPanel>
-                    </StackPanel>
-                </Border>
-
-                    <!-- KARTU 2: CONTOH PERDES. -->
-                    <Border Style="{StaticResource GridHostCard}" Padding="16,15">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <Border Style="{StaticResource AccentSectionBar}"/>
-                                <TextBlock Text="CONTOH PERDES" FontWeight="Bold" FontSize="13"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <TextBlock Text="Pilih contoh untuk membuka formulir Buku Perdes. Isian awal dapat disunting lalu disimpan menurut skema PERDES — bukan dokumen Word terpisah."
-                                       TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
-                                       Margin="0,0,0,10"/>
-                            <Button Content="Buka Buku Perdes"
-                                    Command="{Binding BukaBukuPerdesCommand}"
-                                    Style="{StaticResource SecondaryButton}"
-                                    HorizontalAlignment="Left" Margin="0,0,0,10"/>
-                            <ItemsControl ItemsSource="{Binding ContohPerdes}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Button Command="{Binding DataContext.BukaContohPerdesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                IsEnabled="{Binding BerkasAda}"
-                                                HorizontalContentAlignment="Left"
-                                                Style="{StaticResource SecondaryButton}"
-                                                Padding="10,7" Margin="0,0,0,6"
-                                                ToolTip="Buka contoh ini di formulir Buku Perdes">
-                                            <TextBlock Text="{Binding Judul}" TextWrapping="Wrap"/>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <TextBlock Text="Contoh bukan peraturan yang berlaku. Periksa nomor, tanggal, dasar hukum, dan isi sebelum disimpan."
-                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
-                                       TextWrapping="Wrap" Margin="0,2,0,0"/>
                         </StackPanel>
                     </Border>
                 </c:PanelKartuResponsif>
 
-                <!-- Kartu informasi selebar halaman, di bawah panel kartu. -->
-                <Border Style="{StaticResource GridHostCard}" Padding="16,15" Margin="0,12,0,0">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <Border Style="{StaticResource AccentSectionBar}"/>
-                            <TextBlock Text="TENTANG SOTK" FontWeight="Bold" FontSize="13"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
+                <!-- Kartu informasi berdampingan: penjelasan SOTK dan isi
+                     dokumen — dua kolom pada jendela lebar, menumpuk pada jendela
+                     sempit seperti kartu Rancangan Perdes di atasnya. -->
+                <c:PanelKartuResponsif Jarak="12" AmbangDuaKolom="1000">
+                    <Border Style="{StaticResource GridHostCard}" Padding="16,15">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="TENTANG SOTK" FontWeight="Bold" FontSize="13"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
                             <TextBlock Text="{Binding InfoSotk}" TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
                         </StackPanel>
                     </Border>
 
-                <Border Style="{StaticResource GridHostCard}" Padding="16,15" Margin="0,12,0,0">
+                    <Border Style="{StaticResource GridHostCard}" Padding="16,15">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                 <Border Style="{StaticResource AccentSectionBar}"/>
@@ -201,6 +168,7 @@
                                        Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
+                </c:PanelKartuResponsif>
             </StackPanel>
         </ScrollViewer>
     </Grid>

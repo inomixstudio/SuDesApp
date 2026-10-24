@@ -12,7 +12,8 @@
          (sumber versi aplikasi) sekaligus menyisipkan entri Catatan Rilis baru
          untuk versi itu - kartu terbaru
          di halaman Catatan Rilis sama persis dengan versi csproj;
-      3. menjalankan gerbang verifikasi: dotnet build solusi - gagal berarti
+      3. menjalankan gerbang verifikasi: dotnet build solusi LALU uji E2E trial
+         server (Tools/uji-e2e-trial-server.sh) - salah satu gagal berarti
          berhenti tanpa commit dan kedua berkas dikembalikan ke isi semula;
       4. commit chore(release) berisi perubahan versi + catatan rilis;
       5. membuat tag anotasi vX.Y.Z;
@@ -58,9 +59,9 @@
         ./Tools/rilis.ps1 2.5.6 -Cabang upgrade-dotnet-10 -Peningkatan "..."
 
 .PARAMETER UjiCoba
-    Latihan aman: semua diperiksa dan gerbang build tetap dijalankan, tetapi tidak
-    ada commit, tag, atau push - kedua berkas dikembalikan ke isi semula.
-    Working tree boleh kotor karena tidak ada yang dikomit.
+    Latihan aman: semua diperiksa dan kedua gerbang (build + uji E2E trial server)
+    tetap dijalankan, tetapi tidak ada commit, tag, atau push - kedua berkas
+    dikembalikan ke isi semula. Working tree boleh kotor karena tidak ada yang dikomit.
 
 .PARAMETER TanpaDorong
     Commit dan tag tetap dibuat lokal, tetapi tidak didorong ke origin.
@@ -310,10 +311,13 @@ $berkasCatatan = BacaBerkas $script:catatanVm
 $script:bomCatatan = $berkasCatatan.Bom
 $script:isiCatatan = $berkasCatatan.Teks
 
-$polaEntriTerbaru = [regex]::new('new CatatanRilisEntry\(\s*"Versi (?<versi>[\d.]+) \((?<tanggal>[^"]+)\)",\s*true,')
+$polaEntriTerbaru = [regex]::new('new CatatanRilisEntry\(\s*"Versi (?<versi>[\d.]+) \((?<tanggal>[^"]+)\)",')
+# Entri TERBARU kini diturunkan dari posisi (kartu paling atas) — bendera "true"
+# yang ditulis tangan sudah tidak dipakai sejak 2.7.0, jadi entri terbaru adalah
+# Cocok PERTAMA di berkas.
 $cocokTerbaru = $polaEntriTerbaru.Match($script:isiCatatan)
 if (-not $cocokTerbaru.Success) {
-    throw ('Entri catatan rilis terbaru (IsLatest = true) tidak ditemukan di ' + $script:catatanVm + '.')
+    throw ('Entri catatan rilis teratas (kartu "Versi ... (tanggal)") tidak ditemukan di ' + $script:catatanVm + '.')
 }
 if ($cocokTerbaru.Groups['versi'].Value -ne $versiSekarangSingkat) {
     throw ('Entri catatan rilis terbaru menyebut versi ' + $cocokTerbaru.Groups['versi'].Value +
@@ -383,7 +387,6 @@ $barisEntri = New-Object System.Collections.Generic.List[string]
 # Baris pertama tanpa indentasi: titik sisip sudah berada setelah 16 spasi milik entri lama.
 $barisEntri.Add('new CatatanRilisEntry(')
 $barisEntri.Add($script:i20 + '"' + $judulEntri + '",')
-$barisEntri.Add($script:i20 + 'true,')
 $barisEntri.Add($script:i20 + 'new List<CatatanRilisSubSection>')
 $barisEntri.Add($script:i20 + '{')
 if ($Fitur.Count -gt 0)       { $sisaBagian--; TambahBagian -Ke $barisEntri -Judul 'Fitur Baru'   -Butir $Fitur       -Koma ($sisaBagian -gt 0) }
@@ -392,18 +395,17 @@ if ($Perbaikan.Count -gt 0)   { $sisaBagian--; TambahBagian -Ke $barisEntri -Jud
 $barisEntri.Add($script:i20 + '}),')
 $blokEntri = ($barisEntri -join $nl)
 
-# Kartu lama berhenti menjadi "terbaru", lalu entri baru disisipkan di atasnya.
-$blokLama = $cocokTerbaru.Value -replace 'true,', 'false,'
-$isiCatatanBaru = $script:isiCatatan.Substring(0, $cocokTerbaru.Index) + $blokLama +
-                  $script:isiCatatan.Substring($cocokTerbaru.Index + $cocokTerbaru.Length)
-$awalEntri = $isiCatatanBaru.IndexOf('new CatatanRilisEntry(')
+# Kartu lama tetap di tempatnya; lencana "TERBARU" menyusul otomatis ke kartu
+# teratas karena dihitung dari posisi, bukan bendera yang ditulis tangan.
+# Sisip telanjang di atas entri terlama: kartu lama tidak diubah sama sekali.
+$awalEntri = $script:isiCatatan.IndexOf('new CatatanRilisEntry(')
 if ($awalEntri -lt 0) { throw 'Titik sisip entri catatan rilis tidak ditemukan.' }
-$isiCatatanBaru = $isiCatatanBaru.Insert($awalEntri, $blokEntri + $nl + $script:i16)
+$isiCatatanBaru = $script:isiCatatan.Insert($awalEntri, $blokEntri + $nl + $script:i16)
 
 TulisBerkas -Jalur $script:csprojWpf -Teks $isiCsprojBaru -Bom $script:bomCsproj
 Sukses ('AssemblyVersion/FileVersion -> ' + $versiAssembly)
 TulisBerkas -Jalur $script:catatanVm -Teks $isiCatatanBaru -Bom $script:bomCatatan
-Sukses ('Entri catatan rilis "' + $judulEntri + '" disisipkan; kartu versi sebelumnya tidak lagi ditandai terbaru.')
+Sukses ('Entri catatan rilis "' + $judulEntri + '" disisipkan di atas kartu versi sebelumnya.')
 
 # ---------- Tahap 3: gerbang build ----------
 
@@ -414,6 +416,42 @@ if ($LASTEXITCODE -ne 0) {
     throw ('Build gagal (exit ' + $LASTEXITCODE + ') - tidak ada commit dibuat.')
 }
 Sukses 'Build bersih.'
+
+# ---------- Tahap 4: gerbang uji E2E trial server ----------
+
+Tahap 'Tahap 4/7 - gerbang uji E2E trial server (Tools/uji-e2e-trial-server.sh)'
+Info 'Menyalakan server lisensi lokal (mode memori) dan menguji alur trial penuh:'
+Info 'daftar desa via admin, pemberian trial + token bertanda tangan, dan penolakan trial perangkat kedua.'
+try
+{
+    & bash Tools/uji-e2e-trial-server.sh
+    if ($LASTEXITCODE -ne 0)
+    {
+        throw ('skrip keluar dengan kode ' + $LASTEXITCODE)
+    }
+}
+catch
+{
+    KembalikanBerkas
+    $penyebab = if ($PSItem) { $PSItem.Exception.Message } else { 'bash tidak ditemukan' }
+    throw ('
+
+GERBANG UJI E2E TRIAL SERVER GAGAL (' + $penyebab + ')
+Rilis DIHENTIKAN - tidak ada commit atau tag dibuat.
+
+Yang harus dilakukan sebelum merilis:
+  1. Jalankan ulang gerbangnya manual untuk melihat bagian yang gagal beserta log server:
+         bash Tools/uji-e2e-trial-server.sh
+     Skrip yang lulus seharusnya berakhir dengan tulisan "SEMUA LULUS".
+  2. Bila keluarannya berupa "bash" tidak ditemukan, Git Bash harus ada -
+     skrip uji ini berbasis bash meski rilis.ps1 berjalan di Windows. Pasang Git for Windows
+     (git-scm.com), pastikan "bash" dikenali di baris perintah, lalu jalankan ulang rilis.
+  3. Setelah gerbang lulus, jalankan ulang rilis dari awal.
+
+Catatan: kedua berkas (versi csproj dan catatan rilis) telah dikembalikan ke isi semula,
+jadi putaran rilis berikutnya memulai dari kondisi kerja yang bersih.')
+}
+Sukses 'Uji E2E trial server lolos.'
 
 if ($UjiCoba) {
     Tahap 'Tahap 5/7..7/7 - dilewati (mode -UjiCoba)'

@@ -7,7 +7,7 @@ internal static class BuatSuratCatalog
 {
     public static IReadOnlyList<(string Label, string Template)> MenuSurat { get; } =
     [
-        ("SKD Umum", SuratConstants.SKD_UMUM),
+        ("SKD Belum Menikah", SuratConstants.SKD_UMUM),
         ("Domisili Warga", SuratConstants.DOMISILI_WARGA),
         ("Domisili Instansi", SuratConstants.INSTANSI),
         ("SKU", SuratConstants.SKU),

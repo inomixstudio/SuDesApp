@@ -52,6 +52,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly IMessageService _messageService;
         private readonly Func<string, DataKeputusan?, DataKeputusan?, InputKeputusanViewModel> _inputFactory;
         private readonly Func<string, string, PdfPreviewViewModel> _previewFactory;
+        private readonly AppConfig _appConfig;
         private readonly ILogger<KeputusanViewModel> _logger;
 
         private string _jenisKeputusan = "SK";
@@ -112,6 +113,7 @@ namespace SuDesApp.Wpf.ViewModels
             IMessageService messageService,
             Func<string, DataKeputusan?, DataKeputusan?, InputKeputusanViewModel> inputFactory,
             Func<string, string, PdfPreviewViewModel> previewFactory,
+            AppConfig appConfig,
             ILogger<KeputusanViewModel> logger)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -120,6 +122,7 @@ namespace SuDesApp.Wpf.ViewModels
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
             _inputFactory = inputFactory ?? throw new ArgumentNullException(nameof(inputFactory));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
+            _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             SetSkCommand = new AsyncRelayCommand(() => SetJenisAsync("SK"));
@@ -131,8 +134,16 @@ namespace SuDesApp.Wpf.ViewModels
             HapusCommand = new AsyncRelayCommand(HapusAsync, () => SelectedRow != null);
             CetakCommand = new AsyncRelayCommand(CetakAsync, () => SelectedTahun != null);
             SegarkanCommand = new AsyncRelayCommand(() => LoadAsync());
+            BukaContohPerdesCommand = new AsyncRelayCommand<ContohPerdesDokumen?>(BukaContohPerdesAsync, _ => !IsLoading);
             BatalCommand = new RelayCommand(() => _navigation.ShowDefault());
         }
+
+        /// <summary>Contoh Perdes bawaan yang bisa dijadikan isian awal formulir PERDES.</summary>
+        public ObservableCollection<ContohPerdesDokumen> ContohPerdes { get; } =
+            new(ContohPerdesCatalog.Semua);
+
+        /// <summary>Buka satu contoh Perdes di formulir Buku Perdes (tab aktif).</summary>
+        public AsyncRelayCommand<ContohPerdesDokumen?> BukaContohPerdesCommand { get; }
 
         public string HeaderTitle => _jenisKeputusan switch
         {
@@ -246,6 +257,70 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public Task TambahDenganIsianAsync(DataKeputusan prefill, string? lampiranContohPath = null)
             => BukaFormulirAsync(null, prefill, lampiranContohPath);
+
+        /// <summary>
+        /// Buka satu contoh Perdes bawaan di formulir Buku Perdes. Salinan contoh
+        /// diisi otomatis dengan identitas desa/kabupaten dari Pengaturan Surat
+        /// (TemplatePerdesFiller); berkas contoh asli tidak disentuh. Bila
+        /// pengisian gagal, berkas asli tetap dipakai apa adanya supaya alur
+        /// tidak terhenti. Lajuanya padanan alur contoh di menu SOTK Desa yang
+        /// dipindahkan ke tab PERDES.
+        /// </summary>
+        private async Task BukaContohPerdesAsync(ContohPerdesDokumen? contoh)
+        {
+            if (contoh == null) return;
+            try
+            {
+                if (!contoh.BerkasAda)
+                {
+                    await _messageService.ShowWarningAsync(
+                        "Berkas contoh Perdes tidak ditemukan. Jalankan pembaruan atau instal ulang aplikasi.");
+                    return;
+                }
+
+                if (_jenisKeputusan != "PERDES")
+                {
+                    await SetJenisAsync("PERDES");
+                }
+
+                string nomor = contoh.Nomor;
+                DateTime tanggal = DateTime.Today;
+                string jalurContoh = contoh.JalurBerkas;
+
+                try
+                {
+                    var desa = await _desaRepository.GetInfoDesaAsync();
+                    if (desa != null)
+                    {
+                        var folder = Path.Combine(_appConfig.TempPdfFolder, "TemplatePerdes");
+                        jalurContoh = TemplatePerdesFiller.Isi(contoh.JalurBerkas, desa, folder,
+                            new TemplatePerdesFiller.PerdesTemplateIsian(nomor, tanggal));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Gagal mengisi naskah contoh Perdes {NamaFile}; berkas contoh asli dipakai apa adanya.",
+                        contoh.NamaFile);
+                }
+
+                var prefill = new DataKeputusan
+                {
+                    JenisKeputusan = "PERDES",
+                    Nomor = nomor,
+                    Tanggal = tanggal,
+                    Tentang = contoh.Tentang,
+                    Keterangan = contoh.Keterangan
+                };
+
+                await BukaFormulirAsync(null, prefill, jalurContoh);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka contoh Perdes {NamaFile}", contoh.NamaFile);
+                await _messageService.ShowErrorAsync("Gagal membuka contoh Perdes: " + ex.Message);
+            }
+        }
 
         /// <param name="muatUlangData">
         /// True untuk membaca ulang seluruh arsip dari database (muat pertama,

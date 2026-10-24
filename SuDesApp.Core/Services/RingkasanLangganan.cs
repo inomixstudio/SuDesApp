@@ -30,7 +30,8 @@ namespace SuDesApp.Services
         string PaketNama,
         string SahSampaiTampil,
         string SisaHariTampil,
-        string TerakhirDiperiksaTampil)
+        string TerakhirDiperiksaTampil,
+        bool SelamaTrial = false)
     {
         /// <summary>Nada netral — dipakai sebelum ada status sama sekali.</summary>
         private const int NadaNetral = 0;
@@ -50,7 +51,8 @@ namespace SuDesApp.Services
             PaketNama: "—",
             SahSampaiTampil: "—",
             SisaHariTampil: "—",
-            TerakhirDiperiksaTampil: "—");
+            TerakhirDiperiksaTampil: "—",
+            SelamaTrial: false);
 
         /// <summary>
         /// Susun ringkasan dari status yang sudah diverifikasi. <paramref name="kodeAktivasi"/>
@@ -80,6 +82,20 @@ namespace SuDesApp.Services
 
             if (status.Aktif && sahSampai is DateTime sah)
             {
+                // Trial SERVER: token trial bertanda tangan adalah langganan sah,
+                // tetapi menampilkannya seperti langganan berbayar ("Aktif s.d. …")
+                // membuat desa mengira sudah membayar Full Service — sementara chip
+                // di jendela utama berbunyi Trial. Saat paketnya masih "trial",
+                // status pun memakai ringkasan trial (tanggal & sisa dari STATUS,
+                // bukan dari trial lokal).
+                if (string.Equals(status.Paket, "trial", StringComparison.OrdinalIgnoreCase))
+                {
+                    return SusunTrial(
+                        sahSampai,
+                        status.SisaHariTenggang,
+                        TanggalDanJam(status.CekTerakhir));
+                }
+
                 judul = $"Aktif s.d. {Tanggal(sah)}";
                 nada = lewatTanggalBayar ? NadaPerluTindakan : NadaAktif;
                 keterangan = lewatTanggalBayar
@@ -114,6 +130,38 @@ namespace SuDesApp.Services
                 SisaHariTampil: status.Aktif ? status.SisaHariTenggang + " hari" : "—",
                 TerakhirDiperiksaTampil: TanggalDanJam(status.CekTerakhir));
         }
+
+        /// <summary>
+        /// Ringkasan saat trial LOKAL berjalan. Token langganan belum ada, jadi
+        /// status server masih "tidak aktif" — menampilkan itu akan terbaca
+        /// seolah uji coba belum dimulai, padahal menunya sudah terbuka.
+        /// Nada kuning (masih perlu tindakan), tombol trial disembunyikan
+        /// karena trial tidak bisa diulang, dan tombol pembayaran tetap ada.
+        /// </summary>
+        public static RingkasanLangganan DariTrial(DateTime? berakhirUtc, int sisaHari) =>
+            SusunTrial(berakhirUtc, sisaHari, "—");
+
+        /// <summary>
+        /// Satu-satunya penyusun ringkasan trial — dipakai trial lokal (tanggal
+        /// dari TrialLokal) maupun trial server (tanggal & sisa dari STATUS).
+        /// Keterangannya selalu menawarkan jalan ke Full Service: isi kode
+        /// aktivasi lalu bayar SEBELUM masa uji coba habis, bukan baru setelahnya.
+        /// SelamaTrial=true membuat tampilan memasang tombol "Bayar / Berlangganan"
+        /// langsung di kartu status, tanpa aturan pembayaran kedua di UI.
+        /// </summary>
+        private static RingkasanLangganan SusunTrial(DateTime? berakhirUtc, int sisaHari, string terakhirDiperiksa) => new(
+            Judul: "Trial 14 hari aktif",
+            Keterangan: $"Masa uji coba berakhir {Tanggal(berakhirUtc)} (sisa {sisaHari} hari). " +
+                        "Setelah itu menu vital terkunci lagi sampai langganan diaktifkan — " +
+                        "masukkan kode aktivasi lalu bayar sebelum masa uji coba habis " +
+                        "untuk tetap Full Service.",
+            Nada: NadaPerluTindakan,
+            TampilTombolTrial: false,
+            PaketNama: "Trial 14 hari",
+            SahSampaiTampil: Tanggal(berakhirUtc),
+            SisaHariTampil: $"{sisaHari} hari",
+            TerakhirDiperiksaTampil: terakhirDiperiksa,
+            SelamaTrial: true);
 
         /// <summary>Tanggal UTC → tanggal lokal ("22 Okt 2026"), atau "—" bila belum ada.</summary>
         private static string Tanggal(DateTime? utc) =>

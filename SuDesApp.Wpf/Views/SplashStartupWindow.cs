@@ -89,7 +89,7 @@ namespace SuDesApp.Wpf.Views
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // strip progres
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // isi
 
-            grid.Children.Add(BuatKepala(warna));
+            grid.Children.Add(BuatKepala(warna, "SuDesApp", "Sistem Surat Desa"));
             Grid.SetRow(grid.Children[0], 0);
             grid.Children.Add(BuatStripProgres(warna));
             Grid.SetRow(grid.Children[1], 1);
@@ -116,7 +116,16 @@ namespace SuDesApp.Wpf.Views
             };
         }
 
-        private static FrameworkElement BuatKepala(WarnaTema warna)
+        /// <summary>
+        /// Kepala bergradien yang dipakai splash DAN popup pemberitahuan trial
+        /// (<see cref="TrialPemberitahuanWindow"/>) — judul/subjudulnya menjadi
+        /// parameter agar ikon lencana, ornamen mutiara, dan gradiennya tetap
+        /// satu salinan untuk keduanya. Tingginya bisa diperkecil oleh popup
+        /// (yang butuh ruang teks lebih banyak di bawah kepala); splash tetap
+        /// memakai tinggi penuh bawaannya.
+        /// </summary>
+        internal static FrameworkElement BuatKepala(
+            WarnaTema warna, string judul, string subjudul, double tinggi = 124)
         {
             var gradien = new LinearGradientBrush
             {
@@ -131,7 +140,7 @@ namespace SuDesApp.Wpf.Views
 
             var kepala = new Border
             {
-                Height = 124,
+                Height = tinggi,
                 CornerRadius = new CornerRadius(14, 14, 0, 0),
                 Background = gradien,
                 ClipToBounds = true
@@ -183,14 +192,14 @@ namespace SuDesApp.Wpf.Views
             var teks = new StackPanel { Margin = new Thickness(15, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
             teks.Children.Add(new TextBlock
             {
-                Text = "SuDesApp",
+                Text = judul,
                 FontSize = 24,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = warna.OnPrimer
             });
             teks.Children.Add(new TextBlock
             {
-                Text = "Sistem Surat Desa",
+                Text = subjudul,
                 FontSize = 13,
                 Foreground = warna.OnPrimerHalus,
                 Margin = new Thickness(0, 2, 0, 0)
@@ -202,7 +211,7 @@ namespace SuDesApp.Wpf.Views
             return kepala;
         }
 
-        private static FrameworkElement BuatLogo(WarnaTema warna)
+        internal static FrameworkElement BuatLogo(WarnaTema warna)
         {
             try
             {
@@ -523,7 +532,7 @@ namespace SuDesApp.Wpf.Views
 
         /// <summary>Palet splash: seluruh warna diambil dari ResourceDictionary
         /// tema terpilih agar konsisten dengan tampilan aplikasi setelah masuk.</summary>
-        private sealed class WarnaTema
+        internal sealed class WarnaTema
         {
             public Color Primer;
             public Color Sekunder;
@@ -535,7 +544,7 @@ namespace SuDesApp.Wpf.Views
             public Brush TeksHalus = Brushes.Gray;
         }
 
-        private static WarnaTema AmbilWarnaTema(string? paksaTema)
+        internal static WarnaTema AmbilWarnaTema(string? paksaTema)
         {
             var hasil = new WarnaTema();
 
@@ -598,7 +607,7 @@ namespace SuDesApp.Wpf.Views
             return hasil;
         }
 
-        private static SolidColorBrush Warna(Color c)
+        internal static SolidColorBrush Warna(Color c)
         {
             var b = new SolidColorBrush(c);
             b.Freeze();

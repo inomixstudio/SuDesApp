@@ -203,7 +203,7 @@ public sealed class FeatureNavigationViewModel
         PerangkatDesa = TambahTombol("Perangkat Desa", IkonMenu.Orang, "perangkat-desa");
         PerangkatDesa.Description = "Struktur pemerintahan desa per jabatan: identitas, masa jabatan, arsip SK, dan penyusun SK Bupati.";
         var sotk = TambahTombol("SOTK Desa", IkonMenu.Halaman, "sotk-desa");
-        sotk.Description = "Susun SOTK, naskah Perdes SOTK, dan contoh Perdes yang tersambung ke Buku Perdes.";
+        sotk.Description = "Susun SOTK dan rancangan Perdes SOTK yang tersambung ke Buku Perdes.";
         var apbdes = TambahTombol("APBDES", IkonMenu.Keuangan, "apbdes");
         apbdes.Description = "Arsip dokumen APBDes: Awal, Perubahan, dan Pertanggungjawaban — impor berkas Word, sunting rincian, simpan.";
         IndeksDesa = TambahTombol("Indeks Desa (IDM)", IkonMenu.Pembangunan, "idm");

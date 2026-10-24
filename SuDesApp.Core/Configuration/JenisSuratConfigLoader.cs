@@ -279,7 +279,7 @@ namespace SuDesApp.Configuration
                     NamaJenis = "SKD_UMUM",
                     KodeJenis = "SKD",
                     TemplateName = "SKD_UMUM",
-                    DisplayName = "SKD Umum",
+                    DisplayName = "SKD Belum Menikah (KUA)",
                     NomorFormat = "470/{0:D3}/Ds/{2:yyyy}",
                     IsSharedNumbering = true,
                     IsKeteranganDesa = true

@@ -96,9 +96,18 @@ public sealed record BuktiBayar(byte[] Isi, string Tipe, string? Nama = null);
 /// <summary>
 /// Permintaan pembuatan tagihan.
 ///
+/// Dua jalur (lihat <see cref="LayananTagihan.BuatAsync"/>):
+/// <list type="number">
+/// <item><c>KodeAktivasi</c> terisi = <b>perpanjang</b> — desa yang sudah
+/// terdaftar memperpanjang masa aktifnya.</item>
+/// <item><c>KodeAktivasi</c> kosong = <b>berlangganan awal</b> — desa baru
+/// belum punya kode, jadi <c>NamaDesa</c> ikut dikirim dan server menerbitkan
+/// kode aktivasi baru; kode itu aktif setelah pembayaran lunas.</item>
+/// </list>
+///
 /// <c>Paket</c> memilih paket ("bulanan" / "tahunan"); dikosongkan berarti
 /// paket bawaan. SENGAJA TIDAK ada medan nominal: harga ditentukan server dari
 /// katalog. Bila nominal boleh dikirim klien, pengguna bisa meminta tagihan
 /// Rp1 lalu membayar Rp1 untuk mendapat akses penuh satu bulan (atau setahun).
 /// </summary>
-public sealed record BuatTagihanRequest(string KodeAktivasi, string? Paket = null);
+public sealed record BuatTagihanRequest(string KodeAktivasi, string? Paket = null, string? NamaDesa = null);

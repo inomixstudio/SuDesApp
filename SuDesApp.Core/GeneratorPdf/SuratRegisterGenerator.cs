@@ -304,7 +304,7 @@ namespace SuDesApp.GeneratorPdf
                                 "REKENING_KORAN" => "Permohonan Rekening Koran",
                                 "TEMPLATE_SURAT" => LabelTemplateSurat(surat),
                                 "BEDANAMA" => "Surat Ket. Beda Data",
-                                "SKD_UMUM" => "SKD Umum",
+                                "SKD_UMUM" => "SKD Belum Menikah (KUA)",
                                 "DOMISILI_WARGA" => "Domisili Warga",
                                 "INSTANSI" => "Domisili Instansi/Lembaga",
                                 "SKU" => "SKU (Surat Ket. Usaha)",

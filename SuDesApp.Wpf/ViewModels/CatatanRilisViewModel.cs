@@ -227,6 +227,17 @@ namespace SuDesApp.Wpf.ViewModels
                             "Berkas bawaan boleh diganti lewat tambalan pembaruan tanpa merilis ulang program; berkas aktif yang sudah disunting operator tidak ditimpa. Bila berkas bawaan hilang atau rusak, daftar darurat (Kabupaten Karawang) dipakai agar unduhan otomatis tetap berjalan.",
                             "Setelah menyunting berkas, tekan Segarkan di halaman Pengaturan Formulir — daftar langsung dibaca ulang tanpa menutup aplikasi. Lokasi berkas juga ditampilkan di kartu informasi halaman agar mudah ditemukan.",
                             "Berkas yang rusak atau kosong tidak membuat halaman gagal: daftar bawaan dipakai, alasan kegagalan dicatat di log, dan berkas operator tidak ditimpa. Entri tanpa nama/kode/URL, URL bukan http(s), serta kode ganda dilewati tanpa mengganggu entri lain."
+                        }),
+                        new CatatanRilisSubSection("Fitur Baru — Tombol Pratinjau pada Formulir Permohonan Rekening Koran", new List<string>
+                        {
+                            "Form Permohonan Rekening Koran kini punya tombol Pratinjau di samping tombol Simpan: PDF permohonan langsung disusun dan dibuka dari isian yang sedang berjalan, termasuk ketika belum semua kolom terisi — berguna untuk memeriksa bentuk surat sambil mengisi tanpa harus menyimpan dulu.",
+                            "Pratinjau murni untuk dilihat: tidak dicatat ke register surat dan tidak memakai/mengurangi nomor surat. Pencatatan resmi tetap hanya lewat tombol Simpan/Cetak seperti sebelumnya, sehingga tidak ada entri register ganda atau nomor yang terbuang oleh percobaan.",
+                            "Kalau penyusunan PDF gagal, pesan kesalahannya tampil jelas di dialog aplikasi tanpa menutup form, sehingga isian tidak hilang dan bisa langsung diperbaiki."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — SKD Umum Diberi Nama Jelas: SKD Belum Menikah (KUA)", new List<string>
+                        {
+                            "Jenis surat yang dulu tampil sebagai \"SKD Umum\" kini dilabeli \"SKD Belum Menikah (KUA)\" di seluruh tampilannya: menu Buat Surat, pilihan jenis pada register dan pencarian riwayat, pelabelan PDF register surat, katalog formulir permintaan WhatsApp, serta formulir Google terkait — namanya kini menyebut keperluan aslinya (surat keterangan belum menikah untuk keperluan KUA), tidak mudah disalahartikan sebagai SKD serbaguna.",
+                            "Hanya nama tampilannya yang berubah; kode jenis SKD_UMUM dan data surat lama tetap sama, jadi riwayat lama, pemberkasan, dan penomoran berlanjut tanpa migrasi."
                         })
                     }),
                 new CatatanRilisEntry(
