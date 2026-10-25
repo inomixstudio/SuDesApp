@@ -253,7 +253,7 @@ namespace SuDesApp.Wpf.ViewModels
             "Perangkat desa & verifikasi" =>
                 "Struktur perangkat desa, SK untuk banyak nama sekaligus, dan pemeriksaan keaslian surat.",
             "Layanan digital" =>
-                "Permintaan surat lewat WhatsApp, Google Form/Sheet, dan API Desa untuk sistem lain yang terhubung.",
+                "Permintaan surat lewat website desa dan API Desa untuk sistem lain yang terhubung.",
             "Keamanan & pencadangan" =>
                 "Database terenkripsi penuh, kredensial terlindungi, dan cadangan otomatis ke Google Drive.",
             "Pembaruan & antarmuka" =>
@@ -431,7 +431,7 @@ namespace SuDesApp.Wpf.ViewModels
                 ("Data & arsip", "Manajemen data kependudukan dan arsip digital register surat"),
                 ("Data & arsip", "Buku agenda surat masuk dan keluar dengan lampiran berkas PDF atau gambar pada tiap surat"),
                 ("Data & arsip", "Buku SK, Perdes, dan Perkades beserta lampiran Word/PDF"),
-                ("Layanan digital", "Layanan permintaan surat daring via WhatsApp Cloud API, Google Form/Sheet, atau API Desa yang diproses otomatis"),
+                ("Layanan digital", "Layanan permintaan surat daring lewat website desa maupun API Desa yang diproses operator"),
                 ("Keamanan & pencadangan", "Pencadangan database dan formulir otomatis ke Google Drive"),
                 ("Keamanan & pencadangan", "Kredensial Google tersimpan terenkripsi di komputer tanpa berkas kunci pada instalasi"),
                 ("Keamanan & pencadangan", "Basis data desa.db terenkripsi penuh SQLCipher dengan kunci dijaga DPAPI Windows; lokasi berkas database dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa"),
@@ -528,8 +528,6 @@ namespace SuDesApp.Wpf.ViewModels
                 new("\U0001F4D1", "PdfiumViewer", "Pratinjau & cetak PDF", "https://github.com/pvginkel/PdfiumViewer", "Data & dokumen"),
                 new("\U0001F4CA", "EPPlus", "Excel", "https://epplussoftware.com", "Data & dokumen"),
                 new("\U0001F4C1", "Google Drive API", "Cadangan & arsip", "https://developers.google.com/drive", "Layanan Google"),
-                new("\U0001F4C8", "Google Sheets API", "Layanan online", "https://developers.google.com/sheets/api", "Layanan Google"),
-                new("\U0001F4DD", "Google Forms API", "Formulir daring", "https://developers.google.com/forms/api", "Layanan Google"),
                 new("\U0001F4E6", "Newtonsoft.Json", "Serialisasi", "https://www.newtonsoft.com/json", "Data & dokumen"),
                 new("\U0001F510", "DPAPI", "Kredensial aman", "https://learn.microsoft.com/dotnet/api/system.security.cryptography.protecteddata", "Keamanan"),
             };

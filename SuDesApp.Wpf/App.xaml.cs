@@ -16,7 +16,7 @@ using SuDesApp.Data.Queries;
 using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
-using SuDesApp.WhatsApp;
+using SuDesApp.Permintaan;
 using SuDesApp.Wpf.Input;
 using SuDesApp.Wpf.Services;
 using SuDesApp.Wpf.ViewModels;
@@ -342,10 +342,6 @@ namespace SuDesApp.Wpf
                 MulaiUlangAplikasi.BersihkanPenanda();
             }
 
-            // Layanan WhatsApp: listener webhook pesan masuk (Meta Cloud API) +
-            // poller jawaban Google Sheet (mode tautan). Keduanya aman walau
-            // belum dikonfigurasi — hanya mencatat log dan tetap diam.
-            StartWhatsAppServices();
 
             // API Desa: listener otomatis menyala bila pengaturannya tertinggal
             // aktif dari sesi sebelumnya. Tanpa ini, sistem luar (dashboard,
@@ -830,34 +826,6 @@ namespace SuDesApp.Wpf
         }
 
         /// <summary>
-        /// Menjalankan layanan latar WhatsApp: listener webhook Meta Cloud API
-        /// (pesan masuk warga) dan poller jawaban Google Sheet (mode tautan).
-        /// </summary>
-        private void StartWhatsAppServices()
-        {
-            try
-            {
-                var listener = _serviceProvider!.GetRequiredService<MetaWebhookListener>();
-                listener.Start(8787);
-            }
-            catch (Exception ex)
-            {
-                (_serviceProvider!.GetRequiredService<ILoggerFactory>().CreateLogger("WhatsApp"))
-                    .LogWarning(ex, "Gagal memulai listener webhook Meta Cloud API");
-            }
-
-            try
-            {
-                _serviceProvider!.GetRequiredService<WaSheetIngestService>().Start();
-            }
-            catch (Exception ex)
-            {
-                (_serviceProvider!.GetRequiredService<ILoggerFactory>().CreateLogger("WhatsApp"))
-                    .LogWarning(ex, "Gagal memulai poller Google Sheet");
-            }
-        }
-
-        /// <summary>
         /// Alamat server lisensi untuk proses ini. Aturan pemilihan (konfigurasi
         /// produksi menang dan mengunci, preferensi hanya untuk loopback) ada di
         /// <see cref="SuDesApp.Services.PenentuAlamatLisensi"/> supaya bisa diuji.
@@ -1131,12 +1099,6 @@ namespace SuDesApp.Wpf
             services.AddSingleton<PatchUpdateService>();
             services.AddScoped<DatabaseImportExportService>();
             services.AddSingleton<GoogleDriveService>();
-            // Sheets API memakai token OAuth yang sama dengan Drive (mode layanan
-            // online Google Sheet/Form: baca jawaban warga + tulis status balik).
-            services.AddSingleton<GoogleSheetsService>();
-            // Forms API membuat formulir otomatis; jawabannya disinkronkan ke Sheet.
-            services.AddSingleton<GoogleFormsService>();
-            services.AddSingleton<WaFormAutoSetupService>();
             services.AddSingleton<ActivityLogService>();
             services.AddSingleton<SuDesApp.Wpf.Services.PerdesSotkStore>();
             services.AddTransient<GoogleBackupService>();
@@ -1177,33 +1139,6 @@ namespace SuDesApp.Wpf
             // Layanan cetak PDF langsung ke printer (dialog cetak Windows + PDFium).
             services.AddSingleton<PdfPrintService>();
 
-            // ==== WhatsApp (singleton) ====
-            // Gateway tunggal: WhatsApp Cloud API resmi dari Meta (teks/tautan).
-            services.AddSingleton<CloudApiWhatsAppGateway>();
-            services.AddSingleton<IWhatsAppGateway, WaGatewaySelector>();
-            services.AddSingleton<WaEngine>();
-            // WaEngine/WaPanelViewModel menyelesaikannya dari DI (alur percakapan & pemrosesan
-            // permintaan warga); WaSessionStore dibagi sebagai singleton, sisanya scoped.
-            services.AddSingleton<WaSessionStore>();
-            services.AddSingleton<WaAutoProcessor>();
-            services.AddSingleton(sp => new MetaWebhookListener(
-                sp.GetRequiredService<WaEngine>(),
-                sp.GetRequiredService<ILogger<MetaWebhookListener>>(),
-                () => AppPreferenceStore.GetWaCloudApiVerifyToken(),
-                // App secret WAJIB diisi (Pengaturan > WhatsApp). Dulu provider ini
-                // selalu mengembalikan null sehingga verifikasi tanda tangan tidak
-                // pernah berjalan - siapa pun yang bisa menjangkau URL tunnel bisa
-                // menyuntikkan pesan masuk yang otomatis memproses penerbitan surat.
-                // Sekarang secret kosong berarti listener menolak semua request (503).
-                () => AppPreferenceStore.GetWaCloudApiSecret()));
-            // Poller jawaban Google Sheet (mode tautan): akses provider lewat closure
-            // instance karena layanan dibuat sebelum _serviceProvider selesai diisi.
-            services.AddSingleton(sp => new WaSheetIngestService(
-                () => _serviceProvider,
-                sp.GetRequiredService<WaEngine>(),
-                sp.GetRequiredService<ILogger<WaSheetIngestService>>()));
-            services.AddScoped<WaConversationService>();
-            services.AddScoped<WaSuratProcessor>();
 
             // ==== Service dasar WPF ====
             services.AddSingleton<ThemeService>();
@@ -1243,8 +1178,6 @@ namespace SuDesApp.Wpf
             services.AddTransient<PembaruanViewModel>();
             services.AddTransient<CatatanRilisViewModel>();
             services.AddTransient<BerandaViewModel>();
-            services.AddTransient<WaPanelViewModel>();
-            services.AddSingleton<PanduanWaViewModel>();
             services.AddTransient<InputWindowViewModel>();
             services.AddTransient<RekeningKoranViewModel>();
             services.AddTransient<InputAgendaViewModel>();

@@ -42,7 +42,7 @@ namespace SuDesApp.Utilities
         /// termasuk, jadi tidak ikut diproses ulang begitu data desa diisi.
         /// </summary>
         public static bool Ditahan(string? status, string? catatan)
-            => status == WaRequestStatus.PERLU_PERBAIKAN
+            => status == StatusPermintaan.PERLU_PERBAIKAN
                && catatan != null
                && catatan.TrimStart().StartsWith(AwalanCatatan, System.StringComparison.OrdinalIgnoreCase);
 

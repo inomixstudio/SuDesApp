@@ -1,0 +1,26 @@
+@* Halaman aplikasi hidup di SuDesApp.Ui (beranda, modul, layanan online,
+   masuk) — tanpa AdditionalAssemblies halaman itu tidak terdaftar dan router
+   menjawab 404. AuthorizeRouteView menegakkan [Authorize] dari _Imports.Ui:
+   tanpa sesi, pengguna diarahkan ke halaman masuk. *@
+<Router AppAssembly="typeof(MauiProgram).Assembly"
+        AdditionalAssemblies="new[] { typeof(SuDesApp.Ui.Pages.Beranda).Assembly }"
+        NotFoundPage="typeof(Pages.NotFound)">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(SuDesApp.Ui.Layout.MainLayout)">
+            <NotAuthorized>
+                @if (context.User.Identity?.IsAuthenticated != true)
+                {
+                    <SuDesApp.Ui.Shared.RedirectToMasuk />
+                }
+                else
+                {
+                    <p>Akun Anda tidak memiliki hak akses ke halaman ini.</p>
+                }
+            </NotAuthorized>
+            <Authorizing>
+                <p>Memeriksa sesi…</p>
+            </Authorizing>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

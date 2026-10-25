@@ -120,12 +120,6 @@
             <DataTemplate DataType="{x:Type vm:DaftarHadirViewModel}">
                 <views:DaftarHadirView/>
             </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:WaPanelViewModel}">
-                <views:WaPanelView/>
-            </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:PanduanWaViewModel}">
-                <views:PanduanWaView/>
-            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:PanduanAwalViewModel}">
                 <views:PanduanAwalView/>
             </DataTemplate>

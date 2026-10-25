@@ -179,6 +179,31 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.8.0 (25 Oktober 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Pembaruan — Kebijakan: Layanan Online Pindah ke Website", new List<string>
+                        {
+                            "Kanal WhatsApp dan Google Form/Sheet dihapus dari aplikasi desktop. Menu Layanan Online, panduannya, pengaturan gateway WhatsApp, dan pengaturan Formulir & Sheet tidak ada lagi — antrean permintaan surat kini hanya berisi permintaan dari website desa dan API desa.",
+                            "Permintaan yang masuk lewat website tetap terlihat di halaman Layanan Online aplikasi web dan diproses dengan alur yang sama: periksa, buat surat, lalu kirim tautan unduh kepada warga.",
+                            "Data antrean lama tidak dihapus. Baris dari kanal WhatsApp/Google Sheet tetap tersimpan dan ditandai sebagai data lama agar riwayat desa tidak hilang."
+                        }),
+                        new CatatanRilisSubSection("Pembaruan — Login Google Khusus Cadangan Google Drive", new List<string>
+                        {
+                            "Izin yang diminta saat menyambungkan akun Google kini hanya Google Drive, dipakai untuk cadangan database otomatis. Izin Google Formulir dan Google Sheets tidak diminta lagi.",
+                            "Kartu pengaturan gateway WhatsApp, jam layanan, dan mode tautan Google Form/Sheet dihapus dari halaman Pengaturan Aplikasi; yang tersisa adalah bagian Umum, Kredensial Google, Database Desa, dan Informasi.",
+                            "Chip status WhatsApp dan Google Sheet di status bar dihapus, sehingga status bar hanya menampilkan notifikasi, status langganan, dan status data desa."
+                        }),
+                        new CatatanRilisSubSection("Fitur Baru — Formulir Warga dan Pengguna & Peran di Website", new List<string>
+                        {
+                            "Halaman Formulir Warga (/layanan-online) dapat dibuka tanpa akun: warga mengisi nama, nomor HP, jenis surat, dan keperluan, lalu langsung menerima kode permintaan (mis. PMT-2026-0001) untuk ditanyakan ke kantor desa. Halaman ini memakai layout publik tanpa menu operator, jadi tidak ada menu yang menuntut login.",
+                            "Permintaan dari formulir publik masuk ke antrean yang sama dengan kiriman API desa dan tampil dengan sumber Website. Halaman Layanan Online kini khusus operator: antrean, tombol muat ulang, dan tautan membuka formulir warga — tidak lagi memuat formulir pengajuan di dalam aplikasi desa.",
+                            "Kiriman formulir publik dibatasi 5 permintaan per 10 menit per alamat IP; lebih dari itu dijawab 429 dengan pesan yang bisa dibaca warga, sehingga satu peramban tidak bisa membanjiri antrean.",
+                            "Halaman Pengguna & Peran di web memuat daftar akun desa: tambah akun (nama pengguna, nama lengkap, peran, kata sandi awal), ubah nama/peran/status aktif, reset kata sandi, dan hapus akun. Halaman ini hanya tampil di menu bagi Administrator, dan penegakannya tetap di server — peran lain yang membuka alamatnya menerima 403, bukan daftar akun.",
+                            "Perubahan peran, penonaktifan, penghapusan, dan reset kata sandi langsung memutus sesi akun tersebut, jadi wewenang maupun kata sandi baru berlaku saat itu juga. Akun Administrator aktif terakhir tetap dilindungi: perannya tidak bisa diturunkan, dinonaktifkan, atau dihapus."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.7.1 (20 Oktober 2026)",
                     new List<CatatanRilisSubSection>
                     {

@@ -17,18 +17,41 @@ namespace SuDesApp.Utilities
     /// </summary>
     public static class SessionContext
     {
-        /// <summary>Identitas pengguna aktif: email Google atau username admin.</summary>
-        public static string CurrentUser { get; set; } = "admin";
+        /// <summary>
+        /// Identitas pengguna aktif: email Google atau username admin.
+        /// Bila permintaan sedang berjalan di dalam <see cref="MulaiSesiPermintaan"/>
+        /// (host HTTP dengan banyak pengguna sekaligus), nilai per-aliran itu
+        /// yang dipakai — bukan nilai global milik proses.
+        /// </summary>
+        public static string CurrentUser
+        {
+            get => _aliran.Value?.User ?? _currentUser;
+            set => _currentUser = value;
+        }
 
-        /// <summary>Metode login: "google" atau "manual".</summary>
-        public static string LoginMethod { get; set; } = "manual";
+        private static string _currentUser = "admin";
+
+        /// <summary>Metode login: "google", "manual", atau "api".</summary>
+        public static string LoginMethod
+        {
+            get => _aliran.Value?.Method ?? _loginMethod;
+            set => _loginMethod = value;
+        }
+
+        private static string _loginMethod = "manual";
 
         /// <summary>Waktu login sesi aktif.</summary>
         public static DateTime LoginTime { get; private set; } = DateTime.Now;
 
         /// <summary>Peran sesi aktif (PeranPengguna). Sesi yang belum membawa
         /// peran mendapat akses Operator, bukan hak Administrator.</summary>
-        public static string Peran { get; set; } = SuDesApp.Data.Models.PeranPengguna.Operator;
+        public static string Peran
+        {
+            get => _aliran.Value?.Peran ?? _peran;
+            set => _peran = value;
+        }
+
+        private static string _peran = SuDesApp.Data.Models.PeranPengguna.Operator;
 
         public static void Set(string user, string method)
         {
@@ -61,7 +84,8 @@ namespace SuDesApp.Utilities
         /// (diset lewat <see cref="SetIdentitas"/>), kalau tidak CurrentUser.
         /// </summary>
         public static string NamaPanggil =>
-            string.IsNullOrWhiteSpace(_namaTampilan) ? CurrentUser : _namaTampilan;
+            _aliran.Value?.Nama
+            ?? (string.IsNullOrWhiteSpace(_namaTampilan) ? CurrentUser : _namaTampilan);
 
         private static string? _namaTampilan;
 
@@ -98,9 +122,11 @@ namespace SuDesApp.Utilities
         /// ditetapkan. Saat startup/login, layanan autentikasi tetap dapat
         /// berjalan sebelum sesi pengguna tersedia.
         /// </summary>
-        public static bool PenegakanAktif { get; private set; }
+        public static bool PenegakanAktif => _aliran.Value?.Tegakkan ?? _penegakanAktif;
 
-        public static void SetPenegakanAktif(bool aktif) => PenegakanAktif = aktif;
+        private static bool _penegakanAktif;
+
+        public static void SetPenegakanAktif(bool aktif) => _penegakanAktif = aktif;
 
         /// <summary>
         /// Tegakkan izin: lempar IzinDitolakException bila penegakan aktif dan
@@ -162,6 +188,57 @@ namespace SuDesApp.Utilities
                 _sesiSistem.Value = _flagSebelumnya;
                 Peran = _peranSebelumnya;
             }
+        }
+
+        /// <summary>
+        /// Identitas satu permintaan HTTP (backend Api). Ditimpa per-aliran
+        /// memakai AsyncLocal, bukan disimpan ke properti global: satu proses Api
+        /// melayani banyak pengguna sekaligus, jadi peran Administrator milik satu
+        /// permintaan tidak boleh terbaca oleh permintaan lain yang berjalan
+        /// bersamaan. Tanpa lingkup ini (desktop WPF/MAUI), nilai global tetap
+        /// dipakai seperti sebelumnya.
+        /// </summary>
+        private sealed class IdentitasAliran
+        {
+            public string User { get; init; } = "api";
+            public string Method { get; init; } = "api";
+            public string? Nama { get; init; }
+            public string Peran { get; init; } = SuDesApp.Data.Models.PeranPengguna.Operator;
+            public bool Tegakkan { get; init; }
+        }
+
+        private static readonly AsyncLocal<IdentitasAliran?> _aliran = new AsyncLocal<IdentitasAliran?>();
+
+        /// <summary>
+        /// Jalankan satu permintaan atas nama pengguna yang sudah terautentikasi.
+        /// Selama blok using, <see cref="CurrentUser"/>, <see cref="Peran"/>, dan
+        /// <see cref="PenegakanAktif"/> membaca nilai per-aliran ini, sehingga
+        /// <see cref="Wajib"/> menolak peran yang tidak berwenang dengan
+        /// <see cref="IzinDitolakException"/>. Setelah blok selesai, semuanya
+        /// kembali ke nilai sebelumnya — termasuk bila aliran itu bercabang ke
+        /// pekerja latar.
+        /// </summary>
+        public static IDisposable MulaiSesiPermintaan(
+            string user, string? namaTampilan, string? peran, bool tegakkanIzin = true)
+        {
+            var sebelumnya = _aliran.Value;
+            _aliran.Value = new IdentitasAliran
+            {
+                User = string.IsNullOrWhiteSpace(user) ? "api" : user.Trim(),
+                Nama = string.IsNullOrWhiteSpace(namaTampilan) ? null : namaTampilan!.Trim(),
+                Peran = SuDesApp.Data.Models.PeranPengguna.Normalisasi(peran),
+                Tegakkan = tegakkanIzin
+            };
+            return new KembalikanIdentitasAliran(sebelumnya);
+        }
+
+        private sealed class KembalikanIdentitasAliran : IDisposable
+        {
+            private readonly IdentitasAliran? _sebelumnya;
+
+            public KembalikanIdentitasAliran(IdentitasAliran? sebelumnya) => _sebelumnya = sebelumnya;
+
+            public void Dispose() => _aliran.Value = _sebelumnya;
         }
     }
 

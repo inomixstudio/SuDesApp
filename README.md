@@ -2,7 +2,7 @@
 
 Aplikasi desktop Windows (WPF) untuk administrasi surat-menyurat desa: pembuatan
 surat resmi dengan penomoran sesuai perbup, register & agenda digital, data
-penduduk lengkap dengan mutasi, layanan permintaan surat via WhatsApp/API, sampai
+penduduk lengkap dengan mutasi, layanan permintaan surat lewat website/API, sampai
 alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per surat.
 
 ## Fitur utama
@@ -30,10 +30,15 @@ alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per sura
   pihak luar (bank/instansi) bisa memeriksa keasliannya.
 - **API desa** — endpoint HTTP lokal untuk sistem luar memantau statistik, status
   persetujuan, dan rekap laporan bulanan (`docs/api-desa.md`).
-- **Layanan online** — permintaan surat masuk via WhatsApp Cloud API / Google
-  Sheet / API desa ke antrean operator.
+- **Layanan online** — warga mengisi sendiri **Formulir Warga** di website
+  (`/layanan-online`, tanpa akun); permintaan langsung masuk antrean operator,
+  sama dengan kiriman sistem desa lewat API desa. Kanal WhatsApp dan Google
+  Form/Sheet sudah dihapus; login Google kini hanya untuk pencadangan ke
+  Google Drive.
 - **Multi-pengguna** — akun dengan peran & izin, kunci akun setelah percobaan
-  login gagal (`docs/policy-peran-pengguna.md`).
+  login gagal, dan halaman **Pengguna & Peran** di web untuk membuat akun,
+  mengganti peran/status, mereset kata sandi, dan menghapus akun
+  (`docs/policy-peran-pengguna.md`).
 - **Kuitansi lisensi** — setiap pembayaran bisa dicetak sebagai kuitansi dari
   pusat administer (nomor, nominal + terbilang, status lunas, masa aktif) untuk
   pertanggungjawaban anggaran desa (lihat `docs/langganan-dan-lisensi.md`).
@@ -62,6 +67,19 @@ dotnet build SuDesApp.Wpf/SuDesApp.Wpf.csproj --nologo -v q
 
 # Uji otomatis (termasuk integritas token lisensi)
 dotnet test SuDesApp.Tests/SuDesApp.Tests.csproj --nologo -v q
+
+# Proyek lintas platform (desktop + Android + browser)
+dotnet build SuDesApp.Api/SuDesApp.Api.csproj --nologo -v q
+dotnet build SuDesApp.Web/SuDesApp.Web.csproj --nologo -v q
+dotnet build SuDesApp.Maui/SuDesApp.Maui.csproj -f net10.0-windows10.0.19041.0 --nologo -v q
+dotnet build SuDesApp.Maui/SuDesApp.Maui.csproj -f net10.0-android --nologo -v q
+```
+
+Jalankan backend dan web lalu buka `http://127.0.0.1:5189`:
+
+```bash
+dotnet run --project SuDesApp.Api --urls http://127.0.0.1:5188
+dotnet run --project SuDesApp.Web --urls http://127.0.0.1:5189
 ```
 
 GitHub Actions menjalankan restore, build Release, dan uji otomatis pada Windows
@@ -99,8 +117,12 @@ di clone penulis belum diaktifkan atau commit dibuat dengan `--no-verify`.
 
 | Folder | Isi |
 |---|---|
-| `SuDesApp.Core/` | Logika bisnis: data (SQLite/Dapper), layanan, generator PDF (QuestPDF), API desa, integrasi WhatsApp/Google |
+| `SuDesApp.Core/` | Logika bisnis: data (SQLite/Dapper), layanan, generator PDF (QuestPDF), API desa, integrasi Google Drive |
 | `SuDesApp.Wpf/` | Aplikasi WPF: ViewModel, View, tema, navigasi |
+| `SuDesApp.Api/` | Backend web (ASP.NET Core) di atas `Core` — sumber data tunggal untuk desktop, Android, dan browser |
+| `SuDesApp.Ui/` | Komponen Blazor bersama (net10.0): layout, menu utama, halaman modul — dipakai ketiga platform |
+| `SuDesApp.Maui/` | Host MAUI Blazor Hybrid: desktop Windows dan Android |
+| `SuDesApp.Web/` | Host Blazor Web untuk browser (render server) |
 | `docs/` | Dokumentasi kebijakan & API (tautan di bawah) |
 | `Bawaan/`, `Templates/`, `Resources/`, `installer/`, `Tools/` | Contoh bawaan aplikasi (JSON), template formulir, sumber daya, installer, alat bantu |
 

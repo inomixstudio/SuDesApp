@@ -11,7 +11,7 @@ using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Utilities;
-using SuDesApp.WhatsApp;
+using SuDesApp.Permintaan;
 using SuDesApp.Wpf.Input;
 using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Wpf.Services;
@@ -42,7 +42,6 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly SuDesApp.Wilayah.WilayahDataStore? _wilayah;
         private readonly SettingsManager _settingsManager;
         private readonly FormulirMenuService _formulirMenuService;
-        private readonly WaEngine _waEngine;
         private readonly ThemeService _themeService;
         private readonly NotificationService _notifications;
         private readonly FeatureNavigationViewModel _featureNavigation;
@@ -70,13 +69,6 @@ namespace SuDesApp.Wpf.ViewModels
         // memintanya lewat BuatScopeHalaman()/BuatScopeBertahan(); tidak ada lagi
         // slot global yang bisa menutup halaman di luar jalur navigasi.
         // Penutupan akhir terjadi di App.OnExit (container membuang NavigationService).
-        private System.Windows.Threading.DispatcherTimer? _waStatusTimer;
-
-        private void OnWaStatusTick(object? sender, System.EventArgs e)
-        {
-            RefreshWaGatewayStatus();
-            RefreshWaSheetStatus();
-        }
 
         private IServiceProvider BuatScopeHalaman() => _navigation.BukaHalaman();
 
@@ -89,12 +81,6 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public void Dispose()
         {
-            if (_waStatusTimer is not null)
-            {
-                _waStatusTimer.Stop();
-                _waStatusTimer.Tick -= OnWaStatusTick;
-                _waStatusTimer = null;
-            }
         }
 
         /// <summary>Judul tetap notifikasi peringatan data desa contoh (dipakai untuk mencarinya lagi).</summary>
@@ -102,7 +88,6 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>Peringatan data desa contoh sudah dikirim pada sesi ini.</summary>
         private bool _sudahIngatkanDataDesaContoh;
-        private readonly WaAutoProcessor _waAutoProcessor;
 
         /// <summary>Penanda pemberitahuan sambutan (cukup sekali seumur pemasangan).</summary>
         private readonly IPemberitahuanSambutanStore _sambutanStore;
@@ -113,8 +98,6 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly SuDesApp.Services.SambunganServerLisensi? _sambunganServer;
         private DaftarHadirViewModel? _daftarHadirViewModel;
         private FormulirViewModel? _formulirViewModel;
-        private PanduanWaViewModel? _panduanWaViewModel;
-        private object? _panduanWaView; // cache view juga untuk menghindari rebuild XAML
         private object? _currentView;
         private string _villageInfo = "DESA ... KECAMATAN ... KABUPATEN ...";
         private string _userName = "Operator";
@@ -126,10 +109,8 @@ namespace SuDesApp.Wpf.ViewModels
             ILogger<MainWindowViewModel> logger,
             SettingsManager settingsManager,
             FormulirMenuService formulirMenuService,
-            WaEngine waEngine,
             ThemeService themeService,
             NotificationService notifications,
-            WaAutoProcessor waAutoProcessor,
             IPemberitahuanSambutanStore? sambutanStore = null,
             SuDesApp.Services.PenjagaLisensi? penjaga = null,
             SuDesApp.Services.LisensiManager? lisensi = null,
@@ -143,7 +124,6 @@ namespace SuDesApp.Wpf.ViewModels
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _settingsManager = settingsManager ?? throw new ArgumentNullException(nameof(settingsManager));
             _formulirMenuService = formulirMenuService ?? throw new ArgumentNullException(nameof(formulirMenuService));
-            _waEngine = waEngine ?? throw new ArgumentNullException(nameof(waEngine));
             _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
             _featureNavigation = new FeatureNavigationViewModel(
                 ResolveFeatureRoute, _formulirMenuService, _themeService, _messageService);
@@ -152,7 +132,6 @@ namespace SuDesApp.Wpf.ViewModels
                 TerapkanJudulHalaman();
             };
             _notifications = notifications ?? throw new ArgumentNullException(nameof(notifications));
-            _waAutoProcessor = waAutoProcessor ?? throw new ArgumentNullException(nameof(waAutoProcessor));
             _sambutanStore = sambutanStore ?? new PemberitahuanSambutanStore();
             _penjaga = penjaga;
             _lisensi = lisensi;
@@ -200,12 +179,6 @@ namespace SuDesApp.Wpf.ViewModels
                 TerapkanChipLisensi(_penjaga);
             }
 
-            // Chip status di statusbar bisa diklik → Pengaturan Aplikasi langsung
-            // menggulir ke kartu terkait (Gateway WhatsApp / Google Sheet).
-            WaChipClickCommand = new AsyncRelayCommand(() =>
-                OpenSettingsFocusAsync(SuDesApp.Wpf.Views.PengaturanAplikasiView.SectionGatewayWa));
-            SheetChipClickCommand = new AsyncRelayCommand(() =>
-                OpenSettingsFocusAsync(SuDesApp.Wpf.Views.PengaturanAplikasiView.SectionGoogleSheet));
 
             // Setelah pengaturan desa disimpan, segarkan info desa di status bar
             // (padanan pemanggilan GetInfoDesaAsync setelah SetelanForm ditutup pada WinForms).
@@ -269,51 +242,7 @@ namespace SuDesApp.Wpf.ViewModels
             ShowFormulirCommand = new AsyncRelayCommand(ShowFormulirAsync);
             ShowAboutCommand = new AsyncRelayCommand(ShowAboutAsync);
             ShowCatatanRilisCommand = new AsyncRelayCommand(ShowCatatanRilisAsync);
-            _waEngine.RequestCreated += _waAutoProcessor.HandleRequestCreated;
-            _waEngine.RequestCreated += OnWaRequestCreated;
 
-            // Jam layanan: engine bertanya status buka lewat query ini dan
-            // auto-processor mengejar permintaan tertunda saat jam layanan dibuka.
-            _waEngine.ServiceHoursOpenQuery = () =>
-                WaServiceHours.IsOpen(DateTime.Now,
-                    AppPreferenceStore.GetWaServiceOpen(), AppPreferenceStore.GetWaServiceClose(),
-                    AppPreferenceStore.GetWaServiceDays());
-            _waEngine.ServiceHoursOpened += _waAutoProcessor.HandleServiceHoursOpened;
-
-            // Permintaan warga yang tadi DITAHAN karena data desa masih contoh dibuka
-            // kembali tepat saat data desa disimpan — bukan cuma dikabarkan ke operator,
-            // tapi diproses ulang sendiri sampai suratnya terkirim. Dipasang di
-            // SettingsManager (sumber penyimpanan data desa), bukan di satu halaman,
-            // supaya penyimpan data desa mana pun ikut membuka penahanannya.
-            _settingsManager.PengaturanDesaTersimpan += (_, _) =>
-                _ = _waAutoProcessor.LanjutkanPermintaanTertahanAsync();
-
-            // Status gateway WA di statusbar: cek awal + polling ringan tiap
-            // 10 detik agar perubahan preferensi (ganti gateway/isi token)
-            // terpantau tanpa perlu mekanisme event antar halaman.
-            RefreshWaGatewayStatus();
-            RefreshWaSheetStatus();
-            // Timer disimpan sebagai field, bukan variabel lokal. Sebelumnya ia lokal,
-            // jadi tidak ada satu pun kode yang bisa menjentikannya: hanya
-            // reference Dispatcher yang menahannya tetap hidup. Akibatnya timer
-            // berdetak tiap 10 detik sepanjang proses - termasuk setelah jendela
-            // ditutup - menulis status ke ViewModel yang tidak terlihat lagi.
-            // Kalau alur keluar-masuk pernah membangun ulang ViewModel ini,
-            // jumlah timer akan berlipat tiap kali.
-            _waStatusTimer = new System.Windows.Threading.DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(10)
-            };
-            _waStatusTimer.Tick += OnWaStatusTick;
-            _waStatusTimer.Start();
-            _waEngine.StartPolling();
-
-            // Penahanan dari sesi sebelumnya (aplikasi ditutup sebelum data desa diisi,
-            // atau data desa dilengkapi lewat pemulihan database) ikut dilepas saat
-            // aplikasi dibuka — sekali saja, di latar belakang.
-            _ = _waAutoProcessor.LanjutkanPermintaanTertahanAsync();
-
-            _ = RefreshWaBadgeAsync();
             _ = RefreshGoogleBadgeAsync();
             _ = LoadVillageInfoAsync();
             // Status IDM dari cadangan terakhir (bila desa ini pernah memuat data).
@@ -491,201 +420,9 @@ namespace SuDesApp.Wpf.ViewModels
 
         // ==== Indikator gateway WhatsApp di statusbar ====
 
-        private string _waGatewayStatus = "WA: …";
-        private string _waGatewayStatusTooltip = "Memeriksa gateway WhatsApp…";
-
-        /// <summary>Teks singkat status gateway, mis. "WA: Terhubung".</summary>
-        public string WaGatewayStatus
-        {
-            get => _waGatewayStatus;
-            private set => SetProperty(ref _waGatewayStatus, value);
-        }
-
-        public string WaGatewayStatusTooltip
-        {
-            get => _waGatewayStatusTooltip;
-            private set => SetProperty(ref _waGatewayStatusTooltip, value);
-        }
-
-        /// <summary>
-        /// Hitung status gateway: token/Phone ID kosong → "Token belum diisi";
-        /// lengkap → "Terhubung". (Gateway tunggal: WhatsApp Cloud API.)
-        /// </summary>
-        public void RefreshWaGatewayStatus()
-        {
-            try
-            {
-                var token = AppPreferenceStore.GetWaCloudApiToken();
-                var phoneId = AppPreferenceStore.GetWaCloudApiPhoneId();
-                if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(phoneId))
-                {
-                    WaGatewayStatus = "WA: Token belum diisi";
-                    WaGatewayStatusTooltip = "Gateway WhatsApp Cloud API aktif tetapi access token / Phone Number ID masih kosong.\nIsi di Pengaturan → Pengaturan Aplikasi → Gateway WhatsApp.";
-                }
-                else
-                {
-                    WaGatewayStatus = "WA: Terhubung (Cloud API)";
-                    WaGatewayStatusTooltip = "Gateway WhatsApp Cloud API (Meta, resmi) aktif — pesan keluar berupa teks/tautan via Graph API.\nStatus token dapat diverifikasi via tombol Uji koneksi di Pengaturan.";
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal memperbarui status gateway WA");
-            }
-        }
 
         // ==== Indikator kesehatan mode tautan Google Sheet di statusbar ====
 
-        private string _waSheetStatus = "Sheet: …";
-        private string _waSheetStatusTooltip = "Memeriksa mode tautan Google Sheet…";
-        private bool _waSheetChipVisible;
-        private bool _sheetApiCheckRunning;
-        private string? _sheetApiCheckedKey;
-
-        /// <summary>Teks singkat kesehatan mode tautan Sheet, mis. "Sheet: Siap".</summary>
-        public string WaSheetStatus
-        {
-            get => _waSheetStatus;
-            private set => SetProperty(ref _waSheetStatus, value);
-        }
-
-        public string WaSheetStatusTooltip
-        {
-            get => _waSheetStatusTooltip;
-            private set => SetProperty(ref _waSheetStatusTooltip, value);
-        }
-
-        /// <summary>Chip hanya tampil saat mode tautan aktif.</summary>
-        public bool WaSheetChipVisible
-        {
-            get => _waSheetChipVisible;
-            private set => SetProperty(ref _waSheetChipVisible, value);
-        }
-
-        /// <summary>
-        /// Peringatan proaktif mode tautan (Google Form/Sheet): URL belum diisi,
-        /// akun Google belum terhubung, atau Google Sheets API belum diaktifkan —
-        /// masing-masing dengan arah perbaikan di tooltip. Pemeriksaan jaringan
-        /// (uji baca Sheet) hanya dijalankan sekali per konfigurasi agar polling
-        /// 10 detik tidak menghantam API Google.
-        /// </summary>
-        public void RefreshWaSheetStatus()
-        {
-            try
-            {
-                if (!WaSheetOptions.IsLinkModeEnabled())
-                {
-                    WaSheetChipVisible = false;
-                    return;
-                }
-                WaSheetChipVisible = true;
-
-                var sheetId = WaSheetOptions.ExtractSheetId(WaSheetOptions.GetSheetUrl());
-                if (string.IsNullOrWhiteSpace(sheetId))
-                {
-                    WaSheetStatus = "Sheet: URL belum diisi";
-                    WaSheetStatusTooltip = "Mode tautan aktif tetapi URL Google Sheet jawaban belum diisi — balasan sementara masih memakai percakapan format.\n" +
-                        "Perbaikan: buka Pengaturan → Pengaturan Aplikasi → Google Sheet (Mode Tautan), tempel URL Sheet jawaban.\n" +
-                        "Panduan langkah demi langkah: menu BANTUAN → Panduan WhatsApp, Bagian D.";
-                    return;
-                }
-
-                GoogleDriveService drive;
-                try
-                {
-                    using var scope = _scopeFactory.CreateScope();
-                    drive = scope.ServiceProvider.GetRequiredService<GoogleDriveService>();
-                }
-                catch (Exception exResolve)
-                {
-                    _logger.LogWarning(exResolve, "Gagal mengakses GoogleDriveService untuk indikator Sheet");
-                    return; // biarkan chip pada teks terakhir; dicoba lagi pada tick berikutnya
-                }
-
-                if (!drive.IsOAuthEnabled)
-                {
-                    WaSheetStatus = "Sheet: Login belum dikonfigurasi";
-                    WaSheetStatusTooltip = "Mode tautan aktif tetapi klien OAuth Google belum dikonfigurasi di komputer ini.\n" +
-                        "Perbaikan: hubungi teknisi untuk menyimpan Client ID & Client Secret (lihat Panduan WhatsApp Bagian D).";
-                    return;
-                }
-
-                if (!drive.HasStoredToken())
-                {
-                    WaSheetStatus = "Sheet: Google belum terhubung";
-                    WaSheetStatusTooltip = "Mode tautan aktif tetapi akun Google belum terhubung — aplikasi belum bisa membaca jawaban form atau mengirim tautan unduh PDF.\n" +
-                        "Perbaikan: masuk lewat 'Login dengan Google' di sidebar, pakai akun yang punya akses ke Sheet jawaban (Editor).";
-                    return;
-                }
-
-                // Google terhubung → cek ketersediaan Sheets API + akses baca.
-                // Hanya sekali per kombinasi (sheetId, tab); ulang bila konfigurasi berubah.
-                var tab = WaSheetOptions.GetTabName();
-                var key = sheetId + "|" + tab;
-                if (_sheetApiCheckRunning || _sheetApiCheckedKey == key) return;
-
-                _sheetApiCheckRunning = true;
-                _sheetApiCheckedKey = key;
-                WaSheetStatus = "Sheet: Memeriksa…";
-                WaSheetStatusTooltip = "Memeriksa akses ke Google Sheet jawaban…";
-
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        using var scope = _scopeFactory.CreateScope();
-                        var sheets = scope.ServiceProvider.GetRequiredService<GoogleSheetsService>();
-                        var (ok, pesan) = await sheets.TestConnectionAsync(sheetId, tab);
-
-                        var dispatcher = System.Windows.Application.Current?.Dispatcher;
-                        void Apply()
-                        {
-                            if (ok)
-                            {
-                                WaSheetStatus = "Sheet: Siap";
-                                WaSheetStatusTooltip = "Mode tautan aktif dan siap: akun Google terhubung dan Sheet jawaban terbaca.\n" +
-                                    "Pesan apa pun dari warga dibalas tautan form; jawaban diproses otomatis dan tautan unduh PDF dikirim balik.\n" +
-                                    "Status pemrosesan per baris terlihat di kolom Status pada Google Sheet.";
-                            }
-                            else if (pesan != null && pesan.StartsWith("Google Sheets API belum aktif", StringComparison.Ordinal))
-                            {
-                                WaSheetStatus = "Sheet: API belum aktif";
-                                WaSheetStatusTooltip = "Google Sheets API belum diaktifkan pada proyek Google Cloud yang dipakai Client ID.\n" +
-                                    "Perbaikan (sekali saja, gratis):\n" +
-                                    "1. Buka https://console.cloud.google.com/apis/library\n" +
-                                    "2. Pilih proyek yang dipakai aplikasi.\n" +
-                                    "3. Cari 'Google Sheets API' → klik Enable.\n" +
-                                    "Status diperiksa ulang otomatis setelah aplikasi dibuka ulang.\n\n" +
-                                    "Detail: " + pesan;
-                            }
-                            else
-                            {
-                                // Gangguan jaringan/lainnya — izinkan pemeriksaan ulang pada tick berikutnya.
-                                _sheetApiCheckedKey = null;
-                                WaSheetStatus = "Sheet: Tidak terhubung";
-                                WaSheetStatusTooltip = "Gagal membaca Google Sheet jawaban (kemungkinan koneksi internet).\n" +
-                                    "Aplikasi akan memeriksa ulang otomatis.\n\nDetail: " + pesan;
-                            }
-                        }
-
-                        if (dispatcher is null || dispatcher.CheckAccess()) Apply();
-                        else _ = dispatcher.BeginInvoke(Apply);
-                    }
-                    catch (Exception exCheck)
-                    {
-                        _logger.LogWarning(exCheck, "Gagal memeriksa Sheets API untuk indikator statusbar");
-                    }
-                    finally
-                    {
-                        _sheetApiCheckRunning = false;
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal memperbarui status mode tautan Sheet");
-            }
-        }
 
         public string UserName
         {
@@ -852,7 +589,6 @@ namespace SuDesApp.Wpf.ViewModels
                 "tutup-buku" => ShowTutupBuku,
                 "verifikasi-surat" => ShowVerifikasiSurat,
                 "riwayat" => () => _ = ShowRiwayatAsync(),
-                "layanan-online" => () => _ = ShowWaPanelAsync(),
                 "perangkat-desa" => () => _ = ShowPerangkatDesaAsync(),
                 "sotk-desa" => () => _ = ShowSotkDesaAsync(),
                 "apbdes" => () => _ = ShowApbdesAsync(),
@@ -871,7 +607,6 @@ namespace SuDesApp.Wpf.ViewModels
                 "pembaruan" => () => _ = ShowPembaruanAsync(),
                 "panduan-awal" => () => _ = ShowPanduanAwalAsync(),
                 "dokumentasi" => () => _ = ShowDokumentasiAsync(),
-                "panduan-whatsapp" => () => _ = ShowPanduanWaAsync(),
                 "api-desa" => ShowApi,
                 "catatan-rilis" => () => _ = ShowCatatanRilisAsync(),
                 "tentang" => () => _ = ShowAboutAsync(),
@@ -1016,8 +751,7 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>
         /// Buka Pengaturan Aplikasi lalu langsung menggulir ke kartu dengan kunci
-        /// seksi yang diberikan (Gateway WhatsApp / Google Sheet) — dipanggil
-        /// klik pada chip status WA/Sheet di statusbar.
+        /// seksi yang diberikan (mis. dari tautan langsung ke bagian Pengaturan).
         /// </summary>
         private async Task OpenSettingsFocusAsync(string sectionKey)
         {
@@ -1073,11 +807,6 @@ namespace SuDesApp.Wpf.ViewModels
             _navigation.Navigate(halaman);
         }
 
-        /// <summary>Klik chip WA di statusbar → Pengaturan Aplikasi, kartu Gateway WhatsApp.</summary>
-        public AsyncRelayCommand WaChipClickCommand { get; }
-
-        /// <summary>Klik chip Sheet di statusbar → Pengaturan Aplikasi, kartu Google Sheet.</summary>
-        public AsyncRelayCommand SheetChipClickCommand { get; }
 
         /// <summary>Klik chip status langganan di statusbar → halaman Langganan.</summary>
         public AsyncRelayCommand LanggananChipClickCommand { get; }
@@ -1896,7 +1625,6 @@ namespace SuDesApp.Wpf.ViewModels
             return item.TujuanMenu switch
             {
                 "pembaruan" => ShowPembaruanAsync(),
-                "layanan-online" => ShowWaPanelAsync(),
                 "pengaturan-surat" => ShowSettingsAsync(),
                 "idm" => ShowIdmAsync(),
                 _ => Task.CompletedTask
@@ -2036,122 +1764,9 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        private async Task ShowPanduanWaAsync()
-        {
-            try
-            {
-                // Panduan WhatsApp bersifat statis: instance VM + View disimpan
-                // selama aplikasi berjalan agar halaman tidak perlu dibangun ulang
-                // setiap kali dibuka (XAML kompleks + parsing berat dihindarkan).
-                if (_panduanWaViewModel is null)
-                {
-                    var sp = BuatScopeBertahan();
-                    _panduanWaViewModel = sp.GetRequiredService<PanduanWaViewModel>();
-                    _panduanWaView = new Views.PanduanWaView { DataContext = _panduanWaViewModel };
-                }
-
-                _navigation.Navigate(_panduanWaView!);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal membuka panduan WhatsApp");
-                await _messageService.ShowErrorAsync("Gagal membuka panduan WhatsApp: " + ex.Message);
-            }
-        }
-
-        private async Task ShowWaPanelAsync()
-        {
-            try
-            {
-                var vm = BuatScopeHalaman().GetRequiredService<WaPanelViewModel>();
-                vm.UnreadCountChanged += () => _ = RefreshWaBadgeAsync();
-                await vm.LoadAsync();
-                _navigation.Navigate(vm);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal membuka panel Layanan Online");
-                await _messageService.ShowErrorAsync("Gagal membuka panel Layanan Online: " + ex.Message);
-            }
-        }
-
-        private void OnWaRequestCreated(object? sender, PermintaanWa p)
-        {
-            try
-            {
-                var namaPemohon = string.IsNullOrWhiteSpace(p.NamaWarga) ? "Warga" : p.NamaWarga;
-
-                // Notifikasi lonceng status bar (ringan, tak mengganggu, tak
-                // memblokir dengan dialog modal). Pesan multi-line:
-                _notifications.Info(
-                    "Permintaan Surat Baru",
-                    namaPemohon + " meminta " + WaFormatParser.TampilanJenis(p.NamaJenis) +
-                    ".\nKode: " + p.KodePermintaan +
-                    "\nDetail lengkap di menu Layanan Online.",
-                    "layanan-online");
-
-                // Badge menu diperbarui lokal — tanpa query database ulang setiap
-                // permintaan masuk. Hanya notifikasi permintaan WA yang dihitung
-                // (notifikasi lain seperti backup Drive tidak ikut menciut badge).
-                _waNotifUnread++;
-                UpdateWaBadge(_waUnreadSynced + _waNotifUnread);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal menampilkan notifikasi permintaan WA");
-            }
-        }
-
         /// <summary>Unread DB pada sinkronisasi terakhir (start / aksi panel).</summary>
-        private int _waUnreadSynced;
 
         /// <summary>Notifikasi "Permintaan Surat Baru" sejak sinkronisasi terakhir — hanya untuk badge menu.</summary>
-        private int _waNotifUnread;
-
-        /// <summary>
-        /// Query database sekali (saat start & saat panel ditutup) untuk menyinkronkan
-        /// baseline unread. Pembaruan harian (permintaan masuk) cukup dari angka
-        /// notifikasi — tanpa query ulang, tanpa beban DB.
-        /// </summary>
-        private async Task RefreshWaBadgeAsync()
-        {
-            try
-            {
-                using var scope = _scopeFactory.CreateScope();
-                var repo = scope.ServiceProvider.GetRequiredService<IPermintaanWaRepository>();
-                int unread = await repo.CountUnreadAsync(default);
-
-                // DB adalah sumber kebenaran saat sinkronisasi: reset counter lokal.
-                _waUnreadSynced = unread;
-                _waNotifUnread = 0;
-                UpdateWaBadge(unread);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal memperbarui badge permintaan WA");
-            }
-        }
-
-        private void UpdateWaBadge(int unread)
-        {
-            var dispatcher = System.Windows.Application.Current?.Dispatcher;
-            Action update = () =>
-            {
-                var layanan = _featureNavigation.LayananOnline;
-                if (layanan == null) return;
-                layanan.Title = unread > 0
-                    ? $"Layanan Online ({unread})"
-                    : "Layanan Online";
-            };
-            if (dispatcher == null || dispatcher.CheckAccess())
-            {
-                update();
-            }
-            else
-            {
-                _ = dispatcher.BeginInvoke(update);
-            }
-        }
 
         private async Task ShowAboutAsync()
         {

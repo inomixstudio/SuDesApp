@@ -154,11 +154,19 @@ antrean yang menunggu tindakan pejabat desa.
   `sudahAda: true`. Ini yang membuat integrasi boleh mencoba ulang dengan aman.
 - `jenis_surat` — boleh diisi dengan nama dari `GET /jenis-surat`, atau dikosongkan
   bila jenis surat ditulis pada baris pertama `pesan` (format yang sama dengan
-  WhatsApp).
+  isian pesan di website).
 - Jenis surat yang hanya bisa dibuat offline (`Katalog Offline`) **ditolak**.
 - NIK hanya boleh angka; karakter selain angka dibuang.
 - Respons berhasil: `201` untuk permintaan baru, `200` untuk permintaan yang
   sudah ada, dengan `data.kode` berisi kode permintaan.
+
+> **Kanal formulir warga.** Backend `SuDesApp.Api` (bukan listener desktop)
+> menyajikan jalur publik `POST /sudes/api/v1/permintaan-publik` untuk formulir
+> **Formulir Warga** di website desa. Jalur itu sengaja tidak meminta kunci
+> API karena dipakai warga tanpa akun; penahannya adalah batas kirim 5
+> permintaan / 10 menit per alamat IP (`429` bila lewat). Isi badan dan
+> hasilnya sama dengan `/permintaan`, dan permintaannya masuk antrean operator
+> yang sama. Jalur berkey di atas tetap dipakai sistem desa yang memegang kunci.
 
 ### 4.4 `GET /permintaan/{kode}`
 

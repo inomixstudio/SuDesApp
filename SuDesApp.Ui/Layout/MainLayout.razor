@@ -1,0 +1,89 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject SesiState Sesi
+@inject SuDesApiClient Api
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div class="layout @(sidebarTerbuka ? "drawer-terbuka" : "")">
+    <aside class="sidebar">
+        <div class="merek">
+            <span class="logo">SuDes</span>
+            <span class="versi">Sistem Surat Desa</span>
+        </div>
+        <NavMenu Tutup="TutupSidebar" />
+    </aside>
+
+    @if (sidebarTerbuka)
+    {
+        <div class="tirai" @onclick="TutupSidebar"></div>
+    }
+
+    <div class="kanan">
+        <header class="topbar">
+            <button type="button" class="tombol-menu" aria-label="Buka menu" @onclick="() => sidebarTerbuka = !sidebarTerbuka">
+                <span></span><span></span><span></span>
+            </button>
+            <span class="judul-perangkat">@JudulPerangkat</span>
+
+            @if (Sesi.Adakah && Sesi.Pengguna is not null)
+            {
+                <div class="kartu-sesi">
+                    <span class="nama-sesi">
+                        @Sesi.Pengguna.Nama
+                        <small>@TampilanPeran(Sesi.Pengguna.Peran)</small>
+                    </span>
+                    <button type="button" class="tombol-keluar" @onclick="Keluar">Keluar</button>
+                </div>
+            }
+        </header>
+
+        <main class="konten">
+            @Body
+        </main>
+    </div>
+</div>
+
+@code {
+    private bool sidebarTerbuka;
+
+    protected override void OnInitialized() => Sesi.Berubah += BeriTahu;
+
+    private void BeriTahu() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Sesi.Berubah -= BeriTahu;
+
+    private void TutupSidebar() => sidebarTerbuka = false;
+
+    private static string JudulPerangkat =>
+        OperatingSystem.IsAndroid() ? "Android"
+        : OperatingSystem.IsWindows() ? "Desktop Windows"
+        : "Browser";
+
+    /// <summary>Nama peran untuk tampilan (nilai PeranPengguna huruf kapital semua).</summary>
+    private static string TampilanPeran(string peran) => peran switch
+    {
+        "ADMINISTRATOR" => "Administrator",
+        "SEKDES" => "Sekretaris Desa",
+        "OPERATOR" => "Operator",
+        "KADES" => "Kepala Desa",
+        "AUDITOR" => "Auditor",
+        _ => peran
+    };
+
+    /// <summary>Keluar: akhiri sesi di server, hapus token lokal, kembali ke /masuk.</summary>
+    private async Task Keluar()
+    {
+        await Api.KeluarAsync();
+        Sesi.Bersihkan();
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", SesiState.KunciPenyimpanan);
+        }
+        catch (JSException)
+        {
+            // Tanpa localStorage pun sesi sudah bersih — token di server sudah diakhiri.
+        }
+        Nav.NavigateTo("/masuk");
+    }
+}

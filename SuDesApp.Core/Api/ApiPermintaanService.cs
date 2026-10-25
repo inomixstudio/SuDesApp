@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Utilities;
-using SuDesApp.WhatsApp;
+using SuDesApp.Permintaan;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,9 +19,9 @@ namespace SuDesApp.Api
     ///
     /// Kenapa tidak membuat tabel dan layar sendiri? Karena operator sudah
     /// punya alur kerja untuk memeriksa, menyetujui, membuat surat, dan
-    /// mengirim tautan unduh. Permintaan dari API masuk ke antrean yang sama,
-    /// jadi hanya ada satu tempat untuk memantau semua channel (WhatsApp,
-    /// Google Form, API) tanpa membuat operator memeriksa tiga aplikasi berbeda.
+    /// mengirim tautan unduh. Permintaan dari website maupun sistem luar lewat
+    /// API masuk ke antrean yang sama, jadi hanya ada satu tempat untuk
+    /// memantau semua permintaan warga.
     /// </summary>
     public interface IApiPermintaanService
     {
@@ -41,8 +41,8 @@ namespace SuDesApp.Api
         /// Opsi json untuk DataJson yang disimpan di PermintaanWa.
         ///
         /// Sengaja TANPA JsonNamingPolicy dan TANPA PropertyNameCaseInsensitive:
-        /// WaSuratProcessor membaca kolom ini dengan
-        /// JsonSerializer.Deserialize&lt;WaRequestData&gt; memakai opsi bawaan
+        /// Pembuat surat dari antrean membaca kolom ini dengan
+        /// JsonSerializer.Deserialize&lt;PermintaanData&gt; memakai opsi bawaan
         /// (nama properti PascalCase, bandage case), sehingga DataJson yang
         /// ditulis dengan gaya lain tidak akan terbaca operator. Selain itu
         /// PropertyNameCaseInsensitive membuat System.Text.Json menganggap dua
@@ -56,20 +56,17 @@ namespace SuDesApp.Api
         };
 
         private readonly IPermintaanWaRepository _repo;
-        private readonly WaEngine? _engine;
         private readonly ActivityLogService? _audit;
         private readonly ILogger<ApiPermintaanService> _logger;
         private readonly Func<DateTime> _sekarang;
 
         public ApiPermintaanService(
             IPermintaanWaRepository repo,
-            WaEngine? engine = null,
             ActivityLogService? audit = null,
             ILogger<ApiPermintaanService>? logger = null,
             Func<DateTime>? sekarang = null)
         {
             _repo = repo ?? throw new ArgumentNullException(nameof(repo));
-            _engine = engine;
             _audit = audit;
             _logger = logger ?? NullLogger<ApiPermintaanService>.Instance;
             _sekarang = sekarang ?? (() => DateTime.Now);
@@ -113,7 +110,7 @@ namespace SuDesApp.Api
             }
 
             // NIK boleh ikut dibaca dari pesan berformat bila tidak dikirim terpisah.
-            var parsed = pesan != null ? WaFormatParser.Parse(pesan) : new ParsedWaFormat();
+            var parsed = pesan != null ? FormatPermintaan.Parse(pesan) : new HasilParsePermintaan();
             if (nik == null) nik = NormalisasiNik(parsed.NIK);
             if (nama == null) nama = AmbilField(parsed, "nama");
 
@@ -128,10 +125,10 @@ namespace SuDesApp.Api
                 NamaJenis = namaJenis,
                 PesanMentah = pesan ?? BuildPesanBawaan(namaJenis, nama, nik),
                 DataJson = BangunDataJson(namaJenis, nomorHp, parsed, masuk.Data),
-                Status = WaRequestStatus.BARU,
+                Status = StatusPermintaan.BARU,
                 IsRead = false,
                 TanggalPermintaan = sekarang,
-                Sumber = WaRequestStatus.SumberApi,
+                Sumber = StatusPermintaan.SumberApi,
                 Referensi = referensi
             };
 
@@ -143,11 +140,6 @@ namespace SuDesApp.Api
 
             _logger.LogInformation(
                 "Permintaan surat {Kode} masuk dari API: {Jenis}", permintaan.KodePermintaan, namaJenis);
-
-            // Naikkan event yang sama dengan jalur WhatsApp/Google Form supaya
-            // panel operator diperbarui dan auto-processor (bila aktif) bekerja
-            // tanpa percabangan khusus API.
-            _engine?.RaiseRequestCreated(permintaan);
 
             return new ApiHasilPermintaan
             {
@@ -168,8 +160,8 @@ namespace SuDesApp.Api
             {
                 Kode = permintaan.KodePermintaan,
                 Status = permintaan.Status,
-                Sumber = WaRequestStatus.TampilanSumber(permintaan.Sumber),
-                JenisSurat = WaFormatParser.TampilanJenis(permintaan.NamaJenis),
+                Sumber = StatusPermintaan.TampilanSumber(permintaan.Sumber),
+                JenisSurat = FormatPermintaan.TampilanJenis(permintaan.NamaJenis),
                 Tanggal = permintaan.TanggalPermintaan,
                 Catatan = string.IsNullOrWhiteSpace(permintaan.Catatan) ? null : permintaan.Catatan,
                 AdaSurat = permintaan.IdSurat.HasValue && permintaan.IdSurat.Value > 0
@@ -181,19 +173,19 @@ namespace SuDesApp.Api
             var jenis = (jenisDiberikan ?? string.Empty).Trim();
             if (jenis != string.Empty)
             {
-                var cocok = WaFormatParser.KatalogSurat.FirstOrDefault(k =>
+                var cocok = FormatPermintaan.KatalogSurat.FirstOrDefault(k =>
                     string.Equals(k.NamaJenis, jenis, StringComparison.OrdinalIgnoreCase));
-                if (cocok.NamaJenis != null && !WaFormatParser.IsOfflineOnly(cocok.NamaJenis))
+                if (cocok.NamaJenis != null && !FormatPermintaan.IsOfflineOnly(cocok.NamaJenis))
                     return cocok.NamaJenis;
 
                 // Nama jenis dari luar mungkin ditulis dengan spasi atau garis
                 // bawah — dicoba dinormalkan lebih dulu.
-                var dinormalkan = WaFormatParser.TampilanJenis(jenis)
+                var dinormalkan = FormatPermintaan.TampilanJenis(jenis)
                     .Replace(' ', '_')
                     .ToUpperInvariant();
-                var cocokLain = WaFormatParser.KatalogSurat.FirstOrDefault(k =>
+                var cocokLain = FormatPermintaan.KatalogSurat.FirstOrDefault(k =>
                     string.Equals(k.NamaJenis, dinormalkan, StringComparison.OrdinalIgnoreCase));
-                if (cocokLain.NamaJenis != null && !WaFormatParser.IsOfflineOnly(cocokLain.NamaJenis))
+                if (cocokLain.NamaJenis != null && !FormatPermintaan.IsOfflineOnly(cocokLain.NamaJenis))
                     return cocokLain.NamaJenis;
             }
 
@@ -202,8 +194,8 @@ namespace SuDesApp.Api
             // Tebakan juga disaring jenis offline: kalau tidak, permintaan yang
             // menyimpang tetap bisa masuk antrean padahal suratnya tidak bisa
             // dibuat dari kanal online.
-            var tebakan = WaFormatParser.DetectJenisSurat(pesan ?? string.Empty);
-            if (tebakan == null || WaFormatParser.IsOfflineOnly(tebakan)) return null;
+            var tebakan = FormatPermintaan.DetectJenisSurat(pesan ?? string.Empty);
+            if (tebakan == null || FormatPermintaan.IsOfflineOnly(tebakan)) return null;
             return tebakan;
         }
 
@@ -221,7 +213,7 @@ namespace SuDesApp.Api
             return angka.Length == 0 ? null : angka;
         }
 
-        private static string? AmbilField(ParsedWaFormat parsed, string kunci)
+        private static string? AmbilField(HasilParsePermintaan parsed, string kunci)
             => parsed.Fields.TryGetValue(kunci, out var nilai) && !string.IsNullOrWhiteSpace(nilai)
                 ? nilai.Trim()
                 : null;
@@ -245,10 +237,10 @@ namespace SuDesApp.Api
         private static string BangunDataJson(
             string namaJenis,
             string? nomorHp,
-            ParsedWaFormat parsed,
+            HasilParsePermintaan parsed,
             Dictionary<string, string>? dataTambahan)
         {
-            var isi = new WaRequestData
+            var isi = new PermintaanData
             {
                 NamaJenis = namaJenis,
                 NomorWA = nomorHp ?? string.Empty,

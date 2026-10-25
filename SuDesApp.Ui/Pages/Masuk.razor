@@ -1,0 +1,179 @@
+@page "/masuk"
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@inject SuDesApiClient Api
+@inject SesiState Sesi
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Masuk — SuDesApp</PageTitle>
+
+<div class="halaman-masuk">
+    <div class="kartu-masuk">
+        <div class="merek">
+            <span class="logo">SuDes</span>
+            <span class="versi">Sistem Surat Desa</span>
+        </div>
+
+        <h1>Masuk</h1>
+        <p class="keterangan">
+            Gunakan akun desa Anda. Kata sandi diperiksa lewat aturan yang sama
+            dengan aplikasi desktop (PBKDF2, akun terkunci 5 menit setelah 3 kali salah).
+        </p>
+
+        <EditForm Model="model" OnValidSubmit="ProsesMasukAsync" FormName="form-masuk">
+            <div class="bidang">
+                <label for="username">Nama pengguna</label>
+                <input id="username" class="input" name="@nameof(model.Username)"
+                       @bind="model.Username" @bind:event="oninput"
+                       autocomplete="username" disabled="@sibuk" />
+            </div>
+            <div class="bidang">
+                <label for="katasandi">Kata sandi</label>
+                <input id="katasandi" class="input" type="password" name="@nameof(model.KataSandi)"
+                       @bind="model.KataSandi" @bind:event="oninput"
+                       autocomplete="current-password" disabled="@sibuk" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(galat))
+            {
+                <div class="peringatan" role="alert">@galat</div>
+            }
+
+            <button type="submit" class="tombol-utama" disabled="@sibuk">
+                @(sibuk ? "Memeriksa…" : "Masuk")
+            </button>
+        </EditForm>
+
+        <p class="catatan-akun">
+            Belum punya akun? Buka aplikasi desktop <strong>SuDesApp</strong> sekali
+            untuk membuat akun administrator — akunnya tersimpan di database desa
+            dan langsung bisa dipakai di sini.
+        </p>
+    </div>
+</div>
+
+@code {
+    private sealed class ModelMasuk
+    {
+        public string Username { get; set; } = string.Empty;
+        public string KataSandi { get; set; } = string.Empty;
+    }
+
+    private readonly ModelMasuk model = new();
+    private string galat = string.Empty;
+    private bool sibuk;
+    private bool sudahCobaPulih;
+
+    /// <summary>Halaman tujuan sebelum dipaksa masuk (dibawa RedirectToMasuk lewat ?ke=).</summary>
+    private string? KembaliKe
+    {
+        get
+        {
+            var uri = new Uri(Nav.Uri);
+            var ke = System.Web.HttpUtility.ParseQueryString(uri.Query)["ke"];
+            // Hanya path lokal: cegah "ke=https://situs-lain" menjadi open-redirect.
+            return ke != null && ke.StartsWith('/') && !ke.StartsWith("//") ? ke : null;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Dipanggil setelah komponen interaktif — JS interop aman di sini
+        // (tidak jalan saat prerender). Coba pulihkan sesi dari localStorage
+        // supaya refresh halaman tidak mengeluarkan pengguna.
+        if (!firstRender || sudahCobaPulih) return;
+        sudahCobaPulih = true;
+
+        try
+        {
+            var tersimpan = await JS.InvokeAsync<string?>("localStorage.getItem", SesiState.KunciPenyimpanan);
+            if (string.IsNullOrWhiteSpace(tersimpan)) return;
+
+            var putus = System.Text.Json.JsonSerializer.Deserialize<SesiTersimpan>(tersimpan);
+            if (putus?.Token == null || string.IsNullOrWhiteSpace(putus.Username)) return;
+
+            Sesi.Tetapkan(putus.Token, new InfoSesi
+            {
+                Username = putus.Username,
+                Nama = putus.Nama ?? putus.Username,
+                Peran = putus.Peran ?? string.Empty
+            });
+
+            // Validasi ke server: token bisa saja sudah kedaluwarsa atau sesi
+            // berakhir karena server di-restart.
+            var sah = await Api.SiapaAsync();
+            if (sah == null)
+            {
+                Sesi.Bersihkan();
+                await JS.InvokeVoidAsync("localStorage.removeItem", SesiState.KunciPenyimpanan);
+                return;
+            }
+
+            Sesi.Tetapkan(putus.Token, sah);
+            Nav.NavigateTo(KembaliKe ?? "/");
+        }
+        catch (JSException)
+        {
+            // Penyimpanan tidak tersedia (mis. WebView ketat) — biarkan di halaman masuk.
+        }
+    }
+
+    private async Task ProsesMasukAsync()
+    {
+        galat = string.Empty;
+        sibuk = true;
+        StateHasChanged();
+
+        var hasil = await Api.MasukAsync(model.Username.Trim(), model.KataSandi);
+
+        if (hasil == null)
+        {
+            galat = "Backend tidak terjangkau. Pastikan SuDesApp.Api sedang berjalan.";
+        }
+        else if (!hasil.Sukses || hasil.Token == null || hasil.Pengguna == null)
+        {
+            galat = hasil.Pesan?.Length > 0 ? hasil.Pesan : "Nama pengguna atau kata sandi salah.";
+        }
+        else
+        {
+            Sesi.Tetapkan(hasil.Token, hasil.Pengguna);
+            await SimpanLokalAsync(hasil.Token, hasil.Pengguna);
+            Nav.NavigateTo(KembaliKe ?? "/");
+            return;
+        }
+
+        sibuk = false;
+        StateHasChanged();
+    }
+
+    private async Task SimpanLokalAsync(string token, InfoSesi info)
+    {
+        try
+        {
+            var putus = new SesiTersimpan
+            {
+                Token = token,
+                Username = info.Username,
+                Nama = info.Nama,
+                Peran = info.Peran
+            };
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                SesiState.KunciPenyimpanan,
+                System.Text.Json.JsonSerializer.Serialize(putus));
+        }
+        catch (JSException)
+        {
+            // Tanpa penyimpanan, sesi tetap hidup selama circuit/aplikasi terbuka.
+        }
+    }
+
+    /// <summary>Bentuk simpanan localStorage (token + identitas ringkas).</summary>
+    private sealed class SesiTersimpan
+    {
+        public string? Token { get; set; }
+        public string? Username { get; set; }
+        public string? Nama { get; set; }
+        public string? Peran { get; set; }
+    }
+}
