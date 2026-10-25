@@ -92,7 +92,7 @@ namespace SuDesApp.Utilities
         /// <summary>
         /// Dipicu setiap kali klien Google dibuang (token dihapus / ganti akun /
         /// kredensial klien berubah). Layanan lain yang men-cache klien turunan
-        /// — mis. <see cref="GoogleSheetsService"/> — wajib membuang cache-nya
+        /// — mis. layanan lain yang memakai token yang sama — wajib membuang cache-nya
         /// agar tidak terus memakai akun lama.
         /// </summary>
         public event Action? ClientInvalidated;
@@ -235,7 +235,7 @@ namespace SuDesApp.Utilities
             ResetClient();
             await new ProtectedGoogleTokenDataStore(_tokenFolder).ClearAsync().ConfigureAwait(false);
 
-            // Beri tahu konsumen (mis. GoogleSheetsService) agar membuang klien
+            // Beri tahu konsumen agar membuang klien
             // turunan yang masih memakai akun/token lama.
             ClientInvalidated?.Invoke();
             await Task.CompletedTask;
@@ -299,9 +299,6 @@ namespace SuDesApp.Utilities
             return BuildOAuthClient(ct);
         }
 
-        public const string FormsBodyScope = "https://www.googleapis.com/auth/forms.body";
-        public const string FormsResponsesScope = "https://www.googleapis.com/auth/forms.responses.readonly";
-
         private DriveService BuildOAuthClient(CancellationToken ct)
         {
             try
@@ -310,12 +307,10 @@ namespace SuDesApp.Utilities
                 var secrets = new ClientSecrets { ClientId = _clientId, ClientSecret = _clientSecret };
                 var dataStore = new ProtectedGoogleTokenDataStore(_tokenFolder);
 
-                var scopes = new[]
-                {
-                    DriveService.Scope.Drive,
-                    FormsBodyScope,
-                    FormsResponsesScope
-                };
+                // Hanya Drive: izin Forms/Sheets sudah tidak diminta karena
+                // kanal Google Form/Sheet dihapus. Login Google kini semata-mata
+                // untuk pencadangan ke Drive.
+                var scopes = new[] { DriveService.Scope.Drive };
 
                 var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
                 {
@@ -399,7 +394,7 @@ namespace SuDesApp.Utilities
 
         /// <summary>
         /// Membangun initializer klien Google API (OAuth credential + ApplicationName)
-        /// untuk layanan Google lain di luar Drive — saat ini dipakai GoogleSheetsService
+        /// untuk layanan lain di luar Drive yang memakai token OAuth yang sama
         /// (mode layanan online Google Sheet/Form) supaya warga cukup login Google sekali.
         /// </summary>
         public async Task<BaseClientService.Initializer> BuildSharedInitializerAsync(CancellationToken ct = default)

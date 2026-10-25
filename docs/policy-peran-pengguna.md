@@ -17,8 +17,8 @@
 | Peran | Administrator, Sekdes, Operator, Kades, Auditor | Aktif |
 | Akun lama (`Login.dat`) | Dimigrasikan otomatis ke database saat login pertama | Aktif |
 | Akun pusat penyedia (`adminpusat`) | **Tidak pernah** masuk tabel `Pengguna` → tidak muncul di Kelola Pengguna. Kata sandi **tidak ditanam di kode maupun `Login.dat`**: diprovisikan per mesin lewat `SUDES_PUSAT_SANDI` atau berkas `Pusat.kunci`. Kunci menu rahasia **Pusat Administrasi**: menu itu tidak ditampilkan untuk sesi akun lain | Aktif |
-| Login Google | **Dihapus dari layar login (2026-10-13)** — akun Google bukan jalan masuk aplikasi. Koneksi akun Google hanya untuk fitur layanan (Formulir/Sheet/Drive/WhatsApp) dan disambungkan SETELAH masuk, dari halaman "Login dengan Google" | Dihapus |
-| Pemeriksaan izin | Ditegakkan di halaman + lapis data (bukan lewat penyembunyian menu): `SessionContext.Wajib` di layanan simpan surat, impor warga, verifikasi/tanda tangan, dan kelola pengguna (aktif setelah login; jalur sistem — API desa, proses WhatsApp — membuka blok lewat `SesiSistem()` per-aliran) | Aktif |
+| Login Google | **Dihapus dari layar login (2026-10-13)** — akun Google bukan jalan masuk aplikasi. Koneksi akun Google kini hanya untuk pencadangan ke Google Drive dan disambungkan SETELAH masuk, dari halaman "Login dengan Google" | Dihapus |
+| Pemeriksaan izin | Ditegakkan di halaman + lapis data (bukan lewat penyembunyian menu): `SessionContext.Wajib` di layanan simpan surat, impor warga, verifikasi/tanda tangan, dan kelola pengguna (aktif setelah login; jalur sistem — API desa, pekerja latar — membuka blok lewat `SesiSistem()` per-aliran) | Aktif |
 | Sesi kedaluwarsa otomatis | Layar kunci idle: setelah diam (bawaan 15 menit, bisa diatur 1–120 menit di Pengaturan Aplikasi), jendela ditutup layar kunci; dibuka lewat isi ulang kata sandi akun aktif. Percobaan salah memakai aturan kunci 3× gagal yang sama | Aktif |
 | Enkripsi database | SQLCipher (bundle e_sqlcipher); kunci acak 256 bit disimpan DPAPI CurrentUser (`%LOCALAPPDATA%\SuDesApp\DesaKunciDb.bin`). Saat start: database plaintext lama dicadangkan ke `desa-plaintext-<tanggal>.bak` lalu dikonversi otomatis (sqlcipher_export); database baru terenkripsi sejak byte pertama. Koneksi pengujian in-memory sengaja tanpa kunci | Aktif |
 
@@ -161,9 +161,10 @@ Alasan memilih akun aplikasi, bukan Google:
 
 Koneksi akun Google **tetap ada dan tidak terpengaruh**: halaman **"Login dengan
 Google"** di menu samping (dibuka setelah pengguna masuk) menyambungkan akun
-Google untuk Google Formulir/Sheet/Drive dan tautan WhatsApp. Kredensial OAuth
-karena itu tetap dibutuhkan paket rilis (lihat `PANDUAN-GITHUB-ACTIONS.md`),
-hanya saja bukan lagi untuk masuk ke aplikasi.
+Google untuk **pencadangan database ke Google Drive**. Kanal Google Formulir/
+Sheet dan WhatsApp sudah dihapus, jadi izin OAuth yang diminta hanya Drive.
+Kredensial OAuth tetap dibutuhkan paket rilis (lihat
+`PANDUAN-GITHUB-ACTIONS.md`), hanya saja bukan untuk masuk ke aplikasi.
 
 > **Sejak versi 2.6.0:** layar login kini memakai `PenggunaService.MasukAsync`
 > (PBKDF2, kunci 3× gagal, peran dari database). Akun administrator awal
@@ -178,11 +179,51 @@ hanya saja bukan lagi untuk masuk ke aplikasi.
 
 ---
 
-## 5. Yang Belum Ditegakkan di Lapis Data
+## 5. Penegakan Izin di Lapis Layanan
 
-Pemeriksaan izin saat ini ada di lapis tampilan (menu dan halaman). Artinya,
-kode internal Core (mis. layanan WhatsApp otomatis yang berjalan di latar)
-tetap dapat menulis surat tanpa memeriksa peran — memang disengaja, karena
-kanal otomatis bukan pengguna. Bila nanti aplikasi dibuka lewat jaringan
-(API/layanan daring), pemeriksaan izin perlu dinaikkan ke lapis layanan;
-kebutuhan itu dicatat sebagai **[TENTUKAN]** di dokumen `api-desa.md`.
+Pemeriksaan izin tidak lagi hanya di menu dan halaman: layanan Core memanggil
+`SessionContext.Wajib(izin)` pada aksi yang mengubah data (mis.
+`PenggunaService.TambahAsync`, `UbahAsync`, `ResetKataSandiAsync`, `HapusAsync`
+menuntut `KelolaPengguna`). Bila peran sesi tidak memegang izin itu,
+`IzinDitolakException` dilempar — satu jalur yang sama dipakai desktop maupun
+backend `SuDesApp.Api`.
+
+### 5.1 Desktop (WPF)
+
+Sesi tetap berupa nilai global seperti sebelumnya: satu aplikasi, satu
+pengguna. `PenegakanAktif` dinyalakan setelah login berhasil.
+
+### 5.2 Backend `SuDesApp.Api`
+
+Satu proses Api melayani banyak pengguna sekaligus, jadi identitas **tidak**
+ditulis ke properti global. Middleware memanggil
+`SessionContext.MulaiSesiPermintaan(...)` untuk setiap permintaan ber-Bearer
+token; nilai itu hidup di `AsyncLocal` (per-aliran async), sehingga peran
+Administrator milik satu permintaan tidak terbaca permintaan lain — sudah diuji
+lewat 40 permintaan paralel dengan dua peran berbeda.
+
+| Keadaan permintaan | Hasil |
+|---|---|
+| Tanpa Bearer token | **401** — endpoint memeriksa sesi lebih dulu |
+| Token sah, peran memegang izin | Aksi dijalankan (**200**) |
+| Token sah, peran tidak memegang izin | **403** + `izin` yang ditolak |
+| Tanpa token pada kanal kunci API (mis. `POST /permintaan`) | Penegakan dilewati, setara `SesiSistem` — kanal otomatis bukan pengguna |
+| Tanpa token pada formulir warga (`POST /permintaan-publik`) | Diterima sebagai kanal publik, dibatasi 5 kiriman / 10 menit per alamat IP |
+
+Endpoint yang memakai aturan ini: `GET/POST/PUT/DELETE /sudes/api/v1/pengguna`
+serta `POST /sudes/api/v1/pengguna/{id}/kata-sandi` (izin `KelolaPengguna`,
+hanya Administrator). Bila peran atau status aktif sebuah akun diubah, akun
+dihapus, atau kata sandinya direset — semua token milik akun itu langsung
+diputus, jadi wewenang dan kata sandi baru berlaku tanpa menunggu sesi 12 jam
+habis.
+
+### 5.3 Yang Masih Terbuka
+
+Kanal otomatis di desktop (pekerja latar), kanal kunci API, dan formulir publik
+warga sengaja melewati pemeriksaan peran karena bukan pengguna aplikasi.
+Formulir publik tetap dibatasi laju per alamat IP dan tidak bisa membaca
+antrean: `GET /sudes/api/v1/permintaan` menuntut sesi operator, karena isinya
+nama, NIK, dan nomor HP warga. Endpoint tulis lain di `SuDesApp.Api` (surat,
+warga, perangkat) belum dibuat; saat dibuat, pola yang sama dipakai: periksa
+sesi → jalankan layanan Core → biarkan `Wajib` menilai, dan petakan
+`IzinDitolakException` menjadi 403.

@@ -1,0 +1,23 @@
+@inherits LayoutComponentBase
+
+@* Layout halaman publik: dipakai formulir permintaan surat yang dibuka warga
+   tanpa akun. Sidebar operator sengaja tidak ditampilkan — menu di dalamnya
+   semuanya menuntut login, sehingga akan melempar warga ke halaman masuk. *@
+
+<div class="publik">
+    <header class="kepala-publik">
+        <div class="merek">
+            <span class="logo">SuDes</span>
+            <span class="versi">Sistem Surat Desa</span>
+        </div>
+        <a class="tautan-masuk" href="masuk">Masuk operator</a>
+    </header>
+
+    <main class="isi-publik">
+        @Body
+    </main>
+
+    <footer class="kaki-publik">
+        Layanan surat online desa — permintaan Anda masuk ke antrean petugas desa.
+    </footer>
+</div>

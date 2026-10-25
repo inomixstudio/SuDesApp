@@ -136,16 +136,6 @@ namespace SuDesApp.Utilities
 
         public const string KeyBackupDriveOnExit = "backupDriveOnExit";
         public const string KeyAutoBackupFormulirDrive = "autoBackupFormulirDrive";
-        public const string KeyWaAutoProcess = "waAutoProcess";
-        public const string KeyWaServiceOpen = "waServiceOpen";
-        public const string KeyWaServiceClose = "waServiceClose";
-        public const string KeyWaGateway = "waGateway";
-        public const string KeyWaFonnteToken = "waFonnteToken";
-        public const string KeyWaCloudApiToken = "waCloudApiToken";
-        public const string KeyWaCloudApiPhoneId = "waCloudApiPhoneId";
-        public const string KeyWaCloudApiVerifyToken = "waCloudApiVerifyToken";
-        public const string KeyWaCloudApiSecret = "waCloudApiAppSecret";
-        public const string KeyWaServiceDays = "waServiceDays";
         public const string KeyActivityLogging = "activityLogging";
         public const string KeyCleanupTempPdf = "cleanupTempPdf";
         public const string KeyCleanupOldExports = "cleanupOldExports";
@@ -243,62 +233,6 @@ namespace SuDesApp.Utilities
         /// </summary>
         public static bool IsAutoBackupFormulirDriveEnabled() => GetBool(KeyAutoBackupFormulirDrive, true);
         public static void SetAutoBackupFormulirDriveEnabled(bool v) => SetBool(KeyAutoBackupFormulirDrive, v);
-
-        /// <summary>Proses otomatis permintaan WhatsApp: generate PDF + kirim balik tanpa operator (default aktif).</summary>
-        public static bool IsWaAutoProcessEnabled() => GetBool(KeyWaAutoProcess, true);
-        public static void SetWaAutoProcessEnabled(bool v) => SetBool(KeyWaAutoProcess, v);
-
-        /// <summary>Jam buka layanan WA ("HH:mm"), null/kosong = selalu buka (24 jam).</summary>
-        public static string? GetWaServiceOpen() => GetString(KeyWaServiceOpen, string.Empty);
-        public static void SetWaServiceOpen(string? v) => SetString(KeyWaServiceOpen, v ?? string.Empty);
-
-        /// <summary>Jam tutup layanan WA ("HH:mm"), null/kosong = selalu buka (24 jam).</summary>
-        public static string? GetWaServiceClose() => GetString(KeyWaServiceClose, string.Empty);
-        public static void SetWaServiceClose(string? v) => SetString(KeyWaServiceClose, v ?? string.Empty);
-
-        /// <summary>Gateway WhatsApp aktif: "cloudapi" (WhatsApp Cloud API resmi dari Meta).</summary>
-        public static string GetWaGateway() => GetString(KeyWaGateway, "cloudapi") ?? "cloudapi";
-        public static void SetWaGateway(string v) => SetString(KeyWaGateway, string.IsNullOrWhiteSpace(v) ? "cloudapi" : v.Trim());
-
-        /// <summary>Device token Fonnte dari dashboard fonnte.com (perangkat Anda sendiri — layanan gratis).</summary>
-        public static string? GetWaFonnteToken() => GetString(KeyWaFonnteToken, string.Empty);
-        public static void SetWaFonnteToken(string? v) => SetString(KeyWaFonnteToken, v ?? string.Empty);
-
-        /// <summary>Permanent access token Cloud API (dari System User Meta Business).</summary>
-        public static string? GetWaCloudApiToken() => GetString(KeyWaCloudApiToken, string.Empty);
-        public static void SetWaCloudApiToken(string? v) => SetString(KeyWaCloudApiToken, v ?? string.Empty);
-
-        /// <summary>Phone Number ID nomor WhatsApp desa di Cloud API (Meta Business → WhatsApp → API Setup).</summary>
-        public static string? GetWaCloudApiPhoneId() => GetString(KeyWaCloudApiPhoneId, string.Empty);
-        public static void SetWaCloudApiPhoneId(string? v) => SetString(KeyWaCloudApiPhoneId, v ?? string.Empty);
-
-        /// <summary>Verify token bebas yang sama dengan yang diisi di konfigurasi webhook Meta.</summary>
-        public static string? GetWaCloudApiVerifyToken() => GetString(KeyWaCloudApiVerifyToken, string.Empty);
-        public static void SetWaCloudApiVerifyToken(string? v) => SetString(KeyWaCloudApiVerifyToken, v ?? string.Empty);
-
-        /// <summary>
-        /// App secret dari Meta Business Suite (WhatsApp → API Setup). Tidak sama
-        /// dengan verify token: verify token untuk cocokkan saat pendaftaran,
-        /// app secret untuk MEMBUKTIKAN tiap pesan webhook benar-benar dari Meta.
-        ///
-        /// Secret ini wajib diisi sekarang: MetaWebhookListener menolak request
-        /// yang tanda tangannya tidak bisa diperiksa, jadi tanpa secret seluruh
-        /// pesan masuk ditolak dengan 503.
-        /// </summary>
-        public static string? GetWaCloudApiSecret() => GetString(KeyWaCloudApiSecret, string.Empty);
-        public static void SetWaCloudApiSecret(string? v) => SetString(KeyWaCloudApiSecret, v ?? string.Empty);
-
-        /// <summary>
-        /// Hari layanan WA: indeks DayOfWeek dipisah koma (Minggu=0, Senin=1, … Sabtu=6).
-        /// Belum pernah diisi = Senin–Jumat ("1,2,3,4,5"); kosong setelahnya = setiap hari.
-        /// </summary>
-        public static string GetWaServiceDays()
-        {
-            var raw = GetString(KeyWaServiceDays, null);
-            if (raw == null) return "1,2,3,4,5"; // default pertama kali: Senin–Jumat
-            return raw;
-        }
-        public static void SetWaServiceDays(string? v) => SetString(KeyWaServiceDays, v ?? string.Empty);
 
         /// <summary>Pencatatan riwayat aktivitas (default: aktif).</summary>
         public static bool IsActivityLoggingEnabled() => GetBool(KeyActivityLogging, true);

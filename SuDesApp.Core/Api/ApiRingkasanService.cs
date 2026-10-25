@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Services;
-using SuDesApp.WhatsApp;
+using SuDesApp.Permintaan;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -131,8 +131,8 @@ namespace SuDesApp.Api
         }
 
         public IReadOnlyList<string> AmbilJenisSuratOnline()
-            => WaFormatParser.KatalogSurat
-                .Where(k => !WaFormatParser.IsOfflineOnly(k.NamaJenis))
+            => FormatPermintaan.KatalogSurat
+                .Where(k => !FormatPermintaan.IsOfflineOnly(k.NamaJenis))
                 .Select(k => k.NamaJenis)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
@@ -254,7 +254,7 @@ namespace SuDesApp.Api
         private async Task<Dictionary<string, int>> HitungPermintaanPerStatusAsync(CancellationToken ct)
         {
             var hasil = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            foreach (var status in WaRequestStatus.All)
+            foreach (var status in StatusPermintaan.All)
             {
                 try
                 {

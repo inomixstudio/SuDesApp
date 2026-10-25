@@ -1,0 +1,133 @@
+h1 {
+    font-size: 22px;
+    margin: 0 0 8px;
+}
+
+h2 {
+    font-size: 16px;
+    margin: 0 0 14px;
+    color: #14213d;
+}
+
+.sapaan {
+    color: #5b6675;
+    margin: 0 0 18px;
+    max-width: 760px;
+}
+
+.panel {
+    background: #ffffff;
+    border: 1px solid #e3e8ef;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 18px;
+}
+
+.kepala {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.memuat {
+    color: #5b6675;
+    font-size: 14px;
+}
+
+/* ---- Aksi di kepala panel ---- */
+.aksi {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tautan-formulir {
+    font-size: 13px;
+    color: #1f4fa8;
+    text-decoration: none;
+    padding: 8px 14px;
+    border: 1px solid #c9d6ea;
+    border-radius: 8px;
+    background: #f7faff;
+}
+
+.tautan-formulir:hover {
+    background: #eaf1ff;
+}
+
+button {
+    padding: 9px 16px;
+    border: 1px solid #c3ccd9;
+    border-radius: 8px;
+    background: #ffffff;
+    font: inherit;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.memuat code {
+    background: #eef2f7;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+/* ---- Tabel antrean ---- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px solid #eef2f7;
+    white-space: nowrap;
+}
+
+th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5b6675;
+    background: #f7f9fc;
+}
+
+.lencana {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.lencana.baru {
+    background: #e7f0ff;
+    color: #1f4fa8;
+}
+
+.lencana.proses {
+    background: #fff4e0;
+    color: #8a5a00;
+}
+
+.lencana.selesai {
+    background: #e9f7ef;
+    color: #14522f;
+}
+
+.lencana.tolak {
+    background: #fdecec;
+    color: #7a1f1f;
+}
+
+.lencana.perbaikan {
+    background: #f1ecff;
+    color: #5533b3;
+}

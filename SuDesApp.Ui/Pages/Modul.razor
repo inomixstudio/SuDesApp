@@ -1,0 +1,28 @@
+@page "/modul/{Nama}"
+
+<PageTitle>@NamaTerformat — SuDesApp</PageTitle>
+
+<h1>@NamaTerformat</h1>
+
+<div class="kartu-kosong">
+    <p><strong>Modul ini adalah placeholder.</strong></p>
+    <p>
+        Tampilannya akan dipindahkan dari <code>SuDesApp.Wpf</code> ke komponen Blazor di
+        <code>SuDesApp.Ui/Pages</code>, lalu langsung tersedia di ketiga platform tanpa ditulis ulang.
+        Logika bisnisnya tetap di <code>SuDesApp.Core</code>, diakses lewat <code>SuDesApp.Api</code>.
+    </p>
+</div>
+
+@code {
+    [Parameter] public string Nama { get; set; } = "modul";
+
+    private string NamaTerformat
+    {
+        get
+        {
+            var teks = Uri.UnescapeDataString(Nama ?? "").Replace('-', ' ');
+            if (string.IsNullOrWhiteSpace(teks)) return "Modul";
+            return char.ToUpperInvariant(teks[0]) + teks[1..];
+        }
+    }
+}

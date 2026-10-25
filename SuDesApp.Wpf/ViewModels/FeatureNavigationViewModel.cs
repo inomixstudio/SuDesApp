@@ -48,7 +48,6 @@ public sealed class FeatureNavigationViewModel
     public NavItem Beranda { get; private set; } = null!;
     public NavItem? Google { get; private set; }
     public NavItem? Formulir { get; private set; }
-    public NavItem? LayananOnline { get; private set; }
     public NavItem? PerangkatDesa { get; private set; }
     public NavItem? Langganan { get; private set; }
 
@@ -191,9 +190,6 @@ public sealed class FeatureNavigationViewModel
         TambahTombol("Verifikasi Surat", IkonMenu.Verifikasi, "verifikasi-surat");
         TambahTombol("Riwayat Aktivitas", IkonMenu.Riwayat, "riwayat");
 
-        Header("LAYANAN");
-        LayananOnline = TambahTombol("Layanan Online", IkonMenu.LayananOnline, "layanan-online");
-        LayananOnline.Description = "Antrean permintaan surat dari warga lewat WhatsApp, Google Sheet, dan API Desa — proses otomatis atau tindakan operator.";
         Header("FORMULIR");
         Formulir = Accordion("Formulir", IkonMenu.Blanko);
         MenuItems.Add(Formulir);

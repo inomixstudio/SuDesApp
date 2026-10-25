@@ -1,0 +1,85 @@
+@page "/"
+@inject SuDesApiClient Api
+
+<PageTitle>Beranda — SuDesApp</PageTitle>
+
+<h1>Beranda</h1>
+<p class="sapaan">Menu di samping sama persis di desktop, Android, dan browser — semuanya membaca data dari backend yang sama.</p>
+
+@if (statistik is null && galat is null)
+{
+    <p class="memuat">Memuat ringkasan desa…</p>
+}
+else if (galat is not null)
+{
+    <div class="peringatan">@galat</div>
+}
+else if (statistik is not null)
+{
+    <div class="ringkas">
+        <div class="angka">
+            <span class="nilai">@statistik.TotalWarga.ToString("N0")</span>
+            <span class="label">Total warga</span>
+        </div>
+        <div class="angka">
+            <span class="nilai">@statistik.WargaAktif.ToString("N0")</span>
+            <span class="label">Warga aktif</span>
+        </div>
+        <div class="angka">
+            <span class="nilai">@statistik.JumlahKartuKeluarga.ToString("N0")</span>
+            <span class="label">Kartu keluarga</span>
+        </div>
+        <div class="angka">
+            <span class="nilai">@statistik.SuratTotal.ToString("N0")</span>
+            <span class="label">Surat tercatat</span>
+        </div>
+        <div class="angka">
+            <span class="nilai">@statistik.PermintaanTotal.ToString("N0")</span>
+            <span class="label">Permintaan masuk</span>
+        </div>
+        <div class="angka">
+            <span class="nilai">@statistik.PerangkatTotal.ToString("N0")</span>
+            <span class="label">Perangkat desa</span>
+        </div>
+    </div>
+    <p class="sumber">Sumber: SuDesApp.Api · data per @statistik.DibuatPada.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</p>
+}
+
+<h2 class="judul-modul">Modul</h2>
+<div class="kartu-baris">
+    @foreach (var modul in ModulUtama)
+    {
+        <a class="kartu" href="modul/@modul.Slug">
+            <h2>@modul.Nama</h2>
+            <p>@modul.Keterangan</p>
+        </a>
+    }
+</div>
+
+@code {
+    private StatistikDesa? statistik;
+    private string? galat;
+
+    protected override async Task OnInitializedAsync()
+    {
+        statistik = await Api.StatistikAsync();
+        if (statistik is null)
+        {
+            galat = "Backend SuDesApp.Api belum terjangkau. Jalankan dulu " +
+                    "\"dotnet run --project SuDesApp.Api --urls http://127.0.0.1:5188\" " +
+                    "lalu muat ulang halaman ini.";
+        }
+    }
+
+    private readonly record struct ModulItem(string Slug, string Nama, string Keterangan);
+
+    private static readonly ModulItem[] ModulUtama =
+    [
+        new("buat-surat", "Buat Surat", "Buat surat resmi dengan penomoran sesuai Perbup."),
+        new("register-surat", "Register Surat", "Register dan agenda surat masuk/keluar."),
+        new("persetujuan", "Persetujuan", "Alur ajukan → verifikasi → tanda tangan."),
+        new("penduduk", "Data Penduduk", "Penduduk, Kartu Keluarga, dan mutasi."),
+        new("laporan", "Laporan", "Rekapitulasi kependudukan (PDF + Excel)."),
+        new("pengaturan", "Pengaturan", "Pengaturan aplikasi dan penomoran surat."),
+    ];
+}

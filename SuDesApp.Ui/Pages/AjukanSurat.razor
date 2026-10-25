@@ -1,0 +1,138 @@
+@page "/layanan-online"
+@layout LayoutPublik
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@inject SuDesApiClient Api
+
+<PageTitle>Ajukan Surat Online — SuDesApp</PageTitle>
+
+<h1>Ajukan Surat Online</h1>
+<p class="sapaan">
+    Isi formulir di bawah untuk meminta surat keterangan dari desa. Permintaan
+    Anda langsung masuk ke antrean petugas desa — tidak perlu akun, tidak perlu
+    mengirim pesan ke nomor pribadi petugas. Simpan kode permintaan yang muncul
+    setelah terkirim.
+</p>
+
+<section class="panel">
+    <div class="form">
+        <label>
+            Nama lengkap pemohon
+            @* oninput, bukan onchange: nilai langsung terbaca saat diketik,
+               jadi menekan Kirim tepat setelah mengetik tidak pernah memakai
+               isian yang masih kosong. *@
+            <input @bind="_nama" @bind:event="oninput" placeholder="Sesuai KTP" disabled="@_sibuk" />
+        </label>
+        <label>
+            Nomor HP / WhatsApp
+            <input @bind="_hp" @bind:event="oninput" placeholder="08xx xxxx xxxx" disabled="@_sibuk" />
+        </label>
+        <label>
+            Jenis surat
+            <select @bind="_jenis" disabled="@_sibuk">
+                <option value="">— pilih jenis surat —</option>
+                @foreach (var j in _jenisSurat)
+                {
+                    <option value="@j">@j</option>
+                }
+            </select>
+        </label>
+        <label class="lebar">
+            Keperluan
+            <textarea @bind="_pesan" @bind:event="oninput" rows="3" placeholder="Contoh: SKTM untuk pengajuan KUR" disabled="@_sibuk"></textarea>
+        </label>
+    </div>
+
+    <button class="utama" @onclick="KirimAsync" disabled="@_sibuk">
+        @(_sibuk ? "Mengirim…" : "Kirim Permintaan")
+    </button>
+
+    @if (_hasil is not null)
+    {
+        <div class="hasil @(_hasil.Sukses ? "ok" : "gagal")" role="status">
+            @if (_hasil.Sukses)
+            {
+                <p>
+                    Permintaan diterima. Kode permintaan Anda:
+                    <strong>@(_hasil.Data?.Kode ?? "-")</strong>
+                </p>
+                <p class="kecil">
+                    @if (_hasil.Data?.SudahAda == true)
+                    {
+                        <text>Permintaan ini sudah pernah masuk — tidak dicatat ganda. </text>
+                    }
+                    Tunjukkan kode ini bila menanyakan perkembangan ke kantor desa.
+                </p>
+            }
+            else
+            {
+                @_hasil.Pesan
+            }
+        </div>
+    }
+    else if (_pesanGalat is not null)
+    {
+        <div class="hasil gagal" role="alert">@_pesanGalat</div>
+    }
+</section>
+
+<p class="catatan">
+    Butuh surat yang tidak ada di daftar? Ajukan lewat petugas desa. Permintaan
+    yang masuk lewat halaman ini dibaca petugas pada halaman
+    <em>Layanan Online</em> di aplikasi desa.
+</p>
+
+@code {
+    private string? _nama, _hp, _jenis, _pesan;
+    private bool _sibuk;
+    private HasilPermintaan? _hasil;
+    private string? _pesanGalat;
+    private IReadOnlyList<string> _jenisSurat = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _jenisSurat = await Api.JenisSuratAsync();
+        if (_jenisSurat.Count == 0)
+        {
+            _pesanGalat = "Daftar jenis surat belum bisa dibaca — backend desa mungkin belum menyala. Coba muat ulang halaman ini.";
+        }
+    }
+
+    private async Task KirimAsync()
+    {
+        _hasil = null;
+        _pesanGalat = null;
+
+        if (string.IsNullOrWhiteSpace(_nama) || string.IsNullOrWhiteSpace(_jenis))
+        {
+            _pesanGalat = "Nama pemohon dan jenis surat wajib diisi.";
+            return;
+        }
+
+        _sibuk = true;
+        try
+        {
+            _hasil = await Api.AjukanAsync(new PermintaanMasuk
+            {
+                Referensi = Guid.NewGuid().ToString("N"),
+                NamaWarga = _nama,
+                NomorHp = _hp,
+                JenisSurat = _jenis,
+                Pesan = _pesan
+            });
+
+            if (_hasil is null)
+            {
+                _pesanGalat = "Backend SuDesApp.Api tidak terjangkau — coba lagi setelah server dijalankan.";
+            }
+            else if (_hasil.Sukses)
+            {
+                _nama = _hp = _pesan = null;
+                _jenis = null;
+            }
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+}

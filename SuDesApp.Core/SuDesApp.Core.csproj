@@ -32,11 +32,9 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.89" />
     <PackageReference Include="EPPlus" Version="8.7.2" />
+    <!-- Hanya Drive: pencadangan database. Forms & Sheets sudah dihapus bersama
+         kanal layanan online Google Form/Sheet (layanan online kini di website). -->
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.77.0.4301" />
-    <PackageReference Include="Google.Apis.Forms.v1" Version="1.74.0.3764" />
-    <!-- Sheets API untuk mode layanan online Google Sheet/Form (baca jawaban + tulis status). -->
-    <!-- Dipin ke lini 1.77 agar selaras dengan Drive.v3 dan Google.Apis yang ditarik transitif. -->
-    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.77.0.4290" />
     <!-- Dipin ke 10.0.12 (lini 10 LTS). Tervalidasi dari nuspec NuGet: paket ini
          menarik SQLitePCLRaw 2.1.12 (bundle_e_sqlite3 + core) — identik dengan
          9.0.x — sehingga provider SQLCipher tetap menang saat resolusi aset.

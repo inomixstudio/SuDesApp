@@ -1,0 +1,33 @@
+<nav class="menu" @onclick="Tutup">
+    <div class="kelompok">Surat</div>
+    <NavLink class="tautan" href="" Match="NavLinkMatch.All">Beranda</NavLink>
+    <NavLink class="tautan" href="modul/buat-surat">Buat Surat</NavLink>
+    <NavLink class="tautan" href="modul/register-surat">Register Surat</NavLink>
+    <NavLink class="tautan" href="modul/register-ntcr">Register NTCR</NavLink>
+    <NavLink class="tautan" href="modul/agenda">Agenda Surat</NavLink>
+    <NavLink class="tautan" href="modul/persetujuan">Persetujuan</NavLink>
+    <NavLink class="tautan" href="modul/layanan-online">Layanan Online</NavLink>
+    <NavLink class="tautan" href="layanan-online">Formulir Warga</NavLink>
+
+    <div class="kelompok">Kependudukan</div>
+    <NavLink class="tautan" href="modul/penduduk">Data Penduduk</NavLink>
+    <NavLink class="tautan" href="modul/kartu-keluarga">Kartu Keluarga</NavLink>
+    <NavLink class="tautan" href="modul/mutasi">Mutasi Penduduk</NavLink>
+
+    <div class="kelompok">Pelaporan</div>
+    <NavLink class="tautan" href="modul/laporan">Laporan</NavLink>
+    <NavLink class="tautan" href="modul/arsip">Arsip &amp; Keputusan</NavLink>
+
+    <div class="kelompok">Sistem</div>
+    @* Kelola pengguna hanya ditampilkan ke Administrator. Ini semata kenyamanan
+       tampilan: penegakan sebenarnya tetap di Core (KelolaPengguna) sehingga
+       peran lain yang mengetik alamat halamannya tetap ditolak server. *@
+    <AuthorizeView Roles="ADMINISTRATOR">
+        <NavLink class="tautan" href="modul/pengguna">Pengguna &amp; Peran</NavLink>
+    </AuthorizeView>
+    <NavLink class="tautan" href="modul/pengaturan">Pengaturan</NavLink>
+</nav>
+
+@code {
+    [Parameter] public EventCallback Tutup { get; set; }
+}

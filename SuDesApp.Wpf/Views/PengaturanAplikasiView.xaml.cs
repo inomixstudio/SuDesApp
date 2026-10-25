@@ -19,8 +19,6 @@ namespace SuDesApp.Wpf.Views
     public partial class PengaturanAplikasiView : UserControl
     {
         /// <summary>Kunci kartu pengaturan yang bisa menjadi target fokus.</summary>
-        public const string SectionGatewayWa = "gateway-wa";
-        public const string SectionGoogleSheet = "google-sheet";
 
         /// <summary>Urutan bagian sama persis dengan urutan StackPanel pada XAML.
         /// Bagian "google-oauth" (Kredensial Google) tetap ada: paket yang dibangun
@@ -28,7 +26,7 @@ namespace SuDesApp.Wpf.Views
         /// sehingga teknisi harus bisa mengisinya di komputer pengguna.</summary>
         private static readonly string[] UrutanSeksi =
         {
-            "umum", "layanan-wa", "gateway-wa", "google-oauth", "google-sheet", "database", "informasi"
+            "umum", "google-oauth", "database", "informasi"
         };
 
         private ViewModels.PengaturanAplikasiViewModel? _vm;
