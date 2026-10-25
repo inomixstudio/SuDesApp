@@ -141,6 +141,25 @@ public sealed class SuDesApiClient
     }
 
     /// <summary>
+    /// Katalog menu surat (Buat Surat Baru + blanko NTCR) dari server. Daftarnya
+    /// berasal dari Core yang sama dengan menu desktop, jadi sidebar web tidak
+    /// punya salinan sendiri yang bisa ketinggalan. Null bila backend tidak
+    /// terjangkau — sidebar tetap tampil dengan item dasar.
+    /// </summary>
+    public async Task<MenuAplikasi?> MenuAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            SiapkanSesi();
+            return await _http.GetFromJsonAsync<MenuAplikasi>("sudes/api/v1/menu", ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Ajukan permintaan surat baru dari formulir warga. Memakai jalur publik
     /// (tanpa kunci API) — jalur berkey /permintaan tetap untuk sistem desa.
     /// Mengembalikan HasilPermintaan (bisa gagal validasi) atau null bila backend
@@ -340,6 +359,29 @@ public sealed class PermintaanMasuk
 
     [JsonPropertyName("pesan")]
     public string? Pesan { get; set; }
+}
+
+/// <summary>Katalog menu aplikasi (GET /sudes/api/v1/menu).</summary>
+public sealed class MenuAplikasi
+{
+    public List<MenuSuratItem> Surat { get; set; } = new();
+    public List<MenuNtcrItem> Ntcr { get; set; } = new();
+}
+
+/// <summary>Satu pilihan pada menu "Buat Surat Baru".</summary>
+public sealed class MenuSuratItem
+{
+    public string Label { get; set; } = string.Empty;
+    public string Jenis { get; set; } = string.Empty;
+}
+
+/// <summary>Satu blanko NTCR pada menu.</summary>
+public sealed class MenuNtcrItem
+{
+    public string Judul { get; set; } = string.Empty;
+    public string Jenis { get; set; } = string.Empty;
+    public string Kode { get; set; } = string.Empty;
+    public string? Keterangan { get; set; }
 }
 
 /// <summary>Jawaban POST /sudes/api/v1/permintaan.</summary>

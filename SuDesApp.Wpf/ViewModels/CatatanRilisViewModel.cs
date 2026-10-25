@@ -201,6 +201,13 @@ namespace SuDesApp.Wpf.ViewModels
                             "Kiriman formulir publik dibatasi 5 permintaan per 10 menit per alamat IP; lebih dari itu dijawab 429 dengan pesan yang bisa dibaca warga, sehingga satu peramban tidak bisa membanjiri antrean.",
                             "Halaman Pengguna & Peran di web memuat daftar akun desa: tambah akun (nama pengguna, nama lengkap, peran, kata sandi awal), ubah nama/peran/status aktif, reset kata sandi, dan hapus akun. Halaman ini hanya tampil di menu bagi Administrator, dan penegakannya tetap di server — peran lain yang membuka alamatnya menerima 403, bukan daftar akun.",
                             "Perubahan peran, penonaktifan, penghapusan, dan reset kata sandi langsung memutus sesi akun tersebut, jadi wewenang maupun kata sandi baru berlaku saat itu juga. Akun Administrator aktif terakhir tetap dilindungi: perannya tidak bisa diturunkan, dinonaktifkan, atau dihapus."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Menu Web Mengikuti Sidebar Desktop", new List<string>
+                        {
+                            "Bagian dan urutan menu di browser kini sama dengan sidebar aplikasi desktop: BUAT SURAT (Register Surat, Buat Surat Baru, Buat Surat Sendiri, Daftar Hadir, Surat Peraturan, Surat Masuk/Keluar, NTCR, Register NTCR, Tutup Buku Tahunan, Verifikasi Surat, Riwayat Aktivitas), FORMULIR, DATA DESA, DATA WARGA, PENGATURAN, LANGGANAN, dan BANTUAN, ditambah seksi Layanan Online yang khusus web. Operator yang berpindah antara desktop dan browser menemukan menu di tempat yang sama.",
+                            "Bagian yang punya anak menu (Buat Surat Baru, Surat Peraturan, Surat Masuk/Keluar, NTCR) bisa dibuka-tutup seperti akordeon desktop. Daftar pilihan surat dan blanko NTCR dibaca dari katalog Core yang sama lewat endpoint /sudes/api/v1/menu — menu web tidak lagi menyimpan salinan daftar sendiri, jadi menambah jenis surat cukup sekali di Core dan kedua platform langsung ikut.",
+                            "Item menu yang sedang dibuka disorot, dan pada layar ponsel drawer menu menutup sendiri setiap kali halaman berpindah (sebelumnya menutup bahkan saat akordeon hanya dibuka).",
+                            "Menu desktop ikut dibersihkan: item Panduan WhatsApp yang halamannya sudah dihapus tidak lagi muncul sebagai menu mati."
                         })
                     }),
                 new CatatanRilisEntry(

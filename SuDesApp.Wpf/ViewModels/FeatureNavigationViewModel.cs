@@ -249,7 +249,6 @@ public sealed class FeatureNavigationViewModel
         PanduanAwal = TambahTombol("Panduan Awal", IkonMenu.Panduan, "panduan-awal");
         PanduanAwal.Description = "Langkah mengisi data desa, pejabat, dan nomor surat";
         TambahTombol("Dokumentasi", IkonMenu.Dokumentasi, "dokumentasi");
-        TambahTombol("Panduan WhatsApp", IkonMenu.Dokumen, "panduan-whatsapp");
         TambahTombol("API Desa", IkonMenu.Api, "api-desa");
         TambahTombol("Catatan Rilis", IkonMenu.Peraturan, "catatan-rilis");
         TambahTombol("Tentang", IkonMenu.Tentang, "tentang");
