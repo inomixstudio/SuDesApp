@@ -159,6 +159,110 @@ public sealed class SuDesApiClient
         }
     }
 
+    // ==== Data warga (muka internal, wajib sesi) ====
+
+    /// <summary>
+    /// Satu halaman Data Warga: pencarian bebas, penyaring status, dan paginasi
+    /// dikerjakan server dengan query yang sama seperti halaman desktop.
+    /// Galat dibedakan supaya 401/403 tidak tampil sebagai tabel kosong.
+    /// </summary>
+    public async Task<HasilDaftarWarga> WargaAsync(
+        string? cari = null, string? status = null, int halaman = 1, int ukuran = 25,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            SiapkanSesi();
+
+            var query = new List<string>();
+            if (!string.IsNullOrWhiteSpace(cari)) query.Add($"cari={Uri.EscapeDataString(cari.Trim())}");
+            if (!string.IsNullOrWhiteSpace(status)) query.Add($"status={Uri.EscapeDataString(status)}");
+            query.Add($"halaman={Math.Max(1, halaman)}");
+            query.Add($"ukuran={Math.Clamp(ukuran, 5, 200)}");
+
+            var res = await _http.GetAsync("sudes/api/v1/warga?" + string.Join("&", query), ct);
+
+            if (res.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                return new HasilDaftarWarga { Pesan = "Sesi sudah berakhir. Masuk ulang untuk melanjutkan." };
+            if (res.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                return new HasilDaftarWarga { Pesan = "Peran akun Anda tidak berwenang membuka data warga." };
+            if (!res.IsSuccessStatusCode)
+                return new HasilDaftarWarga { Pesan = $"Server menjawab {(int)res.StatusCode}." };
+
+            var data = await res.Content.ReadFromJsonAsync<HasilDaftarWarga>(cancellationToken: ct);
+            if (data is null)
+                return new HasilDaftarWarga { Pesan = "Respons server tidak terbaca." };
+
+            data.Sukses = true;
+            return data;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return new HasilDaftarWarga
+            {
+                Pesan = "Backend SuDesApp.Api tidak terjangkau — nyalakan server lalu muat ulang halaman."
+            };
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return new HasilDaftarWarga { Pesan = "Respons server tidak terbaca." };
+        }
+    }
+
+    // ==== Register Surat (muka internal, wajib sesi) ====
+
+    /// <summary>
+    /// Satu halaman Register Surat: pencarian, penyaring status/tahun/jenis,
+    /// dan paginasi dikerjakan server dengan filter Core yang sama seperti
+    /// halaman desktop (jenis NTCR dikecualikan). Jawaban juga membawa pilihan
+    /// penyaring (tahun &amp; jenis) serta hitungan per status, supaya halaman
+    /// tidak perlu permintaan tambahan. Galat dibedakan dari daftar kosong.
+    /// </summary>
+    public async Task<HasilDaftarSurat> SuratAsync(
+        string? cari = null, string? status = null, string? tahun = null, string? jenis = null,
+        int halaman = 1, int ukuran = 25, CancellationToken ct = default)
+    {
+        try
+        {
+            SiapkanSesi();
+
+            var query = new List<string>();
+            if (!string.IsNullOrWhiteSpace(cari)) query.Add($"cari={Uri.EscapeDataString(cari.Trim())}");
+            if (!string.IsNullOrWhiteSpace(status)) query.Add($"status={Uri.EscapeDataString(status)}");
+            if (!string.IsNullOrWhiteSpace(tahun)) query.Add($"tahun={Uri.EscapeDataString(tahun)}");
+            if (!string.IsNullOrWhiteSpace(jenis)) query.Add($"jenis={Uri.EscapeDataString(jenis)}");
+            query.Add($"halaman={Math.Max(1, halaman)}");
+            query.Add($"ukuran={Math.Clamp(ukuran, 5, 200)}");
+
+            var res = await _http.GetAsync("sudes/api/v1/surat?" + string.Join("&", query), ct);
+
+            if (res.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                return new HasilDaftarSurat { Pesan = "Sesi sudah berakhir. Masuk ulang untuk melanjutkan." };
+            if (res.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                return new HasilDaftarSurat { Pesan = "Peran akun Anda tidak berwenang membuka register surat." };
+            if (!res.IsSuccessStatusCode)
+                return new HasilDaftarSurat { Pesan = $"Server menjawab {(int)res.StatusCode}." };
+
+            var data = await res.Content.ReadFromJsonAsync<HasilDaftarSurat>(cancellationToken: ct);
+            if (data is null)
+                return new HasilDaftarSurat { Pesan = "Respons server tidak terbaca." };
+
+            data.Sukses = true;
+            return data;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return new HasilDaftarSurat
+            {
+                Pesan = "Backend SuDesApp.Api tidak terjangkau — nyalakan server lalu muat ulang halaman."
+            };
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return new HasilDaftarSurat { Pesan = "Respons server tidak terbaca." };
+        }
+    }
+
     /// <summary>
     /// Ajukan permintaan surat baru dari formulir warga. Memakai jalur publik
     /// (tanpa kunci API) — jalur berkey /permintaan tetap untuk sistem desa.
@@ -359,6 +463,103 @@ public sealed class PermintaanMasuk
 
     [JsonPropertyName("pesan")]
     public string? Pesan { get; set; }
+}
+
+/// <summary>Jawaban satu halaman GET /sudes/api/v1/warga.</summary>
+public sealed class HasilDaftarWarga
+{
+    public bool Sukses { get; set; }
+    public string? Pesan { get; set; }
+
+    public int Total { get; set; }
+    public int Halaman { get; set; }
+    public int Ukuran { get; set; }
+    public int TotalHalaman { get; set; }
+
+    /// <summary>Kalimat siap tampil: "Menampilkan 1–25 dari 812 warga."</summary>
+    public string? Ringkasan { get; set; }
+
+    public List<BarisWarga> Items { get; set; } = new();
+}
+
+/// <summary>Satu baris Data Warga.</summary>
+public sealed class BarisWarga
+{
+    public int Id { get; set; }
+    public string? Nik { get; set; }
+    public string? Nama { get; set; }
+    public string? Jk { get; set; }
+    public string? TempatLahir { get; set; }
+    public string? TanggalLahir { get; set; }
+    public string? Alamat { get; set; }
+    public string? Dusun { get; set; }
+    public string? Rt { get; set; }
+    public string? Rw { get; set; }
+    public string? NoKk { get; set; }
+    public string? Status { get; set; }
+    public string? NomorHp { get; set; }
+    public string? Pekerjaan { get; set; }
+}
+
+/// <summary>Jawaban satu halaman GET /sudes/api/v1/surat.</summary>
+public sealed class HasilDaftarSurat
+{
+    public bool Sukses { get; set; }
+    public string? Pesan { get; set; }
+
+    public int Total { get; set; }
+    public int Halaman { get; set; }
+    public int Ukuran { get; set; }
+    public int TotalHalaman { get; set; }
+
+    /// <summary>Kalimat siap tampil: "Menampilkan 1–25 dari 812 surat."</summary>
+    public string? Ringkasan { get; set; }
+
+    /// <summary>Tahun yang punya surat, untuk kotak pilihan penyaring.</summary>
+    public List<string> TahunTersedia { get; set; } = new();
+
+    /// <summary>Pilihan penyaring jenis surat (katalog Core tanpa NTCR).</summary>
+    public List<PilihanJenisSurat> JenisTersedia { get; set; } = new();
+
+    /// <summary>Jumlah surat per status untuk filter yang sedang berlaku.</summary>
+    public List<RingkasStatusSurat> PerStatus { get; set; } = new();
+
+    public List<BarisSurat> Items { get; set; } = new();
+}
+
+/// <summary>Satu pilihan jenis surat pada penyaring register.</summary>
+public sealed class PilihanJenisSurat
+{
+    public string Jenis { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+}
+
+/// <summary>Jumlah surat satu status (Draft/Aktif/Dibatalkan).</summary>
+public sealed class RingkasStatusSurat
+{
+    public string Status { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+    public int Jumlah { get; set; }
+}
+
+/// <summary>Satu baris Register Surat.</summary>
+public sealed class BarisSurat
+{
+    public int Id { get; set; }
+    public string? Nomor { get; set; }
+    public DateTime Tanggal { get; set; }
+    public string? Keperluan { get; set; }
+    public string? Keterangan { get; set; }
+    public string Jenis { get; set; } = string.Empty;
+    public string LabelJenis { get; set; } = string.Empty;
+    public string Nama { get; set; } = string.Empty;
+    public string? Jk { get; set; }
+    public string Ttl { get; set; } = string.Empty;
+    public string Alamat { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string StatusLabel { get; set; } = string.Empty;
+    public string? StatusPersetujuan { get; set; }
+    public DateTime DibuatPada { get; set; }
 }
 
 /// <summary>Katalog menu aplikasi (GET /sudes/api/v1/menu).</summary>
