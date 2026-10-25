@@ -35,6 +35,11 @@ alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per sura
   sama dengan kiriman sistem desa lewat API desa. Kanal WhatsApp dan Google
   Form/Sheet sudah dihapus; login Google kini hanya untuk pencadangan ke
   Google Drive.
+- **Data warga & register surat di browser** — halaman `/modul/warga` dan
+  `/modul/register-surat` membaca database desa yang sama lewat backend:
+  pencarian, penyaring status/tahun/jenis, dan paginasi memakai kueri Core yang
+  juga dipakai desktop, jadi jumlah dan urutannya tidak bisa berbeda. Keduanya
+  masih baca-saja sampai formulir tulisnya diporting.
 - **Multi-pengguna** — akun dengan peran & izin, kunci akun setelah percobaan
   login gagal, dan halaman **Pengguna & Peran** di web untuk membuat akun,
   mengganti peran/status, mereset kata sandi, dan menghapus akun

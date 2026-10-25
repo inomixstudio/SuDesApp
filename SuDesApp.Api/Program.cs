@@ -329,6 +329,212 @@ app.MapGet("/sudes/api/v1/menu", () => Results.Ok(new
     })
 })).WithName("MenuAplikasi");
 
+// ==== Data warga (muka internal) ====
+// Satu halaman tabel dengan pencarian + penyaring status + paginasi. Isinya
+// data pribadi (NIK, No KK, nomor HP), jadi wajib sesi login. Izin per-peran
+// TIDAK diperiksa di sini karena halaman desktop juga tidak membatasinya:
+// semua peran yang bisa masuk aplikasi desa boleh membaca data warga, dan
+// yang dibatasi adalah perubahannya (belum ada endpoint tulis di web).
+//
+// Penyaringan dan paginasi dikerjakan repository Core (GetWargaPageAsync),
+// bukan di sini: query yang sama dipakai halaman desktop, sehingga jumlah dan
+// urutannya tidak bisa berbeda antara kedua platform.
+app.MapGet("/sudes/api/v1/warga", async (
+    HttpContext ctx, string? cari, string? status, int? halaman, int? ukuran, CancellationToken ct) =>
+{
+    if (SesiDari(ctx) == null) return Results.Unauthorized();
+
+    var filter = new WargaFilter
+    {
+        Cari = string.IsNullOrWhiteSpace(cari) ? null : cari.Trim(),
+        Status = StatusWargaTipe.Valid(status) ? StatusWargaTipe.Normalisasi(status) : null,
+        Halaman = halaman ?? 1,
+        UkuranHalaman = Math.Clamp(ukuran ?? 25, 5, 200)
+    };
+
+    var hasil = await ctx.RequestServices.GetRequiredService<IWargaRepository>()
+        .GetWargaPageAsync(filter, ct);
+
+    return Results.Ok(new
+    {
+        total = hasil.Total,
+        halaman = hasil.Halaman,
+        ukuran = hasil.UkuranHalaman,
+        totalHalaman = hasil.TotalHalaman,
+        ringkasan = hasil.Ringkasan,
+        items = hasil.Items.Select(w => new
+        {
+            id = w.ID_Warga,
+            nik = w.NIK,
+            nama = w.Nama,
+            jk = w.JenisKelamin,
+            tempatLahir = w.TempatLahir,
+            tanggalLahir = w.TanggalLahir,
+            alamat = w.AlamatLengkap,
+            dusun = w.Dusun,
+            rt = w.RT,
+            rw = w.RW,
+            noKk = w.NoKK,
+            status = w.StatusWarga,
+            nomorHp = w.NomorHP,
+            pekerjaan = w.Pekerjaan
+        })
+    });
+}).WithName("DaftarWarga");
+
+// ==== Register Surat (muka internal) ====
+// Daftar surat satu desa dengan pencarian, penyaring status/tahun/jenis, dan
+// paginasi. Penyaringan, urutan, dan hitungan dikerjakan ISuratRepository Core
+// — kelas filter yang sama dengan halaman desktop — jadi hasil web dan desktop
+// tidak bisa berbeda. Jenis NTCR dikecualikan persis seperti Register Surat
+// desktop (NTCR punya registernya sendiri).
+//
+// Nama penerima, TTL, jenis kelamin, dan alamat dihitung lewat
+// TemplateSuratTercatat seperti di desktop, supaya surat dari Template Surat
+// tidak tampil kosong. Isinya data pribadi, jadi wajib sesi login.
+app.MapGet("/sudes/api/v1/surat", async (
+    HttpContext ctx, string? cari, string? status, string? tahun, string? jenis,
+    int? halaman, int? ukuran, CancellationToken ct) =>
+{
+    if (SesiDari(ctx) == null) return Results.Unauthorized();
+
+    var repo = ctx.RequestServices.GetRequiredService<ISuratRepository>();
+    var jenisRepo = ctx.RequestServices.GetRequiredService<IJenisSuratRepository>();
+
+    var filter = new FilterConditions
+    {
+        // Register umum memisahkan NTCR (lihat RegisterSuratViewModel.ExcludedJenisNames).
+        ExcludeJenisNames = new List<string>(SuratConstants.NtcrSemua),
+        JenisSurat = string.IsNullOrWhiteSpace(jenis) ? null : jenis.Trim(),
+        SearchText = string.IsNullOrWhiteSpace(cari) ? null : cari.Trim(),
+        // Nilai status yang tidak dikenal diabaikan, bukan ditolak: penyaring
+        // kosong berarti "semua status" seperti kotak pilihan desktop.
+        Status = SuratConstants.ValidStatus.FirstOrDefault(
+            s => string.Equals(s, status, StringComparison.OrdinalIgnoreCase)),
+        Tahun = int.TryParse(tahun, out var th) && th is >= 1900 and <= 3000
+            ? th.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            : null
+    };
+
+    var halamanKe = Math.Max(1, halaman ?? 1);
+    var ukuranHalaman = Math.Clamp(ukuran ?? 25, 5, 200);
+
+    // Query dijalankan BERURUTAN pada satu koneksi: Microsoft.Data.Sqlite tidak
+    // thread-safe untuk query konkuren di koneksi bersama (aturan yang sama
+    // dengan halaman desktop), dan koneksi ini scoped untuk permintaan ini.
+    var data = (await repo.GetFilteredAsync(
+        filter,
+        sortBy: "ID_Surat",
+        ascending: false,
+        skip: (halamanKe - 1) * ukuranHalaman,
+        take: ukuranHalaman,
+        cancellationToken: ct)).ToList();
+
+    var total = await repo.CountAsync(filter, ct);
+    var perStatus = await repo.CountByStatusAsync(filter.CloneTanpaStatus(), ct);
+    var labelJenis = await jenisRepo.GetJenisSuratDisplayNamesAsync();
+    var tahunTersedia = await jenisRepo.GetAvailableYearsAsync();
+
+    var totalHalaman = (int)Math.Ceiling(total / (double)ukuranHalaman);
+    var mulai = total == 0 ? 0 : (halamanKe - 1) * ukuranHalaman + 1;
+    var sampai = Math.Min(total, halamanKe * ukuranHalaman);
+
+    return Results.Ok(new
+    {
+        total,
+        halaman = halamanKe,
+        ukuran = ukuranHalaman,
+        totalHalaman,
+        ringkasan = $"Menampilkan {mulai}–{sampai} dari {total} surat.",
+        tahunTersedia,
+        // Pilihan penyaring jenis: katalog konfigurasi Core dikurangi NTCR.
+        jenisTersedia = labelJenis
+            .Where(p => !SuratConstants.IsNtcr(p.Key))
+            .OrderBy(p => p.Value, StringComparer.CurrentCultureIgnoreCase)
+            .Select(p => new { jenis = p.Key, label = p.Value }),
+        // Hitungan per status memakai filter yang sama tanpa syarat status,
+        // sama seperti ringkasan "Status: ..." pada halaman desktop.
+        perStatus = SuratConstants.ValidStatus.Select(s => new
+        {
+            status = s,
+            label = s switch
+            {
+                "Active" => "Aktif",
+                "Cancelled" => "Dibatalkan",
+                _ => "Draft"
+            },
+            jumlah = perStatus.TryGetValue(s, out var jumlah) ? jumlah : 0
+        }),
+        items = data.Select(s =>
+        {
+            var jenisNama = string.IsNullOrWhiteSpace(s.NamaJenis)
+                ? "-"
+                : s.NamaJenis!.ToUpperInvariant();
+            var dariTemplate = TemplateSuratTercatat.DariTemplateSurat(s);
+            var warga = s.Warga;
+
+            // Urutan sama dengan GetNamaDisplay desktop: instansi → template → warga.
+            var nama = !string.IsNullOrWhiteSpace(s.Instansi?.NamaInstansi)
+                ? s.Instansi!.NamaInstansi
+                : dariTemplate
+                    ? TemplateSuratTercatat.NamaPenerimaTampil(s)
+                    : warga?.Nama;
+
+            var ttl = dariTemplate
+                ? TemplateSuratTercatat.TempatTanggalLahirTampil(s)
+                : warga is null
+                    ? null
+                    : $"{warga.TempatLahir ?? "-"}, {warga.TanggalLahir ?? "-"}";
+
+            var jk = dariTemplate
+                ? TemplateSuratTercatat.JenisKelaminTampil(s)
+                : string.IsNullOrEmpty(warga?.JenisKelamin)
+                    ? null
+                    : warga!.JenisKelamin![..1].ToUpperInvariant();
+
+            var alamat = dariTemplate
+                ? TemplateSuratTercatat.AlamatPenerimaTampil(s)
+                : warga is not null
+                    ? string.Join(", ", new[]
+                        {
+                            warga.Dusun, warga.Desa, warga.Kecamatan, warga.Kabupaten
+                        }.Where(bagian => !string.IsNullOrWhiteSpace(bagian)))
+                    : s.Instansi?.AlamatInstansi;
+
+            var statusSurat = string.IsNullOrWhiteSpace(s.Status) ? "Draft" : s.Status!;
+
+            return new
+            {
+                id = s.ID_Surat,
+                nomor = s.NomorSurat,
+                tanggal = s.TanggalSurat,
+                keperluan = s.Keperluan,
+                keterangan = s.Keterangan,
+                jenis = jenisNama,
+                labelJenis = labelJenis.TryGetValue(jenisNama, out var label)
+                    ? label
+                    : jenisNama.Replace('_', ' '),
+                nama = string.IsNullOrWhiteSpace(nama) ? "-" : nama,
+                jk,
+                ttl = string.IsNullOrWhiteSpace(ttl) ? "-" : ttl,
+                alamat = string.IsNullOrWhiteSpace(alamat) ? "-" : alamat,
+                status = statusSurat,
+                statusLabel = statusSurat switch
+                {
+                    "Active" => "Aktif",
+                    "Cancelled" => "Dibatalkan",
+                    _ => "Draft"
+                },
+                // Hanya surat yang memang melewati alur persetujuan yang
+                // membawa keterangan; surat tanpa alur tidak perlu baris
+                // "Tanpa persetujuan" di setiap baris register.
+                statusPersetujuan = s.LewatPersetujuan ? s.StatusPersetujuanTampil : null,
+                dibuatPada = s.CreatedAt
+            };
+        })
+    });
+}).WithName("DaftarSurat");
+
 // ==== Permintaan surat online (alur tulis) ====
 // POST — muka publik untuk sistem luar/warga; berkey seperti listener Core.
 // Badan dibaca manual lewat ReadFromJsonAsync: dengan ada parameter HttpContext

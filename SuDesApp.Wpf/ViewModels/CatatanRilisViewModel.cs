@@ -208,6 +208,13 @@ namespace SuDesApp.Wpf.ViewModels
                             "Bagian yang punya anak menu (Buat Surat Baru, Surat Peraturan, Surat Masuk/Keluar, NTCR) bisa dibuka-tutup seperti akordeon desktop. Daftar pilihan surat dan blanko NTCR dibaca dari katalog Core yang sama lewat endpoint /sudes/api/v1/menu — menu web tidak lagi menyimpan salinan daftar sendiri, jadi menambah jenis surat cukup sekali di Core dan kedua platform langsung ikut.",
                             "Item menu yang sedang dibuka disorot, dan pada layar ponsel drawer menu menutup sendiri setiap kali halaman berpindah (sebelumnya menutup bahkan saat akordeon hanya dibuka).",
                             "Menu desktop ikut dibersihkan: item Panduan WhatsApp yang halamannya sudah dihapus tidak lagi muncul sebagai menu mati."
+                        }),
+                        new CatatanRilisSubSection("Fitur Baru — Register Surat dan Data Warga di Website", new List<string>
+                        {
+                            "Halaman Register Surat (/modul/register-surat) menampilkan surat yang sudah tercatat: nomor, tanggal, jenis, nama penerima beserta TTL/alamat, keperluan, dan status. Penyaring status, tahun, dan jenis serta paginasi dikerjakan server memakai filter Core yang sama dengan register desktop, jadi isi dan urutan barisnya tidak bisa berbeda antara kedua platform. Jenis NTCR tetap dipisahkan ke registernya sendiri.",
+                            "Ringkasan Draft/Aktif/Dibatalkan di atas tabel dihitung dari penyaring yang sedang berlaku tanpa syarat status — sama seperti baris status pada register desktop, sehingga angka ringkasan tidak berubah hanya karena status ikut disaring.",
+                            "Halaman Data Warga (/modul/warga) menampilkan data warga dengan pencarian nama, NIK, No. KK, alamat, atau nomor HP, penyaring status warga, dan paginasi. Kedua halaman membaca database desa yang sama lewat backend, jadi tidak ada salinan data yang perlu disinkronkan.",
+                            "Keduanya masih membaca saja: membuat atau mengubah surat, mencetak, memindai tanda tangan, dan memutasi data warga tetap dilakukan dari aplikasi desktop sampai formulir tulisnya diporting ke web."
                         })
                     }),
                 new CatatanRilisEntry(

@@ -1,0 +1,213 @@
+@page "/modul/warga"
+@inject SuDesApiClient Api
+
+<PageTitle>Data Warga — SuDesApp</PageTitle>
+
+<h1>Data Warga</h1>
+<p class="sapaan">
+    Daftar warga desa yang tersimpan di database desa — sama persis dengan yang
+    dibaca aplikasi desktop, karena keduanya memakai query yang sama di Core.
+    Cari dengan nama, NIK, No. KK, alamat, atau nomor HP.
+</p>
+
+<section class="panel">
+    <div class="saring">
+        <label class="cari">
+            <span>Cari warga</span>
+            <div class="cari-baris">
+                <input @bind="_cari" @bind:event="oninput" @onkeydown="TombolCari"
+                       placeholder="Nama, NIK, No. KK, alamat, atau no. HP"
+                       disabled="@_sibuk" autocomplete="off" />
+                <button class="utama" @onclick="CariAsync" disabled="@_sibuk">Cari</button>
+            </div>
+        </label>
+
+        <label>
+            <span>Status</span>
+            <select @bind="_status" @bind:after="CariAsync" disabled="@_sibuk">
+                <option value="">Semua status</option>
+                <option value="AKTIF">Aktif</option>
+                <option value="BARU">Baru</option>
+                <option value="PINDAH">Pindah</option>
+                <option value="MENINGGAL">Meninggal</option>
+            </select>
+        </label>
+
+        <label>
+            <span>Baris per halaman</span>
+            <select @bind="_ukuran" @bind:after="CariAsync" disabled="@_sibuk">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </label>
+    </div>
+
+    @if (_galat is not null)
+    {
+        <div class="peringatan" role="alert">@_galat</div>
+    }
+    else if (_hasil is null)
+    {
+        <p class="memuat">Memuat data warga…</p>
+    }
+    else
+    {
+        <div class="kepala">
+            <p class="ringkasan">@Ringkasan</p>
+            <button @onclick="CariAsync" disabled="@_sibuk">Muat ulang</button>
+        </div>
+
+        @if (_hasil.Items.Count == 0)
+        {
+            <p class="memuat">
+                Tidak ada warga yang cocok. Hapus kata kunci atau pilih
+                <em>Semua status</em> untuk melihat seluruh data.
+            </p>
+        }
+        else
+        {
+            <div class="tabel-gulir">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">NIK</th>
+                            <th scope="col">Nama</th>
+                            <th scope="col">JK</th>
+                            <th scope="col">Tempat / tanggal lahir</th>
+                            <th scope="col">Alamat</th>
+                            <th scope="col">No. KK</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var w in _hasil.Items)
+                        {
+                            <tr>
+                                <td class="mono">@(w.Nik ?? "-")</td>
+                                <td><strong>@(w.Nama ?? "-")</strong></td>
+                                <td>@TampilanJk(w.Jk)</td>
+                                <td>@Lahir(w)</td>
+                                <td>@Alamat(w)</td>
+                                <td class="mono">@(w.NoKk ?? "-")</td>
+                                <td><span class="lencana @KelasStatus(w.Status)">@TampilanStatus(w.Status)</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="halaman">
+                <button @onclick="() => PindahAsync(-1)" disabled="@(_sibuk || _hasil.Halaman <= 1)">
+                    ← Sebelumnya
+                </button>
+                <span>Halaman @_hasil.Halaman dari @Math.Max(1, _hasil.TotalHalaman)</span>
+                <button @onclick="() => PindahAsync(1)"
+                        disabled="@(_sibuk || _hasil.Halaman >= _hasil.TotalHalaman)">
+                    Berikutnya →
+                </button>
+            </div>
+        }
+    }
+</section>
+
+<p class="catatan">
+    Menambah, mengubah, atau memutasi data warga dilakukan dari aplikasi desktop
+    sampai formulirnya diporting ke sini. Halaman ini hanya membaca data agar
+    operator bisa memeriksa dan mencari tanpa membuka komputer desa.
+</p>
+
+@code {
+    private string? _cari;
+    private string? _status;
+    private int _ukuran = 25;
+    private bool _sibuk;
+    private HasilDaftarWarga? _hasil;
+    private string? _galat;
+
+    protected override async Task OnInitializedAsync() => await MuatAsync();
+
+    private async Task CariAsync() => await MuatAsync(1);
+
+    private async Task PindahAsync(int arah)
+    {
+        if (_hasil is null) return;
+        await MuatAsync(Math.Max(1, _hasil.Halaman + arah));
+    }
+
+    private async Task MuatAsync(int halaman = 1)
+    {
+        _sibuk = true;
+        try
+        {
+            _galat = null;
+            var hasil = await Api.WargaAsync(_cari, _status, halaman, _ukuran);
+            if (!hasil.Sukses)
+            {
+                _galat = hasil.Pesan;
+                _hasil = null;
+                return;
+            }
+
+            _hasil = hasil;
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private async Task TombolCari(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await CariAsync();
+    }
+
+    private string Ringkasan =>
+        _hasil?.Ringkasan ?? string.Empty;
+
+    private static string TampilanJk(string? jk) => (jk ?? string.Empty).ToUpperInvariant() switch
+    {
+        "L" or "LAKI-LAKI" or "LAKI LAKI" => "L",
+        "P" or "PEREMPUAN" => "P",
+        _ => "-"
+    };
+
+    private static string Lahir(BarisWarga w)
+    {
+        var tempat = string.IsNullOrWhiteSpace(w.TempatLahir) ? null : w.TempatLahir!.Trim();
+        var tanggal = string.IsNullOrWhiteSpace(w.TanggalLahir) ? null : w.TanggalLahir!.Trim();
+        return tempat is null && tanggal is null ? "-"
+            : tempat is null ? tanggal!
+            : tanggal is null ? tempat
+            : $"{tempat}, {tanggal}";
+    }
+
+    private static string Alamat(BarisWarga w)
+    {
+        if (!string.IsNullOrWhiteSpace(w.Alamat)) return w.Alamat!;
+
+        var bagian = new List<string>();
+        if (!string.IsNullOrWhiteSpace(w.Dusun)) bagian.Add(w.Dusun!.Trim());
+        if (!string.IsNullOrWhiteSpace(w.Rt) || !string.IsNullOrWhiteSpace(w.Rw))
+            bagian.Add($"RT {w.Rt ?? "-"}/RW {w.Rw ?? "-"}");
+        return bagian.Count == 0 ? "-" : string.Join(", ", bagian);
+    }
+
+    private static string TampilanStatus(string? status) => (status ?? string.Empty).ToUpperInvariant() switch
+    {
+        "AKTIF" => "Aktif",
+        "BARU" => "Baru",
+        "PINDAH" => "Pindah",
+        "MENINGGAL" => "Meninggal",
+        _ => status ?? "-"
+    };
+
+    private static string KelasStatus(string? status) => (status ?? string.Empty).ToUpperInvariant() switch
+    {
+        "AKTIF" => "aktif",
+        "BARU" => "baru",
+        "PINDAH" => "pindah",
+        "MENINGGAL" => "meninggal",
+        _ => "lain"
+    };
+}
