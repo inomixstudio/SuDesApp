@@ -312,6 +312,23 @@ app.MapGet("/sudes/api/v1/jenis-surat", (HttpContext ctx) =>
     Results.Ok(ctx.RequestServices.GetRequiredService<IApiRingkasanService>().AmbilJenisSuratOnline()))
     .WithName("JenisSuratOnline");
 
+// ==== Menu aplikasi (daftar pilihan surat untuk sidebar) ====
+// Isinya katalog yang sama dengan menu desktop: "Buat Surat Baru" dan blanko
+// NTCR. Ditaruh di API supaya menu web tidak menyalin daftar sendiri dan bisa
+// ketinggalan saat Core menambah jenis surat. Tidak memuat data pribadi, jadi
+// boleh dibaca tanpa sesi (dipakai juga sebelum login selesai dimuat).
+app.MapGet("/sudes/api/v1/menu", () => Results.Ok(new
+{
+    surat = MenuSuratKatalog.Semua.Select(p => new { label = p.Label, jenis = p.Jenis }),
+    ntcr = NtcrKatalog.Semua.Select(n => new
+    {
+        judul = n.Judul,
+        jenis = n.NamaJenis,
+        kode = n.Kode,
+        keterangan = n.Keterangan
+    })
+})).WithName("MenuAplikasi");
+
 // ==== Permintaan surat online (alur tulis) ====
 // POST — muka publik untuk sistem luar/warga; berkey seperti listener Core.
 // Badan dibaca manual lewat ReadFromJsonAsync: dengan ada parameter HttpContext
