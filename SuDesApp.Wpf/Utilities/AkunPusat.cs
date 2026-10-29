@@ -19,12 +19,11 @@ namespace SuDesApp.Wpf.Utilities
     /// HANYA ditambahkan ke navigasi bila sesi yang sedang masuk adalah akun ini
     /// (<see cref="SesiIniPusat"/>). Sesi lain tidak melihat menunya sama sekali.
     ///
-    /// Kata sandi akun ini TIDAK lagi ditanam di kode. Sandi harus diprovisikan
-    /// di mesin yang membutuhkannya, lewat environment variable
+    /// Kata sandi bawaannya <see cref="SandiBawaan"/> (<c>adminpusat11</c>),
+    /// TETAP dan tidak pernah dibuat acak/dirotasi otomatis. Mesin yang memang
+    /// memakai sandi lain boleh menimpanya lewat environment variable
     /// <see cref="VariabelSandi"/> atau berkas <see cref="NamaBerkasSandi"/> di
-    /// samping executable. Tanpa provisioning, akun pusat tidak bisa dipakai
-    /// sama sekali (gagal-tertutup) — lebih baik daripada kata sandi bawaan
-    /// yang sama di semua instalasi dan sudah pernah terbit di repo publik.
+    /// samping executable; tanpa provisioning, sandi bawaan itu yang berlaku.
     ///
     /// Halaman pusat administrasi sendiri tetap meminta kredensial operator
     /// server (<c>Lisensi:AdminOperators</c>) yang tidak pernah ada di aplikasi
@@ -71,6 +70,14 @@ namespace SuDesApp.Wpf.Utilities
         public const string NamaBerkasSandi = "Pusat.kunci";
 
         /// <summary>
+        /// Kata sandi bawaan akun pusat. Nilai ini sengaja TETAP (bukan dibuat
+        /// acak): akun penyedia harus selalu bisa masuk dengan kredensial yang
+        /// didokumentasikan, dan tidak boleh berubah sendiri saat aplikasi
+        /// pertama kali dipakai. Provisioning mesin menimpanya bila diisi.
+        /// </summary>
+        public const string SandiBawaan = "adminpusat11";
+
+        /// <summary>
         /// Penunjuk lokasi berkas sandi untuk pengujian — pola yang sama dengan
         /// <see cref="BerkasLogin.LokasiOverride"/>. Null = di samping executable.
         /// </summary>
@@ -82,12 +89,12 @@ namespace SuDesApp.Wpf.Utilities
             ?? Path.Combine(AppContext.BaseDirectory, NamaBerkasSandi);
 
         /// <summary>
-        /// Kata sandi akun pusat yang diprovisikan administrator mesin. String
-        /// kosong berarti belum diprovisikan (akun pusat nonaktif).
+        /// Kata sandi akun pusat yang berlaku: provisioning mesin bila ada,
+        /// selain itu <see cref="SandiBawaan"/>.
         /// </summary>
         public static string Sandi => BacaSandi();
 
-        /// <summary>True bila kata sandi akun pusat sudah diprovisikan.</summary>
+        /// <summary>True bila ada kata sandi yang berlaku (selalu benar selama SandiBawaan ada).</summary>
         public static bool SandiTersedia => Sandi.Length > 0;
 
         private static string BacaSandi()
@@ -112,17 +119,18 @@ namespace SuDesApp.Wpf.Utilities
             }
             catch (Exception)
             {
-                // Provisioning rusak/terbaca gagal = akun pusat nonaktif, bukan
+                // Provisioning rusak/terbaca gagal = pakai sandi bawaan, bukan
                 // alasan menggagalkan startup aplikasi desa.
             }
 
-            return string.Empty;
+            return SandiBawaan;
         }
 
         /// <summary>
-        /// Cocokkan kata sandi yang diketik dengan sandi provisioning.
-        /// Perbandingan waktu tetap; layar login sudah menormalkan input ke
-        /// huruf kecil, jadi kedua sisi dinormalkan dengan cara yang sama.
+        /// Cocokkan kata sandi yang diketik dengan sandi yang berlaku
+        /// (provisioning atau bawaan). Perbandingan waktu tetap; layar login
+        /// sudah menormalkan input ke huruf kecil, jadi kedua sisi dinormalkan
+        /// dengan cara yang sama.
         /// </summary>
         public static bool CocokSandi(string? sandi)
         {

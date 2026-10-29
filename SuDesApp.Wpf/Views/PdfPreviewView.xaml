@@ -87,7 +87,7 @@
             </Grid>
         </Border>
 
-        <!-- Pratinjau PDF (PDFium) -->
+        <!-- Pratinjau PDF (mesin SudesPdf sendiri) -->
         <Border Grid.Row="2" Background="{DynamicResource PdfLatarBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="8" ClipToBounds="True">
             <Grid>

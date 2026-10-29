@@ -149,37 +149,77 @@ namespace SuDesApp.Configuration
             if (string.IsNullOrWhiteSpace(backupPath))
                 throw new ArgumentException("Jalur backup tidak boleh kosong.", nameof(backupPath));
 
-            if (!File.Exists(backupPath))
+            var sumberPath = Path.GetFullPath(backupPath);
+            if (!File.Exists(sumberPath))
             {
                 throw new FileNotFoundException($"Berkas backup tidak ditemukan: {backupPath}");
             }
 
             var dbPath = new SqliteConnectionStringBuilder(_config.DatabaseConnectionString).DataSource;
 
-            // Salin database yang SEDANG DIPAKAI ke tempat aman DULU.
-            //
-            // Sebelumnya File.Copy(backupPath, dbPath, overwrite: true) langsung
-            // menghancurkan database aktif: kalau salinan ternyata rusak atau
-            // berasal dari mesin dengan kunci enkripsi berbeda (DPAPI terikat
-            // per-user), pengguna kehilangan semuanya dalam satu langkah tanpa
-            // jalan pulih.
-            //
-            // Koneksi terbuka TIDAK ditutup di sini. ClearAllPools() hanya
-            // membuang pooling; koneksi yang masih hidup di scope DI milik
-            // siapapun dan menutupnya berarti merusak kode lain diam-diam.
-            // Kalau isinya terkunci, File.Copy akan gagal — dan itu memang
-            // hasil yang benar: gagal terang lebih baik daripada menimpa
-            // sebagian jadi sebagian tidak.
-            var cadangan = string.Concat(dbPath, ".sebelum-restore-", DateTime.Now.ToString("yyyyMMdd-HHmmss"));
+            if (string.Equals(Path.GetFullPath(dbPath), sumberPath, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Berkas cadangan tidak boleh sama dengan database yang sedang dipakai.");
+            }
+
+            // 1. Periksa SUMBER sebelum menyentuh database aktif sama sekali.
+            //    Berkas rusak / database lama yang tidak bisa dibuka akan ditolak
+            //    di sini, sehingga database aktif tetap utuh.
+            var koneksiSumber = BerkasDatabase.DeteksiKoneksi(sumberPath)
+                ?? throw new InvalidOperationException(
+                    "Berkas cadangan tidak bisa dibuka: bukan database SQLite yang valid " +
+                    "(rusak, atau berasal dari versi lama yang terenkripsi).");
+
+            await using (var sumber = new SqliteConnection(koneksiSumber))
+            {
+                await sumber.OpenAsync();
+
+                using var periksa = sumber.CreateCommand();
+                periksa.CommandText = "PRAGMA integrity_check;";
+                var hasil = Convert.ToString(await periksa.ExecuteScalarAsync())
+                            ?? string.Empty;
+
+                if (!string.Equals(hasil, "ok", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException(
+                        $"Berkas cadangan rusak (integrity_check: {hasil}). " +
+                        "Database yang sedang dipakai tidak diubah.");
+                }
+            }
+
+            // 2. Snapshot konsisten database aktif (termasuk isi WAL) sebelum
+            //    diubah. Dicadangkan lebih dulu supaya kegagalan di tengah
+            //    pemulihan masih punya jalan pulih. Nama memakai milidetik agar
+            //    dua pemulihan pada detik yang sama tidak saling menimpa.
+            string? cadangan = null;
             if (File.Exists(dbPath))
             {
-                File.Copy(dbPath, cadangan, overwrite: false);
+                cadangan = string.Concat(
+                    dbPath, ".sebelum-restore-", DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
+
+                await BuatBackupAsync(cadangan);
                 _logger.LogWarning(
-                    "Database aktif disalin ke {Cadangan} sebelum restore. Hapus bila restore berhasil.",
+                    "Database aktif dicadangkan ke {Cadangan} sebelum restore. Dihapus bila restore berhasil.",
                     cadangan);
             }
 
-            File.Copy(backupPath, dbPath, overwrite: true);
+            // 3. Salin isi lewat backup API SQLite, BUKAN File.Copy.
+            //
+            //    Mengganti berkas utama di level OS meninggalkan -wal/-shm lama
+            //    di sebelahnya; SQLite lalu memakai WAL itu pada database hasil
+            //    restore — transaksi lama bisa muncul kembali atau indeks rusak.
+            //    Backup API menulis melalui koneksi SQLite sendiri, jadi WAL,
+            //    koneksi yang masih terbuka, dan halaman yang sedang dipakai ikut
+            //    ditangani.
+            await using (var sumber = new SqliteConnection(koneksiSumber))
+            await using (var tujuan = new SqliteConnection(_config.DatabaseConnectionString))
+            {
+                await sumber.OpenAsync();
+                await tujuan.OpenAsync();
+
+                sumber.BackupDatabase(tujuan);
+            }
 
             _logger.LogInformation(
                 "Database dipulihkan dari backup: {BackupPath}. Cadangan pra-restore: {Cadangan}",

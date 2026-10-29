@@ -536,10 +536,8 @@ namespace SuDesApp.Data.Models
         {
             if (errors.Any())
             {
-                _logger.LogDebug("Validation errors: {Errors}, Warga: NIK={NIK}, Nama={Nama}, Status={Status}",
+                _logger.LogDebug("Kesalahan validasi surat: {Errors}, Status={Status}",
                     string.Join("; ", errors),
-                    _suratData.Warga?.NIK ?? "null",
-                    _suratData.Warga?.Nama ?? "null",
                     _suratData.Status ?? "null");
             }
             else

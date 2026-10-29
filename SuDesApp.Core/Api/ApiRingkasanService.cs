@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Services;
-using SuDesApp.WhatsApp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,9 +33,6 @@ namespace SuDesApp.Api
         Task<IReadOnlyList<ApiPerangkatRingkas>> AmbilPerangkatAsync(
             bool hanyaAktif = true, CancellationToken ct = default);
 
-        /// <summary>Daftar nama jenis surat yang bisa diminta lewat API.</summary>
-        IReadOnlyList<string> AmbilJenisSuratOnline();
-
         /// <summary>
         /// Rekap laporan bulanan: jumlah surat per bulan untuk satu tahun
         /// (bawaan tahun berjalan), dirinci per status persetujuan. Tiap bulan
@@ -52,7 +48,6 @@ namespace SuDesApp.Api
         private readonly IWargaRepository _warga;
         private readonly IPerangkatDesaService _perangkat;
         private readonly ISuratRepository _surat;
-        private readonly IPermintaanWaRepository _permintaan;
         private readonly ILogger<ApiRingkasanService> _logger;
         private readonly Func<DateTime> _sekarang;
 
@@ -60,14 +55,12 @@ namespace SuDesApp.Api
             IWargaRepository warga,
             IPerangkatDesaService perangkat,
             ISuratRepository surat,
-            IPermintaanWaRepository permintaan,
             ILogger<ApiRingkasanService>? logger = null,
             Func<DateTime>? sekarang = null)
         {
             _warga = warga ?? throw new ArgumentNullException(nameof(warga));
             _perangkat = perangkat ?? throw new ArgumentNullException(nameof(perangkat));
             _surat = surat ?? throw new ArgumentNullException(nameof(surat));
-            _permintaan = permintaan ?? throw new ArgumentNullException(nameof(permintaan));
             _logger = logger ?? NullLogger<ApiRingkasanService>.Instance;
             _sekarang = sekarang ?? (() => DateTime.Now);
         }
@@ -78,7 +71,6 @@ namespace SuDesApp.Api
             var perangkat = await _perangkat.AmbilStatistikAsync(ct).ConfigureAwait(false);
             var suratPerStatus = await HitungSuratPerStatusAsync(ct).ConfigureAwait(false);
             var suratPerPersetujuan = await HitungSuratPerStatusPersetujuanAsync(ct).ConfigureAwait(false);
-            var permintaanPerStatus = await HitungPermintaanPerStatusAsync(ct).ConfigureAwait(false);
 
             return new ApiRingkasan
             {
@@ -99,11 +91,7 @@ namespace SuDesApp.Api
 
                 SuratTotal = suratPerStatus.Values.Sum(),
                 SuratPerStatus = suratPerStatus,
-                SuratPerStatusPersetujuan = suratPerPersetujuan,
-
-                PermintaanTotal = permintaanPerStatus.Values.Sum(),
-                PermintaanPerStatus = permintaanPerStatus,
-                PermintaanBelumDibaca = await HitungPermintaanBelumDibacaAsync(ct).ConfigureAwait(false)
+                SuratPerStatusPersetujuan = suratPerPersetujuan
             };
         }
 
@@ -129,13 +117,6 @@ namespace SuDesApp.Api
                 })
                 .ToList();
         }
-
-        public IReadOnlyList<string> AmbilJenisSuratOnline()
-            => WaFormatParser.KatalogSurat
-                .Where(k => !WaFormatParser.IsOfflineOnly(k.NamaJenis))
-                .Select(k => k.NamaJenis)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
 
         public async Task<ApiRekapBulanan> AmbilRekapBulananAsync(
             int? tahun = null, CancellationToken ct = default)
@@ -251,34 +232,5 @@ namespace SuDesApp.Api
             return hasil;
         }
 
-        private async Task<Dictionary<string, int>> HitungPermintaanPerStatusAsync(CancellationToken ct)
-        {
-            var hasil = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            foreach (var status in WaRequestStatus.All)
-            {
-                try
-                {
-                    hasil[status] = await _permintaan.CountByStatusAsync(status, ct).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Gagal menghitung permintaan {Status} untuk API", status);
-                }
-            }
-            return hasil;
-        }
-
-        private async Task<int> HitungPermintaanBelumDibacaAsync(CancellationToken ct)
-        {
-            try
-            {
-                return await _permintaan.CountUnreadAsync(ct).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal menghitung permintaan belum dibaca untuk API");
-                return 0;
-            }
-        }
     }
 }

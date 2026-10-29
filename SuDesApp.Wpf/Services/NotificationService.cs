@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -8,6 +9,29 @@ using SuDesApp.Wpf.Mvvm;
 
 namespace SuDesApp.Wpf.Services
 {
+    /// <summary>
+    /// Satu tombol tindakan pada notifikasi lonceng (mis. "Instal Sekarang" /
+    /// "Instal Saat Keluar" untuk pembaruan yang sudah terunduh). Teksnya pendek
+    /// dan tindakannya sudah disiapkan pengirim notifikasi; flyout cukup
+    /// menjalankannya — tidak ada logika bisnis di lapisan tampilan.
+    /// </summary>
+    public sealed class NotificationAction
+    {
+        public NotificationAction(string text, Action execute, bool primary = false)
+        {
+            Text = text ?? string.Empty;
+            Execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            Primary = primary;
+        }
+
+        public string Text { get; }
+
+        public Action Execute { get; }
+
+        /// <summary>Benar untuk tindakan utama (disorot) — mis. "Instal Sekarang".</summary>
+        public bool Primary { get; }
+    }
+
     /// <summary>Jenis notifikasi — menentukan ikon &amp; warna aksen pada popup.</summary>
     public enum NotificationType
     {
@@ -29,8 +53,8 @@ namespace SuDesApp.Wpf.Services
         public DateTime CreatedAt { get; }
 
         /// <summary>
-        /// Kunci halaman tujuan bila notifikasi diklik (mis. "pembaruan",
-        /// "layanan-online"). Kosong = tidak bisa diklik untuk navigasi.
+        /// Kunci halaman tujuan bila notifikasi diklik (mis. "pembaruan").
+        /// Kosong = tidak bisa diklik untuk navigasi.
         /// Dipetakan oleh MainWindowViewModel.BukaTujuanNotifikasiAsync.
         /// </summary>
         public string TujuanMenu { get; }
@@ -69,7 +93,22 @@ namespace SuDesApp.Wpf.Services
                 .SkipWhile(l => l.Trim().Length == 0)
                 .ToArray();
 
-        public NotificationItem(NotificationType type, string title, string message, string? tujuanMenu = null)
+        /// <summary>
+        /// Tombol tindakan yang tampil di bawah pesan (boleh kosong). Dipakai
+        /// notifikasi pembaruan siap pasang untuk menawarkan "Instal Sekarang"
+        /// atau "Instal Saat Keluar" langsung dari lonceng.
+        /// </summary>
+        public IReadOnlyList<NotificationAction> Actions { get; }
+
+        /// <summary>True bila notifikasi ini memiliki tombol tindakan.</summary>
+        public bool HasActions => Actions.Count > 0;
+
+        public NotificationItem(
+            NotificationType type,
+            string title,
+            string message,
+            string? tujuanMenu = null,
+            IReadOnlyList<NotificationAction>? actions = null)
         {
             Type = type;
             Title = title;
@@ -77,6 +116,7 @@ namespace SuDesApp.Wpf.Services
             CreatedAt = DateTime.Now;
             IsRead = false;
             TujuanMenu = tujuanMenu ?? string.Empty;
+            Actions = actions ?? Array.Empty<NotificationAction>();
 
             Icon = type switch
             {
@@ -173,9 +213,14 @@ namespace SuDesApp.Wpf.Services
         /// <paramref name="tujuanMenu"/> opsional: kunci halaman yang dibuka saat
         /// notifikasi diklik (lihat MainWindowViewModel.BukaTujuanNotifikasiAsync).
         /// </summary>
-        public void Add(NotificationType type, string title, string message, string? tujuanMenu = null)
+        public void Add(
+            NotificationType type,
+            string title,
+            string message,
+            string? tujuanMenu = null,
+            IReadOnlyList<NotificationAction>? actions = null)
         {
-            var item = new NotificationItem(type, title, message, tujuanMenu);
+            var item = new NotificationItem(type, title, message, tujuanMenu, actions);
             var dispatcher = Application.Current?.Dispatcher;
             if (dispatcher == null || dispatcher.CheckAccess())
             {
@@ -187,7 +232,9 @@ namespace SuDesApp.Wpf.Services
             }
 
             // Log di luar antrean UI: I/O log tidak ikut membebani UI thread.
-            _logger.LogInformation("Notifikasi ({Type}): {Title} — {Message}", type, title, message);
+            // Isi notifikasi bisa memuat nama warga, jadi cukup jenisnya —
+            // isinya sudah tampil di lonceng aplikasi.
+            _logger.LogDebug("Notifikasi {Type} ditambahkan.", type);
         }
 
         private void AddCore(NotificationItem item)
@@ -209,10 +256,14 @@ namespace SuDesApp.Wpf.Services
             NotificationAdded?.Invoke(this, item);
         }
 
-        public void Info(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Info, title, message, tujuanMenu);
-        public void Success(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Success, title, message, tujuanMenu);
-        public void Warning(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Warning, title, message, tujuanMenu);
-        public void Error(string title, string message, string? tujuanMenu = null) => Add(NotificationType.Error, title, message, tujuanMenu);
+        public void Info(string title, string message, string? tujuanMenu = null, IReadOnlyList<NotificationAction>? actions = null)
+            => Add(NotificationType.Info, title, message, tujuanMenu, actions);
+        public void Success(string title, string message, string? tujuanMenu = null, IReadOnlyList<NotificationAction>? actions = null)
+            => Add(NotificationType.Success, title, message, tujuanMenu, actions);
+        public void Warning(string title, string message, string? tujuanMenu = null, IReadOnlyList<NotificationAction>? actions = null)
+            => Add(NotificationType.Warning, title, message, tujuanMenu, actions);
+        public void Error(string title, string message, string? tujuanMenu = null, IReadOnlyList<NotificationAction>? actions = null)
+            => Add(NotificationType.Error, title, message, tujuanMenu, actions);
 
         /// <summary>
         /// Cari notifikasi lama yang sudah tidak berlaku lagi: judulnya sama, dan — bila
@@ -242,7 +293,7 @@ namespace SuDesApp.Wpf.Services
             // Sebelumnya hanya penghapusan yang dijadwalkan ke UI, sedangkan
             // CariPesanLama(Items, …) menelusuri ObservableCollection yang terikat
             // ke NotificationList dari thread pemanggil — yang untuk pemanggil ini
-            // adalah thread latar (WaAutoProcessor dipanggil fire-and-forget).
+            // bisa berupa thread latar (pemanggil fire-and-forget).
             // UI yang menambah/menghapus pada saat bersamaan THEN menghasilkan
             // InvalidOperationException "Collection was modified" yang tertelan
             // catch di pemanggil, sehingga kabar basi tidak pernah terhapus.

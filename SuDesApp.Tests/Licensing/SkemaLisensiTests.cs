@@ -180,7 +180,7 @@ public sealed class AturanTrialTests
         var repo = new LanggananMemori();
         await repo.InitializeAsync();
 
-        var hasil = await repo.MulaiTrialAsync("id-yang-tidak-ada", 14, DateTime.UtcNow);
+        var hasil = await repo.MulaiTrialAsync("id-yang-tidak-ada", 30, DateTime.UtcNow);
 
         Assert.False(hasil.Boleh);
         Assert.Null(hasil.BerlakuSampai);
@@ -194,11 +194,11 @@ public sealed class AturanTrialTests
         var desa = await repo.DaftarkanAsync("DESAUJI", "Desa Uji");
         var sekarang = new DateTime(2026, 10, 22, 0, 0, 0, DateTimeKind.Utc);
 
-        var pertama = await repo.MulaiTrialAsync(desa.Id, 14, sekarang);
+        var pertama = await repo.MulaiTrialAsync(desa.Id, 30, sekarang);
         Assert.True(pertama.Boleh);
-        Assert.Equal(sekarang.AddDays(14), pertama.BerlakuSampai);
+        Assert.Equal(sekarang.AddDays(30), pertama.BerlakuSampai);
 
-        var kedua = await repo.MulaiTrialAsync(desa.Id, 14, sekarang.AddDays(1));
+        var kedua = await repo.MulaiTrialAsync(desa.Id, 30, sekarang.AddDays(1));
         Assert.False(kedua.Boleh);
         Assert.Contains("sudah pernah dipakai", kedua.Pesan ?? "", StringComparison.OrdinalIgnoreCase);
     }
@@ -216,7 +216,7 @@ public sealed class AturanTrialTests
         var bayar = await repo.PerpanjangAsync("ORDER-1", paket.Hari, "manual");
         Assert.True(bayar.Diterima);
 
-        var hasil = await repo.MulaiTrialAsync(desa.Id, 14, DateTime.UtcNow);
+        var hasil = await repo.MulaiTrialAsync(desa.Id, 30, DateTime.UtcNow);
 
         Assert.False(hasil.Boleh);
         Assert.Contains("masih aktif", hasil.Pesan ?? "", StringComparison.OrdinalIgnoreCase);

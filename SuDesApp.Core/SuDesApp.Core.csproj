@@ -23,43 +23,27 @@
   <ItemGroup>
     <!-- Dapat diuji dari SuDesApp.Tests tanpa harus membuka API internal ke
          publik. Diperlukan untuk menguji aturan yang tidak boleh bocor lewat
-         pintu lain, mis. MetaWebhookListener.VerifiTandaTangan. HARPUS
-         berbentuk ItemGroup: sebagai <PropertyGroup>, properti ini diabaikan
+         pintu lain, mis. ApiAutentikasi.CariCocok. HARUS berbentuk ItemGroup:
+         sebagai <PropertyGroup>, properti ini diabaikan
          MSBuild tanpa peringatan sehingga attribute tidak ter-generate dan
          test gagal dengan CS0117. -->
     <InternalsVisibleTo Include="SuDesApp.Tests" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Pembuatan PDF seluruh surat, laporan, dan register dikerjakan mesin
+         SudesPdf.Core milik aplikasi sendiri: tanpa QuestPDF, PDFium, atau
+         pustaka PDF pihak ketiga lainnya, dan tanpa berkas font yang
+         disematkan ke berkas keluaran. -->
+    <ProjectReference Include="..\SudesPdf.Core\SudesPdf.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.89" />
     <PackageReference Include="EPPlus" Version="8.7.2" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.77.0.4301" />
-    <PackageReference Include="Google.Apis.Forms.v1" Version="1.74.0.3764" />
-    <!-- Sheets API untuk mode layanan online Google Sheet/Form (baca jawaban + tulis status). -->
-    <!-- Dipin ke lini 1.77 agar selaras dengan Drive.v3 dan Google.Apis yang ditarik transitif. -->
-    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.77.0.4290" />
-    <!-- Dipin ke 10.0.12 (lini 10 LTS). Tervalidasi dari nuspec NuGet: paket ini
-         menarik SQLitePCLRaw 2.1.12 (bundle_e_sqlite3 + core) — identik dengan
-         9.0.x — sehingga provider SQLCipher tetap menang saat resolusi aset.
-         AWAS jangan sampai SQLitePCLRaw 3.0.x masuk (mis. lewat pembaruan
-         bundle_e_sqlite3 ke 3.x): provider SQLCipher (bundle_e_sqlcipher) hanya
-         pernah terbit sampai 2.1.11. Bila yang mendaftar di Batteries_V2.Init()
-         e_sqlite3 biasa, PRAGMA cipher_version kosong (enkripsi mati senyap).
-         Terverifikasi empiris pada 10.0.12: cipher_version = 4.5.2 community,
-         uji enkripsi at-rest (tulis, tolak tanpa password, baca) lulus. -->
-    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.13" />
-    <!-- Bundel native SQLCipher: EnkripsiDatabase memeriksa PRAGMA cipher_version
-         dan menolak jalan bila provider native e_sqlite3 biasa termuat (enkripsi
-         mati senyap). Bundel e_sqlite3 bawaan Microsoft.Data.Sqlite sengaja
-         dikeluarkan (ExcludeAssets=all) agar provider e_sqlcipher yang daftar
-         lewat Batteries_V2.Init — berkas lib-nya sama persis
-         (SQLitePCLRaw.batteries_v2.dll) dan yang menang dalam resolusi konflik
-         aset-lah yang menentukan provider aktif.
-
-         Versinya WAJIB sama dengan yang diminta Microsoft.Data.Sqlite 10.0.12
-         (2.1.12) dan sama dengan pin di proyek uji: selisih versi memicu NU1605
-         pada setiap clone bersih, sedangkan 3.0.x membuat provider SQLCipher
-         gagal dimuat. -->
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
+    <!-- Provider SQLite bawaan Microsoft.Data (bundle_e_sqlite3). Database desa
+         disimpan sebagai SQLite biasa tanpa enkripsi dan tanpa berkas kunci,
+         jadi tidak ada bundel SQLCipher yang perlu dikelola. -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.13" />
@@ -69,7 +53,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.13" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="QuestPDF" Version="2026.9.1" />
     <!-- QR untuk kaki surat (QrCodeSurat) -->
     <PackageReference Include="QRCoder" Version="1.8.1" />
     <!-- DPAPI utk kredensial klien OAuth Google (GoogleClientCredentials) -->

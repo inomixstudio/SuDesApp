@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace SuDesApp.Utilities
@@ -18,7 +19,7 @@ namespace SuDesApp.Utilities
         /// <summary>
         /// Penunjuk lokasi berkas preferensi untuk pengujian (dan skenario
         /// khusus). Null = lokasi profil user yang normal. Pola sama dengan
-        /// ApiKunci.LokasiOverride / KunciDatabase.LokasiOverride.
+        /// ApiKunci.LokasiOverride.
         /// </summary>
         internal static Func<string>? LokasiOverride { get; set; }
 
@@ -37,6 +38,18 @@ namespace SuDesApp.Utilities
 
         /// <summary>Simpan nilai boolean (1/0).</summary>
         public static void SetBool(string key, bool value) => SetString(key, value ? "1" : "0");
+
+        /// <summary>
+        /// Penanda bahwa kredensial administrator bawaan (admin/admin) sudah
+        /// dipasang atau dipulihkan. Dipakai pemutakhiran SEKALI JALAN untuk
+        /// instalasi lama: setelah penanda ini ada, sandi yang diganti pengguna
+        /// tidak pernah ditimpa lagi saat aplikasi dibuka.
+        /// </summary>
+        public static bool SudahDisiapkanKredensialBawaan() =>
+            GetBool("kredensial_bawaan_disiapkan", false);
+
+        public static void SetKredensialBawaanDisiapkan(bool v) =>
+            SetBool("kredensial_bawaan_disiapkan", v);
 
         /// <summary>Kode aktivasi langganan yang diketik pengguna (Pengaturan → Langganan).</summary>
         public static string GetKodeAktivasi() => GetString("kode_aktivasi", string.Empty) ?? string.Empty;
@@ -66,24 +79,18 @@ namespace SuDesApp.Utilities
         /// <summary>Simpan nilai integer.</summary>
         public static void SetInt(string key, int value) => SetString(key, value.ToString());
 
-        /// <summary>Ambil nilai string; null bila kunci tidak ada / berkas bermasalah.</summary>
+        /// <summary>
+        /// Ambil nilai string; null bila kunci tidak ada / berkas bermasalah.
+        /// Pembacaan bentuk berkas (termasuk cadangan <c>.bak</c> saat berkas
+        /// utama terpotong) dimiliki <see cref="BerkasPreferensi"/>.
+        /// </summary>
         public static string? GetString(string key, string? defaultValue)
         {
             try
             {
                 lock (FileLock)
                 {
-                    var path = PrefPath;
-                    if (!File.Exists(path)) return defaultValue;
-                    foreach (var line in File.ReadAllLines(path, Encoding.UTF8))
-                    {
-                        var idx = line.IndexOf('=');
-                        if (idx <= 0) continue;
-                        if (!line.Substring(0, idx).Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
-                            continue;
-                        return line.Substring(idx + 1).Trim();
-                    }
-                    return defaultValue;
+                    return BerkasPreferensi.Baca(PrefPath, key) ?? defaultValue;
                 }
             }
             catch
@@ -92,36 +99,62 @@ namespace SuDesApp.Utilities
             }
         }
 
-        /// <summary>Simpan nilai string. Gagal menulis diabaikan (preferensi non-kritis).</summary>
+        /// <summary>
+        /// Ambil nilai rahasia dari preferensi. Nilai baru disimpan memakai DPAPI
+        /// CurrentUser; nilai lama plaintext tetap dibaca sekali lalu dimigrasikan
+        /// otomatis agar pembaruan tidak memutus konfigurasi yang ada.
+        /// </summary>
+        public static string? GetSecret(string key, string? defaultValue = null)
+        {
+            var raw = GetString(key, null);
+            if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
+
+            const string penanda = "dpapi:";
+            if (!raw.StartsWith(penanda, StringComparison.Ordinal))
+            {
+                SetSecret(key, raw);
+                return raw;
+            }
+
+            try
+            {
+                var protectedBytes = Convert.FromBase64String(raw[penanda.Length..]);
+                var plaintext = ProtectedData.Unprotect(
+                    protectedBytes, Encoding.UTF8.GetBytes(key), DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(plaintext);
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>Simpan nilai rahasia dengan DPAPI per akun Windows.</summary>
+        public static void SetSecret(string key, string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                SetString(key, string.Empty);
+                return;
+            }
+
+            var protectedBytes = ProtectedData.Protect(
+                Encoding.UTF8.GetBytes(value), Encoding.UTF8.GetBytes(key), DataProtectionScope.CurrentUser);
+            SetString(key, "dpapi:" + Convert.ToBase64String(protectedBytes));
+        }
+
+        /// <summary>
+        /// Simpan nilai string secara ATOMIK (tulis sementara lalu ganti nama) supaya
+        /// listrik putus di tengah penulisan tidak mengosongkan seluruh preferensi.
+        /// Gagal menulis diabaikan (preferensi non-kritis).
+        /// </summary>
         public static void SetString(string key, string value)
         {
             try
             {
                 lock (FileLock)
                 {
-                    var path = PrefPath;
-                    var dir = Path.GetDirectoryName(path);
-                    if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-
-                    var lines = File.Exists(path)
-                        ? new List<string>(File.ReadAllLines(path, Encoding.UTF8))
-                        : new List<string>();
-
-                    var found = false;
-                    for (int i = 0; i < lines.Count; i++)
-                    {
-                        var idx = lines[i].IndexOf('=');
-                        if (idx <= 0) continue;
-                        if (lines[i].Substring(0, idx).Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
-                        {
-                            lines[i] = $"{key}={value}";
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) lines.Add($"{key}={value}");
-
-                    File.WriteAllLines(path, lines, Encoding.UTF8);
+                    BerkasPreferensi.Tulis(PrefPath, key, value);
                 }
             }
             catch
@@ -136,25 +169,24 @@ namespace SuDesApp.Utilities
 
         public const string KeyBackupDriveOnExit = "backupDriveOnExit";
         public const string KeyAutoBackupFormulirDrive = "autoBackupFormulirDrive";
-        public const string KeyWaAutoProcess = "waAutoProcess";
-        public const string KeyWaServiceOpen = "waServiceOpen";
-        public const string KeyWaServiceClose = "waServiceClose";
-        public const string KeyWaGateway = "waGateway";
-        public const string KeyWaFonnteToken = "waFonnteToken";
-        public const string KeyWaCloudApiToken = "waCloudApiToken";
-        public const string KeyWaCloudApiPhoneId = "waCloudApiPhoneId";
-        public const string KeyWaCloudApiVerifyToken = "waCloudApiVerifyToken";
-        public const string KeyWaCloudApiSecret = "waCloudApiAppSecret";
-        public const string KeyWaServiceDays = "waServiceDays";
         public const string KeyActivityLogging = "activityLogging";
         public const string KeyCleanupTempPdf = "cleanupTempPdf";
         public const string KeyCleanupOldExports = "cleanupOldExports";
         public const string KeyPeriksaPembaruan = "periksaPembaruan";
+        public const string KeyUnduhPembaruanOtomatis = "unduhPembaruanOtomatis";
         public const string KeyPasangOtomatisSaatKeluar = "pasangOtomatisSaatKeluar";
         public const string KeyBatasUkuranTambalanMb = "batasUkuranTambalanMb";
+        public const string KeyBatasUkuranUnduhanMb = "batasUkuranUnduhanMb";
         public const string KeyStartupDiamDiam = "startupDiamDiam";
         public const string KeyStartupDiamDiamMenit = "startupDiamDiamMenit";
         public const string KeyPanduanAwalSelesai = "panduanAwalSelesai";
+
+        /// <summary>
+        /// Keadaan kunci percobaan akun pusat: jumlah gagal dan waktu gagal
+        /// terakhir. Hanya angka dan waktu — tidak ada kata sandi, hash, atau
+        /// nama pengguna yang disimpan di sini.
+        /// </summary>
+        public const string KeyKunciPercobaanPusat = "pusatLoginPercobaan";
 
         /// <summary>
         /// Pemberitahuan sambutan di lonceng notifikasi sudah pernah ditampilkan.
@@ -244,62 +276,6 @@ namespace SuDesApp.Utilities
         public static bool IsAutoBackupFormulirDriveEnabled() => GetBool(KeyAutoBackupFormulirDrive, true);
         public static void SetAutoBackupFormulirDriveEnabled(bool v) => SetBool(KeyAutoBackupFormulirDrive, v);
 
-        /// <summary>Proses otomatis permintaan WhatsApp: generate PDF + kirim balik tanpa operator (default aktif).</summary>
-        public static bool IsWaAutoProcessEnabled() => GetBool(KeyWaAutoProcess, true);
-        public static void SetWaAutoProcessEnabled(bool v) => SetBool(KeyWaAutoProcess, v);
-
-        /// <summary>Jam buka layanan WA ("HH:mm"), null/kosong = selalu buka (24 jam).</summary>
-        public static string? GetWaServiceOpen() => GetString(KeyWaServiceOpen, string.Empty);
-        public static void SetWaServiceOpen(string? v) => SetString(KeyWaServiceOpen, v ?? string.Empty);
-
-        /// <summary>Jam tutup layanan WA ("HH:mm"), null/kosong = selalu buka (24 jam).</summary>
-        public static string? GetWaServiceClose() => GetString(KeyWaServiceClose, string.Empty);
-        public static void SetWaServiceClose(string? v) => SetString(KeyWaServiceClose, v ?? string.Empty);
-
-        /// <summary>Gateway WhatsApp aktif: "cloudapi" (WhatsApp Cloud API resmi dari Meta).</summary>
-        public static string GetWaGateway() => GetString(KeyWaGateway, "cloudapi") ?? "cloudapi";
-        public static void SetWaGateway(string v) => SetString(KeyWaGateway, string.IsNullOrWhiteSpace(v) ? "cloudapi" : v.Trim());
-
-        /// <summary>Device token Fonnte dari dashboard fonnte.com (perangkat Anda sendiri — layanan gratis).</summary>
-        public static string? GetWaFonnteToken() => GetString(KeyWaFonnteToken, string.Empty);
-        public static void SetWaFonnteToken(string? v) => SetString(KeyWaFonnteToken, v ?? string.Empty);
-
-        /// <summary>Permanent access token Cloud API (dari System User Meta Business).</summary>
-        public static string? GetWaCloudApiToken() => GetString(KeyWaCloudApiToken, string.Empty);
-        public static void SetWaCloudApiToken(string? v) => SetString(KeyWaCloudApiToken, v ?? string.Empty);
-
-        /// <summary>Phone Number ID nomor WhatsApp desa di Cloud API (Meta Business → WhatsApp → API Setup).</summary>
-        public static string? GetWaCloudApiPhoneId() => GetString(KeyWaCloudApiPhoneId, string.Empty);
-        public static void SetWaCloudApiPhoneId(string? v) => SetString(KeyWaCloudApiPhoneId, v ?? string.Empty);
-
-        /// <summary>Verify token bebas yang sama dengan yang diisi di konfigurasi webhook Meta.</summary>
-        public static string? GetWaCloudApiVerifyToken() => GetString(KeyWaCloudApiVerifyToken, string.Empty);
-        public static void SetWaCloudApiVerifyToken(string? v) => SetString(KeyWaCloudApiVerifyToken, v ?? string.Empty);
-
-        /// <summary>
-        /// App secret dari Meta Business Suite (WhatsApp → API Setup). Tidak sama
-        /// dengan verify token: verify token untuk cocokkan saat pendaftaran,
-        /// app secret untuk MEMBUKTIKAN tiap pesan webhook benar-benar dari Meta.
-        ///
-        /// Secret ini wajib diisi sekarang: MetaWebhookListener menolak request
-        /// yang tanda tangannya tidak bisa diperiksa, jadi tanpa secret seluruh
-        /// pesan masuk ditolak dengan 503.
-        /// </summary>
-        public static string? GetWaCloudApiSecret() => GetString(KeyWaCloudApiSecret, string.Empty);
-        public static void SetWaCloudApiSecret(string? v) => SetString(KeyWaCloudApiSecret, v ?? string.Empty);
-
-        /// <summary>
-        /// Hari layanan WA: indeks DayOfWeek dipisah koma (Minggu=0, Senin=1, … Sabtu=6).
-        /// Belum pernah diisi = Senin–Jumat ("1,2,3,4,5"); kosong setelahnya = setiap hari.
-        /// </summary>
-        public static string GetWaServiceDays()
-        {
-            var raw = GetString(KeyWaServiceDays, null);
-            if (raw == null) return "1,2,3,4,5"; // default pertama kali: Senin–Jumat
-            return raw;
-        }
-        public static void SetWaServiceDays(string? v) => SetString(KeyWaServiceDays, v ?? string.Empty);
-
         /// <summary>Pencatatan riwayat aktivitas (default: aktif).</summary>
         public static bool IsActivityLoggingEnabled() => GetBool(KeyActivityLogging, true);
         public static void SetActivityLoggingEnabled(bool v) => SetBool(KeyActivityLogging, v);
@@ -321,10 +297,32 @@ namespace SuDesApp.Utilities
         public static void SetPeriksaPembaruanSaatMulai(bool v) => SetBool(KeyPeriksaPembaruan, v);
 
         /// <summary>
-        /// Pasang pembaruan kecil (tambalan) secara OTOMATIS saat aplikasi ditutup,
+        /// Unduh pembaruan yang ditemukan ke latar belakang tanpa menunggu pengguna
+        /// menekan tombol di halaman Pembaruan (default: aktif). Setelah selesai,
+        /// lonceng notifikasi menawarkan "Instal sekarang" atau "Instal saat keluar".
+        /// </summary>
+        public static bool IsUnduhPembaruanOtomatis() => GetBool(KeyUnduhPembaruanOtomatis, true);
+        public static void SetUnduhPembaruanOtomatis(bool v) => SetBool(KeyUnduhPembaruanOtomatis, v);
+
+        /// <summary>
+        /// Batas ukuran installer penuh yang boleh diunduh otomatis di latar belakang
+        /// (dalam MB, default 300). Rilis yang lebih besar tetap ditawarkan lewat
+        /// notifikasi dan diunduh hanya bila pengguna memintanya dari halaman Pembaruan,
+        /// sehingga kuota internet tidak terpakai tanpa sepengetahuan pengguna.
+        /// </summary>
+        public static int GetBatasUkuranUnduhanMb()
+        {
+            int v = GetInt(KeyBatasUkuranUnduhanMb, 300);
+            return v is < 10 or > 2048 ? 300 : v;
+        }
+
+        public static void SetBatasUkuranUnduhanMb(int v) => SetInt(KeyBatasUkuranUnduhanMb, v);
+
+        /// <summary>
+        /// Pasang pembaruan yang sudah terunduh secara OTOMATIS saat aplikasi ditutup,
         /// tanpa menanya pengguna (default: aktif — batal centang bila tidak diinginkan).
-        /// Hanya berlaku untuk tambalan; pembaruan besar selalu memerlukan persetujuan
-        /// lewat halaman Pembaruan.
+        /// Pemasangan hanya terjadi bila paketnya memang sudah siap; pemilihan
+        /// "Instal saat keluar" pada notifikasi tetap diprioritaskan.
         /// </summary>
         public static bool IsPasangOtomatisSaatKeluar() => GetBool(KeyPasangOtomatisSaatKeluar, true);
         public static void SetPasangOtomatisSaatKeluar(bool v) => SetBool(KeyPasangOtomatisSaatKeluar, v);
@@ -407,6 +405,53 @@ namespace SuDesApp.Utilities
         public static bool IsModeEditAwalanAktif() => GetBool(KeyModeEditAwalan, false);
 
         public static void SetModeEditAwalan(bool v) => SetBool(KeyModeEditAwalan, v);
+
+        // =====================================================================
+        // Server lisensi lokal (pusat administrasi di komputer ini)
+        // =====================================================================
+
+        public const string KeyServerLisensiLokal = "serverLisensiLokal";
+        public const string KeyServerLisensiLokalPort = "serverLisensiLokalPort";
+        public const string KeyServerLisensiLokalJalur = "serverLisensiLokalJalur";
+
+        /// <summary>
+        /// Port bawaan server lisensi lokal — port yang sama dengan
+        /// <c>Lisensi:UrlServer</c> di appsettings, launchSettings server, dan
+        /// skrip <c>Tools/SiapkanServerLisensi.ps1</c>. Menyamakan port ini
+        /// membuat server yang dinyalakan aplikasi langsung menjadi alamat yang
+        /// sudah dipakai halaman Langganan dan Pusat Administrasi.
+        /// </summary>
+        public const int PortServerLisensiLokalBawaan = 5110;
+
+        /// <summary>
+        /// Nyalakan server lisensi di komputer ini bersama aplikasi (bawaan:
+        /// MATI). Bila menyala, aplikasi yang menjalankannya dan aplikasi juga
+        /// yang mematikannya saat keluar, sehingga tidak ada proses server yang
+        /// tertinggal.
+        /// </summary>
+        public static bool IsServerLisensiLokalAktif() => GetBool(KeyServerLisensiLokal, false);
+
+        public static void SetServerLisensiLokalAktif(bool v) => SetBool(KeyServerLisensiLokal, v);
+
+        /// <summary>Port server lisensi lokal (1025-65535, bawaan 5110).</summary>
+        public static int GetPortServerLisensiLokal()
+        {
+            int v = GetInt(KeyServerLisensiLokalPort, PortServerLisensiLokalBawaan);
+            return v is < 1025 or > 65535 ? PortServerLisensiLokalBawaan : v;
+        }
+
+        public static void SetPortServerLisensiLokal(int v) => SetInt(KeyServerLisensiLokalPort, v);
+
+        /// <summary>
+        /// Lokasi berkas server lisensi (exe, dll, atau proyek .csproj). Kosong =
+        /// dicari otomatis: folder <c>server</c> di samping aplikasi, lalu proyek
+        /// <c>SuDesApp.Server</c> pada salinan repositori.
+        /// </summary>
+        public static string GetJalurServerLisensiLokal() =>
+            GetString(KeyServerLisensiLokalJalur, string.Empty) ?? string.Empty;
+
+        public static void SetJalurServerLisensiLokal(string? jalur) =>
+            SetString(KeyServerLisensiLokalJalur, jalur?.Trim() ?? string.Empty);
     }
 
 }

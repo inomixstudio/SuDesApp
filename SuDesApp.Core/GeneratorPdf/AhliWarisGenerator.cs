@@ -1,14 +1,13 @@
 // File: SuDesApp/GeneratorPdf/AhliWarisGenerator.cs
 // Dokumen 3 halaman: Surat Keterangan, Surat Pernyataan, dan Surat Kuasa.
-// Seluruh tata letak disusun langsung dengan QuestPDF (tanpa lapisan kompat).
+// Seluruh tata letak disusun langsung dengan mesin SudesPdf (tanpa lapisan kompat).
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Utilities;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -53,7 +52,7 @@ namespace SuDesApp.GeneratorPdf
             var desa = suratData.Desa;
             string logoPath = CariLogoPath();
 
-            halaman.Blok(c => SuratRenderer.Kop(c, desa!, logoPath));
+            halaman.Blok(c => KopSurat.Gambar(c, desa, logoPath));
             ComposeJudul(halaman, suratData);
 
             // Halaman 1: Surat Keterangan Ahli Waris
@@ -378,6 +377,8 @@ namespace SuDesApp.GeneratorPdf
 
                 table.Cell().Element(sel => sel.Column(kolom =>
                 {
+                    // Blok pejabat menempel di kolom kanan, tetapi ISI bloknya
+                    // rata tengah — bentuk baku tanda tangan surat dinas.
                     kolom.Item().Element(c => SuratRenderer.Teks(c, "Mengetahui;", rata: Rata.Tengah));
                     kolom.Item().Element(c => SuratRenderer.Teks(c, jabatanKades, rata: Rata.Tengah));
                     kolom.Item().Height(SuratRenderer.RuangTandaTangan);

@@ -1,12 +1,11 @@
 // File: SuDesApp/GeneratorPdf/IzinOrtuGenerator.cs
-// Badan surat dibuat langsung dengan QuestPDF (BadanSurat), tanpa lapisan kompat.
+// Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -60,8 +59,8 @@ namespace SuDesApp.GeneratorPdf
                 // Validasi data anak dari IzinOrtu
                 if (suratData.IzinOrtu == null || suratData.IzinOrtu.ID_Warga_Anak <= 0 || string.IsNullOrWhiteSpace(suratData.IzinOrtu.NamaAnak))
                 {
-                    _logger.LogError("Data IzinOrtu (Anak) tidak valid atau null untuk Surat ID: {SuratId}. ID_Warga_Anak: {IdWargaAnak}, Nama Anak: {NamaAnak}",
-                        suratData.ID_Surat, suratData.IzinOrtu?.ID_Warga_Anak, suratData.IzinOrtu?.NamaAnak);
+                    _logger.LogError("Data IzinOrtu (Anak) tidak valid atau null untuk Surat ID: {SuratId}. ID_Warga_Anak: {IdWargaAnak}",
+                        suratData.ID_Surat, suratData.IzinOrtu?.ID_Warga_Anak);
                     throw new InvalidOperationException("Data Anak tidak valid atau tidak lengkap untuk membuat Surat Izin.");
                 }
 
@@ -116,7 +115,7 @@ namespace SuDesApp.GeneratorPdf
             }
             else
             {
-                _logger.LogInformation("Using narasiIzin from suratData.Keterangan for IzinOrtu ID_Surat={ID_Surat}", suratData.ID_Surat);
+                _logger.LogDebug("Memakai keterangan Izin Ortu untuk ID_Surat={ID_Surat}", suratData.ID_Surat);
             }
 
             badan.Paragraf(narasiIzin,
@@ -184,8 +183,10 @@ namespace SuDesApp.GeneratorPdf
                     }));
                 });
 
-                // Blok “Mengetahui;” selebar halaman di bawah kedua blok di atas.
-                kolom.Item().PaddingTop(MARGIN_PARAGRAF_BESAR).Column(mengetahui =>
+                // Blok “Mengetahui;” milik pejabat desa: kolomnya menempel di sisi
+                // KANAN surat, sedangkan isi bloknya rata tengah — bentuk baku
+                // tanda tangan surat dinas.
+                kolom.Item().PaddingTop(MARGIN_PARAGRAF_BESAR).AlignRight().Width(240).Column(mengetahui =>
                 {
                     mengetahui.Item().Element(c => SuratRenderer.Teks(c, "Mengetahui;", rata: Rata.Tengah));
                     mengetahui.Item().Element(c => SuratRenderer.Teks(c, jabatanKades, rata: Rata.Tengah));

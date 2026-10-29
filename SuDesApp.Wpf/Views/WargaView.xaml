@@ -364,8 +364,12 @@
               IsHitTestVisible="True">
             <!-- Lebar otomatis mengikuti ruang yang tersedia; batas maksimum
                  menjaga kartu tetap nyaman di jendela lebar tanpa meluber pada
-                 viewport kecil. -->
-            <Border Style="{StaticResource FormCard}" MaxWidth="720" MaxHeight="640"
+                 viewport kecil. Tingginya dibatasi tinggi halaman, bukan angka
+                 tetap: pada jendela minimum (600 px) kartu setinggi 640 px akan
+                 terpotong di luar viewport dan baris tombol Simpan/Batal tidak
+                 bisa dijangkau. Margin 24 menjaga jarak dari tepi. -->
+            <Border Style="{StaticResource FormCard}" MaxWidth="720" Margin="24"
+                    MaxHeight="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     VerticalAlignment="Center" HorizontalAlignment="Center">
                 <Grid IsSharedSizeScope="True">
                     <Grid.RowDefinitions>
@@ -381,7 +385,10 @@
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
                         <StackPanel>
                             <!-- IDENTITAS -->
-                            <TextBlock Text="IDENTITAS" Style="{StaticResource FormSectionTitle}" Margin="0,0,0,6"/>
+                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="IDENTITAS" Style="{StaticResource FormSectionTitle}"/>
+                            </StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
@@ -406,12 +413,16 @@
                                          ToolTip="Nomor Kartu Keluarga 16 digit (boleh dikosongkan)"/>
 
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Nama Lengkap *" Style="{StaticResource FormLabel}"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource FormField}"
-                                         Text="{Binding FormNama, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource FormField}" MaxLength="100"
+                                         Text="{Binding FormNama, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Nama lengkap warga sesuai KTP"/>
                             </Grid>
 
                             <!-- KELAHIRAN -->
-                            <TextBlock Text="KELAHIRAN" Style="{StaticResource FormSectionTitle}" Margin="0,12,0,6"/>
+                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0,6,0,14">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="KELAHIRAN" Style="{StaticResource FormSectionTitle}"/>
+                            </StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
@@ -426,8 +437,9 @@
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Tempat Lahir" Style="{StaticResource FormLabel}"/>
-                                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
-                                         Text="{Binding FormTempatLahir, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}" MaxLength="100"
+                                         Text="{Binding FormTempatLahir, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Kota/kabupaten tempat lahir"/>
 
                                 <TextBlock Grid.Row="0" Grid.Column="2" Text="Tanggal Lahir" Style="{StaticResource FormLabel}" Margin="18,6,10,6"/>
                                 <TextBox Grid.Row="0" Grid.Column="3" Style="{StaticResource FormField}"
@@ -456,7 +468,10 @@
                             </Grid>
 
                             <!-- KEDUDUKAN DALAM KELUARGA -->
-                            <TextBlock Text="KEDUDUKAN DALAM KELUARGA" Style="{StaticResource FormSectionTitle}" Margin="0,12,0,6"/>
+                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0,6,0,14">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="KEDUDUKAN DALAM KELUARGA" Style="{StaticResource FormSectionTitle}"/>
+                            </StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
@@ -470,16 +485,20 @@
                                           ItemsSource="{Binding DaftarStatusKeluarga}"
                                           SelectedItem="{Binding FormStatusKeluarga}"
                                           ToolTip="Kedudukan dalam Kartu Keluarga: Kepala Keluarga, Istri, Anak, Cucu, atau Family Lain — dipakai menghitung jumlah KK laki-laki/wanita"/>
-                                <TextBlock Grid.Column="2" Text="Keterangan" Style="{StaticResource FormLabel}" Margin="18,6,10,6"
-                                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
-                                           VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="3" Text="Satu KK cukup satu Kepala Keluarga; anggota lain diisi Istri/Suami, Anak, Cucu, atau Family Lain."
-                                           TextWrapping="Wrap" FontSize="11" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <!-- Catatan pengisian; dulu di sini ada label "Keterangan"
+                                     palsu di kolom label — terbaca seperti nama field
+                                     padahal hanya keterangan. Kini catatannya saja. -->
+                                <TextBlock Grid.Column="2" Grid.ColumnSpan="2"
+                                           Text="Satu KK cukup satu Kepala Keluarga; anggota lain diisi Istri/Suami, Anak, Cucu, atau Family Lain."
+                                           Style="{StaticResource FormLabel}" Margin="18,6,0,6"
+                                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
 
-                            <!-- ORANG TUA & KONTAK -->
-                            <TextBlock Text="ORANG TUA &amp; KONTAK" Style="{StaticResource FormSectionTitle}" Margin="0,12,0,6"/>
+                            <!-- ORANG TUA, PEKERJAAN & KONTAK -->
+                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0,6,0,14">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="ORANG TUA, PEKERJAAN &amp; KONTAK" Style="{StaticResource FormSectionTitle}"/>
+                            </StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
@@ -488,30 +507,56 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Nama Ayah" Style="{StaticResource FormLabel}"/>
-                                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
-                                         Text="{Binding FormNamaAyah, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}" MaxLength="100"
+                                         Text="{Binding FormNamaAyah, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Nama ayah kandung (boleh dikosongkan)"/>
 
                                 <TextBlock Grid.Row="0" Grid.Column="2" Text="Nama Ibu" Style="{StaticResource FormLabel}" Margin="18,6,10,6"/>
-                                <TextBox Grid.Row="0" Grid.Column="3" Style="{StaticResource FormField}"
-                                         Text="{Binding FormNamaIbu, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Grid.Row="0" Grid.Column="3" Style="{StaticResource FormField}" MaxLength="100"
+                                         Text="{Binding FormNamaIbu, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Nama ibu kandung (boleh dikosongkan)"/>
 
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Nomor HP" Style="{StaticResource FormLabel}"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
+                                <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}" MaxLength="20"
                                          Text="{Binding FormNomorHP, UpdateSourceTrigger=PropertyChanged}"
                                          ToolTip="Nomor HP kepala keluarga"/>
 
                                 <TextBlock Grid.Row="1" Grid.Column="2" Text="Pekerjaan" Style="{StaticResource FormLabel}" Margin="18,6,10,6"/>
-                                <TextBox Grid.Row="1" Grid.Column="3" Style="{StaticResource FormField}"
-                                         Text="{Binding FormPekerjaan, UpdateSourceTrigger=PropertyChanged}"/>
+                                <!-- Bisa disunting: pekerjaan warga desa beragam, jadi
+                                     daftar umum hanya saran. Dulu kotak biasa tanpa saran
+                                     padahal ViewModel sudah menyimpan daftarnya. -->
+                                <ComboBox Grid.Row="1" Grid.Column="3" Style="{StaticResource FormCombo}"
+                                          IsEditable="True"
+                                          ItemsSource="{Binding DaftarPekerjaanUmum}"
+                                          Text="{Binding FormPekerjaan, UpdateSourceTrigger=PropertyChanged}"
+                                          ToolTip="Pilih dari daftar atau ketik sendiri"/>
+
+                                <!-- Pendidikan sudah lama tersimpan, diekspor, dan
+                                     diimpor, tetapi tidak pernah punya kotak isian:
+                                     warga baru selalu tersimpan tanpa pendidikan dan
+                                     operator tidak bisa memperbaikinya saat mengubah. -->
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Pendidikan" Style="{StaticResource FormLabel}"/>
+                                <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
+                                          Style="{StaticResource FormCombo}"
+                                          ItemsSource="{Binding PilihanPendidikan}"
+                                          SelectedItem="{Binding FormPendidikan}"
+                                          ToolTip="Jenjang pendidikan terakhir — daftar baku yang sama dengan laporan kependudukan"/>
                             </Grid>
 
                             <!-- ALAMAT -->
-                            <TextBlock Text="ALAMAT" Style="{StaticResource FormSectionTitle}" Margin="0,12,0,6"/>
+                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0,6,0,14">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="ALAMAT" Style="{StaticResource FormSectionTitle}"/>
+                            </StackPanel>
+                            <TextBlock Text="Isi Dusun dan RT/RW. Desa, Kecamatan, dan Kabupaten mengikuti Pengaturan Desa."
+                                       Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
+                                       TextWrapping="Wrap" Margin="0,0,0,6"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
@@ -519,17 +564,13 @@
                                     <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Column="0" Text="Dusun" Style="{StaticResource FormLabel}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource FormField}" MaxLength="100"
+                                         Text="{Binding FormDusun, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Nama dusun/kampung tempat warga tinggal"/>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Dusun" Style="{StaticResource FormLabel}"/>
-                                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
-                                         Text="{Binding FormDusun, UpdateSourceTrigger=PropertyChanged}"/>
-
-                                <TextBlock Grid.Row="0" Grid.Column="2" Text="RT / RW" Style="{StaticResource FormLabel}" Margin="18,6,10,6"/>
-                                <Grid Grid.Row="0" Grid.Column="3">
+                                <TextBlock Grid.Column="2" Text="RT / RW" Style="{StaticResource FormLabel}" Margin="18,6,10,6"/>
+                                <Grid Grid.Column="3">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
@@ -543,13 +584,13 @@
                                              Text="{Binding FormRW, UpdateSourceTrigger=PropertyChanged}" ToolTip="Nomor RW"/>
                                 </Grid>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Alamat (jalan/kampung)" Style="{StaticResource FormLabel}"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource FormField}"
-                                         Text="{Binding FormAlamatDetail, UpdateSourceTrigger=PropertyChanged}"/>
                             </Grid>
 
                             <!-- STATUS TINGGAL -->
-                            <TextBlock Text="STATUS TINGGAL" Style="{StaticResource FormSectionTitle}" Margin="0,12,0,6"/>
+                            <StackPanel Style="{StaticResource FormSectionHeaderPanel}" Margin="0,6,0,14">
+                                <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="STATUS TINGGAL" Style="{StaticResource FormSectionTitle}"/>
+                            </StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" MinWidth="130" MaxWidth="170" SharedSizeGroup="FormLabel"/>
@@ -580,18 +621,34 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <TextBlock Grid.Row="2" Text="{Binding FormGalat}" Foreground="{DynamicResource ErrorTextBrush}"
-                               FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
+                    <!-- Galat form memakai bentuk kartu pesan seperti pemberitahuan
+                         lain di aplikasi (latar ErrorSubtle + garis Error), bukan
+                         baris merah telanjang, supaya galat tidak terlewat dilihat
+                         tetapi tetap mengikuti tema. -->
+                    <Border Grid.Row="2" Background="{DynamicResource ErrorSubtleBrush}"
+                            BorderBrush="{DynamicResource ErrorBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="12,10" Margin="0,10,0,0">
+                        <Border.Style>
+                            <Style TargetType="Border">
                                 <Style.Triggers>
-                                    <Trigger Property="Text" Value="">
+                                    <DataTrigger Binding="{Binding FormGalat}" Value="">
                                         <Setter Property="Visibility" Value="Collapsed"/>
-                                    </Trigger>
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="⚠️" FontSize="15" Margin="0,0,10,0"
+                                       VerticalAlignment="Top"
+                                       Foreground="{DynamicResource ErrorTextBrush}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding FormGalat}" TextWrapping="Wrap"
+                                       FontSize="13" Foreground="{DynamicResource ErrorTextBrush}"/>
+                        </Grid>
+                    </Border>
 
                     <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
                         <Button Content="Batal" Command="{Binding BatalFormCommand}"

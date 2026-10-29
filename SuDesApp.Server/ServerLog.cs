@@ -39,10 +39,10 @@ internal static partial class ServerLog
     [LoggerMessage(10, LogLevel.Warning, "Trial ditolak untuk {Id}: {Pesan}")]
     internal static partial void TrialDitolakPerangkat(ILogger logger, string id, string? pesan);
 
-    [LoggerMessage(11, LogLevel.Information, "Trial ditolak untuk {Id}: {Pesan}")]
+    [LoggerMessage(11, LogLevel.Warning, "Trial ditolak untuk {Id}: {Pesan}")]
     internal static partial void TrialDitolak(ILogger logger, string id, string? pesan);
 
-    [LoggerMessage(12, LogLevel.Information, "Trial 14 hari aktif untuk {Id} ({Desa}), berlaku sampai {Sampai:O}.")]
+    [LoggerMessage(12, LogLevel.Information, "Trial 30 hari aktif untuk {Id} ({Desa}), berlaku sampai {Sampai:O}.")]
     internal static partial void TrialAktif(ILogger logger, string id, string desa, DateTime sampai);
 
     [LoggerMessage(13, LogLevel.Error, "Penandaan lunas manual desa '{Kode}' gagal: tagihan {Order} tidak terbaca oleh perpanjangan.")]
@@ -138,7 +138,7 @@ internal static partial class ServerLog
     [LoggerMessage(41, LogLevel.Error, "Rekonsiliasi tidak bisa mengambil daftar tagihan.")]
     internal static partial void RekonsiliasiDaftarGagal(ILogger logger, Exception exception);
 
-    [LoggerMessage(42, LogLevel.Information, "Rekonsiliasi: tidak ada tagihan menunggu pembayaran.")]
+    [LoggerMessage(42, LogLevel.Debug, "Rekonsiliasi: tidak ada tagihan menunggu pembayaran.")]
     internal static partial void RekonsiliasiTanpaTagihan(ILogger logger);
 
     [LoggerMessage(43, LogLevel.Information, "Rekonsiliasi: status order {Order} belum bisa dipastikan ({Pesan}).")]
@@ -164,4 +164,19 @@ internal static partial class ServerLog
 
     [LoggerMessage(50, LogLevel.Information, "Notifikasi pembayaran masuk: order {Order}, status {StatusTransaksi}, signature {Signature}, HTTP {StatusBalasan} — {Pesan}")]
     internal static partial void WebhookMasuk(ILogger logger, string order, string? statusTransaksi, string signature, int statusBalasan, string? pesan);
+
+    [LoggerMessage(51, LogLevel.Information, "Penyimpanan lokal belum ada — berkas baru akan dibuat di {Jalur}.")]
+    internal static partial void PenyimpananLokalBaru(ILogger logger, string jalur);
+
+    [LoggerMessage(52, LogLevel.Information, "Penyimpanan lokal dibaca dari {Jalur}: {Desa} desa, {Pengumuman} pengumuman, {Audit} entri audit.")]
+    internal static partial void PenyimpananLokalDibaca(ILogger logger, string jalur, int desa, int pengumuman, int audit);
+
+    [LoggerMessage(53, LogLevel.Warning, "Berkas penyimpanan lokal tidak bisa dipakai ({Alasan}); berkas lama dipindahkan ke {Rusak} dan server mulai dari kosong.")]
+    internal static partial void PenyimpananLokalRusak(ILogger logger, string alasan, string rusak);
+
+    [LoggerMessage(54, LogLevel.Warning, "Berkas penyimpanan lokal tidak bisa dipindahkan dari {Jalur}.")]
+    internal static partial void PenyimpananLokalGagalPindah(ILogger logger, Exception exception, string jalur);
+
+    [LoggerMessage(55, LogLevel.Error, "Gagal menyimpan penyimpanan lokal ke {Jalur} — keadaan di memori tetap sah untuk sesi ini.")]
+    internal static partial void PenyimpananLokalGagalSimpan(ILogger logger, Exception exception, string jalur);
 }

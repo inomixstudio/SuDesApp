@@ -2,9 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 using SuDesApp.Services;
 
@@ -27,14 +25,12 @@ namespace SuDesApp.GeneratorPdf
     {
         static LaporanIdmGenerator()
         {
-            QuestPdfLisensi.Pastikan();
         }
 
         public LaporanIdmGenerator()
         {
             // Laporan bisa menjadi PDF pertama pada sesi ini; daftarkan font buku
             // lebih dulu (idempoten), sama seperti generator laporan lain.
-            SuratGeneratorBase.DaftarkanFont();
         }
 
         public void GenerateLaporanPdf(Stream outputStream, LaporanIdmData data)
@@ -354,6 +350,8 @@ namespace SuDesApp.GeneratorPdf
             string tempatTanggal =
                 $"{T(_data.Desa.NamaDesa)}, {_data.TanggalCetak.ToString("d MMMM yyyy", Id)}";
 
+            // Blok tanda tangan: kolom masing-masing pejabat tetap di tempatnya
+            // (kiri & kanan), tetapi ISI bloknya rata tengah seperti surat dinas.
             container.Row(row =>
             {
                 row.RelativeItem().Column(c =>
@@ -379,7 +377,7 @@ namespace SuDesApp.GeneratorPdf
         // Pembantu sel tabel
         // =================================================================
 
-        private static void HeaderCell(TableCellDescriptor barisKepala, string judul, bool alignRight, bool kecil = false)
+        private static void HeaderCell(TableDescriptor barisKepala, string judul, bool alignRight, bool kecil = false)
         {
             barisKepala.Cell().Element(c => c.Background(Colors.Grey.Lighten3)
                     .BorderBottom(1).BorderColor(Colors.Grey.Darken1)

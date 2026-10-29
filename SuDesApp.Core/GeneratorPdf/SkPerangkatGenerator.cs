@@ -1,17 +1,15 @@
 // SkPerangkatGenerator.cs
 // Penyusun dokumen Surat Keputusan Kepala Desa (dan lampiran daftar nama)
-// memakai API QuestPDF langsung. Kelas ini sengaja TIDAK mewarisi
+// memakai API SudesPdf.Layout langsung. Kelas ini sengaja TIDAK mewarisi
 // SuratGeneratorBase karena SK Bupati diterbitkan di luar aplikasi — hanya
-// SK milik Kepala Desa yang disusun di sini. Font didaftarkan lewat
-// SuratGeneratorBase.DaftarkanFont agar PDF pertama pada sebuah sesi tetap
-// tercetak walau generator ini dipakai lebih dulu.
+// SK milik Kepala Desa yang disusun di sini. Tidak ada font yang perlu
+// didaftarkan: mesin memakai metrik font bawaan PDF, jadi dokumen pertama
+// pada sebuah sesi tercetak sama seperti dokumen berikutnya.
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Configuration;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
@@ -48,10 +46,6 @@ namespace SuDesApp.GeneratorPdf
         public SkPerangkatGenerator(AppConfig config)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
-
-            // Sekali per proses; berlaku juga untuk generator surat lain karena
-            // status pendaftaran font dipusatkan di SuratGeneratorBase.
-            SuratGeneratorBase.DaftarkanFont();
         }
 
         // =====================================================================
@@ -65,10 +59,10 @@ namespace SuDesApp.GeneratorPdf
         }
 
         /// <summary>
-        /// Susun dokumen QuestPDF tanpa menulis — dipakai pemanggil yang butuh
-        /// bentuk lain (PDF, pratinjau, atau SVG per halaman untuk pengujian).
+        /// Susun dokumen tanpa menulis — dipakai pemanggil yang butuh bentuk lain
+        /// (berkas PDF, pratinjau halaman, atau uji isi dokumen).
         /// </summary>
-        public Document BangunDokumen(DesaData desa, SkPerangkatIsi isi)
+        public IDocument BangunDokumen(DesaData desa, SkPerangkatIsi isi)
         {
             if (isi == null) throw new ArgumentNullException(nameof(isi));
 
@@ -531,6 +525,8 @@ namespace SuDesApp.GeneratorPdf
                             baris.ConstantItem(90).Text("Pada tanggal").FontSize(UkuranTeks);
                             baris.RelativeItem().Text($": {tanggal}").FontSize(UkuranTeks);
                         });
+                        // Blok penanda tangan menempel di kolom KANAN halaman;
+                        // isi bloknya rata tengah, sesuai bentuk baku surat dinas.
                         kanan.Item().PaddingTop(14).AlignCenter()
                             .Text($"KEPALA DESA {IsiAtauGaris(desa?.NamaDesa)}".ToUpperInvariant())
                             .FontSize(UkuranTeks).Bold();

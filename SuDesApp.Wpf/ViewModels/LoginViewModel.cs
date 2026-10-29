@@ -13,9 +13,9 @@ namespace SuDesApp.Wpf.ViewModels
 {
     /// <summary>
     /// ViewModel LoginWindow: SATU-satunya jalur masuk aplikasi adalah akun
-    /// aplikasi — username dan kata sandi (pemasangan baru mendapat kata sandi
-    /// acak yang ditampilkan sekali; akun lama Login.dat dimigrasikan ke tabel
-    /// Pengguna, lihat docs/policy-peran-pengguna.md).
+    /// aplikasi — username dan kata sandi (pemasangan baru memakai kredensial
+    /// bawaan admin/admin; akun lama Login.dat dimigrasikan ke tabel Pengguna,
+    /// lihat docs/policy-peran-pengguna.md).
     ///
     /// Sejak versi 2.6.0, login utama memakai <see cref="IPenggunaService.MasukAsync"/>
     /// (PBKDF2, kunci 3× gagal, peran dari database). Akun administrator awal
@@ -27,32 +27,33 @@ namespace SuDesApp.Wpf.ViewModels
     /// Satu pengecualian pada aturan migrasi itu: akun pusat penyedia
     /// (<see cref="AkunPusat"/>). Akun itu sengaja TIDAK pernah dibuatkan baris
     /// di tabel Pengguna, supaya namanya tidak muncul di halaman Kelola
-    /// Pengguna. Kata sandinya tidak lagi disimpan di kode maupun Login.dat —
-    /// hanya dibaca dari provisioning mesin. Hanya sesi dari akun inilah menu
-    /// Pusat Administrasi ditampilkan.
+    /// Pengguna. Kata sandinya memakai bawaan <c>adminpusat11</c> (boleh
+    /// ditimpa provisioning mesin) dan tidak pernah ditulis ke Login.dat.
+    /// Hanya sesi dari akun inilah menu Pusat Administrasi ditampilkan.
     ///
     /// Login Google sudah DIBONGKAR dari layar login: koneksi akun Google
-    /// hanya melayani fitur layanan (Drive/Sheets/WhatsApp) dan disambungkan
-    /// SETELAH masuk lewat halaman Layanan Online — ia bukan jalan masuk,
-    /// sehingga sesi selalu melewati peran dan kunci akun aplikasi.
+    /// hanya melayani pencadangan Drive dan disambungkan SETELAH masuk —
+    /// ia bukan jalan masuk, sehingga sesi selalu melewati peran dan kunci
+    /// akun aplikasi.
     /// </summary>
     public class LoginViewModel : ObservableObject
     {
         private readonly string _loginFilePath;
         private readonly IPenggunaService? _penggunaService;
         private readonly ILogger<LoginViewModel>? _logger;
-        // Sandi bawaan yang pernah terbit di repo publik. Konstanta ini TIDAK
-        // dipakai untuk masuk — hanya untuk mengenali akun lama yang belum
-        // mengganti sandinya agar bisa dirotasi otomatis.
-        private const string SandiBawaanLama = "admin";
+        /// <summary>Nama akun administrator bawaan.</summary>
+        public const string UsernameAdminBawaan = "admin";
 
-        private int _failedAttempts;
-        private DateTime _lastFailedAttempt = DateTime.MinValue;
+        /// <summary>
+        /// Kata sandi akun administrator bawaan. TETAP (bukan dibuat acak per
+        /// instalasi) dan tidak pernah dirotasi otomatis: operator harus selalu
+        /// bisa masuk dengan kredensial yang terdokumentasi. Penggantian sandi
+        /// hanya terjadi bila pengguna sendiri melakukannya di Kelola Pengguna.
+        /// </summary>
+        public const string SandiAdminBawaan = "admin";
 
-        // Kata sandi administrator awal dibuat acak per instalasi (bukan
-        // admin/admin) dan hanya ditampilkan sekali di layar login.
-        private readonly string _sandiAdminAwal = SandiAcak.Buat();
-        private string _infoKredensialAwal = string.Empty;
+        private readonly PembatasPercobaanLogin _pembatas;
+        private readonly PembatasPercobaanLogin _pembatasPusat;
 
         private string _username = string.Empty;
         private string _password = string.Empty;
@@ -95,23 +96,6 @@ namespace SuDesApp.Wpf.ViewModels
             set => SetProperty(ref _hasError, value);
         }
 
-        /// <summary>True bila ada kredensial awal yang harus ditampilkan di layar login.</summary>
-        public bool HasInfoKredensial => InfoKredensialAwal.Length > 0;
-
-        /// <summary>
-        /// Keterangan sekali-tampil berisi kata sandi akun administrator yang
-        /// baru dibuat/dirotasi. Tidak pernah disimpan ke berkas atau log.
-        /// </summary>
-        public string InfoKredensialAwal
-        {
-            get => _infoKredensialAwal;
-            private set
-            {
-                SetProperty(ref _infoKredensialAwal, value);
-                OnPropertyChanged(nameof(HasInfoKredensial));
-            }
-        }
-
         /// <summary>
         /// Teks versi di kaki jendela login ("Surat Desa V.x.y.z  •  ...") —
         /// disusun otomatis dari atribut assembly (csproj) oleh <see cref="IdentitasAplikasi"/>,
@@ -134,11 +118,14 @@ namespace SuDesApp.Wpf.ViewModels
 
         public LoginViewModel(
             IPenggunaService? penggunaService = null,
-            ILogger<LoginViewModel>? logger = null)
+            ILogger<LoginViewModel>? logger = null,
+            Func<DateTime>? waktu = null)
         {
             _loginFilePath = BerkasLogin.JalurBawaan;
             _penggunaService = penggunaService;
             _logger = logger;
+            _pembatas = new PembatasPercobaanLogin(waktu);
+            _pembatasPusat = new PembatasPercobaanLogin(waktu, new KunciPercobaanPusat());
             SiapkanBerkasAkun();
             LoginCommand = new AsyncRelayCommand(LoginAsync);
             CancelCommand = new RelayCommand(() => LoginCancelled?.Invoke());
@@ -157,10 +144,9 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>
         /// Siapkan berkas akun lokal. Pada pemasangan baru, akun desa bawaan
-        /// memakai kata sandi acak per instalasi (bukan admin/admin) yang hanya
-        /// ditampilkan sekali di layar login. Akun pusat TIDAK lagi ditulis ke
-        /// berkas ini — sandinya dibaca dari provisioning mesin (lihat
-        /// <see cref="AkunPusat"/>).
+        /// memakai kredensial tetap <c>admin/admin</c> — tidak dibuat acak dan
+        /// tidak diganti otomatis. Akun pusat TIDAK ditulis ke berkas ini;
+        /// sandinya dibaca dari <see cref="AkunPusat"/>.
         /// </summary>
         private void SiapkanBerkasAkun()
         {
@@ -170,10 +156,10 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     BerkasLogin.Tulis(_loginFilePath, new[]
                     {
-                        BuatAkunBawaan("admin", _sandiAdminAwal)
+                        BuatAkunBawaan(UsernameAdminBawaan, SandiAdminBawaan)
                     });
 
-                    _logger?.LogInformation("Berkas akun lokal dibuat dengan kata sandi administrator acak.");
+                    _logger?.LogInformation("Berkas akun lokal dibuat dengan akun administrator bawaan.");
                     return;
                 }
 
@@ -213,14 +199,10 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task LoginAsync()
         {
-            if (_failedAttempts >= 3 && (DateTime.Now - _lastFailedAttempt).TotalMinutes < 5)
-            {
-                ErrorMessage = "Terlalu banyak percobaan gagal. Tunggu 5 menit.";
-                return;
-            }
-
             string username = Username.ToLower().Trim();
-            string password = Password.ToLower().Trim();
+            // Sandi tidak diturunkan ke huruf kecil: hash dibuat dari sandi apa
+            // adanya, jadi normalisasi di sini membuat sandi berhuruf besar gagal.
+            string password = Password.Trim();
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
@@ -235,6 +217,16 @@ namespace SuDesApp.Wpf.ViewModels
                 // dan nama tampilan yang langsung diset ke sesi.
                 if (_penggunaService != null)
                 {
+                    // Akun pusat tidak punya baris database, jadi pemeriksaan
+                    // layanan tidak akan menahannya. Periksa batas SEBELUM memanggil
+                    // layanan agar percobaan yang ditahan tidak menyentuh database.
+                    bool akunPusat = AkunPusat.Namanya(username);
+                    if (akunPusat && !_pembatasPusat.BolehMencoba)
+                    {
+                        ErrorMessage = PesanTunggu(_pembatasPusat);
+                        return;
+                    }
+
                     var hasil = await _penggunaService.MasukAsync(username, password);
                     if (hasil.Berhasil && hasil.Pengguna != null)
                     {
@@ -244,19 +236,26 @@ namespace SuDesApp.Wpf.ViewModels
                             akun.Username, "manual", akun.NamaTampilan, akun.Peran);
                         SessionContext.TandaiSesiPusat(false);
 
-                        // Sandi bawaan lama yang sudah terbit di repo publik
-                        // dirotasi saat dipakai pertama kali — pengguna langsung
-                        // menerima sandi baru yang hanya tampil sekali.
-                        await RotasiSandiBawaanLamaAsync(akun, password);
+                        // Kredensial bawaan TIDAK dirotasi: admin/admin tetap
+                        // berlaku sampai pengguna sendiri menggantinya.
+                        CatatLoginBerhasil();
                         LoginSucceeded?.Invoke();
                         return;
                     }
 
-                    // Akun pusat penyedia: masuk memakai sandi provisioning
-                    // mesin, tanpa baris di tabel Pengguna (lihat AkunPusat).
-                    if (!hasil.Terkunci && CobaMasukAkunPusat(username, password))
+                    // Akun pusat penyedia: masuk memakai sandi bawaan/provisioning,
+                    // tanpa baris di tabel Pengguna (lihat AkunPusat). Hanya jalur
+                    // ini yang memakai penghitung _pembatasPusat; kegagalan akun
+                    // database sudah dihitung PenggunaService dan tidak boleh ikut
+                    // mengunci akun pusat.
+                    if (!hasil.Terkunci && akunPusat)
                     {
-                        return; // LoginSucceeded sudah dipanggil di dalamnya
+                        if (CobaMasukAkunPusat(username, password))
+                        {
+                            return; // LoginSucceeded sudah dipanggil di dalamnya
+                        }
+
+                        _pembatasPusat.CatatGagal();
                     }
 
                     // Bila PenggunaService tidak menemukan akun, coba migrasi dari
@@ -266,19 +265,29 @@ namespace SuDesApp.Wpf.ViewModels
                         return; // LoginSucceeded sudah dipanggil di dalam metode migrasi
                     }
 
-                    _failedAttempts++;
-                    _lastFailedAttempt = DateTime.Now;
                     ErrorMessage = hasil.Pesan;
                     return;
                 }
 
                 // Fallback bila IPenggunaService tidak tersedia (tidak seharusnya
                 // terjadi lewat DI, tetapi menjaga kompatibilitas mundur).
+                // Akun pusat memakai pembatas menetap; akun Login.dat lain memakai
+                // pembatas memori karena tidak ada layanan yang menghitungnya.
+                bool akunPusatFallback = AkunPusat.Namanya(username);
+                var pembatas = akunPusatFallback ? _pembatasPusat : _pembatas;
+                if (!pembatas.BolehMencoba)
+                {
+                    ErrorMessage = PesanTunggu(pembatas);
+                    return;
+                }
+
+                // Akun pusat dicek lebih dulu: ia tidak punya baris di Login.dat.
+                if (CobaMasukAkunPusat(username, password))
+                    return;
                 if (LoginViaLoginDatAsync(username, password))
                     return;
 
-                _failedAttempts++;
-                _lastFailedAttempt = DateTime.Now;
+                pembatas.CatatGagal();
                 ErrorMessage = "Username atau password salah.";
             }
             catch (Exception ex)
@@ -288,11 +297,14 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Sisipkan akun administrator awal ke tabel Pengguna saat database
-        /// masih kosong — yaitu pemasangan baru. Kata sandinya dibuat acak per
-        /// instalasi (bukan admin/admin) dan hanya ditampilkan sekali di layar
-        /// login. Akun ini langsung muncul di halaman Kelola Pengguna dan bisa
-        /// diganti kata sandinya.
+        /// Sisipkan akun administrator bawaan ke tabel Pengguna saat database
+        /// masih kosong — yaitu pemasangan baru — dengan kredensial tetap
+        /// admin/admin. Akun ini langsung muncul di halaman Kelola Pengguna dan
+        /// bisa diganti kata sandinya oleh pengguna.
+        ///
+        /// Bila database SUDAH berisi akun, satu pemutakhiran sekali-jalan
+        /// dikerjakan untuk instalasi lama yang akun admin-nya terlanjur dibuat
+        /// dengan sandi acak (lihat <see cref="PastikanKredensialBawaanSekaliAsync"/>).
         /// </summary>
         private async Task PastikanAkunAdminAsync()
         {
@@ -300,24 +312,70 @@ namespace SuDesApp.Wpf.ViewModels
 
             try
             {
-                if (await _penggunaService.AdaPenggunaAsync()) return;
+                if (await _penggunaService.AdaPenggunaAsync())
+                {
+                    await PastikanKredensialBawaanSekaliAsync();
+                    return;
+                }
 
                 await _penggunaService.TambahAsync(
-                    "admin", "Administrator",
-                    PeranPengguna.Administrator, _sandiAdminAwal,
+                    UsernameAdminBawaan, "Administrator",
+                    PeranPengguna.Administrator, SandiAdminBawaan,
                     oleh: "sistem", dariMigrasi: true);
 
-                SamakanSandiAdminLoginDat(_sandiAdminAwal);
-                TampilkanKredensialAwal(
-                    "Akun administrator dibuat untuk instalasi ini dengan kata sandi acak.",
-                    _sandiAdminAwal);
-                _logger?.LogInformation("Akun administrator awal disisipkan dengan kata sandi acak.");
+                SamakanSandiAdminLoginDat(SandiAdminBawaan);
+                AppPreferenceStore.SetKredensialBawaanDisiapkan(true);
+                _logger?.LogInformation("Akun administrator bawaan disisipkan.");
             }
             catch (Exception ex)
             {
                 // Jangan gagalkan startup bila penyisipan gagal — Login.dat
                 // masih bisa dipakai sebagai cadangan.
-                _logger?.LogWarning(ex, "Gagal menyisipkan akun administrator awal; berlanjut dengan Login.dat.");
+                _logger?.LogWarning(ex, "Gagal menyisipkan akun administrator bawaan; berlanjut dengan Login.dat.");
+            }
+        }
+
+        /// <summary>
+        /// Pemutakhiran sekali-jalan untuk instalasi yang lebih dulu memakai
+        /// sandi administrator acak: akun <c>admin</c> dikembalikan ke kredensial
+        /// bawaan (admin/admin).
+        ///
+        /// Hanya berjalan SEKALI, ditandai preferensi. Tanpa penanda itu setiap
+        /// pembukaan aplikasi akan menimpa sandi yang sudah diganti pengguna —
+        /// justru perilaku yang ingin dihindari. Bila tanda sudah ada, fungsi
+        /// ini tidak menyentuh apa pun.
+        /// </summary>
+        private async Task PastikanKredensialBawaanSekaliAsync()
+        {
+            if (_penggunaService == null || AppPreferenceStore.SudahDisiapkanKredensialBawaan())
+            {
+                return;
+            }
+
+            try
+            {
+                var admin = await _penggunaService.AmbilAsync(UsernameAdminBawaan);
+                if (admin is not null)
+                {
+                    // Bila penyimpanan gagal, penanda SENGAJA belum dipasang:
+                    // pemulihan dicoba lagi pada pembukaan berikutnya, bukan
+                    // membiarkan pengguna terkunci dengan sandi acak lama.
+                    if (!await _penggunaService.PasangKataSandiAwalAsync(admin.ID, SandiAdminBawaan))
+                    {
+                        _logger?.LogWarning("Kata sandi administrator bawaan belum tersimpan; akan dicoba lagi.");
+                        return;
+                    }
+
+                    SamakanSandiAdminLoginDat(SandiAdminBawaan);
+                    _logger?.LogInformation(
+                        "Kredensial administrator dipulihkan ke bawaan (admin/admin) satu kali.");
+                }
+
+                AppPreferenceStore.SetKredensialBawaanDisiapkan(true);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Gagal memulihkan kredensial administrator bawaan.");
             }
         }
 
@@ -355,57 +413,17 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>
         /// Rotasi kata sandi bawaan lama (<c>admin</c>) yang sudah pernah terbit
-        /// di repo publik. Hanya berlaku bila akun benar-benar masih memakai
-        /// sandi itu; sandi yang sudah diganti pengguna tidak disentuh.
-        /// </summary>
-        private async Task RotasiSandiBawaanLamaAsync(Pengguna akun, string kataSandiDipakai)
-        {
-            if (_penggunaService == null) return;
-            if (!akun.Username.Equals("admin", StringComparison.OrdinalIgnoreCase)) return;
-            if (!kataSandiDipakai.Equals(SandiBawaanLama, StringComparison.OrdinalIgnoreCase)) return;
-
-            try
-            {
-                string baru = SandiAcak.Buat();
-                if (await _penggunaService.UbahKataSandiAsync(akun.ID, kataSandiDipakai, baru))
-                {
-                    SamakanSandiAdminLoginDat(baru);
-                    TampilkanKredensialAwal(
-                        "Kata sandi bawaan administrator sudah tidak berlaku dan telah diganti.",
-                        baru);
-                    _logger?.LogInformation("Kata sandi administrator bawaan dirotasi otomatis.");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "Gagal merotasi kata sandi administrator bawaan.");
-            }
-        }
-
-        /// <summary>
-        /// Siapkan keterangan sekali-tampil berisi kredensial administrator yang
-        /// baru dibuat atau dirotasi. Teks ini hanya hidup di memori.
-        /// </summary>
-        private void TampilkanKredensialAwal(string keterangan, string kataSandi)
-        {
-            InfoKredensialAwal =
-                keterangan + "\n\n" +
-                "Pengguna: admin\n" +
-                "Kata sandi: " + kataSandi + "\n\n" +
-                "Catat sekarang — sandi ini tidak ditampilkan lagi. " +
-                "Ganti lewat halaman Kelola Pengguna setelah masuk.";
-            Username = "admin";
-        }
-
         /// <summary>
         /// Masuk sebagai akun pusat penyedia — TANPA membuat baris di tabel
         /// Pengguna, sehingga akun ini tidak pernah muncul di halaman Kelola
         /// Pengguna dan tidak ikut tercadang bersama data desa.
         ///
-        /// Kata sandinya TIDAK disimpan di kode maupun Login.dat: dibaca dari
-        /// provisioning mesin (<see cref="AkunPusat.VariabelSandi"/> atau
-        /// <see cref="AkunPusat.NamaBerkasSandi"/>). Tanpa provisioning, akun
-        /// pusat tidak bisa dipakai sama sekali.
+        /// Kata sandi bawaannya <c>adminpusat11</c> (lihat
+        /// <see cref="AkunPusat.SandiBawaan"/>); provisioning mesin
+        /// (<see cref="AkunPusat.VariabelSandi"/> atau
+        /// <see cref="AkunPusat.NamaBerkasSandi"/>) boleh menimpanya bila mesin
+        /// itu memang memakai sandi lain. Sandi tidak pernah ditulis ke
+        /// Login.dat.
         ///
         /// Sesi ditandai lewat <see cref="SessionContext.TandaiSesiPusat"/>:
         /// menu Pusat Administrasi bergantung pada penanda itu, bukan sekadar
@@ -424,7 +442,8 @@ namespace SuDesApp.Wpf.ViewModels
             SessionContext.TandaiSesiPusat(true);
 
             _logger?.LogInformation(
-                "Akun pusat masuk memakai sandi provisioning mesin (tanpa baris di tabel Pengguna).");
+                "Akun pusat masuk tanpa baris di tabel Pengguna.");
+            CatatLoginBerhasil();
             LoginSucceeded?.Invoke();
             return true;
         }
@@ -460,6 +479,7 @@ namespace SuDesApp.Wpf.ViewModels
                 SessionContext.TandaiSesiPusat(false);
 
                 _logger?.LogInformation("Akun '{Username}' dimigrasi dari Login.dat ke tabel Pengguna.", username);
+                CatatLoginBerhasil();
                 LoginSucceeded?.Invoke();
                 return true;
             }
@@ -498,9 +518,24 @@ namespace SuDesApp.Wpf.ViewModels
             }
 
             SessionContext.TandaiSesiPusat(pusat);
+            CatatLoginBerhasil();
             LoginSucceeded?.Invoke();
             return true;
         }
+
+        /// <summary>Login berhasil mengakhiri masa tunggu; tanpa ini satu salah ketik sesudahnya langsung mengunci lagi.</summary>
+        private void CatatLoginBerhasil()
+        {
+            _pembatas.CatatBerhasil();
+            // Keadaan pusat juga dibersihkan oleh login yang berhasil, sama
+            // seperti limiter bersama sebelum dipisah: satu login sah tidak
+            // boleh meninggalkan masa tunggu lama di belakangnya.
+            _pembatasPusat.CatatBerhasil();
+        }
+
+        private static string PesanTunggu(PembatasPercobaanLogin pembatas) =>
+            $"Terlalu banyak percobaan gagal. Coba lagi dalam " +
+            $"{(int)Math.Ceiling(pembatas.SisaTunggu.TotalMinutes)} menit.";
 
         public static string CurrentUserName { get; private set; } = "Operator";
     }

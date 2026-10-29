@@ -5,7 +5,7 @@ bulanan dengan target banyak desa (multi-tenant).
 
 ## Model yang dipilih
 
-Aplikasi desktop tetap memakai SQLite lokal terenkripsi (offline-first penuh).
+Aplikasi desktop tetap memakai SQLite lokal (offline-first penuh).
 Status langganan dicek lewat server lisensi pusat:
 
 ```
@@ -65,7 +65,7 @@ Sejak Oktober 2026 ada **tiga paket berbayar** plus satu masa percobaan gratis:
 
 | Mode | Harga | Masa aktif | Per hari | Jalur |
 |---|---|---|---|---|
-| **Trial** | gratis | 14 hari | — | `POST /aktifkan-trial` — TIDAK lewat Midtrans |
+| **Trial** | gratis | 30 hari | — | `POST /aktifkan-trial` — TIDAK lewat Midtrans |
 | **Bulanan** | Rp150.000 | 30 hari | Rp5.000 | tagihan QRIS/VA (`POST /buat-tagihan`) |
 | **6 Bulan** | Rp750.000 | 180 hari | Rp4.167 (hemat ±17%) | tagihan QRIS/VA |
 | **Tahunan** | Rp1.200.000 | 365 hari | Rp3.288 (hemat ±34%) | tagihan QRIS/VA |
@@ -85,7 +85,7 @@ Aturan trial (dijaga di server, bukan di klien):
 - jumlah hari datang dari konstanta server (`LayananAktivasi.HariTrial`),
   jadi klien tidak bisa memesan trial lebih panjang.
 
-Ada **dua** trial 14 hari dan keduanya tidak saling menggantikan:
+Ada **dua** trial 30 hari dan keduanya tidak saling menggantikan:
 
 | Trial | Syarat | Dijaga oleh | Kapan dipakai |
 |---|---|---|---|
@@ -98,7 +98,7 @@ hanya dipakai bila kode belum ada atau server tidak terjangkau. Server yang
 menjawab menolak **tidak** diberi cadangan lokal, supaya satu desa tidak bisa
 mengumpulkan dua kali masa coba (detail di bagian *Penggatingan fitur*).
 
-Trial lokal hanya membuka gerbang menu selama 14 hari; setelah itu aplikasi
+Trial lokal hanya membuka gerbang menu selama 30 hari; setelah itu aplikasi
 kembali terkunci (baca-saja) sampai ada token langganan yang sah. Bila server
 kemudian menerbitkan token trial maupun berbayar, keadaan `Berlangganan` menang
 atas trial lokal — jadi desa yang membayar tidak pernah “dimundurkan” oleh
@@ -362,8 +362,8 @@ di latar belakang: tiap **30 detik** selama server belum tersambung dan tiap
 halaman Langganan memakai langganan lemah ke event itu untuk memuat ulang
 katalog saat keadaan berubah ke *Terhubung*, sehingga chip status pulih sendiri
 tanpa membuka ulang halaman. Untuk pengembangan lokal aplikasi menunjuk
-`http://127.0.0.1:5110` — port yang dipakai `.tmp-render/run-uji-server*.sh`
-(server dijalankan dengan `--no-launch-profile`).
+`http://127.0.0.1:5110` — port yang sama dengan server lokal yang dinyalakan
+aplikasi (lihat *Server lisensi lokal yang dijalankan aplikasi*).
 
 ## Keamanan webhook
 
@@ -474,6 +474,8 @@ jadi gudang data pembayaran yang tak pernah dibersihkan.
 | [SuDesApp.Server/RekonsiliasiLatar.cs](../SuDesApp.Server/RekonsiliasiLatar.cs) | Penjadwal pekerja latar untuk rekonsiliasi |
 | [SuDesApp.Server/StatusPembayaran.cs](../SuDesApp.Server/StatusPembayaran.cs) | Antarmuka sumber status pembayaran (bisa dipalsukan di uji) + model hasilnya |
 | [SuDesApp.Server/IRepositoryLangganan.cs](../SuDesApp.Server/IRepositoryLangganan.cs) | Antarmuka penyimpanan + `LanggananMemori` untuk uji tanpa database |
+| [SuDesApp.Server/PenyimpananLokal.cs](../SuDesApp.Server/PenyimpananLokal.cs) | Penyimpanan berkas server lokal (desa, tagihan, pembayaran, pengumuman, audit) — menetap setelah server berhenti, tulis atomik |
+| [SuDesApp.Core/Services/ServerLisensiLokal.cs](../SuDesApp.Core/Services/ServerLisensiLokal.cs) | Siklus hidup server lokal: nyalakan + tunggu `/healthz`, jadikan alamat lisensi, matikan seluruh pohon proses, bersihkan sisa proses (pid + waktu mulai) |
 | [SuDesApp.Server/schema.sql](../SuDesApp.Server/schema.sql) | Skema (bisa dijalankan dari SQL Editor) |
 | [SuDesApp.Server/wwwroot/checkout.html](../SuDesApp.Server/wwwroot/checkout.html) | Halaman web `/checkout`: pilih paket → buat tagihan → bayar |
 | [SuDesApp.Server/wwwroot/admin.html](../SuDesApp.Server/wwwroot/admin.html) | Halaman web `/admin`: pusat administer — daftar/ubah/hapus desa, kelola perangkat, riwayat pembayaran + CSV (token di `sessionStorage`, bukan di HTML) |
@@ -487,7 +489,7 @@ jadi gudang data pembayaran yang tak pernah dibersihkan.
 | [SuDesApp.Core/Services/VerifikasiLisensi.cs](../SuDesApp.Core/Services/VerifikasiLisensi.cs) | Verifikasi tanda tangan di klien |
 | [SuDesApp.Core/Services/LisensiManager.cs](../SuDesApp.Core/Services/LisensiManager.cs) | Klien lisensi + cache token |
 | [SuDesApp.Core/Services/PenjagaLisensi.cs](../SuDesApp.Core/Services/PenjagaLisensi.cs) | Gerbang fitur + chip status: Demo / Trial / Full Service / Baca-saja |
-| [SuDesApp.Core/Services/TrialLokal.cs](../SuDesApp.Core/Services/TrialLokal.cs) | Trial 14 hari lokal (`%LocalAppData%\SuDesApp\trial-lokal.json`), sekali per instalasi |
+| [SuDesApp.Core/Services/TrialLokal.cs](../SuDesApp.Core/Services/TrialLokal.cs) | Trial 30 hari lokal (`%LocalAppData%\SuDesApp\trial-lokal.json`), sekali per instalasi |
 | [SuDesApp.Core/Services/RingkasanLangganan.cs](../SuDesApp.Core/Services/RingkasanLangganan.cs) | Penerjemah status lisensi → kalimat banner, nada warna, nama paket, dan petak ringkasan — satu-satunya tempat aturan “sah sampai” dan “masih tenggang” ditulis |
 | [SuDesApp.Core/Services/LanggananKlien.cs](../SuDesApp.Core/Services/LanggananKlien.cs) | Klien endpoint publik langganan: katalog harga (`GET /paket`), pembuatan tagihan (`POST /buat-tagihan`), jeda coba ulang setelah gagal, & kebijakan tampilan harga (`KatalogLangganan`) |
 | [SuDesApp.Core/Services/KatalogPaketTersimpan.cs](../SuDesApp.Core/Services/KatalogPaketTersimpan.cs) | Salinan katalog terakhir yang dikonfirmasi server (`%LocalAppData%\SuDesApp\katalog-paket.json`) supaya kartu tetap berangka saat server tak terjangkau |
@@ -496,7 +498,7 @@ jadi gudang data pembayaran yang tak pernah dibersihkan.
 | [SuDesApp.Wpf/ViewModels/MainWindowViewModel.cs](../SuDesApp.Wpf/ViewModels/MainWindowViewModel.cs) | Menu rahasia **Pusat Administrasi** di bagian `LANGGANAN` (hanya untuk sesi akun pusat): membuka halaman operator server (`/admin`) di dalam aplikasi lewat WebView2 (profil privat), dengan tombol **Buka di Browser** sebagai cadangan; alamatnya dari `LisensiManager.AlamatPusatAdministrasi()` |
 | [SuDesApp.Wpf/ViewModels/FeatureNavigationViewModel.cs](../SuDesApp.Wpf/ViewModels/FeatureNavigationViewModel.cs) | Tempat menu **Pusat Administrasi** ditambahkan ke sidebar — di dalam `if (AkunPusat.SesiIniPusat)`, jadi sesi lain tidak melihatnya sama sekali |
 | [SuDesApp.Wpf/Views/PusatAdministrasiView.xaml.cs](../SuDesApp.Wpf/Views/PusatAdministrasiView.xaml.cs) | Halaman tertanam Pusat Administrasi: WebView2 profil InPrivate, tanpa devtools/autofill, membersihkan data situs saat ditutup, dan melaporkan galat HTTP/jaringan apa adanya |
-| [SuDesApp.Wpf/Utilities/AkunPusat.cs](../SuDesApp.Wpf/Utilities/AkunPusat.cs) | Akun rahasia penyedia (`adminpusat`) — nama pengguna, nama tampilan, pembacaan sandi provisioning (`SUDES_PUSAT_SANDI` / `Pusat.kunci`), dan penilaian “sesi ini sesi pusat?” |
+| [SuDesApp.Wpf/Utilities/AkunPusat.cs](../SuDesApp.Wpf/Utilities/AkunPusat.cs) | Akun rahasia penyedia (`adminpusat`) — nama pengguna, nama tampilan, sandi bawaan tetap `adminpusat11` (boleh ditimpa provisioning `SUDES_PUSAT_SANDI` / `Pusat.kunci`), dan penilaian “sesi ini sesi pusat?” |
 | [SuDesApp.Wpf/Utilities/BerkasLogin.cs](../SuDesApp.Wpf/Utilities/BerkasLogin.cs) | Bentuk & enkripsi berkas akun lokal `Login.dat` (DPAPI, multi-akun, penanda `pusat`) |
 | [SuDesApp.Tests/](../SuDesApp.Tests/) | Uji Core & Server (xUnit): skema & kriptografi lisensi, migrasi Supabase, CSV laporan, penomoran, pembayaran, dan kebijakan status langganan (`RingkasanLanggananTests`) |
 
@@ -525,9 +527,9 @@ penanda `sudesEmbedded`.
 **Hanya sesi akun pusat yang melihatnya.** Akun itu (`adminpusat`) tidak pernah
 masuk tabel `Pengguna`, jadi ia tidak muncul di halaman Kelola Pengguna —
 rinciannya di [policy-peran-pengguna.md](policy-peran-pengguna.md) bagian 3.
-Kata sandinya tidak lagi disimpan di `Login.dat` maupun di kode: diprovisikan
-per mesin lewat `SUDES_PUSAT_SANDI` atau berkas `Pusat.kunci` di samping
-executable. Menu ditambahkan
+Kata sandinya **tidak pernah ditulis ke `Login.dat`**: bawaannya `adminpusat11`,
+mesin yang memakai sandi lain boleh menimpanya lewat `SUDES_PUSAT_SANDI` atau
+berkas `Pusat.kunci` di samping executable. Menu ditambahkan
 ke sidebar hanya bila `AkunPusat.SesiIniPusat` benar, dan tindakan membukanya
 memeriksa ulang syarat itu sebelum halaman dimuat; penentunya adalah
 penanda sesi (`SessionContext.SesiPusat`) yang hanya dinyalakan jalur login akun
@@ -544,7 +546,7 @@ operatornya.
 **Server yang dituju tampil di sidebar, bukan hanya setelah halaman dimuat.**
 Baris menu **Pusat Administrasi** menampilkan alamat tujuannya sebagai baris
 kecil di bawah judul: `Server: lisensi.contoh.go.id`, atau
-`Server: localhost:5000` untuk server uji — jadi server uji dan server produksi
+`Server: 127.0.0.1:5110` untuk server lokal — jadi server uji dan server produksi
 tidak bisa tertukar diam-diam sebelum token admin diketik. Yang tampil hanya
 host dan port (bila bukan port bawaan); jalur `/admin` dan token tidak pernah
 masuk ke sidebar. Teks itu disegarkan oleh `LisensiManager.AlamatBerubah`
@@ -590,7 +592,7 @@ Halaman terdiri dari empat kartu bertumpuk:
    Rp750.000 / Tahunan Rp1.200.000), masing-masing menyebut harga per hari dan
    penghematannya, dengan satu kartu bertanda **PALING HEMAT**. Harga dan durasi
    diisi dari `GET /paket` (katalog server); sebelum server menjawab, kartu
-   menampilkan teks tanpa angka. Di bawah kartu ada **Mulai Trial 14 Hari**
+   menampilkan teks tanpa angka. Di bawah kartu ada **Mulai Trial 30 Hari**
    yang **tidak meminta kode aktivasi** (sama dengan popup saat aplikasi
    dibuka: `PenjagaLisensi.MulaiPercobaanAsync` — trial server bila kode sudah
    diisi & server terjangkau, trial lokal bila belum/offline) dan tombol
@@ -821,13 +823,13 @@ mode demo tanpa token, dan gateway gagal → 500 sementara tagihannya tetap
 tercatat supaya rekonsiliasi bisa menyusul. Satu aturan yang justru wajib:
 desa yang belum membayar tetap boleh membuat tagihan — itu jalan keluarnya.
 
-**`PenjagaLisensiTests`** — aturan alur uji coba 14 hari: instalasi baru yang
+**`PenjagaLisensiTests`** — aturan alur uji coba 30 hari: instalasi baru yang
 belum pernah trial berkeadaan `Demo` dan terkunci, trial yang berjalan membuka
 menu vital, trial yang habis mengunci lagi walau belum pernah membayar, kode
 aktivasi tanpa status aktif tetap terkunci, dan langganan aktif menang atas
 sisa trial. Daftar rute vital diuji dari dua sisi (rute pembuatan surat/data
 terkunci; Register, Riwayat, Langganan, dan pencadangan tetap terbuka), begitu
-pula `TrialLokal`: berjalan tepat 14 hari, tidak bisa diulang, dan bertahan
+pula `TrialLokal`: berjalan tepat 30 hari, tidak bisa diulang, dan bertahan
 setelah objek/instans aplikasi baru.
 
 **`MulaiPercobaanTests`** — urutan trial server vs lokal, diuji dengan HTTP
@@ -838,9 +840,9 @@ tanpa trial lokal; trial lokal yang sudah dipakai tidak diulang; dan status HTTP
 yang dianggap penolakan tegas (400/401/403/409) dipisahkan dari gangguan sesaat
 (404/408/429/5xx).
 
-**`MulaiTrialLanggananTests`** — tombol **Mulai Trial 14 Hari** di halaman
+**`MulaiTrialLanggananTests`** — tombol **Mulai Trial 30 Hari** di halaman
 Langganan ditekan tanpa kode aktivasi saat server mati: trial lokal aktif,
-tombol hilang, banner berbunyi “Trial 14 hari aktif”, dan lencana keadaan
+tombol hilang, banner berbunyi “Trial 30 hari aktif”, dan lencana keadaan
 menjadi Trial — bukan “Tidak aktif” atau “Full Service”.
 
 **`StatusMidtransTests`** — pembacaan status transaksi dari Core API, diuji
@@ -864,7 +866,7 @@ aplikasi untuk membuktikan:
 3. token v1 bertanda tangan tersimpan, dan kunci publik untuk memverifikasinya
    diambil dari `/kunci-publik` — bukan ditanam di klien,
 4. setelah trial aktif: menu terbuka, chip berbunyi `Trial • sisa N hari`
-   (bukan "Full Service"), sisa hari ±14,
+   (bukan "Full Service"), sisa hari ±30,
 5. trial kedua dari "perangkat lain" DITOLAK server **tanpa** cadangan trial
    lokal di perangkat itu.
 
@@ -976,7 +978,7 @@ daftar izinnya; setiap operator dapat melihat sesi miliknya sendiri.
 | `GET /admin/ekspor/desa.csv` | Unduh seluruh daftar desa sebagai berkas CSV |
 | `GET /admin/ekspor/pembayaran/{kode}.csv` | Unduh riwayat pembayaran satu desa sebagai CSV |
 
-Antarmuka webnya ada di **`/admin`** (`http://localhost:5000/admin` saat
+Antarmuka webnya ada di **`/admin`** (`http://127.0.0.1:5110/admin` saat
 lokal). Operator memasukkan ID dan token pribadi sekali per tab; keduanya disimpan di
 `sessionStorage` dan dikirim sebagai header `X-Admin-Operator` dan `Authorization` di setiap
 permintaan. Server mencatat ID operator, izin, rute, hasil, dan trace ID per permintaan admin; retensinya mengikuti konfigurasi log deployment. Dari halaman ini operator
@@ -1097,20 +1099,68 @@ Aplikasi (`appsettings.json`):
 |---|---|
 | `Lisensi:UrlServer` | Alamat server lisensi |
 | `Lisensi:KunciPublik` | Kunci publik base64url — **isi sebelum rilis** |
-| `Lisensi:KunciTanpaLangganan` | Warisan konfigurasi lama. Instalasi baru kini SELALU terkunci sampai trial 14 hari dimulai atau lisensi dibayar, jadi kunci ini tidak lagi mengubah perilaku |
+| `Lisensi:KunciTanpaLangganan` | Warisan konfigurasi lama. Instalasi baru kini SELALU terkunci sampai trial 30 hari dimulai atau lisensi dibayar, jadi kunci ini tidak lagi mengubah perilaku |
 
 Bila `KunciPublik` kosong, aplikasi mengambilnya sekali dari
 `/kunci-publik` lalu memetiknya di `%LocalAppData%`.
 
-## Menjalankan server lokal tanpa Supabase (Development)
+## Server lisensi lokal yang dijalankan aplikasi
 
-Untuk menguji aplikasi dan menu **Pusat Administrasi** tanpa database, jalankan
-server dengan environment `Development`. Bila `SUPABASE_HOST` dan
-`SUPABASE_DB_PASSWORD` kosong, server memakai `LanggananMemori` dan
-`PengumumanMemori`: `/healthz`, `/paket`, `/kunci-publik`, `/admin`, serta alur
-aktivasi/pembayaran bisa dicoba, tetapi **seluruh data hilang saat server
-berhenti**. Mode ini tidak pernah aktif di Production — tanpa kredensial
-Supabase, server Production tetap menolak start.
+Aplikasi adalah PEMILIK siklus hidup server lisensi lokal — bukan skrip, bukan
+operator yang harus menyalakannya sendiri:
+
+| Peristiwa | Yang terjadi |
+|---|---|
+| Aplikasi dibuka, pilihan **Jalankan server lisensi di komputer ini** aktif di halaman Langganan | `ServerLisensiLokal` menyalakan `SuDesApp.Server` di latar belakang, menunggu `/healthz` siap, lalu menjadikan `http://127.0.0.1:5110` alamat lisensi aplikasi |
+| Aplikasi ditutup (jendela ditutup, menu Keluar, atau logoff Windows) | `App.OnExit` dan `SessionEnding` memanggil `Matikan()`: seluruh pohon proses server dibunuh sebelum pekerjaan penutupan lain (mis. backup Drive) dimulai |
+| Aplikasi mati mendadak / komputer dimatikan paksa | Penanda `server.pid.json` dibaca saat aplikasi dibuka berikutnya; proses yang pid + waktu mulainya cocok dimatikan. Pid yang sudah dipakai ulang program lain TIDAK ikut dibunuh |
+| Operator mematikan pilihan itu | `Matikan()` dijalankan seketika; pilihan berikutnya boleh dinyalakan lagi tanpa menutup aplikasi |
+
+Port **5110** dan host **127.0.0.1** sama dengan `Lisensi:UrlServer` di
+appsettings, `launchSettings.json` server, dan `Tools/SiapkanServerLisensi.ps1`,
+sehingga server yang dinyalakan aplikasi langsung menjadi alamat yang dipakai
+Cek Status, katalog harga, tagihan, **dan** Pusat Administrasi. Port bisa
+diganti lewat preferensi `serverLisensiLokalPort` (halaman Langganan memakai satu
+alamat yang sama untuk semua itu).
+
+Data langganan server lokal **menetap** di berkas:
+
+```
+%LOCALAPPDATA%\SuDesApp\server-lisensi\langganan.json   ← desa, perangkat,
+                                                           tagihan, pembayaran,
+                                                           pengumuman, audit
+%LOCALAPPDATA%\SuDesApp\server-lisensi\server.log        ← stdout/stderr server
+%LOCALAPPDATA%\SuDesApp\server-lisensi\server.pid.json  ← penanda sisa proses
+```
+
+Server yang dijalankan aplikasi SELALU memakai berkas itu, walau
+`appsettings.lokal.json` di mesin pengembang berisi kredensial Supabase: aplikasi
+menyuntikkan `SUPABASE_HOST`/`SUPABASE_DB_PASSWORD` kosong ke proses server,
+sehingga "server lokal" tidak pernah diam-diam menulis langganan ke database
+produksi. Menulis atomik (berkas sementara lalu dipindahkan) membuat berkas lama
+tetap utuh bila proses mati di tengah penulisan; berkas yang rusak/berversi
+asing dipindahkan ke `langganan.json.rusak-<waktu>` dan server mulai kosong.
+
+### Pusat Administrasi terhubung dengan langganan
+
+Tombol **Buka Pusat Administrasi** di halaman Langganan membuka `/admin` pada
+alamat server yang SAMA. Jadi desa/paket/tagihan yang dikelola operator di
+pusat administrasi adalah data yang diperiksa halaman Langganan saat Cek Status
+— bukan dua server yang berbeda. Tombol itu hanya tampil dan hanya bisa
+dijalankan pada sesi akun pusat (aturan yang sama dengan menu sidebar), dan
+halaman admin tetap meminta ID + token operator server. Bila build terkunci pada
+URL produksi (`Lisensi:UrlServer` non-loopback HTTPS), blok server lokal tidak
+ditampilkan sama sekali.
+
+### Menjalankan server tanpa aplikasi (debugging)
+
+Masih mungkin untuk keperluan debug: jalankan `dotnet run --project
+SuDesApp.Server` dengan `ASPNETCORE_ENVIRONMENT=Development`, dan tanpa
+`SUPABASE_HOST`/`SUPABASE_DB_PASSWORD` server memakai berkas yang sama
+(`PenyimpananLokal:Path` bila diisi, selain itu
+`%LOCALAPPDATA%\SuDesApp\server-lisensi\langganan.json`). Mode berkas tidak
+pernah aktif di Production: tanpa kredensial Supabase, server Production tetap
+menolak start.
 
 ```powershell
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
@@ -1122,11 +1172,10 @@ $env:SUDES_ADMIN_OPERATORS__0__PERMISSIONS__1 = 'customers.read'
 dotnet run --project SuDesApp.Server
 ```
 
-Aplikasi desa yang masih memakai `Lisensi:UrlServer = http://localhost:5000`
-akan menampilkan chip **Terhubung** setelah halaman Langganan dibuka. Menu
-Pusat Administrasi memakai alamat yang sama (`/admin`) dan operator masuk
-dengan ID/token di atas. Untuk produksi, tetap isi kredensial Supabase dan
-pakai URL HTTPS nyata.
+Untuk produksi, tetap isi kredensial Supabase dan pakai URL HTTPS nyata. Bila
+server dijalankan manual, ingat bahwa aplikasi hanya mematikannya bila server
+itulah yang dinyalakan aplikasi — proses yang dijalankan dari terminal adalah
+tanggung jawab terminal itu.
 
 > Catatan audit 2026-10-22: environment variable
 > `SUDES_ADMIN_OPERATORS__<indeks>__*` sebelumnya **tidak pernah terbaca**
@@ -1255,7 +1304,7 @@ bisa dibaca kunci publik itu.
 | `GET /paket` | ✅ 150000 / 750000 / 1200000 (harga katalog resmi) |
 | `POST /admin/pelanggan` tanpa token / token salah | ✅ 401 / 401 |
 | `POST /admin/pelanggan` dengan token | ✅ desa tersimpan di Supabase |
-| `POST /aktifkan-trial` | ✅ token bertanda tangan, berlaku 14 hari |
+| `POST /aktifkan-trial` | ✅ token bertanda tangan, berlaku 30 hari |
 | `POST /buat-tagihan` | ✅ order `SUDES-…`, nominal 150000 |
 | `POST /admin/pelanggan/{kode}/tandai-lunas` | ✅ langganan diperpanjang, order `MANUAL-…` |
 | `POST /aktivasi` | ✅ token paket `bulanan` |
@@ -1363,7 +1412,7 @@ hanya memverifikasi bahwa RLS sudah aktif.
 > percakapan ini sudah terekspos di riwayat chat — putar di
 > Dashboard → Settings → Database.
 
-## Penggatingan fitur & alur trial 14 hari (status 2026-10-24)
+## Penggatingan fitur & alur trial 30 hari (status 2026-10-24)
 
 Empat keadaan akses, ditentukan `PenjagaLisensi` (Core) dari status lisensi
 BERTANDA TANGAN plus trial lokal:
@@ -1371,7 +1420,7 @@ BERTANDA TANGAN plus trial lokal:
 | Keadaan | Kapan | Akses |
 |---|---|---|
 | `Berlangganan` | Token sah (dalam masa aktif / tenggang) | **Penuh.** Menang atas trial |
-| `Trial` | Trial lokal 14 hari masih berjalan | **Penuh sementara** |
+| `Trial` | Trial lokal 30 hari masih berjalan | **Penuh sementara** |
 | `Demo` | Instalasi baru, trial belum pernah dimulai | **Terkunci** + popup ajakan trial |
 | `BacaSaja` | Trial habis, atau langganan berakhir, atau kode aktivasi tanpa pembayaran | **Terkunci** + popup wajib bayar |
 
@@ -1385,7 +1434,7 @@ aturan yang sama, jadi gerbang navigasi tidak punya daftar kedua.
 penggambaran awal), `App.TampilkanPemberitahuanLisensi` membaca keadaan dari
 cache lalu:
 
-- `Demo` → popup “Mulai masa uji coba 14 hari”. Ya → `MulaiPercobaanAsync()`
+- `Demo` → popup “Mulai masa uji coba 30 hari”. Ya → `MulaiPercobaanAsync()`
   (trial server bila kode aktivasi ada & server terjangkau, selain itu trial
   lokal; gerbang langsung terbuka, chip berubah). Tidak → popup “Menu vital
   terkunci” dan menu tetap terkunci.
@@ -1414,7 +1463,7 @@ urutan tetap:
 | Langganan sudah aktif | Tidak ada trial | Tidak perlu, server pun akan menolak |
 | Kode aktivasi ada & server menjawab menerima | **Trial server** | Sekali per desa (`trial_sudah`), token bertanda tangan, batas perangkat |
 | Kode ada, server tak terjangkau (timeout/5xx/404/408/429) | **Trial lokal** | Desa tetap bisa mencoba saat offline; gangguan server tidak mengunci desa |
-| Kode ada, server menjawab MENOLAK (400/401/403/409 dst.) | Tidak ada — arahkan bayar | Kalau diberi lokal, satu desa bisa mengumpulkan 28 hari dari dua jalur |
+| Kode ada, server menjawab MENOLAK (400/401/403/409 dst.) | Tidak ada — arahkan bayar | Kalau diberi lokal, satu desa bisa mengumpulkan 60 hari dari dua jalur |
 | Kode belum ada | **Trial lokal** | Instalasi pertama memang belum punya kode |
 | Trial lokal sudah pernah dipakai | Tidak ada | Trial lokal tidak bisa diulang |
 
@@ -1426,7 +1475,7 @@ diberi trial lokal, supaya hitungannya tidak dobel.
 
 Penguncian itu **terlihat sebelum menu diklik**: setiap menu vital yang
 terkunci diberi gembok di ujung kanan baris, judul/ikonnya diredupkan, dan
-tooltip-nya menyebut jalan keluarnya — “klik untuk mulai trial 14 hari” pada
+tooltip-nya menyebut jalan keluarnya — “klik untuk mulai trial 30 hari” pada
 `Demo`, “klik untuk menyelesaikan pembayaran lisensi” setelah trial habis.
 Akordeon ikut bergembok bila SELURUH isinya terkunci (mis. **Buat Surat Baru**),
 termasuk saat daftarnya masih terlipat; akordeon campuran seperti **Formulir**
@@ -1467,9 +1516,10 @@ berakhir tetap terkunci.
 ## Batasan sebelum produksi
 
 1. **Server belum dijalankan di produksi** — `Lisensi:UrlServer` di repo masih
-   `localhost`; server lokal Development bisa dijalankan dengan mode memori
-   (lihat bagian di atas), tetapi data hilang saat proses berhenti. Untuk
-   produksi wajib Supabase + HTTPS. Panduan langkah demi langkah
+   loopback; server lokal bisa dinyalakan aplikasi dengan penyimpanan berkas
+   yang menetap (lihat bagian di atas), tetapi itu untuk satu komputer desa,
+   bukan layanan bersama. Untuk produksi wajib Supabase + HTTPS. Panduan
+   langkah demi langkah
    (Railway/Render/VPS) ada di [docs/deploy-server.md](deploy-server.md); ada
    juga `Dockerfile` di akar repo untuk build image.
 2. **Kunci penandatangan wajib persistent.** Image container menyimpan kunci di

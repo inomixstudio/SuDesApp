@@ -1,5 +1,5 @@
 // File: SuDesApp/GeneratorPdf/KenalLahirGenerator.cs
-// Badan surat dibuat langsung dengan QuestPDF (BadanSurat), tanpa lapisan kompat.
+// Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
@@ -99,7 +99,7 @@ namespace SuDesApp.GeneratorPdf
                 rata: Rata.Kiri,
                 jarakAtas: 10);
 
-            _logger.LogInformation("Berhasil membuat dokumen KENAL LAHIR untuk Anak: {NamaAnak}", namaAnak);
+            _logger.LogDebug("Dokumen Kenal Lahir selesai dibuat.");
         }
 
         /// <summary>

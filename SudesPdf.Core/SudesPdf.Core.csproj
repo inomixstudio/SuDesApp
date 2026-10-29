@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SudesPdf.Core</RootNamespace>
+    <AssemblyName>SudesPdf.Core</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!--
+      SudesPdf.Core adalah mesin PDF milik aplikasi sendiri: tanpa paket pihak
+      ketiga sama sekali (tidak ada PDFium, PDF.js, Skia, atau MIT/Apache
+      library lain). Seluruh berkas di proyek ini ditulis untuk SuDesApp,
+      sehingga distribusi aplikasi tidak bergantung lisensi pihak lain.
+    -->
+  </PropertyGroup>
+</Project>

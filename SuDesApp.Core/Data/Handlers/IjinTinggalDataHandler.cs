@@ -80,7 +80,7 @@ namespace SuDesApp.Data.Handlers
                 }, transaction);
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully inserted IJIN_TINGGAL data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully inserted IJIN_TINGGAL data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -99,7 +99,7 @@ namespace SuDesApp.Data.Handlers
                 await connection.ExecuteAsync(deleteQuery, new { ID_Surat = idSurat }, transaction);
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully deleted IJIN_TINGGAL data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully deleted IJIN_TINGGAL data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -142,7 +142,7 @@ namespace SuDesApp.Data.Handlers
                 suratData.TglLahirPenanggungJawab = row.TglLahirPenanggungJawab;
                 suratData.PekerjaanPenanggungJawab = row.PekerjaanPenanggungJawab;
 
-                _logger.LogInformation("Successfully loaded IJIN_TINGGAL data for ID_Surat={ID_Surat}", suratData.ID_Surat);
+                _logger.LogDebug("Successfully loaded IJIN_TINGGAL data for ID_Surat={ID_Surat}", suratData.ID_Surat);
             }
             catch (Exception ex)
             {

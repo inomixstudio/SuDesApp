@@ -1,5 +1,5 @@
 // SKTMGenerator.cs
-// Badan surat dibuat langsung dengan QuestPDF (BadanSurat), tanpa lapisan kompat.
+// Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Repositories;
@@ -29,7 +29,7 @@ namespace SuDesApp.GeneratorPdf
         {
             try
             {
-                _logger.LogInformation("Generating PDF for ID_Surat={ID_Surat}, KeteranganTextBox={KeteranganTextBox}", idSurat, keteranganTextBox);
+                _logger.LogDebug("Membuat PDF SKTM untuk ID_Surat={ID_Surat}", idSurat);
 
                 var suratData = await _suratRepository.GetByIdAsync(idSurat);
                 if (suratData == null)
@@ -40,7 +40,7 @@ namespace SuDesApp.GeneratorPdf
 
                 if (string.IsNullOrWhiteSpace(suratData.Warga?.Nama) || string.IsNullOrWhiteSpace(suratData.Warga?.NIK))
                 {
-                    _logger.LogError("Data warga tidak lengkap untuk ID_Surat={ID_Surat}: Nama={Nama}, NIK={NIK}", idSurat, suratData.Warga?.Nama, suratData.Warga?.NIK);
+                    _logger.LogError("Data warga tidak lengkap untuk ID_Surat={ID_Surat}", idSurat);
                     throw new InvalidOperationException("Data warga tidak lengkap untuk generate PDF.");
                 }
 
@@ -54,9 +54,6 @@ namespace SuDesApp.GeneratorPdf
                         suratData.Desa?.Kecamatan ?? "null", suratData.Desa?.Kabupaten ?? "null");
                     throw new InvalidOperationException("Data desa tidak lengkap untuk generate PDF.");
                 }
-
-                _logger.LogInformation("SuratData retrieved: NamaWarga={NamaWarga}, NIK={NIK}, NomorSurat={NomorSurat}, NamaDesa={NamaDesa}, KepalaDesa={KepalaDesa}, Keterangan={Keterangan}",
-                    suratData.Warga?.Nama, suratData.Warga?.NIK, suratData.NomorSurat, suratData.Desa?.NamaDesa, suratData.Desa?.KepalaDesa, suratData.Keterangan);
 
                 await base.GeneratePdfAsync(outputStream, suratData, keteranganTextBox);
             }
@@ -73,9 +70,6 @@ namespace SuDesApp.GeneratorPdf
             {
                 var warga = suratData.Warga ?? throw new InvalidOperationException("Data warga tidak lengkap untuk menghasilkan PDF SKTM.");
                 var desa = suratData.Desa ?? throw new InvalidOperationException("Data desa tidak lengkap untuk menghasilkan PDF SKTM.");
-
-                _logger.LogInformation("Rendering content: NamaWarga={NamaWarga}, NamaDesa={NamaDesa}, KepalaDesa={KepalaDesa}, KeteranganTextBox={KeteranganTextBox}, SuratData.Keterangan={SuratDataKeterangan}",
-                    warga.Nama, desa.NamaDesa, desa.KepalaDesa, keteranganTextBox, suratData.Keterangan);
 
                 badan.Paragraf("Yang bertanda tangan di bawah ini :", jarakBawah: 10);
 
@@ -120,7 +114,6 @@ namespace SuDesApp.GeneratorPdf
                         indentBarisPertama: 50,
                         jarakAtas: 10,
                         jarakBawah: 12);
-                    _logger?.LogInformation("KeteranganFinal ditambahkan ke PDF: {KeteranganFinal}", keteranganFinal);
                 }
 
                 badan.Paragraf("Demikian surat keterangan ini dibuat dengan sebenarnya untuk digunakan seperlunya.",
@@ -129,7 +122,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SKTM, NamaWarga={NamaWarga}", suratData.Warga?.Nama);
+                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SKTM");
                 throw;
             }
         }
@@ -151,12 +144,12 @@ namespace SuDesApp.GeneratorPdf
                     return parsedDate.ToString(DefaultTanggalFormat, new CultureInfo("id-ID"));
                 }
 
-                _logger.LogWarning("Failed to parse TanggalLahir '{TanggalLahir}' to format {Format}", dbDate, DefaultTanggalFormat);
+                _logger.LogWarning("Tanggal lahir warga tidak bisa dibaca dengan format {Format}.", DefaultTanggalFormat);
                 return dbDate; // Kembalikan string asli jika gagal
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error parsing TanggalLahir '{TanggalLahir}'", dbDate);
+                _logger.LogWarning(ex, "Tanggal lahir warga gagal diurai.");
                 return dbDate; // Kembalikan string asli jika error
             }
         }

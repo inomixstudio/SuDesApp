@@ -90,11 +90,15 @@ pernah bocor.
 
 ### Cara cepat mencoba di komputer sendiri (bukan produksi)
 
-Paling mudah lewat profil Visual Studio sudah tersedia (`http://localhost:5000`,
-`ASPNETCORE_ENVIRONMENT=Development`) — atau dari terminal:
+Paling mudah: nyalakan pilihan **Jalankan server lisensi di komputer ini** di
+halaman Langganan — aplikasi yang menyalakan, memakai, dan mematikannya
+(lihat [langganan-dan-lisensi.md](langganan-dan-lisensi.md#server-lisensi-lokal-yang-dijalankan-aplikasi)).
+Bila perlu menjalankannya sendiri (debugging), profil Visual Studio sudah memakai
+`http://127.0.0.1:5110` dengan `ASPNETCORE_ENVIRONMENT=Development` — atau dari
+terminal:
 
 ```bash
-ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:5000 \
+ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5110 \
   dotnet run --project SuDesApp.Server --no-launch-profile
 ```
 
@@ -107,16 +111,16 @@ Uji cepat dari terminal — kedua baris ini harus menjawab sebelum aplikasi
 desktop dibuka:
 
 ```bash
-curl http://localhost:5000/        # {"status":"SuDesApp lisensi server", ...}
-curl http://localhost:5000/paket   # [{"kode":"bulanan", ...}]
+curl http://127.0.0.1:5110/        # {"status":"SuDesApp lisensi server", ...}
+curl http://127.0.0.1:5110/paket   # [{"kode":"bulanan", ...}]
 ```
 
 Bila `/` menjawab tetapi `/paket` tidak, masalahnya di sisi server (bukan di
 aplikasi). Bila keduanya kosong, server belum berjalan: periksa log startup —
-server sengaja berhenti, bukan diam-diam melayani, bila kredensial Supabase
-kosong, RLS tidak terverifikasi, atau (di luar Development) ServerKey Midtrans
+di luar Development server sengaja berhenti, bukan diam-diam melayani, bila
+kredensial Supabase kosong, RLS tidak terverifikasi, atau ServerKey Midtrans
 kosong. Di aplikasi, buka **Langganan → Server Lisensi**, isi
-`http://localhost:5000`, tekan **Simpan & Uji** sampai chip berbunyi
+`http://127.0.0.1:5110`, tekan **Simpan & Uji** sampai chip berbunyi
 **Terhubung**.
 
 ## Environment variables
@@ -182,8 +186,10 @@ SUDES_ADMIN_OPERATORS__0__PERMISSIONS__1=customers.read \
 dotnet run --project SuDesApp.Server
 ```
 
-Buka `http://localhost:5000/admin`, lalu masuk dengan ID/token di atas. Aplikasi
-desa yang menunjuk `http://localhost:5000` akan melihat chip **Terhubung**.
+Buka `http://127.0.0.1:5110/admin`, lalu masuk dengan ID/token di atas — atau
+tekan **Buka Pusat Administrasi** di halaman Langganan, yang membuka alamat yang
+sama di dalam aplikasi. Aplikasi desa yang menunjuk `http://127.0.0.1:5110` akan
+melihat chip **Terhubung**.
 
 Tanpa `MIDTRANS_SERVER_KEY` di luar mode Development, server **menolak start** —
 webhook tanpa verifikasi signature akan membiarkan siapa pun memperpanjang

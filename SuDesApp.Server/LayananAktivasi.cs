@@ -48,7 +48,7 @@ public sealed class LayananAktivasi
     /// harganya 0, dan karena itu ia TIDAK masuk katalog tagihan
     /// (<see cref="KatalogPaket"/>) — yang masuk katalog hanya paket berbayar.
     /// </summary>
-    public const int HariTrial = 14;
+    public const int HariTrial = 30;
 
     private readonly IRepositoryLangganan _repo;
     private readonly SigningService _signing;
@@ -135,7 +135,7 @@ public sealed class LayananAktivasi
     }
 
     /// <summary>
-    /// Aktifkan trial 14 hari (tanpa pembayaran) untuk satu desa, lalu terbitkan
+    /// Aktifkan trial 30 hari (tanpa pembayaran) untuk satu desa, lalu terbitkan
     /// token persis seperti aktivasi biasa — klien tidak membedakan keduanya.
     ///
     /// Urutan guard (sama pentingnya dengan aktivasi):

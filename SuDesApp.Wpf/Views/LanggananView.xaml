@@ -472,10 +472,10 @@
                                                  meminta kode aktivasi: kode yang sudah diisi dipakai
                                                  bila ada (trial server), selain itu trial lokal —
                                                  jalur yang sama dengan popup saat aplikasi dibuka. -->
-                                            <Button Content="Mulai Trial 14 Hari" Command="{Binding MulaiTrialCommand}"
+                                            <Button Content="Mulai Trial 30 Hari" Command="{Binding MulaiTrialCommand}"
                                                     MinWidth="170" Margin="0,0,8,0"
                                                     HorizontalAlignment="Left" Style="{StaticResource SecondaryButton}"
-                                                    ToolTip="Mulai masa uji coba 14 hari tanpa pembayaran dan tanpa kode aktivasi. Bila kode sudah diisi dan server terjangkau, trial dicatat server; bila offline, trial berlaku di komputer ini."
+                                                    ToolTip="Mulai masa uji coba 30 hari tanpa pembayaran dan tanpa kode aktivasi. Bila kode sudah diisi dan server terjangkau, trial dicatat server; bila offline, trial berlaku di komputer ini."
                                                     Visibility="{Binding TampilTombolTrial, Converter={StaticResource BoolToVis}}"/>
                                             <Button Content="Bayar / Perpanjang" Command="{Binding BayarLanggananCommand}"
                                                     MinWidth="180"
@@ -497,7 +497,7 @@
                                                    Foreground="{DynamicResource AccentTextBrush}"/>
                                         <TextBlock Style="{StaticResource LanggananDesc}" Margin="0,4,0,10"
                                                    TextWrapping="Wrap" LineHeight="19"
-                                                   Text="Tampilkan QRIS di layar, scan dengan aplikasi bank/e-wallet, bayar nominal yang tertera, lalu hubungi admin via WhatsApp ke nomor 0851 1166 9951 dan kirim bukti pembayaran. Langganan aktif setelah admin menandai lunas."/>
+                                                   Text="Tampilkan QRIS di layar, scan dengan aplikasi bank/e-wallet, bayar nominal yang tertera, lalu hubungi admin via WhatsApp dan kirim bukti pembayaran. Langganan aktif setelah admin menandai lunas."/>
                                         <WrapPanel Orientation="Horizontal">
                                             <Button Content="Tampilkan QRIS (scan &amp; bayar)"
                                                     Command="{Binding TampilkanQrisCommand}"
@@ -507,7 +507,7 @@
                                             <Button Content="Hubungi Admin via WhatsApp" Command="{Binding BukaWaAdminCommand}"
                                                     MinWidth="230" Margin="8,0,0,0"
                                                     Style="{StaticResource SecondaryButton}"
-                                                    ToolTip="Buka WhatsApp ke admin (0851 1166 9951) dengan rincian pembayaran sudah terisi"/>
+                                                    ToolTip="Buka WhatsApp ke admin dengan rincian pembayaran sudah terisi"/>
                                         </WrapPanel>
                                     </StackPanel>
                                 </Border>
@@ -580,17 +580,13 @@
                                                             <Button Content="Hubungi Admin via WhatsApp" Command="{Binding BukaWaAdminCommand}"
                                                                     MinWidth="230" HorizontalAlignment="Left"
                                                                     Style="{StaticResource PrimaryButton}"
-                                                                    ToolTip="Buka WhatsApp ke admin (0851 1166 9951) dengan rincian pembayaran sudah terisi"/>
+                                                                    ToolTip="Buka WhatsApp ke admin dengan rincian pembayaran sudah terisi"/>
                                                             <Button Content="Salin rincian"
                                                                     Command="{Binding SalinRincianQrisCommand}"
                                                                     Margin="8,0,0,0" HorizontalAlignment="Left" MinWidth="130"
                                                                     Style="{StaticResource SecondaryButton}"
                                                                     ToolTip="Salin kode aktivasi, paket, nominal, dan nama penerima untuk dikirim ke admin"/>
                                                         </WrapPanel>
-                                                        <TextBlock FontSize="12" FontWeight="SemiBold" Margin="0,6,0,0"
-                                                                   TextWrapping="Wrap"
-                                                                   Foreground="{DynamicResource TextBrush}"
-                                                                   Text="{Binding NomorWaAdmin}"/>
                                                     </StackPanel>
                                                 </Grid>
                                                 <Grid Margin="0,8,0,0">
@@ -663,7 +659,7 @@
                                         <TextBlock Style="{StaticResource LangkahNomorTeks}" Text="3"/>
                                     </Border>
                                     <TextBlock Grid.Column="1" Style="{StaticResource LangkahTeks}"
-                                               Text="Pilih paket (Bulanan, 6 Bulan, atau Tahunan), lalu pilih jalur — Jalur 1 Otomatis: tekan Bayar / Perpanjang, tagihan terbuka di peramban; ATAU Jalur 2 Manual: Tampilkan QRIS, scan &amp; bayar, lalu hubungi admin via WhatsApp ke 0851 1166 9951."/>
+                                               Text="Pilih paket (Bulanan, 6 Bulan, atau Tahunan), lalu pilih jalur — Jalur 1 Otomatis: tekan Bayar / Perpanjang, tagihan terbuka di peramban; ATAU Jalur 2 Manual: Tampilkan QRIS, scan &amp; bayar, lalu hubungi admin via WhatsApp."/>
                                 </Grid>
                                 <Grid Margin="0,0,0,14">
                                     <Grid.ColumnDefinitions>
@@ -678,7 +674,7 @@
                                 </Grid>
 
                                 <Border Style="{StaticResource LanggananInfoBox}" Padding="12,10">
-                                    <TextBlock Text="Butuh bantuan? Hubungi admin via WhatsApp ke 0851 1166 9951 bila kode aktivasi belum diterima atau pembayaran tidak kunjung terbaca."
+                                    <TextBlock Text="Butuh bantuan? Gunakan tombol Hubungi Admin via WhatsApp di panel pembayaran bila kode aktivasi belum diterima atau pembayaran tidak kunjung terbaca."
                                                FontSize="11" TextWrapping="Wrap" LineHeight="18"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 </Border>
@@ -708,7 +704,7 @@
                         </Border>
                         <StackPanel Style="{StaticResource LanggananCardBody}">
                                 <TextBlock Style="{StaticResource LanggananDesc}"
-                                           Text="Aktivasi manual memakai kode aktivasi yang diberikan admin — lewat WhatsApp ke 0851 1166 9951 — setelah pembayaran manual (QRIS/transfer) dikonfirmasi. Kode ini berfungsi sebagai identitas desa, bukan rahasia. Masukkan kode di bawah, lalu tekan Simpan &amp; Cek sampai status berubah menjadi Aktif."/>
+                                           Text="Aktivasi manual memakai kode aktivasi yang diberikan admin lewat WhatsApp setelah pembayaran manual (QRIS/transfer) dikonfirmasi. Kode ini berfungsi sebagai identitas desa, bukan rahasia. Masukkan kode di bawah, lalu tekan Simpan &amp; Cek sampai status berubah menjadi Aktif."/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="140"/>
@@ -805,6 +801,34 @@
                                         </WrapPanel>
                                     </StackPanel>
                                 </Grid>
+
+                                <!-- Server lokal: kendali operator untuk pusat administrasi
+                                     di komputer ini. Tampil hanya bila alamat server boleh
+                                     diganti (build uji lokal), bukan pada rilis yang
+                                     terkunci ke server produksi. -->
+                                <Border Style="{StaticResource LanggananInfoBox}" Margin="0,14,0,0"
+                                        Visibility="{Binding TampilServerLokal, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel>
+                                        <DockPanel>
+                                            <CheckBox DockPanel.Dock="Left" Content="Jalankan server lisensi di komputer ini"
+                                                      IsChecked="{Binding ServerLokalAktif, Mode=TwoWay}"
+                                                      VerticalAlignment="Center"/>
+                                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right"
+                                                       Text="{Binding ServerLokalStatus}" FontSize="11" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding ServerLokalCatatan}" FontSize="11"
+                                                   TextWrapping="Wrap" LineHeight="18" Margin="0,8,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <Button Content="Buka Pusat Administrasi"
+                                                Command="{Binding BukaPusatAdministrasiCommand}"
+                                                MinWidth="170" Margin="0,10,0,0" HorizontalAlignment="Left"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Visibility="{Binding TampilPusatAdministrasi, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="Halaman operator server lisensi pada alamat yang sama dengan alamat langganan"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </StackPanel>
                     </Border>

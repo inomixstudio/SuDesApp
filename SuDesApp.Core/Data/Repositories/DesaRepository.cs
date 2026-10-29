@@ -40,8 +40,8 @@ namespace SuDesApp.Data.Repositories
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configLoader = configLoader ?? throw new ArgumentNullException(nameof(configLoader));
             _connectionString = _config.DatabaseConnectionString ?? $"Data Source={Path.Combine(AppContext.BaseDirectory, "Database", "desa.db")}";
-            // Connection strings may contain the SQLCipher password. Log only the
-            // database path so diagnostics never disclose encryption credentials.
+            // Log only the database path, not the whole connection string, so
+            // diagnostics never disclose connection details.
             var databasePath = new SqliteConnectionStringBuilder(_connectionString).DataSource;
             _logger.LogInformation("Using database at: {DatabasePath}", databasePath);
         }

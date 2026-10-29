@@ -1,7 +1,7 @@
 ; ============================================================================
 ;  Skrip Inno Setup untuk SuDesApp.
 ;  Dipakai oleh .github/workflows/release.yml. Versi di-inject via:
-;     ISCC.exe /DAppVersion=2.7.1 /DAppVersionNumeric=2.7.1.0 installer\SuDesApp.iss
+;     ISCC.exe /DAppVersion=2.9.0 /DAppVersionNumeric=2.9.0.0 installer\SuDesApp.iss
 ;
 ;  Instalasi ke {localappdata}\Programs\SuDesApp (tanpa UAC) supaya
 ;  database/aplikasi yang ditulis relatif ke folder aplikasi tetap bisa
@@ -20,7 +20,7 @@
 #endif
 
 #ifndef AppVersionNumeric
-  ; VersionInfoVersion hanya menerima angka x.y.z[.w]; prarilis (2.7.1-rc1)
+  ; VersionInfoVersion hanya menerima angka x.y.z[.w]; prarilis (2.9.0-rc1)
   ; wajib memberi AppVersionNumeric dari alur rilis.
   #define AppVersionNumeric AppVersion
 #endif

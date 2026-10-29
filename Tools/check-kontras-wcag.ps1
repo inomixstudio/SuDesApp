@@ -260,7 +260,7 @@ if ($dibaca.ContainsKey($refNama)) {
 Write-Host ''
 Write-Host 'Warna tetap di luar tema' -ForegroundColor Cyan
 Write-Ok 'Avatar Google AboutView memakai #3367D6 dengan teks putih (rasio 5,18).'
-Write-Ok 'Latar pratinjau kertas Setelan, latar PDF (#525659), dan panduan WhatsApp sengaja memakai warna tetap.'
+Write-Ok 'Latar pratinjau kertas Setelan dan latar PDF (#525659) sengaja memakai warna tetap.'
 
 Write-Host ''
 if ($script:hardErrors -eq 0) {

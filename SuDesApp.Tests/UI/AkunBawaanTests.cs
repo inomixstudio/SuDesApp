@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.Data.Models;
+using SuDesApp.Data.Repositories;
 using SuDesApp.Services;
+using SuDesApp.Utilities;
 using SuDesApp.Wpf.Utilities;
 using SuDesApp.Wpf.ViewModels;
 using Xunit;
@@ -12,50 +16,108 @@ using Xunit;
 namespace SuDesApp.Tests.UI
 {
     /// <summary>
-    /// Kredensial akun bawaan tidak boleh lagi berupa sandi tetap yang sama di
-    /// semua instalasi. Uji ini menjaga generator sandi acak dan pembacaan sandi
-    /// provisioning akun pusat tetap berperilaku seperti yang didokumentasikan.
+    /// Kredensial akun bawaan bersifat TETAP: admin/admin dan
+    /// adminpusat/adminpusat11. Uji ini menjaga agar pemasangan baru memakai
+    /// nilai itu (bukan sandi acak), login tidak pernah merotasinya otomatis,
+    /// dan instalasi lama yang terlanjur memakai sandi acak dipulihkan HANYA
+    /// sekali — sesudah itu sandi yang diganti pengguna tidak disentuh lagi.
     /// </summary>
-    public class AkunBawaanTests
+    [Collection("LisensiBerbagiBerkas")]
+    public class AkunBawaanTests : IDisposable
     {
-        private const string Alfabet = "abcdefghjkmnpqrstuvwxyz23456789";
+        private readonly string _folder = Path.Combine(
+            Path.GetTempPath(), "sudes-akun-" + Guid.NewGuid().ToString("N"));
+
+        public AkunBawaanTests()
+        {
+            Directory.CreateDirectory(_folder);
+
+            // Preferensi & berkas akun diarahkan ke folder uji: penanda
+            // "kredensial sudah disiapkan" tidak boleh mengotori profil mesin
+            // yang menjalankan uji, dan tiap uji mulai dari keadaan bersih.
+            AppPreferenceStore.LokasiOverride = () => Path.Combine(_folder, "prefs.json");
+            BerkasLogin.LokasiOverride = () => Path.Combine(_folder, BerkasLogin.NamaBerkas);
+        }
+
+        public void Dispose()
+        {
+            AppPreferenceStore.LokasiOverride = null;
+            BerkasLogin.LokasiOverride = null;
+            AkunPusat.LokasiBerkasSandiOverride = null;
+
+            try { Directory.Delete(_folder, recursive: true); } catch { /* sisa berkas uji */ }
+        }
+
+        private string JalurLogin => Path.Combine(_folder, BerkasLogin.NamaBerkas);
 
         [Fact]
-        public void SandiAcak_MemakaiAlfabetAmanDanPanjangYangDiminta()
+        public void PemasanganBaru_MemakaiKredensialTetapAdminAdmin()
         {
-            var sandi = SandiAcak.Buat();
+            _ = new LoginViewModel(new LayananPenggunaPalsu());
 
-            Assert.Equal(19, sandi.Length); // 16 karakter + 3 tanda hubung
-            Assert.Matches("^[a-z0-9]{4}(-[a-z0-9]{4}){3}$", sandi);
-            Assert.All(sandi.Replace("-", string.Empty), huruf => Assert.Contains(huruf, Alfabet));
+            var akun = BerkasLogin.Cari(JalurLogin, LoginViewModel.UsernameAdminBawaan);
+
+            Assert.NotNull(akun);
+            Assert.True(BerkasLogin.Cocok(akun!, LoginViewModel.SandiAdminBawaan));
+            Assert.False(BerkasLogin.Cocok(akun!, "admin-lama-yang-berbeda"));
         }
 
         [Fact]
-        public void SandiAcak_BerbedaSetiapPemanggilan()
+        public async Task PemasanganBaru_MenyemaiAdminBawaanTanpaMembuatSandiAcak()
         {
-            var kumpulan = new System.Collections.Generic.HashSet<string>();
-            for (var i = 0; i < 24; i++)
+            var layanan = new LayananPenggunaPalsu();
+            var vm = new LoginViewModel(layanan);
+
+            await vm.InisialisasiAsync();
+
+            Assert.Equal(LoginViewModel.SandiAdminBawaan, layanan.SandiDibuat);
+            Assert.DoesNotContain(BerkasLogin.Baca(JalurLogin), a => a.Pusat);
+            Assert.True(AppPreferenceStore.SudahDisiapkanKredensialBawaan());
+        }
+
+        [Fact]
+        public async Task InstalasiLama_KredensialBawaanDipulihkanSekaliSaja()
+        {
+            var layanan = new LayananPenggunaPalsu
             {
-                Assert.True(kumpulan.Add(SandiAcak.Buat()));
-            }
+                AdaPengguna = true,
+                Admin = new Pengguna
+                {
+                    ID = 7,
+                    Username = LoginViewModel.UsernameAdminBawaan,
+                    NamaTampilan = "Administrator",
+                    Peran = PeranPengguna.Administrator,
+                    Aktif = true
+                }
+            };
+
+            var pertama = new LoginViewModel(layanan);
+            await pertama.InisialisasiAsync();
+
+            Assert.Equal((7, LoginViewModel.SandiAdminBawaan), layanan.SandiAwalDipasang);
+
+            // Pembukaan berikutnya TIDAK boleh menimpa lagi: sandi yang sudah
+            // diganti pengguna setelah pemulihan ini harus bertahan.
+            layanan.SandiAwalDipasang = default;
+            var kedua = new LoginViewModel(layanan);
+            await kedua.InisialisasiAsync();
+
+            Assert.Equal(default, layanan.SandiAwalDipasang);
         }
 
         [Fact]
-        public void SandiAcak_MenolakPanjangDiBawahDelapan()
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() => SandiAcak.Buat(7));
-        }
-
-        [Fact]
-        public void AkunPusat_MembacaSandiDariEnvironmentVariable()
+        public void AkunPusat_MemakaiSandiBawaanTanpaProvisioning()
         {
             string? lama = Environment.GetEnvironmentVariable(AkunPusat.VariabelSandi);
             try
             {
-                Environment.SetEnvironmentVariable(AkunPusat.VariabelSandi, "sandi-provisioning-uji");
+                Environment.SetEnvironmentVariable(AkunPusat.VariabelSandi, null);
+                AkunPusat.LokasiBerkasSandiOverride = () => Path.Combine(_folder, "tidak-ada.kunci");
 
+                Assert.Equal("adminpusat11", AkunPusat.SandiBawaan);
                 Assert.True(AkunPusat.SandiTersedia);
-                Assert.True(AkunPusat.CocokSandi("SANDI-PROVISIONING-UJI"));
+                Assert.True(AkunPusat.CocokSandi("adminpusat11"));
+                Assert.True(AkunPusat.CocokSandi("ADMINPUSAT11"));
                 Assert.False(AkunPusat.CocokSandi("sandi-lain"));
                 Assert.False(AkunPusat.CocokSandi(string.Empty));
             }
@@ -66,104 +128,126 @@ namespace SuDesApp.Tests.UI
         }
 
         [Fact]
-        public async Task PemasanganBaru_MemakaiSandiAcakDanTidakMenyemaiAkunPusat()
+        public void AkunPusat_ProvisioningMenimpaSandiBawaan()
         {
-            string folder = Path.Combine(Path.GetTempPath(), "sudes-akun-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(folder);
-            string jalur = Path.Combine(folder, BerkasLogin.NamaBerkas);
-            BerkasLogin.LokasiOverride = () => jalur;
-
-            try
-            {
-                var layanan = new LayananPenggunaPalsu();
-                var vm = new LoginViewModel(layanan);
-
-                var akun = BerkasLogin.Cari(jalur, "admin");
-                Assert.NotNull(akun);
-                Assert.False(BerkasLogin.Cocok(akun!, "admin"));
-                Assert.DoesNotContain(BerkasLogin.Baca(jalur), a => a.Pusat);
-
-                await vm.InisialisasiAsync();
-
-                Assert.False(string.IsNullOrEmpty(layanan.SandiDibuat));
-                Assert.True(BerkasLogin.Cocok(akun!, layanan.SandiDibuat!));
-                Assert.True(vm.HasInfoKredensial);
-                Assert.Contains(layanan.SandiDibuat!, vm.InfoKredensialAwal);
-            }
-            finally
-            {
-                BerkasLogin.LokasiOverride = null;
-                if (Directory.Exists(folder))
-                {
-                    Directory.Delete(folder, recursive: true);
-                }
-            }
-        }
-
-        [Fact]
-        public void AkunPusatModelLama_DihapusDariBerkasAkun()
-        {
-            string folder = Path.Combine(Path.GetTempPath(), "sudes-akun-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(folder);
-            string jalur = Path.Combine(folder, BerkasLogin.NamaBerkas);
-            BerkasLogin.LokasiOverride = () => jalur;
-
-            try
-            {
-                string garam = BerkasLogin.BuatGaram();
-                BerkasLogin.Tulis(jalur, new[]
-                {
-                    new AkunLogin("admin", garam, BerkasLogin.HitungHash("admin", garam), false),
-                    new AkunLogin(
-                        AkunPusat.Username, garam, BerkasLogin.HitungHash("adminpusat11", garam), true)
-                });
-
-                _ = new LoginViewModel(new LayananPenggunaPalsu());
-
-                var akun = BerkasLogin.Baca(jalur);
-                Assert.DoesNotContain(akun, a => a.Pusat);
-                Assert.Contains(akun, a => a.Username == "admin");
-            }
-            finally
-            {
-                BerkasLogin.LokasiOverride = null;
-                if (Directory.Exists(folder))
-                {
-                    Directory.Delete(folder, recursive: true);
-                }
-            }
-        }
-
-        [Fact]
-        public void AkunPusat_TanpaProvisioning_TidakBisaDipakai()
-        {
-            string jalur = Path.Combine(
-                Path.GetTempPath(), "sudes-pusat-" + Guid.NewGuid().ToString("N") + ".kunci");
             string? lama = Environment.GetEnvironmentVariable(AkunPusat.VariabelSandi);
+            try
+            {
+                Environment.SetEnvironmentVariable(AkunPusat.VariabelSandi, "sandi-provisioning-uji");
+
+                Assert.True(AkunPusat.CocokSandi("SANDI-PROVISIONING-UJI"));
+                Assert.False(AkunPusat.CocokSandi("adminpusat11"));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(AkunPusat.VariabelSandi, lama);
+            }
+        }
+
+        [Fact]
+        public void AkunPusatDariBerkasProvisioning_MenimpaSandiBawaan()
+        {
+            string? lama = Environment.GetEnvironmentVariable(AkunPusat.VariabelSandi);
+            string jalur = Path.Combine(_folder, "Pusat.kunci");
 
             try
             {
                 Environment.SetEnvironmentVariable(AkunPusat.VariabelSandi, null);
                 AkunPusat.LokasiBerkasSandiOverride = () => jalur;
 
-                Assert.False(AkunPusat.SandiTersedia);
-                Assert.False(AkunPusat.CocokSandi("apa-saja"));
-
                 File.WriteAllText(jalur, "kunci-berkas-uji\n");
-                Assert.True(AkunPusat.SandiTersedia);
-                Assert.True(AkunPusat.CocokSandi("kunci-berkas-uji"));
 
-                File.Delete(jalur);
-                Assert.False(AkunPusat.SandiTersedia);
+                Assert.True(AkunPusat.CocokSandi("kunci-berkas-uji"));
+                Assert.False(AkunPusat.CocokSandi("adminpusat11"));
             }
             finally
             {
                 AkunPusat.LokasiBerkasSandiOverride = null;
                 Environment.SetEnvironmentVariable(AkunPusat.VariabelSandi, lama);
-                if (File.Exists(jalur))
-                {
-                    File.Delete(jalur);
-                }
+            }
+        }
+
+        [Fact]
+        public void AkunPusatModelLama_DihapusDariBerkasAkun()
+        {
+            string garam = BerkasLogin.BuatGaram();
+            BerkasLogin.Tulis(JalurLogin, new[]
+            {
+                new AkunLogin("admin", garam, BerkasLogin.HitungHash("admin", garam), false),
+                new AkunLogin(
+                    AkunPusat.Username, garam, BerkasLogin.HitungHash("adminpusat11", garam), true)
+            });
+
+            _ = new LoginViewModel(new LayananPenggunaPalsu());
+
+            var akun = BerkasLogin.Baca(JalurLogin);
+            Assert.DoesNotContain(akun, a => a.Pusat);
+            Assert.Contains(akun, a => a.Username == "admin");
+        }
+
+        [Fact]
+        public async Task AdminBawaan_BisaMasukLewatDatabaseSungguhan()
+        {
+            SessionContext.TandaiSesiPusat(false);
+
+            using var koneksi = new SqliteConnection("Data Source=:memory:");
+            await koneksi.OpenAsync();
+            var repo = new PenggunaRepository(koneksi, NullLogger<PenggunaRepository>.Instance);
+            var layanan = new PenggunaService(repo, logger: NullLogger<PenggunaService>.Instance);
+
+            var vm = new LoginViewModel(layanan);
+            await vm.InisialisasiAsync();
+
+            var hasil = await layanan.MasukAsync(
+                LoginViewModel.UsernameAdminBawaan, LoginViewModel.SandiAdminBawaan);
+            Assert.True(hasil.Berhasil, hasil.Pesan);
+
+            // Juga lewat jalur layar login (input dinormalkan ke huruf kecil).
+            var berhasil = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            vm.LoginSucceeded += () => berhasil.TrySetResult(true);
+            vm.Username = "ADMIN";
+            vm.Password = "admin";
+            vm.LoginCommand.Execute(null);
+
+            Assert.True(await berhasil.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.True(string.IsNullOrEmpty(vm.ErrorMessage));
+            Assert.False(SessionContext.SesiPusat);
+        }
+
+        [Fact]
+        public async Task AkunPusat_BisaMasukDenganSandiBawaan()
+        {
+            string? lama = Environment.GetEnvironmentVariable(AkunPusat.VariabelSandi);
+            SessionContext.TandaiSesiPusat(false);
+
+            try
+            {
+                Environment.SetEnvironmentVariable(AkunPusat.VariabelSandi, null);
+                AkunPusat.LokasiBerkasSandiOverride = () => Path.Combine(_folder, "tidak-ada.kunci");
+
+                using var koneksi = new SqliteConnection("Data Source=:memory:");
+                await koneksi.OpenAsync();
+                var repo = new PenggunaRepository(koneksi, NullLogger<PenggunaRepository>.Instance);
+                var layanan = new PenggunaService(repo, logger: NullLogger<PenggunaService>.Instance);
+
+                var vm = new LoginViewModel(layanan);
+                await vm.InisialisasiAsync();
+
+                var berhasil = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                vm.LoginSucceeded += () => berhasil.TrySetResult(true);
+                vm.Username = "adminpusat";
+                vm.Password = "adminpusat11";
+                vm.LoginCommand.Execute(null);
+
+                Assert.True(await berhasil.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+                Assert.True(AkunPusat.SesiIniPusat);
+                Assert.Equal("adminpusat", LoginViewModel.CurrentUserName);
+            }
+            finally
+            {
+                AkunPusat.LokasiBerkasSandiOverride = null;
+                Environment.SetEnvironmentVariable(AkunPusat.VariabelSandi, lama);
+                SessionContext.TandaiSesiPusat(false);
             }
         }
 
@@ -172,7 +256,13 @@ namespace SuDesApp.Tests.UI
         {
             public string? SandiDibuat { get; private set; }
 
-            public Task<bool> AdaPenggunaAsync(CancellationToken ct = default) => Task.FromResult(false);
+            public bool AdaPengguna { get; init; }
+
+            public Pengguna? Admin { get; init; }
+
+            public (int Id, string Sandi)? SandiAwalDipasang { get; set; }
+
+            public Task<bool> AdaPenggunaAsync(CancellationToken ct = default) => Task.FromResult(AdaPengguna);
 
             public Task<HasilMasukPengguna> MasukAsync(
                 string username, string kataSandi, CancellationToken ct = default) =>
@@ -182,7 +272,7 @@ namespace SuDesApp.Tests.UI
                 Task.FromResult(new List<Pengguna>());
 
             public Task<Pengguna?> AmbilAsync(string username, CancellationToken ct = default) =>
-                Task.FromResult<Pengguna?>(null);
+                Task.FromResult(Admin);
 
             public Task<Pengguna> TambahAsync(
                 string username, string namaTampilan, string peran, string kataSandi,
@@ -205,6 +295,13 @@ namespace SuDesApp.Tests.UI
             public Task ResetKataSandiAsync(
                 int id, string kataSandiBaru, string? oleh = null, CancellationToken ct = default) =>
                 Task.CompletedTask;
+
+            public Task<bool> PasangKataSandiAwalAsync(
+                int id, string kataSandi, CancellationToken ct = default)
+            {
+                SandiAwalDipasang = (id, kataSandi);
+                return Task.FromResult(true);
+            }
 
             public Task<bool> UbahKataSandiAsync(
                 int id, string kataSandiLama, string kataSandiBaru, CancellationToken ct = default) =>

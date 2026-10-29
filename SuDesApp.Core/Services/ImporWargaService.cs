@@ -713,7 +713,7 @@ namespace SuDesApp.Services
             {
                 // Gagal membaca harus terdengar, bukan diam-diam membuat semua
                 // baris terlihat baru lalu menimpa data yang sudah ada.
-                _logger.LogError(ex, "Gagal memeriksa NIK {NIK} di database saat impor", nik);
+                _logger.LogError(ex, "Gagal memeriksa NIK di database saat impor.");
                 throw new InvalidOperationException(
                     "Gagal memeriksa NIK di database. Periksa koneksi lalu coba lagi.", ex);
             }
@@ -753,8 +753,8 @@ namespace SuDesApp.Services
                 catch (Exception ex)
                 {
                     // Satu baris gagal tidak boleh menghentikan sisa impor.
-                    _logger.LogError(ex, "Gagal mengimpor warga NIK {NIK} dari baris {Baris}",
-                        siap[i].NIK, siap[i].NomorBaris);
+                    _logger.LogError(ex, "Gagal mengimpor warga dari baris {Baris}.",
+                        siap[i].NomorBaris);
                     siap[i].Tindakan = TindakanImpor.Lewati;
                     siap[i].Kesalahan.Add("Gagal disimpan: " + ex.Message);
                 }

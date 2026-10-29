@@ -117,7 +117,7 @@ namespace SuDesApp.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal membaca warga NIK {NIK} untuk lampiran SK", kunci);
+                _logger.LogError(ex, "Gagal membaca warga untuk lampiran SK.");
                 return null;
             }
         }

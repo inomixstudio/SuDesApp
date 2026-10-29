@@ -38,11 +38,6 @@ yang belum tertutup.
   merekonstruksi `SHA512(order_id + status_code + gross_amount + ServerKey)`
   dan membandingkannya dengan waktu-tetap. Tanpa `ServerKey`, server
   **menolak start** di luar mode Development.
-- **Webhook WhatsApp Meta** (`SuDesApp.Core/WhatsApp/MetaWebhookListener.cs`)
-  memverifikasi `X-Hub-Signature-256` dengan `HMAC-SHA256`. Bila app secret
-  kosong, listener **menolak semua request dengan 503** — bukan meneruskannya.
-  (Sebelumnya jalur ini hanya memverifikasi bila secret terisi, sehingga
-  praktis selalu terbuka.)
 
 ### Kunci lisensi
 
@@ -75,8 +70,17 @@ iterasi ikut disimpan per akun (agar bisa menaikkan biaya di masa depan tanpa
 membuat akun lama tidak terbaca), dan perbandingan memakai
 `CryptographicOperations.FixedTimeEquals`.
 
+Akun bawaan sengaja memakai kredensial tetap — `admin`/`admin` dan akun
+penyedia `adminpusat`/`adminpusat11` — dan tidak pernah dibuat acak atau
+dirotasi otomatis. Ini keputusan produk supaya operator selalu bisa masuk;
+risikonya diterima dan dikompensasi dengan: akun pusat tidak pernah masuk
+tabel `Pengguna`, sandi penyedia bisa ditimpa provisioning mesin
+(`SUDES_PUSAT_SANDI`/`Pusat.kunci`), dan sandi akun desa bisa diganti kapan
+saja lewat Kelola Pengguna. Ganti sandi bawaan sebelum instalasi dipakai
+banyak orang.
+
 ### Data desa
 
-Database desa (`desa.db`) terenkripsi dan **tidak pernah** dikirim ke server.
+Database desa (`desa.db`) berada di komputer desa dan **tidak pernah** dikirim ke server. Database ini SQLite biasa **tanpa enkripsi** — lindungi lewat izin folder dan akun Windows.
 Server lisensi hanya menyimpan masa aktif, nama desa, dan kontak — cukup untuk
 menagih langganan. Lihat `docs/langganan-dan-lisensi.md`.

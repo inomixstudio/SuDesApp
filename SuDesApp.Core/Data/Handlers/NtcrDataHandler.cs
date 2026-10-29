@@ -120,7 +120,7 @@ namespace SuDesApp.Data.Handlers
                 }, transaction);
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully inserted {NamaJenis} data for ID_Surat={ID_Surat}", _namaJenis, idSurat);
+                _logger.LogDebug("Successfully inserted {NamaJenis} data for ID_Surat={ID_Surat}", _namaJenis, idSurat);
             }
             catch (Exception ex)
             {
@@ -139,7 +139,7 @@ namespace SuDesApp.Data.Handlers
                 await connection.ExecuteAsync(deleteQuery, new { ID_Surat = idSurat }, transaction);
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully deleted {NamaJenis} data for ID_Surat={ID_Surat}", _namaJenis, idSurat);
+                _logger.LogDebug("Successfully deleted {NamaJenis} data for ID_Surat={ID_Surat}", _namaJenis, idSurat);
             }
             catch (Exception ex)
             {
@@ -196,7 +196,7 @@ namespace SuDesApp.Data.Handlers
                 suratData.Ntcr.TujuanSurat = row.TujuanSurat;
                 ApplyDetail(suratData.Ntcr, row.DetailJson!);
 
-                _logger.LogInformation("Successfully loaded {NamaJenis} data for ID_Surat={ID_Surat}", _namaJenis, suratData.ID_Surat);
+                _logger.LogDebug("Successfully loaded {NamaJenis} data for ID_Surat={ID_Surat}", _namaJenis, suratData.ID_Surat);
             }
             catch (Exception ex)
             {

@@ -259,6 +259,17 @@ namespace SuDesApp.Wpf.ViewModels
         public IReadOnlyList<string> DaftarGolonganDarah { get; } =
             new[] { "A", "B", "AB", "O", "Tidak diketahui" };
 
+        /// <summary>
+        /// Pendidikan untuk dropdown form warga. Memakai jenjang baku BPS — daftar
+        /// yang sama dengan tabel laporan kependudukan — sehingga pilihan operator
+        /// langsung masuk kelompok yang benar, tanpa dipetakan ulang saat dicetak.
+        /// </summary>
+        public IReadOnlyList<string> PilihanPendidikan { get; } = JenjangPendidikanBps.Lista;
+
+        /// <summary>
+        /// Saran pekerjaan untuk form warga. Kolom Pekerjaan tetap bebas diisi
+        /// karena pekerjaan warga desa sangat beragam; daftar ini hanya jalan pintas.
+        /// </summary>
         public IReadOnlyList<string> DaftarPekerjaanUmum { get; } =
             new[] { "Petani", "Buruh Tani", "Wiraswasta", "Pedagang", "Buruh Pabrik", "ASN/PNS", "TNI/Polri", "Guru/Dosen", "Tenaga Kesehatan", "Pensiunan", "Pelajar/Mahasiswa", "Ibu Rumah Tangga", "Lainnya" };
 
@@ -362,6 +373,7 @@ namespace SuDesApp.Wpf.ViewModels
 
         // ----- Form tambah / ubah -----
         private int _formIdWarga;
+        private string? _alamatDetailFormTersimpan;
 
         public bool IsFormTerbuka
         {
@@ -505,13 +517,6 @@ namespace SuDesApp.Wpf.ViewModels
         {
             get => _formRW;
             set => SetProperty(ref _formRW, value ?? string.Empty);
-        }
-
-        private string _formAlamatDetail = string.Empty;
-        public string FormAlamatDetail
-        {
-            get => _formAlamatDetail;
-            set => SetProperty(ref _formAlamatDetail, value ?? string.Empty);
         }
 
         private string _formStatusWarga = StatusWargaTipe.Aktif;
@@ -802,6 +807,7 @@ namespace SuDesApp.Wpf.ViewModels
             }
 
             _formIdWarga = 0;
+            _alamatDetailFormTersimpan = null;
             IsModeUbah = false;
             FormGalat = string.Empty;
 
@@ -825,7 +831,6 @@ namespace SuDesApp.Wpf.ViewModels
             FormDusun = string.Empty;
             FormRT = string.Empty;
             FormRW = string.Empty;
-            FormAlamatDetail = string.Empty;
             FormStatusWarga = StatusWargaTipe.Aktif;
             FormTanggalStatus = DateTime.Today.ToString("yyyy-MM-dd");
             FormKeterangan = string.Empty;
@@ -856,6 +861,7 @@ namespace SuDesApp.Wpf.ViewModels
                 _desaBawaan = await _desa.GetInfoDesaFromCacheAsync();
 
                 _formIdWarga = warga.ID_Warga;
+                _alamatDetailFormTersimpan = warga.AlamatDetail;
                 IsModeUbah = true;
                 FormGalat = string.Empty;
 
@@ -877,7 +883,6 @@ namespace SuDesApp.Wpf.ViewModels
                 FormDusun = warga.Dusun ?? string.Empty;
                 FormRT = warga.RT ?? string.Empty;
                 FormRW = warga.RW ?? string.Empty;
-                FormAlamatDetail = warga.AlamatDetail ?? string.Empty;
                 FormStatusWarga = StatusWargaTipe.Normalisasi(warga.StatusWarga);
                 FormTanggalStatus = warga.TanggalStatus ?? string.Empty;
                 FormKeterangan = warga.KeteranganWarga ?? string.Empty;
@@ -897,6 +902,7 @@ namespace SuDesApp.Wpf.ViewModels
             IsFormTerbuka = false;
             FormGalat = string.Empty;
             _formIdWarga = 0;
+            _alamatDetailFormTersimpan = null;
         }
 
         private async Task SimpanAsync()
@@ -973,7 +979,9 @@ namespace SuDesApp.Wpf.ViewModels
                     Dusun = FormDusun?.Trim(),
                     RT = FormRT?.Trim(),
                     RW = FormRW?.Trim(),
-                    AlamatDetail = FormAlamatDetail?.Trim(),
+                    // Alamat detail lama dipertahankan saat edit agar data historis
+                    // tidak terhapus walau kolomnya tidak lagi ditampilkan di form.
+                    AlamatDetail = _alamatDetailFormTersimpan,
                     // Desa/kecamatan/kabupaten selalu mengikuti data desa: surat
                     // resmi desa tidak boleh mencantumkan desa lain.
                     Desa = _desaBawaan?.NamaDesa,

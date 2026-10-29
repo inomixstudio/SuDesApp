@@ -1,13 +1,11 @@
 // File: SuDesApp/GeneratorPdf/GarapanGenerator.cs
-// Badan surat dibuat langsung dengan QuestPDF (BadanSurat), tanpa lapisan kompat.
+// Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -25,7 +23,6 @@ namespace SuDesApp.GeneratorPdf
         public GarapanGenerator(AppConfig config, FileService fileService, IDesaRepository desaRepository, ISuratRepository suratRepository, SettingsManager settingsManager, ILogger<GarapanGenerator> logger, ILoggerFactory loggerFactory)
             : base(config, fileService, desaRepository, suratRepository, settingsManager, logger, loggerFactory)
         {
-            _logger.LogInformation("GarapanGenerator initialized.");
         }
 
         protected override string JudulSurat => "SURAT KETERANGAN GARAPAN";
@@ -49,7 +46,7 @@ namespace SuDesApp.GeneratorPdf
                 suratData.Garapan != null && suratData.Garapan.IsValid())
             {
                 daftarRincianGarapan = new List<GarapanData> { suratData.Garapan };
-                _logger.LogInformation("RincianGarapans kosong; memakai Garapan tunggal untuk PDF Garapan. ID_Surat: {IDSurat}", suratData.ID_Surat);
+                _logger.LogDebug("Rincian garapan kosong; memakai garapan tunggal (ID_Surat={IDSurat}).", suratData.ID_Surat);
             }
 
             if (desa == null || penggarap == null)
@@ -206,7 +203,7 @@ namespace SuDesApp.GeneratorPdf
         private static void SelTabel(TableDescriptor table, string teks, Rata rata)
             => IsiSel(table.Cell().Element(SelBerbingkai), teks, rata, tebal: false);
 
-        private static void SelHeader(TableCellDescriptor header, string teks, Rata rata)
+        private static void SelHeader(TableDescriptor header, string teks, Rata rata)
             => IsiSel(header.Cell().Element(SelBerbingkai), teks, rata, tebal: true);
 
         private static void IsiSel(IContainer cell, string teks, Rata rata, bool tebal)

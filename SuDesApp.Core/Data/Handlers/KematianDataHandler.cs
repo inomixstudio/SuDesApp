@@ -75,7 +75,7 @@ namespace SuDesApp.Data.Handlers
 
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully inserted Kematian data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully inserted Kematian data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -98,7 +98,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully deleted Kematian data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully deleted Kematian data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -133,7 +133,7 @@ namespace SuDesApp.Data.Handlers
                     _logger.LogWarning("No Kematian data found for ID_Surat={ID_Surat}", suratData.ID_Surat);
                 }
 
-                _logger.LogInformation("Successfully loaded Kematian data for ID_Surat={ID_Surat}", suratData.ID_Surat);
+                _logger.LogDebug("Successfully loaded Kematian data for ID_Surat={ID_Surat}", suratData.ID_Surat);
             }
             catch (Exception ex)
             {

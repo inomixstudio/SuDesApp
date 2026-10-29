@@ -1,6 +1,6 @@
 // SKDGenerator.cs
-// Badan surat dibuat langsung dengan QuestPDF (lewat BadanSurat), bukan lagi
-// lapisan kompat iText.
+// Badan surat dibuat langsung dengan mesin SudesPdf (lewat BadanSurat), tanpa
+// lapisan kompat apa pun.
 using Microsoft.Extensions.Logging;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Data.Models;
@@ -21,7 +21,6 @@ namespace SuDesApp.GeneratorPdf
         public SKDGenerator(AppConfig config, FileService fileService, IDesaRepository desaRepository, ISuratRepository suratRepository, SettingsManager settingsManager, ILogger<SKDGenerator> logger, ILoggerFactory loggerFactory)
             : base(config, fileService, desaRepository, suratRepository, settingsManager, logger, loggerFactory)
         {
-            _logger.LogInformation("SKDGenerator initialized, using default font from base class.");
         }
 
         protected override string JudulSurat => "SURAT KETERANGAN DESA";
@@ -37,9 +36,6 @@ namespace SuDesApp.GeneratorPdf
                     throw new InvalidOperationException("Data Warga tidak boleh null untuk membuat SKD.");
                 }
                 // Pemanggilan EnsureDesaDataLoadedAsync sudah ada di SuratGeneratorBase.GeneratePdfAsync
-
-                _logger.LogInformation("Rendering content for SKD: NamaWarga={NamaWarga}, NomorSurat={NomorSurat}",
-                    suratData.Warga?.Nama ?? "N/A", suratData.NomorSurat ?? "N/A");
 
                 badan.Paragraf("Yang bertanda tangan di bawah ini :", jarakBawah: 10);
 
@@ -63,7 +59,7 @@ namespace SuDesApp.GeneratorPdf
                     else
                     {
                         tanggalLahirFormatted = suratData.Warga.TanggalLahir;
-                        _logger.LogWarning("Gagal memformat TanggalLahir Warga: {TanggalLahirWarga}", suratData.Warga.TanggalLahir);
+                        _logger.LogWarning("Tanggal lahir warga tidak bisa diformat.");
                     }
                 }
                 string alamatLengkap = AlamatFormatter.Format(suratData.Warga);
@@ -107,7 +103,6 @@ namespace SuDesApp.GeneratorPdf
                     indentBarisPertama: 50,
                     jarakAtas: 10,
                     jarakBawah: 12);
-                _logger.LogInformation("KeteranganFinal added to PDF: {KeteranganFinal}", keteranganFinal);
 
                 // Kalimat penutup rata kiri: justify membuat baris yang pecah
                 // jadi terlihat renggang dan janggal.
@@ -117,7 +112,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SKD, NamaWarga={NamaWarga}", suratData.Warga?.Nama ?? "N/A");
+                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SKD.");
                 throw;
             }
         }

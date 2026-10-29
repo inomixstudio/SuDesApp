@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace SuDesApp.Services
 {
     /// <summary>
-    /// Trial 14 hari LOKAL — jalan buka akses untuk instalasi yang belum punya
+    /// Trial 30 hari LOKAL — jalan buka akses untuk instalasi yang belum punya
     /// kode aktivasi (belum berlangganan) tanpa menyentuh server lisensi.
     ///
     /// Sengaja tidak memakai server: instal pertama di desa sering belum punya
@@ -20,7 +20,7 @@ namespace SuDesApp.Services
     /// </summary>
     public sealed class TrialLokal
     {
-        public const int DURASI_HARI = 14;
+        public const int DURASI_HARI = 30;
 
         /// <summary>Penunjuk folder untuk pengujian; null = lokasi bawaan %LocalAppData%\SuDesApp.</summary>
         internal static string? FolderOverride { get; set; }
@@ -48,7 +48,7 @@ namespace SuDesApp.Services
             ? mulai.AddDays(DURASI_HARI)
             : null;
 
-        /// <summary>True bila trial masih berjalan (sekarang &lt; mulai + 14 hari).</summary>
+        /// <summary>True bila trial masih berjalan (sekarang &lt; mulai + 30 hari).</summary>
         public bool Aktif(DateTime? sekarangUtc = null)
         {
             var akhir = BerakhirUtc;

@@ -1,8 +1,7 @@
 // Di dalam SKCKGenerator.cs
-// Badan surat dibuat langsung dengan QuestPDF (BadanSurat), tanpa lapisan kompat.
+// Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Interfaces;
@@ -44,7 +43,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to add content for NamaWarga={NamaWarga}", suratData.Warga?.Nama);
+                _logger.LogError(ex, "Gagal menambahkan konten PDF SKCK.");
                 throw;
             }
         }
@@ -99,7 +98,7 @@ namespace SuDesApp.GeneratorPdf
             {
                 _logger.LogWarning("Data desa tidak lengkap untuk Pernyataan Section.");
                 badan.Paragraf("Data desa tidak lengkap, pernyataan tidak dapat ditampilkan.",
-                    ukuran: 10, warna: QuestPDF.Helpers.Colors.Red.Medium);
+                    ukuran: 10, warna: Colors.Red.Medium);
                 return;
             }
 
@@ -193,12 +192,12 @@ namespace SuDesApp.GeneratorPdf
                     return parsedDate.ToString("dd MMMM yyyy", new CultureInfo("id-ID"));
                 }
 
-                _logger.LogWarning("Failed to parse TanggalLahir '{TanggalLahir}'", dbDate);
+                _logger.LogWarning("Tanggal lahir warga tidak bisa dibaca.");
                 return dbDate;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error parsing TanggalLahir '{TanggalLahir}'", dbDate);
+                _logger.LogWarning(ex, "Tanggal lahir warga gagal diurai.");
                 return dbDate;
             }
         }

@@ -150,14 +150,14 @@ namespace SuDesApp.Services
         /// langsung di kartu status, tanpa aturan pembayaran kedua di UI.
         /// </summary>
         private static RingkasanLangganan SusunTrial(DateTime? berakhirUtc, int sisaHari, string terakhirDiperiksa) => new(
-            Judul: "Trial 14 hari aktif",
+            Judul: "Trial 30 hari aktif",
             Keterangan: $"Masa uji coba berakhir {Tanggal(berakhirUtc)} (sisa {sisaHari} hari). " +
                         "Setelah itu menu vital terkunci lagi sampai langganan diaktifkan — " +
                         "masukkan kode aktivasi lalu bayar sebelum masa uji coba habis " +
                         "untuk tetap Full Service.",
             Nada: NadaPerluTindakan,
             TampilTombolTrial: false,
-            PaketNama: "Trial 14 hari",
+            PaketNama: "Trial 30 hari",
             SahSampaiTampil: Tanggal(berakhirUtc),
             SisaHariTampil: $"{sisaHari} hari",
             TerakhirDiperiksaTampil: terakhirDiperiksa,

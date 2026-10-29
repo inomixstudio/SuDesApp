@@ -25,7 +25,7 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>
         /// True untuk berkas PDF. Menentukan cara membacanya di dalam aplikasi:
-        /// PDF lewat pratinjau PDFium, berkas .md lewat halaman baca dokumen.
+        /// PDF lewat pratinjau SudesPdf, berkas .md lewat halaman baca dokumen.
         /// </summary>
         public bool Pdf { get; }
 
@@ -137,7 +137,7 @@ namespace SuDesApp.Wpf.ViewModels
     /// beserta tombol baca per dokumen.
     ///
     /// Seluruh dokumen dibaca <b>di dalam aplikasi</b>: berkas PDF dibuka pada
-    /// pratinjau PDFium yang sama dengan surat dan laporan, sedangkan berkas
+    /// pratinjau SudesPdf yang sama dengan surat dan laporan, sedangkan berkas
     /// <c>.md</c> disusun menjadi dokumen siap baca. Tidak ada berkas yang diserahkan
     /// ke aplikasi asosiasi Windows — di komputer desa berkas <c>.md</c> umumnya tidak
     /// punya asosiasi sama sekali, dan jendela aplikasi luar membuat operator keluar
@@ -492,7 +492,7 @@ namespace SuDesApp.Wpf.ViewModels
         public RelayCommand BukaFolderCommand { get; }
 
         /// <summary>
-        /// Tampilkan dokumen di dalam aplikasi: PDF pada pratinjau PDFium, berkas
+        /// Tampilkan dokumen di dalam aplikasi: PDF pada pratinjau SudesPdf, berkas
         /// <c>.md</c> pada halaman baca. Halaman Dokumentasi ditinggalkan lebih dulu,
         /// jadi pesan status di sini terbaca lagi saat pengguna kembali.
         /// </summary>

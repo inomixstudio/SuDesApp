@@ -83,7 +83,7 @@ namespace SuDesApp.Data.Handlers
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
                 await _cacheService.RemoveAsync<SuratData>("IzinOrtu_All");
 
-                _logger.LogInformation("Successfully inserted IzinOrtu data for ID_Surat={ID_Surat}, ID_Warga_Anak={ID_Warga_Anak}, NegaraTujuan={NegaraTujuan}",
+                _logger.LogDebug("Successfully inserted IzinOrtu data for ID_Surat={ID_Surat}, ID_Warga_Anak={ID_Warga_Anak}, NegaraTujuan={NegaraTujuan}",
                     idSurat, data.ID_Anak, data.NegaraTujuan);
             }
             catch (Exception ex)
@@ -110,7 +110,7 @@ namespace SuDesApp.Data.Handlers
                 await connection.ExecuteAsync(deleteQuery, new { ID_Surat = idSurat }, transaction);
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully deleted IzinOrtu data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully deleted IzinOrtu data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -157,7 +157,7 @@ namespace SuDesApp.Data.Handlers
 
                 suratData.IzinOrtu = izinData;
 
-                _logger.LogInformation("Successfully loaded IzinOrtu data for ID_Surat={ID_Surat}, ID_Warga_Anak={ID_Warga_Anak}",
+                _logger.LogDebug("Successfully loaded IzinOrtu data for ID_Surat={ID_Surat}, ID_Warga_Anak={ID_Warga_Anak}",
                     suratData.ID_Surat, izinData.ID_Anak);
             }
             catch (Exception ex)

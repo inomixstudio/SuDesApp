@@ -68,7 +68,7 @@ langganan Anda, selama masa aktif berlangsung.
 
 - Jumlah Perangkat mengikuti yang tercatat pada langganan Anda. Nilai bawaan
   adalah **2 PC**; penambahan dapat diminta kepada Kami.
-- **Uji coba (trial) 14 hari** tersedia satu kali per desa untuk Kode Aktivasi
+- **Uji coba (trial) 30 hari** tersedia satu kali per desa untuk Kode Aktivasi
   yang sudah terdaftar, tanpa pembayaran. Trial tidak dapat diulang dengan
   memasang ulang aplikasi.
 - Langganan **tidak diperpanjang otomatis** dan tidak memotong dana secara
@@ -125,13 +125,15 @@ Anda tidak boleh:
 
 ## 6. Akun dan tanggung jawab pengguna
 
-1. Akun Administrator pertama dibuat saat pemasangan. Anda wajib mengganti
-   kata sandi bawaan dan menjaga kerahasiaannya.
+1. Akun Administrator pertama dibuat saat pemasangan dengan kredensial bawaan
+   (`admin`/`admin`). Anda bertanggung jawab menjaga kerahasiaannya dan
+   dianjurkan mengganti kata sandi lewat Kelola Pengguna bila komputer dipakai
+   bersama orang lain.
 2. Peran dan izin (Administrator, Sekdes, Operator, Kades, Auditor) diatur di
    [Kebijakan Pengguna dan Peran](policy-peran-pengguna.md). Anda bertanggung
    jawab menetapkan peran yang tepat.
 3. Anda bertanggung jawab atas semua aktivitas yang dilakukan dengan akun
-   Anda, termasuk aktivitas otomatis layanan WhatsApp/API yang Anda aktifkan.
+   Anda, termasuk aktivitas otomatis API Desa yang Anda aktifkan.
 4. Beri tahu Kami segera bila mengetahui akses tanpa kewenangan atau
    kebocoran kredensial.
 
@@ -141,9 +143,8 @@ Anda tidak boleh:
 
 1. **Data Desa tetap milik Anda.** Kami tidak mengklaim kepemilikan atas data
    warga, surat, arsip, atau keuangan desa.
-2. Data Desa tersimpan terenkripsi di komputer Anda dan **tidak dapat dibaca
-   Kami**. Kami tidak memiliki kunci database dan tidak memiliki akses jarak
-   jauh ke komputer desa.
+2. Data Desa tersimpan di komputer Anda dan **tidak dapat dibaca
+   Kami**. Kami tidak memiliki akses jarak jauh ke komputer desa.
 3. Anda bertanggung jawab atas: dasar pemrosesan data warga, pemberitahuan
    kepada warga, ketepatan data, pembatasan akses, pencadangan, dan masa
    simpan. Aplikasi menyediakan alatnya, tetapi keputusan dan tanggung
@@ -226,8 +227,7 @@ Anda tidak boleh:
 Aplikasi dapat terhubung dengan layanan pihak ketiga yang **Anda aktifkan
 sendiri**:
 
-- **Google** (Drive, Sheets, Forms) — tunduk pada syarat dan kebijakan Google;
-- **Meta/WhatsApp Cloud API** — tunduk pada syarat Meta;
+- **Google** (Drive) — tunduk pada syarat dan kebijakan Google;
 - **Midtrans** — tunduk pada syarat gateway pembayaran;
 - **Kemendesa** (data IDM) dan **GitHub** (rilis/pembaruan) — tunduk pada
   ketentuan masing-masing.
@@ -364,12 +364,12 @@ versi baru.
 
 | Hal | Ketentuan |
 |---|---|
-| Uji coba | 14 hari, sekali per desa, tanpa pembayaran |
+| Uji coba | 30 hari, sekali per desa, tanpa pembayaran |
 | Masa tenggang setelah jatuh tempo | 7 hari sejak konfirmasi server terakhir |
 | Perangkat bawaan | 2 PC (dapat ditambah sesuai langganan) |
 | Perpanjangan | manual, tanpa pemotongan otomatis |
 | Setelah langganan berakhir | mode baca-saja; data tetap ada dan dapat diekspor |
-| Lokasi Data Desa | komputer desa (terenkripsi), bukan server Kami |
+| Lokasi Data Desa | komputer desa, bukan server Kami |
 | Harga | dari Server Lisensi saat tagihan dibuat, dalam Rupiah |
 | Respons dukungan | diupayakan 7 hari kerja |
 | Pemberitahuan perubahan material | 30 hari |

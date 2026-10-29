@@ -1259,7 +1259,7 @@ namespace SuDesApp.Data.Repositories
     int take = 100,
     CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("GetAllSuratDataAsync: Loading {Take} records, skip {Skip}, sortBy {SortBy}", take, skip, sortBy);
+            _logger.LogDebug("Memuat surat: take={Take}, skip={Skip}, sortBy={SortBy}.", take, skip, sortBy);
 
             try
             {
@@ -1369,7 +1369,7 @@ namespace SuDesApp.Data.Repositories
                     }
                 }
 
-                _logger.LogInformation("SUCCESS: Retrieved {Count} surat records", results.Count);
+                _logger.LogDebug("Berhasil memuat {Count} surat.", results.Count);
                 return results;
             }
             catch (Exception ex)

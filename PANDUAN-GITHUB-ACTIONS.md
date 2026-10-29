@@ -16,6 +16,9 @@
 >   pemeriksaan tautan markdown.
 > - **Rilis sekarang bergerbang CI dan konfigurasi lisensi.** `release.yml`
 >   menolak terbit bila `LISENSI_KUNCI_PUBLIK` kosong atau URL server bukan HTTPS.
+> - **Rilis ditandatangani Authenticode.** `release.yml` menolak terbit tanpa
+>   sertifikat (`WINDOWS_SIGNING_PFX_BASE64`); langkah dan secret-nya ada di
+>   [`docs/TANDA-TANGAN-RILIS.md`](docs/TANDA-TANGAN-RILIS.md).
 > - **Bagian "Cara A / Cara B / Cara C" sudah usang.** Rilis berjalan lewat
 >   `Tools/rilis-sekali-jalan.ps1 <versi>`. Jalur cadangan manual di bawah
 >   tetap berlaku.
@@ -82,10 +85,10 @@ atau izin Actions), bukan isi workflow-nya.
 1. Buka **https://github.com/inomixstudio/SudesApp/settings/actions**
    (*Settings* → *Actions* → *General*).
 2. Bagian **Actions permissions**: pilih **Allow all actions and reusable workflows**.
-   Workflow repo ini memakai `actions/checkout@v4`, `actions/setup-dotnet@v4`, dan
-   `softprops/action-gh-release@v2`.
+   Workflow repo ini memakai `actions/checkout@v4` dan `actions/setup-dotnet@v4`
+   (aset rilis diunggah oleh `Tools/publish-release.ps1`, bukan action pihak ketiga).
 3. Kalau memilih **Allow select actions**, centang juga **Allow actions created by
-   GitHub** dan **Allow Marketplace actions by verified creators**, supaya ketiga action
+   GitHub** dan **Allow Marketplace actions by verified creators**, supaya kedua action
    di atas tidak ikut diblokir.
 4. Bagian **Workflow permissions**: pilih **Read and write permissions** — workflow
    Release butuh itu untuk membuat GitHub Release dan mengunggah aset.
@@ -95,18 +98,21 @@ atau izin Actions), bukan isi workflow-nya.
 
 ---
 
-## Langkah 3 — Hal yang tidak perlu dikhawatirkan
+## Langkah 3 — Secret rilis dan hal lain yang perlu diketahui
 
-- Tidak ada Secrets/Variables yang wajib diisi untuk rilis — tetapi kredensial Google
+- **Secret yang wajib untuk rilis:** `WINDOWS_SIGNING_PFX_BASE64`,
+  `WINDOWS_SIGNING_PFX_PASSWORD`, `LISENSI_URL_SERVER`, dan
+  `LISENSI_KUNCI_PUBLIK` — lihat
+  [`docs/TANDA-TANGAN-RILIS.md`](docs/TANDA-TANGAN-RILIS.md). Kredensial Google
   **tidak ikut** pada paket hasil CI: berkas rahasia build
   (`SuDesApp.Core/Utilities/GoogleClientCredentialsBawaan.lokal.cs`) sengaja tidak ada di
   repo, sehingga paket CI hanya memuat placeholder dan **tidak bisa menyambungkan akun
-  Google** (fitur Google Formulir/Sheet/Drive) di komputer pengguna.
-- Karena itu workflow Release sekarang memasang **Gerbang kredensial Google**
-  (`Tools/check-kredensial-google.ps1`): rilis dari CI berhenti lebih awal kecuali
-  dijalankan lewat **Run workflow** dengan opsi *izinkan_tanpa_kredensial* = `true`.
-  Untuk rilis yang fitur Google-nya langsung siap dipakai, bangun asetnya di komputer
-  yang memiliki berkas rahasia itu — lihat **Jalur cadangan** di bawah.
+  Google** (pencadangan ke Google Drive) di komputer pengguna.
+- Karena itu workflow Release membuat paket CI dengan `-IzinkanTanpaKredensial`:
+  asetnya tetap terbit, tetapi status **"Kredensial Google TIDAK tertanam"** ikut
+  tertulis di `RELEASE.md` dan teknisi mengisinya di Pengaturan Aplikasi. Untuk rilis
+  yang fitur Google-nya langsung siap dipakai, bangun asetnya di komputer yang memiliki
+  berkas rahasia itu — lihat **Jalur cadangan** di bawah.
 - Jangan pernah menaruh `GoogleClientCredentialsBawaan.lokal.cs` atau token apa pun ke
   Secrets repo.
 - `choco install innosetup` di workflow Release berjalan memakai Chocolatey bawaan

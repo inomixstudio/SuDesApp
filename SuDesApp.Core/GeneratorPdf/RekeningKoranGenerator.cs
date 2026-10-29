@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
@@ -36,7 +35,6 @@ namespace SuDesApp.GeneratorPdf
             ILoggerFactory loggerFactory)
             : base(config, fileService, desaRepository, suratRepository, settingsManager, logger, loggerFactory)
         {
-            _logger.LogInformation("RekeningKoranGenerator siap — memakai kop & tata letak SuratGeneratorBase.");
         }
 
         protected override string JudulSurat => "PERMOHONAN PRINT OUT REKENING KORAN";
@@ -66,9 +64,9 @@ namespace SuDesApp.GeneratorPdf
 
             ValidateRekeningKoranData(data);
 
-            _logger.LogInformation(
-                "Membuat PDF Permohonan Rekening Koran, NomorSurat={NomorSurat}, Desa={Desa}",
-                data.NomorSurat, data.Desa?.NamaDesa);
+            _logger.LogDebug(
+                "Membuat PDF Permohonan Rekening Koran, NomorSurat={NomorSurat}",
+                data.NomorSurat);
 
             var (lebarHalaman, tinggiHalaman) = PengaturanCetak.Dimensi();
             byte[] pdf = RenderDenganKerapatan(data, lebarHalaman, tinggiHalaman);
@@ -109,7 +107,7 @@ namespace SuDesApp.GeneratorPdf
             byte[]? pdf = null;
             int jumlahHalaman = 0;
 
-            foreach (var kerapatan in KerapatanBertingkat)
+            foreach (var kerapatan in KerapatanSurat.Bertingkat)
             {
                 using var penanda = KerapatanSurat.Pakai(kerapatan);
                 using var penampung = new MemoryStream();
@@ -125,11 +123,7 @@ namespace SuDesApp.GeneratorPdf
                             var halaman = new BadanSurat();
                             SusunSurat(halaman, data);
 
-                            foreach (var potongan in halaman.Potongan)
-                            {
-                                var render = potongan;
-                                kolom.Item().Element(c => render(c));
-                            }
+                            halaman.Render(kolom);
                         });
                     });
                 }).GeneratePdf(penampung);
@@ -141,7 +135,7 @@ namespace SuDesApp.GeneratorPdf
                 {
                     if (!ReferenceEquals(kerapatan, KerapatanSurat.Normal))
                     {
-                        _logger.LogInformation(
+                        _logger.LogDebug(
                             "Permohonan rekening koran dirapatkan ke kerapatan {Kerapatan} agar muat {Halaman} halaman.",
                             kerapatan.Nama, HalamanMaksimal);
                     }
@@ -159,7 +153,7 @@ namespace SuDesApp.GeneratorPdf
 
             // Kop memakai renderer bersama — sama persis dengan surat keterangan lain.
             string logoPath = CariLogoPath();
-            halaman.Blok(c => SuratRenderer.Kop(c, desa, logoPath));
+            halaman.Blok(c => KopSurat.Gambar(c, desa, logoPath));
 
             // Tempat & tanggal (rata kanan), seperti surat desa pada umumnya.
             string namaDesa = CultureInfo.CurrentCulture.TextInfo.ToTitleCase((desa.NamaDesa ?? string.Empty).ToLower());
@@ -216,8 +210,8 @@ namespace SuDesApp.GeneratorPdf
                 "Demikian permohonan ini kami sampaikan, atas perhatian dan kerjasamanya kami ucapkan terima kasih.",
                 jarakAtas: 18);
 
-            // Tanda tangan: jabatan + nama, sejajar kanan. Tanggal tidak diulang karena
-            // sudah tercetak di kepala surat.
+            // Tanda tangan: kolomnya menempel di sisi kanan, sedangkan isi bloknya
+            // rata tengah. Tanggal tidak diulang karena sudah tercetak di kepala surat.
             string namaPejabat = NamaFormatter.ToUpperNama(data.NamaPejabat ?? desa.KepalaDesa ?? string.Empty);
 
             // NIP hanya untuk pejabat ASN kelurahan (Lurah); Kepala Desa tidak ASN.

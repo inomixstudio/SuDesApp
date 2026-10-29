@@ -5,9 +5,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
 
@@ -26,7 +24,6 @@ namespace SuDesApp.GeneratorPdf
 
         static DaftarHadirGenerator()
         {
-            QuestPdfLisensi.Pastikan();
         }
 
         public DaftarHadirGenerator(
@@ -40,7 +37,6 @@ namespace SuDesApp.GeneratorPdf
 
             // Generator ini tidak mewarisi SuratGeneratorBase: pastikan font buku
             // (Times New Roman) sudah terdaftar juga bila ini PDF pertama sesi.
-            SuratGeneratorBase.DaftarkanFont(config, _logger);
         }
 
         public void GeneratePdf(Stream outputStream, DaftarHadirData data)
@@ -265,57 +261,15 @@ namespace SuDesApp.GeneratorPdf
         }
 
         /// <summary>
-        /// Kop surat desa: logo (bila ada) + lima baris dari KopSurat, ditutup
-        /// garis ganda pemisah. Isinya sama persis dengan dokumen lain.
+        /// Kop surat desa: logo (bila ada) + baris KopSurat, ditutup garis ganda
+        /// pemisah. Susunannya milik <see cref="KopSurat.Gambar"/> supaya sama persis
+        /// dengan dokumen lain.
         /// </summary>
         void ComposeKopSurat(IContainer container)
         {
+            // Gambar kop mengikuti Pengaturan Surat (bisa diganti pengguna).
             float skalaJudul = Landscape ? SkalaJudulKopLandscape : 1f;
-            var barisKop = KopSurat.BarisKop(_data.Desa, skalaJudul);
-
-            container.Column(column =>
-            {
-                column.Item().Row(row =>
-                {
-                    row.ConstantItem(KopSurat.LebarLogoUntuk(skalaJudul)).Element(logoContainer =>
-                    {
-                        // Gambar kop mengikuti Pengaturan Surat (bisa diganti pengguna).
-                        string? logoPath = PengaturanCetak.JalurLogoEfektif(_config.LogoPath);
-                        if (logoPath != null)
-                        {
-                            logoContainer.Image(logoPath).FitArea();
-                        }
-                    });
-
-                    row.RelativeItem().Column(col =>
-                    {
-                        foreach (var baris in barisKop)
-                        {
-                            // Sama seperti dokumen lain: surel desa (opsional) dicetak biru
-                            // sebagai baris tersendiri di bawah nama kabupaten.
-                            col.Item().AlignCenter().Text(teks =>
-                            {
-                                var utama = teks.Span(baris.Teks).FontSize(baris.FontSize);
-                                if (baris.Tebal)
-                                {
-                                    utama.Bold();
-                                }
-
-                                if (baris.AdaSurel)
-                                {
-                                    var pemisah = baris.Teks.Length == 0 ? string.Empty : " ";
-                                    teks.Span(pemisah + baris.Surel)
-                                        .FontSize(baris.FontSize)
-                                        .FontColor(KopSurat.WarnaSurel);
-                                }
-                            });
-                        }
-                    });
-                });
-
-                column.Item().PaddingTop(3).Height(KopSurat.GarisTipis).Background(Colors.Black);
-                column.Item().PaddingTop(1).Height(KopSurat.GarisTebal).Background(Colors.Black);
-            });
+            KopSurat.Gambar(container, _data.Desa, PengaturanCetak.JalurLogoEfektif(_config.LogoPath), skalaJudul);
         }
 
         void ComposeTable(TableDescriptor table)
@@ -450,6 +404,7 @@ namespace SuDesApp.GeneratorPdf
                 ? TanggalIndo(tanggalKaki)
                 : $"{namaDesa}, {TanggalIndo(tanggalKaki)}";
 
+            // Kolomnya menempel di sisi kanan halaman; isi bloknya rata tengah.
             container.AlignRight().Width(260).Column(column =>
             {
                 column.Item().AlignCenter().Text(tempatTanggal);

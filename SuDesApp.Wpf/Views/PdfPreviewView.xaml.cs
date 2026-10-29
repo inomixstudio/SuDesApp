@@ -1,25 +1,20 @@
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
-using PdfiumViewer;
+using SudesPdf;
 using SuDesApp.Wpf.ViewModels;
 
 namespace SuDesApp.Wpf.Views
 {
-    /// <summary>
-    /// Pratinjau PDF berbasis PDFium (PdfiumViewer) dengan zoom, fit-lebar, dan cetak.
-    /// Pengganti implementasi sebelumnya yang bergantung pada WebView2 Runtime.
-    /// Padanan FormulirControl/ShowPdfBytesInMainPanel (WinForms).
-    /// </summary>
+    /// <summary>Pratinjau PDF multi-halaman berbasis mesin SudesPdf sendiri.</summary>
     public partial class PdfPreviewView : UserControl
     {
-        private PdfDocument? _document;
+        private Document? _document;
+        private int _loadGeneration;
         private string _title = string.Empty;
         private string? _currentPdfPath;
         private long _cachedLength = -1;
@@ -38,29 +33,24 @@ namespace SuDesApp.Wpf.Views
             // ContentPresenter), muat ulang konten.
             if (IsLoaded)
             {
-                LoadDocument();
+                _ = LoadDocumentAsync();
             }
         }
 
-        private void UserControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            LoadDocument();
-        }
+        private void UserControl_Loaded(object sender, RoutedEventArgs e) => _ = LoadDocumentAsync();
 
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            _document?.Dispose();
-            _document = null;
+            _loadGeneration++;
+            _ = DisposeDocumentAsync();
             _currentPdfPath = null;
         }
 
-        private void LoadDocument(bool force = false)
+        private async Task LoadDocumentAsync(bool force = false)
         {
             if (force) _currentPdfPath = null;
-            if (DataContext is not PdfPreviewViewModel viewModel)
-            {
-                return;
-            }
+            int generation = ++_loadGeneration;
+            if (DataContext is not PdfPreviewViewModel viewModel) return;
 
             // Skip reload hanya bila path sama DAN file belum berubah (ukuran+mtime).
             // Tanpa cek isi, PDF hasil edit yang ditulis ulang ke nama file yang sama
@@ -70,21 +60,16 @@ namespace SuDesApp.Wpf.Views
                 try
                 {
                     var info = new FileInfo(viewModel.PdfPath!);
-                    if (_cachedLength == info.Length && _cachedLastWrite == info.LastWriteTimeUtc)
-                    {
-                        return;
-                    }
+                    if (_cachedLength == info.Length && _cachedLastWrite == info.LastWriteTimeUtc) return;
                 }
-                catch (Exception)
-                {
-                    // File tak terbaca: lanjut coba muat ulang.
-                }
+                catch (Exception) { /* berkas berubah/terkunci: lanjutkan muat ulang */ }
             }
 
             _title = viewModel.Title;
             _currentPdfPath = viewModel.PdfPath;
             _cachedLength = -1;
             _cachedLastWrite = DateTime.MinValue;
+            await DisposeDocumentAsync();
 
             if (viewModel.IsMissing || string.IsNullOrEmpty(viewModel.PdfPath))
             {
@@ -94,31 +79,22 @@ namespace SuDesApp.Wpf.Views
 
             try
             {
-                _document?.Dispose();
-                _document = null;
-                _document = PdfDocument.Load(viewModel.PdfPath);
+                var document = await Document.LoadAsync(viewModel.PdfPath);
+                if (generation != _loadGeneration || !IsLoaded)
+                {
+                    await document.DisposeAsync();
+                    return;
+                }
+                _document = document;
                 var info = new FileInfo(viewModel.PdfPath);
                 _cachedLength = info.Exists ? info.Length : -1;
                 _cachedLastWrite = info.Exists ? info.LastWriteTimeUtc : DateTime.MinValue;
                 TampilkanDokumen();
-                FitWidth();
+                await FitWidthAsync();
             }
             catch (Exception)
             {
-                // Bila gagal muat (mis. file baru saja dibuat dan masih ditulis),
-                // coba sekali lagi setelah jeda singkat sebelum menyerah.
-                try
-                {
-                    System.Threading.Thread.Sleep(150);
-                    _document?.Dispose();
-                    _document = PdfDocument.Load(viewModel.PdfPath);
-                    TampilkanDokumen();
-                    FitWidth();
-                }
-                catch (Exception)
-                {
-                    ShowMissing();
-                }
+                if (generation == _loadGeneration) ShowMissing();
             }
         }
 
@@ -129,15 +105,22 @@ namespace SuDesApp.Wpf.Views
         /// yang gagal dimuat membuat panel "dokumen tidak ditemukan" dan tombol
         /// Cetak/Ekspor/zoom mati PERMANEN untuk sisa sesi.
         /// </summary>
+        private async Task DisposeDocumentAsync()
+        {
+            var document = _document;
+            _document = null;
+            if (document is not null) await document.DisposeAsync();
+        }
+
         private void TampilkanDokumen()
         {
             ScrollViewer.Visibility = Visibility.Visible;
             MissingPanel.Visibility = Visibility.Collapsed;
-            PrintBtn.IsEnabled = true;
-            ExportBtn.IsEnabled = true;
-            ZoomInBtn.IsEnabled = true;
-            ZoomOutBtn.IsEnabled = true;
-            FitWidthBtn.IsEnabled = true;
+            PrintBtn.IsEnabled = _document is not null;
+            ExportBtn.IsEnabled = _document is not null;
+            ZoomInBtn.IsEnabled = _document is not null;
+            ZoomOutBtn.IsEnabled = _document is not null;
+            FitWidthBtn.IsEnabled = _document is not null;
         }
 
         private void ShowMissing()
@@ -151,33 +134,43 @@ namespace SuDesApp.Wpf.Views
             FitWidthBtn.IsEnabled = false;
         }
 
-        private void FitWidth_Click(object sender, RoutedEventArgs e) => FitWidth();
+        private void FitWidth_Click(object sender, RoutedEventArgs e) => _ = FitWidthAsync();
 
-        private void FitWidth()
+        private async Task FitWidthAsync()
         {
-            if (_document is null || _document.PageCount == 0)
-            {
-                return;
-            }
-
+            if (_document is null || _document.PageCount == 0) return;
             double available = ScrollViewer.ViewportWidth > 0 ? ScrollViewer.ViewportWidth : 600;
-            available -= 40; // margin halaman + estimasi scrollbar
-            double renderedW = _document.PageSizes[0].Width; // dalam titik (72 dpi)
-            _scale = Math.Max(0.1, Math.Min(8.0, available / renderedW));
-            RenderPages();
+            // Lebar halaman 100% (DIP) tidak bergantung pada skala yang sedang aktif.
+            double lebarPenuh = _document.PageSizes[0].Width * 96.0 / 72.0;
+            _scale = Math.Clamp((available - 40) / lebarPenuh, 0.1, 8.0);
+            await RenderPagesAsync();
         }
 
-        private void ZoomIn_Click(object sender, RoutedEventArgs e) => SetScale(_scale * 1.2d);
+        /// <summary>Lebar halaman pada skala tampil (DIP) — 100% = ukuran kertas sebenarnya.</summary>
+        private double LebarHalamanDip(int halaman) =>
+            _document!.PageSizes[halaman].Width * _scale * 96.0 / 72.0;
 
-        private void ZoomOut_Click(object sender, RoutedEventArgs e) => SetScale(_scale / 1.2d);
-
-        private void SetScale(double value)
+        /// <summary>
+        /// Piksel per titik PDF. Halaman dirender pada kerapatan perangkat layar
+        /// (bukan hanya DIP), sehingga teks tetap tajam pada Windows 125%/150%
+        /// dan saat diperbesar.
+        /// </summary>
+        private double SkalaPiksel()
         {
-            _scale = Math.Max(0.1, Math.Min(8.0, value));
-            RenderPages();
+            double dpi = VisualTreeHelper.GetDpi(this).DpiScaleX;
+            return Math.Min(8.0, dpi * 96.0 / 72.0);
         }
 
-        private void RenderPages()
+        private void ZoomIn_Click(object sender, RoutedEventArgs e) => _ = SetScaleAsync(_scale * 1.2);
+        private void ZoomOut_Click(object sender, RoutedEventArgs e) => _ = SetScaleAsync(_scale / 1.2);
+
+        private async Task SetScaleAsync(double value)
+        {
+            _scale = Math.Clamp(value, 0.1, 8.0);
+            await RenderPagesAsync();
+        }
+
+        private async Task RenderPagesAsync()
         {
             if (_document is null)
             {
@@ -185,18 +178,18 @@ namespace SuDesApp.Wpf.Views
             }
 
             PagesPanel.Children.Clear();
+            int generation = _loadGeneration;
 
+            double pikselPerTitik = SkalaPiksel();
             for (int i = 0; i < _document.PageCount; i++)
             {
                 var size = _document.PageSizes[i];
-                int w = Math.Max(1, (int)(size.Width * _scale));
-                int h = Math.Max(1, (int)(size.Height * _scale));
-
-                using var bmp = (System.Drawing.Bitmap)_document.Render(i, w, h, 96f, 96f, PdfRenderFlags.LcdText);
-
-                // Kertas pratinjau memakai warna TETAP (bukan warna tema): halaman
-                // surat memang dicetak di kertas putih, juga saat aplikasi bertema
-                // gelap. Diambil dari PaletTetap agar tidak ada warna literal di sini.
+                BitmapSource bitmap;
+                try { bitmap = await _document.RenderAsync(i, Math.Min(8.0, _scale * pikselPerTitik * 2.0)); }
+                catch (Exception) { return; }
+                if (generation != _loadGeneration || _document is null) return;
+                int w = Math.Max(1, (int)Math.Round(LebarHalamanDip(i)));
+                int h = Math.Max(1, (int)Math.Round(size.Height * _scale * 96.0 / 72.0));
                 var card = new Border
                 {
                     Background = TryFindResource("KertasBrush") as Brush ?? Brushes.White,
@@ -221,7 +214,7 @@ namespace SuDesApp.Wpf.Views
                 var pageStack = new StackPanel();
                 pageStack.Children.Add(new Image
                 {
-                    Source = ToBitmapSource(bmp),
+                    Source = bitmap,
                     Width = w,
                     Height = h,
                     Stretch = Stretch.Uniform
@@ -241,56 +234,17 @@ namespace SuDesApp.Wpf.Views
             ZoomText.Text = $"{_scale * 100.0:0}%";
         }
 
-        private static BitmapSource ToBitmapSource(System.Drawing.Bitmap bitmap)
+        private void Print_Click(object sender, RoutedEventArgs e) => _ = PrintAsync();
+
+        private async Task PrintAsync()
         {
-            IntPtr hBitmap = bitmap.GetHbitmap();
+            var document = _document;
+            if (document is null || document.PageCount == 0) return;
             try
             {
-                return Imaging.CreateBitmapSourceFromHBitmap(
-                    hBitmap, IntPtr.Zero, Int32Rect.Empty,
-                    BitmapSizeOptions.FromEmptyOptions());
-            }
-            finally
-            {
-                DeleteObject(hBitmap);
-            }
-        }
-        private async void Print_Click(object sender, RoutedEventArgs e)
-        {
-            if (_document is null || _document.PageCount == 0)
-            {
-                return;
-            }
-
-            try
-            {
-                // Data desa masih contoh: surat resmi tidak boleh keluar dengan kop
-                // contoh tanpa sepengetahuan pengguna. Pertanyaan dijawab lebih dulu.
-                // (Di dalam try: kegagalan dialog konfirmasi tidak boleh menjatuhkan
-                // aplikasi lewat async void — cukup hentikan percetakan ini.)
-                if (DataContext is PdfPreviewViewModel vm && !await vm.BolehCetakAsync())
-                {
-                    return;
-                }
-
-                // Pengguna bisa saja berpindah halaman selagi menjawab pertanyaan di atas.
-                if (_document is null || _document.PageCount == 0)
-                {
-                    return;
-                }
-
-                // Cetak seperti aplikasi lama (WinForms): dialog cetak Windows standar
-                // (pilih printer, rentang halaman, salinan) → langsung kirim ke printer.
-                if (_currentPdfPath is not null && File.Exists(_currentPdfPath))
-                {
-                    await App.PrintService.PrintPdfFileAsync(_currentPdfPath, _title);
-                    return;
-                }
-
-                // Dokumen dimuat dari memori (tanpa file): render PDFium → PrintDocument.
-                using var printDoc = _document.CreatePrintDocument();
-                printDoc.DocumentName = _title;
-                printDoc.Print();
+                if (DataContext is PdfPreviewViewModel vm && !await vm.BolehCetakAsync()) return;
+                if (!ReferenceEquals(document, _document)) return;
+                await document.PrintAsync(_title);
             }
             catch (Exception)
             {
@@ -298,7 +252,5 @@ namespace SuDesApp.Wpf.Views
             }
         }
 
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(IntPtr hObject);
     }
 }

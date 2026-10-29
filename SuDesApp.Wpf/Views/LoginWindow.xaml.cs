@@ -17,18 +17,6 @@ namespace SuDesApp.Wpf.Views
 
             viewModel.LoginSucceeded += () =>
             {
-                // Bila sandi administrator baru dibuat/dirotasi saat login ini
-                // (mis. sandi bawaan lama dipakai), tampilkan sekali lagi sebelum
-                // jendela ditutup supaya pengguna sempat mencatatnya.
-                if (viewModel.HasInfoKredensial)
-                {
-                    MessageBox.Show(
-                        viewModel.InfoKredensialAwal,
-                        "Kredensial administrator",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-
                 DialogResult = true;
                 Close();
             };

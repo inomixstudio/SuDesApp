@@ -179,6 +179,69 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.9.0 (29 Oktober 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Fitur Baru — Mesin PDF Sendiri (SudesPdf)", new List<string>
+                        {
+                            "Seluruh surat, laporan, register, dan blanko kini disusun oleh SudesPdf.Core — mesin PDF milik aplikasi sendiri untuk penataan teks, tabel, gambar, kop, dan blok tanda tangan. QuestPDF, PDFium, dan PDF.js dihapus dari jalur dokumen, sehingga aplikasi yang dijual atau dilanggankan tidak lagi bergantung pada lisensi pustaka PDF pihak ketiga.",
+                            "Pratinjau dan cetak memakai lapisan SudesPdf: halaman dirender sendiri, ekstraksi teks tetap tersedia, dan dialog cetak Windows tetap muncul lengkap dengan pilihan printer, rentang halaman, serta jumlah salinan. Mesin baru tetap dapat membuka PDF hasil versi lama, sehingga arsip surat dan formulir tidak perlu dikonversi.",
+                            "Tata letak naskah dipertahankan: kop, badan, tabel, dan blok tanda tangan mengikuti bentuk yang sudah dipakai. Tulisan “tanda tangan” yang keliru di kolom pejabat dihapus — ruang tanda tangan dibiarkan kosong untuk ditandatangani, sesuai naskah dinas.",
+                            "Tidak ada lagi pustaka PDF native yang perlu dipasang terpisah di komputer desa; pratinjau, pencarian teks, dan cetak berjalan dari rakitan aplikasi sendiri."
+                        }),
+                        new CatatanRilisSubSection("Fitur Baru — Pembaruan Otomatis di Latar Belakang", new List<string>
+                        {
+                            "Setelah login, aplikasi memeriksa rilis terbaru lalu mengunduh paketnya di latar belakang — tambalan kecil atau installer penuh — tanpa menahan pekerjaan operator. Unduhan yang terputus dilanjutkan pada pembukaan berikutnya, dan unduhan otomatis dapat dimatikan di Pengaturan Aplikasi (installer penuh dibatasi ukuran, bawaan 300 MB).",
+                            "Begitu unduhan selesai, lonceng notifikasi menawarkan Instal Sekarang atau Instal Saat Keluar. Instal Sekarang menutup aplikasi, memasang, lalu membukanya kembali; Instal Saat Keluar menjadwalkan pemasangan saat aplikasi ditutup.",
+                            "Pemasangan berjalan tanpa halaman konfirmasi atau klik tambahan — hanya jendela kemajuan yang terlihat. Installer dan executable pada rilis resmi ditandatangani Authenticode, dan setiap paket yang menyertakan sidik jari SHA-256 diverifikasi sebelum dipasang."
+                        }),
+                        new CatatanRilisSubSection("Pembaruan — Tentang Aplikasi Mengikuti Fitur Terbaru", new List<string>
+                        {
+                            "Halaman Tentang Aplikasi kini menjelaskan mesin PDF sendiri, pembaruan yang diunduh di latar belakang, Pusat Administrasi, dan formulir data warga yang mengikuti Pengaturan Desa. Keterangan lama yang menyebut pembaruan “bertanda tangan SHA-256” diganti dengan penjelasan yang sesuai: verifikasi SHA-256 untuk paket, tanda tangan Authenticode untuk installer dan executable.",
+                            "Daftar teknologi dan ucapan terima kasih kini memisahkan SudesPdf.Core (mesin penyusun, pembaca, dan render PDF) dari SudesPdf (pratinjau, ekstraksi teks, dan cetak), sehingga batas keduanya jelas dan tidak lagi menyiratkan keduanya sebagai satu proyek."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Server Lisensi Lokal dan Langganan", new List<string>
+                        {
+                            "Pada mode lokal, server lisensi untuk Pusat Administrasi menyala bersama aplikasi dan berhenti saat aplikasi ditutup, termasuk saat Windows logoff. Proses yang tertinggal dari sesi sebelumnya dibersihkan saat aplikasi dibuka kembali, sehingga tidak ada layanan yang terus berjalan di latar belakang.",
+                            "Data langganan pada server lokal kini menetap: masa aktif desa, tagihan, pembayaran, pengumuman, dan audit tidak hilang saat aplikasi atau komputer dinyalakan ulang. Pusat Administrasi dapat dibuka dari halaman Langganan oleh akun pusat.",
+                            "Trial kini 30 hari, baik lewat server lisensi maupun tanpa kode aktivasi. Batas percobaan akun pusat juga bertahan setelah aplikasi dibuka ulang tanpa menyimpan kata sandinya.",
+                            "Halaman Langganan tidak lagi menampilkan nomor HP admin sebagai teks; kontak tetap tersedia lewat tombol WhatsApp yang sudah ada."
+                        }),
+                        new CatatanRilisSubSection("Perbaikan — Data Warga, Login, dan Ketahanan Data", new List<string>
+                        {
+                            "Form Tambah Warga dirapikan mengikuti tema. Kolom Alamat (Jalan/Kampung) dihapus karena tumpang tindih dengan Dusun/RT/RW; desa, kecamatan, dan kabupaten terisi otomatis dari Pengaturan Desa, sehingga operator tidak mengisi data yang sama dua kali.",
+                            "Kata sandi berhuruf besar kini dapat dipakai masuk — sebelumnya seluruh kata sandi diturunkan ke huruf kecil sehingga akun bersandi campuran tidak pernah bisa login.",
+                            "Batas percobaan login tidak lagi mengunci akun pusat karena salah ketik pada akun lain, dan pesannya menyebut sisa waktu tunggu yang sebenarnya.",
+                            "Cadangan database memakai snapshot SQLite yang konsisten sehingga transaksi terbaru yang masih berada di WAL ikut tersimpan; pemulihan juga tidak lagi mengganti berkas secara paksa. Penulisan preferensi menjadi atomik agar pengaturan tidak hilang bila aplikasi berhenti di tengah penulisan.",
+                            "Log produksi kini berotasi dan tidak lagi memuat NIK atau nama warga. Seluruh catch kosong diberi alasan atau log yang memadai supaya kegagalan tidak hilang diam-diam."
+                        })
+                    }),
+                new CatatanRilisEntry(
+                    "Versi 2.8.0 (27 Oktober 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Pembaruan — Layanan WhatsApp dan Google Sheet/Form Dihapus", new List<string>
+                        {
+                            "Menu Layanan Online, panel permintaan surat masuk, dan halaman Panduan WhatsApp tidak lagi ada; kartu Jam Layanan WhatsApp, Gateway WhatsApp, serta Formulir & Sheet di Pengaturan Aplikasi ikut hilang. Pengaturan Aplikasi kini memuat empat bagian: Umum & Preferensi, Kredensial Google, Database Desa, dan Informasi.",
+                            "Dari integrasi Google yang tersisa hanya login akun Google dan pencadangan ke Google Drive. Kredensial Google dan token OAuth tetap tersimpan terenkripsi DPAPI pada komputer masing-masing seperti sebelumnya.",
+                            "Endpoint API yang menerima permintaan surat dari sistem luar (POST /permintaan, GET /permintaan/{kode}, dan GET /jenis-surat) dihapus. API Desa kini hanya membaca data — status, statistik, perangkat desa, dan rekap bulanan — serta memeriksa keaslian surat; kunci API lama yang bercakupan Permintaan tetap terbaca, tetapi tidak membuka endpoint mana pun.",
+                            "Izin Layanan online pada peran pengguna dihapus karena tidak lagi mengendalikan menu apa pun, dan tabel PermintaanWa tidak lagi dibuat maupun dimigrasikan saat aplikasi dibuka."
+                        }),
+                        new CatatanRilisSubSection("Pembaruan — Database Disimpan Tanpa Berkas Kunci", new List<string>
+                        {
+                            "Enkripsi SQLCipher beserta berkas kunci DesaKunciDb.bin dihapus. Database desa.db kini berupa SQLite biasa, sehingga tidak ada lagi berkas kunci yang bisa hilang dan mengunci aplikasi sendiri — masalah yang sebelumnya membuat aplikasi berhenti pada layar splash tanpa jalan keluar.",
+                            "Konsekuensinya perlu diketahui bersama: data warga kini dapat dibaca oleh siapa pun yang bisa membuka berkas database di komputer desa. Batasi akses folder lewat izin Windows, dan pertimbangkan enkripsi disk bila komputer desa dipakai bersama.",
+                            "Berkas database dari versi lama yang masih terenkripsi tetap terdeteksi saat aplikasi dibuka, disertai pesan yang menyebut cara memulihkannya (dari cadangan, atau memilih berkas lain) — bukan galat teknis yang membingungkan di setiap halaman.",
+                            "Halaman Pengaturan Aplikasi → Database Desa kini menjelaskan keadaan tanpa-enkripsi ini dan tetap meminta konfirmasi sebelum memakai berkas yang tidak bisa dibuka."
+                        }),
+                        new CatatanRilisSubSection("Perbaikan — Teks dan Dokumen Tidak Lagi Menyebut Fitur yang Sudah Dihapus", new List<string>
+                        {
+                            "Halaman Tentang Aplikasi, Kebijakan Privasi, Syarat & Ketentuan, kebijakan peran pengguna, dan SECURITY.md kini hanya menyebut fitur yang benar-benar ada: tidak ada lagi klaim enkripsi database, permintaan surat via WhatsApp atau Google Form/Sheet, maupun izin Layanan online.",
+                            "Keterangan Layanan digital pada halaman Tentang dijelaskan apa adanya — API Desa membaca statistik, data perangkat desa, dan memeriksa keaslian surat — tanpa lagi menjanjikan penerimaan permintaan surat dari sistem luar.",
+                            "Isi riwayat versi lama tetap seperti saat diterbitkan; yang disesuaikan hanya kalimat yang kini menyesatkan pembaca — status berkas yang labelnya sudah berubah dan klaim enkripsi yang tidak berlaku lagi. Perubahan perilaku yang terlihat oleh pengguna dicatat pada versi ini."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.7.1 (20 Oktober 2026)",
                     new List<CatatanRilisSubSection>
                     {
@@ -346,7 +409,7 @@ namespace SuDesApp.Wpf.ViewModels
                             "Pembayaran QRIS dan Virtual Account bank (BCA, BNI, BRI, dan Permata) lewat Midtrans Snap. Aplikasi membuat tagihan lalu membuka halaman pembayaran di peramban; begitu dana masuk, masa aktif bertambah otomatis tanpa pengguna perlu mengirim bukti transfer ke siapa pun.",
                             "Halaman web https://<server>/checkout untuk membayar dari telepon atau komputer lain tanpa membuka aplikasi: pilih paket, isi kode aktivasi, buat tagihan. Halaman itu ikut disajikan oleh server lisensi yang sama, lengkap dengan berkas Docker dan panduan langkah demi langkah di docs/deploy-server.md.",
                             "Pembayaran terbaru dan masa aktif yang tersisa selalu terbaca dari server, jadi angka yang dilihat pengguna persis sama dengan yang benar-benar ditagih — harga tidak bisa berbeda antara tampilan dan tagihan karena keduanya berasal dari satu sumber di server.",
-                            "Data desa TIDAK ikut diunggah: database desa.db tetap terenkripsi di komputer masing-masing. Yang diurus server hanya masa aktif aplikasinya."
+                            "Data desa TIDAK ikut diunggah: database desa.db tetap tersimpan di komputer masing-masing. Yang diurus server hanya masa aktif aplikasinya."
                         }),
                         new CatatanRilisSubSection("Fitur Baru — Lisensi Bertanda Tangan (verifikasi offline)", new List<string>
                         {
@@ -524,8 +587,8 @@ namespace SuDesApp.Wpf.ViewModels
                         new CatatanRilisSubSection("Fitur Baru — Lokasi Berkas Database Dapat Dipilih", new List<string>
                         {
                             "Pengaturan Aplikasi → Database Desa: lokasi berkas desa.db kini dapat dipindah sendiri (mis. ke folder data desa di drive D) lewat tombol pilih berkas, tanpa menyentuh berkas konfigurasi.",
-                            "Pilihan disimpan di profil pengguna dan tetap dipakai setelah aplikasi diperbarui; kembali ke lokasi bawaan cukup satu tombol, dan lokasi aktif beserta status berkasnya (terenkripsi & terkunci / siap dienkripsi / tidak terbaca) tampil di halaman.",
-                            "Saat berpindah, aplikasi memeriksa berkas lebih dulu: database yang belum terenkripsi atau tidak terbaca meminta konfirmasi sebelum dipakai, dan jalur tidak sah otomatis kembali ke lokasi bawaan tanpa menggagalkan pembukaan aplikasi.",
+                            "Pilihan disimpan di profil pengguna dan tetap dipakai setelah aplikasi diperbarui; kembali ke lokasi bawaan cukup satu tombol, dan lokasi aktif beserta status berkasnya (siap dipakai / belum ada / tidak terbaca) tampil di halaman.",
+                            "Saat berpindah, aplikasi memeriksa berkas lebih dulu: berkas yang bukan database SQLite yang bisa dibuka meminta konfirmasi sebelum dipakai, dan jalur tidak sah otomatis kembali ke lokasi bawaan tanpa menggagalkan pembukaan aplikasi.",
                             "Pengaturan diterapkan setelah aplikasi ditutup lalu dibuka lagi agar seluruh sambungan database tertutup rapi — tidak ada data yang dipindah atau diubah otomatis. Tombol 'Simpan & Mulai Ulang Sekarang' mengerjakan penutupan dan pembukaan kembali itu seketika, lengkap dengan konfirmasi."
                         }),
                         new CatatanRilisSubSection("Fitur Baru — Laporan Penduduk", new List<string>
@@ -545,7 +608,7 @@ namespace SuDesApp.Wpf.ViewModels
                         }),
                         new CatatanRilisSubSection("Peningkatan", new List<string>
                         {
-                            "Halaman Tentang Aplikasi diselaraskan: daftar fitur dan teknologi kini menyebut enkripsi database SQLCipher dan API Desa, dan lokasi data dipecah jelas — 'Folder aplikasi' (program + database) serta 'Preferensi & kunci' (%LOCALAPPDATA%\\SuDesApp).",
+                            "Halaman Tentang Aplikasi diselaraskan: daftar fitur dan teknologi kini menyebut API Desa, dan lokasi data dipecah jelas — 'Folder aplikasi' (program + database) serta 'Preferensi & kunci' (%LOCALAPPDATA%\\SuDesApp).",
                             "Pengaturan Aplikasi → Preferensi: tinggi maksimum baris tabel bertext panjang (Register Surat, Register NTCR, API Desa, Data Warga) kini dapat diatur operator — cukup tekan tombol cepat Ringkas, Normal, atau Lega, atau ketik sendiri angkanya (40-600 piksel, bawaan 200) — dan tersimpan di preferensi aplikasi. Naikkan bila alamat panjang perlu tampil lebih utuh, turunkan bila tabel ingin lebih ringkas; tabel yang sedang terbuka langsung menyesuaikan tanpa perlu dibuka ulang.",
                             "Kontras keenam tema (Terang, Gelap, Biru, Hijau, Pink, Abu-abu) disesuaikan agar memenuhi WCAG 2.1 AA: token teks 'di atas latar' untuk lencana sukses/peringatan/galat ditambahkan, warna teks status dan subjudul header disetel ulang, serta teks aksen kini memakai token teks — bukan warna isian. Akibatnya teks di atas aksen di tema Terang/Gelap/Hijau/Pink berganti dari putih (1,9-3,5:1) menjadi tinta gelap yang terbaca, dan header gradien di empat tema itu sedikit lebih gelap. Aturannya dijaga alat Tools/check-kontras-wcag.ps1 (49 pasangan × 7 tema). Putaran kedua (1 Oktober 2026) menutup celahnya: sepuluh pasangan yang dipakai kode tetapi belum pernah diperiksa ditambahkan ke gerbang, dan beberapa angka palet disetel ulang (teks sekunder tema Gelap dari #9E9E9E ke #BDBDBD, kartu galat tema Pink dari #FEE2E2 ke #FEEAEA, aksen terang tema Biru dan Pink diperjelas).",
                             "Tema ketujuh 'Kontras Tinggi' ditambahkan untuk pengguna low vision: latar hitam pekat, teks putih, dan aksen kuning menyala — dipilih dari daftar Tema seperti tema lain, tersimpan, dan tetap berlaku setelah aplikasi dibuka ulang. Ini satu-satunya tema yang menargetkan WCAG 2.1 AAA (teks normal minimal 7:1), jadi ambangnya ikut dinaikkan di alat Tools/check-kontras-wcag.ps1 — bukan sekadar AA seperti enam tema lainnya.",

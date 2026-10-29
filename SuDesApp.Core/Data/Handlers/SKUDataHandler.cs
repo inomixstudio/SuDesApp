@@ -93,7 +93,7 @@ namespace SuDesApp.Data.Handlers
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
                 await _cacheService.RemoveAsync<SuratData>("SKU_All");
 
-                _logger.LogInformation("Successfully inserted SKU data for ID_Surat={ID_Surat}, BidangUsaha={BidangUsaha}, SejakTahun={SejakTahun}",
+                _logger.LogDebug("Successfully inserted SKU data for ID_Surat={ID_Surat}, BidangUsaha={BidangUsaha}, SejakTahun={SejakTahun}",
                     idSurat, data.BidangUsaha, data.SejakTahun);
             }
             catch (Exception ex)
@@ -124,7 +124,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully deleted SKU data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully deleted SKU data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -174,7 +174,7 @@ namespace SuDesApp.Data.Handlers
                     LokasiUsaha = data.LokasiUsaha
                 };
 
-                _logger.LogInformation("Successfully loaded SKU data for ID_Surat={ID_Surat}, BidangUsaha={BidangUsaha}, SejakTahun={SejakTahun}",
+                _logger.LogDebug("Successfully loaded SKU data for ID_Surat={ID_Surat}, BidangUsaha={BidangUsaha}, SejakTahun={SejakTahun}",
                     suratData.ID_Surat, data.BidangUsaha, data.SejakTahun);
             }
             catch (Exception ex)

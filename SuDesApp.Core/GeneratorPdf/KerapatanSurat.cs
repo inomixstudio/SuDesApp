@@ -11,7 +11,10 @@ using System.Threading;
 
 namespace SuDesApp.GeneratorPdf
 {
-    /// <summary>Satu tingkat kerapatan: jarak baris, jarak paragraf, dan ruang tanda tangan.</summary>
+    /// <summary>
+    /// Satu tingkat kerapatan: jarak baris, jarak paragraf, dan ruang tanda tangan.
+    /// Perataan teks BUKAN bagian dari kelas ini — jenisnya ada di <see cref="Rata"/>.
+    /// </summary>
     public sealed class KerapatanSurat
     {
         public string Nama { get; }
@@ -94,7 +97,7 @@ namespace SuDesApp.GeneratorPdf
         // ------------------------------------------------------------------
         // Kerapatan yang sedang dipakai saat merender satu dokumen.
         // Disimpan per konteks async (AsyncLocal) supaya dua dokumen yang
-        // dibuat bersamaan — mis. dari UI dan dari layanan WhatsApp — tidak
+        // dibuat bersamaan — mis. dari UI dan dari paket NTCR — tidak
         // saling menimpa pengaturannya.
         // ------------------------------------------------------------------
         private static readonly AsyncLocal<KerapatanSurat> _aktif = new();

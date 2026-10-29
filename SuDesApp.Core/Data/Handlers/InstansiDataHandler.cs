@@ -67,7 +67,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully inserted Instansi data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully inserted Instansi data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -90,7 +90,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully deleted Instansi data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully deleted Instansi data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -125,7 +125,7 @@ namespace SuDesApp.Data.Handlers
                     _logger.LogWarning("No Instansi data found for ID_Surat={ID_Surat}", suratData.ID_Surat);
                 }
 
-                _logger.LogInformation("Successfully loaded Instansi data for ID_Surat={ID_Surat}", suratData.ID_Surat);
+                _logger.LogDebug("Successfully loaded Instansi data for ID_Surat={ID_Surat}", suratData.ID_Surat);
             }
             catch (Exception ex)
             {

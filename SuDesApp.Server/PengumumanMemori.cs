@@ -9,6 +9,22 @@ public sealed class PengumumanMemori : IPengumumanStore
     private readonly List<PengumumanServer> _daftar = new();
     private readonly object _kunci = new();
 
+    /// <summary>Salinan seluruh pengumuman untuk disimpan ke berkas.</summary>
+    internal List<PengumumanServer> AmbilSnapshot()
+    {
+        lock (_kunci) return _daftar.ToList();
+    }
+
+    /// <summary>Ganti seluruh daftar dengan isi berkas simpanan.</summary>
+    internal void TerapkanSnapshot(IEnumerable<PengumumanServer> daftar)
+    {
+        lock (_kunci)
+        {
+            _daftar.Clear();
+            _daftar.AddRange(daftar);
+        }
+    }
+
     public Task<List<PengumumanServer>> BacaPengumumanAsync()
     {
         lock (_kunci) return Task.FromResult(_daftar.ToList());

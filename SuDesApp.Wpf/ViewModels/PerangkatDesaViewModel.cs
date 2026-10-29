@@ -30,7 +30,7 @@ namespace SuDesApp.Wpf.ViewModels
     /// PKK, LPM, dan Karang Taruna — masing-masing dipilih lewat tombol di
     /// bilah alat dan memakai tabel, form, maupun panel SK yang sama. Tersedia
     /// pula ekspor Excel dan cetak PDF
-    /// (pratinjau PDFium); pencarian, filter jabatan/wilayah, dan tombol Muat
+    /// (pratinjau SudesPdf); pencarian, filter jabatan/wilayah, dan tombol Muat
     /// Ulang sengaja tidak dipakai — saringan status berlaku langsung dari
     /// salinan data yang dibaca sekali saat halaman dibuka.
     ///
@@ -38,16 +38,16 @@ namespace SuDesApp.Wpf.ViewModels
     /// SK di kolom AKSI yang membuka panel Surat Keputusan; panel itu juga
     /// menjadi tempat mengarsipkan berkas SK Bupati untuk Kepala Desa.
     ///
-    /// Di bawah tabel perangkat desa ada bagian <b>RT/RW</b> (Ketua RT dan
-    /// Ketua RW) dengan tabel, tombol, dan form isian yang sama persis, sebab
-    /// keduanya memang satu kelompok pekerjaan pengisian data warga yang
-    /// ditetapkan lewat SK Kepala Desa.
+    /// Seluruh bagian memakai satu tabel, satu kepala bagian, dan satu form:
+    /// memilih bagian hanya mengganti isi tabel dan angka ringkasannya, sebab
+    /// tiap kelompok memang pekerjaan pengisian yang sama dan hanya berbeda
+    /// cara penerbitan SK-nya.
     ///
     /// Dua aturan yang dijaga halaman ini: satu jabatan pada satu wilayah
     /// hanya boleh satu orang (validasi ada di <c>PerangkatDesaService</c>),
     /// dan jabatan yang belum punya orang tetap tampil sebagai baris kosong
-    /// penanda. Ringkasan keterisian dibaca dari pesan status di atas tabel —
-    /// halaman ini sengaja tidak memakai kartu KPI.
+    /// penanda. Ringkasan keterisian dibaca dari kepala bagian di atas tabel:
+    /// jumlah orang, jumlah jabatan, dan jabatan yang belum terisi.
     /// </summary>
     /// <summary>Bagian halaman Perangkat Desa yang sedang ditampilkan.</summary>
     public enum BagianPerangkat
@@ -88,28 +88,6 @@ namespace SuDesApp.Wpf.ViewModels
         private bool _isFormTerbuka;
         private bool _isModeUbah;
         private int _formId;
-
-        /// <summary>
-        /// Jumlah orang pada jabatan resmi, tanpa saringan apa pun. Dipakai
-        /// membedakan "database memang kosong" dari "filter tidak cocok",
-        /// sebab kelompok lain di luar daftar jabatan resmi tidak dihitung
-        /// halaman ini.
-        /// </summary>
-        private int _jumlahOrangResmi;
-
-        /// <summary>Jumlah orang RT/RW; bagian RT/RW menampilkannya di kepala bagian.</summary>
-        private int _jumlahOrangRtRw;
-
-        private int _jumlahOrangBpd;
-        private int _jumlahOrangLinmas;
-        private int _jumlahOrangPosyandu;
-        private int _jumlahOrangKaderKpm;
-        private int _jumlahOrangKaderStunting;
-        private int _jumlahOrangStaf;
-        private int _jumlahOrangOperator;
-        private int _jumlahOrangPkk;
-        private int _jumlahOrangLpm;
-        private int _jumlahOrangKarangTaruna;
 
         private BagianPerangkat _bagianAktif = BagianPerangkat.PerangkatDesa;
 
@@ -292,12 +270,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public sealed class BarisBagian
         {
-            internal BarisBagian(BagianPerangkat bagian, string judul, string ikon, string keterangan)
+            internal BarisBagian(BagianPerangkat bagian, string judul, string ikon, string keterangan, int jumlah)
             {
                 Bagian = bagian;
                 Judul = judul;
                 Ikon = ikon;
                 Keterangan = keterangan;
+                Jumlah = jumlah;
             }
 
             /// <summary>Bagian yang dibuka tombol ini; juga penanda tombol aktif.</summary>
@@ -305,6 +284,9 @@ namespace SuDesApp.Wpf.ViewModels
             public string Judul { get; }
             public string Ikon { get; }
             public string Keterangan { get; }
+
+            /// <summary>Jumlah orang pada bagian ini, tampil sebagai angka kecil di tombol.</summary>
+            public int Jumlah { get; }
 
             /// <summary>Nama anggota enum — dibandingkan gaya tombol bagian
             /// dengan <see cref="NamaBagianAktifEnum"/> untuk menyalakan tombol aktif.</summary>
@@ -324,7 +306,12 @@ namespace SuDesApp.Wpf.ViewModels
         {
             BarisBagian B(BagianPerangkat bagian, string judul, string ikon, string keterangan)
             {
-                var baris = new BarisBagian(bagian, judul, ikon, keterangan)
+                // Angka pada tombol memakai daftar jabatan bagian itu, bukan
+                // penghitung terpisah per kelompok: satu sumber dengan tabel.
+                var jabatan = JabatanBagian(bagian);
+                int jumlah = _semua.Count(p => jabatan.Contains(p.JabatanTampil, StringComparer.Ordinal));
+
+                var baris = new BarisBagian(bagian, judul, ikon, keterangan, jumlah)
                 {
                     Perintah = bagian switch
                     {
@@ -378,6 +365,9 @@ namespace SuDesApp.Wpf.ViewModels
                 B(BagianPerangkat.KarangTaruna, "Karang Taruna", IkonMenu.KarangTaruna,
                     "Tampilkan Karang Taruna"),
             };
+
+            OnPropertyChanged(nameof(BarisBagianPemerintahan));
+            OnPropertyChanged(nameof(BarisBagianLembaga));
         }
 
         /// <summary>Ikon chip judul halaman: ikon bagian yang sedang tampil, supaya
@@ -403,11 +393,9 @@ namespace SuDesApp.Wpf.ViewModels
         public string HeaderTitle => "DATA PERANGKAT DESA";
 
         public string HeaderSubtitle =>
-            "Struktur perangkat desa dari Kepala Desa sampai Kadus: satu baris per orang "
-            + "yang memegang jabatan. Bagian Perangkat Desa, RT/RW, BPD, LINMAS, Posyandu, "
-            + "Kader KPM, Kader Stunting, Staf Desa, Operator Desa, PKK, LPM, dan Karang "
-            + "Taruna dipilih "
-            + "lewat tombol di bilah alat; halaman terbuka pada bagian Perangkat Desa.";
+            "Aparatur pemerintahan desa dan lembaga mitra: satu baris per orang yang memegang "
+            + "jabatan, dari Kepala Desa sampai kader. Pilih kelompoknya di bawah untuk "
+            + "menampilkan data, lalu kelola SK tiap jabatan dari kolom Aksi.";
 
         // ---------- daftar ----------
 
@@ -436,31 +424,19 @@ namespace SuDesApp.Wpf.ViewModels
         /// properti <c>Tampilkan…</c> per bagian.
         /// </summary>
         public string NamaBagianAktifEnum => _bagianAktif.ToString();
-        public bool TampilkanRtRw => _bagianAktif == BagianPerangkat.RtRw;
         public bool TampilkanPerangkatDesa => _bagianAktif == BagianPerangkat.PerangkatDesa;
 
-        /// <summary>Benar bila bagian lembaga/kelompok lain (di luar Perangkat Desa dan RT/RW) sedang tampil.</summary>
-        public bool TampilkanBagianStandar =>
-            _bagianAktif != BagianPerangkat.PerangkatDesa && _bagianAktif != BagianPerangkat.RtRw;
-
-        /// <summary>Tabel baris bagian yang sedang tampil (untuk bagian selain Perangkat Desa &amp; RT/RW).</summary>
-        public ObservableCollection<BarisPerangkatViewModel> ItemsAktif => _bagianAktif switch
-        {
-            BagianPerangkat.Bpd => ItemsBpd,
-            BagianPerangkat.Linmas => ItemsLinmas,
-            BagianPerangkat.Posyandu => ItemsPosyandu,
-            BagianPerangkat.KaderKpm => ItemsKaderKpm,
-            BagianPerangkat.KaderStunting => ItemsKaderStunting,
-            BagianPerangkat.StafDesa => ItemsStafDesa,
-            BagianPerangkat.OperatorDesa => ItemsOperatorDesa,
-            BagianPerangkat.Pkk => ItemsPkk,
-            BagianPerangkat.Lpm => ItemsLpm,
-            BagianPerangkat.KarangTaruna => ItemsKarangTaruna,
-            _ => new ObservableCollection<BarisPerangkatViewModel>()
-        };
+        /// <summary>
+        /// Tabel baris bagian yang sedang tampil. Halaman memakai satu tabel
+        /// untuk seluruh bagian, jadi berpindah bagian cukup mengganti isi
+        /// koleksi ini.
+        /// </summary>
+        public ObservableCollection<BarisPerangkatViewModel> ItemsAktif => TabelAktif;
 
         public string JudulBagianAktif => _bagianAktif switch
         {
+            BagianPerangkat.PerangkatDesa => "Perangkat Desa",
+            BagianPerangkat.RtRw => "RT/RW",
             BagianPerangkat.Bpd => "BPD",
             BagianPerangkat.Linmas => "LINMAS",
             BagianPerangkat.Posyandu => "POSYANDU",
@@ -508,77 +484,43 @@ namespace SuDesApp.Wpf.ViewModels
             : "_" + _bagianAktif;
 
         /// <summary>Teks tombol tambah — diseragamkan "Tambah Orang" di seluruh
-        /// halaman (bilah alat maupun panel keadaan kosong), supaya ajakan yang
-        /// sama terlihat di semua bagian.</summary>
+        /// halaman, supaya ajakan yang sama terlihat di semua bagian.</summary>
         public string LabelTambahAktif => "Tambah Orang";
 
-        /// <summary>Ajakan menambah data pada panel keadaan kosong.</summary>
-        public string PesanKosongAksi =>
-            "Tekan “Tambah Orang” untuk menambahkan orang pada jabatan yang kosong.";
-
-        public string StatusBagianAktif
-        {
-            get
-            {
-                var items = ItemsAktif;
-                if (items.Count == 0) return "Belum ada data.";
-                int orang = items.Count(b => b.AdaData);
-                int kosong = items.Count(b => b.IsBaru);
-                string pesan = orang == 0
-                    ? "Belum ada orang yang tampil"
-                    : $"{orang} orang ditampilkan";
-                if (kosong > 0) pesan += $", {kosong} jabatan belum ada orangnya";
-                return pesan + ".";
-            }
-        }
-
         /// <summary>
-        /// Ringkasan bagian RT/RW, tampil di kepala bagian: jumlah orang yang
-        /// tampil beserta jabatan yang masih kosong.
+        /// Petunjuk singkat pada kepala bagian: apa yang bisa dilakukan pada
+        /// tabel ini, atau teguran bahwa bagian ini belum berisi orang. Angka
+        /// keterisian tidak diulang di sini sebab sudah tampil sebagai chip.
         /// </summary>
-        public string StatusRtRw
-        {
-            get
-            {
-                if (ItemsRtRw.Count == 0) return "Belum ada data RT/RW.";
+        public string StatusBagianAktif => JumlahOrangBagianAktif == 0
+            ? "Belum ada orang pada bagian ini. Pilih baris jabatan kosong atau tekan Tambah Orang untuk mulai mengisi."
+            : "Klik dua kali baris untuk mengubah data diri; tombol SK di kolom Aksi membuka surat keputusan jabatan itu.";
 
-                int orang = ItemsRtRw.Count(b => b.AdaData);
-                int kosong = ItemsRtRw.Count(b => b.IsBaru);
-                string pesan = orang == 0
-                    ? "Belum ada orang RT/RW yang tampil"
-                    : $"{orang} orang RT/RW ditampilkan";
-                if (kosong > 0) pesan += $", {kosong} jabatan belum ada orangnya";
-                return pesan + ".";
-            }
-        }
+        /// <summary>Jumlah orang pada bagian yang sedang tampil.</summary>
+        public int JumlahOrangBagianAktif => TabelAktif.Count(b => b.AdaData);
 
-        /// <summary>Benar bila tidak ada satu pun orang yang ditampilkan halaman ini —
-        /// jabatan perangkat desa maupun RT/RW — dipakai untuk membedakan
-        /// "belum ada data" dari "filter tidak cocok".</summary>
-        public bool DatabaseKosong =>
-            _jumlahOrangResmi == 0 && _jumlahOrangRtRw == 0 && _jumlahOrangBpd == 0 &&
-            _jumlahOrangLinmas == 0 && _jumlahOrangPosyandu == 0 && _jumlahOrangKaderKpm == 0 &&
-            _jumlahOrangKaderStunting == 0 && _jumlahOrangStaf == 0 && _jumlahOrangOperator == 0 &&
-            _jumlahOrangPkk == 0 && _jumlahOrangLpm == 0 &&
-            _jumlahOrangKarangTaruna == 0;
+        /// <summary>Jumlah jabatan resmi pada bagian yang sedang tampil.</summary>
+        public int JumlahJabatanBagianAktif => JabatanBagian(_bagianAktif).Count;
 
-        /// <summary>Tabel bagian yang sedang tampil — ukuran isi inilah yang
-        /// menentukan apakah pesan keadaan kosong boleh diperlihatkan.</summary>
+        /// <summary>Jabatan pada bagian ini yang belum ada orangnya.</summary>
+        public int JumlahKosongBagianAktif => TabelAktif.Count(b => b.IsBaru);
+
+        /// <summary>Tabel bagian yang sedang tampil; satu tabel dipakai seluruh bagian.</summary>
         private ObservableCollection<BarisPerangkatViewModel> TabelAktif => _bagianAktif switch
         {
             BagianPerangkat.PerangkatDesa => Items,
             BagianPerangkat.RtRw => ItemsRtRw,
-            _ => ItemsAktif
+            BagianPerangkat.Bpd => ItemsBpd,
+            BagianPerangkat.Linmas => ItemsLinmas,
+            BagianPerangkat.Posyandu => ItemsPosyandu,
+            BagianPerangkat.KaderKpm => ItemsKaderKpm,
+            BagianPerangkat.KaderStunting => ItemsKaderStunting,
+            BagianPerangkat.StafDesa => ItemsStafDesa,
+            BagianPerangkat.OperatorDesa => ItemsOperatorDesa,
+            BagianPerangkat.Pkk => ItemsPkk,
+            BagianPerangkat.Lpm => ItemsLpm,
+            _ => ItemsKarangTaruna
         };
-
-        /// <summary>Benar bila tabel bagian yang sedang tampil tidak memuat satu pun
-        /// orang — baris penanda "belum terisi" tidak dihitung — dan database memang
-        /// belum punya data. Tanpa syarat itu, tabel penanda memang tampilan yang
-        /// diharapkan, jadi pesan di tengah tampilan sengaja tidak ditampilkan.</summary>
-        public bool TampilkanKosong => TabelAktif.All(b => !b.AdaData) && DatabaseKosong;
-
-        /// <summary>Tabel kosong karena database memang belum punya data perangkat desa.</summary>
-        public bool KosongKarenaBelumAdaData => TampilkanKosong && DatabaseKosong;
 
         public string StatusText
         {
@@ -1112,11 +1054,11 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Simpan daftar yang sedang tampil ke berkas Excel (.xlsx).</summary>
         public AsyncRelayCommand EksporExcelCommand { get; }
 
-        /// <summary>Cetak daftar ke PDF lalu tampilkan pada pratinjau PDFium.</summary>
+        /// <summary>Cetak daftar ke PDF lalu tampilkan pada pratinjau SudesPdf.</summary>
         public AsyncRelayCommand CetakPdfCommand { get; }
 
         /// <summary>Cetak formulir pendataan kosong (18 kolom DATA PERANGKAT) untuk
-        /// mengumpulkan data perangkat baru, lalu tampilkan pada pratinjau PDFium.</summary>
+        /// mengumpulkan data perangkat baru, lalu tampilkan pada pratinjau SudesPdf.</summary>
         public AsyncRelayCommand CetakFormulirCommand { get; }
 
         /// <summary>Buka panel SK untuk satu baris, termasuk baris jabatan yang belum ada orangnya.</summary>
@@ -1125,13 +1067,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Tutup panel SK tanpa mengubah data.</summary>
         public RelayCommand TutupPanelSkCommand { get; }
 
-        /// <summary>Buat SK jabatan terpilih lalu tampilkan pratinjaunya di PDFium.</summary>
+        /// <summary>Buat SK jabatan terpilih lalu tampilkan pratinjaunya di SudesPdf.</summary>
         public AsyncRelayCommand PratinjauSkCommand { get; }
 
         /// <summary>Salin berkas PDF SK ke folder arsip untuk orang pada jabatan terpilih.</summary>
         public AsyncRelayCommand ArsipkanSkCommand { get; }
 
-        /// <summary>Buka berkas SK terarsip pada pratinjau PDFium.</summary>
+        /// <summary>Buka berkas SK terarsip pada pratinjau SudesPdf.</summary>
         public RelayCommand BukaBerkasSkCommand { get; }
 
         /// <summary>Muat ulang daftar nama lampiran SK bersama dari data jabatan terpilih.</summary>
@@ -1521,14 +1463,11 @@ namespace SuDesApp.Wpf.ViewModels
                 // maupun filter; seluruh data selalu tampil apa adanya.
                 _semua = await _layanan.AmbilSemuaAsync().ConfigureAwait(true);
 
-                HitungJumlah(_semua);
-                OnPropertyChanged(nameof(DatabaseKosong));
                 SusunBaris();
-                OnPropertyChanged(nameof(StatusBagianAktif));
-                OnPropertyChanged(nameof(TampilkanKosong));
-                OnPropertyChanged(nameof(KosongKarenaBelumAdaData));
-
-                StatusText = SusunStatusText();
+                // Angka pada tombol pemilih bagian ikut berubah setelah data dimuat.
+                SusunBarisBagian();
+                SegarkanRingkasanBagian();
+                StatusText = string.Empty;
             }
             catch (Exception ex)
             {
@@ -1541,31 +1480,6 @@ namespace SuDesApp.Wpf.ViewModels
                 IsBusy = false;
             }
         }
-
-        /// <summary>
-        /// Hitung jumlah orang tiap kelompok dari salinan data yang baru dibaca.
-        /// Angka ini dipakai <see cref="DatabaseKosong"/> untuk membedakan
-        /// "database memang kosong" dari "bagian yang tampil belum ada isinya" —
-        /// bukan untuk kartu ringkasan, sebab halaman ini tidak memakai kartu KPI.
-        /// </summary>
-        private void HitungJumlah(IReadOnlyList<PerangkatDesa> semua)
-        {
-            _jumlahOrangResmi = semua.Count(p => JabatanPerangkat.AdalahResmi(p.Jabatan));
-            _jumlahOrangRtRw = HitungKelompok(semua, "RT/RW");
-            _jumlahOrangBpd = HitungKelompok(semua, "BPD");
-            _jumlahOrangLinmas = HitungKelompok(semua, "LINMAS");
-            _jumlahOrangPosyandu = HitungKelompok(semua, "POSYANDU");
-            _jumlahOrangKaderKpm = HitungKelompok(semua, "KADER KPM");
-            _jumlahOrangKaderStunting = HitungKelompok(semua, "KADER STUNTING");
-            _jumlahOrangStaf = HitungKelompok(semua, "STAF DESA");
-            _jumlahOrangOperator = HitungKelompok(semua, "OPERATOR DESA");
-            _jumlahOrangPkk = HitungKelompok(semua, "PKK");
-            _jumlahOrangLpm = HitungKelompok(semua, "LPM");
-            _jumlahOrangKarangTaruna = HitungKelompok(semua, "KARANG TARUNA");
-        }
-
-        private static int HitungKelompok(IReadOnlyList<PerangkatDesa> semua, string kelompok) =>
-            semua.Count(p => JabatanPerangkat.Kelompok(p.Jabatan) == kelompok);
 
         /// <summary>
         /// Susun baris seluruh tabel halaman: satu blok per jabatan menurut
@@ -1605,15 +1519,13 @@ namespace SuDesApp.Wpf.ViewModels
             IsiTabel(ItemsPkk, DaftarJabatanPkk, pkk);
             IsiTabel(ItemsLpm, DaftarJabatanLpm, lpm);
             IsiTabel(ItemsKarangTaruna, DaftarJabatanKarangTaruna, karang);
-
-            OnPropertyChanged(nameof(StatusRtRw));
         }
 
         /// <summary>
         /// Isi satu tabel halaman ini: satu blok per jabatan menurut
         /// <paramref name="urutan"/>, orang yang masih memegang jabatan
         /// didahulukan, dan jabatan tanpa orang tetap mendapat baris kosong siap
-        /// isi. Dipakai tabel perangkat desa maupun tabel bagian RT/RW.
+        /// isi. Dipakai seluruh bagian halaman, termasuk Perangkat Desa dan RT/RW.
         ///
         /// Penghuni sebenarnya menentukan baris penanda: jabatan yang belum ada
         /// orangnya tetap mendapat baris kosong siap isi.
@@ -1659,7 +1571,7 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>Kelompokkan orang per jabatan; urut: yang masih memegang
-        /// jabatan didahulukan, lalu menurut nama. Dipakai kedua tabel halaman ini.</summary>
+        /// jabatan didahulukan, lalu menurut nama. Dipakai seluruh tabel halaman ini.</summary>
         private static Dictionary<string, List<PerangkatDesa>> Kelompokkan(IEnumerable<PerangkatDesa> orang) =>
             orang
                 .GroupBy(p => p.JabatanTampil, StringComparer.Ordinal)
@@ -1671,37 +1583,20 @@ namespace SuDesApp.Wpf.ViewModels
                     StringComparer.Ordinal);
 
         /// <summary>
-        /// Pesan daftar sesuai keadaan sebenarnya: jumlah orang yang tampil dan
-        /// jabatan yang belum ada orangnya pada bagian yang sedang tampil.
+        /// Segarkan seluruh turunan kepala bagian: petunjuk, jumlah orang,
+        /// jumlah jabatan, dan jabatan yang belum terisi.
         /// </summary>
-        private string SusunStatusText()
+        private void SegarkanRingkasanBagian()
         {
-            if (DatabaseKosong)
-            {
-                return "Belum ada data perangkat desa maupun kelompok lain. "
-                     + $"Tekan {LabelTambahAktif} untuk mulai mengisi bagian ini.";
-            }
-
-            // Pesan mengikuti bagian yang sedang tampil, sebab tiap bagian
-            // dipilih lewat tombol dan tidak diperlihatkan bersamaan.
-            var tabel = TabelAktif;
-            string namaBagian = NamaBagianAktif;
-
-            int orang = tabel.Count(b => b.AdaData);
-            int kosong = tabel.Count(b => b.IsBaru);
-            string pesan = orang == 0
-                ? $"Belum ada {namaBagian} yang tampil"
-                : $"{orang} orang {namaBagian} ditampilkan";
-            if (kosong > 0)
-            {
-                pesan += $", {kosong} jabatan belum ada orangnya";
-            }
-
-            return pesan + ".";
+            OnPropertyChanged(nameof(StatusBagianAktif));
+            OnPropertyChanged(nameof(JumlahOrangBagianAktif));
+            OnPropertyChanged(nameof(JumlahJabatanBagianAktif));
+            OnPropertyChanged(nameof(JumlahKosongBagianAktif));
         }
 
         /// <summary>
-        /// Pindah bagian halaman. Semua tabel sudah ada di memori.
+        /// Pindah bagian halaman. Semua tabel sudah ada di memori, jadi tidak
+        /// ada pembacaan database ulang.
         /// </summary>
         private void PilihBagian(BagianPerangkat bagian)
         {
@@ -1710,19 +1605,14 @@ namespace SuDesApp.Wpf.ViewModels
             _bagianAktif = bagian;
             OnPropertyChanged(nameof(NamaBagianAktifEnum));
             OnPropertyChanged(nameof(IkonBagianAktif));
-            OnPropertyChanged(nameof(TampilkanRtRw));
             OnPropertyChanged(nameof(TampilkanPerangkatDesa));
-            OnPropertyChanged(nameof(TampilkanBagianStandar));
             OnPropertyChanged(nameof(ItemsAktif));
             OnPropertyChanged(nameof(JudulBagianAktif));
-            OnPropertyChanged(nameof(StatusBagianAktif));
-            OnPropertyChanged(nameof(TampilkanKosong));
-            OnPropertyChanged(nameof(KosongKarenaBelumAdaData));
             OnPropertyChanged(nameof(JudulForm));
+            SegarkanRingkasanBagian();
 
-            // Jumlah kelompok tidak berubah saat bagian ditukar — angkanya hanya
-            // perlu dihitung sekali di LoadAsync lewat HitungJumlah.
-            StatusText = SusunStatusText();
+            // Pesan hasil aksi bagian sebelumnya tidak relevan lagi di sini.
+            StatusText = string.Empty;
             SegarkanPerintah();
         }
 
@@ -1914,7 +1804,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>
         /// Cetak daftar **bagian yang sedang tampil** (sama persis dengan layar,
         /// termasuk baris jabatan yang belum terisi) ke PDF, lalu tampilkan pada
-        /// pratinjau PDFium. Tiap bagian dicetak terpisah sebab SK tiap kelompok
+        /// pratinjau SudesPdf. Tiap bagian dicetak terpisah sebab SK tiap kelompok
         /// punya cara penerbitan berbeda.
         /// </summary>
         private async Task CetakPdfAsync()
@@ -1936,7 +1826,7 @@ namespace SuDesApp.Wpf.ViewModels
                 }
 
                 // Pratinjau ditulis ke folder TempPDF supaya ikut dibersihkan
-                // TempPdfCleanup seperti keluaran lain; PDFium membutuhkan
+                // TempPdfCleanup seperti keluaran lain; SudesPdf membutuhkan
                 // jalur penuh — nama berkas saja membuat dokumen gagal dimuat.
                 string folder = _appConfig.TempPdfFolder;
                 Directory.CreateDirectory(folder);
@@ -1963,7 +1853,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>
         /// Cetak formulir pendataan kosong: blanko 18 kolom berkas "DATA PERANGKAT"
         /// (DESA s.d. BPJS KES) yang dipakai menarik data perangkat baru di lapangan,
-        /// lalu buka hasilnya di pratinjau PDFium agar bisa dicetak/diperbanyak.
+        /// lalu buka hasilnya di pratinjau SudesPdf agar bisa dicetak/diperbanyak.
         /// </summary>
         private async Task CetakFormulirAsync()
         {
@@ -1988,7 +1878,7 @@ namespace SuDesApp.Wpf.ViewModels
                 }
 
                 // Sama seperti cetak daftar: berkas ditulis ke TempPDF supaya ikut
-                // dibersihkan TempPdfCleanup, lalu dibuka di pratinjau PDFium.
+                // dibersihkan TempPdfCleanup, lalu dibuka di pratinjau SudesPdf.
                 string folder = _appConfig.TempPdfFolder;
                 Directory.CreateDirectory(folder);
                 string jalur = Path.Combine(folder,
@@ -2289,7 +2179,7 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Cetak SK jabatan terpilih ke PDF lalu tampilkan di pratinjau PDFium.
+        /// Cetak SK jabatan terpilih ke PDF lalu tampilkan di pratinjau SudesPdf.
         /// Isian yang kosong (atau baris tanpa orang) dicetak bergaris titik-titik
         /// oleh generator, jadi dokumen tetap terbaca.
         /// </summary>
@@ -2367,7 +2257,7 @@ namespace SuDesApp.Wpf.ViewModels
                 }
 
                 // Pratinjau ditulis ke TempPDF supaya ikut dibersihkan
-                // TempPdfCleanup seperti keluaran lain; PDFium butuh jalur penuh.
+                // TempPdfCleanup seperti keluaran lain; SudesPdf butuh jalur penuh.
                 string folder = _appConfig.TempPdfFolder;
                 Directory.CreateDirectory(folder);
                 string awalan = bersama ? "SK_Bersama" : "SK";
@@ -2463,7 +2353,7 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        /// <summary>Tampilkan berkas SK Bupati yang sudah diarsipkan pada pratinjau PDFium.</summary>
+        /// <summary>Tampilkan berkas SK Bupati yang sudah diarsipkan pada pratinjau SudesPdf.</summary>
         private void BukaBerkasSk()
         {
             string? jalur = BerkasSkPerangkat.JalurLengkap(_skBerkasSk);
@@ -2827,7 +2717,7 @@ namespace SuDesApp.Wpf.ViewModels
             SegarkanFormSk();
         }
 
-        /// <summary>Buka berkas SK pada form (pilihan baru atau arsip lama) di pratinjau PDFium.</summary>
+        /// <summary>Buka berkas SK pada form (pilihan baru atau arsip lama) di pratinjau SudesPdf.</summary>
         private void BukaSkForm()
         {
             string? jalur = !string.IsNullOrWhiteSpace(_formBerkasSkSumber) && File.Exists(_formBerkasSkSumber)

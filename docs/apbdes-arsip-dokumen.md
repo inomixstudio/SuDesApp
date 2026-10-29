@@ -55,7 +55,7 @@ rinciannya disimpan di `%LocalAppData%\SuDesApp\apbdes.json`.
 ### Melihat berkas lampiran
 
 - **Pratinjau**: lampiran **PDF** dibuka di halaman pratinjau PDF aplikasi
-  (mesin PDFium yang sama dengan IDM, Agenda Surat, dan Daftar Hadir), lengkap
+  (mesin SudesPdf yang sama dengan IDM, Agenda Surat, dan Daftar Hadir), lengkap
   dengan tombol Cetak dan Ekspor. Berkasnya dibaca dari folder arsip, bukan dari
   folder PDF sementara, jadi tidak ikut terhapus pembersih dokumen temp.
 - **Buka berkas**: membuka lampiran dengan aplikasi luar. Ini jalur untuk

@@ -40,8 +40,8 @@ namespace SuDesApp.Data.Handlers
                 // saat surat dilengkapi lewat Edit) — jangan gagalkan insert.
                 if (string.Equals(suratData.Status, "Draft", StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogInformation(
-                        "RincianGarapans kosong untuk DRAFT ID_Surat={ID_Surat}; lewati insert rincian.", idSurat);
+                    _logger.LogDebug(
+                        "Rincian garapan kosong untuk DRAFT ID_Surat={ID_Surat}; lewati insert rincian.", idSurat);
                     return;
                 }
                 _logger.LogWarning("RincianGarapans is empty for ID_Surat={ID_Surat}", idSurat);
@@ -75,7 +75,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully inserted {ItemCount} garapan items for ID_Surat={ID_Surat}",
+                _logger.LogDebug("Successfully inserted {ItemCount} garapan items for ID_Surat={ID_Surat}",
                     suratData.RincianGarapans.Count, idSurat);
             }
             catch (Exception ex)
@@ -99,7 +99,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully deleted Garapan data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully deleted Garapan data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -122,7 +122,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 suratData.RincianGarapans = items.ToList();
-                _logger.LogInformation("Successfully loaded {ItemCount} garapan items for ID_Surat={ID_Surat}",
+                _logger.LogDebug("Successfully loaded {ItemCount} garapan items for ID_Surat={ID_Surat}",
                     suratData.RincianGarapans.Count, suratData.ID_Surat);
             }
             catch (Exception ex)

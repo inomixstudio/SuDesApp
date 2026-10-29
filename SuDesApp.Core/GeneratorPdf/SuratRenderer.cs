@@ -1,160 +1,23 @@
 // SuratRenderer.cs
-// Komposisi surat memakai API QuestPDF LANGSUNG (tanpa lapisan kompat iText).
-// Isi kop diambil dari KopSurat supaya seluruh dokumen — surat, daftar hadir,
-// rekening koran — memakai kop yang sama persis.
+// Primitive tata letak surat — teks, paragraf, tabel, judul, dan blok tanda
+// tangan — yang dipakai generator surat. Susunan kop dimiliki KopSurat.
+//
+// Kelas ini TIDAK menyimpan tujuan surat: BadanSurat memiliki urutan blok,
+// dan masing-masing generator mengisi isinya.
+using SudesPdf.Core.Layout;
+using SuDesApp.Data.Models;
+using SuDesApp.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
-using SuDesApp.Data.Models;
-using SuDesApp.Utilities;
 
 namespace SuDesApp.GeneratorPdf
 {
-    /// <summary>Perataan teks yang dipakai badan surat.</summary>
-    public enum Rata
-    {
-        Kiri,
-        Tengah,
-        Kanan,
-        Justify
-    }
-
     /// <summary>
-    /// Potongan-potongan badan surat yang siap dirender QuestPDF. Generator mengisi
-    /// daftar ini lewat <see cref="Paragraf"/>, <see cref="TabelFormulir"/>, atau
-    /// <see cref="Blok"/>; setiap potongan menjadi satu item tersendiri sehingga
-    /// pemenggalan halaman tetap sama seperti sebelumnya.
+    /// Komposisi bersama seluruh surat: kop, judul + nomor, tabel/daftar, dan blok
+    /// tanda tangan. Seluruh ukuran yang ikut menyesuaikan kerapatan surat diambil
+    /// dari <see cref="KerapatanSurat.Aktif"/>.
     /// </summary>
-    public sealed class BadanSurat
-    {
-        private readonly List<Action<IContainer>> _blok = new();
-
-        /// <summary>Potongan siap render, urut sesuai pemanggilan.</summary>
-        public IReadOnlyList<Action<IContainer>> Potongan => _blok;
-
-        /// <summary>Tambahkan potongan bebas (tabel, daftar, gambar) dengan API QuestPDF.</summary>
-        public void Blok(Action<IContainer> render)
-        {
-            if (render != null)
-            {
-                _blok.Add(render);
-            }
-        }
-
-        /// <summary>Tambahkan satu paragraf teks.</summary>
-        public void Paragraf(
-            string teks,
-            float ukuran = SuratRenderer.UkuranTeks,
-            bool tebal = false,
-            bool miring = false,
-            Rata rata = Rata.Kiri,
-            float indentBarisPertama = 0f,
-            float indentKiri = 0f,
-            float jarakAtas = 0f,
-            float jarakBawah = 0f,
-            float? leading = null,
-            string? warna = null)
-        {
-            _blok.Add(container =>
-            {
-                var area = container;
-                if (jarakAtas > 0f) area = area.PaddingTop(SuratRenderer.JarakBlok(jarakAtas));
-                if (jarakBawah > 0f) area = area.PaddingBottom(SuratRenderer.JarakBlok(jarakBawah));
-                if (indentKiri > 0f) area = area.PaddingLeft(indentKiri);
-
-                SuratRenderer.Teks(area, teks, ukuran, tebal, miring, rata, indentBarisPertama, leading, warna);
-            });
-        }
-
-        /// <summary>Paragraf dengan campuran tebal/tidak tebal dalam satu baris.</summary>
-        public void ParagrafCampur(
-            IEnumerable<(string Teks, bool Tebal)> potongan,
-            float ukuran = SuratRenderer.UkuranTeks,
-            Rata rata = Rata.Kiri,
-            float indentBarisPertama = 0f,
-            float indentKiri = 0f,
-            float jarakAtas = 0f,
-            float jarakBawah = 0f)
-        {
-            var segmen = potongan == null ? new List<(string, bool)>() : new List<(string, bool)>(potongan);
-            if (segmen.Count == 0) return;
-
-            _blok.Add(container =>
-            {
-                var area = container;
-                if (jarakAtas > 0f) area = area.PaddingTop(SuratRenderer.JarakBlok(jarakAtas));
-                if (jarakBawah > 0f) area = area.PaddingBottom(SuratRenderer.JarakBlok(jarakBawah));
-                if (indentKiri > 0f) area = area.PaddingLeft(indentKiri);
-
-                SuratRenderer.TeksCampur(area, segmen, ukuran, rata, indentBarisPertama);
-            });
-        }
-
-        /// <summary>Ruang kosong setinggi <paramref name="tinggi"/> point.</summary>
-        public void Spasi(float tinggi)
-        {
-            if (tinggi <= 0f) return;
-            _blok.Add(container => container.Height(SuratRenderer.JarakBlok(tinggi)));
-        }
-
-        /// <summary>Daftar bernomor (1., 2., …) dengan nomor di kolom tersendiri.</summary>
-        public void DaftarBernomor(
-            IEnumerable<string> butir,
-            float indentKiri = 0f,
-            float jarakAtas = 0f,
-            float jarakBawah = 0f,
-            float lebarNomor = 20f,
-            float spasiAntarButir = 3f)
-        {
-            var daftar = butir == null ? new List<string>() : new List<string>(butir);
-            if (daftar.Count == 0) return;
-
-            _blok.Add(container =>
-            {
-                var area = container;
-                if (jarakAtas > 0f) area = area.PaddingTop(SuratRenderer.JarakBlok(jarakAtas));
-                if (jarakBawah > 0f) area = area.PaddingBottom(SuratRenderer.JarakBlok(jarakBawah));
-                if (indentKiri > 0f) area = area.PaddingLeft(indentKiri);
-
-                area.Column(kolom =>
-                {
-                    kolom.Spacing(SuratRenderer.JarakBlok(spasiAntarButir));
-                    for (int i = 0; i < daftar.Count; i++)
-                    {
-                        string nomor = (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture) + ".";
-                        string teks = daftar[i];
-                        kolom.Item().Row(baris =>
-                        {
-                            baris.ConstantItem(lebarNomor).Text(nomor).FontSize(SuratRenderer.UkuranTeks);
-                            baris.RelativeItem().Text(teks).FontSize(SuratRenderer.UkuranTeks);
-                        });
-                    }
-                });
-            });
-        }
-
-        /// <summary>
-        /// Tabel berlabel ala surat desa: kolom label, titik dua, lalu nilai.
-        /// Nilai baris "Nama" dicetak tebal seperti template resmi.
-        /// </summary>
-        public void TabelFormulir(
-            IEnumerable<(string Label, string? Nilai)> baris,
-            float jarakAtas = 3f,
-            float jarakBawah = 3f,
-            bool tebalkanNama = true,
-            float indentKiri = 0f,
-            IReadOnlyCollection<string>? labelTebal = null)
-        {
-            if (baris == null) return;
-
-            var daftar = new List<(string Label, string? Nilai)>(baris);
-            _blok.Add(container => SuratRenderer.TabelFormulir(container, daftar, jarakAtas, jarakBawah, tebalkanNama, indentKiri, labelTebal));
-        }
-    }
-
-    /// <summary>Komposisi bersama seluruh surat: kop, judul + nomor, dan blok tanda tangan.</summary>
     public static class SuratRenderer
     {
         public const float UkuranTeks = 12f;
@@ -175,55 +38,6 @@ namespace SuDesApp.GeneratorPdf
 
         /// <summary>Jarak antar blok/paragraf sesudah dikalikan kerapatan berlaku.</summary>
         public static float JarakBlok(float jarak) => jarak * KerapatanSurat.Aktif.FaktorJarakBlok;
-
-        /// <summary>Kop surat: logo + lima baris dari KopSurat, ditutup garis ganda.</summary>
-        public static void Kop(IContainer container, DesaData desa, string logoPath)
-        {
-            container.Column(column =>
-            {
-                column.Item().Row(row =>
-                {
-                    row.ConstantItem(KopSurat.LebarLogo).Element(logo =>
-                    {
-                        if (!string.IsNullOrWhiteSpace(logoPath))
-                        {
-                            logo.Image(logoPath).FitArea();
-                        }
-                    });
-
-                    row.RelativeItem().Column(col =>
-                    {
-                        // Jarak baris kop sengaja mengikuti bawaan QuestPDF: ukurannya
-                        // sudah pas dan tidak ikut dirapatkan agar kop tetap sama
-                        // di semua ukuran kertas.
-                        foreach (var baris in KopSurat.BarisKop(desa))
-                        {
-                            col.Item().AlignCenter().Text(teks =>
-                            {
-                                var utama = teks.Span(baris.Teks).FontSize(baris.FontSize);
-                                if (baris.Tebal)
-                                {
-                                    utama.Bold();
-                                }
-
-                                // Surel desa (opsional) dicetak biru sebagai baris tersendiri
-                                // di bawah nama kabupaten (bukan sambungan baris alamat).
-                                if (baris.AdaSurel)
-                                {
-                                    var pemisah = baris.Teks.Length == 0 ? string.Empty : " ";
-                                    teks.Span(pemisah + baris.Surel)
-                                        .FontSize(baris.FontSize)
-                                        .FontColor(KopSurat.WarnaSurel);
-                                }
-                            });
-                        }
-                    });
-                });
-
-                column.Item().PaddingTop(3).Height(KopSurat.GarisTipis).Background(QuestPDF.Helpers.Colors.Black);
-                column.Item().PaddingTop(1).PaddingBottom(5).Height(KopSurat.GarisTebal).Background(QuestPDF.Helpers.Colors.Black);
-            });
-        }
 
         /// <summary>Judul surat (bergaris bawah, kapital) dan baris NOMOR di bawahnya.</summary>
         public static void JudulDanNomor(
@@ -261,65 +75,22 @@ namespace SuDesApp.GeneratorPdf
                 .Underline();
         }
 
-        /// <summary>
-        /// Label status alur persetujuan di atas surat — mis. "DRAF — MENUNGGU
-        /// VERIFIKASI", "DITOLAK — TIDAK SAH, JANGAN DIPAKAI", atau "SALINAN —
-        /// CETAKAN KE-2" — digambar sebagai pita berbingkai di dalam kolom
-        /// yang diberikan. Label kosong berarti surat biasa: tidak menambah
-        /// apa pun sehingga cetakan resmi tidak pernah berubah.
-        /// Label peringatan dirender merah agar tidak tertukar dengan salinan.
-        /// </summary>
-        public static void LabelStatusSurat(IContainer container, string label, bool peringatan = false)
-        {
-            if (string.IsNullOrWhiteSpace(label))
-            {
-                // Surat biasa: slot tetap dikonsumsi (elemen kosong) supaya
-                // susunan kolom pemanggil tidak berubah sama sekali.
-                container.Element(_ => { });
-                return;
-            }
-
-            var warna = peringatan
-                ? QuestPDF.Helpers.Colors.Red.Medium
-                : QuestPDF.Helpers.Colors.Grey.Darken2;
-
-            container
-                .PaddingBottom(JarakBlok(6))
-                .Border(1)
-                .BorderColor(warna)
-                .Background(peringatan ? QuestPDF.Helpers.Colors.Red.Lighten5 : QuestPDF.Helpers.Colors.Grey.Lighten4)
-                .PaddingHorizontal(8)
-                .PaddingVertical(3)
-                .AlignCenter()
-                .Text(label.Trim().ToUpperInvariant())
-                .FontSize(8.5f)
-                .Bold()
-                .FontColor(warna);
-        }
-
         /// <summary>Satu paragraf teks dengan gaya surat desa.</summary>
         public static void Teks(
             IContainer container,
-            string teks,
+            string? teks,
             float ukuran = UkuranTeks,
             bool tebal = false,
             bool miring = false,
-            Rata rata = Rata.Kiri,
+            Rata rata = Rata.Justify,
             float indentBarisPertama = 0f,
-            float? leading = null,
             string? warna = null)
         {
             // Perataan dan indentasi baris pertama adalah sifat PARAGRAF, jadi harus
             // lewat TextDescriptor — bukan pada span-nya.
             container.Text(paragraf =>
             {
-                switch (rata)
-                {
-                    case Rata.Tengah: paragraf.AlignCenter(); break;
-                    case Rata.Kanan: paragraf.AlignRight(); break;
-                    case Rata.Justify: paragraf.Justify(); break;
-                    default: paragraf.AlignLeft(); break;
-                }
+                RataTeks(paragraf, rata);
 
                 if (indentBarisPertama > 0f)
                 {
@@ -328,7 +99,7 @@ namespace SuDesApp.GeneratorPdf
 
                 var span = paragraf.Span(teks ?? string.Empty)
                     .FontSize(ukuran)
-                    .LineHeight((leading ?? ukuran * LeadingParagraf) / ukuran);
+                    .LineHeight(LeadingParagraf);
 
                 if (warna != null) span.FontColor(warna);
                 if (tebal) span.Bold();
@@ -336,39 +107,60 @@ namespace SuDesApp.GeneratorPdf
             });
         }
 
-        /// <summary>Paragraf berisi beberapa potongan teks dengan ketebalan berbeda.</summary>
-        public static void TeksCampur(
+        /// <summary>Paragraf dengan jarak atas/bawah dan indentasi sesuai gaya surat.</summary>
+        public static void Paragraf(
             IContainer container,
-            IReadOnlyList<(string Teks, bool Tebal)> potongan,
+            string? teks,
+            Rata rata = Rata.Justify,
+            bool tebal = false,
+            bool miring = false,
             float ukuran = UkuranTeks,
-            Rata rata = Rata.Kiri,
-            float indentBarisPertama = 0f)
+            float indentKiri = 0f,
+            float indentBarisPertama = 0f,
+            float jarakAtas = 0f,
+            float jarakBawah = 0f,
+            string? warna = null)
         {
-            container.Text(paragraf =>
+            var target = container;
+            if (jarakAtas > 0f) target = target.PaddingTop(JarakBlok(jarakAtas));
+            if (jarakBawah > 0f) target = target.PaddingBottom(JarakBlok(jarakBawah));
+            if (indentKiri > 0f) target = target.PaddingLeft(indentKiri);
+
+            Teks(target, teks, ukuran, tebal, miring, rata, indentBarisPertama, warna);
+        }
+
+        /// <summary>Paragraf berisi beberapa potongan teks dengan ketebalan berbeda.</summary>
+        public static void ParagrafCampur(
+            IContainer container,
+            IReadOnlyList<(string Teks, bool Tebal)> bagian,
+            Rata rata = Rata.Justify,
+            float ukuran = UkuranTeks,
+            float indentKiri = 0f,
+            float indentBarisPertama = 0f,
+            float jarakAtas = 0f,
+            float jarakBawah = 0f)
+        {
+            var target = container;
+            if (jarakAtas > 0f) target = target.PaddingTop(JarakBlok(jarakAtas));
+            if (jarakBawah > 0f) target = target.PaddingBottom(JarakBlok(jarakBawah));
+            if (indentKiri > 0f) target = target.PaddingLeft(indentKiri);
+
+            target.Text(paragraf =>
             {
-                switch (rata)
-                {
-                    case Rata.Tengah: paragraf.AlignCenter(); break;
-                    case Rata.Kanan: paragraf.AlignRight(); break;
-                    case Rata.Justify: paragraf.Justify(); break;
-                    default: paragraf.AlignLeft(); break;
-                }
+                RataTeks(paragraf, rata);
 
                 if (indentBarisPertama > 0f)
                 {
                     paragraf.ParagraphFirstLineIndentation(indentBarisPertama);
                 }
 
-                foreach (var (teks, tebal) in potongan)
+                foreach (var (teks, tebal) in bagian)
                 {
                     var span = paragraf.Span(teks ?? string.Empty)
                         .FontSize(ukuran)
                         .LineHeight(LeadingParagraf);
 
-                    if (tebal)
-                    {
-                        span.Bold();
-                    }
+                    if (tebal) span.Bold();
                 }
             });
         }
@@ -442,26 +234,55 @@ namespace SuDesApp.GeneratorPdf
             });
         }
 
+        /// <summary>Daftar bernomor (1., 2., …) dengan nomor di kolom tersendiri.</summary>
+        public static void DaftarBernomor(
+            IContainer container,
+            IReadOnlyList<string> butir,
+            float indentKiri = 0f,
+            float jarakAtas = 0f,
+            float jarakBawah = 0f,
+            float lebarNomor = 20f,
+            float spasiAntarButir = 3f)
+        {
+            var area = container;
+            if (jarakAtas > 0f) area = area.PaddingTop(JarakBlok(jarakAtas));
+            if (jarakBawah > 0f) area = area.PaddingBottom(JarakBlok(jarakBawah));
+            if (indentKiri > 0f) area = area.PaddingLeft(indentKiri);
+
+            area.Column(kolom =>
+            {
+                kolom.Spacing(JarakBlok(spasiAntarButir));
+                for (int i = 0; i < butir.Count; i++)
+                {
+                    string nomor = (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture) + ".";
+                    string teks = butir[i];
+                    kolom.Item().Row(baris =>
+                    {
+                        baris.ConstantItem(lebarNomor).Text(nomor).FontSize(UkuranTeks);
+                        baris.RelativeItem().Text(teks ?? string.Empty)
+                            .FontSize(UkuranTeks)
+                            .LineHeight(LeadingParagraf);
+                    });
+                }
+            });
+        }
+
         /// <summary>
         /// Blok tanda tangan: pemohon (opsional) di kiri, Kepala Desa di kanan.
         ///
         /// Kolom kanan mengikuti bentuk Perbup 74/2020 lampiran: tempat/tanggal,
-        /// jabatan, ruang tanda tangan, baris <c>tanda tangan</c>, lalu <c>NAMA</c>.
-        /// Dua baris terakhir itu SELALU ada — tanpa "tanda tangan" dan "NAMA",
-        /// perangkat desa harus menuliskan nama penandatangan tangan di atas
-        /// ruang kosong pada setiap lembar surat.
+        /// jabatan, ruang tanda tangan, lalu nama pejabat.
         /// </summary>
         public static void TandaTangan(
             IContainer container,
             bool tampilkanPemohon,
-            string namaPemohon,
+            string? namaPemohon,
             string namaDesa,
             string tanggalTerformat,
             string jabatan,
             string namaPejabat,
             string labelPemohon = "Pemohon :",
-            bool tampilkanLabelTandaTangan = true,
-            string nipPejabat = "")
+            string? nipPejabat = null)
         {
             container.PaddingTop(JarakBlok(10)).Table(table =>
             {
@@ -493,18 +314,13 @@ namespace SuDesApp.GeneratorPdf
                 {
                     cell.Column(kolom =>
                     {
+                        // Blok penanda tangan tetap berada di kolom sisi kanan,
+                        // sedangkan isi blok rata tengah sesuai format tanda tangan.
                         kolom.Item().Element(item => Teks(item, $"{namaDesa}, {tanggalTerformat}", rata: Rata.Tengah));
                         kolom.Item().Element(item => Teks(item, jabatan, rata: Rata.Tengah));
                         kolom.Item().Height(RuangTandaTangan);
 
-                        // Baris "tanda tangan" sesuai perbup 74/2020 lampiran, lalu
-                        // NAMA penandatangan — aplikasi mencetak namanya langsung
-                        // (bukan cuma label "NAMA") supaya perangkat desa tidak
-                        // perlu menuliskannya tangan pada setiap lembar.
-                        if (tampilkanLabelTandaTangan)
-                        {
-                            kolom.Item().Element(item => Teks(item, "tanda tangan", rata: Rata.Tengah));
-                        }
+                        // Nama pejabat langsung dicetak setelah ruang tanda tangan.
                         kolom.Item().Element(item => Teks(
                             item,
                             string.IsNullOrWhiteSpace(namaPejabat) ? "NAMA" : namaPejabat,
@@ -519,6 +335,17 @@ namespace SuDesApp.GeneratorPdf
                     });
                 });
             });
+        }
+
+        private static void RataTeks(TextDescriptor paragraf, Rata rata)
+        {
+            switch (rata)
+            {
+                case Rata.Tengah: paragraf.AlignCenter(); break;
+                case Rata.Kanan: paragraf.AlignRight(); break;
+                case Rata.Justify: paragraf.Justify(); break;
+                default: paragraf.AlignLeft(); break;
+            }
         }
 
         private static TextSpanDescriptor SelTabel(TableDescriptor table, string teks, float padding)

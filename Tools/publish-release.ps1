@@ -9,6 +9,13 @@ param(
     # bawah akan menolak publish yang tanpa kredensial tertanam.
     [switch]$IzinkanTanpaKredensial,
 
+    # Tanda tangan Authenticode. Kosong = pakai env SUDESAPP_PFX_PATH /
+    # SUDESAPP_PFX_PASSWORD / SUDESAPP_SIGN_THUMBPRINT (jalur CI), atau rilis
+    # tetap dibuat tanpa tanda tangan dengan status yang ditulis terus terang.
+    [string]$SertifikatPfx,
+    [string]$SandiSertifikat,
+    [string]$SidikJariSertifikat,
+
     # Pembaruan kecil (opsional): isi versi rilis sebelumnya, maka skrip membuat
     # patch.json + patch-<versi>.zip dari perbandingan hasil publish. Pembandingnya
     # diambil dari -PublishLama, dari zip portable rilis lama di artifacts/
@@ -285,6 +292,28 @@ if ($IzinkanTanpaKredensial) {
     $statusKredensial = 'Kredensial Google TIDAK tertanam - teknisi mengisinya di Pengaturan Aplikasi -> Kredensial Google pada tiap komputer.'
 }
 
+# ---------- tanda tangan Authenticode (executable) ----------
+# Tanpa tanda tangan, setiap pengguna baru melihat peringatan SmartScreen dan
+# nama penerbit tidak tampil di properti berkas. Dijalankan SEBELUM zip dan
+# tambalan dibuat supaya semua jalur distribusi membawa exe yang sama.
+$sertifikatTersedia = [bool]($SertifikatPfx -or $SidikJariSertifikat -or
+    $env:SUDESAPP_PFX_PATH -or $env:SUDESAPP_SIGN_THUMBPRINT)
+$argTandaTangan = @{}
+if ($SertifikatPfx)       { $argTandaTangan['Pfx'] = $SertifikatPfx }
+if ($SandiSertifikat)     { $argTandaTangan['Sandi'] = $SandiSertifikat }
+if ($SidikJariSertifikat) { $argTandaTangan['SidikJari'] = $SidikJariSertifikat }
+$ditandatangani = @()
+
+if ($sertifikatTersedia) {
+    & (Join-Path $PSScriptRoot 'Tanda-Tangani-Rilis.ps1') -Berkas (Join-Path $publishDir 'SuDesApp.exe') @argTandaTangan
+    if ($LASTEXITCODE -ne 0) { throw "Publish dibatalkan: tanda tangan SuDesApp.exe gagal (exit $LASTEXITCODE)." }
+    $ditandatangani += 'SuDesApp.exe'
+} else {
+    Write-Host 'Peringatan: sertifikat tanda tangan tidak tersedia - aset rilis TIDAK ditandatangani.' -ForegroundColor Yellow
+    Write-Host 'Tanpa Authenticode, Windows SmartScreen memperingatkan setiap pengguna baru.' -ForegroundColor Yellow
+    Write-Host 'Isi -SertifikatPfx/-SandiSertifikat atau env SUDESAPP_PFX_PATH/SUDESAPP_PFX_PASSWORD (lihat docs/TANDA-TANGAN-RILIS.md).' -ForegroundColor Yellow
+}
+
 if (Test-Path $zipPath) { Remove-Item -Force $zipPath }
 Compress-Archive -Path (Join-Path $publishDir '*') -DestinationPath $zipPath
 Write-Host ("Portable  : " + $zipPath) -ForegroundColor Green
@@ -311,6 +340,11 @@ if (-not $SkipInstaller) {
         if ($LASTEXITCODE -ne 0) { throw "ISCC gagal (exit $LASTEXITCODE)" }
         $setup = Get-ChildItem -LiteralPath $installerDir -Filter ("SuDesApp_{0}_Setup.exe" -f $Version) -ErrorAction SilentlyContinue | Select-Object -First 1
         if (-not $setup) { throw "Installer tidak terbentuk di $installerDir" }
+        if ($sertifikatTersedia) {
+            & (Join-Path $PSScriptRoot 'Tanda-Tangani-Rilis.ps1') -Berkas $setup.FullName @argTandaTangan
+            if ($LASTEXITCODE -ne 0) { throw "Publish dibatalkan: tanda tangan installer gagal (exit $LASTEXITCODE)." }
+            $ditandatangani += $setup.Name
+        }
     } else {
         Write-Host 'Inno Setup (ISCC.exe) tidak ditemukan.' -ForegroundColor Yellow
         Write-Host 'Install gratis dari https://jrsoftware.org/isdl.php lalu jalankan ulang skrip ini.' -ForegroundColor Yellow
@@ -319,6 +353,11 @@ if (-not $SkipInstaller) {
 
 Write-Host ''
 Write-Host '== Ringkasan ==' -ForegroundColor Cyan
+if ($ditandatangani.Count -gt 0) {
+    $statusTandaTangan = 'Authenticode: ' + ($ditandatangani -join ', ') + ' ditandatangani.'
+} else {
+    $statusTandaTangan = 'Authenticode: TIDAK ditandatangani - pengguna baru akan melihat peringatan SmartScreen.'
+}
 $lines = @("Rilis SuDesApp $Version.", "")
 if ($setup) {
     $hash = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLower()
@@ -332,8 +371,10 @@ if ($setup) {
 $lines += ('Portable: `{0}`' -f (Split-Path -Leaf $zipPath))
 $lines += ''
 $lines += $statusKredensial
+$lines += $statusTandaTangan
 Write-Host ("Portable  : " + $zipPath)
 Write-Host ("Kredensial: " + $statusKredensial)
+Write-Host ("Tanda tgn : " + $statusTandaTangan)
 
 # ---------- tambalan (pembaruan kecil) ----------
 # Bandingkan hasil publish ini dengan hasil publish rilis lama. Pembanding bisa

@@ -37,8 +37,9 @@ Setiap langkah tercatat di **Riwayat Aktivitas** (aksi, nomor surat, akun pelaku
 
 ## Label cetak
 
-Label dicetak di kepala surat (`SuratRenderer.LabelStatusSurat`) dan hanya
-berlaku untuk surat yang memakai alur / pernah dicetak:
+Label persetujuan/cetakan ditambahkan oleh alur pencetakan WPF setelah badan surat
+dirender; primitive tata letak (`SuratRenderer`) tidak memiliki kebijakan alur
+persetujuan. Label hanya berlaku untuk surat yang memakai alur / pernah dicetak:
 
 | Label | Kapan |
 | --- | --- |

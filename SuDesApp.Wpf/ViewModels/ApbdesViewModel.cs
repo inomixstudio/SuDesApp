@@ -305,7 +305,7 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>
         /// Berkas terpilih bisa dipratinjau di halaman pratinjau aplikasi.
-        /// Hanya PDF yang punya mesin render (PDFium); Word/Excel tetap lewat
+        /// Hanya PDF yang punya mesin render (SudesPdf); Word/Excel tetap lewat
         /// tombol Buka berkas karena aplikasi tidak merender format itu.
         /// </summary>
         public bool BisaPratinjau => _terpilih?.AdaBerkas == true

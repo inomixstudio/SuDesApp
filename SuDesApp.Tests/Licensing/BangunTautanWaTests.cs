@@ -13,9 +13,8 @@ namespace SuDesApp.Tests.Licensing;
 public sealed class BangunTautanWaTests
 {
     [Fact]
-    public void Nomor_admin_tertulis_lengkap_dan_satu_sumber()
+    public void Nomor_admin_memakai_format_internasional()
     {
-        Assert.Equal("0851 1166 9951", LanggananViewModel.NomorWaAdminTampil);
         Assert.Equal("6285111669951", LanggananViewModel.NomorWaAdminWa);
     }
 

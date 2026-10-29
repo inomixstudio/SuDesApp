@@ -148,7 +148,7 @@ namespace SuDesApp.Wpf.ViewModels
                     return;
                 }
 
-                _logger.LogInformation("Login Google berhasil untuk {Email}", email);
+                _logger.LogInformation("Login Google berhasil.");
                 SetConnected(email);
                 OnLoggedIn?.Invoke(email);
             }

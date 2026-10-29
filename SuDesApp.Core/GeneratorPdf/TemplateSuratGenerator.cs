@@ -7,10 +7,7 @@
 // Susunan yang dipilih pengguna saat wizard itulah yang tercetak.
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using QuestPDF.Drawing;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Configuration;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
@@ -33,15 +30,6 @@ namespace SuDesApp.GeneratorPdf
 
         private static readonly CultureInfo Budaya = new("id-ID");
 
-        /// <summary>Font didaftarkan sekali saja per proses (QuestPDF menyimpannya global).</summary>
-        private static bool _fontTerdaftar;
-        private static readonly object _fontLock = new();
-
-        static TemplateSuratGenerator()
-        {
-            QuestPdfLisensi.Pastikan();
-        }
-
         public TemplateSuratGenerator(
             AppConfig config,
             IDesaRepository desaRepository,
@@ -51,52 +39,6 @@ namespace SuDesApp.GeneratorPdf
             _desaRepository = desaRepository ?? throw new ArgumentNullException(nameof(desaRepository));
             _logger = logger ?? NullLogger<TemplateSuratGenerator>.Instance;
 
-            DaftarkanFont();
-        }
-
-        /// <summary>
-        /// Daftarkan font di folder font ke QuestPDF supaya surat template memakai
-        /// Times New Roman yang sama dengan surat bawaan. Generator ini bisa dipakai
-        /// lebih dulu daripada generator lain, jadi fontnya didaftarkan sendiri.
-        /// </summary>
-        private void DaftarkanFont()
-        {
-            if (_fontTerdaftar) return;
-
-            lock (_fontLock)
-            {
-                if (_fontTerdaftar) return;
-
-                try
-                {
-                    var folder = _config.FontFolder;
-                    if (!Directory.Exists(folder))
-                    {
-                        _logger.LogWarning("Folder font tidak ditemukan ({Folder}); surat template memakai font bawaan sistem.", folder);
-                    }
-                    else
-                    {
-                        foreach (var berkas in Directory.GetFiles(folder, "*.ttf"))
-                        {
-                            try
-                            {
-                                using var aliran = new MemoryStream(File.ReadAllBytes(berkas));
-                                FontManager.RegisterFontFromStream(aliran);
-                            }
-                            catch
-                            {
-                                // Font ganda atau tidak valid diabaikan.
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Font folder tidak dapat dibaca; surat template memakai font bawaan sistem.");
-                }
-
-                _fontTerdaftar = true;
-            }
         }
 
         /// <summary>
@@ -140,11 +82,7 @@ namespace SuDesApp.GeneratorPdf
                             var badan = new BadanSurat();
                             SusunSurat(badan, template, nilai, nomorSurat, tanggalSurat,
                                 namaPejabat ?? string.Empty, desa, pratinjau);
-                            foreach (var potongan in badan.Potongan)
-                            {
-                                var render = potongan;
-                                kolom.Item().Element(c => render(c));
-                            }
+                            badan.Render(kolom);
                         });
                     });
                 }).GeneratePdf(penampung);
@@ -220,7 +158,7 @@ namespace SuDesApp.GeneratorPdf
             if (template.PakaiKop)
             {
                 string? logoPath = PengaturanCetak.JalurLogoEfektif(_config.LogoPath);
-                badan.Blok(c => SuratRenderer.Kop(c, desa, logoPath!));
+                badan.Blok(c => KopSurat.Gambar(c, desa, logoPath));
             }
 
             // 2. Judul + nomor (opsional).
@@ -275,7 +213,7 @@ namespace SuDesApp.GeneratorPdf
                     tanggalTerformat: tanggal,
                     jabatan: jabatan,
                     namaPejabat: string.IsNullOrWhiteSpace(namaPejabatCetak) ? "_______________________" : NamaFormatter.ToUpperNama(namaPejabatCetak),
-                    tampilkanLabelTandaTangan: !pratinjau,
+                    labelPemohon: string.Empty,
                     nipPejabat: nipPejabat));
             }
 
@@ -474,7 +412,7 @@ namespace SuDesApp.GeneratorPdf
         // =====================================================================
 
         /// <summary>
-        /// Jumlah halaman dokumen, dibaca dari pohon halaman PDF yang dihasilkan QuestPDF.
+        /// Jumlah halaman dokumen, dibaca dari pohon halaman PDF yang dihasilkan mesin SudesPdf.
         /// </summary>
         private static int HitungJumlahHalaman(byte[] pdf)
         {

@@ -3,8 +3,7 @@
 
     <!--
         Style panel navigasi kiri — dipakai bersama oleh halaman yang memakai
-        pola nav kiri (Tentang, Panduan WhatsApp, Pencadangan Database).
-        Sebelumnya style ini diduplikasi di AboutStyles.xaml & PanduanWaStyles.xaml.
+        pola nav kiri (Tentang, Pencadangan Database, Dokumentasi).
     -->
 
     <Style x:Key="WaNavPanel" TargetType="Border">

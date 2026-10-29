@@ -13,9 +13,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
 
@@ -71,14 +69,12 @@ namespace SuDesApp.GeneratorPdf
 
         static SotkDesaGenerator()
         {
-            QuestPdfLisensi.Pastikan();
         }
 
         public SotkDesaGenerator(AppConfig config, ILogger<SotkDesaGenerator> logger)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            SuratGeneratorBase.DaftarkanFont(_config, _logger);
         }
 
         public void GeneratePdf(Stream outputStream, SotkDesaData data)
@@ -98,14 +94,12 @@ namespace SuDesApp.GeneratorPdf
 
         static PerdesSotkGenerator()
         {
-            QuestPdfLisensi.Pastikan();
         }
 
         public PerdesSotkGenerator(AppConfig config, ILogger<PerdesSotkGenerator> logger)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            SuratGeneratorBase.DaftarkanFont(_config, _logger);
         }
 
         public void GeneratePdf(Stream outputStream, PerdesSotkData data)
@@ -222,6 +216,9 @@ namespace SuDesApp.GeneratorPdf
             string titik = string.IsNullOrWhiteSpace(tempat) ? wilayah : tempat.Trim();
             string kepala = string.IsNullOrWhiteSpace(desa.KepalaDesa) ? "..........................." : desa.KepalaDesa!.Trim();
 
+            // Blok penanda tangan menempel di kolom KANAN halaman: tempat/tanggal,
+            // jabatan, ruang tanda tangan, lalu nama Kepala Desa — ISI bloknya
+            // rata tengah, sesuai bentuk baku tanda tangan surat dinas.
             kolom.Item().PaddingTop(JarakTandaTangan).AlignRight().Width(280).Column(blok =>
             {
                 blok.Item().AlignCenter().Text($"Ditetapkan di {titik}").FontSize(UkuranTeks);
@@ -265,29 +262,13 @@ namespace SuDesApp.GeneratorPdf
 
     internal static class KopSotkPdf
 {
+    /// <summary>
+    /// Kop naskah SOTK. Susunannya milik <see cref="KopSurat.Gambar"/> supaya sama
+    /// dengan dokumen lain — termasuk baris surel desa yang opsional.
+    /// </summary>
     public static void ComposeKop(ColumnDescriptor kolom, DesaData desa, AppConfig config)
-    {
-        var rows = KopSurat.BarisKop(desa);
-        kolom.Item().Row(row =>
-        {
-            row.ConstantItem(KopSurat.LebarLogo).Element(logo =>
-            {
-                string? path = PengaturanCetak.JalurLogoEfektif(config.LogoPath);
-                if (path != null) logo.Image(path).FitArea();
-            });
-            row.RelativeItem().Column(lines =>
-            {
-                foreach (var line in rows)
-                    lines.Item().AlignCenter().Text(text =>
-                    {
-                        var span = text.Span(line.Teks).FontSize(line.FontSize);
-                        if (line.Tebal) span.Bold();
-                    });
-            });
-        });
-        kolom.Item().PaddingTop(3).Height(KopSurat.GarisTipis).Background(Colors.Black);
-        kolom.Item().PaddingTop(1).Height(KopSurat.GarisTebal).Background(Colors.Black);
-    }
+        => kolom.Item().Element(c =>
+            KopSurat.Gambar(c, desa, PengaturanCetak.JalurLogoEfektif(config.LogoPath)));
 }
 
 internal class SotkDesaDocument : IDocument

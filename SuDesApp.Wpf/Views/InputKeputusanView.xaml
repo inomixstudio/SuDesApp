@@ -83,8 +83,98 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Lampiran Word/PDF -->
-                <Border Style="{StaticResource FormCard}">
+                <!-- Naskah Perdes: halaman yang disunting lalu dirender generator PDF -->
+                <Border Style="{StaticResource FormCard}"
+                        Visibility="{Binding IsPerdes, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
+                            <Border Style="{StaticResource AccentSectionBar}"/>
+                            <TextBlock Text="NASKAH PERATURAN DESA" Style="{StaticResource FormSectionTitle}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Naskah disusun per halaman dan dirender oleh generator PDF aplikasi — bukan dari berkas Word. Setiap halaman dimulai di lembar baru; isi yang panjang mengalir ke lembar berikutnya. Nomor, tahun, dan tanggal pada kepala surat serta penutup mengikuti isian di atas saat pratinjau atau simpan."
+                                   TextWrapping="Wrap" FontSize="12" Margin="0,0,0,10"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="Tambah Halaman" Command="{Binding TambahHalamanCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
+                                    ToolTip="Tambahkan satu bagian naskah baru"/>
+                            <Button Content="Pratinjau PDF" Command="{Binding PratinjauNaskahCommand}"
+                                    Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"
+                                    ToolTip="Buat dan lihat PDF dari naskah yang sedang disunting"/>
+                            <Button Content="Lihat PDF Tersimpan" Command="{Binding OpenWordFileCommand}"
+                                    IsEnabled="{Binding HasStoredOrPickedFile, FallbackValue=False}"
+                                    Style="{StaticResource OutlineButton}"
+                                    ToolTip="Buka berkas PDF yang sudah tersimpan di arsip"/>
+                        </WrapPanel>
+
+                        <Border Background="{DynamicResource ZebraBrush}" CornerRadius="6"
+                                Padding="10,7" Margin="0,0,0,10">
+                            <TextBlock Text="{Binding InfoNaskah}" TextWrapping="Wrap" FontSize="12"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </Border>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="230"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ListBox Grid.Column="0" ItemsSource="{Binding HalamanNaskah}"
+                                     SelectedItem="{Binding HalamanTerpilih, Mode=TwoWay}"
+                                     Height="440" BorderThickness="1"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     Background="{DynamicResource SurfaceBrush}"
+                                     AutomationProperties.Name="Daftar halaman naskah">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2,4">
+                                            <TextBlock Text="{Binding Judul}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Ringkasan}" FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel Grid.Column="2" IsEnabled="{Binding AdaHalamanTerpilih}">
+                                <TextBlock Text="Nama halaman" Style="{StaticResource FormLabel}"
+                                           ToolTip="Hanya menjadi label di daftar halaman; teks yang dicetak ada di kotak Isi halaman."/>
+                                <TextBox Style="{StaticResource FormField}" Margin="0,0,0,8"
+                                         Text="{Binding HalamanTerpilih.Judul, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Label daftar halaman — tidak ikut dicetak"
+                                         AutomationProperties.Name="Nama halaman naskah"/>
+
+                                <TextBlock Text="Isi halaman" Style="{StaticResource FormLabel}" Margin="0,6,0,0"/>
+                                <TextBox Style="{StaticResource FormField}" Height="360" Margin="0,0,0,8"
+                                         AcceptsReturn="True" TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         FontFamily="Consolas" FontSize="13"
+                                         Text="{Binding HalamanTerpilih.Isi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Isi halaman naskah"/>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Naik" Command="{Binding NaikkanHalamanCommand}"
+                                            Style="{StaticResource OutlineButton}" Margin="0,0,6,0"
+                                            ToolTip="Pindahkan halaman ini ke atas"/>
+                                    <Button Content="Turun" Command="{Binding TurunkanHalamanCommand}"
+                                            Style="{StaticResource OutlineButton}" Margin="0,0,6,0"
+                                            ToolTip="Pindahkan halaman ini ke bawah"/>
+                                    <Button Content="Hapus Halaman" Command="{Binding HapusHalamanCommand}"
+                                            Style="{StaticResource OutlineButton}"
+                                            Foreground="{DynamicResource ErrorBrush}"
+                                            ToolTip="Hapus halaman naskah ini"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Lampiran Word/PDF (SK/Perkades) -->
+                <Border Style="{StaticResource FormCard}"
+                        Visibility="{Binding IsBukanPerdes, Converter={StaticResource BoolToVis}}">
                     <StackPanel>
                         <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
                             <Border Style="{StaticResource AccentSectionBar}"/>

@@ -54,10 +54,11 @@ Kami membantu desa memenuhi permintaan itu sejauh data yang kami simpan
 ## 3. Data yang tersimpan di komputer desa
 
 Seluruh data pada bagian ini berada di **komputer/PC kantor desa**, di dalam
-database `desa.db` yang dienkripsi dengan SQLCipher. Kuncinya 256-bit acak dan
-disimpan untuk akun Windows yang sedang dipakai melalui DPAPI
-(`%LOCALAPPDATA%\SuDesApp\DesaKunciDb.bin`), sehingga berkas database yang
-disalin ke komputer atau akun Windows lain tidak dapat dibuka.
+database `desa.db` berformat SQLite biasa. Database **tidak dienkripsi** dan
+tidak memakai berkas kunci, sehingga siapa pun yang bisa membuka berkas itu
+di komputer desa bisa membaca isinya. Yang membatasi aksesnya adalah izin
+folder dan akun Windows komputer desa itu sendiri — karena itu jangan
+diberikan akses bebas ke folder penyimpanan database.
 
 | Kategori | Contoh isi | Keterangan |
 |---|---|---|
@@ -66,8 +67,8 @@ disalin ke komputer atau akun Windows lain tidak dapat dibuka.
 | Perangkat desa & SK | nama, NIP/NIK, jabatan, masa jabatan, alamat, nomor HP/WhatsApp, riwayat SK | Dipakai untuk kop surat dan penerbitan SK |
 | Keuangan desa | APBDes, realisasi, tanda bukti, laporan | Bukan data pribadi warga, tetapi dapat memuat nama penerima |
 | Akun & keamanan | nama pengguna, peran, hash kata sandi (PBKDF2-SHA256, 120.000 putaran, salt 16 byte), status akun, riwayat aktivitas | Kata sandi asli tidak pernah disimpan |
-| Preferensi & cache teknis | kode aktivasi, alamat server lisensi, token WhatsApp Cloud API, token OAuth Google, cache katalog harga, token lisensi bertanda tangan, **catatan persetujuan Kebijakan Privasi & Syarat Ketentuan (versi dokumen, tanggal berlaku, waktu persetujuan)** | Sebagian tersimpan di `%LOCALAPPDATA%\SuDesApp` (bagian 10); catatan persetujuan hanya disimpan di komputer ini |
-| Log lokal | `error.log`, log aplikasi | Dapat memuat jalur berkas dan pesan galat; **tidak dikirim otomatis** |
+| Preferensi & cache teknis | kode aktivasi, alamat server lisensi, token OAuth Google, cache katalog harga, token lisensi bertanda tangan, **catatan persetujuan Kebijakan Privasi & Syarat Ketentuan (versi dokumen, tanggal berlaku, waktu persetujuan)** | Sebagian tersimpan di `%LOCALAPPDATA%\SuDesApp` (bagian 10); catatan persetujuan hanya disimpan di komputer ini |
+| Log lokal | `error.log` dan `logs/app.log` (arsip `.1`–`.3`) | `logs/app.log` hanya menerima peringatan/galat, berotasi 2 MB per berkas; pesan log tidak sengaja memuat NIK/nama warga. **Tidak dikirim otomatis** |
 
 Data pada tabel di atas **tidak** dikirim ke server lisensi kami. Yang keluar
 hanya bila operator sendiri mengaktifkan integrasi opsional (bagian 6).
@@ -141,21 +142,17 @@ itu tidak memasang cookie analitik maupun pelacak iklan.
 Semua integrasi di bagian ini **mati secara bawaan** dan hanya berjalan bila
 operator menyalakannya. Bila tidak dipakai, tidak ada data yang keluar.
 
-### 6.1 Google Drive, Sheets, dan Forms (opsional)
+### 6.1 Google Drive (opsional)
 
 Setelah pengguna masuk ke aplikasi, operator dapat menyambungkan akun Google
 desa. Cakupan (scope) yang diminta adalah **Drive penuh**
-(`.../auth/drive`), **Forms body**, dan **Forms responses readonly** — Drive
-penuh dibutuhkan karena aplikasi membuat folder, mengunggah, mengunduh, dan
-memangkas cadangan di Drive akun tersebut.
+(`.../auth/drive`) — dibutuhkan karena aplikasi membuat folder, mengunggah,
+mengunduh, dan memangkas cadangan di Drive akun tersebut.
 
-- **Cadangan**: salinan database terenkripsi (`VACUUM INTO`), zip lampiran
+- **Cadangan**: salinan database (`VACUUM INTO`), zip lampiran
   arsip, dan zip template diunggah ke folder `SuDesApp-Backup` di akun Google
   desa. Maksimum 30 berkas per kelompok; berkas lama dipangkas otomatis.
   Data ini berada di akun Google desa, bukan di server kami.
-- **Formulir/Sheet**: jawaban warga pada Google Form dan baris Google Sheet
-  dibaca untuk membuat permintaan surat; PDF surat dan tautan unduh dapat
-  diunggah ke Drive desa.
 - **Token OAuth** disimpan terenkripsi DPAPI (`CurrentUser`) di profil Windows
   pengguna (`%LOCALAPPDATA%\SuDesApp\GoogleDriveToken\<pengguna Windows>`).
   Hanya akun Windows yang sama yang dapat membukanya. Token lama yang tersimpan
@@ -167,22 +164,7 @@ memangkas cadangan di Drive akun tersebut.
 Pemrosesan oleh Google mengikuti kebijakan privasi Google. Data dapat
 diproses di luar Indonesia.
 
-### 6.2 WhatsApp Cloud API — Meta (opsional)
-
-Bila layanan permintaan surat WhatsApp diaktifkan, pesan warga dikirim melalui
-**WhatsApp Cloud API milik Meta** dan diterima aplikasi lewat webhook HTTPS.
-Isi pesan dapat memuat nama, NIK, nomor HP, alamat, dan keperluan surat.
-Data tersebut:
-
-- diproses Meta sebagai penyedia platform sesuai kebijakan Meta;
-- disimpan oleh aplikasi di database desa sebagai permintaan surat;
-- dibalas berupa teks/tautan — aplikasi tidak mengirim berkas melalui
-  WhatsApp, hanya tautan unduh.
-
-Token akses WhatsApp dan app secret disimpan sebagai preferensi lokal di
-komputer desa. Bila integrasi dimatikan, webhook berhenti menerima pesan.
-
-### 6.3 API Desa (opsional)
+### 6.2 API Desa (opsional)
 
 API Desa adalah server HTTP kecil **di dalam komputer desa**. Bawaannya hanya
 mendengarkan `localhost` dan wajib memakai kunci API. Bila operator membuka
@@ -193,8 +175,7 @@ akses jaringan, API dapat dipanggil komputer lain di jaringan desa.
 - Endpoint verifikasi surat dapat dipanggil tanpa kunci karena dipakai bank/
   instansi pemegang surat; jawabannya dibatasi pada data yang sudah tercetak
   di surat, dengan **nama pemohon disamarkan** (mis. "BUDI S.").
-- Permintaan surat yang masuk lewat API **dapat memuat NIK**; isi badan
-  permintaan **tidak dicatat** ke log. Log hanya mencatat endpoint, alamat
+- Isi badan permintaan **tidak dicatat** ke log. Log hanya mencatat endpoint, alamat
   pengirim, dan kode jawaban.
 
 ### 6.4 Data IDM Kemendesa
@@ -225,8 +206,7 @@ warga; server hanya melihat alamat IP seperti permintaan HTTP biasa.
 |---|---|---|---|
 | Midtrans | gateway pembayaran | data transaksi dan instrumen pembayaran sesuai kebijakan Midtrans | Indonesia |
 | Penyedia basis data & hosting server lisensi (mis. Supabase/PostgreSQL) | menyimpan data langganan | tabel pelanggan, langganan, tagihan, pembayaran, perangkat | sesuai wilayah yang dipilih operator; dapat di luar Indonesia |
-| Google | Drive/Sheets/Forms opsional | berkas cadangan, formulir, token OAuth | global |
-| Meta | WhatsApp Cloud API opsional | nomor dan isi pesan warga | global |
+| Google | Drive opsional | berkas cadangan, token OAuth | global |
 | Kemendesa | data IDM | kode desa dan tahun | Indonesia |
 | GitHub | rilis dan pembaruan | versi aplikasi, alamat IP | global |
 
@@ -288,7 +268,7 @@ penanganannya.
 
 | Lapis | Pengamanan |
 |---|---|
-| Database desa | SQLCipher (AES-256); kunci disimpan DPAPI per akun Windows |
+| Database desa | SQLite tanpa enkripsi; akses dibatasi izin folder dan akun Windows komputer desa |
 | Kata sandi akun | PBKDF2-HMAC-SHA256, 120.000 iterasi, salt acak 16 byte; kunci 3× gagal selama 5 menit |
 | Sesi | layar kunci otomatis setelah diam (bawaan 15 menit, dapat diatur) |
 | Berkas akun lama | `Login.dat` dienkripsi DPAPI |
@@ -298,10 +278,9 @@ penanganannya.
 | Pembaruan | unduhan diverifikasi SHA-256 sebelum dijalankan |
 
 Yang perlu dijaga desa: akun Windows, kata sandi aplikasi, perangkat yang
-dipakai, akun Google yang disambungkan, dan token WhatsApp. Beberapa token
-(mis. OAuth Google dan WhatsApp) tersimpan sebagai berkas di profil pengguna
-tanpa enkripsi tambahan; membatasi akses fisik dan akun Windows adalah
-lapisan pertahanannya.
+dipakai, dan akun Google yang disambungkan. Token OAuth Google tersimpan di
+profil pengguna; membatasi akses fisik dan akun Windows adalah lapisan
+pertahanannya.
 
 Kerentanan keamanan dilaporkan melalui **GitHub Security Advisories**, bukan
 issue publik — lihat [SECURITY.md](../SECURITY.md).

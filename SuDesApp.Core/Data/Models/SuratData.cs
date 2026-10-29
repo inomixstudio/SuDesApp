@@ -348,7 +348,7 @@ namespace SuDesApp.Data.Models
             var desa = Desa;
             if (IsDesaDataValid(desa!) && desa != null && !string.IsNullOrWhiteSpace(desa.Alamat))
             {
-                _logger.LogInformation("Data desa sudah valid: NamaDesa={NamaDesa}", desa.NamaDesa);
+                _logger.LogDebug("Data desa sudah valid.");
                 return;
             }
 
@@ -366,7 +366,7 @@ namespace SuDesApp.Data.Models
                 if (loadedDesa != null && IsDesaDataValid(loadedDesa))
                 {
                     Desa = loadedDesa;
-                    _logger.LogInformation("Data desa berhasil dimuat: NamaDesa={NamaDesa}", Desa.NamaDesa);
+                    _logger.LogDebug("Data desa berhasil dimuat.");
                 }
                 else
                 {

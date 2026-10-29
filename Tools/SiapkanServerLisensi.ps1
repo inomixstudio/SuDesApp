@@ -9,7 +9,12 @@
 #      appsettings ketika keduanya loopback dan berbeda - aplikasi
 #      memanggil alamat salah.
 #
-# Pemakaian (sebelum membuka aplikasi, dan setiap kali koneksi hilang):
+# Sejak aplikasi memegang siklus hidup server lisensi lokal (halaman
+# Langganan: nyalakan bersama aplikasi, matikan saat keluar/logoff), skrip
+# ini hanya untuk MEMERIKSA/MEMPERBAIKI koneksi secara manual - mis. saat
+# server sudah berjalan tetapi token operator ditolak.
+#
+# Pemakaian (bila perlu memeriksa, dan setiap kali koneksi hilang):
 #   powershell -ExecutionPolicy Bypass -File Tools\SiapkanServerLisensi.ps1
 #
 # Keluar kode 0 = koneksinya terbukti hidup end-to-end.

@@ -17,7 +17,7 @@ namespace SuDesApp.Services
         /// <summary>Belum pernah berlangganan dan belum mulai trial — fitur vital terkunci.</summary>
         Demo,
 
-        /// <summary>Trial 14 hari lokal sedang berjalan — fitur terbuka sementara.</summary>
+        /// <summary>Trial 30 hari lokal sedang berjalan — fitur terbuka sementara.</summary>
         Trial,
 
         /// <summary>Langganan aktif menurut token bertanda tangan yang terverifikasi.</summary>
@@ -41,7 +41,7 @@ namespace SuDesApp.Services
         /// <summary>Trial diterima server; token bertanda tangannya sudah terpasang.</summary>
         Server,
 
-        /// <summary>Trial lokal 14 hari (tanpa kode aktivasi, atau server tak terjangkau).</summary>
+        /// <summary>Trial lokal 30 hari (tanpa kode aktivasi, atau server tak terjangkau).</summary>
         Lokal,
 
         /// <summary>Trial lokal di perangkat ini sudah pernah dipakai dan tidak bisa diulang.</summary>
@@ -86,10 +86,10 @@ namespace SuDesApp.Services
     /// Penjaga gerbang fitur berdasarkan status lisensi — satu-satunya tempat
     /// memutuskan "aplikasi masih bisa dipakai penuh atau hanya bisa dibaca".
     ///
-    /// ATURAN (alur uji coba 14 hari):
+    /// ATURAN (alur uji coba 30 hari):
     /// 1. Langganan berbayar yang sah → <see cref="KeadaanLisensi.Berlangganan"/>,
     ///    semua menu terbuka.
-    /// 2. Trial 14 hari lokal yang masih berjalan → <see cref="KeadaanLisensi.Trial"/>,
+    /// 2. Trial 30 hari lokal yang masih berjalan → <see cref="KeadaanLisensi.Trial"/>,
     ///    semua menu terbuka sementara.
     /// 3. Instalasi baru yang belum pernah memulai trial → <see cref="KeadaanLisensi.Demo"/>,
     ///    seluruh menu vital TERKUNCI dan aplikasi menawarkan memulai trial.
@@ -116,21 +116,21 @@ namespace SuDesApp.Services
         public const string PesanAksesDikunci =
             "Fitur ini terkunci karena lisensi belum aktif. Data tetap bisa dibaca, " +
             "tetapi membuat dan mencetak surat baru dikunci. " +
-            "Mulai trial 14 hari atau aktifkan langganan lewat menu Langganan.";
+            "Mulai trial 30 hari atau aktifkan langganan lewat menu Langganan.";
 
         /// <summary>Pesan saat instalasi baru belum memulai trial sama sekali.</summary>
         public const string PesanBelumTrial =
-            "Menu vital aplikasi masih terkunci. Mulai trial gratis 14 hari untuk membuka " +
+            "Menu vital aplikasi masih terkunci. Mulai trial gratis 30 hari untuk membuka " +
             "seluruh fitur, atau aktifkan lisensi berbayar lewat menu Langganan.";
 
         /// <summary>Pertanyaan sebelum trial lokal dimulai (dipakai popup startup &amp; menu).</summary>
         public const string PesanMulaiTrial =
-            "Mulai trial gratis 14 hari sekarang? Selama masa uji coba seluruh menu vital terbuka. " +
+            "Mulai trial gratis 30 hari sekarang? Selama masa uji coba seluruh menu vital terbuka. " +
             "Bila trial berakhir tanpa pembayaran, menu vital terkunci kembali dan aplikasi hanya bisa dibaca.";
 
-        /// <summary>Pesan saat trial 14 hari sudah habis tanpa pembayaran.</summary>
+        /// <summary>Pesan saat trial 30 hari sudah habis tanpa pembayaran.</summary>
         public const string PesanTrialHabis =
-            "Masa uji coba 14 hari sudah berakhir. Menu vital aplikasi terkunci dan data hanya bisa " +
+            "Masa uji coba 30 hari sudah berakhir. Menu vital aplikasi terkunci dan data hanya bisa " +
             "dibaca. Selesaikan pembayaran lisensi lewat menu Langganan untuk membuka kembali seluruh fitur.";
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace SuDesApp.Services
         /// tampil di sidebar supaya penguncian terlihat SEBELUM menu diklik.
         /// </summary>
         public const string TooltipTerkunciDemo =
-            "menu vital terkunci — klik untuk mulai trial 14 hari";
+            "menu vital terkunci — klik untuk mulai trial 30 hari";
 
         /// <summary>Tooltip singkat menu vital yang terkunci karena trial/langganan berakhir.</summary>
         public const string TooltipTerkunciBacaSaja =
@@ -322,7 +322,7 @@ namespace SuDesApp.Services
         /// <summary>Benar bila menu vital sedang terkunci.</summary>
         public bool Terkunci => HitungTerkunci(_keadaan);
 
-        /// <summary>Benar bila trial 14 hari lokal masih berjalan.</summary>
+        /// <summary>Benar bila trial 30 hari lokal masih berjalan.</summary>
         public bool TrialAktif => _trial.Aktif();
 
         /// <summary>Benar bila trial pernah dimulai pada perangkat ini (mungkin sudah habis).</summary>
@@ -340,7 +340,7 @@ namespace SuDesApp.Services
         /// <summary>
         /// Bila true, instalasi tanpa kode aktivasi ikut dikunci. Properti ini
         /// dipertahankan untuk kompatibilitas konfigurasi lama; sejak alur trial
-        /// 14 hari diberlakukan, instalasi baru SELALU terkunci sampai trial
+        /// 30 hari diberlakukan, instalasi baru SELALU terkunci sampai trial
         /// dimulai atau lisensi dibayar.
         /// </summary>
         public bool KunciTanpaLangganan { get; set; }
@@ -389,12 +389,12 @@ namespace SuDesApp.Services
         /// 2. Kode aktivasi ada DAN server terjangkau → <b>trial server</b>
         ///    (sekali per desa, token bertanda tangan, batas perangkat).
         /// 3. Kode belum ada, ATAU server tidak terjangkau → <b>trial lokal</b>
-        ///    14 hari sebagai cadangan offline.
+        ///    30 hari sebagai cadangan offline.
         ///
         /// Server yang MENJAWAB dan menolak (mis. trial desa sudah dipakai)
         /// sengaja TIDAK diberi cadangan lokal: kalau diberi, desa yang sudah
-        /// pernah trial bisa mengumpulkan 28 hari dari dua jalur yang berbeda —
-        /// padahal maksud produknya 14 hari per desa. Penolakan karena gangguan
+        /// pernah trial bisa mengumpulkan 60 hari dari dua jalur yang berbeda —
+        /// padahal maksud produknya 30 hari per desa. Penolakan karena gangguan
         /// sesaat (5xx, 404 endpoint lama, timeout, 408/429) tetap dianggap
         /// "tidak terjangkau" supaya desa tidak terkunci karena server bermasalah.
         /// </summary>
@@ -470,7 +470,7 @@ namespace SuDesApp.Services
                 return new HasilPercobaan(AsalPercobaan.SudahPernahTrial);
             }
 
-            _logger.LogInformation("Trial 14 hari lokal dimulai; berlaku sampai {Sampai:O}.",
+            _logger.LogInformation("Trial 30 hari lokal dimulai; berlaku sampai {Sampai:O}.",
                 _trial.BerakhirUtc);
             Terapkan(Status);
             return new HasilPercobaan(AsalPercobaan.Lokal, null, _trial.BerakhirUtc);
@@ -502,7 +502,7 @@ namespace SuDesApp.Services
 
                 AsalPercobaan.Lokal => (
                     "Trial lokal aktif",
-                    "Server lisensi belum terjangkau, jadi masa uji coba 14 hari dicatat di komputer ini. " +
+                    "Server lisensi belum terjangkau, jadi masa uji coba 30 hari dicatat di komputer ini. " +
                     "Seluruh menu vital sudah terbuka. Setelah trial berakhir, selesaikan pembayaran di menu Langganan."),
 
                 AsalPercobaan.ServerTertunda => (
@@ -524,7 +524,7 @@ namespace SuDesApp.Services
         }
 
         /// <summary>
-        /// Mulai trial 14 hari lokal. Mengembalikan true bila trial benar-benar
+        /// Mulai trial 30 hari lokal. Mengembalikan true bila trial benar-benar
         /// baru dimulai — trial tidak bisa diulang, dan langganan aktif tidak
         /// perlu trial. Keadaan gerbang langsung diperbarui sehingga menu vital
         /// terbuka tanpa perlu menunggu cek lisensi berikutnya.
@@ -538,7 +538,7 @@ namespace SuDesApp.Services
             if (Status?.Aktif == true || _trial.SudahMulai) return false;
             if (!_trial.MulaiSekarang()) return false;
 
-            _logger.LogInformation("Trial 14 hari lokal dimulai; berlaku sampai {Sampai:O}.",
+            _logger.LogInformation("Trial 30 hari lokal dimulai; berlaku sampai {Sampai:O}.",
                 _trial.BerakhirUtc);
             Terapkan(Status);
             return true;

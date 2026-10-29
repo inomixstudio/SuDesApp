@@ -3,12 +3,16 @@ using Microsoft.Win32;
 using SuDesApp;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
+using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -16,25 +20,24 @@ namespace SuDesApp.Wpf.ViewModels
     /// Formulir input/edit satu data buku SK / Peraturan (SK, Perdes, Perkades).
     /// Padanan InputKeputusanPeraturan (WinForms): validasi + simpan/ubah ke Excel.
     ///
-    /// Fitur tambahan: tombol "Pilih File Lampiran" (Word/PDF). Dokumen Word (.docx/.doc)
-    /// dibaca untuk mengisi otomatis Nomor/Tanggal/Tentang/Keterangan, lalu berkas (Word/PDF)
-    /// disalin ke folder penyimpanan (ArsipKeputusanFiles) pada saat Simpan agar bisa
-    /// dilihat, diedit, atau dicetak kembali. Berkas .doc (Word lama) dikonversi otomatis
-    /// lebih dulu memakai Microsoft Word, jadi pengguna tidak perlu menyimpan ulang.
+    /// Untuk PERDES, dokumen tidak lagi berasal dari berkas Word: naskah disusun
+    /// per halaman di formulir ini, lalu dirender generator PDF SudesPdf saat
+    /// pratinjau dan saat disimpan. Sumber naskah ikut disimpan di samping PDF
+    /// arsip supaya bisa dibuka dan disunting lagi.
     ///
-    /// PDF: pemilihan berkas .pdf juga didukung, tetapi TIDAK dibaca isinya —
-    /// pengguna cukup diberi tahu (messagebox) untuk mengisi formulir manual,
-    /// lalu berkas tetap disalin ke arsip pada saat Simpan.
+    /// SK/PERKADES tetap mendukung lampiran Word/PDF. Berkas Word dibaca untuk
+    /// mengisi Nomor/Tanggal/Tentang/Keterangan; .doc lama dikonversi otomatis.
     /// </summary>
     public class InputKeputusanViewModel : ObservableObject, IJudulHalaman
     {
         private readonly IArsipKeputusanRepository _repository;
+        private readonly IDesaRepository _desaRepository;
         private readonly IWordFileReader _wordReader;
         private readonly FileService _fileService;
         private readonly IMessageService _messageService;
+        private readonly Func<string, string, Action?, PdfPreviewViewModel> _previewFactory;
+        private readonly string _folderPdfSementara;
         private readonly ILogger<InputKeputusanViewModel> _logger;
-        /// <summary>Folder salinan naskah contoh Perdes (pengisian otomatis).</summary>
-        private readonly string _folderNaskahContohPerdes;
 
         private string _jenisKeputusan = "SK";
         /// <summary>Jenis arsip saat formulir dibuka; dipakai untuk mendeteksi perpindahan jenis.</summary>
@@ -56,6 +59,11 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Nama file Word/PDF yang sudah tersimpan (dari kolom FileWord), untuk keperluan Lihat/Ubah.</summary>
         private string? _storedFileName;
 
+        /// <summary>Halaman naskah PERDES yang sedang disunting.</summary>
+        public ObservableCollection<NaskahHalamanViewModel> HalamanNaskah { get; } = new();
+        private NaskahHalamanViewModel? _halamanTerpilih;
+        private string _infoNaskah = string.Empty;
+
         public event Action? RequestClose;
 
         /// <summary>Data berhasil disimpan — halaman induk perlu memuat ulang daftarnya.</summary>
@@ -63,25 +71,36 @@ namespace SuDesApp.Wpf.ViewModels
 
         public InputKeputusanViewModel(
             IArsipKeputusanRepository repository,
+            IDesaRepository desaRepository,
             IWordFileReader wordReader,
             FileService fileService,
             IMessageService messageService,
+            Func<string, string, Action?, PdfPreviewViewModel> previewFactory,
             AppConfig appConfig,
             ILogger<InputKeputusanViewModel> logger)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _desaRepository = desaRepository ?? throw new ArgumentNullException(nameof(desaRepository));
             _wordReader = wordReader ?? throw new ArgumentNullException(nameof(wordReader));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
-            _folderNaskahContohPerdes = Path.Combine(
-                (appConfig ?? throw new ArgumentNullException(nameof(appConfig))).TempPdfFolder,
-                "TemplatePerdes");
+            _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
+            _folderPdfSementara = (appConfig ?? throw new ArgumentNullException(nameof(appConfig))).TempPdfFolder;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             SaveCommand = new AsyncRelayCommand(SaveAsync);
             CancelCommand = new RelayCommand(() => RequestClose?.Invoke());
             PickWordFileCommand = new AsyncRelayCommand(PickFileAsync);
             OpenWordFileCommand = new AsyncRelayCommand(OpenAttachedFileAsync, () => HasStoredOrPickedFile);
+            TambahHalamanCommand = new RelayCommand(TambahHalaman);
+            HapusHalamanCommand = new RelayCommand(HapusHalaman, () => _halamanTerpilih != null);
+            NaikkanHalamanCommand = new RelayCommand(
+                () => GeserHalaman(-1),
+                () => _halamanTerpilih != null && HalamanNaskah.IndexOf(_halamanTerpilih) > 0);
+            TurunkanHalamanCommand = new RelayCommand(
+                () => GeserHalaman(1),
+                () => _halamanTerpilih != null && HalamanNaskah.IndexOf(_halamanTerpilih) < HalamanNaskah.Count - 1);
+            PratinjauNaskahCommand = new AsyncRelayCommand(PratinjauNaskahAsync, () => HasNaskah);
         }
 
         public string Title
@@ -110,6 +129,37 @@ namespace SuDesApp.Wpf.ViewModels
         public string Tentang { get => _tentang; set => SetProperty(ref _tentang, value); }
         public string Keterangan { get => _keterangan; set => SetProperty(ref _keterangan, value); }
 
+        /// <summary>PERDES memakai naskah berhalaman, bukan lampiran Word.</summary>
+        public bool IsPerdes => _jenisKeputusan == "PERDES";
+
+        public bool IsBukanPerdes => !IsPerdes;
+
+        /// <summary>Halaman naskah yang sedang dibuka di kotak penyunting.</summary>
+        public NaskahHalamanViewModel? HalamanTerpilih
+        {
+            get => _halamanTerpilih;
+            set
+            {
+                if (!SetProperty(ref _halamanTerpilih, value)) return;
+                ((RelayCommand)HapusHalamanCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)NaikkanHalamanCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)TurunkanHalamanCommand).RaiseCanExecuteChanged();
+                OnPropertyChanged(nameof(AdaHalamanTerpilih));
+            }
+        }
+
+        public bool AdaHalamanTerpilih => _halamanTerpilih != null;
+
+        /// <summary>Keterangan singkat keadaan naskah di formulir.</summary>
+        public string InfoNaskah
+        {
+            get => _infoNaskah;
+            private set => SetProperty(ref _infoNaskah, value);
+        }
+
+        /// <summary>Ada halaman naskah yang berisi — syarat pratinjau dan penerbitan PDF.</summary>
+        public bool HasNaskah => HalamanNaskah.Any(h => !string.IsNullOrWhiteSpace(h.Isi));
+
         /// <summary>Nama file Word/PDF yang dipilih, atau kosong.</summary>
         public string WordFileDisplay => string.IsNullOrWhiteSpace(_wordFilePath)
             ? (string.IsNullOrWhiteSpace(_pdfFilePath)
@@ -131,6 +181,11 @@ namespace SuDesApp.Wpf.ViewModels
         public RelayCommand CancelCommand { get; }
         public AsyncRelayCommand PickWordFileCommand { get; }
         public AsyncRelayCommand OpenWordFileCommand { get; }
+        public RelayCommand TambahHalamanCommand { get; }
+        public RelayCommand HapusHalamanCommand { get; }
+        public RelayCommand NaikkanHalamanCommand { get; }
+        public RelayCommand TurunkanHalamanCommand { get; }
+        public AsyncRelayCommand PratinjauNaskahCommand { get; }
 
         public void Initialize(string jenisKeputusan, DataKeputusan? editData, DataKeputusan? prefill = null)
         {
@@ -167,26 +222,202 @@ namespace SuDesApp.Wpf.ViewModels
 
             _wordFilePath = string.Empty;
             _pdfFilePath = string.Empty;
+            OnPropertyChanged(nameof(IsPerdes));
+            OnPropertyChanged(nameof(IsBukanPerdes));
             OnPropertyChanged(nameof(WordFileDisplay));
             OnPropertyChanged(nameof(HasStoredOrPickedFile));
             ((AsyncRelayCommand)OpenWordFileCommand).RaiseCanExecuteChanged();
+            MuatNaskahAwal();
         }
 
         /// <summary>
-        /// Lampirkan berkas contoh sebagai sumber formulir (mis. naskah contoh
-        /// Perdes dari menu SOTK). Berkas tidak langsung disalin; penyalinan ke
-        /// arsip terjadi saat pengguna menekan Simpan, sama seperti berkas yang
-        /// dipilih sendiri lewat tombol Pilih Berkas.
+        /// Muat naskah contoh PERDES sebagai isi halaman. Nama desa pada teks
+        /// contoh diganti identitas Pengaturan Surat; nomor dan tanggal tetap
+        /// diisi saat pratinjau/simpan dari kolom formulir.
         /// </summary>
-        public void GunakanLampiranContoh(string path)
+        public async Task GunakanNaskahContohAsync(string namaBerkas)
         {
-            if (string.IsNullOrWhiteSpace(path)) return;
-            _wordFilePath = path;
-            _pdfFilePath = string.Empty;
-            UpdateFileState();
+            if (string.IsNullOrWhiteSpace(namaBerkas)) return;
+            var desa = await _desaRepository.GetInfoDesaAsync().ConfigureAwait(true);
+            var naskah = NaskahPerdesContoh.Muat(namaBerkas, desa);
+            IsiHalamanDariModel(naskah.Halaman);
+            InfoNaskah = $"{naskah.Halaman.Count} halaman naskah contoh dimuat. Sunting isi halaman lalu periksa pratinjau PDF.";
         }
 
-        private string _jenis_keputusan => _jenisKeputusan;
+        private void MuatNaskahAwal()
+        {
+            HalamanNaskah.Clear();
+            HalamanTerpilih = null;
+            InfoNaskah = string.Empty;
+
+            if (!IsPerdes)
+            {
+                UpdateNaskahState();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(_storedFileName))
+            {
+                string? pdfPath = _repository.ResolveWordFullPath(_storedFileName);
+                if (pdfPath != null)
+                {
+                    try
+                    {
+                        var naskah = NaskahPerdesStore.Muat(pdfPath);
+                        if (naskah != null)
+                        {
+                            IsiHalamanDariModel(naskah.Halaman);
+                            InfoNaskah = $"{naskah.Halaman.Count} halaman naskah tersimpan dimuat. Sunting lalu simpan untuk menerbitkan PDF baru.";
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Naskah sampingan tidak dapat dibaca untuk {Berkas}", _storedFileName);
+                        InfoNaskah = "Naskah tersimpan tidak dapat dibaca. Isi halaman baru untuk menggantikan PDF lama.";
+                        UpdateNaskahState();
+                        return;
+                    }
+                }
+            }
+
+            InfoNaskah = _storedFileName != null
+                ? "Naskah lama tidak tersedia untuk disunting; PDF lama tetap tersimpan sampai Anda mengisi halaman naskah."
+                : "Belum ada halaman. Tambahkan halaman atau pilih salah satu contoh Perdes di daftar.";
+            UpdateNaskahState();
+        }
+
+        private void IsiHalamanDariModel(IEnumerable<NaskahPerdesHalaman> halaman)
+        {
+            foreach (var lama in HalamanNaskah)
+            {
+                lama.PropertyChanged -= Halaman_PropertyChanged;
+            }
+            HalamanNaskah.Clear();
+            foreach (var item in halaman)
+            {
+                var halamanBaru = new NaskahHalamanViewModel(item);
+                halamanBaru.PropertyChanged += Halaman_PropertyChanged;
+                HalamanNaskah.Add(halamanBaru);
+            }
+
+            HalamanTerpilih = HalamanNaskah.FirstOrDefault();
+            UpdateNaskahState();
+        }
+
+        private void UpdateNaskahState()
+        {
+            OnPropertyChanged(nameof(HasNaskah));
+            ((AsyncRelayCommand)PratinjauNaskahCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)HapusHalamanCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)NaikkanHalamanCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)TurunkanHalamanCommand).RaiseCanExecuteChanged();
+        }
+
+        private void TambahHalaman()
+        {
+            var halaman = new NaskahHalamanViewModel(new NaskahPerdesHalaman
+            {
+                Judul = $"Halaman {HalamanNaskah.Count + 1}",
+                Isi = string.Empty
+            });
+            halaman.PropertyChanged += Halaman_PropertyChanged;
+            HalamanNaskah.Add(halaman);
+            HalamanTerpilih = halaman;
+            InfoNaskah = "Halaman baru ditambahkan. Isi teks naskah pada kotak di sebelah kanan.";
+            UpdateNaskahState();
+        }
+
+        private void HapusHalaman()
+        {
+            if (_halamanTerpilih == null) return;
+            int indeks = HalamanNaskah.IndexOf(_halamanTerpilih);
+            _halamanTerpilih.PropertyChanged -= Halaman_PropertyChanged;
+            HalamanNaskah.Remove(_halamanTerpilih);
+            HalamanTerpilih = HalamanNaskah.Count == 0
+                ? null
+                : HalamanNaskah[Math.Clamp(indeks, 0, HalamanNaskah.Count - 1)];
+            InfoNaskah = HalamanNaskah.Count == 0
+                ? "Belum ada halaman naskah."
+                : "Halaman dihapus.";
+            UpdateNaskahState();
+        }
+
+        private void GeserHalaman(int arah)
+        {
+            if (_halamanTerpilih == null) return;
+            int indeks = HalamanNaskah.IndexOf(_halamanTerpilih);
+            int tujuan = indeks + arah;
+            if (tujuan < 0 || tujuan >= HalamanNaskah.Count) return;
+            HalamanNaskah.Move(indeks, tujuan);
+            HalamanTerpilih = _halamanTerpilih;
+            UpdateNaskahState();
+        }
+
+        private void Halaman_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(NaskahHalamanViewModel.Isi))
+            {
+                UpdateNaskahState();
+            }
+        }
+
+        private NaskahPerdes AmbilNaskah() => new()
+        {
+            Judul = Tentang,
+            Halaman = HalamanNaskah.Select(h => h.KeModel()).ToList()
+        };
+
+        /// <summary>
+        /// Pratinjau naskah yang sedang disunting di jendela terpisah, sehingga
+        /// isian formulir dan halaman naskah tidak hilang saat pratinjau ditutup.
+        /// </summary>
+        private async Task PratinjauNaskahAsync()
+        {
+            if (!HasNaskah)
+            {
+                await _messageService.ShowInfoAsync("Isi minimal satu halaman naskah sebelum membuka pratinjau.");
+                return;
+            }
+
+            try
+            {
+                var desa = await _desaRepository.GetInfoDesaAsync().ConfigureAwait(true) ?? new DesaData();
+                DateTime tanggal = ParseDate(Tanggal) ?? DateTime.Today;
+                byte[] pdf = new NaskahPerdesGenerator(desa, AmbilNaskah(), Nomor, tanggal).Buat();
+
+                Directory.CreateDirectory(_folderPdfSementara);
+                string path = Path.Combine(_folderPdfSementara,
+                    $"Pratinjau_Perdes_{DateTime.Now:yyyyMMddHHmmssfff}.pdf");
+                await File.WriteAllBytesAsync(path, pdf).ConfigureAwait(true);
+
+                TampilkanPratinjau(path);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuat pratinjau naskah Perdes");
+                await _messageService.ShowErrorAsync("Pratinjau naskah gagal dibuat: " + ex.Message);
+            }
+        }
+
+        private void TampilkanPratinjau(string path)
+        {
+            Window? jendela = null;
+            var preview = _previewFactory(
+                $"Pratinjau Naskah {LabelJenis(_jenisKeputusan)}", path, () => jendela?.Close());
+            jendela = new Window
+            {
+                Title = preview.Title,
+                Content = new SuDesApp.Wpf.Views.PdfPreviewView { DataContext = preview },
+                Owner = Application.Current?.MainWindow,
+                Width = 1100,
+                Height = 860,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                ShowInTaskbar = false
+            };
+            jendela.ShowDialog();
+        }
+
 
         private static string LabelJenis(string jenis) => jenis switch
         {
@@ -256,6 +487,21 @@ namespace SuDesApp.Wpf.ViewModels
 
                 // Deteksi jenis dokumen dari isi berkas
                 var detectedType = WordTextParser.DetectDocumentType(content.FullText);
+
+                // PERDES tidak lagi menerima lampiran Word: naskahnya disusun
+                // sebagai halaman dan diterbitkan generator PDF. Berkas seperti
+                // ini dibatalkan supaya tidak tersimpan sebagai lampiran PERDES.
+                if (string.Equals(detectedType, "PERDES", StringComparison.OrdinalIgnoreCase) && !IsPerdes)
+                {
+                    _wordFilePath = string.Empty;
+                    UpdateFileState();
+                    await _messageService.ShowWarningAsync(
+                        "Berkas ini terdeteksi Peraturan Desa.\n\n" +
+                        "Peraturan Desa disusun sebagai halaman naskah di menu PERDES, bukan sebagai lampiran Word. " +
+                        "Buka tab PERDES lalu sunting halaman naskahnya.");
+                    return;
+                }
+
                 if (!string.Equals(detectedType, _jenisKeputusan, StringComparison.OrdinalIgnoreCase) && detectedType != "Unknown")
                 {
                     // Tawarkan opsi memindahkan formulir (dan data yang sedang diedit)
@@ -271,6 +517,8 @@ namespace SuDesApp.Wpf.ViewModels
                         // Pindahkan formulir ke arsip jenis yang benar; berkas tetap dipakai.
                         _jenisKeputusan = detectedType.ToUpperInvariant();
                         Title = (_editData != null ? "Edit " : "Input ") + LabelJenis(_jenisKeputusan);
+                        OnPropertyChanged(nameof(IsPerdes));
+                        OnPropertyChanged(nameof(IsBukanPerdes));
                         // Lanjut ke pengisian otomatis di bawah dengan jenis yang baru.
                     }
                     else
@@ -383,15 +631,36 @@ namespace SuDesApp.Wpf.ViewModels
                     return;
                 }
 
+                // PERDES: PDF diterbitkan dari naskah halaman SEBELUM data disimpan.
+                // Bila generator gagal, tidak ada baris arsip setengah jadi.
+                byte[]? pdfNaskah = null;
+                if (IsPerdes && HasNaskah)
+                {
+                    try
+                    {
+                        var desa = await _desaRepository.GetInfoDesaAsync().ConfigureAwait(true) ?? new DesaData();
+                        pdfNaskah = new NaskahPerdesGenerator(
+                            desa, AmbilNaskah(), Nomor, ParseDate(Tanggal)!.Value).Buat();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Gagal membuat PDF naskah Perdes");
+                        await _messageService.ShowErrorAsync(
+                            "PDF naskah gagal dibuat, data belum disimpan:\n\n" + ex.Message);
+                        return;
+                    }
+                }
+
                 var item = new DataKeputusan
                 {
-                    JenisKeputusan = _jenis_keputusan,
+                    JenisKeputusan = _jenisKeputusan,
                     Nomor = Nomor.Trim(),
                     Tanggal = ParseDate(Tanggal)!.Value,
                     Tentang = Tentang.Trim(),
                     Keterangan = Keterangan.Trim(),
                     FileWord = _editData?.FileWord
                 };
+                string? berkasLama = item.FileWord;
 
                 if (_editData != null)
                 {
@@ -405,14 +674,22 @@ namespace SuDesApp.Wpf.ViewModels
                     _logger.LogInformation("Arsip keputusan ditambahkan: Nomor={Nomor} Jenis={Jenis}", item.Nomor, item.JenisKeputusan);
                 }
 
-                // Naskah contoh Perdes diisi ulang dengan nomor & tanggal formulir
-                // terkini sebelum disalin ke arsip, supaya baris "NOMOR x TAHUN y"
-                // dan tanggal penutup pada lampiran selalu cocok dengan isian.
-                PerbaruiNaskahContohPerdes();
-
-                // Copy Word/PDF file BEFORE closing dialog so FileWord is saved in Excel
-                // before grid refresh (LoadAsync) reads it
-                if (HasNewAttachment)
+                // Simpan berkas SEBELUM halaman ditutup agar FileWord sudah terbaru
+                // saat daftar induk memuat ulang.
+                if (pdfNaskah != null)
+                {
+                    try
+                    {
+                        await SaveNaskahPdfAsync(item, pdfNaskah, berkasLama);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Gagal menyimpan PDF naskah Perdes (data sudah tersimpan)");
+                        await _messageService.ShowErrorAsync(
+                            "Data tersimpan, tetapi PDF naskah gagal ditulis:\n\n" + ex.Message);
+                    }
+                }
+                else if (HasNewAttachment)
                 {
                     try
                     {
@@ -464,7 +741,7 @@ namespace SuDesApp.Wpf.ViewModels
                 var oldPath = string.IsNullOrWhiteSpace(item.FileWord) ? null : _repository.ResolveWordFullPath(item.FileWord);
                 if (!string.Equals(oldPath, destPath, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(oldPath))
                 {
-                    try { File.Delete(oldPath); } catch { /* ignore */ }
+                    try { File.Delete(oldPath); } catch { /* berkas lama terkunci — versi baru tetap disalin */ }
                 }
 
                 _fileService.EnsureDirectoryExists(Path.GetDirectoryName(destPath) ?? destPath);
@@ -484,38 +761,37 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Isi ulang salinan naskah contoh Perdes (di folder sementara
-        /// TemplatePerdes) dengan nomor &amp; tanggal formulir terkini sebelum
-        /// berkas disalin ke arsip, supaya baris "NOMOR x TAHUN y" dan tanggal
-        /// penutup pada naskah selalu mengikuti isian formulir — bukan nomor/tanggal
-        /// contoh bawaan. Hanya berlaku untuk hasil pengisian contoh (bukan berkas
-        /// pengguna lain); kegagalan isi ulang tidak membatalkan penyimpanan.
+        /// Tulis PDF naskah ke arsip, simpan sumber naskah di sampingnya, lalu
+        /// perbarui kolom FileWord. Berkas lama (termasuk Word) dibersihkan bila
+        /// jalurnya berbeda.
         /// </summary>
-        private void PerbaruiNaskahContohPerdes()
+        private async Task SaveNaskahPdfAsync(DataKeputusan item, byte[] pdf, string? berkasLama)
         {
-            try
+            var (fileName, destPath) = _repository.ResolveWordStorage(
+                item.IdBarisExcel, item.JenisKeputusan, item.Nomor, ".pdf");
+            var oldPath = string.IsNullOrWhiteSpace(berkasLama)
+                ? null
+                : _repository.ResolveWordFullPath(berkasLama);
+
+            _fileService.EnsureDirectoryExists(Path.GetDirectoryName(destPath) ?? destPath);
+            await File.WriteAllBytesAsync(destPath, pdf).ConfigureAwait(true);
+
+            item.FileWord = fileName;
+            await _repository.UpdateAsync(item); // persist kolom FileWord
+            NaskahPerdesStore.Simpan(destPath, AmbilNaskah());
+            _storedFileName = fileName;
+
+            if (oldPath != null && !string.Equals(oldPath, destPath, StringComparison.OrdinalIgnoreCase))
             {
-                if (string.IsNullOrWhiteSpace(_wordFilePath) ||
-                    !_wordFilePath.StartsWith(_folderNaskahContohPerdes, StringComparison.OrdinalIgnoreCase) ||
-                    !Path.GetExtension(_wordFilePath).Equals(".docx", StringComparison.OrdinalIgnoreCase) ||
-                    !File.Exists(_wordFilePath))
+                try
                 {
-                    return;
+                    File.Delete(oldPath);
+                    NaskahPerdesStore.Hapus(oldPath);
                 }
-
-                var tanggal = ParseDate(Tanggal);
-                if (tanggal == null)
-                    return;
-
-                _wordFilePath = TemplatePerdesFiller.IsiUlangNaskahPerdes(
-                    _wordFilePath,
-                    _folderNaskahContohPerdes,
-                    new TemplatePerdesFiller.PerdesTemplateIsian(Nomor, tanggal.Value));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex,
-                    "Gagal mengisi ulang naskah contoh Perdes dengan nomor/tanggal formulir; berkas disalin apa adanya");
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Berkas Perdes lama tidak dapat dihapus: {Path}", oldPath);
+                }
             }
         }
 

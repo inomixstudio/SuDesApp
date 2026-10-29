@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 
 namespace SuDesApp.GeneratorPdf
@@ -16,14 +14,12 @@ namespace SuDesApp.GeneratorPdf
 
         static KeputusanPeraturanGenerator()
         {
-            QuestPdfLisensi.Pastikan();
         }
 
         public KeputusanPeraturanGenerator(DesaData desaInfo)
         {
             // Generator ini tidak mewarisi SuratGeneratorBase: pastikan font buku
             // (Times New Roman) sudah terdaftar juga bila ini PDF pertama sesi.
-            SuratGeneratorBase.DaftarkanFont();
 
             // Header & footer buku memakai nama wilayah; pakai salinan yang sudah bersih.
             _desaInfo = KopSurat.DesaBersih(desaInfo);
@@ -153,7 +149,9 @@ namespace SuDesApp.GeneratorPdf
                 column.Item().PaddingTop(25);
                 column.Item().Row(row =>
                 {
-                    row.RelativeItem().Column(col =>
+                    // Kolom tiap pejabat tetap di tempatnya (kiri & kanan);
+                    // isi blok tanda tangan yang rata tengah.
+                    row.ConstantItem(190).Column(col =>
                     {
                         // Jabatan mengikuti lembaga: “LURAH …” pada kelurahan.
                         col.Item().AlignCenter().Text("Mengetahui,");
@@ -169,7 +167,7 @@ namespace SuDesApp.GeneratorPdf
                             col.Item().AlignCenter().Text($"NIP {nipPejabat}");
                         }
                     });
-                    row.RelativeItem().Column(col =>
+                    row.ConstantItem(190).Column(col =>
                     {
                         var culture = new CultureInfo("id-ID");
                         string locationAndDate = $"{_desaInfo.NamaDesa}, {DateTime.Now.ToString("d MMMM yyyy", culture)}";

@@ -396,12 +396,9 @@ namespace SuDesApp.Services
     /// Pengaturan Surat, sehingga angkanya selalu sama dengan yang dilihat
     /// pemerintah pusat.
     ///
-    /// Catatan jaringan: sertifikat HTTPS situs pusat kerap kedaluwarsa. Bila
-    /// koneksi aman gagal karena sertifikat, permintaan yang sama diulang lewat
-    /// HTTP (situs itu tetap melayani HTTP) dan hasilnya ditandai
-    /// <see cref="MuatanIdm.LewatHttp"/> supaya halaman bisa memberi tahu
-    /// pengguna bahwa data diambil tanpa enkripsi. Bila sertifikatnya sudah
-    /// diperbaiki, jalur HTTPS otomatis dipakai lagi.
+    /// Semua permintaan memakai HTTPS. Kegagalan sertifikat tidak boleh diam-diam
+    /// diturunkan ke HTTP karena hasil yang dipakai kantor desa dapat dimodifikasi
+    /// pada jaringan di antara pengguna dan situs pusat.
     /// </summary>
     public sealed class IdmKemendesaKlien : IIdmKemendesaKlien
     {
@@ -411,11 +408,9 @@ namespace SuDesApp.Services
         public const string AlamatSitus = "https://idm.kemendesa.go.id/";
 
         private const string AkarHttps = "https://" + Host + "/open/api/desa/rumusan/";
-        private const string AkarHttp = "http://" + Host + "/open/api/desa/rumusan/";
 
         private readonly HttpClient _http;
         private readonly ILogger<IdmKemendesaKlien> _logger;
-        private bool _pemberitahuanHttpSudahDitulis;
 
         public IdmKemendesaKlien(HttpClient? http = null, ILogger<IdmKemendesaKlien>? logger = null)
         {
@@ -434,10 +429,10 @@ namespace SuDesApp.Services
 
             try
             {
-                var (isi, lewatHttp) = await UnduhAsync(AkarHttps + kode + "/" + tahun, ct)
+                var isi = await BacaAsync(AkarHttps + kode + "/" + tahun, ct)
                     .ConfigureAwait(false);
                 var muatan = IdmKemendesaBaca.Urai(isi, tahun);
-                return muatan with { LewatHttp = lewatHttp };
+                return muatan with { LewatHttp = false };
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
@@ -457,34 +452,6 @@ namespace SuDesApp.Services
                 _logger.LogWarning(ex, "Gagal membaca data IDM desa {Kode} tahun {Tahun}", kode, tahun);
                 return MuatanIdm.Galat("Gagal membaca data IDM: " + ex.Message);
             }
-        }
-
-        /// <summary>
-        /// Unduh satu jawaban. HTTPS dicoba lebih dulu; bila gagal karena
-        /// sertifikat situs pusat kedaluwarsa, ulangi lewat HTTP dan laporkan
-        /// bahwa data tidak terenkripsi.
-        /// </summary>
-        private async Task<(string Isi, bool LewatHttp)> UnduhAsync(string alamatHttps, CancellationToken ct)
-        {
-            try
-            {
-                return (await BacaAsync(alamatHttps, ct).ConfigureAwait(false), false);
-            }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-            {
-                // Sertifikat kedaluwarsa (atau TLS ditolak): coba jalur HTTP yang
-                // masih dilayani situs pusat. Kegagalan jaringan biasa juga akan
-                // gagal lagi di bawah, jadi tidak ada tambahan yang dirugikan.
-                if (!_pemberitahuanHttpSudahDitulis)
-                {
-                    _pemberitahuanHttpSudahDitulis = true;
-                    _logger.LogWarning(
-                        "HTTPS {Host} gagal ({Pesan}); mencoba HTTP tanpa enkripsi.", Host, ex.Message);
-                }
-            }
-
-            var alamatHttp = AkarHttp + alamatHttps[AkarHttps.Length..];
-            return (await BacaAsync(alamatHttp, ct).ConfigureAwait(false), true);
         }
 
         private async Task<string> BacaAsync(string alamat, CancellationToken ct)

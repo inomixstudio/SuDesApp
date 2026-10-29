@@ -21,6 +21,7 @@ namespace SuDesApp.Api
         private const string KunciJaringan = "apiJaringan";
         private const string KunciCatatAktivitas = "apiCatatAktivitas";
         private const string KunciBatasPermintaan = "apiBatasPermintaan";
+        private const string KunciIpDiizinkan = "apiIpDiizinkan";
 
         /// <summary>Port bawaan. Dipilih berbeda dari 8787 (webhook Meta) supaya tidak bentrok.</summary>
         public const int PortBawaan = 8790;
@@ -55,6 +56,16 @@ namespace SuDesApp.Api
         public static int BatasPermintaan => Math.Clamp(
             AppPreferenceStore.GetInt(KunciBatasPermintaan, BatasPermintaanBawaan), 5, 600);
 
+        /// <summary>
+        /// Daftar IP LAN yang diizinkan, dipisah koma. Kosong berarti akses jaringan
+        /// ditolak agar operator harus menentukan komputer yang boleh memanggil API.
+        /// localhost selalu diizinkan.
+        /// </summary>
+        public static IReadOnlySet<string> IpDiizinkan => (AppPreferenceStore.GetString(KunciIpDiizinkan, string.Empty) ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(IpValid)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         public static void SetAktif(bool nilai) => AppPreferenceStore.SetBool(KunciAktif, nilai);
 
         public static void SetIzinkanJaringan(bool nilai) => AppPreferenceStore.SetBool(KunciJaringan, nilai);
@@ -63,6 +74,18 @@ namespace SuDesApp.Api
 
         public static void SetBatasPermintaan(int nilai) =>
             AppPreferenceStore.SetInt(KunciBatasPermintaan, Math.Clamp(nilai, 5, 600));
+
+        public static void SetIpDiizinkan(string? nilai)
+        {
+            var bersih = (nilai ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(IpValid).Distinct(StringComparer.OrdinalIgnoreCase);
+            AppPreferenceStore.SetString(KunciIpDiizinkan, string.Join(',', bersih));
+        }
+
+        public static bool AsalDiizinkan(string alamat) =>
+            string.Equals(alamat, "lokal", StringComparison.OrdinalIgnoreCase) || IpDiizinkan.Contains(alamat);
+
+        private static bool IpValid(string nilai) => System.Net.IPAddress.TryParse(nilai, out _);
 
         /// <summary>Simpan port; nilai di luar rentang ditolak.</summary>
         public static void SetPort(int nilai)
@@ -135,6 +158,12 @@ namespace SuDesApp.Api
             if (!NormalisasiPort(AppPreferenceStore.GetInt(KunciPort, PortBawaan), out _))
             {
                 alasan = "Port tidak sah.";
+                return false;
+            }
+
+            if (IzinkanJaringan && IpDiizinkan.Count == 0)
+            {
+                alasan = "Akses jaringan membutuhkan minimal satu IP yang diizinkan.";
                 return false;
             }
 

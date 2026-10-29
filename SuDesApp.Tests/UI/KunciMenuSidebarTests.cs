@@ -93,9 +93,9 @@ namespace SuDesApp.Tests.UI
             KunciMenuSidebar.Terapkan(new[] { warga }, terkunci: true, AlasanDemo);
 
             Assert.Contains("terkunci", warga.TooltipTampil);
-            Assert.Contains("trial 14 hari", warga.TooltipTampil);
+            Assert.Contains("trial 30 hari", warga.TooltipTampil);
             Assert.Contains("Data Warga", warga.TooltipCiut);
-            Assert.Contains("trial 14 hari", warga.TooltipCiut);
+            Assert.Contains("trial 30 hari", warga.TooltipCiut);
         }
 
         [Fact]
@@ -108,7 +108,7 @@ namespace SuDesApp.Tests.UI
                 PenjagaLisensi.TooltipTerkunci(KeadaanLisensi.BacaSaja));
 
             Assert.Contains("pembayaran lisensi", warga.TooltipTampil);
-            Assert.DoesNotContain("trial 14 hari", warga.TooltipTampil);
+            Assert.DoesNotContain("trial 30 hari", warga.TooltipTampil);
         }
     }
 }

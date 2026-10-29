@@ -166,10 +166,10 @@ Di container atau VPS:
 ASPNETCORE_ENVIRONMENT=Production \
 SUPABASE_HOST=aws-0-ap-northeast-2.pooler.supabase.com \
 SUPABASE_DB_USER=sudes_server.jotnrhjzyslyaozzawwq \
-SUPABASE_DB_PASSWORD=PASSWORD_ROLE \
+SUPABASE_DB_PASSWORD=<password-role> \
 SUPABASE_MIGRATE_PASSWORD=PASSWORD_POSTGRES \
 SUPABASE_SSLMODE=Require \
-MIDTRANS_SERVER_KEY=Mid-server-XXXX \
+MIDTRANS_SERVER_KEY=<midtrans-server-key> \
 SUDES_ADMIN_OPERATORS__0__ID=operator1 \
 SUDES_ADMIN_OPERATORS__0__NAME="Nama Operator" \
 SUDES_ADMIN_OPERATORS__0__TOKEN="TOKEN_ACAK" \
@@ -185,7 +185,7 @@ dotnet run --project SuDesApp.Server
 | Endpoint | Metode | Deskripsi | Autentikasi |
 |---|---|---|---|
 | `/aktivasi` | POST | Aktivasi desa dengan kode | Kode Aktivasi |
-| `/aktifkan-trial` | POST | Mulai trial 14 hari | Kode Aktivasi |
+| `/aktifkan-trial` | POST | Mulai trial 30 hari | Kode Aktivasi |
 | `/buat-tagihan` | POST | Buat tagihan Midtrans — **berlangganan awal** (`kodeAktivasi` kosong + `namaDesa` → desa terdaftar & kode baru terbit, balasan memuat `kode_aktivasi`) atau **perpanjangan** (kode harus dikenal) | Berlangganan awal tanpa kode; perpanjangan dengan Kode Aktivasi |
 | `/paket` | GET | Daftar paket & harga | Publik |
 | `/pengumuman` | GET | Pengumuman broadcast | Publik |

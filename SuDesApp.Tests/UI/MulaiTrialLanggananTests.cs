@@ -12,7 +12,7 @@ using Xunit;
 namespace SuDesApp.Tests.UI
 {
     /// <summary>
-    /// Tombol **Mulai Trial 14 Hari** di halaman Langganan tidak boleh menuntut
+    /// Tombol **Mulai Trial 30 Hari** di halaman Langganan tidak boleh menuntut
     /// kode aktivasi: popup saat aplikasi dibuka bisa, halaman ini juga harus
     /// bisa. Yang diuji adalah tombolnya sendiri (perintah + tampilan), bukan
     /// hanya aturan di Core — jalur inilah yang diklik pengguna.
@@ -102,7 +102,7 @@ namespace SuDesApp.Tests.UI
             Assert.Equal(KeadaanLisensi.Trial, penjaga.Keadaan);
             Assert.False(penjaga.Terkunci);
             Assert.True(new TrialLokal().SudahMulai);
-            Assert.Equal("Trial 14 hari aktif", vm.LanggananStatus);
+            Assert.Equal("Trial 30 hari aktif", vm.LanggananStatus);
             Assert.StartsWith("Trial", vm.KeadaanLabel, StringComparison.Ordinal);
         }
 

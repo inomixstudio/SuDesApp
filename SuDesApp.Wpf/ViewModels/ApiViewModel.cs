@@ -36,6 +36,7 @@ namespace SuDesApp.Wpf.ViewModels
         private bool _catatAktivitas;
         private int _port;
         private int _batasPermintaan;
+        private string _ipDiizinkan = string.Empty;
         private string _kunciApi = string.Empty;
         private bool _kunciTersembunyi = true;
         private string _statusText = string.Empty;
@@ -76,7 +77,7 @@ namespace SuDesApp.Wpf.ViewModels
         public string HeaderTitle => "API DESA";
 
         public string HeaderSubtitle =>
-            "Buka angka desa, perangkat desa, dan antrean surat ke sistem luar. "
+            "Buka angka desa, perangkat desa, dan pemeriksaan keaslian surat ke sistem luar. "
             + "Setiap permintaan harus menyertakan kunci API.";
 
         // ---------- daftar endpoint ----------
@@ -171,6 +172,12 @@ namespace SuDesApp.Wpf.ViewModels
             set => SetProperty(ref _batasPermintaan, value);
         }
 
+        public string IpDiizinkan
+        {
+            get => _ipDiizinkan;
+            set => SetProperty(ref _ipDiizinkan, value);
+        }
+
         public string KunciApi
         {
             get => _kunciApi;
@@ -214,8 +221,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public IReadOnlyList<OpsiCakupan> PilihanCakupan { get; } = new[]
         {
-            new OpsiCakupan { Nilai = ApiCakupan.Agregat, Tampilan = "Agregat — baca statistik & status" },
-            new OpsiCakupan { Nilai = ApiCakupan.Permintaan, Tampilan = "Permintaan — kirim & pantau surat online" }
+            new OpsiCakupan { Nilai = ApiCakupan.Agregat, Tampilan = "Agregat — baca statistik & status" }
         };
 
         /// <summary>Daftar kunci tambahan (tanpa kunci utama) untuk ditampilkan di daftar.</summary>
@@ -267,6 +273,7 @@ namespace SuDesApp.Wpf.ViewModels
                 IzinkanJaringan = ApiPengaturan.IzinkanJaringan;
                 CatatAktivitas = ApiPengaturan.CatatAktivitas;
                 BatasPermintaan = ApiPengaturan.BatasPermintaan;
+                IpDiizinkan = string.Join(", ", ApiPengaturan.IpDiizinkan);
                 KunciApi = ApiKunci.Muat() ?? string.Empty;
                 MuatKunciCakupan();
                 GalatText = _listener.Berjalan ? string.Empty : _listener.GalatTerakhir ?? string.Empty;
@@ -298,6 +305,7 @@ namespace SuDesApp.Wpf.ViewModels
                 ApiPengaturan.SetIzinkanJaringan(IzinkanJaringan);
                 ApiPengaturan.SetCatatAktivitas(CatatAktivitas);
                 ApiPengaturan.SetBatasPermintaan(BatasPermintaan);
+                ApiPengaturan.SetIpDiizinkan(IpDiizinkan);
             }
             catch (Exception ex)
             {
@@ -543,14 +551,14 @@ namespace SuDesApp.Wpf.ViewModels
 
             yield return new BarisContohPanggilan(
                 "Status layanan",
-                "Cek paling ringan: versi API dan jumlah antrean yang menunggu operator.",
+                "Cek paling ringan: versi API dan waktu server — dipakai untuk uji koneksi.",
                 $"curl {alamat}/status -H \"X-Api-Key: <KUNCI_API>\"",
-                "{\n  \"sukses\": true,\n  \"data\": {\n    \"aplikasi\": \"SuDesApp\",\n    \"versi\": \"10.2.0\",\n    \"waktu\": \"2026-10-15 09:34:12\",\n    \"antrean\": {\"BARU\": 2, \"DIPROSES\": 1, \"SELESAI\": 5},\n    \"belumDibaca\": 2\n  }\n}");
+                "{\n  \"sukses\": true,\n  \"data\": {\n    \"aplikasi\": \"SuDesApp\",\n    \"versi\": \"10.2.0\",\n    \"waktu\": \"2026-10-15 09:34:12\"\n  }\n}");
 
             yield return new BarisContohPanggilan(
                 "Statistik desa",
                 "Angka agregat tanpa data pribadi: warga per jenis kelamin/RT, kartu keluarga, "
-                + "perangkat desa, surat per status, dan permintaan per status.",
+                + "perangkat desa, dan surat per status.",
                 $"curl {alamat}/statistik -H \"X-Api-Key: <KUNCI_API>\"",
                 "{\n  \"sukses\": true,\n  \"data\": {\n    \"totalWarga\": 3521,\n    \"wargaAktif\": 3214,\n    \"jumlahKartuKeluarga\": 812,\n    \"suratTotal\": 23,\n    ...\n  }\n}");
 
@@ -561,31 +569,10 @@ namespace SuDesApp.Wpf.ViewModels
                 "{\n  \"sukses\": true,\n  \"data\": [\n    {\"nama\": \"H. Suryana\", \"jabatan\": \"Kepala Desa\", \"kelompok\": \"INTI\", \"wilayah\": \"\", \"status\": \"Aktif\"}\n  ]\n}");
 
             yield return new BarisContohPanggilan(
-                "Jenis surat online",
-                "Daftar jenis surat yang boleh dikirim lewat POST /permintaan — sistem luar tidak perlu menebak nama jenis.",
-                $"curl {alamat}/jenis-surat -H \"X-Api-Key: <KUNCI_API>\"",
-                "{\n  \"sukses\": true,\n  \"data\": {\n    \"jenis\": [\"Surat Keterangan Tidak Mampu (SKTM)\", \"...\"]\n  }\n}");
-
-            yield return new BarisContohPanggilan(
                 "Rekap laporan bulanan",
                 "12 baris Januari–Desember (bawaan tahun berjalan; parameter ?tahun=YYYY), rinci per status persetujuan.",
                 $"curl \"{alamat}/rekap-bulanan?tahun=2026\" -H \"X-Api-Key: <KUNCI_API>\"",
                 "{\n  \"sukses\": true,\n  \"data\": {\n    \"tahun\": 2026,\n    \"jumlahSuratTotal\": 23,\n    \"bulan\": [\n      {\"bulan\": \"2026-01\", \"jumlahSurat\": 2, \"perStatusPersetujuan\": {\"TERBIT\": 2}},\n      ...\n    ]\n  }\n}");
-
-            yield return new BarisContohPanggilan(
-                "Kirim permintaan surat",
-                "Masuk antrean operator (menu Layanan Online) dengan status BARU. Kirim ulang dengan referensi sama "
-                + "dibalas 200, bukan 201, dan tidak dibentuk ganda. Jenis surat yang cukup dinormalisasi diterima; "
-                + "jenis yang tak dikenal ditebak dari isi pesan dengan parser yang sama dengan WhatsApp; "
-                + "jenis hanya-luat (offline) ditolak.",
-                $"curl -X POST {alamat}/permintaan -H \"X-Api-Key: <KUNCI_API>\" -H \"Content-Type: application/json\" -d '{'{'}\"referensi\":\"REF-2026-0001\",\"jenis_surat\":\"SKTM\",\"nama_warga\":\"Budi\",\"no_hp\":\"0811...\",\"pesan\":\"SKTM Nama: Budi\"{'}'}'",
-                "{\n  \"sukses\": true,\n  \"pesan\": \"Permintaan masuk antrean operator.\",\n  \"data\": {\"kode\": \"PMT-2026-0001\", \"sudahAda\": false}\n}");
-
-            yield return new BarisContohPanggilan(
-                "Status satu permintaan",
-                "Pantau permintaan berdasarkan kode yang diterima saat POST tadi.",
-                $"curl {alamat}/permintaan/PMT-2026-0001 -H \"X-Api-Key: <KUNCI_API>\"",
-                "{\n  \"sukses\": true,\n  \"data\": {\n    \"kode\": \"PMT-2026-0001\", \"status\": \"SELESAI\", \"sumber\": \"API\",\n    \"jenisSurat\": \"Surat Keterangan Tidak Mampu (SKTM)\",\n    \"tanggal\": \"2026-10-15T09:34:12\", \"adaSurat\": true, \"nomorSurat\": \"800/123/SKTM\"\n  }\n}");
 
             yield return new BarisContohPanggilan(
                 "Verifikasi surat (tanpa kunci)",

@@ -94,7 +94,7 @@ namespace SuDesApp.Utilities
 
                 using var proses = Process.Start(new ProcessStartInfo
                 {
-                    FileName = "powershell.exe",
+                    FileName = PowerShellWindows.JalurExecutable(),
                     Arguments = SusunArgumenPenjadwal(skrip),
                     UseShellExecute = false,
                     CreateNoWindow = true

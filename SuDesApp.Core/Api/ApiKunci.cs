@@ -7,21 +7,28 @@ using System.Text;
 using System.Text.Json;
 
 namespace SuDesApp.Api
-{
-    /// <summary>
-    /// Luas wewenang satu kunci API. Kunci utama selalu Penuh; kunci tambahan
-    /// dibuat dengan cakupan sempit untuk pemakaian luar (dashboard kecamatan,
-    /// website desa) supaya bocornya satu kunci tidak membuka semuanya.
-    /// </summary>
+{        /// <summary>
+        /// Luas wewenang satu kunci API. Kunci utama selalu Penuh; kunci tambahan
+        /// dibuat dengan cakupan sempit untuk pemakaian luar (dashboard kecamatan,
+        /// website desa) supaya bocornya satu kunci tidak membuka semuanya.
+        ///
+        /// Nilai enum yang tersimpan di berkas kunci tidak boleh dihapus: entri
+        /// lama harus tetap terbaca dengan cakupan yang sama.
+        /// </summary>
     public enum ApiCakupan
     {
         /// <summary>Semua endpoint berkunci (kunci utama).</summary>
         Penuh,
 
-        /// <summary>Hanya endpoint agregat: /status, /statistik, /perangkat-desa, /jenis-surat, /rekap-bulanan.</summary>
+        /// <summary>Hanya endpoint agregat: /status, /statistik, /perangkat-desa, /rekap-bulanan.</summary>
         Agregat,
 
-        /// <summary>Endpoint permintaan: kirim dan pantau permintaan surat online.</summary>
+        /// <summary>
+        /// Cakupan kunci lama untuk alur permintaan surat online. Endpoint-nya
+        /// sudah tidak ada, tetapi nilainya dipertahankan supaya berkas kunci
+        /// yang sudah terbit tidak berubah cakupan: kunci seperti ini tetap
+        /// sempit dan ditolak di semua endpoint yang tersisa.
+        /// </summary>
         Permintaan
     }
 
@@ -41,8 +48,8 @@ namespace SuDesApp.Api
     /// (CurrentUser), di %LOCALAPPDATA%\SuDesApp\ApiKunci.bin.
     ///
     /// Kunci API adalah satu-satunya penjaga endpoint ini, jadi tidak boleh
-    /// disimpan plaintext di berkas preferensi (AppPreferenceStore) seperti
-    /// Kredensial WhatsApp — berkas preferensi itu dibaca tanpa proteksi
+    /// disimpan plaintext di berkas preferensi (AppPreferenceStore) — berkas
+    /// preferensi itu dibaca tanpa proteksi
     /// tambahan dan mudah ikut terkopi. DPAPI CurrentUser juga konsisten dengan
     /// penyimpanan token Google dan sandi aplikasi yang sudah ada: hanya akun
     /// Windows yang mengenkripsi yang dapat mendekripsi.
@@ -164,15 +171,15 @@ namespace SuDesApp.Api
         }
 
         /// <summary>
-        /// Buat kunci TAMBAHAN bercakupan sempit (Agregat atau Permintaan) dan
-        /// simpan. Nilai kunci hanya ditampilkan sekali kepada pembuatnya.
-        /// Cakupan Penuh tidak lewat sini — untuk itu gunakan <see cref="BuatBaru"/>.
+        /// Buat kunci TAMBAHAN bercakupan sempit (Agregat) dan simpan. Nilai
+        /// kunci hanya ditampilkan sekali kepada pembuatnya. Cakupan Penuh tidak
+        /// lewat sini — untuk itu gunakan <see cref="BuatBaru"/>.
         /// </summary>
         public static ApiKunciEntry BuatTambahan(ApiCakupan cakupan, string? nama)
         {
-            if (cakupan is not (ApiCakupan.Agregat or ApiCakupan.Permintaan))
+            if (cakupan != ApiCakupan.Agregat)
                 throw new ArgumentException(
-                    "Kunci tambahan hanya untuk cakupan Agregat atau Permintaan; cakupan penuh memakai kunci utama.",
+                    "Kunci tambahan hanya untuk cakupan Agregat; cakupan penuh memakai kunci utama.",
                     nameof(cakupan));
 
             var keadaan = BacaKeadaan();

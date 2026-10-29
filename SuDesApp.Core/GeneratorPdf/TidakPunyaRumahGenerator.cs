@@ -1,6 +1,6 @@
 // TidakPunyaRumahGenerator.cs
 // Surat Keterangan Tidak Punya Rumah: warga yang tidak memiliki rumah/tempat
-// tinggal tetap di wilayah desa. Badan surat memakai BadanSurat (QuestPDF)
+// tinggal tetap di wilayah desa. Badan surat memakai BadanSurat (mesin SudesPdf)
 // seperti SKD/SKTM.
 using Microsoft.Extensions.Logging;
 using SuDesApp.ControlSurat;
@@ -85,7 +85,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SK Tidak Punya Rumah, NamaWarga={NamaWarga}", suratData.Warga?.Nama);
+                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SK Tidak Punya Rumah.");
                 throw;
             }
         }

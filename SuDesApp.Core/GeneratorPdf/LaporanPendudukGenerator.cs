@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 
 namespace SuDesApp.GeneratorPdf
@@ -27,7 +25,6 @@ namespace SuDesApp.GeneratorPdf
 
         static LaporanPendudukGenerator()
         {
-            QuestPdfLisensi.Pastikan();
         }
 
         public LaporanPendudukGenerator(DesaData? desaInfo)
@@ -35,7 +32,6 @@ namespace SuDesApp.GeneratorPdf
             // Laporan bisa menjadi PDF pertama pada sesi ini, jadi pastikan font
             // buku (Times New Roman) terdaftar lebih dulu — sama seperti
             // KeputusanPeraturanGenerator.
-            SuratGeneratorBase.DaftarkanFont();
 
             // Kop & tanda tangan memakai nama wilayah; pakai salinan yang bersih
             // supaya "Desa null" tidak pernah tercetak.
@@ -158,9 +154,9 @@ namespace SuDesApp.GeneratorPdf
                 if (tandaTangan)
                 {
                     // Spasi 10pt + blok tanda tangan (~40pt ruang kosong) harus
-                    // muat di halaman terakhir. Kalau tabel terakhir sangat
-                    // tinggi, QuestPDF melempar DocumentLayoutException — itu
-                    // lebih baik daripada blok tanda tangan terpotong.
+                    // muat di halaman terakhir. Tanda tangan ditata sebagai satu
+                    // kotak utuh, jadi ia pindah ke halaman berikutnya bila tidak
+                    // muat — bukan terpotong di tengah.
                     col.Item().PaddingTop(14f).Element(ComposeTandaTangan);
                 }
             });
@@ -367,6 +363,7 @@ namespace SuDesApp.GeneratorPdf
         /// <summary>
         /// Blok penandatangan: kepala desa di kiri, sekretaris desa di kanan.
         /// Dipanggil sekali saja, di akhir halaman terakhir, bukan di footer.
+        /// Kolom tiap pejabat tetap di tempatnya; isi bloknya rata tengah.
         /// </summary>
         private void ComposeTandaTangan(IContainer container)
         {

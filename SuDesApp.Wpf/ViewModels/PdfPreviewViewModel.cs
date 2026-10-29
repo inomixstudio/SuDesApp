@@ -7,7 +7,7 @@ using SuDesApp.Wpf.Views;
 namespace SuDesApp.Wpf.ViewModels
 {
     /// <summary>
-    /// Pratinjau PDF generik (PDFium) dengan tombol Cetak/Ekspor/Batal —
+    /// Pratinjau PDF generik (SudesPdf) dengan tombol Cetak/Ekspor/Batal —
     /// digunakan oleh pratinjau formulir, hasil input surat, agenda, dan register.
     /// Untuk pratinjau hasil Buat/Edit Surat, tombol ✏️ Edit ditampilkan agar
     /// pengguna bisa langsung memperbaiki data tanpa mencari surat di Register.

@@ -6,12 +6,10 @@ namespace SuDesApp.Wpf.ViewModels
 {
     /// <summary>
     /// Satu naskah contoh Perdes bawaan aplikasi. Contoh hanyalah titik awal:
-    /// tombolnya membuka formulir Buku Perdes yang bisa disunting dan disimpan
-    /// menurut skema arsip Perdes (nomor, tanggal, tentang, keterangan, dan
-    /// berkas lampiran) — bukan membuka berkas Word di luar aplikasi. Saat
-    /// dibuka, SALINAN contoh diisi otomatis dengan identitas desa dan kabupaten
-    /// dari Pengaturan Surat oleh <see cref="SuDesApp.Utilities.TemplatePerdesFiller"/>,
-    /// sehingga naskah yang terbit sudah sesuai desa pengguna.
+    /// tombolnya membuka formulir Buku Perdes dengan halaman naskah yang bisa
+    /// disunting. Isi contoh adalah data naskah (JSON), bukan berkas Word, dan
+    /// dirender generator PDF saat pratinjau maupun simpan. Nama desa/kabupaten
+    /// pada teks diganti identitas Pengaturan Surat saat dimuat.
     /// </summary>
     public sealed class ContohPerdesDokumen
     {
@@ -38,6 +36,9 @@ namespace SuDesApp.Wpf.ViewModels
         public string JalurBerkas => Path.Combine(FolderContoh, NamaFile);
 
         public bool BerkasAda => File.Exists(JalurBerkas);
+
+        /// <summary>Nama berkas naskah (JSON) yang dibuka oleh pemuat contoh.</summary>
+        public string Kunci => NamaFile;
     }
 
     /// <summary>
@@ -51,37 +52,37 @@ namespace SuDesApp.Wpf.ViewModels
         {
             new(
                 "Perdes tentang Pendapatan Asli Desa (PADes)",
-                "Contoh-Perdes-PADes-2023.docx",
+                "Contoh-Perdes-PADes-2023.json",
                 "5",
                 "Pungutan-Pungutan Desa Tahun Anggaran 2023",
                 "Contoh Perdes PADes — pungutan desa dan tata cara pemungutannya. Sesuaikan nomor, tanggal, dan isi dengan kondisi desa."),
             new(
                 "Perdes Kewenangan Berdasarkan Hak Asal Usul",
-                "Contoh-Perdes-Kewenangan-Asal-Usul.docx",
+                "Contoh-Perdes-Kewenangan-Asal-Usul.json",
                 "1",
                 "Kewenangan Berdasarkan Hak Asal-Usul",
                 "Contoh Perdes kewenangan berdasarkan hak asal-usul. Pastikan dasar hukum daerah berlaku sebelum ditetapkan."),
             new(
                 "Perdes Kewenangan Lokal Skala Desa",
-                "Contoh-Perdes-Kewenangan-Lokal-Skala-Desa.docx",
+                "Contoh-Perdes-Kewenangan-Lokal-Skala-Desa.json",
                 "2",
                 "Kewenangan Lokal Berskala Desa",
                 "Contoh Perdes kewenangan lokal berskala desa. Periksa daftar kewenangan daerah sebelum disimpan."),
             new(
                 "Perdes Kewenangan yang Ditugaskan",
-                "Contoh-Perdes-Kewenangan-Ditugaskan.docx",
+                "Contoh-Perdes-Kewenangan-Ditugaskan.json",
                 "3",
                 "Kewenangan yang Ditugaskan",
                 "Contoh Perdes kewenangan yang ditugaskan pemerintah atas. Sesuaikan dengan penugasan yang benar-benar diterima desa."),
             new(
                 "Perdes tentang APBDes Tahun Anggaran 2026",
-                "Contoh-Perdes-APBDes.docx",
+                "Contoh-Perdes-APBDes.json",
                 "1",
                 "Anggaran Pendapatan dan Belanja Desa Tahun Anggaran 2026",
                 "Contoh Perdes APBDes — struktur pendapatan, belanja, dan pembiayaan desa. Ganti seluruh angka rincian dengan hasil musyawarah desa Anda sebelum menyimpan."),
             new(
                 "Perdes tentang Badan Permusyawaratan Desa (BPD)",
-                "Contoh-Perdes-BPD.docx",
+                "Contoh-Perdes-BPD.json",
                 "2",
                 "Badan Permusyawaratan Desa",
                 "Contoh Perdes BPD — kedudukan, susunan, tugas, dan wewenang BPD. Periksa ketentuan pembentukan BPD yang berlaku di daerah Anda sebelum ditetapkan.")

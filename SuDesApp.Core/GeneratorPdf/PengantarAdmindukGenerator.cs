@@ -1,6 +1,6 @@
 // PengantarAdmindukGenerator.cs
 // Surat pengantar urusan administrasi kependudukan (KTP-e, KK, akta, dsb.)
-// ke Disdukcapil. Badan surat memakai BadanSurat (QuestPDF) seperti SKD.
+// ke Disdukcapil. Badan surat memakai BadanSurat (mesin SudesPdf) seperti SKD.
 using Microsoft.Extensions.Logging;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Repositories;
@@ -82,7 +82,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk Pengantar Adminduk, NamaWarga={NamaWarga}", suratData.Warga?.Nama);
+                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk Pengantar Adminduk.");
                 throw;
             }
         }

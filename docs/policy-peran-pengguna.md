@@ -12,15 +12,16 @@
 |---|---|---|
 | Penyimpanan akun | Tabel `Pengguna` di database desa | Aktif |
 | Hash kata sandi | PBKDF2-SHA256, 120.000 putaran, salt 16 byte per akun | Aktif |
-| Minimal panjang kata sandi | 8 karakter untuk akun baru, reset, dan ubah sendiri | Aktif |
-| Kunci percobaan gagal | 3 kali gagal → akun terkunci 5 menit (tersimpan di database) | Aktif |
+| Akun administrator bawaan | `admin` / `admin` — **TETAP**: tidak dibuat acak dan tidak dirotasi otomatis saat login. Diganti hanya bila pengguna sendiri melakukannya di Kelola Pengguna | Aktif |
+| Minimal panjang kata sandi | 8 karakter untuk akun baru, reset, dan ubah sendiri. Akun bawaan `admin/admin` disemai lewat jalur migrasi sehingga sandi pendek itu hanya berlaku untuk akun bawaan | Aktif |
+| Kunci percobaan gagal | 3 kali gagal → akun terkunci 5 menit. Akun database menyimpannya di database; akun pusat menyimpan hitungan dan waktu gagal terakhir di preferensi lokal (tanpa kata sandi), jadi kuncinya tetap berlaku setelah aplikasi dibuka ulang | Aktif |
 | Peran | Administrator, Sekdes, Operator, Kades, Auditor | Aktif |
 | Akun lama (`Login.dat`) | Dimigrasikan otomatis ke database saat login pertama | Aktif |
-| Akun pusat penyedia (`adminpusat`) | **Tidak pernah** masuk tabel `Pengguna` → tidak muncul di Kelola Pengguna. Kata sandi **tidak ditanam di kode maupun `Login.dat`**: diprovisikan per mesin lewat `SUDES_PUSAT_SANDI` atau berkas `Pusat.kunci`. Kunci menu rahasia **Pusat Administrasi**: menu itu tidak ditampilkan untuk sesi akun lain | Aktif |
-| Login Google | **Dihapus dari layar login (2026-10-13)** — akun Google bukan jalan masuk aplikasi. Koneksi akun Google hanya untuk fitur layanan (Formulir/Sheet/Drive/WhatsApp) dan disambungkan SETELAH masuk, dari halaman "Login dengan Google" | Dihapus |
-| Pemeriksaan izin | Ditegakkan di halaman + lapis data (bukan lewat penyembunyian menu): `SessionContext.Wajib` di layanan simpan surat, impor warga, verifikasi/tanda tangan, dan kelola pengguna (aktif setelah login; jalur sistem — API desa, proses WhatsApp — membuka blok lewat `SesiSistem()` per-aliran) | Aktif |
+| Akun pusat penyedia (`adminpusat`) | **Tidak pernah** masuk tabel `Pengguna` → tidak muncul di Kelola Pengguna. Kata sandi bawaan **`adminpusat11`** dan **tidak pernah ditulis ke `Login.dat`**; mesin yang memakai sandi lain boleh menimpanya lewat `SUDES_PUSAT_SANDI` atau berkas `Pusat.kunci`. Kunci menu rahasia **Pusat Administrasi**: menu itu tidak ditampilkan untuk sesi akun lain | Aktif |
+| Login Google | **Dihapus dari layar login (2026-10-13)** — akun Google bukan jalan masuk aplikasi. Koneksi akun Google hanya untuk pencadangan Drive dan disambungkan SETELAH masuk, dari halaman "Login dengan Google" | Dihapus |
+| Pemeriksaan izin | Ditegakkan di halaman + lapis data (bukan lewat penyembunyian menu): `SessionContext.Wajib` di layanan simpan surat, impor warga, verifikasi/tanda tangan, dan kelola pengguna (aktif setelah login; jalur sistem — API desa — membuka blok lewat `SesiSistem()` per-aliran) | Aktif |
 | Sesi kedaluwarsa otomatis | Layar kunci idle: setelah diam (bawaan 15 menit, bisa diatur 1–120 menit di Pengaturan Aplikasi), jendela ditutup layar kunci; dibuka lewat isi ulang kata sandi akun aktif. Percobaan salah memakai aturan kunci 3× gagal yang sama | Aktif |
-| Enkripsi database | SQLCipher (bundle e_sqlcipher); kunci acak 256 bit disimpan DPAPI CurrentUser (`%LOCALAPPDATA%\SuDesApp\DesaKunciDb.bin`). Saat start: database plaintext lama dicadangkan ke `desa-plaintext-<tanggal>.bak` lalu dikonversi otomatis (sqlcipher_export); database baru terenkripsi sejak byte pertama. Koneksi pengujian in-memory sengaja tanpa kunci | Aktif |
+| Enkripsi database | **Dihapus** — `desa.db` kini SQLite biasa tanpa enkripsi dan tanpa berkas kunci (`DesaKunciDb.bin` tidak lagi dibuat maupun dibaca). Berkas dari versi lama yang terenkripsi terdeteksi saat start dengan pesan yang bisa ditindaklanjuti: pulihkan dari cadangan, atau pilih berkas database lain | Dihapus |
 
 ---
 
@@ -45,7 +46,6 @@ membukanya memeriksa ulang syarat itu.
 | Kelola data warga (`KelolaWarga`) | ✔ | ✔ | ✔ | – | – |
 | Kelola perangkat desa (`KelolaPerangkat`) | ✔ | ✔ | ✔ | – | – |
 | Laporan (`Laporan`) | ✔ | ✔ | ✔ | ✔ | ✔ |
-| Layanan online (`LayananOnline`) | ✔ | ✔ | ✔ | – | – |
 | Verifikasi keaslian surat (`VerifikasiSurat`) | ✔ | ✔ | ✔ | ✔ | ✔ |
 | Riwayat aktivitas (`RiwayatAktivitas`) | ✔ | ✔ | ✔ | ✔ | ✔ |
 | Pengaturan aplikasi (`PengaturanAplikasi`) | ✔ | ✔ | – | – | – |
@@ -119,15 +119,16 @@ Akun pusat (`adminpusat`, lihat `AkunPusat`) berbeda dalam tiga hal dari akun
 desa:
 
 1. **Tidak masuk tabel `Pengguna`, tidak pernah.** Login-nya sengaja TIDAK
-   lewat jalur migrasi: kata sandi provisioning diverifikasi langsung lalu sesi
-   dibuka. Akibatnya ia tidak muncul di halaman Kelola Pengguna, tidak bisa
+   lewat jalur migrasi: kata sandi akun pusat (bawaan `adminpusat11` atau
+   provisioning mesin) diverifikasi langsung lalu sesi dibuka. Akibatnya ia tidak muncul di halaman Kelola Pengguna, tidak bisa
    diubah/dihapus dari aplikasi desa, dan tidak ikut tercadang bersama data desa.
-2. **Tidak ada kata sandi bawaan.** Sandi akun pusat diprovisikan di mesin yang
-   membutuhkannya lewat environment variable `SUDES_PUSAT_SANDI` atau berkas
-   `Pusat.kunci` di samping executable. Tanpa provisioning, akun pusat tidak
-   bisa dipakai (gagal-tertutup). Sandi tidak pernah ditulis ke kode sumber,
-   `Login.dat`, maupun log; akun pusat lama yang masih memakai sandi bawaan
-   terdahulu dihapus otomatis saat aplikasi dibuka.
+2. **Kata sandi bawaan tetap `adminpusat11`.** Nilainya tidak dibuat acak dan
+   tidak dirotasi otomatis, supaya akun penyedia selalu bisa masuk. Mesin yang
+   memang memakai sandi lain boleh menimpanya lewat environment variable
+   `SUDES_PUSAT_SANDI` atau berkas `Pusat.kunci` di samping executable; bila
+   keduanya kosong, sandi bawaan itulah yang berlaku. Sandi tidak pernah
+   ditulis ke `Login.dat` maupun log; akun pusat lama yang tersimpan di
+   `Login.dat` dihapus otomatis saat aplikasi dibuka.
 3. **Satu-satunya pembuka menu Pusat Administrasi.** Menu itu tidak ditambahkan
    ke sidebar untuk sesi lain — dan bukan hanya disamarkan: tindakan membukanya
    juga menolak sesi non-pusat. Penentunya bukan nama pengguna semata, melainkan
@@ -161,27 +162,32 @@ Alasan memilih akun aplikasi, bukan Google:
 
 Koneksi akun Google **tetap ada dan tidak terpengaruh**: halaman **"Login dengan
 Google"** di menu samping (dibuka setelah pengguna masuk) menyambungkan akun
-Google untuk Google Formulir/Sheet/Drive dan tautan WhatsApp. Kredensial OAuth
+Google untuk pencadangan database ke Google Drive. Kredensial OAuth
 karena itu tetap dibutuhkan paket rilis (lihat `PANDUAN-GITHUB-ACTIONS.md`),
 hanya saja bukan lagi untuk masuk ke aplikasi.
 
-> **Sejak versi 2.6.0:** layar login kini memakai `PenggunaService.MasukAsync`
+> **Sejak versi 2.6.0:** layar login memakai `PenggunaService.MasukAsync`
 > (PBKDF2, kunci 3× gagal, peran dari database). Akun administrator awal
-> disisipkan otomatis ke tabel `Pengguna` saat pemasangan baru dengan kata
-> sandi acak per instalasi (ditampilkan sekali di layar login), sehingga
-> langsung muncul di halaman Kelola Pengguna dan bisa diganti kata sandinya.
-> Sandi bawaan lama `admin` yang sudah terbit di repo publik dirotasi otomatis
-> saat dipakai. Instalasi lama
-> yang masih memakai `Login.dat` dimigrasi otomatis: saat login pertama kali
-> berhasil via `Login.dat`, akun dipindahkan ke tabel `Pengguna` dan kata sandi
-> selanjutnya diverifikasi melalui database.
+> disisipkan otomatis ke tabel `Pengguna` saat pemasangan baru dengan
+> kredensial tetap **admin/admin**, sehingga langsung muncul di halaman Kelola
+> Pengguna dan bisa diganti kata sandinya oleh pengguna sendiri.
+>
+> **Kredensial bawaan tidak pernah diganti otomatis.** Sebelumnya akun admin
+> dibuat dengan sandi acak per instalasi dan sandi `admin` dirotasi saat
+> dipakai; keduanya dihapus. Instalasi yang terlanjur memakai sandi acak
+> dipulihkan ke admin/admin **satu kali** (ditandai preferensi
+> `kredensial_bawaan_disiapkan`), sesudah itu sandi yang sudah diganti
+> pengguna tidak pernah ditimpa lagi. Instalasi lama yang masih memakai
+> `Login.dat` dimigrasi otomatis: saat login pertama kali berhasil via
+> `Login.dat`, akun dipindahkan ke tabel `Pengguna` dan kata sandi selanjutnya
+> diverifikasi melalui database.
 
 ---
 
 ## 5. Yang Belum Ditegakkan di Lapis Data
 
 Pemeriksaan izin saat ini ada di lapis tampilan (menu dan halaman). Artinya,
-kode internal Core (mis. layanan WhatsApp otomatis yang berjalan di latar)
+kode internal Core (mis. pembangkit PDF surat yang dipanggil langsung)
 tetap dapat menulis surat tanpa memeriksa peran — memang disengaja, karena
 kanal otomatis bukan pengguna. Bila nanti aplikasi dibuka lewat jaringan
 (API/layanan daring), pemeriksaan izin perlu dinaikkan ke lapis layanan;

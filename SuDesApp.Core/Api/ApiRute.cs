@@ -62,7 +62,7 @@ namespace SuDesApp.Api
                 Metode = "GET",
                 Jalur = "/status",
                 Nama = "Status layanan",
-                Keterangan = "Cek versi API dan jumlah antrean yang menunggu operator. Endpoint paling ringan untuk uji koneksi.",
+                Keterangan = "Cek versi API dan waktu server. Endpoint paling ringan untuk uji koneksi.",
                 Kategori = ApiKategori.Agregat
             },
             new ApiEndpoint
@@ -70,7 +70,7 @@ namespace SuDesApp.Api
                 Metode = "GET",
                 Jalur = "/statistik",
                 Nama = "Statistik desa",
-                Keterangan = "Angka agregat: jumlah warga, kartu keluarga, perangkat desa, surat per status, dan permintaan per status. Tidak memuat NIK, alamat, atau nomor HP warga.",
+                Keterangan = "Angka agregat: jumlah warga, kartu keluarga, perangkat desa, dan surat per status. Tidak memuat NIK, alamat, atau nomor HP warga.",
                 Kategori = ApiKategori.Agregat
             },
             new ApiEndpoint
@@ -80,30 +80,6 @@ namespace SuDesApp.Api
                 Nama = "Daftar perangkat desa",
                 Keterangan = "Nama jabatan, nama pejabat, wilayah, dan masa jabatan. Berguna untuk menyelaraskan kop surat di sistem luar.",
                 Kategori = ApiKategori.Perangkat
-            },
-            new ApiEndpoint
-            {
-                Metode = "GET",
-                Jalur = "/jenis-surat",
-                Nama = "Jenis surat online",
-                Keterangan = "Daftar jenis surat yang bisa diminta lewat API, supaya sistem luar tidak perlu menebak nama jenis.",
-                Kategori = ApiKategori.Agregat
-            },
-            new ApiEndpoint
-            {
-                Metode = "POST",
-                Jalur = "/permintaan",
-                Nama = "Kirim permintaan surat",
-                Keterangan = "Menerima permintaan dari luar dan menaruhnya di antrean operator (menu Layanan Online) dengan status BARU. Isi field referensi agar pengiriman ulang tidak tercatat ganda.",
-                Kategori = ApiKategori.Permintaan
-            },
-            new ApiEndpoint
-            {
-                Metode = "GET",
-                Jalur = "/permintaan/{kode}",
-                Nama = "Status permintaan",
-                Keterangan = "Status satu permintaan berdasarkan kode (mis. PMT-2026-0001): BARU, DIPROSES, SELESAI, DITOLAK, atau PERLU_PERBAIKAN.",
-                Kategori = ApiKategori.Permintaan
             },
             new ApiEndpoint
             {
@@ -165,8 +141,8 @@ namespace SuDesApp.Api
                 new[] { PlaceholderParameter }, 2, StringSplitOptions.None);
             adaParameter = potong.Length > 1;
 
-            // Parameter dibatasi satu segmen jalur supaya "/permintaan/a/b" tidak
-            // ikut cocok ke "/permintaan/{kode}".
+            // Parameter dibatasi satu segmen jalur supaya "/verifikasi/a/b" tidak
+            // ikut cocok ke "/verifikasi/{kode}".
             var pola = "^" + Regex.Escape(potong[0])
                 + (adaParameter
                     ? "(?<" + NamaKelompok + ">[^/]+)" + Regex.Escape(potong[1])

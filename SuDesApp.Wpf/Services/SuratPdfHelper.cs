@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
+using SuDesApp.GeneratorPdf;
 
 namespace SuDesApp.Wpf.Services
 {
@@ -15,7 +16,26 @@ namespace SuDesApp.Wpf.Services
     /// </summary>
     public static class SuratPdfHelper
     {
-        public static SuDesApp.Interfaces.ISuratGenerator? ResolveGenerator(IServiceProvider services, string templateName)
+        /// <summary>
+        /// Simpan PDF melalui pemilik siklus hidup berkas Core. Bila file tujuan
+        /// terkunci pratinjau, catat bahwa jalur sementara yang unik dipertahankan.
+        /// </summary>
+        private static async Task<string> SimpanAsync(
+            string path,
+            Func<Stream, Task> tulis,
+            ILogger logger)
+        {
+            string dipakai = await SuratPdfSave.SimpanAsync(path, tulis);
+            if (!string.Equals(dipakai, path, StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning(
+                    "PDF lama masih terkunci ({Path}); memakai nama file unik.", path);
+            }
+
+            return dipakai;
+        }
+
+        public static SuDesApp.GeneratorPdf.SuratGeneratorBase? ResolveGenerator(IServiceProvider services, string templateName)
         {
             return templateName.ToUpperInvariant() switch
             {
@@ -57,7 +77,7 @@ namespace SuDesApp.Wpf.Services
                     return null;
 
                 // Permohonan rekening koran memakai generator sendiri (bukan
-                // ISuratGenerator) dan isinya dibaca kembali dari payload surat.
+                // SuratGeneratorBase) dan isinya dibaca kembali dari payload surat.
                 if (string.Equals(templateName, SuratConstants.REKENING_KORAN, StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(suratData.NamaJenis, SuratConstants.REKENING_KORAN, StringComparison.OrdinalIgnoreCase))
                 {
@@ -83,36 +103,12 @@ namespace SuDesApp.Wpf.Services
                 var safeNomor = new string((suratData.NomorSurat ?? "NO")
                     .Where(char.IsLetterOrDigit)
                     .ToArray());
-                string fileName = $"{suratData.NamaJenis}_{safeNomor}_{suratData.ID_Surat}.pdf";
-                Directory.CreateDirectory(appConfig.TempPdfFolder);
-                string path = Path.Combine(appConfig.TempPdfFolder, fileName);
-
-                // Tulis ke file sementara bernama unik dulu, lalu pindah ke nama akhir.
-                // Alasan: pratinjau PDFium mem-lock file yang sedang dilihat, sehingga
-                // File.Create(path) langsung ke nama akhir meledak "being used by another
-                // process" saat PDF di-generate ulang dari form edit yang terbuka di atas
-                // pratinjau itu sendiri. Bila nama akhir masih terkunci, pakai file unik —
-                // generate tetap sukses dan pratinjau baru selalu memuat file terbaru.
-                string writePath = Path.Combine(appConfig.TempPdfFolder,
-                    $"{Path.GetFileNameWithoutExtension(fileName)}_{DateTime.Now:HHmmssfff}.pdf");
-
-                using (var stream = File.Create(writePath))
-                {
-                    await generator.GeneratePdfAsync(stream, suratData, suratData.Keterangan!);
-                }
-
-                try
-                {
-                    if (File.Exists(path)) File.Delete(path);
-                    File.Move(writePath, path);
-                    return path;
-                }
-                catch (Exception lockEx) when (lockEx is IOException or UnauthorizedAccessException)
-                {
-                    logger.LogWarning(lockEx,
-                        "PDF lama masih terkunci ({Path}); memakai nama file unik.", path);
-                    return writePath;
-                }
+                string path = Path.Combine(appConfig.TempPdfFolder,
+                    $"{suratData.NamaJenis}_{safeNomor}_{suratData.ID_Surat}.pdf");
+                return await SimpanAsync(
+                    path,
+                    stream => generator.GeneratePdfAsync(stream, suratData, suratData.Keterangan!),
+                    logger);
             }
             catch (Exception ex)
             {
@@ -154,30 +150,13 @@ namespace SuDesApp.Wpf.Services
                 if (suratData.TanggalSurat != default) data.TanggalSurat = suratData.TanggalSurat;
 
                 var safeNomor = new string((data.NomorSurat ?? "NO").Where(char.IsLetterOrDigit).ToArray());
-                Directory.CreateDirectory(appConfig.TempPdfFolder);
 
                 string path = Path.Combine(appConfig.TempPdfFolder,
                     $"{SuratConstants.REKENING_KORAN}_{safeNomor}_{suratData.ID_Surat}.pdf");
-                string writePath = Path.Combine(appConfig.TempPdfFolder,
-                    $"{Path.GetFileNameWithoutExtension(path)}_{DateTime.Now:HHmmssfff}.pdf");
-
-                using (var stream = File.Create(writePath))
-                {
-                    await generator.GeneratePdfAsync(stream, data);
-                }
-
-                try
-                {
-                    if (File.Exists(path)) File.Delete(path);
-                    File.Move(writePath, path);
-                    return path;
-                }
-                catch (Exception lockEx) when (lockEx is IOException or UnauthorizedAccessException)
-                {
-                    logger.LogWarning(lockEx,
-                        "PDF lama masih terkunci ({Path}); memakai nama file unik.", path);
-                    return writePath;
-                }
+                return await SimpanAsync(
+                    path,
+                    stream => generator.GeneratePdfAsync(stream, data),
+                    logger);
             }
             catch (Exception ex)
             {
@@ -231,27 +210,13 @@ namespace SuDesApp.Wpf.Services
                 }
 
                 var safeNomor = new string((data.NomorSurat ?? "NO").Where(char.IsLetterOrDigit).ToArray());
-                Directory.CreateDirectory(appConfig.TempPdfFolder);
 
                 string path = Path.Combine(appConfig.TempPdfFolder,
                     $"{SuratConstants.TEMPLATE_SURAT}_{safeNomor}_{suratData.ID_Surat}.pdf");
-                string writePath = Path.Combine(appConfig.TempPdfFolder,
-                    $"{Path.GetFileNameWithoutExtension(path)}_{DateTime.Now:HHmmssfff}.pdf");
-
-                await File.WriteAllBytesAsync(writePath, pdf);
-
-                try
-                {
-                    if (File.Exists(path)) File.Delete(path);
-                    File.Move(writePath, path);
-                    return path;
-                }
-                catch (Exception lockEx) when (lockEx is IOException or UnauthorizedAccessException)
-                {
-                    logger.LogWarning(lockEx,
-                        "PDF lama masih terkunci ({Path}); memakai nama file unik.", path);
-                    return writePath;
-                }
+                return await SimpanAsync(
+                    path,
+                    stream => stream.WriteAsync(pdf, 0, pdf.Length),
+                    logger);
             }
             catch (Exception ex)
             {

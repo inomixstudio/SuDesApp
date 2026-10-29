@@ -16,7 +16,7 @@ namespace SuDesApp.Tests.Licensing
     /// aktivasi sudah ada dan server terjangkau; trial lokal hanya cadangan
     /// saat server tidak terjangkau. Server yang menjawab dan MENOLAK tidak
     /// boleh diberi cadangan lokal — kalau diberi, satu desa bisa mengumpulkan
-    /// 28 hari dari dua jalur yang seharusnya 14 hari.
+    /// 60 hari dari dua jalur yang seharusnya 30 hari.
     ///
     /// Jaringan dipalsukan lewat <see cref="HttpMessageHandler"/>; tidak ada
     /// koneksi sungguhan.

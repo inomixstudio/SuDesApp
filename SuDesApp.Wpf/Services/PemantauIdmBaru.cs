@@ -90,7 +90,11 @@ namespace SuDesApp.Wpf.Services
             _pengaturan = pengaturan ?? throw new ArgumentNullException(nameof(pengaturan));
             _wilayah = wilayah ?? throw new ArgumentNullException(nameof(wilayah));
             _notifikasi = notifikasi ?? throw new ArgumentNullException(nameof(notifikasi));
-            _kirimNotifikasi = kirimNotifikasi ?? _notifikasi.Info;
+            // Delegasi eksplisit: Info punya parameter opsional tambahan (tombol
+            // tindakan), sehingga method group-nya tidak bisa dipakai langsung
+            // sebagai Action<string, string, string?>.
+            _kirimNotifikasi = kirimNotifikasi
+                ?? ((judul, isi, tujuan) => _notifikasi.Info(judul, isi, tujuan));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _jam = jam ?? (() => DateTime.Now);
         }

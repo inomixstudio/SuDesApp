@@ -98,7 +98,11 @@
                                   Margin="0,14,0,0"
                                   ToolTip="Matikan bila API hanya dipakai dari komputer ini"/>
                         <TextBlock Style="{StaticResource FieldLabel}" Margin="22,2,0,0" TextWrapping="Wrap"
-                                   Text="Membuka untuk jaringan biasanya butuh aplikasi dijalankan sebagai administrator."/>
+                                    Text="Membuka untuk jaringan membutuhkan IP yang diizinkan dan biasanya hak administrator."/>
+                        <TextBlock Text="IP yang diizinkan" Style="{StaticResource FieldLabel}" Margin="0,8,0,0"/>
+                        <TextBox Text="{Binding IpDiizinkan, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FieldBox}" Margin="0,4,0,0"
+                                 ToolTip="Pisahkan IP komputer yang diizinkan dengan koma, mis. 192.168.1.20, 192.168.1.21"/>
 
                         <CheckBox Content="Catat pemanggilan API ke Riwayat Aktivitas"
                                   IsChecked="{Binding CatatAktivitas}" Margin="0,10,0,0"/>

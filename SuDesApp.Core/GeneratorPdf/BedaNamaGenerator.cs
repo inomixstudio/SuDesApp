@@ -1,5 +1,5 @@
 // BedaNamaGenerator.cs
-// Badan surat dibuat langsung dengan QuestPDF (BadanSurat), tanpa lapisan kompat.
+// Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Data.Models;
@@ -21,7 +21,6 @@ namespace SuDesApp.GeneratorPdf
         public BedaNamaGenerator(AppConfig config, FileService fileService, IDesaRepository desaRepository, ISuratRepository suratRepository, SettingsManager settingsManager, ILogger<BedaNamaGenerator> logger, ILoggerFactory loggerFactory)
             : base(config, fileService, desaRepository, suratRepository, settingsManager, logger, loggerFactory)
         {
-            _logger.LogInformation("BedaNamaGenerator initialized, using default font from base class.");
         }
 
         protected override string JudulSurat => "SURAT KETERANGAN BEDA DATA";
@@ -36,9 +35,6 @@ namespace SuDesApp.GeneratorPdf
                     _logger.LogError("Data Warga null saat membuat konten Beda Nama untuk Surat ID: {SuratId}", suratData.ID_Surat);
                     throw new InvalidOperationException("Data Warga tidak boleh null untuk membuat Surat Beda Nama.");
                 }
-
-                _logger.LogInformation("Rendering content for Beda Nama: NamaWarga={NamaWarga}, NomorSurat={NomorSurat}, DataSource1={DataSource1}, DataSource2={DataSource2}",
-                    suratData.Warga?.Nama ?? "N/A", suratData.NomorSurat ?? "N/A", suratData.DataSource1 ?? "N/A", suratData.DataSource2 ?? "N/A");
 
                 // Bagian pengantar
                 badan.Paragraf("Yang bertanda tangan di bawah ini:", jarakBawah: 10);
@@ -64,7 +60,7 @@ namespace SuDesApp.GeneratorPdf
                     else
                     {
                         tanggalLahirData1 = suratData.Warga.TanggalLahir;
-                        _logger.LogWarning("Gagal memformat TanggalLahir Data 1: {TanggalLahir}", suratData.Warga.TanggalLahir);
+                        _logger.LogWarning("Tanggal lahir Data 1 tidak bisa diformat.");
                     }
                 }
 
@@ -90,7 +86,7 @@ namespace SuDesApp.GeneratorPdf
                     else
                     {
                         tanggalLahirData2 = suratData.WargaKK.TanggalLahir;
-                        _logger.LogWarning("Gagal memformat TanggalLahir Data 2: {TanggalLahir}", suratData.WargaKK.TanggalLahir);
+                        _logger.LogWarning("Tanggal lahir Data 2 tidak bisa diformat.");
                     }
                 }
 
@@ -139,7 +135,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk Beda Nama, NamaWarga={NamaWarga}", suratData.Warga?.Nama ?? "N/A");
+                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk Beda Nama.");
                 throw;
             }
         }

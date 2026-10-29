@@ -399,7 +399,7 @@ namespace SuDesApp.Wpf.ViewModels
             _isInitializing = true;
             try
             {
-                _logger.LogInformation("Loading RegisterSurat data...");
+                _logger.LogDebug("Loading RegisterSurat data...");
                 await Task.WhenAll(
                     LoadJenisSuratKeComboBoxAsync(),
                     LoadStatusKeComboBoxAsync(),
@@ -427,7 +427,7 @@ namespace SuDesApp.Wpf.ViewModels
         {
             try
             {
-                _logger.LogInformation("Loading jenis surat to ComboBox...");
+                _logger.LogDebug("Loading jenis surat to ComboBox...");
                 JenisSuratItems.Clear();
 
                 foreach (var item in await BuildJenisFilterItemsAsync())
@@ -436,7 +436,7 @@ namespace SuDesApp.Wpf.ViewModels
                 }
 
                 SelectedJenisSurat = JenisSuratItems.FirstOrDefault();
-                _logger.LogInformation("Loaded {Count} jenis surat", JenisSuratItems.Count);
+                _logger.LogDebug("Loaded {Count} jenis surat", JenisSuratItems.Count);
             }
             catch (Exception ex)
             {
@@ -478,7 +478,7 @@ namespace SuDesApp.Wpf.ViewModels
         {
             try
             {
-                _logger.LogInformation("Loading status to ComboBox...");
+                _logger.LogDebug("Loading status to ComboBox...");
                 StatusItems.Clear();
 
                 var items = new List<FilterItem>
@@ -499,7 +499,7 @@ namespace SuDesApp.Wpf.ViewModels
                     StatusItems.Add(item);
 
                 SelectedStatus = StatusItems.FirstOrDefault();
-                _logger.LogInformation("Loaded {Count} status items", StatusItems.Count);
+                _logger.LogDebug("Loaded {Count} status items", StatusItems.Count);
             }
             catch (Exception ex)
             {
@@ -565,7 +565,7 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task LoadDataAsync(CancellationToken cancellationToken, int seq)
         {
-            _logger.LogInformation("Loading data page {Page}...", _currentPage);
+            _logger.LogDebug("Loading data page {Page}...", _currentPage);
             IsLoading = true;
             UpdateCommandStates();
 

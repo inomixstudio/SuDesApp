@@ -15,7 +15,7 @@
 
         Saat dibuka hanya hero + kartu akun Google + navigasi yang dirender.
         Konten tiap bagian baru dibangun saat bagiannya dipilih (lazy) — pola
-        yang sama dengan Panduan WhatsApp dan Pencadangan Database.
+        yang sama dengan Pencadangan Database.
 
         Penting: ContentControl memakai Content="{Binding}" (VM halaman) karena
         ContentPresenter menaruh nilai Content ke DataContext template. Bila
