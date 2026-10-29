@@ -11,8 +11,8 @@
     <AssemblyName>SuDesApp</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-    <AssemblyVersion>2.7.1.0</AssemblyVersion>
-    <FileVersion>2.7.1.0</FileVersion>
+    <AssemblyVersion>2.9.0.0</AssemblyVersion>
+    <FileVersion>2.9.0.0</FileVersion>
     <!-- Identitas aplikasi: tampil di halaman Tentang (detail aplikasi) -->
     <Product>SuDesApp</Product>
     <Company>Sumberjaya Dev.</Company>
@@ -30,16 +30,16 @@
        wajib <ItemGroup>, bukan PropertyGroup — sebagai PropertyGroup elemen
        ini diabaikan MSBuild dan uji gagal CS0117 dengan alasan yang tak jelas. -->
   <ItemGroup>
-    <!-- Keluaran verifikasi/build yang berada di bawah proyek bukan source aplikasi. -->
-    <Compile Remove="artifacts\**\*.cs" />
-    <InternalsVisibleTo Include="SuDesApp.Tests" />
+    <!-- WinForms framework dipakai hanya untuk dialog cetak klasik di SudesPdf;
+         jangan aktifkan UseWindowsForms di proyek WPF karena menambah global using
+         yang membuat banyak tipe WPF ambigu. -->
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- WinForms (referensi framework saja, bukan UseWindowsForms) dibutuhkan khusus
-         untuk dialog cetak Windows standar (System.Windows.Forms.PrintDialog) + 
-         PdfiumViewer CreatePrintDocument — padanan alur cetak aplikasi lama. -->
-    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+    <!-- Keluaran verifikasi/build yang berada di bawah proyek bukan source aplikasi. -->
+    <Compile Remove="artifacts\**\*.cs" />
+    <InternalsVisibleTo Include="SuDesApp.Tests" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,13 +47,15 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.13" />
-    <PackageReference Include="PdfiumViewer.Updated" Version="2.14.5" />
-    <PackageReference Include="PdfiumViewer.Native.x86_64.v8-xfa" Version="2018.4.8.256" />
+    <!-- WebView2 hanya untuk PusatAdministrasiView (halaman langganan tertanam).
+         Tidak dipakai lagi untuk PDF: pratinjau, ekstraksi teks, dan cetak PDF
+         memakai library SudesPdf di atas mesin SudesPdf.Core sendiri. -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SuDesApp.Core\SuDesApp.Core.csproj" />
+    <ProjectReference Include="..\SudesPdf\SudesPdf.csproj" />
   </ItemGroup>
 
   <!-- File runtime yang di-share dengan proyek WinForms (data query, konfigurasi, aset). -->
@@ -119,7 +121,8 @@
          boleh diperbarui lewat tambalan.
     -->
     <None Include="..\docs\**" Link="docs\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <!-- Contoh Perdes disertakan sebagai isian awal formulir Buku Perdes dari menu SOTK Desa. -->
+    <!-- Naskah contoh Perdes (JSON) disertakan sebagai isian awal formulir Buku Perdes.
+         Sumbernya data halaman, bukan berkas Word; PDF dibuat generator SudesPdf. -->
     <None Include="..\Templates\Perdes\**" Link="Templates\Perdes\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <!-- Contoh Template Surat & formulir PDF (folder Templates) ikut terbundel ke
          hasil build/publish supaya instalasi baru tidak kosong - pengguna tidak
@@ -155,8 +158,9 @@
     CommunityToolkit.Mvvm opsional untuk Source Generator MVVM:
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 
-    Pratinjau PDF memakai PDFium (PdfiumViewer.Updated + native), bukan WebView2.
-    PdfiumViewer.Updated = 2.14.5, native x64 v8-xfa = 2018.4.8.256
+    Pratinjau, ekstraksi teks, dan cetak PDF memakai library SudesPdf, yang
+    berdiri di atas mesin SudesPdf.Core buatan sendiri (tanpa PDFium, PDF.js,
+    atau paket native pihak ketiga).
   -->
 
 </Project>

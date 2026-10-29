@@ -212,7 +212,7 @@ namespace SuDesApp.Wpf.Input
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal memproses NIK warga kedua: {Nik}", nik);
+                _logger.LogError(ex, "Gagal memproses NIK warga kedua.");
                 await _messageService.ShowErrorAsync("Gagal memproses NIK warga kedua");
             }
         }

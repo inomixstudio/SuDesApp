@@ -69,7 +69,7 @@ namespace SuDesApp.Services
             lock (_kunci)
             {
                 if (_berhenti == null) return;
-                try { _berhenti.Cancel(); } catch { }
+                try { _berhenti.Cancel(); } catch { /* loop sudah selesai dan membuang CTS */ }
                 _berhenti.Dispose();
                 _berhenti = null;
                 _tugas = null;

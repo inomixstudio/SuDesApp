@@ -263,9 +263,16 @@ public sealed class LayananRekonsiliasi
         var ringkasan = new RingkasanRekonsiliasi(
             daftar.Count, diselesaikan, sudah, belumBayar, perluDiperiksa, tidakPasti, catatan);
 
-        ServerLog.RekonsiliasiSelesai(
-            _logger, ringkasan.Diperiksa, ringkasan.Diselesaikan, ringkasan.SudahDiselesaikan,
-            ringkasan.BelumBayar, ringkasan.PerluDiperiksa, ringkasan.TidakPasti);
+        // Putaran terjadwal yang tidak mengubah apa pun tidak perlu menulis baris
+        // Information setiap interval — itu yang membuat server.log membengkak
+        // tanpa memberi informasi. Ringkasan tetap dicatat bila ada perpanjangan
+        // atau order yang perlu diperiksa.
+        if (ringkasan.Diselesaikan > 0 || ringkasan.PerluDiperiksa > 0 || ringkasan.TidakPasti > 0)
+        {
+            ServerLog.RekonsiliasiSelesai(
+                _logger, ringkasan.Diperiksa, ringkasan.Diselesaikan, ringkasan.SudahDiselesaikan,
+                ringkasan.BelumBayar, ringkasan.PerluDiperiksa, ringkasan.TidakPasti);
+        }
 
         return ringkasan;
     }

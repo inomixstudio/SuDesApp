@@ -36,7 +36,7 @@
 #                          nama/kontak, ubah batas perangkat (sah & ditolak),
 #                          desa tak dikenal 404
 #   4.  aktivasi          kode kosong 400, kode asing 404, desa belum bayar
-#                          tanpa token, trial 14 hari + token v1 yang
+#                          tanpa token, trial 30 hari + token v1 yang
 #                          tanda tangan ES256-nya diverifikasi terhadap
 #                          /kunci-publik, batas perangkat (perangkat sama tidak
 #                          menghabiskan kuota, perangkat ke-3 ditolak 403,

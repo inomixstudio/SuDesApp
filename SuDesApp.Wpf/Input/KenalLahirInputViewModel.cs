@@ -168,7 +168,7 @@ namespace SuDesApp.Wpf.Input
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal memproses NIK Ibu: {Nik}", nik);
+                _logger.LogError(ex, "Gagal memproses NIK Ibu.");
                 await _messageService.ShowErrorAsync("Gagal memproses NIK Ibu");
             }
         }

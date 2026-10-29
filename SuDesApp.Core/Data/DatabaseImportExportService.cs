@@ -74,11 +74,12 @@ public class DatabaseImportExportService
                 File.Copy(sourceDbPath, tempPath, true);
                 _logger.LogInformation("Sumber disalin ke file sementara: {TempPath}", tempPath);
 
-                // Berkas impor bisa plaintext (ekspor lama) maupun sudah terenkripsi;
-                // koneksi yang tepat ditentukan dari bentuk berkasnya.
-                var tempConnectionString = EnkripsiDatabase.DeteksiKoneksi(tempPath)
+                // Berkas impor harus berupa database SQLite biasa; koneksi yang
+                // tepat ditentukan dengan membukanya terlebih dahulu.
+                var tempConnectionString = BerkasDatabase.DeteksiKoneksi(tempPath)
                     ?? throw new InvalidOperationException(
-                        "Berkas impor tidak bisa dibuka: rusak atau terenkripsi dengan kunci mesin lain.");
+                        "Berkas impor tidak bisa dibuka: bukan database SQLite yang valid " +
+                        "(rusak, atau berasal dari versi lama yang terenkripsi).");
 
                 using (var conn = new SqliteConnection(tempConnectionString))
                 {
@@ -120,13 +121,9 @@ public class DatabaseImportExportService
                 TryDeleteFile(tempPath);
             }
 
-            // Berkas hasil impor bisa berbentuk plaintext, sedangkan koneksi
-            // aplikasi yang sudah ber-kunci tidak akan bisa membukanya. Jadikan
-            // bentuk finalnya terenkripsi dengan kunci mesin ini sebelum dipakai;
-            // cadangan plaintext tidak dibuat lagi karena impor sudah mencadangkan
-            // database lama ke desa_backup_before_import_*.db.
-            _config.DatabaseConnectionString = EnkripsiDatabase.JaminTerkunci(
-                _config.DatabaseConnectionString, _logger, cadangkanPlaintext: false);
+            // Berkas hasil impor sudah berbentuk database SQLite biasa sehingga
+            // langsung dipakai apa adanya. Cadangan database lama tetap dibuat di
+            // atas sebelum berkas diganti.
 
             // Panggil InitializeAsync setelah transaksi migrasi selesai
             await InitializeAsync();
@@ -166,8 +163,8 @@ public class DatabaseImportExportService
             if (File.Exists(targetDbPath))
                 File.Delete(targetDbPath);
 
-            // Koneksi database aktif (bisa ber-kunci SQLCipher) — bukan jalur mentah,
-            // supaya VACUUM INTO tetap bisa membaca seluruh isi database.
+            // Gunakan koneksi database aktif — bukan jalur mentah — supaya
+            // VACUUM INTO tetap bisa membaca seluruh isi database.
             using (var conn = new SqliteConnection(_config.DatabaseConnectionString))
             {
                 await conn.OpenAsync();
@@ -552,9 +549,9 @@ public class DatabaseImportExportService
 
     public string GetDatabasePath()
     {
-        // Connection string bisa memuat parameter lain (mis. Password= SQLCipher),
-        // jadi jalurnya dibaca lewat builder — bukan dengan membuang teks
-        // "Data Source=" yang akan menyisakan "...;Password=..." sebagai "jalur".
+        // Connection string bisa memuat parameter lain, jadi jalurnya dibaca
+        // lewat builder — bukan dengan membuang teks "Data Source=" yang akan
+        // menyisakan sisa parameter sebagai "jalur".
         var path = new SqliteConnectionStringBuilder(_config.DatabaseConnectionString)
             .DataSource.Trim();
         if (!Path.IsPathRooted(path))
@@ -574,11 +571,11 @@ public class DatabaseImportExportService
 
         try
         {
-            // Berkas kandidat boleh plaintext (ekspor lama) atau sudah terenkripsi
-            // (cadangan dari mesin ini); DeteksiKoneksi memilih bentuk yang terbaca.
-            var connectionString = EnkripsiDatabase.DeteksiKoneksi(dbPath)
+            // Berkas kandidat harus berupa database SQLite biasa.
+            var connectionString = BerkasDatabase.DeteksiKoneksi(dbPath)
                 ?? throw new InvalidOperationException(
-                    "Database tidak bisa dibuka: berkasnya rusak atau terenkripsi dengan kunci mesin lain.");
+                    "Database tidak bisa dibuka: berkasnya rusak atau berasal dari " +
+                    "versi lama yang terenkripsi.");
 
             using var conn = new SqliteConnection(connectionString);
             await conn.OpenAsync();

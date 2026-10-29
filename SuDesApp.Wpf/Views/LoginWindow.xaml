@@ -21,8 +21,8 @@
 
         Satu jalur masuk saja: akun aplikasi (username + kata sandi). Koneksi
         akun Google TIDAK dipakai untuk masuk — akun Google hanya disambungkan
-        SETELAH masuk, dari halaman Layanan Online, untuk fitur Drive/Sheets/
-        WhatsApp. Pemasangan baru memakai kata sandi administrator acak yang
+        SETELAH masuk, untuk pencadangan Drive. Pemasangan baru memakai kata
+        sandi administrator acak yang
         ditampilkan sekali di kartu "Catat kredensial administrator".
     -->
     <Border CornerRadius="14" Background="{DynamicResource SurfaceBrush}"
@@ -101,23 +101,6 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-
-                    <!-- Kredensial awal (pemasangan baru / rotasi sandi bawaan):
-                         ditampilkan sekali. Teksnya hanya hidup di memori — tidak
-                         pernah ditulis ke berkas maupun log. -->
-                    <Border Grid.Row="0" Background="{DynamicResource PanelBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="6" Padding="10,8" Margin="0,0,0,12"
-                            Visibility="{Binding HasInfoKredensial, Converter={StaticResource BoolToVis}}">
-                        <StackPanel>
-                            <TextBlock Text="Catat kredensial administrator" FontWeight="SemiBold"
-                                       FontSize="12" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding InfoKredensialAwal, Mode=OneWay}" IsReadOnly="True"
-                                     TextWrapping="Wrap" BorderThickness="0" Background="Transparent"
-                                     Foreground="{DynamicResource TextBrush}" FontSize="12"
-                                     IsTabStop="False"/>
-                        </StackPanel>
-                    </Border>
 
                     <!-- Error message -->
                     <Border Grid.Row="1" Background="{DynamicResource ErrorOverlayBrush}" CornerRadius="6"

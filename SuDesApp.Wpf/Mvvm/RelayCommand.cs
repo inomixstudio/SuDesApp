@@ -57,13 +57,7 @@ namespace SuDesApp.Wpf.Mvvm
         /// </summary>
         internal static void LaporkanGagal(Exception ex)
         {
-            try
-            {
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(AppContext.BaseDirectory, "error.log"),
-                    $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] PERINTAH GAGAL:\n{ex}\n\n");
-            }
-            catch { /* log tidak tersedia — laporkan saja lewat penangkap */ }
+            SuDesApp.Wpf.Services.LogGalat.Tulis("PERINTAH GAGAL", ex);
 
             try
             {

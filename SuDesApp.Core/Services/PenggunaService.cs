@@ -65,6 +65,14 @@ namespace SuDesApp.Services
 
         Task ResetKataSandiAsync(int id, string kataSandiBaru, string? oleh = null, CancellationToken ct = default);
 
+        /// <summary>
+        /// Pasang kata sandi akun bawaan TANPA pemeriksaan aturan sandi dan
+        /// tanpa izin sesi. HANYA dipakai bootstrap layar login sebelum ada
+        /// sesi (memulihkan admin/admin pada instalasi lama sekali jalan).
+        /// Operasi pengguna biasa wajib lewat <see cref="ResetKataSandiAsync"/>.
+        /// </summary>
+        Task<bool> PasangKataSandiAwalAsync(int id, string kataSandi, CancellationToken ct = default);
+
         Task<bool> UbahKataSandiAsync(int id, string kataSandiLama, string kataSandiBaru, CancellationToken ct = default);
 
         Task HapusAsync(int id, CancellationToken ct = default);
@@ -276,6 +284,32 @@ namespace SuDesApp.Services
 
             _logger.LogInformation("Kata sandi akun {Username} direset oleh {Oleh}.", akun.Username, oleh ?? "sistem");
             _audit?.Log("Pengguna", akun.Username, "Reset kata sandi", $"oleh {oleh ?? "sistem"}");
+        }
+
+        public async Task<bool> PasangKataSandiAwalAsync(
+            int id, string kataSandi, CancellationToken ct = default)
+        {
+            // Sengaja tanpa SessionContext.Wajib dan tanpa Validasi: dipanggil
+            // layar login sebelum sesi ada, untuk mengembalikan akun bawaan
+            // (admin/admin) pada instalasi lama. Tidak diekspos ke perintah UI.
+            var akun = await _repo.GetAsync(id, ct).ConfigureAwait(false);
+            if (akun is null) return false;
+
+            var salt = KataSandiPengguna.BuatSalt();
+            var hash = KataSandiPengguna.HitungHash(kataSandi, salt);
+
+            bool tersimpan = await _repo
+                .UpdateKataSandiAsync(id, salt, hash, KataSandiPengguna.IterasiBawaan, "sistem", ct)
+                .ConfigureAwait(false);
+
+            if (tersimpan)
+            {
+                _logger.LogInformation(
+                    "Kata sandi awal akun {Username} dipasang saat bootstrap login.", akun.Username);
+                _audit?.Log("Pengguna", akun.Username, "Pasang kata sandi bawaan", "bootstrap login");
+            }
+
+            return tersimpan;
         }
 
         public async Task<bool> UbahKataSandiAsync(int id, string kataSandiLama, string kataSandiBaru, CancellationToken ct = default)

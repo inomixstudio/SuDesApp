@@ -87,8 +87,8 @@ namespace SuDesApp.Data.Repositories
                 _logger.LogWarning("Data Izin Ortu tidak ditemukan untuk ID_Surat: {ID_Surat}", idSurat);
                 return new IzinOrtuData();
             }
-            _logger.LogDebug("Izin Ortu data: ID_Surat={ID_Surat}, ID_Warga_Anak={ID_Warga_Anak}, NamaAnak={NamaAnak}, NIKAnak={NIKAnak}",
-                idSurat, result.ID_Anak, result.NamaAnak ?? "null", result.NIKAnak ?? "null");
+            _logger.LogDebug("Data Izin Ortu dimuat: ID_Surat={ID_Surat}, ID_Warga_Anak={ID_Warga_Anak}",
+                idSurat, result.ID_Anak);
             return result;
         }
 
@@ -98,8 +98,8 @@ namespace SuDesApp.Data.Repositories
             if (izinData.ID_Surat <= 0) throw new ArgumentException("ID_Surat harus valid.", nameof(izinData.ID_Surat));
             if (izinData.ID_Anak <= 0) throw new ArgumentException("ID_Warga_Anak harus valid.", nameof(izinData.ID_Anak));
 
-            _logger.LogInformation("Memperbarui data Izin Ortu untuk ID_Surat: {ID_Surat}, ID_Warga_Anak: {ID_Warga_Anak}, NamaAnak: {NamaAnak}",
-                izinData.ID_Surat, izinData.ID_Anak, izinData.NamaAnak ?? "null");
+            _logger.LogDebug("Memperbarui data Izin Ortu untuk ID_Surat={ID_Surat}, ID_Warga_Anak={ID_Warga_Anak}",
+                izinData.ID_Surat, izinData.ID_Anak);
 
             // Validasi bahwa ID_Warga_Anak ada di tabel Warga
             var wargaAnak = await _connection.QueryFirstOrDefaultAsync<WargaData>(
@@ -111,8 +111,7 @@ namespace SuDesApp.Data.Repositories
                 _logger.LogError("Warga anak tidak ditemukan untuk ID_Warga_Anak: {ID_Warga_Anak}", izinData.ID_Anak);
                 throw new DataAccessException($"Warga anak dengan ID {izinData.ID_Anak} tidak ditemukan.");
             }
-            _logger.LogDebug("Warga anak valid: ID_Warga_Anak={ID_Warga_Anak}, Nama={Nama}, NIK={NIK}",
-                izinData.ID_Anak, wargaAnak.Nama, wargaAnak.NIK);
+            _logger.LogDebug("Warga anak valid: ID_Warga_Anak={ID_Warga_Anak}", izinData.ID_Anak);
 
             const string query = @"
             UPDATE IZIN
@@ -129,8 +128,8 @@ namespace SuDesApp.Data.Repositories
                 izinData.NegaraTujuan,
                 izinData.NamaPT
             }, transaction);
-            _logger.LogInformation("Data Izin Ortu diperbarui untuk ID_Surat: {ID_Surat}, Baris terpengaruh: {AffectedRows}, NamaAnak: {NamaAnak}",
-                izinData.ID_Surat, affectedRows, izinData.NamaAnak ?? "null");
+            _logger.LogInformation("Data Izin Ortu diperbarui untuk ID_Surat={ID_Surat} ({AffectedRows} baris).",
+                izinData.ID_Surat, affectedRows);
             return affectedRows;
         }
 

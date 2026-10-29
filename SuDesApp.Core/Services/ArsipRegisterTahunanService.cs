@@ -9,9 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
@@ -274,7 +272,6 @@ namespace SuDesApp.Services
 
         internal static byte[] RenderPdf(RegisterTahunanData data)
         {
-            QuestPdfLisensi.Pastikan();
 
             using var penampung = new MemoryStream();
             Document.Create(container =>

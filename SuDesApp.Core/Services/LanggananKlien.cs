@@ -94,7 +94,7 @@ namespace SuDesApp.Services
         /// </summary>
         public static KatalogLangganan Bawaan { get; } = new(new[]
         {
-            // Tiga paket berbayar, urut dari yang paling pendek. TRIAL 14 hari
+            // Tiga paket berbayar, urut dari yang paling pendek. TRIAL 30 hari
             // tidak ada di sini karena gratis — ia tombol terpisah yang tidak
             // pernah melewati tagihan Midtrans (LanggananKlien.MulaiTrialAsync).
             //
@@ -133,7 +133,7 @@ namespace SuDesApp.Services
             string rapi = kode.Trim();
             if (string.Equals(rapi, "trial", StringComparison.OrdinalIgnoreCase))
             {
-                return "Trial 14 hari";
+                return "Trial 30 hari";
             }
 
             return Cari(rapi)?.Label ?? rapi;
@@ -462,7 +462,7 @@ namespace SuDesApp.Services
         }
 
         /// <summary>
-        /// Mulai trial 14 hari (gratis) untuk desa dengan kode aktivasi ini.
+        /// Mulai trial 30 hari (gratis) untuk desa dengan kode aktivasi ini.
         /// Lepas dari pembayaran karena harganya 0: server yang menahan "sekali
         /// per desa" (kolom trial_sudah) dan "langganan belum aktif", jadi
         /// menekan tombol berkali-kali atau dari banyak PC tetap aman.
@@ -588,7 +588,7 @@ namespace SuDesApp.Services
 
             if (pertama)
             {
-                _logger.LogInformation(ex,
+                _logger.LogWarning(ex,
                     "Katalog harga paket tidak terjangkau — kartu memakai harga tersimpan bila ada.");
             }
         }

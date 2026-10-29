@@ -42,7 +42,7 @@ namespace SuDesApp.Services
     /// bukan flag) → transaksi atomik → penomoran → log aktivitas. PDF tetap di lapis
     /// UI (SuratPdfHelper) karena butuh resolver generator per presentasi.
     ///
-    /// Sumber kebenaran tunggal sehingga alur baru (WhatsApp, paket NTCR, surat lain)
+    /// Sumber kebenaran tunggal sehingga alur baru (paket NTCR, surat lain)
     /// otomatis mendapat perilaku draft/atomik yang benar tanpa menyalin orkestrasi.
     /// </summary>
     public sealed class SuratSaveService

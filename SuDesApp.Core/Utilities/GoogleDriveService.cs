@@ -89,14 +89,6 @@ namespace SuDesApp.Utilities
         /// </summary>
         private readonly SemaphoreSlim _clientLock = new(1, 1);
 
-        /// <summary>
-        /// Dipicu setiap kali klien Google dibuang (token dihapus / ganti akun /
-        /// kredensial klien berubah). Layanan lain yang men-cache klien turunan
-        /// — mis. <see cref="GoogleSheetsService"/> — wajib membuang cache-nya
-        /// agar tidak terus memakai akun lama.
-        /// </summary>
-        public event Action? ClientInvalidated;
-
         public GoogleDriveService(IConfiguration configuration, ILogger<GoogleDriveService>? logger = null)
         {
             _logger = logger ?? NullLogger<GoogleDriveService>.Instance;
@@ -201,7 +193,6 @@ namespace SuDesApp.Utilities
             // Klien lama dibangun dengan kredensial lama — buang agar percobaan
             // berikutnya memakai kredensial baru tanpa perlu menjalankan ulang.
             ResetClient();
-            ClientInvalidated?.Invoke();
         }
 
         /// <summary>Lokasi file penyimpanan kredensial (untuk pesan petunjuk setup).</summary>
@@ -234,10 +225,6 @@ namespace SuDesApp.Utilities
         {
             ResetClient();
             await new ProtectedGoogleTokenDataStore(_tokenFolder).ClearAsync().ConfigureAwait(false);
-
-            // Beri tahu konsumen (mis. GoogleSheetsService) agar membuang klien
-            // turunan yang masih memakai akun/token lama.
-            ClientInvalidated?.Invoke();
             await Task.CompletedTask;
         }
 
@@ -395,21 +382,6 @@ namespace SuDesApp.Utilities
             var old = _service;
             _service = null;
             old?.Dispose();
-        }
-
-        /// <summary>
-        /// Membangun initializer klien Google API (OAuth credential + ApplicationName)
-        /// untuk layanan Google lain di luar Drive — saat ini dipakai GoogleSheetsService
-        /// (mode layanan online Google Sheet/Form) supaya warga cukup login Google sekali.
-        /// </summary>
-        public async Task<BaseClientService.Initializer> BuildSharedInitializerAsync(CancellationToken ct = default)
-        {
-            var drive = await GetClientAsync(ct).ConfigureAwait(false);
-            return new BaseClientService.Initializer
-            {
-                HttpClientInitializer = drive.HttpClientInitializer,
-                ApplicationName = "SuDesApp"
-            };
         }
 
         public async Task<IList<DriveItem>> ListItemsAsync(string? folderId = null, CancellationToken ct = default)

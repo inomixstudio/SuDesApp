@@ -69,7 +69,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully inserted BedaNama data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully inserted BedaNama data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -95,7 +95,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully deleted BedaNama data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully deleted BedaNama data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -149,7 +149,7 @@ namespace SuDesApp.Data.Handlers
                     _logger.LogWarning("No BedaNama data found for ID_Surat={ID_Surat}", suratData.ID_Surat);
                 }
 
-                _logger.LogInformation("Successfully loaded BedaNama data for ID_Surat={ID_Surat}", suratData.ID_Surat);
+                _logger.LogDebug("Successfully loaded BedaNama data for ID_Surat={ID_Surat}", suratData.ID_Surat);
             }
             catch (Exception ex)
             {

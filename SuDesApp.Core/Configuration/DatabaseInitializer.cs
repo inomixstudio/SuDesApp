@@ -606,19 +606,13 @@ namespace SuDesApp.Configuration
             // ? 1. Create audit log table jika belum ada
             await CreateAuditLogTableAsync(connection);
 
-            // ? 1a. Create tabel permintaan surat online (WhatsApp)
-            await CreatePermintaanWaTableAsync(connection);
-
-            // ? 1b. Migrasi kolom mode Google Sheet (Sumber, SheetToken, SheetRowId)
-            await MigratePermintaanWaSheetColumnsAsync(connection);
-
-            // ? 1c. Tabel Perangkat Desa (dibuat + migrasi nama jabatan lama)
+            // ? 1a. Tabel Perangkat Desa (dibuat + migrasi nama jabatan lama)
             await EnsurePerangkatDesaTableAsync(connection);
 
-            // ? 1d. Tabel status tutup buku tahunan (fitur baru; tidak ada di desa.db.sql versi awal)
+            // ? 1b. Tabel status tutup buku tahunan (fitur baru; tidak ada di desa.db.sql versi awal)
             await EnsureTutupBukuTahunTableAsync(connection);
 
-            // ? 1e. Tabel bukti langganan (kode aktivasi terhubung ke database desa)
+            // ? 1c. Tabel bukti langganan (kode aktivasi terhubung ke database desa)
             await EnsureLisensiAktivasiTableAsync(connection);
 
             // ? 2. Create views jika belum ada
@@ -757,20 +751,15 @@ namespace SuDesApp.Configuration
                         "SELECT COUNT(*) FROM JenisSurat WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 })
                     : 0;
 
-                int permintaanN7 = await TableExistsAsync(connection, "PermintaanWa")
-                    ? await connection.ExecuteScalarAsync<int>(
-                        "SELECT COUNT(*) FROM PermintaanWa WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 })
-                    : 0;
-
-                if (suratN7 == 0 && jenisN7Tersisa == 0 && permintaanN7 == 0)
+                if (suratN7 == 0 && jenisN7Tersisa == 0)
                 {
                     return;
                 }
 
                 _logger.LogWarning(
-                    "Migrasi N7: ditemukan {Surat} surat, {Jenis} jenis surat, {Permintaan} permintaan online. " +
+                    "Migrasi N7: ditemukan {Surat} surat, {Jenis} jenis surat. " +
                     "Model N7 sudah tidak dipakai — data lama akan dibuang setelah dicadangkan.",
-                    suratN7, jenisN7Tersisa, permintaanN7);
+                    suratN7, jenisN7Tersisa);
 
                 await CadangkanSebelumHapusN7Async();
 
@@ -797,12 +786,6 @@ namespace SuDesApp.Configuration
                 {
                     await connection.ExecuteAsync(
                         "DELETE FROM JenisSurat WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 });
-                }
-
-                if (permintaanN7 > 0)
-                {
-                    await connection.ExecuteAsync(
-                        "DELETE FROM PermintaanWa WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 });
                 }
 
                 _logger.LogInformation("Migrasi N7 selesai: sisa data Model N7 dihapus.");
@@ -922,80 +905,6 @@ namespace SuDesApp.Configuration
                 // langganan tidak terkunci hanya karena tabel ini belum ada.
                 _logger.LogError(ex, "Gagal menyiapkan tabel LisensiAktivasi");
             }
-        }
-
-        /// <summary>
-        /// Migrasi kolom mode Google Sheet pada tabel PermintaanWa (Sumber,
-        /// SheetToken, SheetRowId) untuk database lama yang tabelnya sudah ada.
-        /// </summary>
-        private async Task MigratePermintaanWaSheetColumnsAsync(SqliteConnection connection)
-        {
-            try
-            {
-                var kolomBaru = new[]
-                {
-                    "Sumber TEXT NOT NULL DEFAULT 'WA'",
-                    "SheetToken TEXT",
-                    "SheetRowId INTEGER"
-                };
-
-                var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                var rows = await connection.QueryAsync<(int cid, string name)>(
-                    "SELECT cid, name FROM pragma_table_info('PermintaanWa');");
-                foreach (var row in rows) existing.Add(row.name);
-
-                foreach (var def in kolomBaru)
-                {
-                    var nama = def.Split(' ')[0];
-                    if (existing.Contains(nama)) continue;
-                    try
-                    {
-                        await connection.ExecuteAsync($"ALTER TABLE PermintaanWa ADD COLUMN {def};");
-                        _logger.LogInformation("Kolom PermintaanWa ditambahkan: {Kolom}", nama);
-                    }
-                    catch (SqliteException ex) when (ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Kolom sudah ada — aman diabaikan.
-                    }
-                }
-            }
-            catch (SqliteException ex) when (ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogDebug("Migrasi kolom Sheet PermintaanWa: kolom sudah ada.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal migrasi kolom Sheet PermintaanWa");
-            }
-        }
-
-        // ? CREATE PERMINTAAN WA TABLE
-        private async Task CreatePermintaanWaTableAsync(SqliteConnection connection)
-        {
-            var sql = @"
-                CREATE TABLE IF NOT EXISTS PermintaanWa (
-                    ID_Permintaan    INTEGER PRIMARY KEY AUTOINCREMENT,
-                    KodePermintaan   TEXT NOT NULL,
-                    NomorWA          TEXT NOT NULL,
-                    NamaWarga        TEXT,
-                    NIK              TEXT,
-                    NamaJenis        TEXT NOT NULL,
-                    PesanMentah      TEXT,
-                    DataJson         TEXT,
-                    Status           TEXT NOT NULL DEFAULT 'BARU',
-                    IdSurat          INTEGER,
-                    IsRead           INTEGER NOT NULL DEFAULT 0,
-                    TanggalPermintaan TEXT NOT NULL,
-                    TanggalDiproses  TEXT,
-                    Catatan          TEXT,
-                    PesanBalasan     TEXT
-                );
-                CREATE INDEX IF NOT EXISTS idx_permintaanwa_status ON PermintaanWa(Status);
-                CREATE INDEX IF NOT EXISTS idx_permintaanwa_wa ON PermintaanWa(NomorWA);
-                CREATE INDEX IF NOT EXISTS idx_permintaanwa_isread ON PermintaanWa(IsRead);";
-
-            await connection.ExecuteAsync(sql);
-            _logger.LogInformation("Tabel PermintaanWa dimigrasikan.");
         }
 
         // ? CREATE VIEWS

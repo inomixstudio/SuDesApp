@@ -60,9 +60,8 @@ namespace SuDesApp.Api
         /// <summary>
         /// True bila cakupan kunci mencakup endpoint yang diminta. Kunci Penuh
         /// membuka semuanya; kunci Agregat membuka endpoint agregat dan data
-        /// perangkat desa (baca-saja untuk kop/dashboard); kunci Permintaan
-        /// membuka alur permintaan surat online. Kategori lain tidak tercakup
-        /// kunci sempit mana pun.
+        /// perangkat desa (baca-saja untuk kop/dashboard). Kategori lain tidak
+        /// tercakup kunci sempit mana pun.
         /// </summary>
         public static bool CakupanCukup(ApiCakupan cakupanKunci, ApiEndpoint endpoint)
         {
@@ -70,7 +69,6 @@ namespace SuDesApp.Api
             return endpoint.Kategori switch
             {
                 ApiKategori.Agregat or ApiKategori.Perangkat => cakupanKunci == ApiCakupan.Agregat,
-                ApiKategori.Permintaan => cakupanKunci == ApiCakupan.Permintaan,
                 _ => false
             };
         }

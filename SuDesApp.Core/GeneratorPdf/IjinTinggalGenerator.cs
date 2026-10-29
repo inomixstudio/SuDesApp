@@ -1,5 +1,5 @@
 // IjinTinggalGenerator.cs
-// Badan surat dibuat langsung dengan QuestPDF (BadanSurat), tanpa lapisan kompat.
+// Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
@@ -62,7 +62,7 @@ namespace SuDesApp.GeneratorPdf
                 AddKeteranganParagraph(badan, keteranganFinal);
                 AddPenutupParagraph(badan);
 
-                _logger.LogInformation("Berhasil membuat dokumen Ijin Tinggal untuk {Nik}", warga.NIK);
+                _logger.LogDebug("Dokumen Ijin Tinggal selesai dibuat.");
             }
             catch (Exception ex)
             {
@@ -103,7 +103,7 @@ namespace SuDesApp.GeneratorPdf
                 return tglLahir.ToString("dd MMMM yyyy", new CultureInfo("id-ID"));
             }
 
-            _logger.LogWarning("Format tanggal lahir tidak valid: {TanggalLahir}", tanggalLahirDb);
+            _logger.LogWarning("Format tanggal lahir tidak valid.");
             return tanggalLahirDb;
         }
 

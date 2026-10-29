@@ -98,7 +98,7 @@ namespace SuDesApp.Wpf.ViewModels
 
             MuatUlangCommand = new AsyncRelayCommand(() => LoadAsync(), () => !IsBusy);
             // Cetak PDF kini menjalankan alur pratinjau (tombol "Pratinjau"
-            // tersendiri sudah dihapus): susun PDF → halaman pratinjau PDFium,
+            // tersendiri sudah dihapus): susun PDF → halaman pratinjau SudesPdf,
             // tempat tombol Cetak dan Ekspor berada. Simpan-ke-berkas tidak lagi
             // menjadi alur terpisah.
             CetakPdfCommand = new AsyncRelayCommand(PratinjauAsync, () => !IsBusy);
@@ -417,7 +417,7 @@ namespace SuDesApp.Wpf.ViewModels
                 SusunTampilan(data);
                 StatusText = "Pratinjau PDF siap. Gunakan tombol Cetak pada halaman pratinjau.";
 
-                // Kirim jalur PENUH, bukan nama berkas: PDFium memuat dokumen
+                // Kirim jalur PENUH, bukan nama berkas: SudesPdf memuat dokumen
                 // persis dari path yang diberikan, dan berkas tadi ditulis ke
                 // folder TempPDF — bukan direktori kerja proses.
                 NavigasiKePratinjau(jalur, $"Laporan Penduduk — {data.Periode}");
@@ -509,7 +509,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// Buka halaman pratinjau PDF yang sama dengan yang dipakai surat dan
         /// daftar hadir, sehingga satu gaya pratinjau berlaku untuk semua
         /// keluaran di aplikasi ini. Parameter harus jalur penuh ke berkas —
-        /// pemanggilan dengan nama berkas saja membuat PDFium gagal memuat
+        /// pemanggilan dengan nama berkas saja membuat SudesPdf gagal memuat
         /// dokumen (pratinjau kosong / "dokumen tidak ditemukan").
         /// </summary>
         private void NavigasiKePratinjau(string jalurPdf, string judul)

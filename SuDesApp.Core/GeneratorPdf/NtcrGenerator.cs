@@ -10,15 +10,14 @@
 // kepala "KANTOR DESA/KELURAHAN" dan ditandatangani Kepala Desa/Lurah; N2 dan N3
 // adalah surat permohonan kepada KUA yang ditandatangani pemohon; N4 ditandatangani
 // kedua calon pengantin; N5 oleh ayah dan ibu/wali.
-// Seluruh tata letak dirender langsung dengan API QuestPDF (tanpa lapisan kompat).
+// Seluruh tata letak dirender langsung dengan API SudesPdf.Layout (tanpa lapisan kompat).
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Utilities;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using System.Globalization;
 
 namespace SuDesApp.GeneratorPdf
@@ -34,13 +33,14 @@ namespace SuDesApp.GeneratorPdf
 
         private const float LebarLabelKepala = 205f;
 
+        protected override string JudulSurat => NtcrKatalog.NamaFormulir(SuratConstants.NTCR_N1);
+
         /// <summary>Jarak baris tiap sel tabel data blanko mengikuti kerapatan surat yang aktif.</summary>
         private static float LeadingData => KerapatanSurat.Aktif.LeadingSelTabel;
 
         /// <summary>Lebar kolom label (%) pada tabel data — cukup agar label panjang tidak terpotong.</summary>
         private const float LebarLabelSel = 42f;
 
-        private string _currentJudul = NtcrKatalog.NamaFormulir(SuratConstants.NTCR_N1);
         private static readonly CultureInfo Budaya = new("id-ID");
 
         public NtcrGenerator(
@@ -55,8 +55,6 @@ namespace SuDesApp.GeneratorPdf
         {
         }
 
-        protected override string JudulSurat => _currentJudul;
-
         /// <summary>
         /// Blanko resmi NTCR berupa satu lembar (kertas F4/A4). Bila isi melimpah —
         /// umumnya di A4 yang lebih pendek — kerapatan surat dirapatkan otomatis
@@ -69,12 +67,6 @@ namespace SuDesApp.GeneratorPdf
         protected override bool UseDefaultFooter => false;
         protected override bool ShowPemohonInFooter => false;
 
-        public override async Task GeneratePdfAsync(Stream outputStream, SuratData suratData, string? keteranganTextBox = null)
-        {
-            _currentJudul = NtcrKatalog.NamaFormulir(suratData?.NamaJenis);
-            await base.GeneratePdfAsync(outputStream, suratData!, keteranganTextBox);
-        }
-
         /// <summary>
         /// Cetak satu paket blanko sekaligus: setiap blanko pada daftar menempati satu
         /// halaman di dalam SATU berkas PDF, sehingga berkas hasilnya siap cetak/hantar
@@ -82,7 +74,7 @@ namespace SuDesApp.GeneratorPdf
         /// pasangan" (lihat NtcrPaketService).
         /// </summary>
         /// <remarks>
-        /// QuestPDF merender secara sinkron; metode ini mengembalikan Task agar
+        /// Mesin SudesPdf merender secara sinkron; metode ini mengembalikan Task agar
         /// seragam dengan sebutan generator lain saat dipanggil dari alur async.
         /// </remarks>
         public virtual Task GeneratePaketPdfAsync(
@@ -117,7 +109,7 @@ namespace SuDesApp.GeneratorPdf
             // Kerapatan berlaku untuk seluruh halaman; dokumen dirender ulang dengan
             // kerapatan lebih rapat sampai jumlah halamannya sama dengan jumlah blanko
             // (satu blanko = satu halaman, tanpa halaman sisa).
-            foreach (var kerapatan in KerapatanBertingkat)
+            foreach (var kerapatan in KerapatanSurat.Bertingkat)
             {
                 using var penanda = KerapatanSurat.Pakai(kerapatan);
                 using var penampung = new MemoryStream();
@@ -127,8 +119,6 @@ namespace SuDesApp.GeneratorPdf
                     for (int i = 0; i < halamanBlanko.Count; i++)
                     {
                         var suratData = halamanBlanko[i];
-                        _currentJudul = NtcrKatalog.NamaFormulir(suratData.NamaJenis);
-
                         container.Page(page =>
                         {
                             SiapkanHalaman(page, lebarHalaman, tinggiHalaman);
@@ -137,11 +127,7 @@ namespace SuDesApp.GeneratorPdf
                             {
                                 var halaman = new BadanSurat();
                                 ComposeHalaman(halaman, suratData, keteranganTextBox!);
-                                foreach (var potongan in halaman.Potongan)
-                                {
-                                    var render = potongan;
-                                    kolom.Item().Element(c => render(c));
-                                }
+                                halaman.Render(kolom);
                             });
                         });
                     }
@@ -154,14 +140,14 @@ namespace SuDesApp.GeneratorPdf
                 {
                     if (!ReferenceEquals(kerapatan, KerapatanSurat.Normal))
                     {
-                        _logger.LogInformation("Paket NTCR dirapatkan ke kerapatan {Kerapatan} agar tepat {Halaman} halaman.",
+                        _logger.LogDebug("Paket NTCR dirapatkan ke kerapatan {Kerapatan} agar tepat {Halaman} halaman.",
                             kerapatan.Nama, halamanBlanko.Count);
                     }
 
                     break;
                 }
 
-                _logger.LogInformation("Paket NTCR memakai kerapatan {Kerapatan} masih {Jumlah} halaman untuk {Blanko} blanko; mencoba kerapatan berikutnya.",
+                _logger.LogDebug("Paket NTCR memakai kerapatan {Kerapatan} masih {Jumlah} halaman untuk {Blanko} blanko; mencoba kerapatan berikutnya.",
                     kerapatan.Nama, jumlahHalaman, halamanBlanko.Count);
             }
 
@@ -224,7 +210,7 @@ namespace SuDesApp.GeneratorPdf
                         break;
                 }
 
-                _logger.LogInformation("Berhasil membuat blanko NTCR ({NamaJenis}) untuk {NIK}", jenis, warga.NIK);
+                _logger.LogDebug("Blanko NTCR {NamaJenis} selesai dibuat.", jenis);
             }
             catch (Exception ex)
             {
@@ -544,7 +530,7 @@ namespace SuDesApp.GeneratorPdf
         // =====================================================================
         private void ComposeN8(BadanSurat badan, SuratData suratData, DesaData desa, WargaData warga, NtcrData ntcr, string keteranganTextBox)
         {
-            badan.Blok(c => SuratRenderer.Kop(c, desa, CariLogoPath()));
+            badan.Blok(c => KopSurat.Gambar(c, desa, CariLogoPath()));
             badan.Blok(c => SuratRenderer.JudulDanNomor(c, "SURAT KETERANGAN NUMPANG NIKAH", HitungNomorSurat(suratData)));
 
             badan.Paragraf("Yang bertandatangan di bawah ini :", jarakBawah: 8);
@@ -771,7 +757,11 @@ namespace SuDesApp.GeneratorPdf
                 ? $"Sekretaris Desa {desa.NamaDesa}"
                 : $"{KopSurat.KataPejabat(desa)} {desa.NamaDesa}";
 
-        /// <summary>Blok tanda tangan rata kanan (desa/KUA) dengan ruang tanda tangan. NIP dicetak di bawah nama bila diisi (Lurah pada kelurahan).</summary>
+        /// <summary>
+        /// Blok tanda tangan pada kolom KANAN halaman dengan ruang tanda tangan;
+        /// isi bloknya rata tengah, sesuai bentuk baku tanda tangan surat dinas.
+        /// NIP dicetak di bawah nama bila diisi (Lurah pada kelurahan).
+        /// </summary>
         private static void TandaTanganKanan(BadanSurat badan, SuratData suratData, DesaData desa, string[] jabatan, string? nama, string? barisAtas = null, string? nip = null)
         {
             string namaFinal = string.IsNullOrWhiteSpace(nama)

@@ -84,7 +84,7 @@ namespace SuDesApp.Data.Handlers
                     new { ID_Surat = idSurat, suratData.AhliWaris.Waris.Count }
                 );
 
-                _logger.LogInformation("Successfully inserted {WarisCount} waris and updated AdditionalData for ID_Surat={ID_Surat}",
+                _logger.LogDebug("Successfully inserted {WarisCount} waris and updated AdditionalData for ID_Surat={ID_Surat}",
                     suratData.AhliWaris.Waris.Count, idSurat);
 
                 //await _cacheService.RemoveAsync(CacheKeys.Surat(idSurat));

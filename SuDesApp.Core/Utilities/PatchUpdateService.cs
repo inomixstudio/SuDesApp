@@ -395,7 +395,7 @@ namespace SuDesApp.Utilities
 
             var info = new ProcessStartInfo
             {
-                FileName = "powershell.exe",
+                FileName = PowerShellWindows.JalurExecutable(),
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
@@ -427,45 +427,6 @@ namespace SuDesApp.Utilities
 
             Process.Start(info);
             _logger.LogInformation("Skrip penerapan tambalan {Versi} dijalankan (menunggu proses {Pid}).", siap.Versi, pid);
-        }
-
-        // =====================================================================
-        // 4. Pemasangan otomatis saat aplikasi ditutup (tanpa tanya pengguna)
-        // =====================================================================
-
-        /// <summary>
-        /// Unduh + verifikasi paket tambalan TANPA UI sama sekali, dipakai pemasangan
-        /// otomatis saat aplikasi ditutup (bila pengesahan membolehkannya lewat
-        /// Pengaturan Aplikasi). Rencana boleh ditolak (mis. versi tidak cocok) —
-        /// pemanggil cukup membatalkan rencananya tanpa mengganggu penutupan.
-        /// Tidak ada berkas aplikasi yang disentuh pada tahap ini.
-        /// </summary>
-        public async Task<TambalanSiap?> SiapkanPembaruanOtomatisAsync(
-            UpdateInfo rilis,
-            CancellationToken cancellationToken = default)
-        {
-            if (rilis == null) return null;
-
-            try
-            {
-                var tambalan = await AmbilPenawaranAsync(rilis, cancellationToken);
-                if (tambalan == null) return null;
-
-                var rencana = SusunRencana(tambalan, _versiTerpasang());
-                if (!rencana.BisaDipakai) return null;
-
-                return await UnduhDanSiapkanAsync(rilis, tambalan, rencana, null, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex,
-                    "Pemasangan otomatis tambalan {Versi} gagal disiapkan; pemasangan dilewati.", rilis.Version);
-                return null;
-            }
         }
 
         // =====================================================================

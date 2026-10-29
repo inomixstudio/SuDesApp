@@ -1,0 +1,155 @@
+name: Release
+
+# Rilis dari tag v<versi> atau manual (Run workflow). Seluruh urutan aset -
+# publish, tanda tangan Authenticode, zip portable, installer, tambalan,
+# patch.json, unggah - dikerjakan Tools/publish-release.ps1 supaya jalur CI dan
+# jalur lokal tidak pernah berbeda.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      versi:
+        description: 'Versi rilis x.y.z (tag v<versi> harus sudah ada di origin)'
+        required: true
+        type: string
+      tanpa_tanda_tangan:
+        description: 'Lewati tanda tangan Authenticode (hanya untuk uji - aset tidak layak dibagikan)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verifikasi:
+    name: Verifikasi (build + uji)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.401
+
+      - name: Restore
+        run: dotnet restore SuDesApp.slnx
+
+      - name: Build
+        run: dotnet build SuDesApp.slnx --no-restore --configuration Release
+
+      - name: Uji
+        run: dotnet test SuDesApp.Tests/SuDesApp.Tests.csproj --no-build --no-restore --configuration Release
+
+  rilis:
+    name: Publish, tanda tangan, unggah
+    needs: verifikasi
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Riwayat dan tag lengkap: versi pembanding tambalan dibaca dari tag.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.401
+
+      - name: Pasang Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      - name: Tentukan versi dan pembanding tambalan
+        id: versi
+        shell: pwsh
+        env:
+          INPUT_VERSI: ${{ inputs.versi }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          $versi = if ($env:INPUT_VERSI) { $env:INPUT_VERSI } elseif ($env:REF_TYPE -eq 'tag') { $env:REF_NAME } else { '' }
+          $versi = $versi.Trim().TrimStart('v', 'V')
+          if ($versi -notmatch '^\d+\.\d+\.\d+$') { throw "Versi tidak valid: '$versi' (harus x.y.z)." }
+
+          $tag = 'v' + $versi
+          if (-not (git ls-remote --tags origin ("refs/tags/" + $tag))) {
+            throw "Tag $tag belum ada di origin. Buat dan dorong tag itu dulu - rilis GitHub menuntut tag yang menunjuk commit rilis."
+          }
+
+          # Pembanding tambalan: tag tertinggi yang lebih rendah dari versi ini.
+          # Bila zip-nya tidak bisa diunduh, publish-release.ps1 jatuh ke
+          # patch.json berjenis "besar" dengan sendirinya.
+          $lama = ''
+          foreach ($t in @(git tag --list 'v*' --sort=-v:refname)) {
+            if ($t -notmatch '^v(\d+\.\d+\.\d+)$') { continue }
+            if ([version]$Matches[1] -lt [version]$versi) { $lama = $Matches[1]; break }
+          }
+
+          "versi=$versi" >> $env:GITHUB_OUTPUT
+          "versi_lama=$lama" >> $env:GITHUB_OUTPUT
+          Write-Host ("Versi: {0}   pembanding: {1}" -f $versi, $(if ($lama) { $lama } else { '(tidak ada)' }))
+
+      - name: Terapkan konfigurasi lisensi produksi
+        shell: pwsh
+        env:
+          LISENSI_URL_SERVER: ${{ secrets.LISENSI_URL_SERVER }}
+          LISENSI_KUNCI_PUBLIK: ${{ secrets.LISENSI_KUNCI_PUBLIK }}
+        run: |
+          if (-not $env:LISENSI_URL_SERVER -or -not $env:LISENSI_KUNCI_PUBLIK) {
+            throw 'Secret LISENSI_URL_SERVER dan LISENSI_KUNCI_PUBLIK wajib diisi (Settings -> Secrets and variables -> Actions).'
+          }
+          $jalur = 'appsettings.json'
+          $json = Get-Content -LiteralPath $jalur -Raw | ConvertFrom-Json
+          $json.Lisensi.UrlServer = $env:LISENSI_URL_SERVER.Trim()
+          $json.Lisensi.KunciPublik = $env:LISENSI_KUNCI_PUBLIK.Trim()
+          ($json | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $jalur -Encoding UTF8
+          Write-Host ('Lisensi:UrlServer = ' + $json.Lisensi.UrlServer)
+
+      - name: Siapkan sertifikat tanda tangan Authenticode
+        id: sertifikat
+        shell: pwsh
+        env:
+          LEWATI: ${{ inputs.tanpa_tanda_tangan }}
+          PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
+        run: |
+          if ($env:LEWATI -eq 'true') {
+            Write-Host 'Tanda tangan dilewati (tanpa_tanda_tangan=true) - aset TIDAK ditandatangani.' -ForegroundColor Yellow
+            "pfx=" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+          if (-not $env:PFX_BASE64) {
+            throw 'Secret WINDOWS_SIGNING_PFX_BASE64 kosong. Aset tanpa Authenticode memicu peringatan SmartScreen di setiap pengguna baru; isi sertifikatnya atau jalankan workflow dengan tanpa_tanda_tangan=true untuk uji.'
+          }
+          $jalur = Join-Path $env:RUNNER_TEMP 'sudesapp-signing.pfx'
+          [IO.File]::WriteAllBytes($jalur, [Convert]::FromBase64String($env:PFX_BASE64))
+          "pfx=$jalur" >> $env:GITHUB_OUTPUT
+
+      - name: Publish, tanda tangan, unggah aset
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SUDESAPP_PFX_PATH: ${{ steps.sertifikat.outputs.pfx }}
+          SUDESAPP_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
+          VERSI: ${{ steps.versi.outputs.versi }}
+          VERSI_LAMA: ${{ steps.versi.outputs.versi_lama }}
+          REPO: ${{ github.repository }}
+        run: |
+          # CI tidak pernah memegang berkas rahasia kredensial Google (sengaja tidak
+          # masuk repo maupun secrets), jadi paket CI selalu tanpa kredensial tertanam.
+          # Status itu terbawa ke RELEASE.md; untuk paket yang langsung tersambung
+          # Google, rilis dibuat lokal di komputer yang memiliki berkas rahasianya.
+          $arg = @{
+            Version                = $env:VERSI
+            Repo                   = $env:REPO
+            Unggah                 = $true
+            IzinkanTanpaKredensial = $true
+          }
+          if ($env:VERSI_LAMA) { $arg['VersiLama'] = $env:VERSI_LAMA }
+          ./Tools/publish-release.ps1 @arg

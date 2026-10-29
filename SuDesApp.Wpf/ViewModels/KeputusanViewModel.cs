@@ -52,7 +52,6 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly IMessageService _messageService;
         private readonly Func<string, DataKeputusan?, DataKeputusan?, InputKeputusanViewModel> _inputFactory;
         private readonly Func<string, string, PdfPreviewViewModel> _previewFactory;
-        private readonly AppConfig _appConfig;
         private readonly ILogger<KeputusanViewModel> _logger;
 
         private string _jenisKeputusan = "SK";
@@ -113,7 +112,6 @@ namespace SuDesApp.Wpf.ViewModels
             IMessageService messageService,
             Func<string, DataKeputusan?, DataKeputusan?, InputKeputusanViewModel> inputFactory,
             Func<string, string, PdfPreviewViewModel> previewFactory,
-            AppConfig appConfig,
             ILogger<KeputusanViewModel> logger)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -122,7 +120,6 @@ namespace SuDesApp.Wpf.ViewModels
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
             _inputFactory = inputFactory ?? throw new ArgumentNullException(nameof(inputFactory));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
-            _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             SetSkCommand = new AsyncRelayCommand(() => SetJenisAsync("SK"));
@@ -251,20 +248,11 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Buka formulir tambah Perdes dengan isian awal dari halaman lain
-        /// (mis. contoh Perdes di menu SOTK Desa). Berkas contoh opsional ikut
-        /// dilampirkan dan baru disalin ke arsip saat pengguna menekan Simpan.
-        /// </summary>
-        public Task TambahDenganIsianAsync(DataKeputusan prefill, string? lampiranContohPath = null)
-            => BukaFormulirAsync(null, prefill, lampiranContohPath);
-
-        /// <summary>
-        /// Buka satu contoh Perdes bawaan di formulir Buku Perdes. Salinan contoh
-        /// diisi otomatis dengan identitas desa/kabupaten dari Pengaturan Surat
-        /// (TemplatePerdesFiller); berkas contoh asli tidak disentuh. Bila
-        /// pengisian gagal, berkas asli tetap dipakai apa adanya supaya alur
-        /// tidak terhenti. Lajuanya padanan alur contoh di menu SOTK Desa yang
-        /// dipindahkan ke tab PERDES.
+        /// Buka satu contoh Perdes bawaan di formulir Buku Perdes. Isi contoh
+        /// dimuat sebagai halaman naskah yang dapat disunting; berkas contoh asli
+        /// tidak pernah diubah. Nomor dan tanggal tetap diisi saat pratinjau/simpan
+        /// dari kolom formulir, sehingga naskah yang terbit tidak membawa nomor
+        /// atau tanggal contoh.
         /// </summary>
         private async Task BukaContohPerdesAsync(ContohPerdesDokumen? contoh)
         {
@@ -283,37 +271,16 @@ namespace SuDesApp.Wpf.ViewModels
                     await SetJenisAsync("PERDES");
                 }
 
-                string nomor = contoh.Nomor;
-                DateTime tanggal = DateTime.Today;
-                string jalurContoh = contoh.JalurBerkas;
-
-                try
-                {
-                    var desa = await _desaRepository.GetInfoDesaAsync();
-                    if (desa != null)
-                    {
-                        var folder = Path.Combine(_appConfig.TempPdfFolder, "TemplatePerdes");
-                        jalurContoh = TemplatePerdesFiller.Isi(contoh.JalurBerkas, desa, folder,
-                            new TemplatePerdesFiller.PerdesTemplateIsian(nomor, tanggal));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex,
-                        "Gagal mengisi naskah contoh Perdes {NamaFile}; berkas contoh asli dipakai apa adanya.",
-                        contoh.NamaFile);
-                }
-
                 var prefill = new DataKeputusan
                 {
                     JenisKeputusan = "PERDES",
-                    Nomor = nomor,
-                    Tanggal = tanggal,
+                    Nomor = contoh.Nomor,
+                    Tanggal = DateTime.Today,
                     Tentang = contoh.Tentang,
                     Keterangan = contoh.Keterangan
                 };
 
-                await BukaFormulirAsync(null, prefill, jalurContoh);
+                await BukaFormulirAsync(null, prefill, naskahContoh: contoh.Kunci);
             }
             catch (Exception ex)
             {
@@ -419,15 +386,15 @@ namespace SuDesApp.Wpf.ViewModels
         /// Buka formulir input/edit SK/Peraturan sebagai halaman di area konten utama.
         /// Setelah tersimpan (atau dibatalkan) halaman kembali ke daftar arsip.
         /// </summary>
-        private Task BukaFormulirAsync(
-            DataKeputusan? editData, DataKeputusan? prefill, string? lampiranContohPath = null)
+        private async Task BukaFormulirAsync(
+            DataKeputusan? editData, DataKeputusan? prefill, string? naskahContoh = null)
         {
             try
             {
                 var vm = _inputFactory(_jenisKeputusan, editData, prefill);
-                if (!string.IsNullOrWhiteSpace(lampiranContohPath))
+                if (!string.IsNullOrWhiteSpace(naskahContoh))
                 {
-                    vm.GunakanLampiranContoh(lampiranContohPath);
+                    await vm.GunakanNaskahContohAsync(naskahContoh).ConfigureAwait(true);
                 }
                 vm.Tersimpan += () => _ = LoadAsync();
                 vm.RequestClose += () => _navigation.Navigate(this);
@@ -436,10 +403,8 @@ namespace SuDesApp.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal membuka formulir input keputusan {Jenis}", _jenisKeputusan);
-                return _messageService.ShowErrorAsync("Gagal membuka formulir input: " + ex.Message);
+                await _messageService.ShowErrorAsync("Gagal membuka formulir input: " + ex.Message);
             }
-
-            return Task.CompletedTask;
         }
 
         private async Task SalinAsync()

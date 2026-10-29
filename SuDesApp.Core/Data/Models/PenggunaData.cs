@@ -72,7 +72,6 @@ namespace SuDesApp.Data.Models
         KelolaWarga,
         KelolaPerangkat,
         Laporan,
-        LayananOnline,
 
         /// <summary>Memeriksa keaslian surat dari kode verifikasi.</summary>
         VerifikasiSurat,
@@ -99,7 +98,6 @@ namespace SuDesApp.Data.Models
             IzinAplikasi.KelolaWarga,
             IzinAplikasi.KelolaPerangkat,
             IzinAplikasi.Laporan,
-            IzinAplikasi.LayananOnline,
             IzinAplikasi.VerifikasiSurat,
             IzinAplikasi.RiwayatAktivitas
         };
@@ -111,7 +109,6 @@ namespace SuDesApp.Data.Models
             IzinAplikasi.KelolaWarga,
             IzinAplikasi.KelolaPerangkat,
             IzinAplikasi.Laporan,
-            IzinAplikasi.LayananOnline,
             IzinAplikasi.VerifikasiSurat,
             IzinAplikasi.RiwayatAktivitas,
             IzinAplikasi.PengaturanAplikasi,

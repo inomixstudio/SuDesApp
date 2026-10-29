@@ -7,7 +7,7 @@ using Xunit;
 namespace SuDesApp.Tests.Licensing
 {
     /// <summary>
-    /// Aturan alur uji coba 14 hari: instalasi baru terkunci sampai trial
+    /// Aturan alur uji coba 30 hari: instalasi baru terkunci sampai trial
     /// dimulai, trial membuka menu vital sementara, dan setelah trial habis
     /// menu vital terkunci lagi sampai lisensi dibayar.
     ///
@@ -137,7 +137,7 @@ namespace SuDesApp.Tests.Licensing
         }
 
         [Fact]
-        public void TrialLokal_BerjalanEmpatBelasHari_DanTidakBisaDiulang()
+        public void TrialLokal_BerjalanSesuaiDurasi_DanTidakBisaDiulang()
         {
             var trial = new TrialLokal();
 
@@ -148,10 +148,10 @@ namespace SuDesApp.Tests.Licensing
 
             var mulai = Assert.IsType<DateTime>(trial.MulaiUtc);
             Assert.True(trial.Aktif(mulai));
-            Assert.True(trial.Aktif(mulai.AddDays(13)));
-            Assert.False(trial.Aktif(mulai.AddDays(14)));
-            Assert.Equal(14, trial.SisaHari(mulai));
-            Assert.Equal(0, trial.SisaHari(mulai.AddDays(15)));
+            Assert.True(trial.Aktif(mulai.AddDays(TrialLokal.DURASI_HARI - 1)));
+            Assert.False(trial.Aktif(mulai.AddDays(TrialLokal.DURASI_HARI)));
+            Assert.Equal(TrialLokal.DURASI_HARI, trial.SisaHari(mulai));
+            Assert.Equal(0, trial.SisaHari(mulai.AddDays(TrialLokal.DURASI_HARI + 1)));
 
             // Trial tidak bisa direset dengan memanggil ulang.
             Assert.False(trial.MulaiSekarang());
@@ -215,7 +215,7 @@ namespace SuDesApp.Tests.Licensing
         [Fact]
         public void Penjaga_TrialKedaluwarsa_TerkunciDanTidakBisaDiulang()
         {
-            // Instalasi yang trial-nya sudah lewat 14 hari: berkas trial sengaja
+            // Instalasi yang trial-nya sudah lewat 30 hari: berkas trial sengaja
             // dimundurkan, persis keadaan "trial habis tanpa pembayaran".
             Directory.CreateDirectory(_folder);
             File.WriteAllText(

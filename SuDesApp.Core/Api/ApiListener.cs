@@ -13,11 +13,9 @@ using System.Threading.Tasks;
 namespace SuDesApp.Api
 {
     /// <summary>
-    /// Listener HTTP lokal untuk API desa, memakai <see cref="HttpListener"/> —
-    /// kelas yang sama dengan listener webhook WhatsApp yang sudah dipakai
-    /// aplikasi. Alasannya sederhana: tidak menambah dependensi apa pun,
-    /// aplikasi tetap satu berkas .exe, dan kodenya mengikuti pola yang sudah
-    /// teruji di aplikasi.
+    /// Listener HTTP lokal untuk API desa, memakai <see cref="HttpListener"/>.
+    /// Alasannya sederhana: tidak menambah dependensi apa pun dan aplikasi
+    /// tetap satu berkas .exe.
     ///
     /// Batas Keamanan yang dijaga:
     /// - Hanya localhost secara default. Membuka untuk jaringan harus diminta
@@ -128,7 +126,7 @@ namespace SuDesApp.Api
                         : ex.Message;
                     _logger.LogError(ex, "Gagal menyalakan listener API di {Prefiks}", prefiks);
 
-                    try { listener.Close(); } catch { /* abaikan */ }
+                    try { listener.Close(); } catch { /* listener gagal dinyalakan — tidak ada yang perlu ditutup */ }
                     return false;
                 }
 
@@ -157,10 +155,10 @@ namespace SuDesApp.Api
                 _listener = null;
             }
 
-            try { cts?.Cancel(); } catch { /* abaikan */ }
-            try { listener?.Stop(); } catch { /* abaikan */ }
-            try { listener?.Close(); } catch { /* abaikan */ }
-            try { cts?.Dispose(); } catch { /* abaikan */ }
+            try { cts?.Cancel(); } catch { /* sudah dibatalkan pemanggil lain */ }
+            try { listener?.Stop(); } catch { /* sudah berhenti */ }
+            try { listener?.Close(); } catch { /* sudah ditutup */ }
+            try { cts?.Dispose(); } catch { /* sudah dibuang */ }
 
             _logger.LogInformation("API desa dimatikan.");
         }
@@ -194,6 +192,15 @@ namespace SuDesApp.Api
 
             try
             {
+                if (ApiPengaturan.IzinkanJaringan && !ApiPengaturan.AsalDiizinkan(asal))
+                {
+                    Tulis(ctx, 403, ApiAmplop.Gagal(
+                        ApiKodeGalat.ApiCakupanKurang,
+                        "Alamat pengirim tidak ada dalam daftar IP API yang diizinkan."));
+                    CatatAktivitas(metode, jalur, asal, 403);
+                    return;
+                }
+
                 // 1) Batas laju diperiksa lebih dulu, supaya percobaan menebak
                 //    kunci API tidak bisa membebani aplikasi.
                 if (!_pembatas.Izinkan(asal))
@@ -310,17 +317,11 @@ namespace SuDesApp.Api
             {
                 case "/status":
                 {
-                    using var scope = _provider().CreateScope();
-                    var ringkasan = scope.ServiceProvider.GetRequiredService<IApiRingkasanService>();
-                    var status = await ringkasan.AmbilAsync(ct).ConfigureAwait(false);
-
                     Tulis(ctx, 200, ApiAmplop.Berhasil(new
                     {
                         aplikasi = "SuDesApp",
                         versi = VersiAplikasi,
-                        waktu = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                        antrean = status.PermintaanPerStatus,
-                        belumDibaca = status.PermintaanBelumDibaca
+                        waktu = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
                     }));
                     return new HasilJalankan { KodeHttp = 200 };
                 }
@@ -373,14 +374,6 @@ namespace SuDesApp.Api
                     return new HasilJalankan { KodeHttp = 200 };
                 }
 
-                case "/jenis-surat":
-                {
-                    using var scope = _provider().CreateScope();
-                    var ringkasan = scope.ServiceProvider.GetRequiredService<IApiRingkasanService>();
-                    Tulis(ctx, 200, ApiAmplop.Berhasil(new { jenis = ringkasan.AmbilJenisSuratOnline() }));
-                    return new HasilJalankan { KodeHttp = 200 };
-                }
-
                 case "/rekap-bulanan":
                 {
                     // Parameter tahun lewat query string (jalur rute tidak
@@ -410,73 +403,8 @@ namespace SuDesApp.Api
                     return new HasilJalankan { KodeHttp = 200 };
                 }
 
-                case "/permintaan":
-                {
-                    var (isi, galat) = BacaBadan(ctx.Request);
-                    if (galat != null)
-                    {
-                        Tulis(ctx, 413, ApiAmplop.Gagal(ApiKodeGalat.BadanTerlaluBesar, galat));
-                        return new HasilJalankan { KodeHttp = 413 };
-                    }
-
-                    if (string.IsNullOrWhiteSpace(isi))
-                    {
-                        Tulis(ctx, 400, ApiAmplop.Gagal(
-                            ApiKodeGalat.PermintaanTidakSah, "Badan permintaan kosong."));
-                        return new HasilJalankan { KodeHttp = 400 };
-                    }
-
-                    ApiPermintaanMasuk? masukan;
-                    try
-                    {
-                        masukan = JsonSerializer.Deserialize<ApiPermintaanMasuk>(isi!, OpsiJson);
-                    }
-                    catch (JsonException ex)
-                    {
-                        Tulis(ctx, 400, ApiAmplop.Gagal(
-                            ApiKodeGalat.PermintaanTidakSah, "JSON tidak terbaca: " + ex.Message));
-                        return new HasilJalankan { KodeHttp = 400 };
-                    }
-
-                    using var scope = _provider().CreateScope();
-                    var layanan = scope.ServiceProvider.GetRequiredService<IApiPermintaanService>();
-                    var hasil = await layanan.BuatAsync(masukan!, ct).ConfigureAwait(false);
-
-                    if (!hasil.Berhasil)
-                    {
-                        Tulis(ctx, 400, ApiAmplop.Gagal(
-                            ApiKodeGalat.PermintaanTidakSah,
-                            hasil.Pesan ?? "Permintaan ditolak."));
-                        return new HasilJalankan { KodeHttp = 400 };
-                    }
-
-                    Tulis(ctx, hasil.SudahAda ? 200 : 201, ApiAmplop.Berhasil(
-                        new { kode = hasil.Kode, sudahAda = hasil.SudahAda }, hasil.Pesan));
-                    return new HasilJalankan { KodeHttp = hasil.SudahAda ? 200 : 201 };
-                }
-
                 default:
                 {
-                    // Endpoint /permintaan/{kode} — satu-satunya yang punya parameter.
-                    if (endpoint.Metode == "GET" && !string.IsNullOrWhiteSpace(cocok.NilaiParameter))
-                    {
-                        using var scope = _provider().CreateScope();
-                        var layanan = scope.ServiceProvider.GetRequiredService<IApiPermintaanService>();
-                        var status = await layanan
-                            .AmbilStatusAsync(cocok.NilaiParameter!, ct).ConfigureAwait(false);
-
-                        if (status is null)
-                        {
-                            Tulis(ctx, 404, ApiAmplop.Gagal(
-                                ApiKodeGalat.EndpointTidakAda,
-                                $"Permintaan dengan kode {cocok.NilaiParameter} tidak ditemukan."));
-                            return new HasilJalankan { KodeHttp = 404 };
-                        }
-
-                        Tulis(ctx, 200, ApiAmplop.Berhasil(status));
-                        return new HasilJalankan { KodeHttp = 200 };
-                    }
-
                     Tulis(ctx, 404, ApiAmplop.Gagal(
                         ApiKodeGalat.EndpointTidakAda, "Endpoint tidak dikenal."));
                     return new HasilJalankan { KodeHttp = 404 };
@@ -554,7 +482,7 @@ namespace SuDesApp.Api
             }
             finally
             {
-                try { ctx.Response.Close(); } catch { /* abaikan */ }
+                try { ctx.Response.Close(); } catch { /* klien mungkin sudah menutup respons */ }
             }
         }
 

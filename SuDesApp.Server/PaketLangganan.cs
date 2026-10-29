@@ -42,7 +42,7 @@ public sealed class KatalogPaket
         //   6 Bulan   Rp750.000 / 180 hari  = Rp4.167/hari  (hemat ±17%)
         //   Tahunan   Rp1.200.000 / 365 hari = Rp3.288/hari (hemat ±34%)
         //
-        // Trial 14 hari TIDAK lewat katalog ini: harganya 0, dan paket Rp0 di
+        // Trial 30 hari TIDAK lewat katalog ini: harganya 0, dan paket Rp0 di
         // katalog tagihan berarti tagihan Rp0 yang bisa dikali ulang. Trial
         // punya jalurnya sendiri (LayananAktivasi.HariTrial + /aktifkan-trial).
         //

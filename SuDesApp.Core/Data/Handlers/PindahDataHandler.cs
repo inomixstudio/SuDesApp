@@ -60,7 +60,7 @@ namespace SuDesApp.Data.Handlers
                 }, transaction);
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully inserted SK_PINDAH data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully inserted SK_PINDAH data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -79,7 +79,7 @@ namespace SuDesApp.Data.Handlers
                 await connection.ExecuteAsync(deleteQuery, new { ID_Surat = idSurat }, transaction);
 
                 await _cacheService.RemoveAsync<SuratData>(CacheKeys.Surat(idSurat));
-                _logger.LogInformation("Successfully deleted SK_PINDAH data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully deleted SK_PINDAH data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -115,7 +115,7 @@ namespace SuDesApp.Data.Handlers
                 suratData.AlamatTujuanPindah = row.AlamatTujuanPindah;
                 suratData.AlasanPindah = row.AlasanPindah;
 
-                _logger.LogInformation("Successfully loaded SK_PINDAH data for ID_Surat={ID_Surat}", suratData.ID_Surat);
+                _logger.LogDebug("Successfully loaded SK_PINDAH data for ID_Surat={ID_Surat}", suratData.ID_Surat);
             }
             catch (Exception ex)
             {

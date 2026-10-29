@@ -171,6 +171,7 @@ namespace SuDesApp.Wpf.ViewModels
             }
             catch (OperationCanceledException)
             {
+                // Dibatalkan permintaan berikutnya; bukan kegagalan yang perlu dilaporkan.
             }
             catch (Exception ex)
             {
@@ -579,6 +580,7 @@ namespace SuDesApp.Wpf.ViewModels
             }
             catch (OperationCanceledException)
             {
+                // Dibatalkan permintaan berikutnya; bukan kegagalan yang perlu dilaporkan.
             }
             catch (Exception ex)
             {

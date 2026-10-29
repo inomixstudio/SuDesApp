@@ -9,7 +9,7 @@
         Halaman Dokumentasi (seksi BANTUAN): daftar dokumen bawaan aplikasi —
         bukti regulasi (PDF Perbup), panduan, kebijakan, dan catatan teknis —
         dengan tombol Baca per dokumen. Dokumen selalu dibaca DI DALAM aplikasi:
-        PDF pada pratinjau PDFium, berkas .md pada halaman baca dokumen. Tidak ada
+        PDF pada pratinjau SudesPdf, berkas .md pada halaman baca dokumen. Tidak ada
         berkas yang diserahkan ke aplikasi asosiasi Windows.
     -->
     <UserControl.Resources>

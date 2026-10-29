@@ -27,7 +27,9 @@ namespace SuDesApp.Wpf.Views.About
             {
                 if (simpul is FrameworkElement { DataContext: AboutViewModel vm })
                 {
-                    vm.OpenUrlCommand.Execute(item.Url);
+                    // Komponen milik aplikasi sendiri (mis. SudesPdf) tidak punya
+                    // tautan luar: chip-nya tetap tampil sebagai keterangan saja.
+                    if (!string.IsNullOrWhiteSpace(item.Url)) vm.OpenUrlCommand.Execute(item.Url);
                     return;
                 }
             }

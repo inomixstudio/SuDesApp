@@ -37,8 +37,8 @@ tidak dicampur dengan bagian lain.
 
 ## Ruang lingkup: seluruh bagian halaman
 
-Bagian **PERANGKAT DESA** menampilkan, dari atas ke bawah (urutan kolom mengikuti
-kepala tabel 19 kolom):
+Bagian **PERANGKAT DESA** menampilkan, dari atas ke bawah, jabatan resmi
+desa:
 
 | # | Jabatan |
 |---|---------|
@@ -97,11 +97,12 @@ Bagian lain memakai daftar jabatannya sendiri:
 
 ## Tabel: satu baris per orang, baca-saja
 
-Kolom tabel (19): **Jabatan, Nama, NIK, Jenis Kelamin, Tempat Lahir, Tgl.
-Lahir, Agama, No. Telp., Rekomendasi, Tgl. Rekomendasi, SK Pngkat., Tgl. SK,
-Pendidikan, Tahun Lulus, No. Ijasah, No. Rekening, BPJS Kesehat., Status,
-Aksi** (17 kolom data + Status + Aksi). Tabel lebih lebar dari jendela biasa
-dapat digeser mendatar.
+Kolom tabel di layar: **Jabatan, Nama / NIK, Wilayah, Masa Jabatan, Status,
+Aksi**. Kedelapan belas kolom berkas "DATA PERANGKAT" tetap lengkap, tetapi
+dibaca dan dicetak lewat **form**, **Ekspor Excel**, dan **Cetak PDF** — bukan
+dipadatkan ke dalam tabel yang harus digeser ke kiri-kanan. Tabel tetap dapat
+digeser mendatar pada jendela sempit, dan kepala kolom ikut bergeser bersama
+isinya.
 
 - Tiap jabatan selalu mendapat baris. Jabatan yang belum punya orang tampil
   sebagai **baris kosong penanda** (petunjuk *belum terisi*).
@@ -151,42 +152,42 @@ Kader Stunting, Staf Desa, Operator Desa, PKK, LPM, Karang Taruna)
 memakai tampilan dan isian **sama persis** dengan bagian perangkat desa —
 bahkan berbagi kepala tabel dan template baris yang sama:
 
-- Kepala bagian menampilkan **ringkasan** (jumlah orang yang tampil beserta
-  jabatan yang masih kosong); penambahan data memakai tombol **Tambah Orang**
-  pada bilah aksi.
-- Tabelnya memakai **19 kolom yang sama** (17 kolom data + Status + Aksi),
-  tombol **SK / Ubah / Hapus** yang
-  sama, dan aturan baris yang sama: satu orang satu baris, dan jabatan yang
-  belum ada orangnya tetap punya baris penanda *belum terisi*.
+- **Satu tabel, satu kepala bagian, dan satu templat baris** dipakai seluruh
+  dua belas bagian; memilih bagian hanya mengganti isi `ItemsAktif` dan angka
+  ringkasannya, tanpa membaca ulang database.
+- Kepala bagian menampilkan judul kelompok, petunjuk singkat, dan tiga angka:
+  **ORANG**, **JABATAN**, dan **BELUM TERISI**. Penambahan data memakai tombol
+  **Tambah Orang** pada bilah aksi.
+- Tabel memakai kolom yang sama untuk semua bagian: tombol **SK / Ubah /
+  Hapus**, satu orang satu baris, dan jabatan yang belum ada orangnya tetap
+  punya baris penanda *belum terisi*.
 - **Form isian, validasi, dan tombol SK berlaku untuk semua
   bagian**, tetapi **ekspor dan cetak hanya memuat bagian yang sedang tampil**
   — tiap kelompok punya cara penerbitan SK berbeda, jadi daftarnya tidak
   dicampur. Kolom **Jabatan** tetap membedakan kelompoknya.
-- **Pesan status mengikuti bagian yang tampil** (tanpa kartu KPI — lihat
-  *Ringkasan halaman* di bawah): jumlah orang yang ditampilkan beserta jumlah
-  jabatan yang belum ada orangnya.
 - **Tata letak tahan jendela sempit**: judul &amp; subjudul halaman membungkus
-  di kolom bintang, tombol aksi kanan berada di `WrapPanel` sehingga turun ke
-  baris kedua alih-alih terpotong, dan lebar minimum tabel **2500 px**
-  (19 kolom) dijaga oleh uji kontrak.
-- **Semua sel tabel membungkus teks** dan tidak memakai `TextTrimming` —
-  termasuk kolom NIK, nomor HP, nomor rekening, dan BPJS yang diperlebar
-  supaya angka panjang tidak terjepit. Kepala tabel dan definisi kolom baris
-  dijaga tetap sama persis oleh uji, sebab selisihnya dulu membuat kolom
-  Status/Aksi menumpuk.
+  di kolom bintang, label pemilih bagian duduk di atas baris tombol (bukan di
+  kolom kiri yang memakan lebar), tombol aksi kanan berada di `WrapPanel`
+  sehingga turun ke baris kedua alih-alih terpotong, dan tabel memiliki lebar
+  minimum 880 px yang digeser mendatar bersama kepalanya.
+- **Nama panjang dipotong elipsis dengan tooltip** pada kolom Nama supaya
+  baris tidak melebar; kolom Jabatan dan Wilayah membungkus teks.
 
 ## Pesan keadaan
 
 - Halaman ini **tanpa saringan**: seluruh baris bagian yang sedang tampil
-  selalu tampil apa adanya. Pesan di bawah bilah aksi membedakan keadaan
-  database kosong dari jumlah baris yang ditampilkan beserta jumlah jabatan
-  yang belum ada orangnya.
-- **Panel keadaan kosong** di tengah tampilan hanya muncul bila tabel bagian
-  yang sedang tampil tidak memuat satu pun orang **dan** database memang belum
-  punya data; pesan berisi ajakan menambah data + tombol **Tambah Orang** di
-  dalam panel (sebab kepala bagian ikut tersembunyi bersama tabelnya). Selama
-  panel tampil, tabelnya disembunyikan supaya tidak menumpuk; baris penanda
-  "belum terisi" bukan alasan untuk memunculkannya.
+  selalu tampil apa adanya.
+- **Kerangka jabatan tidak pernah disembunyikan.** Bagian yang belum berisi
+  orang tetap menampilkan baris penanda *belum terisi* beserta angka 0, supaya
+  operator melihat jabatan apa saja yang harus diisi. Dulu panel keadaan kosong
+  menutupi tabel ini dan judulnya selalu "perangkat desa", bahkan ketika
+  bagian aktifnya BPD atau Posyandu.
+- Petunjuk pada kepala bagian mengikuti keadaan: bagian kosong menawarkan
+  pilih baris jabatan atau **Tambah Orang**; bagian berisi mengingatkan klik
+  ganda untuk mengubah data dan tombol SK untuk surat keputusan.
+- Baris pesan di bawah bilah aksi kini **hanya untuk hasil aksi** (simpan,
+  ekspor, cetak, hapus) dan menghilang saat tidak ada pesan; ringkasan
+  keterisian pindah ke kepala bagian supaya tidak ada dua ringkasan berbeda.
 
 ## Tombol dan panel SK per jabatan
 
@@ -213,7 +214,7 @@ dengan jabatan baris tersebut sudah terpilih:
   kosong; SK-nya dicetak sebagai contoh (nama dan tanggal digariskan
   titik-titik) supaya bentuk dokumen bisa dilihat lebih dulu.
 - **Pratinjau SK** — menyusun PDF lewat `SkPerangkatGenerator` lalu membukanya
-  di pratinjau PDFium; dari sana operator bisa mencetak atau menyimpan.
+  di pratinjau SudesPdf; dari sana operator bisa mencetak atau menyimpan.
 - **SK bersama** — centang *SK bersama* untuk membuat satu SK bagi semua orang
   pada jabatan itu dengan lampiran daftar nama (lihat bagian di bawah).
 - **Kelompok tanpa template** — bila kelompok terpilih belum punya template
@@ -493,9 +494,9 @@ pemakai sekaligus format naskah dinas Perbup 74/2020:
 
 **Tata letak & tipografi**:
 
-- **Huruf Times New Roman** di seluruh dokumen, didaftarkan lewat
-  `SuratGeneratorBase.DaftarkanFont()` dari folder `Resources/Fonts`
-  (`times.ttf`, `timesbd.ttf`, `timesi.ttf`).
+- **Huruf Times** di seluruh dokumen dengan **metrik bawaan PDF**
+  (`PdfStandardTimes` di `SudesPdf.Core`): tidak ada berkas font yang didaftarkan
+  atau dibundel, dan lebar tiap huruf tetap sama di komputer mana pun.
 - Teks isi **11 pt** dan judul SK **13 pt** tebal, dengan tinggi baris rapat
   (`LineHeight 1.05`) sehingga naskah tidak boros halaman.
 - **Ukuran halaman mengikuti Pengaturan Cetak** — A4 atau F4, portrait,
@@ -511,17 +512,18 @@ pemakai sekaligus format naskah dinas Perbup 74/2020:
 ## Menu SOTK Desa
 
 Satu menu setelah **Perangkat Desa** memuat dua dokumen yang saling terkait:
-**SOTK Desa** dan **Perdes SOTK**, ditambah katalog **contoh Perdes**. Semuanya
-memakai data desa yang sudah tersimpan dan bermuara ke **Buku Perdes** —
-contoh tidak lagi membuka berkas Word di luar aplikasi.
+**SOTK Desa** dan **Perdes SOTK**. Keduanya memakai data desa yang sudah tersimpan
+dan bermuara ke **Buku Perdes**. Katalog **contoh Perdes** tampil di halaman
+**PERDES** dan membuka naskah berhalaman yang dapat disunting — contoh tidak lagi
+membuka berkas Word di luar aplikasi.
 
-Saat sebuah contoh dibuka, aplikasi menyalinnya ke folder sementara lalu
-**mengisi identitas dari Pengaturan Surat** ke dalam naskah: nama desa,
-kecamatan, kabupaten/kota (termasuk gelar Bupati/Wali Kota dan kutipan peraturan
-daerah) menggantikan teks contoh Sumberjaya/Tempuran/Karawang yang tertanam di
-berkas bawaan. Berkas asli tidak pernah diubah — yang dilampirkan ke formulir
-Buku Perdes adalah salinan hasil pengisian, sehingga naskah yang tersimpan sudah
-siap dipakai oleh desa pengguna.
+Saat sebuah contoh dibuka, aplikasi memuat **data naskah berhalaman** dari
+`Templates/Perdes/*.json` lalu mengganti identitas contoh dengan identitas dari
+Pengaturan Surat: nama desa, kecamatan, kabupaten/kota (termasuk gelar
+Bupati/Wali Kota dan kutipan peraturan daerah) menggantikan teks contoh
+Sumberjaya/Tempuran/Karawang. Tidak ada dokumen Word yang dibuka atau disalin;
+sumber contoh tidak pernah diubah karena setiap formulir bekerja pada data
+halaman di memori. Naskah yang tersimpan sudah sesuai desa pengguna.
 
 ### SOTK Desa (`SotkDesaView`)
 
@@ -540,47 +542,69 @@ Rujukan nasional PP 16/2026 tercantum pada [JDIH BPK](https://peraturan.bpk.go.i
 Rujukan daerah harus dipastikan operator pada JDIH kabupaten/kota masing-masing;
 aplikasi tidak menganggap satu Perbup berlaku untuk seluruh Indonesia.
 
-### Contoh Perdes dan tautan ke Buku Perdes
+### Contoh Perdes dan halaman naskah
 
-- Katalog contoh berada di halaman **SOTK Desa** (`ContohPerdesCatalog`), bukan
-  lagi di halaman PERDES. Contoh yang tersedia: PADes, APBDes, BPD, kewenangan
+- Katalog contoh berada di kartu **CONTOH PERDES** pada halaman **PERDES**
+  (`ContohPerdesCatalog`). Contoh yang tersedia: PADes, APBDes, BPD, kewenangan
   berdasarkan hak asal-usul, kewenangan lokal berskala desa, dan kewenangan
-  yang ditugaskan.
+  yang ditugaskan. Isinya berasal dari `Templates/Perdes/*.json`, bukan berkas
+  Word.
 - Memilih contoh membuka **formulir tambah PERDES** dengan isian awal nomor,
-  tanggal, tentang, dan keterangan. Berkas contoh ikut dilampirkan, tetapi baru
-  disalin ke folder arsip saat pengguna menekan **Simpan** di formulir. Dengan
-  begitu contoh menjadi data PERDES biasa yang dapat disunting dan disimpan
-  menurut skema `DataKeputusan` (`JenisKeputusan`, `Nomor`, `Tanggal`, `Tentang`,
-  `Keterangan`, `FileWord`) — bukan panel embed atau dokumen Word terpisah.
-- Setelah disimpan, pengguna berada di halaman **PERDES** seperti alur
-  peraturan desa lainnya. Tombol **Buka Buku Perdes** pada panel contoh
-  membuka daftar yang sama tanpa membuat data baru.
+  tanggal, tentang, keterangan, dan halaman naskah yang dapat disunting. Setiap
+  halaman dimulai di lembar PDF baru; isi yang panjang mengalir ke lembar
+  berikutnya. Tombol **Tambah Halaman** menyisipkan bagian baru, sedangkan Naik,
+  Turun, dan Hapus Halaman mengatur urutannya. **Pratinjau PDF** merender naskah
+  yang sedang diisi tanpa meninggalkan formulir. Nama halaman hanya menjadi label
+  daftar; teks yang tercetak ada di kotak Isi halaman.
+- Nomor, tahun, dan tanggal pada kepala surat serta penutup diambil dari kolom
+  formulir saat pratinjau/simpan, termasuk tahun pada baris Lembaran Desa.
+  Halaman lampiran (mis. Keputusan BPD pada contoh PADes) tidak ikut diubah
+  karena nomor dan tanggalnya milik dokumen lampiran.
+- Saat Simpan, `NaskahPerdesGenerator` (SudesPdf) menulis PDF ke arsip dan
+  menyimpan sumber halaman di berkas `<nama-pdf>.naskah.json` di sampingnya.
+  Saat data dibuka kembali, sumber itu dimuat sehingga halaman dapat disunting
+  lagi; PDF lama tetap ada sampai penggantiannya berhasil ditulis. Menghapus
+  data PERDES juga menghapus PDF dan sumber naskahnya.
+- Baris arsip tetap memakai skema `DataKeputusan` (`JenisKeputusan`, `Nomor`,
+  `Tanggal`, `Tentang`, `Keterangan`, `FileWord`); kolom `FileWord` kini menunjuk
+  PDF hasil generator, bukan dokumen Word.
 - Katalog tidak menetapkan contoh sebagai peraturan yang berlaku; nomor,
   tanggal, dasar hukum, dan isi wajib diperiksa operator.
 
-Generator dan modelnya ada di `SuDesApp.Core/GeneratorPdf/SotkPerdesGenerator.cs`
-(`SotkDesaData`, `PerdesSotkData`, `SotkDesaGenerator`, `PerdesSotkGenerator`,
-beserta helper `NaskahDesa` untuk lambang Garuda, judul bab, pasal, dan blok
-penetapan);
-view model dan halaman untuk kedua dokumen ada di
+Generator dan model SOTK ada di
+`SuDesApp.Core/GeneratorPdf/SotkPerdesGenerator.cs` (`SotkDesaData`,
+`PerdesSotkData`, `SotkDesaGenerator`, `PerdesSotkGenerator`, beserta helper
+`NaskahDesa` untuk lambang Garuda, judul bab, pasal, dan blok penetapan).
+Naskah Perdes dari contoh memakai
+`SuDesApp.Core/GeneratorPdf/NaskahPerdesGenerator.cs` dengan model
+`NaskahPerdes`/`NaskahPerdesHalaman`, pemuat contoh dan penyimpanan sampingan di
+`NaskahPerdesBerkas.cs`. View model dan halaman SOTK ada di
 `SuDesApp.Wpf/ViewModels/SotkDesaViewModel.cs` dan
 `SuDesApp.Wpf/Views/SotkDesaView.xaml`; katalog contoh di
-`SuDesApp.Wpf/ViewModels/ContohPerdesCatalog.cs`; dan penyimpanan draf beserta
-tautan arsip di `SuDesApp.Wpf/Services/PerdesSotkStore.cs`. Isian Perdes dan
-SOTK tampil bersama di halaman **SOTK Desa** yang dibuka dari menu DATA DESA.
+`SuDesApp.Wpf/ViewModels/ContohPerdesCatalog.cs`; penyunting halaman di
+`SuDesApp.Wpf/ViewModels/InputKeputusanViewModel.cs`; dan penyimpanan draf
+beserta tautan arsip di `SuDesApp.Wpf/Services/PerdesSotkStore.cs`. Isian Perdes
+dan SOTK tampil bersama di halaman **SOTK Desa** yang dibuka dari menu DATA DESA;
+katalog contoh Perdes tampil di halaman **PERDES**.
 
-## Ringkasan halaman (tanpa kartu KPI)
+## Ringkasan kepala bagian
 
-Halaman ini **sengaja tidak memakai kartu KPI**: deretan kartu angka di atas
-pemilih bagian memakan ruang vertikal dan teksnya mudah terpotong di jendela
-sempit. Sebagai gantinya, ringkasan muncul pada **satu baris pesan status** di
-bawah bilah aksi — jumlah orang bagian yang sedang tampil serta jumlah jabatan
-yang belum ada orangnya, mis. *"8 orang perangkat desa ditampilkan, 2 jabatan
-belum ada orangnya."*
+Halaman ini tidak memakai deretan kartu KPI di atas pemilih bagian; angka
+ringkasannya menempel pada konteksnya, yaitu **kepala bagian yang sedang
+tampil**:
+
+- Chip **ORANG** — jumlah baris berisi orang pada bagian itu.
+- Chip **JABATAN** — jumlah jabatan resmi bagian itu (`JabatanBagian`).
+- Chip **BELUM TERISI** — jabatan pada bagian itu yang belum ada orangnya.
+
+Angka yang sama tampil sebagai bilangan kecil di ujung tiap tombol pemilih
+bagian, sehingga kelompok yang belum terisi terlihat tanpa membukanya. Angka
+ini dihitung dari koleksi tabel yang sama dengan yang ditampilkan
+(`TabelAktif`), bukan dari penghitung terpisah, jadi tidak bisa berbeda dari
+isi tabel.
 
 Rincian per jabatan tetap tersedia di tabel: setiap jabatan tanpa penghuni
-punya barisnya sendiri bertanda **belum terisi**, jadi klik kartu "Jabatan
-Terisi" tidak lagi diperlukan untuk mengetahui jabatan mana yang kosong.
+punya barisnya sendiri bertanda **belum terisi**.
 
 ## Ekspor Excel dan Cetak PDF
 
@@ -625,10 +649,10 @@ Terisi" tidak lagi diperlukan untuk mengetahui jabatan mana yang kosong.
   di atas); tidak menyambung dengan bagian lain.
 - Berkas ditulis ke folder `TempPDF` dengan akhiran nama bagian
   (`PerangkatDesa_<Bagian>_waktu.pdf`, ikut dibersihkan `TempPdfCleanup`), lalu
-  dibuka pada **pratinjau PDFium** yang dipakai seluruh dokumen aplikasi — dari
+  dibuka pada **pratinjau SudesPdf** yang dipakai seluruh dokumen aplikasi — dari
   pratinjau operator bisa mencetak atau menyimpan seperti biasa.
 - Generator: `SuDesApp.Core/GeneratorPdf/StrukturPerangkatGenerator.cs`
-  (QuestPDF, kop memakai `KopSurat.BarisKop`, terdaftar di DI sebagai
+  (mesin SudesPdf, kop memakai `KopSurat.BarisKop`, terdaftar di DI sebagai
   `StrukturPerangkatGenerator`).
 
 **Formulir Pendataan** (`CetakFormulirCommand`) — tombol pada bilah aksi
@@ -647,7 +671,7 @@ bagian Perangkat Desa, untuk **menarik data perangkat baru** di lapangan:
   memberi data* (kosong untuk ditandatangani) dan kanan Kepala Desa dengan
   nama dari Pengaturan Surat.
 - Berkas ditulis ke folder `TempPDF` (`FormulirPerangkat_waktu.pdf`) lalu
-  dibuka pada pratinjau PDFium, sehingga operator bisa memperbanyak dan
+  dibuka pada pratinjau SudesPdf, sehingga operator bisa memperbanyak dan
   mencetaknya seperti dokumen lain.
 - Generator: `SuDesApp.Core/GeneratorPdf/FormulirPerangkatGenerator.cs`
   (`FormulirPerangkatData`/`FormulirPerangkatGenerator`, terdaftar di DI).
@@ -680,30 +704,28 @@ bagian Perangkat Desa, untuk **menarik data perangkat baru** di lapangan:
 - Logika halaman: `SuDesApp.Wpf/ViewModels/PerangkatDesaViewModel.cs` —
   `LoadAsync` membaca seluruh data sekali ke salinan `_semua`;
   `SusunBaris` mengisi **seluruh** tabel bagian (`IsiTabel` per bagian) dari
-  salinan itu;
-  `HitungJumlah` menghitung jumlah orang tiap kelompok tanpa saringan sekali
-  saat daftar dimuat (dipakai membedakan database kosong dari bagian kosong);
+  salinan itu, lalu `SusunBarisBagian` memperbarui angka pada tombol pemilih
+  bagian dan `SegarkanRingkasanBagian` menyegarkan chip kepala bagian;
   `BukaFormDariBarisAsync` membuka form tambah/ubah;
   `EksporExcelAsync`/`CetakPdfAsync` melayani ekspor dan cetak; sedangkan
   `BukaPanelSkAsync`/`PratinjauSkAsync`/`ArsipkanSkAsync` melayani panel SK.
 - Pemilih bagian: enum `BagianPerangkat` (12 nilai) + pasangan
-  `Tampilkan<Bagian>`/`Tampilkan<Bagian>Command` + koleksi
-  `Items<Bagian>`; `PilihBagian` mengganti pesan status
-  (`SusunStatusText`), penanda keadaan kosong, dan tabel yang tampil
-  (`ItemsAktif`), tanpa membaca ulang database sebab seluruh tabel sudah ada di
-  memori. Di XAML, bagian perangkat desa, RT/RW, dan bagian lembaga masing-
-  masing dibungkus `StackPanel` ber-`Visibility`.
-  Tombolnya sendiri adalah dua `ItemsControl` yang menyalin `BarisBagianPemerintahan`
+  `Tampilkan<Bagian>Command` + koleksi `Items<Bagian>`; `PilihBagian` mengganti
+  tabel yang tampil (`ItemsAktif` → `TabelAktif`), judul kepala bagian, dan
+  angkanya, tanpa membaca ulang database sebab seluruh tabel sudah ada di
+  memori. Di XAML hanya ada **satu** tabel dan **satu** kepala bagian; dulu
+  tiap kelompok dibungkus `StackPanel` ber-`Visibility` sendiri.
+  Tombolnya adalah dua `ItemsControl` yang menyalin `BarisBagianPemerintahan`
   dan `BarisBagianLembaga` (class `BarisBagian`: `Bagian`, `Judul`, `Ikon`,
-  `Keterangan`, `Perintah`) sehingga satu gaya `TombolBagian` melayani semua:
-  penanda tempel `u:BagianAktif.Bagian` dibandingkan dengan
-  `NamaBagianAktifEnum` lewat `BagianSamaConverter` (`SuDesApp.Wpf/Views/BagianSamaConverter.cs`)
-  untuk menyalakan warna tombol aktif, dan chip judul mengikuti
-  `IkonBagianAktif` — tanpa satu gaya/properti per bagian.
-- Panel keadaan kosong memakai `TampilkanKosong` dan
-  `KosongKarenaBelumAdaData` — berbasis jumlah **baris orang** pada tabel
-  bagian aktif (`TabelAktif`), bukan jumlah baris, sebab baris penanda selalu
-  ada; tabelnya disembunyikan lewat `InvBoolToVis` selama panel tampil.
+  `Keterangan`, `Jumlah`, `Perintah`) dengan satu templat
+  `TombolBagianItem` dan satu gaya `TombolBagian`: penanda tempel
+  `u:BagianAktif.Bagian` dibandingkan dengan `NamaBagianAktifEnum` lewat
+  `BagianSamaConverter` (`SuDesApp.Wpf/Views/BagianSamaConverter.cs`) untuk
+  menyalakan warna tombol aktif, dan chip judul mengikuti `IkonBagianAktif` —
+  tanpa satu gaya/properti per bagian.
+- `Jumlah` pada `BarisBagian` dihitung dari daftar jabatan bagian yang sama
+  (`JabatanBagian`) dan salinan `_semua`, jadi tidak perlu dua belas field
+  penghitung per kelompok.
 - SK bersama disusun di `PerangkatDesaViewModel` (`SkBersama`,
   `SkWajibBersama`, `SkBersamaDiubah`, `SkLampiran`,
   `MuatLampiranBersamaAsync`, `CalonLampiran`, `SegarkanLampiranCommand`):
@@ -716,10 +738,12 @@ bagian Perangkat Desa, untuk **menarik data perangkat baru** di lapangan:
   bersama terkunci; peran awal Posyandu *Anggota* dan unit lampirannya dihitung
   `PeranLampiran`/`UnitLampiran` — sama dengan SK jadi yang dibuat saat data
   disimpan.
-- Pembatas bagian memakai `TabelAktif` (tabel bagian aktif): dipakai pesan
-  status, panel keadaan kosong, ekspor Excel, dan cetak PDF, sehingga tiap
-  bagian berdiri sendiri. `JabatanBagian` menurunkan daftar jabatan satu
-  bagian — dipakai `DaftarJabatanForm` (form) dan `PilihanJabatanSk` (panel SK).
+- Pembatas bagian memakai `TabelAktif` (tabel bagian aktif): dipakai tabel
+  yang tampil, chip ringkasan (`JumlahOrang/JumlahJabatan/JumlahKosong`),
+  ekspor Excel, dan cetak PDF, sehingga tiap bagian berdiri sendiri.
+  `JabatanBagian` menurunkan daftar jabatan satu bagian — dipakai
+  `DaftarJabatanForm` (form), `PilihanJabatanSk` (panel SK), dan angka pada
+  tombol pemilih bagian.
 - Panel SK memakai `PilihanJabatanSk` (= daftar jabatan bagian tempat panel
   dibuka) supaya combo jabatan selalu sebagian dan tidak kosong; `SkAdaTemplate`
   memutus apakah blok dasar hukum tampil atau diganti kotak peringatan, dan
@@ -735,9 +759,9 @@ bagian Perangkat Desa, untuk **menarik data perangkat baru** di lapangan:
   `{NIK}`, `{DESA}`, `{KECAMATAN}`, `{KABUPATEN}`, `{WILAYAH}`, `{NOMOR}`,
   `{MULAI}`, `{SELESAI}`, `{TANGGAL}`, `{ALASAN}`, dan `{PENANDA}`; nilai yang
   kosong dicetak bergaris titik-titik.
-- Konversi keadaan kosong memakai properti view model
-  (`TampilkanKosong`, `KosongKarenaBelumAdaData`) —
-  `BooleanToVisibilityConverter` bawaan WPF mengabaikan `ConverterParameter`,
+- `BooleanToVisibilityConverter` bawaan WPF mengabaikan `ConverterParameter`,
   jadi jangan memakai pola `ConverterParameter=Collapsed` untuk membalik nilai;
-  untuk membalik pakai `InverseBoolToVisibilityConverter`
-  (`InvBoolToVis` di `PerangkatDesaView.xaml`).
+  untuk membalik pakai `InverseBoolToVisibilityConverter` (`InvBoolToVis` di
+  `PerangkatDesaView.xaml`, dipakai panel SK). Pesan hasil aksi memakai
+  `StringToVisibilityConverter` (`StringToVis`) supaya barisnya kolaps saat
+  tidak ada pesan.

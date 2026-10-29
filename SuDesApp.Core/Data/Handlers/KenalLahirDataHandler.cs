@@ -130,8 +130,7 @@ namespace SuDesApp.Data.Handlers
                 // Invalidate relevant caches
                 await ClearRelatedCaches(idSurat);
 
-                _logger.LogInformation("Successfully inserted KenalLahir data for ID_Surat={ID_Surat}, Nama Anak={NamaAnak}",
-                    idSurat, namaAnak);
+                _logger.LogDebug("Data Kenal Lahir disimpan untuk ID_Surat={ID_Surat}.", idSurat);
             }
             catch (Exception ex)
             {
@@ -161,7 +160,7 @@ namespace SuDesApp.Data.Handlers
                 );
 
                 await ClearRelatedCaches(idSurat);
-                _logger.LogInformation("Successfully deleted KenalLahir data for ID_Surat={ID_Surat}", idSurat);
+                _logger.LogDebug("Successfully deleted KenalLahir data for ID_Surat={ID_Surat}", idSurat);
             }
             catch (Exception ex)
             {
@@ -261,8 +260,7 @@ namespace SuDesApp.Data.Handlers
                     }
                 };
 
-                _logger.LogInformation("Successfully loaded KenalLahir data for ID_Surat={ID_Surat}, Nama Anak={NamaAnak}",
-                    suratData.ID_Surat, suratData.KenalLahir.NamaAnak);
+                _logger.LogDebug("Data Kenal Lahir dimuat untuk ID_Surat={ID_Surat}.", suratData.ID_Surat);
             }
             catch (Exception ex)
             {
@@ -312,14 +310,12 @@ namespace SuDesApp.Data.Handlers
             if (existingParent == null || existingParent.ID_Warga <= 0)
             {
                 parentId = await _wargaRepository.AddOrUpdateWargaAndGetIdAsync(parent, connection, transaction);
-                _logger.LogInformation("Saved {ParentType} data: NIK={NIK}, Name={Nama}, ID_Warga={ID_Warga}",
-                    parentType, parent.NIK, parent.Nama, parentId);
+                _logger.LogDebug("Data {ParentType} disimpan (ID_Warga={ID_Warga}).", parentType, parentId);
             }
             else
             {
                 parentId = existingParent.ID_Warga;
-                _logger.LogInformation("Using existing {ParentType} data: NIK={NIK}, ID_Warga={ID_Warga}",
-                    parentType, parent.NIK, parentId);
+                _logger.LogDebug("Memakai data {ParentType} yang sudah ada (ID_Warga={ID_Warga}).", parentType, parentId);
             }
 
             // Invalidate cache

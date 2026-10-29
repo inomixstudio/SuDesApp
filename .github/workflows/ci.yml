@@ -24,6 +24,25 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Scan tracked files for secrets
+        shell: pwsh
+        run: |
+          $patterns = @(
+            'BEGIN (RSA |EC )?PRIVATE KEY',
+            'SUPABASE_DB_PASSWORD\s*[=:]\s*["'']?[A-Za-z0-9_-]{12,}',
+            'MIDTRANS_SERVER_KEY\s*[=:]\s*["'']?[A-Za-z0-9_-]{12,}'
+          )
+          $files = git ls-files
+          foreach ($pattern in $patterns) {
+            $matches = $files | ForEach-Object {
+              Select-String -Path $_ -Pattern $pattern -ErrorAction SilentlyContinue
+            }
+            if ($matches) {
+              $matches | ForEach-Object { Write-Error "Potential secret: $($_.Path):$($_.LineNumber)" }
+              throw "Secret scan failed. Store credentials only in ignored local files or CI secrets."
+            }
+          }
+
       - name: Install pinned .NET SDK
         uses: actions/setup-dotnet@v4
         with:

@@ -1,3 +1,4 @@
+using SudesPdf.Core.Layout;
 using System;
 using System.Collections.Generic;
 using SuDesApp.Data.Models;
@@ -5,9 +6,9 @@ using SuDesApp.Data.Models;
 namespace SuDesApp.GeneratorPdf
 {
     /// <summary>
-    /// Isi kop surat desa beserta ukuran fontnya. Dipakai bersama oleh SELURUH
-    /// generator — surat keterangan, daftar hadir, dan rekening koran — supaya
-    /// tampilan kop tidak pernah berbeda antar dokumen.
+    /// Kop surat desa: isi barisnya, ukuran fontnya, dan cara menggambarnya.
+    /// Dipakai bersama oleh SELURUH generator — surat keterangan, daftar hadir,
+    /// dan rekening koran — supaya tampilan kop tidak pernah berbeda antar dokumen.
     ///
     /// Urutannya:
     ///   PEMERINTAH KABUPATEN/KOTA ... (lihat <see cref="LabelKabupaten"/>)
@@ -106,6 +107,68 @@ namespace SuDesApp.GeneratorPdf
         /// <summary>Lebar kotak logo yang dipakai bersama skala judul yang sama.</summary>
         public static float LebarLogoUntuk(float skalaJudul) =>
             skalaJudul <= 0f ? LebarLogo : LebarLogo * skalaJudul;
+
+        /// <summary>
+        /// Gambar kop lengkap — logo (bila ada), baris <see cref="BarisKop"/>, lalu
+        /// garis ganda pemisah — ke sebuah kontainer.
+        ///
+        /// Inilah satu-satunya tempat susunan kop ditulis. Pemanggil hanya perlu
+        /// menyiapkan jalur logo yang sudah diperiksa keberadaannya
+        /// (lihat <c>PengaturanCetak.JalurLogoEfektif</c>).
+        /// </summary>
+        /// <param name="container">Kontainer tempat kop digambar.</param>
+        /// <param name="desa">Data desa; nilai kosong dicetak sebagai penanda kurung siku.</param>
+        /// <param name="logoPath">Jalur gambar logo; null berarti kop dicetak tanpa logo.</param>
+        /// <param name="skalaJudul">Pengali ukuran tiga baris judul &amp; kotak logo (dokumen landscape).</param>
+        public static void Gambar(IContainer container, DesaData? desa, string? logoPath, float skalaJudul = 1f)
+        {
+            var barisKop = BarisKop(desa, skalaJudul);
+
+            container.Column(column =>
+            {
+                column.Item().Row(row =>
+                {
+                    row.ConstantItem(LebarLogoUntuk(skalaJudul)).Element(logoContainer =>
+                    {
+                        if (!string.IsNullOrWhiteSpace(logoPath))
+                        {
+                            logoContainer.Image(logoPath).FitArea();
+                        }
+                    });
+
+                    row.RelativeItem().Column(col =>
+                    {
+                        // Jarak baris kop sengaja mengikuti tinggi baris bawaan mesin
+                        // (bukan dirapatkan): ukurannya sudah pas dan tidak berubah
+                        // di semua ukuran kertas.
+                        foreach (var baris in barisKop)
+                        {
+                            col.Item().AlignCenter().Text(teks =>
+                            {
+                                var utama = teks.Span(baris.Teks).FontSize(baris.FontSize);
+                                if (baris.Tebal)
+                                {
+                                    utama.Bold();
+                                }
+
+                                // Surel desa (opsional) dicetak biru sebagai baris tersendiri
+                                // di bawah nama kabupaten (bukan sambungan baris alamat).
+                                if (baris.AdaSurel)
+                                {
+                                    var pemisah = baris.Teks.Length == 0 ? string.Empty : " ";
+                                    teks.Span(pemisah + baris.Surel)
+                                        .FontSize(baris.FontSize)
+                                        .FontColor(WarnaSurel);
+                                }
+                            });
+                        }
+                    });
+                });
+
+                column.Item().PaddingTop(3).Height(GarisTipis).Background(Colors.Black);
+                column.Item().PaddingTop(1).Height(GarisTebal).Background(Colors.Black);
+            });
+        }
 
         /// <summary>
         /// Bagian surel yang dicetak biru di ujung baris alamat kop — kosong bila kolom

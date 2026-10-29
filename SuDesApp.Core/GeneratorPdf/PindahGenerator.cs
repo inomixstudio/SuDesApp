@@ -92,7 +92,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk Surat Keterangan Pindah, NamaWarga={NamaWarga}", suratData.Warga?.Nama);
+                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk Surat Keterangan Pindah.");
                 throw;
             }
         }

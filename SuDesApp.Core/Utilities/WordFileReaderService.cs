@@ -425,7 +425,7 @@ namespace SuDesApp.Utilities
                         return dt.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
                 }
             }
-            catch { /* ignore */ }
+            catch { /* format tanggal asing — kembalikan teks aslinya */ }
             return m.Value;
         }
 

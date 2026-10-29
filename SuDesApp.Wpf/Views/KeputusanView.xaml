@@ -255,7 +255,7 @@
                     <TextBlock Text="CONTOH PERDES" FontWeight="Bold" FontSize="13"
                                VerticalAlignment="Center"/>
                 </StackPanel>
-                <TextBlock Text="Pilih contoh untuk membuka formulir PERDES. Salinan contoh otomatis diisi identitas desa dari Pengaturan Surat, lalu dapat disunting dan disimpan sesuai skema arsip PERDES."
+                <TextBlock Text="Pilih contoh untuk membuka formulir PERDES dengan halaman naskah yang bisa disunting. Identitas desa diisi dari Pengaturan Surat, lalu naskah disimpan sebagai PDF di arsip PERDES."
                            TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
                            Margin="0,0,0,10"/>
                 <ItemsControl ItemsSource="{Binding ContohPerdes}">

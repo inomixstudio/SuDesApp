@@ -60,7 +60,9 @@ namespace SuDesApp.Wpf.ViewModels
             PenjagaLisensi penjaga,
             LanggananKlien klien,
             SambunganServerLisensi sambungan,
-            SettingsManager? pengaturanDesa = null)
+            SettingsManager? pengaturanDesa = null,
+            ServerLisensiLokal? serverLokal = null,
+            NavigationService? navigasi = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _lisensi = lisensi ?? throw new ArgumentNullException(nameof(lisensi));
@@ -68,6 +70,10 @@ namespace SuDesApp.Wpf.ViewModels
             _klien = klien ?? throw new ArgumentNullException(nameof(klien));
 
             _sambungan = sambungan ?? throw new ArgumentNullException(nameof(sambungan));
+            // Server lokal & navigasi boleh null pada uji: halaman tetap berfungsi
+            // sebagai klien server lisensi jarak jauh.
+            _serverLokal = serverLokal;
+            _navigasi = navigasi;
             // Profil desa lokal: sumber nama desa untuk jalur BERLANGGANAN AWAL
             // (desa belum punya kode aktivasi — nama desa dikirim ke server dan
             // kode baru diterbitkan otomatis setelah tagihan dibuat). Boleh null
@@ -105,6 +111,7 @@ namespace SuDesApp.Wpf.ViewModels
             BukaWaAdminCommand = new RelayCommand(BukaWaAdmin);
             SimpanServerCommand = new AsyncRelayCommand(
                 () => JalankanSibukAsync(SimpanServerAsync), () => !LanggananSibuk);
+            BukaPusatAdministrasiCommand = new AsyncRelayCommand(BukaPusatAdministrasiAsync);
             BukaKunciServerCommand = new RelayCommand(BukaKunciServer,
                 () => _alamatTerkunciSesi && !_lisensi.UrlServerTerkunci);
             _urlServer = _lisensi.UrlServer;
@@ -224,7 +231,7 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>
         /// Nama paket aktif dalam bahasa manusia ("Tahunan", "6 Bulan", "Bulanan",
-        /// "Trial 14 hari"). Pemetaan kode → nama ada di Core, tempat kode "trial"
+        /// "Trial 30 hari"). Pemetaan kode → nama ada di Core, tempat kode "trial"
         /// — yang tidak punya kartu karena gratis — tetap terbaca sebagai nama
         /// paket, bukan kode mentah.
         /// </summary>
@@ -524,6 +531,192 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         // =======================================================================
+        // Server lisensi lokal (pusat administrasi di komputer ini).
+        // =======================================================================
+        // Halaman ini KENDALI yang terlihat operator; prosesnya milik
+        // ServerLisensiLokal (Core) dan siklus hidupnya milik aplikasi
+        // (dinyalakan saat dibuka, dimatikan saat keluar). Pilihan "nyalakan
+        // bersama aplikasi" disimpan sebagai preferensi — App membaca nilai yang
+        // sama pada pembukaan berikutnya, jadi tidak ada dua sumber kebenaran.
+        //
+        // Pusat Administrasi dibuka dari sini pada alamat yang SAMA dengan alamat
+        // langganan: itulah yang membuat langganan yang dikelola operator
+        // (aktivasi, perpanjangan, tandai lunas) adalah langganan yang diperiksa
+        // halaman ini — bukan dua server yang berbeda.
+
+        private readonly ServerLisensiLokal? _serverLokal;
+        private readonly NavigationService? _navigasi;
+
+        /// <summary>
+        /// True bila blok server lokal ditampilkan: hanya pada build yang
+        /// alamatnya boleh diganti (server uji lokal). Rilis yang terkunci pada
+        /// server produksi tidak menjalankan server lisensi di komputer desa.
+        /// </summary>
+        public bool TampilServerLokal => _serverLokal is not null && !_lisensi.UrlServerTerkunci;
+
+        /// <summary>
+        /// Pilihan "jalankan server lisensi di komputer ini". Disimpan sebagai
+        /// preferensi supaya pilihan ini berlaku juga pada pembukaan berikutnya
+        /// (App yang menyalakannya), lalu dikerjakan sekarang juga.
+        /// </summary>
+        public bool ServerLokalAktif
+        {
+            get => AppPreferenceStore.IsServerLisensiLokalAktif();
+            set
+            {
+                if (value == AppPreferenceStore.IsServerLisensiLokalAktif()) return;
+
+                AppPreferenceStore.SetServerLisensiLokalAktif(value);
+                OnPropertyChanged();
+                SegarkanStatusServerLokal();
+
+                if (value) _ = NyalakanServerLokalAsync();
+                else HentikanServerLokal();
+            }
+        }
+
+        /// <summary>True selama proses server yang dinyalakan aplikasi masih hidup.</summary>
+        public bool ServerLokalBerjalan => _serverLokal?.Berjalan == true;
+
+        /// <summary>Kalimat status server lokal di bawah kotak centangnya.</summary>
+        public string ServerLokalStatus
+        {
+            get
+            {
+                if (_serverLokal is null) return "Server lokal tidak tersedia di aplikasi ini.";
+                if (_serverLokal.Berjalan) return "Berjalan di " + _serverLokal.Alamat;
+
+                return AppPreferenceStore.IsServerLisensiLokalAktif()
+                    ? "Belum berjalan — periksa pesan kegagalan di bawah."
+                    : "Tidak berjalan.";
+            }
+        }
+
+        /// <summary>Di mana data langganan server lokal disimpan — dan bahwa data itu menetap.</summary>
+        public string ServerLokalCatatan =>
+            "Server ini yang melayani aktivasi dan perpanjangan di halaman ini, dan Pusat Administrasi " +
+            "membuka alamat yang sama. Data langganan tersimpan di " +
+            OpsiServerLokal.FolderDataBawaan() + " sehingga tetap ada setelah server dimatikan.";
+
+        /// <summary>
+        /// Tombol Pusat Administrasi hanya untuk sesi akun pusat — aturan yang
+        /// sama dengan menu sidebar (docs/policy-peran-pengguna.md). Halaman
+        /// admin sendiri tetap meminta kredensial operator server.
+        /// </summary>
+        public bool TampilPusatAdministrasi => _navigasi is not null && Utilities.AkunPusat.SesiIniPusat;
+
+        public AsyncRelayCommand BukaPusatAdministrasiCommand { get; }
+
+        private async Task NyalakanServerLokalAsync()
+        {
+            if (_serverLokal is null) return;
+
+            StatusMessage = "Menyalakan server lisensi lokal…";
+            try
+            {
+                if (await _serverLokal.NyalakanDanPakaiAsync(_lisensi))
+                {
+                    // Alamat server berubah ke server yang baru menyala: kartu
+                    // paket dan chip status harus berbicara tentang server itu,
+                    // bukan angka dari alamat sebelumnya.
+                    UrlServer = _lisensi.UrlServer;
+                    _angkaDariSumberIni = false;
+                    await MuatKatalogAsync(paksa: true);
+
+                    Beritahu(2, "Server lisensi lokal berjalan di " + _serverLokal.Alamat +
+                        " — alamat ini yang dipakai halaman Langganan dan Pusat Administrasi.");
+                    StatusMessage = "Server lisensi lokal berjalan.";
+                }
+                else
+                {
+                    // Gagal menyala: pilihan dikembalikan supaya kotak centang
+                    // tidak menjanjikan server yang tidak ada.
+                    AppPreferenceStore.SetServerLisensiLokalAktif(false);
+                    OnPropertyChanged(nameof(ServerLokalAktif));
+                    Beritahu(3, _serverLokal.GalatTerakhir ?? "Server lisensi lokal tidak bisa dinyalakan.");
+                    StatusMessage = "Server lisensi lokal gagal dinyalakan.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Gagal menyalakan server lisensi lokal dari halaman Langganan");
+                AppPreferenceStore.SetServerLisensiLokalAktif(false);
+                OnPropertyChanged(nameof(ServerLokalAktif));
+                Beritahu(3, "Server lisensi lokal gagal dinyalakan: " + ex.Message);
+                StatusMessage = "Server lisensi lokal gagal dinyalakan.";
+            }
+            finally
+            {
+                SegarkanStatusServerLokal();
+            }
+        }
+
+        /// <summary>
+        /// Matikan server lokal sekarang juga. Pilihan "nyalakan bersama
+        /// aplikasi" dibiarkan seperti yang dipilih operator, sehingga server
+        /// menyala lagi pada pembukaan berikutnya bila memang diinginkan.
+        /// </summary>
+        private void HentikanServerLokal()
+        {
+            try
+            {
+                _serverLokal?.Matikan();
+                Beritahu(2, "Server lisensi lokal dimatikan. Server menyala lagi saat aplikasi dibuka bila pilihannya tetap aktif.");
+                StatusMessage = "Server lisensi lokal dimatikan.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Gagal mematikan server lisensi lokal dari halaman Langganan");
+                Beritahu(3, "Server lisensi lokal tidak bisa dimatikan: " + ex.Message);
+            }
+            finally
+            {
+                SegarkanStatusServerLokal();
+            }
+        }
+
+        private void SegarkanStatusServerLokal()
+        {
+            OnPropertyChanged(nameof(ServerLokalBerjalan));
+            OnPropertyChanged(nameof(ServerLokalStatus));
+            OnPropertyChanged(nameof(ServerLokalCatatan));
+        }
+
+        /// <summary>
+        /// Buka pusat administrasi DI DALAM aplikasi, pada alamat server yang
+        /// sama dengan alamat langganan. Penjagaan akun pusat diulang di sini
+        /// (bukan hanya lewat visibilitas tombol) supaya perintah tidak bisa
+        /// dijalankan dari sesi akun desa.
+        /// </summary>
+        private async Task BukaPusatAdministrasiAsync()
+        {
+            if (_navigasi is null || !Utilities.AkunPusat.SesiIniPusat)
+            {
+                Beritahu(3, "Halaman pusat administrasi hanya tersedia untuk akun pusat.");
+                return;
+            }
+
+            string alamat = _lisensi.AlamatPusatAdministrasi();
+            if (alamat.Length == 0)
+            {
+                Beritahu(3, "Alamat server lisensi belum diatur, jadi pusat administrasi belum bisa dibuka.");
+                return;
+            }
+
+            try
+            {
+                var halaman = new SuDesApp.Wpf.Views.PusatAdministrasiView();
+                _navigasi.Navigate(halaman);
+                await halaman.MuatAsync(alamat);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka pusat administrasi {Alamat}", alamat);
+                Beritahu(3, "Gagal membuka pusat administrasi: " + ex.Message);
+            }
+        }
+
+        // =======================================================================
         // Pilihan paket (bulanan / 6 bulan / tahunan).
         // =======================================================================
 
@@ -602,16 +795,10 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Nomor WhatsApp admin yang ditampilkan di layar (format lokal).
-        /// Dipasangkan dengan <see cref="NomorWaAdminWa"/> — mengubah salah
-        /// satunya tanpa yang lain membuat layar berbohong tentang tujuan
-        /// tombol WhatsApp.
-        /// </summary>
-        public const string NomorWaAdminTampil = "0851 1166 9951";
-
-        /// <summary>
         /// Nomor admin dalam format internasional tanpa tanda, untuk tautan
-        /// <c>wa.me</c>: 0851 1166 9951 → 6285111669951.
+        /// <c>wa.me</c>: 0851 1166 9951 → 6285111669951. Nomor sengaja TIDAK
+        /// ditampilkan sebagai teks di halaman; pengguna menghubungi admin
+        /// lewat tombol WhatsApp yang sudah ada.
         /// </summary>
         public const string NomorWaAdminWa = "6285111669951";
 
@@ -667,9 +854,6 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Buka WhatsApp admin (wa.me) dengan pesan bukti pembayaran terisi.</summary>
         public RelayCommand BukaWaAdminCommand { get; }
 
-        /// <summary>Nomor WhatsApp admin untuk ditampilkan di layar.</summary>
-        public string NomorWaAdmin => NomorWaAdminTampil;
-
         /// <summary>
         /// Susun tautan <c>wa.me</c> untuk satu pesan. Statis supaya bisa diuji
         /// tanpa membangun ViewModel: nomor tujuan dan encoding pesan adalah
@@ -692,9 +876,8 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>
         /// Buka WhatsApp admin di aplikasi/peramban bawaan dengan pesan yang
         /// sudah terisi. Kegagalan membuka (WhatsApp Desktop tidak ada dan
-        /// peramban ditolak) TIDAK pernah menghilangkan nomornya: banner
-        /// menampilkan nomor + tautan, jadi pengguna tetap bisa menghubungi
-        /// admin dengan cara apa pun yang tersedia.
+        /// peramban ditolak) tetap menyertakan tautan manual di banner, jadi
+        /// pengguna tidak kehilangan jalan menghubungi admin.
         /// </summary>
         private void BukaWaAdmin()
         {
@@ -706,16 +889,16 @@ namespace SuDesApp.Wpf.ViewModels
                     FileName = tautan,
                     UseShellExecute = true
                 });
-                Beritahu(2, $"WhatsApp admin dibuka ke {NomorWaAdminTampil} — kirim rincian dan bukti pembayaran. " +
+                Beritahu(2, "WhatsApp admin dibuka — kirim rincian dan bukti pembayaran. " +
                     "Langganan aktif setelah admin menandai lunas.");
                 StatusMessage = "WhatsApp admin dibuka.";
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Gagal membuka WhatsApp admin {Tautan}", tautan);
-                Beritahu(2, $"Buka manual: {tautan} (atau kirim pesan ke {NomorWaAdminTampil}). " +
+                Beritahu(2, $"Buka manual: {tautan}. " +
                     "Sertakan rincian pembayaran berikut: " + QrisReferensi);
-                StatusMessage = "WhatsApp tidak bisa dibuka otomatis — nomor admin ditampilkan.";
+                StatusMessage = "WhatsApp tidak bisa dibuka otomatis — buka tautan manual di banner.";
             }
         }
 
@@ -748,7 +931,7 @@ namespace SuDesApp.Wpf.ViewModels
                 ? "Isi kode aktivasi terlebih dahulu — kode itulah yang dipakai admin untuk mencocokkan pembayaran dengan desa ini. "
                 : "") +
             $"Scan QRIS di layar dengan aplikasi bank/e-wallet, masukkan nominal {QrisNominal}, " +
-            $"lalu hubungi admin via WhatsApp ({NomorWaAdminTampil}) — tombol di panel. " +
+            "lalu hubungi admin via WhatsApp — tombol di panel. " +
             "Langganan aktif setelah admin menandai lunas.");
 
         /// <summary>
@@ -1143,7 +1326,7 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Mulai masa uji coba 14 hari dari halaman ini — TANPA memaksa kode
+        /// Mulai masa uji coba 30 hari dari halaman ini — TANPA memaksa kode
         /// aktivasi, sama seperti popup saat aplikasi dibuka.
         ///
         /// Aturannya satu dan dipakai bersama (<see cref="PenjagaLisensi.MulaiPercobaanAsync"/>):
@@ -1156,10 +1339,10 @@ namespace SuDesApp.Wpf.ViewModels
         private async Task MulaiTrialAsync()
         {
             // Trial lokal yang sudah dipakai menutup trial server juga: dua jalur
-            // trial yang sama-sama 14 hari tidak boleh menjadi 28 hari.
+            // trial yang sama-sama 30 hari tidak boleh menjadi 60 hari.
             if (_penjaga.TrialPernahDimulai)
             {
-                Beritahu(2, "Masa uji coba 14 hari sudah pernah dipakai di komputer ini. " +
+                Beritahu(2, "Masa uji coba 30 hari sudah pernah dipakai di komputer ini. " +
                     "Selesaikan pembayaran lisensi untuk melanjutkan.");
                 StatusMessage = "Trial tidak diaktifkan.";
                 return;
@@ -1174,7 +1357,7 @@ namespace SuDesApp.Wpf.ViewModels
                     _lisensi.KodeAktivasi = KodeAktivasi!.Trim();
                 }
 
-                StatusMessage = "Menyiapkan masa uji coba 14 hari…";
+                StatusMessage = "Menyiapkan masa uji coba 30 hari…";
 
                 var percobaan = await _penjaga.MulaiPercobaanAsync();
                 var (judul, pesan) = PenjagaLisensi.JelaskanPercobaan(percobaan);
@@ -1383,7 +1566,7 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 System.Windows.Clipboard.SetText(QrisReferensi);
-                Beritahu(2, $"Rincian disalin — kirim ke admin via WhatsApp ({NomorWaAdminTampil}): {QrisReferensi}");
+                Beritahu(2, $"Rincian disalin — kirim ke admin via WhatsApp: {QrisReferensi}");
             }
             catch (Exception ex)
             {

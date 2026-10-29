@@ -16,6 +16,28 @@ menu **Pembaruan** dan halaman **Catatan Rilis** di dalam aplikasi.
 Aplikasi memilih sendiri: bila rilis menyertakan `patch.json`, versi terpasang cocok,
 dan folder aplikasi bisa ditulis → pembaruan kecil. Selain itu → installer penuh.
 
+## Unduhan latar & pilihan pemasangan (perilaku pengguna)
+
+Setelah pengguna masuk, aplikasi memeriksa rilis terbaru lalu **mengunduh sendiri**
+paketnya di latar belakang (dapat dimatikan di Pengaturan Aplikasi; installer penuh
+dibatasi ukuran, bawaan 300 MB). Sesudah unduhan tuntas, lonceng notifikasi memberi
+dua tombol:
+
+- **Instal Sekarang** — aplikasi menutup, pemasangan berjalan otomatis, lalu aplikasi
+  dibuka lagi.
+- **Instal Saat Keluar** — pemasangan dijadwalkan saat aplikasi ditutup.
+
+Tidak ada halaman konfirmasi saat pemasangan: installer Inno Setup dijalankan dengan
+`/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS` (hanya jendela kemajuan
+yang terlihat), setelah proses aplikasi benar-benar berakhir. Pembaruan kecil tetap
+bisa dipasang otomatis saat aplikasi ditutup sesuai setelan lama; installer penuh
+hanya berjalan bila pengguna memilih salah satu tombol di atas.
+
+Menutup aplikasi sebelum memilih tidak menghilangkan unduhan: rilis yang sama
+diunduh/dilanjutkan pada pembukaan berikutnya. Installer yang sudah lengkap tidak
+diunduh ulang bila rilis menyertakan SHA-256 untuk memverifikasinya.
+
+
 ## Alur otomatis (GitHub Actions)
 
 1. Naikkan versi di `SuDesApp.Wpf/SuDesApp.Wpf.csproj`, `CatatanRilisViewModel`,
@@ -25,6 +47,8 @@ dan folder aplikasi bisa ditulis → pembaruan kecil. Selain itu → installer p
 3. Workflow `.github/workflows/release.yml` akan:
    - `dotnet publish` self-contained win-x64;
    - membuat zip portable + installer Inno Setup;
+   - menandatangani `SuDesApp.exe` dan installer dengan Authenticode
+     (sertifikat dari secret — lihat [`TANDA-TANGAN-RILIS.md`](TANDA-TANGAN-RILIS.md));
    - mengunduh zip portable rilis sebelumnya, mengekstraknya, lalu membandingkan
      berkas (SHA-256) dengan hasil publish baru;
    - menulis `patch.json` + `patch-<versi>.zip` berisi **hanya berkas yang berubah**;

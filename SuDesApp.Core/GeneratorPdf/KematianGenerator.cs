@@ -1,15 +1,13 @@
 // File: SuDesApp/GeneratorPdf/KematianGenerator.cs
 // Surat kematian adalah SALINAN FORMULIR resmi (kode F-2.17), jadi kepalanya bukan
 // kop surat: identitas desa berlabel “Pemerintah Desa/Kecamatan/Kabupaten”.
-// Seluruh tata letak disusun langsung dengan QuestPDF (tanpa lapisan kompat).
+// Seluruh tata letak disusun langsung dengan mesin SudesPdf (tanpa lapisan kompat).
 using Microsoft.Extensions.Logging;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -152,6 +150,8 @@ namespace SuDesApp.GeneratorPdf
 
                 table.Cell().Element(sel => sel.Column(kolom =>
                 {
+                    // Blok penanda tangan berada di kolom kanan; isinya rata tengah
+                    // sesuai bentuk tanda tangan surat dinas.
                     kolom.Item().Element(c => SuratRenderer.Teks(c, $"{namaDesa}, {tanggalTerformat}", rata: Rata.Tengah));
                     kolom.Item().Element(c => SuratRenderer.Teks(c, jabatanKades, rata: Rata.Tengah));
                     kolom.Item().Height(60);

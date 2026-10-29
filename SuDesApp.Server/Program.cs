@@ -82,11 +82,12 @@ using var logs = LoggerFactory.Create(b =>
         builder.Configuration.GetValue("Logging:LogLevel:Default", LogLevel.Information));
 });
 
-// Penyimpanan: Supabase di produksi, atau memori HANYA di Development bila
-// kredensial database belum diisi. Mode memori membuat server bisa dijalankan
-// untuk menguji aplikasi, halaman /admin, dan alur lisensi tanpa database —
-// tetapi seluruh data hilang saat proses berhenti, jadi mode ini tidak pernah
-// boleh dipakai di Production.
+// Penyimpanan: Supabase di produksi, atau berkas lokal di Development bila
+// kredensial database belum diisi. Mode berkas membuat server bisa dijalankan
+// di satu komputer desa — aplikasi yang menyalakannya, halaman /admin, dan alur
+// lisensi — dengan data langganan yang TETAP ADA setelah server berhenti.
+// Mode ini tidak pernah boleh dipakai di Production: ia tidak memakai RLS,
+// tidak punya replika, dan tidak punya jejak akses lintas-tenant.
 IRepositoryLangganan repo;
 IAdminAuditStore audit;
 IPengumumanStore pengumuman;
@@ -101,14 +102,16 @@ if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(passwordAplikas
         return;
     }
 
-    var memori = new LanggananMemori();
-    await memori.InitializeAsync();
-    repo = memori;
-    audit = new AuditMemori();
-    pengumuman = new PengumumanMemori();
+    string jalurLokal = PenyimpananLokal.JalurBawaan(builder.Configuration);
+    var lokal = await PenyimpananLokal.BukaAsync(jalurLokal, logs.CreateLogger<PenyimpananLokal>());
+    repo = lokal;
+    audit = lokal;
+    pengumuman = lokal;
+    await repo.InitializeAsync();
     Console.WriteLine(
-        "[dev] Supabase belum dikonfigurasi — memakai penyimpanan MEMORI. " +
-        "Data pelanggan/tagihan hilang saat server berhenti; jangan pakai di produksi.");
+        "[dev] Supabase belum dikonfigurasi — memakai penyimpanan BERKAS: " + lokal.Jalur + ". " +
+        "Desa, langganan, tagihan, pembayaran, dan pengumuman tetap ada setelah server berhenti. " +
+        "Jangan pakai mode ini di produksi (tanpa RLS & tanpa replika).");
 }
 else
 {
@@ -482,7 +485,7 @@ app.MapPost("/aktivasi", async (AktivasiRequest req, LayananAktivasi layanan, Ca
 })
 .RequireRateLimiting("aktivasi");
 
-// POST /aktifkan-trial — mulai trial 14 hari (tanpa pembayaran) untuk desa
+// POST /aktifkan-trial — mulai trial 30 hari (tanpa pembayaran) untuk desa
 // yang kode aktivasi terdaftar. Guard-nya di server:
 //   • sekali per desa SEUMUR HIDUP (kolom pelanggan.trial_sudah);
 //   • hanya bila langganan belum sedang aktif;

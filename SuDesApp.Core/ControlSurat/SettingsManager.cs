@@ -12,7 +12,7 @@ namespace SuDesApp.ControlSurat
         /// Dipicu setelah data desa benar-benar tersimpan (beserta data barunya).
         ///
         /// Dipakai untuk melanjutkan pekerjaan yang tadi ditahan karena data desa masih
-        /// contoh — mis. surat dari permintaan WhatsApp — sehingga semua penyimpan data
+        /// contoh — mis. surat yang dibuat beberapa halaman sekaligus — sehingga semua penyimpan data
         /// desa (halaman Pengaturan Surat, pemulihan database, apa pun yang datang
         /// kemudian) otomatis membuka penahanan itu tanpa perlu mendaftar sendiri-sendiri.
         /// </summary>
@@ -102,7 +102,7 @@ namespace SuDesApp.ControlSurat
                     _logger.LogWarning("No data found in InfoDesa table.");
                     return new DesaData();
                 }
-                _logger.LogInformation("Village settings retrieved: NamaDesa={0}", desaData.NamaDesa);
+                _logger.LogDebug("Pengaturan desa berhasil dibaca.");
                 return desaData;
             }
             catch (Exception ex)
@@ -262,7 +262,7 @@ namespace SuDesApp.ControlSurat
                 AddParameterWithNullCheck(command, "@nipKepalaDesa", desaData.NipKepalaDesa);
 
                 await command.ExecuteNonQueryAsync();
-                _logger.LogInformation("Village settings saved successfully: NamaDesa={NamaDesa}", desaData.NamaDesa);
+                _logger.LogInformation("Pengaturan desa berhasil disimpan.");
 
                 // Data desa dibaca lewat cache (bertahan sampai 1 jam). Tanpa pembersihan
                 // ini, halaman lain — mis. Daftar Hadir yang mengisi "Aula Kantor Desa …"

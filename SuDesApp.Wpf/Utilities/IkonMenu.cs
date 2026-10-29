@@ -21,7 +21,7 @@ namespace SuDesApp.Wpf.Utilities
         // ==== Navigasi utama ====
         /// <summary>Rumah — halaman Beranda.</summary>
         public const string Beranda = "\uE80F";
-        /// <summary>Dokumen/daftar surat — Register Surat, item surat, Register NTCR, Panduan WhatsApp.</summary>
+        /// <summary>Dokumen/daftar surat — Register Surat, item surat, Register NTCR.</summary>
         public const string Dokumen = "\uE8F1";
         /// <summary>Halaman dokumen polos — fallback item tanpa ikon khusus.</summary>
         public const string Halaman = "\uE7C9";
@@ -49,8 +49,6 @@ namespace SuDesApp.Wpf.Utilities
         public const string Orang = "\uE77B";
         /// <summary>Jam riwayat — Riwayat Aktivitas.</summary>
         public const string Riwayat = "\uE81C";
-        /// <summary>Obrolan/layanan daring — Layanan Online.</summary>
-        public const string LayananOnline = "\uE774";
         /// <summary>Alias akun Google (memakai glyph orang).</summary>
         public const string AkunGoogle = Orang;
 

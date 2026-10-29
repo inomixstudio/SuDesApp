@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SuDesApp.GeneratorPdf
 {
-    // Badan surat memakai API QuestPDF langsung (BadanSurat), bukan lapisan kompat.
+    // Badan surat memakai API SudesPdf.Layout langsung (BadanSurat), bukan lapisan kompat.
     public class SKUGenerator : SuratGeneratorBase
     {
         public SKUGenerator(AppConfig config, FileService fileService, IDesaRepository desaRepository, ISuratRepository suratRepository, SettingsManager settingsManager, ILogger<SKUGenerator> logger, ILoggerFactory loggerFactory)
@@ -32,7 +32,7 @@ namespace SuDesApp.GeneratorPdf
 
             try
             {
-                _logger.LogInformation("Generating PDF for ID_Surat={ID_Surat}, KeteranganTextBox={KeteranganTextBox}", idSurat, keteranganTextBox);
+                _logger.LogDebug("Membuat PDF SKU untuk ID_Surat={ID_Surat}", idSurat);
 
                 var suratData = await _suratRepository.GetByIdAsync(idSurat);
                 if (suratData == null)
@@ -43,12 +43,9 @@ namespace SuDesApp.GeneratorPdf
 
                 if (string.IsNullOrWhiteSpace(suratData.Warga?.Nama) || string.IsNullOrWhiteSpace(suratData.Warga?.NIK))
                 {
-                    _logger.LogError("Data warga tidak lengkap untuk ID_Surat={ID_Surat}: Nama={Nama}, NIK={NIK}", idSurat, suratData.Warga?.Nama, suratData.Warga?.NIK);
+                    _logger.LogError("Data warga tidak lengkap untuk ID_Surat={ID_Surat}", idSurat);
                     throw new InvalidOperationException("Data warga tidak lengkap untuk generate PDF.");
                 }
-
-                _logger.LogInformation("SuratData retrieved: NamaWarga={NamaWarga}, NIK={NIK}, NomorSurat={NomorSurat}, NamaDesa={NamaDesa}, KepalaDesa={KepalaDesa}, Keterangan={Keterangan}",
-                    suratData.Warga?.Nama, suratData.Warga?.NIK, suratData.NomorSurat, suratData.Desa?.NamaDesa, suratData.Desa?.KepalaDesa, suratData.Keterangan);
 
                 await base.GeneratePdfAsync(outputStream, suratData, keteranganTextBox);
             }
@@ -64,10 +61,7 @@ namespace SuDesApp.GeneratorPdf
             try
             {
                 var warga = suratData.Warga ?? throw new InvalidOperationException("Data warga tidak lengkap untuk menghasilkan PDF SKU.");
-                var desa = suratData.Desa ?? throw new InvalidOperationException("Data desa tidak lengkap untuk menghasilkan PDF SKU.");
-
-                _logger.LogInformation("Rendering content: NamaWarga={NamaWarga}, NamaDesa={NamaDesa}, KepalaDesa={KepalaDesa}, KeteranganTextBox={KeteranganTextBox}, SuratData.Keterangan={SuratDataKeterangan}",
-                    warga.Nama, desa.NamaDesa, desa.KepalaDesa, keteranganTextBox, suratData.Keterangan);
+                _ = suratData.Desa ?? throw new InvalidOperationException("Data desa tidak lengkap untuk menghasilkan PDF SKU.");
 
                 badan.Paragraf("Yang bertanda tangan di bawah ini :", jarakBawah: 10);
 
@@ -95,7 +89,7 @@ namespace SuDesApp.GeneratorPdf
                 string? keteranganFinal = keteranganTextBox ?? suratData.Keterangan;
                 if (string.IsNullOrWhiteSpace(keteranganFinal))
                 {
-                    _logger.LogWarning("keteranganTextBox and suratData.Keterangan are null or empty in SKUGenerator.ComposeBody. Using default keterangan.");
+                    _logger.LogDebug("Keterangan SKU kosong; memakai keterangan bawaan.");
                     // Jenis wilayah mengikuti data desa (“Kabupaten Karawang”/“Kota Bandung”)
                     // — sebelumnya selalu “Kab.” walau desanya berada di wilayah kota.
                     string namaKabupaten = KopSurat.NamaKabupaten(suratData.Desa);
@@ -127,7 +121,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SKU, NamaWarga={NamaWarga}", suratData.Warga?.Nama);
+                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk SKU");
                 throw;
             }
         }
@@ -149,12 +143,12 @@ namespace SuDesApp.GeneratorPdf
                     return parsedDate.ToString(DefaultTanggalFormat, new CultureInfo("id-ID"));
                 }
 
-                _logger.LogWarning("Failed to parse TanggalLahir '{TanggalLahir}' to format {Format}", dbDate, DefaultTanggalFormat);
+                _logger.LogWarning("Tanggal lahir warga tidak bisa dibaca dengan format {Format}.", DefaultTanggalFormat);
                 return dbDate;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error parsing TanggalLahir '{TanggalLahir}'", dbDate);
+                _logger.LogWarning(ex, "Tanggal lahir warga gagal diurai.");
                 return dbDate;
             }
         }

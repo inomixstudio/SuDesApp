@@ -230,8 +230,7 @@ namespace SuDesApp.Data.Repositories
 
             if (!wargaData.IsValid(out var wargaErrors))
             {
-                _logger.LogWarning("Validasi WargaData gagal untuk NIK: {NIK}. Errors: {Errors}",
-                    wargaData.NIK, string.Join("; ", wargaErrors));
+                _logger.LogWarning("Validasi data warga gagal: {Errors}", string.Join("; ", wargaErrors));
                 throw new ValidationException($"Data warga tidak valid: {string.Join("; ", wargaErrors)}");
             }
 
@@ -507,7 +506,7 @@ namespace SuDesApp.Data.Repositories
             var cachedWarga = await _cacheService.GetAsync<WargaData>(cacheKey);
             if (cachedWarga != null)
             {
-                _logger.LogInformation("Warga data retrieved from cache for NIK: {NIK}", nik);
+                _logger.LogDebug("Data warga diambil dari cache.");
                 return cachedWarga;
             }
 
@@ -537,19 +536,19 @@ namespace SuDesApp.Data.Repositories
                             AbsoluteExpirationRelativeToNow = _cacheExpiration
                         });
                     }
-                    _logger.LogInformation("Warga data retrieved from database and cached for NIK: {NIK}, Nama: {Nama}", nik, result.Nama);
+                    _logger.LogDebug("Data warga diambil dari basis data dan disimpan di cache.");
                 }
                 else
                 {
-                    _logger.LogInformation("No Warga data found for NIK: {NIK}", nik);
+                    _logger.LogDebug("Data warga tidak ditemukan.");
                 }
 
                 return result!;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to retrieve Warga data for NIK: {NIK}", nik);
-                throw new DataRetrievalException($"Failed to retrieve Warga data for NIK: {nik}", ex);
+                _logger.LogError(ex, "Gagal mengambil data warga berdasarkan NIK.");
+                throw new DataRetrievalException("Gagal mengambil data warga berdasarkan NIK.", ex);
             }
         }
 
@@ -870,7 +869,7 @@ namespace SuDesApp.Data.Repositories
             var cachedWarga = await _cacheService.GetAsync<WargaData>(cacheKey);
             if (cachedWarga != null)
             {
-                _logger.LogInformation("Warga data retrieved from cache for ID: {ID_Warga}", idWarga);
+                _logger.LogDebug("Data warga diambil dari cache untuk ID={ID_Warga}.", idWarga);
                 return cachedWarga;
             }
 
@@ -948,7 +947,7 @@ namespace SuDesApp.Data.Repositories
             var cachedWargaList = await _cacheService.GetAsync<List<WargaData>>(cacheKey);
             if (cachedWargaList != null)
             {
-                _logger.LogInformation("All Warga data retrieved from cache.");
+                _logger.LogDebug("Daftar seluruh warga diambil dari cache.");
                 return cachedWargaList;
             }
 
@@ -1007,7 +1006,7 @@ namespace SuDesApp.Data.Repositories
             var cachedResults = await _cacheService.GetAsync<List<WargaData>>(cacheKey);
             if (cachedResults != null)
             {
-                _logger.LogInformation("Search Warga results retrieved from cache for term: {SearchTerm}", searchTerm);
+                _logger.LogDebug("Hasil pencarian warga diambil dari cache.");
                 return cachedResults;
             }
 

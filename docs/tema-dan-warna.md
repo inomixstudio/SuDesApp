@@ -209,7 +209,7 @@ Gaya yang dipakai lebih dari satu halaman tinggal di
 | `KpiLabel` / `KpiValue` | Daftar Hadir, Langganan | label 11 bold + membungkus; angka 15 semibold + membungkus |
 | `KpiCard` / `KpiTile` | Daftar Hadir / Langganan | kartu berbayang di atas latar halaman; petak datar di dalam kartu |
 | `KpiIconChip` | KPI & kepala section kedua halaman | chip 36×36, sudut 8, latar aksen lembut |
-| `SectionTitle` | halaman data, Tentang Aplikasi, Panduan WA | 14 bold, membungkus, sejajar tengah |
+| `SectionTitle` | halaman data, Tentang Aplikasi, Panduan Awal | 14 bold, membungkus, sejajar tengah |
 | `SectionTitleLarge` | Langganan | turunan `SectionTitle` dengan 15 |
 | `HeaderTitle` / `HeaderSubtitle` | seluruh kepala halaman | sudah lama terpusat; tidak berubah |
 

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SudesPdf</RootNamespace>
+    <AssemblyName>SudesPdf</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8625;CS8629;CS0108;CS0618;CS0168;CS8765</WarningsNotAsErrors>
+    <!--
+      Lapisan WPF: pratinjau, cetak, dan pembungkus dokumen di atas mesin
+      SudesPdf.Core. Tidak ada paket NuGet pihak ketiga di sini — dulu PDF.js
+      (WebView2) yang dipakai untuk pratinjau, sekarang digantikan mesin sendiri.
+    -->
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SudesPdf.Core\SudesPdf.Core.csproj" />
+  </ItemGroup>
+</Project>

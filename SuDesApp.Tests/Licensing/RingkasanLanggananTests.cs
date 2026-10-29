@@ -111,10 +111,10 @@ public sealed class RingkasanLanggananTests
 
         var ringkasan = RingkasanLangganan.DariTrial(berakhir, 9);
 
-        Assert.Equal("Trial 14 hari aktif", ringkasan.Judul);
+        Assert.Equal("Trial 30 hari aktif", ringkasan.Judul);
         Assert.Equal(2, ringkasan.Nada);
         Assert.False(ringkasan.TampilTombolTrial);
-        Assert.Equal("Trial 14 hari", ringkasan.PaketNama);
+        Assert.Equal("Trial 30 hari", ringkasan.PaketNama);
         Assert.Equal("9 hari", ringkasan.SisaHariTampil);
         Assert.Equal(berakhir.ToLocalTime().ToString("dd MMM yyyy"), ringkasan.SahSampaiTampil);
         Assert.Contains("kode aktivasi", ringkasan.Keterangan, StringComparison.Ordinal);
@@ -142,11 +142,11 @@ public sealed class RingkasanLanggananTests
 
         var ringkasan = RingkasanLangganan.Dari(status, "SUDES-1");
 
-        Assert.Equal("Trial 14 hari aktif", ringkasan.Judul);
+        Assert.Equal("Trial 30 hari aktif", ringkasan.Judul);
         Assert.Equal(2, ringkasan.Nada);
         Assert.False(ringkasan.TampilTombolTrial);
         Assert.True(ringkasan.SelamaTrial);
-        Assert.Equal("Trial 14 hari", ringkasan.PaketNama);
+        Assert.Equal("Trial 30 hari", ringkasan.PaketNama);
         Assert.Equal("9 hari", ringkasan.SisaHariTampil);
         Assert.Equal(berakhir.ToLocalTime().ToString("dd MMM yyyy"), ringkasan.SahSampaiTampil);
         Assert.Contains("uji coba", ringkasan.Keterangan, StringComparison.Ordinal);

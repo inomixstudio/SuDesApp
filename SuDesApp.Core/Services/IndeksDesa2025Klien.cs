@@ -288,8 +288,7 @@ public sealed class IndeksDesa2025Klien : IIndeksDesa2025Klien
         finally
         {
             try { if (File.Exists(sementara)) File.Delete(sementara); }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
+            catch (Exception) { /* berkas sementara terkunci; dibersihkan pada simpan berikutnya */ }
         }
     }
 

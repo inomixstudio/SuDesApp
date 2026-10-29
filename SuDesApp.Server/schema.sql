@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS admin_action_audit (
 -- Ditambahkan lewat ALTER (bukan di CREATE TABLE) supaya instalasi yang
 -- sudah berisi data ikut termigrasi dengan jalur yang sama: tambah kolom →
 -- isi ulang dari pemilik baris → baru dijadikan NOT NULL.
--- Kolom trial: trial 14 hari hanya boleh sekali per desa; kolom inilah yang
+-- Kolom trial: trial 30 hari hanya boleh sekali per desa; kolom inilah yang
 -- menahannya — server yang mengingat, bukan kunci kejujuran klien
 -- (lihat LayananAktivasi). Ditambah lewat ALTER supaya instalasi lama ikut
 -- termigrasi dengan jalur yang sama seperti tenant_id.

@@ -2,9 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using Microsoft.Extensions.Logging;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
 
@@ -38,7 +36,6 @@ namespace SuDesApp.GeneratorPdf
 
         static FormulirPerangkatGenerator()
         {
-            QuestPdfLisensi.Pastikan();
         }
 
         public FormulirPerangkatGenerator(AppConfig config, ILogger<FormulirPerangkatGenerator> logger)
@@ -48,7 +45,6 @@ namespace SuDesApp.GeneratorPdf
 
             // Generator ini tidak mewarisi SuratGeneratorBase: pastikan font buku
             // (Times New Roman) sudah terdaftar juga bila ini PDF pertama sesi.
-            SuratGeneratorBase.DaftarkanFont(config, _logger);
         }
 
         public void GeneratePdf(Stream outputStream, FormulirPerangkatData data)
@@ -120,50 +116,12 @@ namespace SuDesApp.GeneratorPdf
             });
         }
 
-        /// <summary>Kop surat desa: logo (bila ada) + baris KopSurat, ditutup garis ganda.</summary>
+        /// <summary>
+        /// Kop surat desa: logo (bila ada) + baris KopSurat, ditutup garis ganda.
+        /// Susunannya milik <see cref="KopSurat.Gambar"/> supaya sama dengan dokumen lain.
+        /// </summary>
         private void ComposeKopSurat(IContainer container)
-        {
-            const float skalaJudul = 1f;
-            var barisKop = KopSurat.BarisKop(_desa, skalaJudul);
-
-            container.Column(column =>
-            {
-                column.Item().Row(row =>
-                {
-                    row.ConstantItem(KopSurat.LebarLogoUntuk(skalaJudul)).Element(logoContainer =>
-                    {
-                        string? logoPath = PengaturanCetak.JalurLogoEfektif(_config.LogoPath);
-                        if (logoPath != null)
-                        {
-                            logoContainer.Image(logoPath).FitArea();
-                        }
-                    });
-
-                    row.RelativeItem().Column(col =>
-                    {
-                        foreach (var baris in barisKop)
-                        {
-                            col.Item().AlignCenter().Text(teks =>
-                            {
-                                var utama = teks.Span(baris.Teks).FontSize(baris.FontSize);
-                                if (baris.Tebal) utama.Bold();
-
-                                if (baris.AdaSurel)
-                                {
-                                    var pemisah = baris.Teks.Length == 0 ? string.Empty : " ";
-                                    teks.Span(pemisah + baris.Surel)
-                                        .FontSize(baris.FontSize)
-                                        .FontColor(KopSurat.WarnaSurel);
-                                }
-                            });
-                        }
-                    });
-                });
-
-                column.Item().PaddingTop(3).Height(KopSurat.GarisTipis).Background(Colors.Black);
-                column.Item().PaddingTop(1).Height(KopSurat.GarisTebal).Background(Colors.Black);
-            });
-        }
+            => KopSurat.Gambar(container, _desa, PengaturanCetak.JalurLogoEfektif(_config.LogoPath));
 
         private void ComposeContent(IContainer container)
         {
@@ -294,6 +252,8 @@ namespace SuDesApp.GeneratorPdf
                 // dari Pengaturan Desa). Jabatan & NIP mengikuti lembaga yang dipilih.
                 row.RelativeItem().Column(kanan =>
                 {
+                    // Kolom pejabat berada di sisi kanan halaman; ISI bloknya
+                    // rata tengah, sesuai bentuk baku tanda tangan surat dinas.
                     kanan.Item().AlignCenter().Text(tempatTanggal).FontSize(10);
                     kanan.Item().AlignCenter()
                         .Text($"{KopSurat.KataPejabat(_desa)} {namaDesa}".ToUpperInvariant().Trim())

@@ -304,22 +304,28 @@ namespace SuDesApp.Wpf
         /// <summary>Benar bila penutupan final sedang berlangsung (alur penundaan tidak boleh jalan lagi).</summary>
         private bool _keluarFinal;
 
-        /// <summary>Benar bila penutupan ini disengaja tombol "Simpan & Mulai Ulang Sekarang".</summary>
-        private bool _keluarUntukMulaiUlang;
-
         /// <summary>
-        /// Penutupan yang DISengaja oleh tombol "Simpan & Mulai Ulang Sekarang"
+        /// Penutupan yang DISengaja oleh tombol "Simpan &amp; Mulai Ulang Sekarang"
         /// (Pengaturan Aplikasi → Database Desa): lewati dialog "Yakin ingin keluar?"
         /// dan alur pemasangan otomatis pembaruan — pengguna sudah memastikan dari
-        /// dialog konfirmasi tombol itu sendiri, dan pembaruan kecil tidak boleh
-        /// menyusul di tengah proses pindah lokasi database. OnExit (backup Drive
-        /// saat keluar) tetap berjalan normal setelah ini.
+        /// dialog konfirmasi tombol itu sendiri, dan pembaruan tidak boleh menyusul
+        /// di tengah proses pindah lokasi database. OnExit (backup Drive saat
+        /// keluar) tetap berjalan normal setelah ini.
         /// </summary>
         public void KeluarUntukMulaiUlang()
         {
-            _keluarUntukMulaiUlang = true;
-            _keluarFinal = true;
-            Close();
+            TutupFinal();
+        }
+
+        /// <summary>
+        /// Tutup jendela karena pemasangan pembaruan sudah dijadwalkan (pengguna
+        /// memilih "Instal Sekarang" pada notifikasi). Tanpa dialog konfirmasi keluar
+        /// dan tanpa alur pasang-saat-keluar — keduanya hanya akan menghalangi
+        /// pemasangan yang sudah disiapkan.
+        /// </summary>
+        public void TutupUntukPemasangan()
+        {
+            TutupFinal();
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -340,25 +346,45 @@ namespace SuDesApp.Wpf
                 return;
             }
 
-            // Pemasangan otomatis pembaruan kecil: bila diaktifkan pengguna lewat
-            // Pengaturan Aplikasi, penutupan DITUNDA sesaat sementara paket pembaruan
-            // diunduh & diverifikasi (chip indikator di status bar berputar); setelah
-            // itu aplikasi menutup diri untuk pemasangan. Bila fitur mati, tidak ada
-            // penundaan sama sekali — penutupan tetap instan. Pembaruan besar TIDAK
-            // pernah ikut alur ini. Mulai ulang yang disengaja (pindah database)
-            // tidak boleh terganggu alur pembaruan.
-            if (!_keluarUntukMulaiUlang && SuDesApp.Utilities.AppPreferenceStore.IsPasangOtomatisSaatKeluar())
+            // Pembaruan yang SUDAH terunduh di latar belakang: bila pengguna
+            // memilih "Instal Saat Keluar" (atau setelan pasang otomatis pembaruan
+            // kecil aktif), pemasangan dijadwalkan lebih dulu, lalu penutupan
+            // dilanjutkan segera — tidak ada pemeriksaan/unduhan baru yang menunda
+            // keluar.
+            if (_viewModel.PembaruanLatar.SiapkanPemasanganSaatKeluar())
             {
                 e.Cancel = true;
-                _ = SiapkanPembaruanOtomatisSaatKeluarAsync();
+                _ = TutupSetelahPemasanganAsync();
+                return;
             }
 
             // Tutup semua scope DI yang dipegang MainWindowViewModel (terutama
-            // scope "bertahan" untuk ViewModel berumur sesi) dan hentikan timer
-            // status WA. Tanpa ini handle SQLite native tetap tertahan sampai
-            // proses mati, dan timer terus berdetak pada ViewModel yang sudah
-            // tidak terlihat.
+            // scope "bertahan" untuk ViewModel berumur sesi). Tanpa ini handle
+            // SQLite native tetap tertahan sampai proses mati, dan timer terus
+            // berdetak pada ViewModel yang sudah tidak terlihat.
             (DataContext as ViewModels.MainWindowViewModel)?.Dispose();
+        }
+
+        /// <summary>
+        /// Penutupan setelah pemasangan dijadwalkan: tunjukkan fase terakhir di chip
+        /// status bar sebentar, lalu tutup tanpa dialog. Skrip pemasang menunggu proses
+        /// ini benar-benar berakhir sebelum mengganti berkas.
+        /// </summary>
+        private async Task TutupSetelahPemasanganAsync()
+        {
+            try
+            {
+                TampilkanIndikatorPembaruan("Memasang pembaruan — menutup aplikasi…");
+                await Task.Delay(800);
+            }
+            catch
+            {
+                // Apa pun yang terjadi, penutupan tetap dilanjutkan.
+            }
+            finally
+            {
+                TutupFinal();
+            }
         }
 
         /// <summary>Tampilkan chip indikator status bar pada fase yang diberikan.</summary>
@@ -404,125 +430,11 @@ namespace SuDesApp.Wpf
         {
             _keluarFinal = true;
             SembunyikanIndikatorPembaruan();
+            (DataContext as ViewModels.MainWindowViewModel)?.Dispose();
             Close();
         }
 
         /// <summary>
-        /// Alur keluar dengan pemasangan otomatis: menampilkan fase di chip indikator
-        /// status bar (memeriksa → mengunduh → siap), memasang skrip penerap bila
-        /// berhasil, lalu MENUTUP aplikasi pada setiap cabang — pengguna sudah
-        /// mengonfirmasi keluar, jadi alur ini tidak boleh meninggalkan aplikasi
-        /// menggantung. Seluruh kegagalan cukup dilewati (penutupan tetap berjalan).
-        /// </summary>
-        private async Task SiapkanPembaruanOtomatisSaatKeluarAsync()
-        {
-            bool lewatBatas = false;
-
-            try
-            {
-                if (!SuDesApp.Utilities.AppPreferenceStore.IsPasangOtomatisSaatKeluar()) return;
-
-                var vm = _viewModel;
-                var updateService = vm?.PembaruanUpdateService;
-                var patchService = vm?.PembaruanPatchService;
-                if (updateService == null || patchService == null || !updateService.IsAvailable) return;
-
-                // Fase 1: memeriksa rilis terbaru.
-                TampilkanIndikatorPembaruan("Memeriksa pembaruan…");
-
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-                var rilis = await updateService.CheckForUpdatesAsync(cts.Token);
-                if (rilis == null || string.IsNullOrWhiteSpace(rilis.Version)) return;
-
-                var versiTerpasang = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version
-                                     ?? new Version(0, 0);
-                if (!Version.TryParse(rilis.Version, out var versiRilis) || versiRilis <= versiTerpasang) return;
-
-                // Fase 2: mengunduh & memverifikasi paket tambalan.
-                TampilkanIndikatorPembaruan($"Mengunduh pembaruan {rilis.Version}…");
-
-                var siap = await patchService.SiapkanPembaruanOtomatisAsync(rilis, cts.Token);
-                if (siap == null) return; // bukan tambalan / versi tidak cocok / gagal siap
-
-                // Gerbang ukuran: paket yang lebih besar dari batas pengguna tidak
-                // pernah diunduh senyap-senyap (siap.TotalByte = jumlah berkas diganti).
-                long batasByte = (long)SuDesApp.Utilities.AppPreferenceStore.GetBatasUkuranTambalanMb() * 1024 * 1024;
-                if (siap.TotalByte > batasByte)
-                {
-                    lewatBatas = true;
-                    SembunyikanIndikatorPembaruan();
-
-                    // Pembaruan dilewati karena melebihi batas otomatis. Pengguna sudah
-                    // memilih keluar, jadi tidak ada lagi dialog yang ditampilkan —
-                    // alasannya dicatat ke Riwayat Pembaruan supaya bisa dibaca lagi
-                    // kapan saja di halaman Pembaruan (tanpa popup), lalu aplikasi keluar.
-                    try
-                    {
-                        SuDesApp.Utilities.RiwayatPembaruanStore.Tambah(new SuDesApp.Utilities.EntriRiwayatPembaruan
-                        {
-                            Versi = siap.Versi,
-                            Jenis = "Tambalan",
-                            JumlahBerkas = siap.JumlahBerkas,
-                            Berhasil = false,
-                            Pesan = $"Dilewati otomatis: {siap.TotalByte / (1024.0 * 1024.0):0.#} MB melebihi batas " +
-                                    $"{SuDesApp.Utilities.AppPreferenceStore.GetBatasUkuranTambalanMb()} MB — " +
-                                    "pasang manual dari halaman Pembaruan bila diinginkan.",
-                            DariVersi = versiTerpasang.ToString(),
-                            Waktu = DateTime.Now
-                        });
-                    }
-                    catch (Exception exRiwayat)
-                    {
-                        System.Diagnostics.Debug.WriteLine("Riwayat pembaruan dilewati gagal dicatat: " + exRiwayat.Message);
-                    }
-
-                    return; // keluar tanpa pemasangan (ditutup oleh blok finally/akhir)
-                }
-
-                // Fase 3: siap dipasang — jalankan skrip penerap (menunggu proses
-                // tertutup, mengganti berkas, lalu membuka aplikasi kembali).
-                TampilkanIndikatorPembaruan("Siap dipasang — menutup aplikasi…");
-                patchService.JalankanPenerapan(siap);
-
-                // Riwayat: pemasangan otomatis tercatat dengan jelas (hasil akhirnya
-                // dilaporkan skrip penerap saat aplikasi dibuka kembali).
-                SuDesApp.Utilities.RiwayatPembaruanStore.Tambah(new SuDesApp.Utilities.EntriRiwayatPembaruan
-                {
-                    Versi = siap.Versi,
-                    Jenis = "Tambalan",
-                    JumlahBerkas = siap.JumlahBerkas,
-                    Berhasil = true,
-                    Pesan = "Dipasang otomatis saat aplikasi ditutup.",
-                    DariVersi = versiTerpasang.ToString(),
-                    Waktu = DateTime.Now
-                });
-
-                // Beri waktu sesaat agar pengguna sempat melihat fase terakhir.
-                await Task.Delay(1200);
-            }
-            catch (OperationCanceledException)
-            {
-                // Batas 60 detik tercapai (mis. internet lambat): cukup dilewati.
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Pemasangan otomatis pembaruan dilewati: " + ex.Message);
-            }
-            finally
-            {
-                if (!lewatBatas)
-                {
-                    SembunyikanIndikatorPembaruan();
-                }
-
-                // Pengguna sudah mengonfirmasi keluar di awal; semua cabang —
-                // tanpa pembaruan, gagal unduh, batas waktu, maupun berhasil —
-                // berakhir di sini: aplikasi ditutup untuk benar-benar keluar
-                // (atau lanjut ke pemasangan oleh skrip penerap).
-                TutupFinal();
-            }
-        }
-
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.F5)
@@ -637,6 +549,32 @@ namespace SuDesApp.Wpf
             if ((sender as FrameworkElement)?.DataContext is NotificationItem item)
             {
                 _viewModel.Notifications.Hapus(item);
+            }
+        }
+
+        /// <summary>
+        /// Jalankan tombol tindakan pada notifikasi (mis. "Instal Sekarang" /
+        /// "Instal Saat Keluar"). Tindakannya sudah disiapkan pengirim notifikasi;
+        /// handler ini hanya menutup flyout lalu menjalankannya.
+        /// </summary>
+        private void NotificationAction_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+
+            if ((sender as FrameworkElement)?.DataContext is not NotificationAction aksi) return;
+
+            // Tombol tindakan bukan navigasi: batalkan pilihan baris agar flyout
+            // tidak ikut membuka halaman Pembaruan ketika pengguna memilih
+            // "Instal Saat Keluar".
+            NotificationList.SelectedItem = null;
+            NotificationFlyout.IsOpen = false;
+            try
+            {
+                aksi.Execute();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Tindakan notifikasi gagal: " + ex.Message);
             }
         }
 

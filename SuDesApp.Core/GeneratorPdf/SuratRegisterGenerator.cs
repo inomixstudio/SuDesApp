@@ -5,19 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
-using SuDesApp.Interfaces;
 using SuDesApp.Utilities;
 
 namespace SuDesApp.GeneratorPdf
 {
-    public class SuratRegisterGenerator : ISuratGenerator
+    public class SuratRegisterGenerator
     {
         private readonly AppConfig _config;
         private readonly FileService _fileService;
@@ -38,6 +35,7 @@ namespace SuDesApp.GeneratorPdf
 
             return nama.Length == 0 ? "Surat dari Template Surat" : $"Template: {nama}";
         }
+
         private const float DEFAULT_FONT_SIZE = 9f;
         private const float TITLE_FONT_SIZE = 12f;
 
@@ -60,15 +58,13 @@ namespace SuDesApp.GeneratorPdf
             // Generator register tidak mewarisi SuratGeneratorBase, jadi pendaftaran
             // font harus dipanggil sendiri — bila ini dokumen PDF pertama pada sesi,
             // keluarga "Times New Roman" belum ada dan dokumen akan gagal dibuat.
-            SuratGeneratorBase.DaftarkanFont(config, logger);
 
-            QuestPdfLisensi.Pastikan();
         }
 
         // Generate PDF berdasarkan ID surat
         public async Task GeneratePdfAsync(Stream outputStream, int idSurat, string? keteranganTextBox = null)
         {
-            _logger.LogInformation("Generating PDF for single surat with ID: {IdSurat}", idSurat);
+            _logger.LogDebug("Membuat PDF satu surat, ID={IdSurat}", idSurat);
 
             var suratData = await _suratRepository.GetByIdAsync(idSurat);
             if (suratData == null)
@@ -91,7 +87,7 @@ namespace SuDesApp.GeneratorPdf
         // Generate PDF berdasarkan SuratData tunggal
         public async Task GeneratePdfAsync(Stream outputStream, SuratData suratData, string? keteranganTextBox = null)
         {
-            _logger.LogInformation("Generating PDF for single surat with ID: {IdSurat}", suratData.ID_Surat);
+            _logger.LogDebug("Membuat PDF satu surat, ID={IdSurat}", suratData.ID_Surat);
 
             var suratList = new List<SuratData> { suratData };
             await GenerateRegisterPdfAsync(outputStream, suratList, keteranganTextBox);
@@ -118,7 +114,7 @@ namespace SuDesApp.GeneratorPdf
             var sortedSuratListForPdf = suratList.OrderBy(s => s.ID_Surat).ToList();
             if (!sortedSuratListForPdf.Any())
             {
-                _logger.LogInformation("SuratList is empty after sorting in GenerateRegisterPdfAsync.");
+                _logger.LogWarning("Daftar surat kosong setelah diurutkan; register tidak dibuat.");
                 Document.Create(container =>
                 {
                     container.Page(page =>
@@ -334,10 +330,9 @@ namespace SuDesApp.GeneratorPdf
                             noUrut++;
                         }
 
-                        // Keterangan tambahan dicetak sebagai baris penutup tabel.
-                        // QuestPDF menolak page.Content() dipanggil dua kali, sedangkan
-                        // cara lama membuat layer konten kedua — akibatnya buku register
-                        // gagal dibuat setiap kali kolom keterangan diisi.
+                        // Keterangan tambahan dicetak sebagai baris penutup tabel supaya
+                        // tetap berada di dalam bingkai tabel: lebar kolom, garis, dan
+                        // perpindahan halamannya sama seperti baris lainnya.
                         if (!string.IsNullOrWhiteSpace(keteranganTextBox))
                         {
                             table.Cell().ColumnSpan((uint)(isRegisterNtcr ? 10 : 9)).Element(TableCellStyle)
@@ -350,10 +345,12 @@ namespace SuDesApp.GeneratorPdf
                     });
 
                     // Footer
-                    page.Footer().AlignCenter().Column(column =>
+                    page.Footer().Column(column =>
                     {
                         column.Item().PaddingTop(25).Row(row =>
                         {
+                            // Kolom tiap pejabat tetap di tempatnya (kiri & kanan);
+                            // isi blok tanda tangan yang rata tengah.
                             row.RelativeItem().Column(col =>
                             {
                                 // Jabatan mengikuti lembaga: “Lurah …” pada kelurahan.

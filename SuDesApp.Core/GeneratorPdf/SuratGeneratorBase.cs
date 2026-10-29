@@ -1,17 +1,14 @@
 // SuratGeneratorBase.cs
 // Kelas dasar seluruh generator surat. Seluruh dokumen — kop, judul, badan,
-// dan kaki surat — dirender dengan API QuestPDF langsung (tanpa lapisan kompat).
+// dan kaki surat — dirender dengan tata letak SudesPdf.Core (tanpa pustaka
+// pihak ketiga dan tanpa berkas font yang disematkan).
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.ControlSurat; // SettingsManager
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
-using SuDesApp.Interfaces;
 using SuDesApp.Utilities;
-using QuestPDF.Drawing;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using SudesPdf.Core.Layout;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace SuDesApp.GeneratorPdf
 {
-    public abstract class SuratGeneratorBase : ISuratGenerator
+    public abstract class SuratGeneratorBase
     {
         protected readonly AppConfig _config;
         protected readonly FileService _fileService;
@@ -41,9 +38,6 @@ namespace SuDesApp.GeneratorPdf
         /// </summary>
         protected virtual int HalamanMaksimal => 1;
 
-        /// <summary>Kerapatan tata letak yang dicoba berurutan: lapang → rapat.</summary>
-        protected static IReadOnlyList<KerapatanSurat> KerapatanBertingkat => KerapatanSurat.Bertingkat;
-
         protected virtual bool UseDefaultLogo => true;
         protected virtual bool UseDefaultHeader => true;
         protected virtual bool UseDefaultFooter => true;
@@ -51,11 +45,6 @@ namespace SuDesApp.GeneratorPdf
 
         protected readonly ILoggerFactory _loggerFactory;
         protected readonly ISuratRepository _suratRepository;
-
-        static SuratGeneratorBase()
-        {
-            QuestPdfLisensi.Pastikan();
-        }
 
         protected SuratGeneratorBase(
             AppConfig config,
@@ -73,61 +62,13 @@ namespace SuDesApp.GeneratorPdf
             _settingsManager = settingsManager ?? throw new ArgumentNullException(nameof(settingsManager));
             _logger = logger ?? NullLogger<SuratGeneratorBase>.Instance;
             _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
-
-            DaftarkanFont(_config, _logger);
-        }
-
-        private static bool _fontSudahDidaftarkan;
-
-        /// <summary>
-        /// Daftarkan seluruh font di folder font ke QuestPDF sehingga keluarga
-        /// "Times New Roman" tersedia untuk semua dokumen surat. Statis dan sekali
-        /// per proses — generator mana pun boleh memanggilnya, termasuk yang tidak
-        /// mewarisi kelas ini (mis. SuratRegisterGenerator) agar PDF pertama pada
-        /// sebuah sesi tetap punya font terdaftar.
-        /// </summary>
-        internal static void DaftarkanFont(AppConfig config, ILogger logger)
-            => DaftarkanFontCore(config.FontFolder, logger);
-
-        /// <summary>Overload tanpa konfigurasi: memakai folder font bawaan aplikasi
-        /// (Resources/Fonts di direktori aplikasi). Untuk generator buku yang tidak
-        /// menerima AppConfig (Keputusan, Agenda Surat Masuk/Keluar).</summary>
-        internal static void DaftarkanFont(ILogger? logger = null)
-            => DaftarkanFontCore(null, logger ?? NullLogger.Instance);
-
-        private static void DaftarkanFontCore(string? fontFolder, ILogger logger)
-        {
-            if (_fontSudahDidaftarkan) return;
-
-            fontFolder ??= System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "Fonts");
-            if (!Directory.Exists(fontFolder))
-            {
-                logger.LogError("Folder font tidak ditemukan: {FontFolder}", fontFolder);
-                throw new DirectoryNotFoundException($"Folder font tidak ditemukan: {fontFolder}");
-            }
-
-            foreach (var berkas in Directory.GetFiles(fontFolder, "*.ttf"))
-            {
-                try
-                {
-                    using var aliran = new MemoryStream(File.ReadAllBytes(berkas));
-                    FontManager.RegisterFontFromStream(aliran);
-                }
-                catch
-                {
-                    // Font ganda atau tidak valid diabaikan.
-                }
-            }
-
-            _fontSudahDidaftarkan = true;
-            logger.LogInformation("Font dari {FontFolder} didaftarkan ke QuestPDF.", fontFolder);
         }
 
         public virtual async Task GeneratePdfAsync(Stream outputStream, int idSurat, string? keteranganTextBox = null)
         {
             try
             {
-                _logger.LogInformation("Generating PDF for Surat ID={ID_Surat} (loading data from DB)", idSurat);
+                _logger.LogDebug("Membuat PDF Surat ID={ID_Surat} (memuat data dari basis data)", idSurat);
                 var suratData = await _suratRepository.GetByIdAsync(idSurat);
                 if (suratData == null)
                 {
@@ -158,7 +99,7 @@ namespace SuDesApp.GeneratorPdf
                 throw new InvalidOperationException("Output stream tidak dapat ditulis.");
             }
 
-            _logger.LogInformation("Generating PDF for Surat ID={ID_Surat} (using provided SuratData object)", suratData.ID_Surat);
+            _logger.LogDebug("Membuat PDF Surat ID={ID_Surat} (memakai data yang diberikan)", suratData.ID_Surat);
 
             if (suratData.Desa == null || !suratData.IsDesaDataValid(suratData.Desa))
             {
@@ -167,7 +108,7 @@ namespace SuDesApp.GeneratorPdf
             }
             else
             {
-                _logger.LogInformation("DesaData sudah valid, tidak perlu memuat ulang.");
+                _logger.LogDebug("DesaData sudah valid, tidak perlu memuat ulang.");
             }
 
             // Sekali saja di titik masuk: pakai salinan DesaData yang nama wilayahnya
@@ -189,7 +130,7 @@ namespace SuDesApp.GeneratorPdf
                 var ukuranPdf = RenderDenganPenyesuaian(suratData, keteranganTextBox!, lebarHalaman, tinggiHalaman);
                 outputStream.Write(ukuranPdf, 0, ukuranPdf.Length);
 
-                _logger.LogInformation("PDF generation completed for Surat ID={ID_Surat}, stream size: {Size} bytes", suratData.ID_Surat, outputStream.Length);
+                _logger.LogDebug("PDF Surat ID={ID_Surat} selesai ditulis ({Size} byte).", suratData.ID_Surat, outputStream.Length);
                 if (outputStream.Length == 0)
                 {
                     _logger.LogError("Stream PDF kosong setelah penulisan untuk ID_Surat={ID_Surat}", suratData.ID_Surat);
@@ -226,11 +167,7 @@ namespace SuDesApp.GeneratorPdf
                         {
                             var halaman = new BadanSurat();
                             ComposeHalaman(halaman, suratData, keteranganTextBox);
-                            foreach (var potongan in halaman.Potongan)
-                            {
-                                var render = potongan;
-                                kolom.Item().Element(c => render(c));
-                            }
+                            halaman.Render(kolom);
                         });
                     });
                 }).GeneratePdf(penampung);
@@ -242,13 +179,13 @@ namespace SuDesApp.GeneratorPdf
                 {
                     if (!ReferenceEquals(kerapatan, KerapatanSurat.Normal))
                     {
-                        _logger.LogInformation("Surat ID={ID_Surat} dirapatkan ke kerapatan {Kerapatan} agar muat {Halaman} halaman.",
+                        _logger.LogDebug("Surat ID={ID_Surat} dirapatkan ke kerapatan {Kerapatan} agar muat {Halaman} halaman.",
                             suratData.ID_Surat, kerapatan.Nama, HalamanMaksimal);
                     }
                     break;
                 }
 
-                _logger.LogInformation("Surat ID={ID_Surat} memakai kerapatan {Kerapatan} masih {Jumlah} halaman; mencoba kerapatan berikutnya.",
+                _logger.LogDebug("Surat ID={ID_Surat} memakai kerapatan {Kerapatan} masih {Jumlah} halaman; mencoba kerapatan berikutnya.",
                     suratData.ID_Surat, kerapatan.Nama, jumlahHalaman);
             }
 
@@ -281,7 +218,7 @@ namespace SuDesApp.GeneratorPdf
         }
 
         /// <summary>
-        /// Jumlah halaman dokumen, dibaca dari pohon halaman PDF yang dihasilkan QuestPDF.
+        /// Jumlah halaman dokumen, dibaca dari pohon halaman berkas PDF yang dihasilkan.
         /// </summary>
         protected static int HitungJumlahHalaman(byte[] pdf)
         {
@@ -346,7 +283,7 @@ namespace SuDesApp.GeneratorPdf
             {
                 var desa = suratData.Desa;
                 string logoPath = CariLogoPath();
-                halaman.Blok(c => SuratRenderer.Kop(c, desa!, logoPath));
+                halaman.Blok(c => KopSurat.Gambar(c, desa, logoPath));
             }
 
             ComposeJudul(halaman, suratData);
@@ -359,7 +296,7 @@ namespace SuDesApp.GeneratorPdf
             }
         }
 
-        /// <summary>Judul surat + baris NOMOR. Generator boleh menimpanya bila perlu gaya lain.</summary>
+        /// <summary>Judul surat + baris NOMOR. Generator boleh menimpinya bila perlu gaya lain.</summary>
         protected virtual void ComposeJudul(BadanSurat judul, SuratData suratData)
         {
             string teksJudul = JudulSurat;
@@ -454,15 +391,13 @@ namespace SuDesApp.GeneratorPdf
 
         /// <summary>
         /// Isi tambahan di bawah blok tanda tangan Kepala Desa (mis. tanda tangan
-        /// Camat). Generator yang butuh menimpanya.
+        /// Camat). Generator yang butuh menimpinya.
         /// </summary>
         protected virtual void ComposeFooterTambahan(BadanSurat badan, SuratData suratData)
         {
         }
 
-        /// <summary>
-        /// Badan surat masing-masing generator.
-        /// </summary>
+        /// <summary>Badan surat. Generator yang tidak mengisi badan CD-anak boleh mewarisi operasi ini.</summary>
         protected virtual void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
         }
@@ -481,8 +416,8 @@ namespace SuDesApp.GeneratorPdf
             {
                 if (suratData.Warga == null || string.IsNullOrWhiteSpace(suratData.Warga.Nama) || string.IsNullOrWhiteSpace(suratData.Warga.NIK))
                 {
-                    _logger.LogError("Data warga tidak lengkap: Nama={Nama}, NIK={NIK}, NamaJenis={NamaJenis}",
-                        suratData.Warga?.Nama, suratData.Warga?.NIK, suratData.NamaJenis);
+                    _logger.LogError("Data warga tidak lengkap untuk jenis surat {NamaJenis}.",
+                        suratData.NamaJenis);
                     throw new InvalidOperationException("Data warga tidak lengkap untuk generate PDF.");
                 }
             }

@@ -91,7 +91,7 @@ namespace SuDesApp.GeneratorPdf
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk Izin Keramaian, NamaWarga={NamaWarga}", suratData.Warga?.Nama);
+                _logger.LogError(ex, "Gagal menambahkan konten PDF untuk Izin Keramaian.");
                 throw;
             }
         }

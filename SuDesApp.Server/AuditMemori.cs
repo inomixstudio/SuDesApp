@@ -22,4 +22,20 @@ public sealed class AuditMemori : IAdminAuditStore
         lock (_kunci) _entri.Add(entry);
         return Task.CompletedTask;
     }
+
+    /// <summary>Salinan seluruh entri audit untuk disimpan ke berkas.</summary>
+    internal IReadOnlyList<AdminAuditEntry> AmbilSnapshot()
+    {
+        lock (_kunci) return _entri.ToArray();
+    }
+
+    /// <summary>Ganti seluruh entri dengan isi berkas simpanan.</summary>
+    internal void TerapkanSnapshot(IEnumerable<AdminAuditEntry> entri)
+    {
+        lock (_kunci)
+        {
+            _entri.Clear();
+            _entri.AddRange(entri);
+        }
+    }
 }

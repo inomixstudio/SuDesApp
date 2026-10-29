@@ -124,7 +124,7 @@ if (status1 is not null)
     Cek("chip menyebut sisa hari trial", chip.Contains($"sisa {sisa} hari"), chip);
     Cek("chip berbunyi Trial (bukan Full Service)",
         chip.StartsWith("Trial", StringComparison.Ordinal), chip);
-    Cek("masa trial ±14 hari", sisa is >= 13 and <= 14, $"{sisa} hari");
+    Cek("masa trial ±30 hari", sisa is >= 29 and <= 30, $"{sisa} hari");
 }
 
 // --- 5) "Komputer lain": trial kedua harus DITOLAK, tanpa cadangan lokal --

@@ -23,6 +23,15 @@
     <ProjectReference Include="..\SuDesApp.Core\SuDesApp.Core.csproj" />
     <ProjectReference Include="..\SuDesApp.Server\SuDesApp.Server.csproj" />
     <ProjectReference Include="..\SuDesApp.Wpf\SuDesApp.Wpf.csproj" />
+    <ProjectReference Include="..\SudesPdf\SudesPdf.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Naskah contoh Perdes (JSON) ikut ke folder uji agar tes generator
+         membaca data bawaan yang sama dengan aplikasi. -->
+    <Content Include="..\Templates\Perdes\*.json"
+             Link="Templates\Perdes\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

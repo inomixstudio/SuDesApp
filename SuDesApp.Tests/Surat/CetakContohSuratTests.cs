@@ -1,13 +1,14 @@
 using System.Data;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging.Abstractions;
+using SudesPdf;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
-using SuDesApp.Interfaces;
 using SuDesApp.Utilities;
 using Xunit;
 
@@ -15,11 +16,16 @@ namespace SuDesApp.Tests.Surat;
 
 /// <summary>
 /// Render contoh nyata tiap keluarga surat keterangan lewat generator aslinya
-/// (QuestPDF, fon Times New Roman, kop &amp; blok tanda tangan sungguhan) lalu
+/// (mesin PDF aplikasi sendiri, kop &amp; blok tanda tangan sungguhan) lalu
 /// memastikan hasilnya PDF valid berjumlah SATU halaman — sama seperti yang
 /// dicetak aplikasi. Berkas sampel ikut ditulis ke folder sementara
 /// <c>%TEMP%/sudesapp-sampel</c> sehingga tata letaknya bisa diperiksa visual
 /// (paragraf, spasi, alinea) tanpa membuka aplikasi.
+///
+/// Dua uji terakhir memeriksa ISI yang tercetak (kop, judul + nomor, nama
+/// kapital, blok tanda tangan), bukan sekadar jumlah halamannya: tata letak
+/// bersama itu milik <see cref="SuratRenderer"/> dan <see cref="KopSurat"/>, dan
+/// pernah hilang dari hasil cetak tanpa membuat uji halaman gagal.
 /// </summary>
 public sealed class CetakContohSuratTests : IDisposable
 {
@@ -181,7 +187,7 @@ public sealed class CetakContohSuratTests : IDisposable
         return new AppConfig(cfg);
     }
 
-    private async Task<byte[]> CetakAsync(ISuratGenerator generator, SuratData data)
+    private async Task<byte[]> CetakAsync(SuratGeneratorBase generator, SuratData data)
     {
         using var stream = new MemoryStream();
         await generator.GeneratePdfAsync(stream, data);
@@ -197,6 +203,44 @@ public sealed class CetakContohSuratTests : IDisposable
 
     private void SimpanSampel(string nama, byte[] pdf)
         => File.WriteAllBytes(Path.Combine(_folderSampel, nama + ".pdf"), pdf);
+
+    /// <summary>
+    /// Teks seluruh halaman PDF dibaca lewat library SudesPdf sendiri — mesin
+    /// render dan ekstraksi teks yang dipakai aplikasi. Isi surat ditulis sebagai
+    /// aliran operator yang terkompresi, jadi barisnya tidak dapat dicari langsung
+    /// dari byte PDF. Berkas sampelnya sekalian ditulis untuk inspeksi visual.
+    /// </summary>
+    private string BacaTeks(byte[] pdf, string nama)
+    {
+        string jalur = Path.Combine(_folderSampel, nama + ".pdf");
+        File.WriteAllBytes(jalur, pdf);
+
+        var dokumen = Document.LoadAsync(jalur).GetAwaiter().GetResult();
+        try
+        {
+            var teks = new StringBuilder();
+            for (int halaman = 0; halaman < dokumen.PageCount; halaman++)
+            {
+                teks.AppendLine(dokumen.GetTextAsync(halaman).GetAwaiter().GetResult());
+            }
+            return teks.ToString();
+        }
+        finally
+        {
+            dokumen.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+    }
+
+    /// <summary>Pastikan setiap baris benar-benar tercetak; pesan galat memuat seluruh teks surat.</summary>
+    private static void PastikanTercetak(string teks, params string[] baris)
+    {
+        foreach (string dicari in baris)
+        {
+            Assert.True(
+                teks.Contains(dicari, StringComparison.Ordinal),
+                $"Baris \"{dicari}\" tidak tercetak. Teks surat:\n{teks}");
+        }
+    }
 
     [Fact]
     public async Task SKDUmumCetakSatuHalaman()
@@ -351,6 +395,66 @@ public sealed class CetakContohSuratTests : IDisposable
         SimpanSampel("08-izin-keramaian", pdf);
         Assert.True(pdf.Length > 1000);
         Assert.Equal(1, HitungHalaman(pdf));
+    }
+
+    /// <summary>
+    /// Surat desa harus mencetak kop bersama, judul + baris nomor, nama orang
+    /// KAPITAL, dan blok tanda tangan Perbup — bukan cuma PDF satu halaman.
+    /// </summary>
+    [Fact]
+    public async Task SkdUmumMencetakKopJudulNomorDanNamaKapital()
+    {
+        var config = BuatConfig();
+        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var surat = SuratContoh(SuratConstants.SKD_UMUM);
+        var pdf = await CetakAsync(gen, surat);
+        string teks = BacaTeks(pdf, "10-skd-umum-isi");
+
+        // Kop: setiap baris milik KopSurat tercetak apa adanya, sehingga surat ini
+        // tidak memakai kop tersendiri yang berbeda dari dokumen lain.
+        PastikanTercetak(teks, KopSurat.BarisKop(surat.Desa).Select(baris => baris.Teks).ToArray());
+
+        // Judul + baris nomor: nomor dari register yang tercetak, lengkap dengan labelnya.
+        PastikanTercetak(teks, "SURAT KETERANGAN DESA", $"NOMOR : {surat.NomorSurat}");
+
+        // Nama orang dicetak KAPITAL pada tabel isian.
+        PastikanTercetak(teks, "BUDI SANTOSO");
+        Assert.DoesNotContain("Budi Santoso", teks, StringComparison.Ordinal);
+
+        // Blok pejabat: jabatan diikuti langsung oleh nama. Frasa "bertanda tangan"
+        // tetap sah pada isi surat, tetapi label tersendiri di kolom pejabat harus hilang.
+        PastikanTercetak(teks, "KEPALA DESA SUKAMAJU", "H. AHMAD SURYANA");
+        Assert.False(Regex.IsMatch(
+            teks,
+            @"KEPALA DESA SUKAMAJU\s+tanda tangan\s+H\.\s*AHMAD SURYANA",
+            RegexOptions.IgnoreCase));
+    }
+
+    /// <summary>
+    /// Surat kelurahan harus mencetak kop "KELURAHAN …", jabatan Lurah, dan NIP
+    /// pejabat ASN di bawah namanya — bedanya dari desa hanya dari data lembaganya.
+    /// </summary>
+    [Fact]
+    public async Task SkdKelurahanMencetakJabatanLurahDanNip()
+    {
+        var config = BuatConfig();
+        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var surat = SuratContoh(SuratConstants.SKD_UMUM);
+        surat.Desa = DesaKelurahanContoh();
+
+        var pdf = await CetakAsync(gen, surat);
+        string teks = BacaTeks(pdf, "11-skd-kelurahan-isi");
+
+        PastikanTercetak(teks, "KELURAHAN SUKAMAJU", "Jabatan : Lurah Sukamaju",
+            "LURAH SUKAMAJU", $"NIP {surat.Desa.NipKepalaDesa}");
     }
 
     private static string? CariRootRepo()

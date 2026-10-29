@@ -13,8 +13,8 @@ namespace SuDesApp.Wpf.Views
 {
     /// <summary>
     /// Jendela pembuka yang tampil seketika saat aplikasi dimulai — jauh sebelum
-    /// jendela login. Pekerjaan berat pada detik pertama (enkripsi database,
-    /// skema dan migrasi) berjalan di latar belakang, dan jendela ini memberi
+    /// jendela login. Pekerjaan berat pada detik pertama (skema dan migrasi)
+    /// berjalan di latar belakang, dan jendela ini memberi
     /// tahu tahapannya agar aplikasi tidak terasa "macet" saat baru dibuka.
     ///
     /// Sengaja dibangun dari kode, bukan XAML, agar muncul sebelum
@@ -586,7 +586,7 @@ namespace SuDesApp.Wpf.Views
                 {
                     if (Application.Current?.TryFindResource(kunci) is Brush b2) return b2;
                 }
-                catch { /* abaikan */ }
+                catch { /* aplikasi uji tanpa resource */ }
                 return Warna(cadangan);
             }
 

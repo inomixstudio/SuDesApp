@@ -2,7 +2,7 @@
 
 Aplikasi desktop Windows (WPF) untuk administrasi surat-menyurat desa: pembuatan
 surat resmi dengan penomoran sesuai perbup, register & agenda digital, data
-penduduk lengkap dengan mutasi, layanan permintaan surat via WhatsApp/API, sampai
+penduduk lengkap dengan mutasi, API desa untuk sistem luar, sampai
 alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per surat.
 
 ## Fitur utama
@@ -11,7 +11,7 @@ alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per sura
   NTCR, rekening koran, …) plus Template Surat sendiri lewat wizard atau impor
   berkas Word; penomoran otomatis mengikuti Perbup (rujukan di
   `docs/referensi-penomoran-surat.md`). Tombol **Pratinjau** bisa ditekan sebelum
-  form diisi: PDFium menampilkan kerangka surat, dengan kolom kosong tercetak
+  form diisi: SudesPdf menampilkan kerangka surat, dengan kolom kosong tercetak
   sebagai titik-titik dan tanpa menyimpan apa pun ke register.
 - **Logo kabupaten otomatis** — lambang 514 kabupaten/kota se-Indonesia tersedia
   lengkap; begitu kabupaten dipilih di Pengaturan Surat, lambang kop surat
@@ -28,10 +28,9 @@ alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per sura
   (lihat `docs/alur-persetujuan-surat.md`).
 - **QR verifikasi** — setiap surat terbit membawa kode + QR di kaki surat;
   pihak luar (bank/instansi) bisa memeriksa keasliannya.
-- **API desa** — endpoint HTTP lokal untuk sistem luar memantau statistik, status
-  persetujuan, dan rekap laporan bulanan (`docs/api-desa.md`).
-- **Layanan online** — permintaan surat masuk via WhatsApp Cloud API / Google
-  Sheet / API desa ke antrean operator.
+- **API desa** — endpoint HTTP lokal untuk sistem luar membaca statistik, data
+  perangkat desa, rekap laporan bulanan, dan memeriksa keaslian surat
+  (`docs/api-desa.md`).
 - **Multi-pengguna** — akun dengan peran & izin, kunci akun setelah percobaan
   login gagal (`docs/policy-peran-pengguna.md`).
 - **Kuitansi lisensi** — setiap pembayaran bisa dicetak sebagai kuitansi dari
@@ -53,6 +52,12 @@ alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per sura
 
 ## Build
 
+Build juga menjalankan analyzer **SUDES0001**: setiap `catch` kosong wajib
+berisi komentar alasan di dalam bloknya. Catch kosong tanpa komentar alasan
+ditolak sebagai error, sehingga build gagal. Contoh yang diterima:
+`catch { /* berkas sementara sudah tidak ada */ }`. Analyzer adalah dependensi
+build saja dan tidak ikut ke installer atau hasil publish.
+
 ```bash
 # Library inti (TreatWarningsAsErrors aktif)
 dotnet build SuDesApp.Core/SuDesApp.Core.csproj --nologo -v q
@@ -67,8 +72,9 @@ dotnet test SuDesApp.Tests/SuDesApp.Tests.csproj --nologo -v q
 GitHub Actions menjalankan restore, build Release, dan uji otomatis pada Windows
 untuk setiap pull request dan push ke `main` (`.github/workflows/ci.yml`). Cakupan
 uji saat ini mencakup tanda tangan token lisensi, termasuk kompatibilitas verifikasi
-server dan aplikasi desktop. Workflow publikasi GitHub Release tidak disertakan
-dalam checkout ini.
+server dan aplikasi desktop. Workflow publikasi `.github/workflows/release.yml`
+ikut disertakan dan menandatangani aset dengan Authenticode — lihat
+[`docs/TANDA-TANGAN-RILIS.md`](docs/TANDA-TANGAN-RILIS.md).
 Untuk pemeriksaan kontras tema, jalankan `Tools/check-kontras-wcag.ps1` secara
 terpisah (lihat [`docs/tema-dan-warna.md`](docs/tema-dan-warna.md)). Skrip
 `Tools/publish-release.ps1` dan `Tools/rilis-sekali-jalan.ps1` menyiapkan aset
@@ -99,8 +105,10 @@ di clone penulis belum diaktifkan atau commit dibuat dengan `--no-verify`.
 
 | Folder | Isi |
 |---|---|
-| `SuDesApp.Core/` | Logika bisnis: data (SQLite/Dapper), layanan, generator PDF (QuestPDF), API desa, integrasi WhatsApp/Google |
+| `SuDesApp.Core/` | Logika bisnis: data (SQLite/Dapper), layanan, generator surat di atas mesin PDF sendiri (SudesPdf), API desa, integrasi Google Drive |
 | `SuDesApp.Wpf/` | Aplikasi WPF: ViewModel, View, tema, navigasi |
+| `SudesPdf.Core/` | Mesin PDF aplikasi sendiri: penulis dokumen, penata letak surat, pembaca, dan penggambar halaman — tanpa pustaka PDF pihak ketiga |
+| `SudesPdf/` | Lapisan WPF untuk mesin tadi: pratinjau halaman, pembungkus dokumen, dan cetak |
 | `docs/` | Dokumentasi kebijakan & API (tautan di bawah) |
 | `Bawaan/`, `Templates/`, `Resources/`, `installer/`, `Tools/` | Contoh bawaan aplikasi (JSON), template formulir, sumber daya, installer, alat bantu |
 
@@ -115,5 +123,6 @@ di clone penulis belum diaktifkan atau commit dibuat dengan `--no-verify`.
 - [`docs/kebijakan-privasi.md`](docs/kebijakan-privasi.md) — kebijakan privasi: data lokal vs data server
 - [`docs/syarat-ketentuan.md`](docs/syarat-ketentuan.md) — syarat & ketentuan layanan (lisensi, pembayaran, tanggung jawab)
 - [`docs/tema-dan-warna.md`](docs/tema-dan-warna.md) — aturan warna & tema (agar semua bagian ikut tema)
+- [`docs/arsitektur-pdf-surat.md`](docs/arsitektur-pdf-surat.md) — struktur lapisan pembuatan PDF surat (kop, renderer, generator)
 - [`docs/referensi-penomoran-surat.md`](docs/referensi-penomoran-surat.md) — acuan penomoran
 - [`docs/PEMBARUAN-TAMBALAN.md`](docs/PEMBARUAN-TAMBALAN.md) — mekanisme pembaruan kecil

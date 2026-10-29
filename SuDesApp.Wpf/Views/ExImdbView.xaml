@@ -6,7 +6,7 @@
 
     <!--
         Halaman Cadangkan & Pulihkan.
-        Pola nav kiri sama dengan Tentang & Panduan WhatsApp, tetapi isinya
+        Pola nav kiri sama dengan Tentang, tetapi isinya
         dipecah menjadi empat bagian: Database Aktif (ringkasan + aksi cepat),
         Cadangan (riwayat .db di folder database), Ekspor, dan Impor.
         Kabar hasil aksi tampil di ATAS konten, sehingga tetap terlihat

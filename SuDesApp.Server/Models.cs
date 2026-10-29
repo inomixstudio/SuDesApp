@@ -22,7 +22,7 @@ public class Pelanggan
     public Langganan? Langganan { get; set; }
 
     /// <summary>
-    /// True setelah desa ini pernah memakai trial 14 hari. Trial hanya boleh
+    /// True setelah desa ini pernah memakai trial 30 hari. Trial hanya boleh
     /// SEKALI per desa — kolom ini yang menahannya, bukan kejujuran klien.
     /// </summary>
     public bool TrialSudah { get; set; }

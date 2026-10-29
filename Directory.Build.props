@@ -1,0 +1,14 @@
+<Project>
+
+  <!--
+    Aturan build SUDES0001: catch kosong wajib disertai komentar alasan di
+    dalam bloknya. Analyzer dipasang sebagai analyzer (bukan referensi
+    assembly) supaya tidak ikut ke keluaran aplikasi.
+  -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'SudesApp.Analyzers'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)Analyzers/SudesApp.Analyzers/SudesApp.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

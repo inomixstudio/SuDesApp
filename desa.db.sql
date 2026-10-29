@@ -246,29 +246,6 @@ CREATE TABLE IF NOT EXISTS "BedaNama" (
     FOREIGN KEY("ID_Surat") REFERENCES "Surat"("ID_Surat") ON DELETE CASCADE,
     FOREIGN KEY("ID_Warga") REFERENCES "Warga"("ID_Warga") ON DELETE RESTRICT
 );
-CREATE TABLE IF NOT EXISTS "PermintaanWa" (
-    "ID_Permintaan"    INTEGER PRIMARY KEY AUTOINCREMENT,
-    "KodePermintaan"   TEXT NOT NULL,
-    "NomorWA"          TEXT NOT NULL,
-    "NamaWarga"        TEXT,
-    "NIK"              TEXT,
-    "NamaJenis"        TEXT NOT NULL,
-    "PesanMentah"      TEXT,
-    "DataJson"         TEXT,
-    "Status"           TEXT NOT NULL DEFAULT 'BARU',
-    "IdSurat"          INTEGER,
-    "IsRead"           INTEGER NOT NULL DEFAULT 0,
-    "TanggalPermintaan" TEXT NOT NULL,
-    "TanggalDiproses"  TEXT,
-    "Catatan"          TEXT,
-    "PesanBalasan"     TEXT,
-    "Sumber"           TEXT NOT NULL DEFAULT 'WA',
-    "SheetToken"       TEXT,
-    "SheetRowId"       INTEGER,
-    "Referensi"        TEXT
-);
-CREATE INDEX IF NOT EXISTS "idx_permintaanwa_status" ON "PermintaanWa"("Status");
-CREATE INDEX IF NOT EXISTS "idx_permintaanwa_wa" ON "PermintaanWa"("NomorWA");
 CREATE TABLE IF NOT EXISTS "NTCR" (
     "ID_Surat" INTEGER PRIMARY KEY,
     "ID_CalonIstri" INTEGER,

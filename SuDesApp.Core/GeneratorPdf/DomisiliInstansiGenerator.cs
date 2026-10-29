@@ -1,5 +1,5 @@
 // File: SuDesApp/GeneratorPdf/DomisiliInstansiGenerator.cs
-// Badan surat dibuat langsung dengan QuestPDF (BadanSurat), tanpa lapisan kompat.
+// Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Repositories;
@@ -16,7 +16,6 @@ namespace SuDesApp.GeneratorPdf
         public DomisiliInstansiGenerator(AppConfig config, FileService fileService, IDesaRepository desaRepository, ISuratRepository suratRepository, SettingsManager settingsManager, ILogger<DomisiliInstansiGenerator> logger, ILoggerFactory loggerFactory)
             : base(config, fileService, desaRepository, suratRepository, settingsManager, logger, loggerFactory)
         {
-            _logger.LogInformation("DomisiliInstansiGenerator initialized.");
         }
 
         protected override string JudulSurat => "SURAT KETERANGAN DOMISILI";
@@ -47,9 +46,6 @@ namespace SuDesApp.GeneratorPdf
                     _logger.LogError("Data Desa tidak lengkap untuk membuat PDF Domisili Instansi. Surat ID: {SuratId}", suratData.ID_Surat);
                     throw new InvalidOperationException("Data Desa tidak lengkap.");
                 }
-
-                _logger.LogInformation("Rendering content for Domisili Instansi: NamaInstansi={NamaInstansi}, NomorSurat={NomorSurat}",
-                    instansi.NamaInstansi, suratData.NomorSurat);
 
                 badan.Paragraf("Yang bertanda tangan di bawah ini :", jarakBawah: 10);
 
@@ -101,8 +97,6 @@ namespace SuDesApp.GeneratorPdf
                     indentBarisPertama: 50,
                     jarakAtas: 10,
                     jarakBawah: 12);
-
-                _logger.LogInformation("Keterangan ditambahkan ke PDF: {Keterangan}", keteranganFinal);
 
                 badan.Paragraf("Demikian surat keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
                     rata: Rata.Kiri,

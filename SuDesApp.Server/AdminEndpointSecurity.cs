@@ -261,9 +261,13 @@ public static class AdminEndpointSecurity
             throw;
         }
 
+        // "started" hanya dicatat ke penyimpanan audit: satu permintaan admin
+        // sebelumnya menghasilkan DUA baris log (mulai + selesai), padahal log
+        // konsol/berkas hanya perlu hasil akhirnya. Audit durable tetap lengkap.
         var logger = context.RequestServices.GetRequiredService<ILoggerFactory>()
             .CreateLogger("SuDesApp.AdminAudit");
-        if (logger.IsEnabled(LogLevel.Information))
+        if (!string.Equals(outcome, "started", StringComparison.Ordinal) &&
+            logger.IsEnabled(LogLevel.Information))
         {
             ServerLog.AuditAdminTindakan(
                 logger,

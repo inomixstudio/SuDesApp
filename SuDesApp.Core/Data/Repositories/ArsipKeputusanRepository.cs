@@ -3,6 +3,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using SuDesApp.Data.Models;
+using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
 using System;
 using System.Collections.Generic;
@@ -260,6 +261,7 @@ namespace SuDesApp.Data.Repositories
                         if (path != null)
                         {
                             File.Delete(path);
+                            NaskahPerdesStore.Hapus(path);
                             _logger.LogInformation("Berkas lampiran terkait dihapus: {File}", fileLampiran);
                         }
                     }

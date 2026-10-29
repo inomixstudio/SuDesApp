@@ -188,6 +188,68 @@ public sealed class LanggananMemori : IRepositoryLangganan
     private readonly List<string> _urutanTagihan = new();
     private readonly Dictionary<string, DateTime> _dibuat = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// Seluruh isi penyimpanan sebagai snapshot yang bisa disimpan ke berkas
+    /// (lihat <see cref="PenyimpananLokal"/>). Dipakai mode lokal tanpa database
+    /// supaya desa, langganan, tagihan, dan pembayaran tetap ada setelah server
+    /// berhenti — bukan hilang seperti penyimpanan memori biasa.
+    /// </summary>
+    public LanggananSnapshot AmbilSnapshot() => new(
+        1,
+        new Dictionary<string, Pelanggan>(_pelanggan, StringComparer.OrdinalIgnoreCase),
+        _tagihan.ToDictionary(
+            kv => kv.Key,
+            kv => new TagihanTersimpan(kv.Value.Paket, kv.Value.Nominal, kv.Value.Hari, kv.Value.PelangganId),
+            StringComparer.Ordinal),
+        _dibayar.ToList(),
+        _perangkat.ToDictionary(
+            kv => kv.Key,
+            kv => new Dictionary<string, DateTime>(kv.Value, StringComparer.Ordinal),
+            StringComparer.Ordinal),
+        _pembayaran.ToDictionary(
+            kv => kv.Key,
+            kv => new PembayaranTersimpan(
+                kv.Value.Nominal, kv.Value.Status, kv.Value.Dicatat, kv.Value.Catatan, kv.Value.Bukti),
+            StringComparer.Ordinal),
+        _urutanTagihan.ToList(),
+        new Dictionary<string, DateTime>(_dibuat, StringComparer.Ordinal));
+
+    /// <summary>Ganti seluruh isi penyimpanan dengan snapshot hasil <see cref="AmbilSnapshot"/>.</summary>
+    public void TerapkanSnapshot(LanggananSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        _pelanggan.Clear();
+        foreach (var (kode, pelanggan) in snapshot.Pelanggan) _pelanggan[kode] = pelanggan;
+
+        _tagihan.Clear();
+        foreach (var (order, tagihan) in snapshot.Tagihan)
+        {
+            _tagihan[order] = (tagihan.Paket, tagihan.Nominal, tagihan.Hari, tagihan.PelangganId);
+        }
+
+        _dibayar.Clear();
+        foreach (string order in snapshot.Dibayar) _dibayar.Add(order);
+
+        _perangkat.Clear();
+        foreach (var (pelangganId, perangkat) in snapshot.Perangkat)
+        {
+            _perangkat[pelangganId] = new Dictionary<string, DateTime>(perangkat, StringComparer.Ordinal);
+        }
+
+        _pembayaran.Clear();
+        foreach (var (order, bayar) in snapshot.Pembayaran)
+        {
+            _pembayaran[order] = (bayar.Nominal, bayar.Status, bayar.Dicatat, bayar.Catatan, bayar.Bukti);
+        }
+
+        _urutanTagihan.Clear();
+        _urutanTagihan.AddRange(snapshot.UrutanTagihan);
+
+        _dibuat.Clear();
+        foreach (var (order, waktu) in snapshot.Dibuat) _dibuat[order] = waktu;
+    }
+
     public Task InitializeAsync() => Task.CompletedTask;
 
     public Task<Pelanggan?> CariByKodeAsync(string kode) =>
