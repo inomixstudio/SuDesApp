@@ -43,6 +43,8 @@ public sealed class PdfWriter
     private readonly List<PdfWriterPage> _pages = new();
     private readonly Dictionary<string, PdfWriterImage> _images = new();
     private readonly Dictionary<PdfTimesFace, int> _fontObjects = new();
+    private readonly Dictionary<PdfTimesFace, HashSet<int>> _kodeDipakai = new();
+    private readonly Dictionary<PdfTimesFace, (byte[] Program, TrueTypeFont Source)?> _fontTersemat = new();
     private int _imageCounter;
 
     /// <summary>Nama perangkat yang dicatat pada Info dokumen.</summary>
@@ -83,6 +85,22 @@ public sealed class PdfWriter
         int pagesId = Reserve();
         int catalogId = Reserve();
         int infoId = Reserve();
+
+        // Kumpulkan kode WinAnsi seluruh halaman lebih dulu: subset font harus
+        // sudah tahu glif mana yang dipakai sebelum objek font ditulis.
+        foreach (var halaman in _pages)
+        {
+            foreach (var pasangan in halaman.Content.CodesUsed)
+            {
+                if (!_kodeDipakai.TryGetValue(pasangan.Key, out var kumpulan))
+                {
+                    kumpulan = new HashSet<int>();
+                    _kodeDipakai[pasangan.Key] = kumpulan;
+                }
+
+                kumpulan.UnionWith(pasangan.Value);
+            }
+        }
 
         var kids = new StringBuilder();
         for (int i = 0; i < _pages.Count; i++)
@@ -159,7 +177,13 @@ public sealed class PdfWriter
         return pageId;
     }
 
-    /// <summary>Objek font standar (dibuat sekali per muka).</summary>
+    /// <summary>
+    /// Objek font (dibuat sekali per muka). Bila Times New Roman tersedia di
+    /// sistem, subset font itu DISEMATKAN ke berkas sehingga semua pembaca PDF
+    /// menampilkan bentuk huruf yang sama — bukan mengganti nama base-14 dengan
+    /// font serif lain yang lebih tipis/berbeda metrik. Bila tidak tersedia,
+    /// jatuh kembali ke font standar PDF agar dokumen tetap terbentuk.
+    /// </summary>
     private int FontObject(PdfTimesFace face)
     {
         if (_fontObjects.TryGetValue(face, out int existing)) return existing;
@@ -173,12 +197,122 @@ public sealed class PdfWriter
         }
 
         int id = Reserve();
-        Set(id, Ascii(
-            "<< /Type /Font /Subtype /Type1 /BaseFont /" + PdfStandardTimes.BaseFontName(face) +
-            " /Encoding /WinAnsiEncoding /FirstChar " + PdfStandardTimes.FirstChar +
-            " /LastChar " + PdfStandardTimes.LastChar + " /Widths [" + widths + "] >>"));
+        var tersemat = MuatFontTersemat(face);
+        if (tersemat is { } font)
+        {
+            int fileId = Reserve();
+            Set(fileId, FontFileStream(font.Program));
+
+            int descriptorId = Reserve();
+            Set(descriptorId, Ascii(FontDescriptor(face, font.Source, fileId)));
+
+            Set(id, Ascii(
+                "<< /Type /Font /Subtype /TrueType /BaseFont /" + NamaFontTersemat(face) +
+                " /Encoding /WinAnsiEncoding /FirstChar " + PdfStandardTimes.FirstChar +
+                " /LastChar " + PdfStandardTimes.LastChar + " /Widths [" + widths + "]" +
+                " /FontDescriptor " + Ref(descriptorId) + " >>"));
+        }
+        else
+        {
+            Set(id, Ascii(
+                "<< /Type /Font /Subtype /Type1 /BaseFont /" + PdfStandardTimes.BaseFontName(face) +
+                " /Encoding /WinAnsiEncoding /FirstChar " + PdfStandardTimes.FirstChar +
+                " /LastChar " + PdfStandardTimes.LastChar + " /Widths [" + widths + "] >>"));
+        }
+
         _fontObjects[face] = id;
         return id;
+    }
+
+    /// <summary>Nama Times New Roman pada kamus font berkas PDF.</summary>
+    private static string NamaFontTersemat(PdfTimesFace face) => face switch
+    {
+        PdfTimesFace.Bold => "TimesNewRomanPS-BoldMT",
+        PdfTimesFace.Italic => "TimesNewRomanPS-ItalicMT",
+        PdfTimesFace.BoldItalic => "TimesNewRomanPS-BoldItalicMT",
+        _ => "TimesNewRomanPSMT",
+    };
+
+    /// <summary>
+    /// Bangun subset font untuk muka ini (sekali per dokumen). Null bila font
+    /// sistem tidak ada/tidak terbaca atau tabel wajibnya tidak lengkap.
+    /// </summary>
+    private (byte[] Program, TrueTypeFont Source)? MuatFontTersemat(PdfTimesFace face)
+    {
+        if (_fontTersemat.TryGetValue(face, out var tersimpan)) return tersimpan;
+
+        (byte[] Program, TrueTypeFont Source)? hasil = null;
+        try
+        {
+            string? berkas = PdfStandardFontSource.FaceFile(face);
+            string? jalur = berkas is null ? null : PdfStandardFontSource.FindFile(berkas);
+            if (jalur is not null)
+            {
+                var font = TrueTypeFont.Parse(File.ReadAllBytes(jalur));
+                if (font is not null)
+                {
+                    var glyphs = new HashSet<int> { 0 };
+                    if (_kodeDipakai.TryGetValue(face, out var kode))
+                    {
+                        foreach (int k in kode)
+                        {
+                            char? karakter = PdfEncodingTables.Lookup("WinAnsiEncoding", k);
+                            if (karakter is { } c && font.TryGetGlyphIdForCharacter(c, out int glyphId))
+                            {
+                                glyphs.Add(glyphId);
+                            }
+                        }
+                    }
+
+                    byte[] subset = font.BuildSubset(glyphs);
+                    if (subset.Length > 0) hasil = (subset, font);
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Font sistem yang rusak tidak boleh menggagalkan surat: dokumen
+            // tetap dibuat dengan font standar PDF.
+            hasil = null;
+        }
+
+        _fontTersemat[face] = hasil;
+        return hasil;
+    }
+
+    /// <summary>Aliran program font tersemat (/FontFile2).</summary>
+    private static byte[] FontFileStream(byte[] program)
+    {
+        byte[] data = Compress(program);
+        return Build(
+            "<< /Length1 " + program.Length.ToString(CultureInfo.InvariantCulture) +
+            " /Filter /FlateDecode /Length " + data.Length.ToString(CultureInfo.InvariantCulture) + " >>\nstream\n",
+            data);
+    }
+
+    /// <summary>Kamus /FontDescriptor dengan metrik yang diambil dari font asli.</summary>
+    private static string FontDescriptor(
+        PdfTimesFace face, TrueTypeFont font, int fileId)
+    {
+        var m = font.ReadFontMetrics();
+        double skala = 1000.0 / font.UnitsPerEm;
+        int S(int nilai) => (int)Math.Round(nilai * skala, MidpointRounding.AwayFromZero);
+
+        int flags = 32 | 2; // nonsimbolik + serif
+        if (face is PdfTimesFace.Italic or PdfTimesFace.BoldItalic) flags |= 64;
+
+        int ascent = S(m.Ascent);
+        int descent = S(m.Descent);
+        int capHeight = m.CapHeight > 0 ? S(m.CapHeight) : (int)Math.Round(ascent * 0.7);
+        int stemV = face is PdfTimesFace.Bold or PdfTimesFace.BoldItalic ? 120 : 80;
+
+        return "<< /Type /FontDescriptor /FontName /" + NamaFontTersemat(face) +
+               " /Flags " + flags.ToString(CultureInfo.InvariantCulture) +
+               " /FontBBox [" + S(m.XMin) + " " + S(m.YMin) + " " + S(m.XMax) + " " + S(m.YMax) + "]" +
+               " /ItalicAngle " + m.ItalicAngle.ToString("0.####", CultureInfo.InvariantCulture) +
+               " /Ascent " + ascent + " /Descent " + descent +
+               " /CapHeight " + capHeight + " /StemV " + stemV +
+               " /FontFile2 " + Ref(fileId) + " >>";
     }
 
     /// <summary>Objek gambar (dibuat sekali per gambar terdaftar).</summary>

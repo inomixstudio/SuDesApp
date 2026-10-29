@@ -161,6 +161,9 @@ namespace SuDesApp.Wpf.Views
             return Math.Min(8.0, dpi * 96.0 / 72.0);
         }
 
+        /// <summary>DPI bitmap yang membuat satu pikselnya sama dengan satu piksel layar.</summary>
+        private double KerapatanLayar() => Math.Max(0.5, VisualTreeHelper.GetDpi(this).DpiScaleX) * 96.0;
+
         private void ZoomIn_Click(object sender, RoutedEventArgs e) => _ = SetScaleAsync(_scale * 1.2);
         private void ZoomOut_Click(object sender, RoutedEventArgs e) => _ = SetScaleAsync(_scale / 1.2);
 
@@ -181,11 +184,16 @@ namespace SuDesApp.Wpf.Views
             int generation = _loadGeneration;
 
             double pikselPerTitik = SkalaPiksel();
+            double kerapatan = KerapatanLayar();
             for (int i = 0; i < _document.PageCount; i++)
             {
                 var size = _document.PageSizes[i];
                 BitmapSource bitmap;
-                try { bitmap = await _document.RenderAsync(i, Math.Min(8.0, _scale * pikselPerTitik * 2.0)); }
+                // Dirender tepat satu piksel bitmap per piksel layar. Sebelumnya
+                // halaman digambar dua kali lebih rapat lalu diperkecil WPF dengan
+                // penyaringan bilinear — huruf tebal berubah abu-abu dan tepinya
+                // kabur. Tanpa pembesaran itu teks tampil setajam penampil PDF.
+                try { bitmap = await _document.RenderAsync(i, Math.Min(8.0, _scale * pikselPerTitik), kerapatan); }
                 catch (Exception) { return; }
                 if (generation != _loadGeneration || _document is null) return;
                 int w = Math.Max(1, (int)Math.Round(LebarHalamanDip(i)));
@@ -212,13 +220,18 @@ namespace SuDesApp.Wpf.Views
                 };
 
                 var pageStack = new StackPanel();
-                pageStack.Children.Add(new Image
+                var halaman = new Image
                 {
                     Source = bitmap,
                     Width = w,
                     Height = h,
                     Stretch = Stretch.Uniform
-                });
+                };
+                // Kalau pembulatan ukuran menyisakan pecahan piksel, WPF tetap
+                // perlu menyesuaikan sedikit; filter kelas atas menjaga tepi huruf
+                // tetap tegas alih-alih bilinear yang mengaburkannya.
+                RenderOptions.SetBitmapScalingMode(halaman, BitmapScalingMode.HighQuality);
+                pageStack.Children.Add(halaman);
 
                 // Label "Halaman N dari M" di bawah setiap halaman DIHAPUS.
                 // Angka halaman sudah bisa dibaca dari jumlah kartu halaman yang

@@ -45,6 +45,32 @@ internal static class PdfStandardFontSource
         };
     }
 
+    /// <summary>
+    /// Nama berkas font sistem untuk satu muka Times. Dipakai saat menulis PDF
+    /// supaya berkas keluaran benar-benar memuat Times New Roman — bukan nama
+    /// base-14 yang setiap pembaca PDF ganti dengan font serif lain.
+    /// </summary>
+    internal static string? FaceFile(PdfTimesFace face) => face switch
+    {
+        PdfTimesFace.Roman => "times.ttf",
+        PdfTimesFace.Bold => "timesbd.ttf",
+        PdfTimesFace.Italic => "timesi.ttf",
+        PdfTimesFace.BoldItalic => "timesbi.ttf",
+        _ => null,
+    };
+
+    /// <summary>Jalur berkas font di folder font sistem, atau null bila tidak ada.</summary>
+    internal static string? FindFile(string fileName)
+    {
+        foreach (string folder in FontFolders())
+        {
+            string path = Path.Combine(folder, fileName);
+            if (File.Exists(path)) return path;
+        }
+
+        return null;
+    }
+
     /// <summary>Program huruf pengganti, atau null bila tidak ditemukan di sistem.</summary>
     internal static IPdfGlyphSource? Resolve(string baseFontName)
     {

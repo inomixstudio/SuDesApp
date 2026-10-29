@@ -192,9 +192,10 @@ namespace SuDesApp.Services
                 }
             }
 
-            skor ??= iks.HasValue && ike.HasValue && ikl.HasValue
-                ? Math.Round((iks.Value + ike.Value + ikl.Value) / 3.0, 4)
-                : null;
+            // Skor TIDAK pernah dihitung dari rata-rata IKS/IKE/IKL. Angka itu
+            // harus datang dari pusat (SUMMARIES atau baris subtotal IDM); nilai
+            // hitungan sendiri bisa berbeda dari penetapan kementerian dan
+            // membuat laporan desa tidak cocok dengan situs pusat.
 
             return skor == null
                 ? null
@@ -262,19 +263,27 @@ namespace SuDesApp.Services
                     ? AngkaDari(skorMentah)!.Value.ToString("0.####", Budaya)
                     : skorMentah;
 
+                // Baris subtotal dikenali dari NAMA bidangnya, bukan hanya dari
+                // ketiadaan nomor. Situs pusat bisa mengirim NO sebagai teks pada
+                // baris indikator; sebaliknya baris tanpa nomor yang bukan
+                // subtotal harus tetap dibaca sebagai indikator, bukan ditebalkan
+                // sebagai ringkasan.
+                string jenis = JenisSubtotal(indikator);
+                bool ringkasan = nomor == null && jenis.Length > 0;
+                string bidang = jenis is "IKS" or "IKE" or "IKL" ? jenis : "";
+
                 var baris = new BarisIdm(
                     nomor,
-                    "",
+                    bidang,
                     indikator,
                     skorTampil,
                     Teks(r, "KETERANGAN"),
                     Teks(r, "KEGIATAN"),
                     GabungPihak(r),
-                    nomor == null);
+                    ringkasan);
 
-                if (baris.Ringkasan)
+                if (ringkasan)
                 {
-                    string bidang = BidangDariNama(indikator);
                     if (bidang.Length > 0)
                     {
                         for (int i = awalBidang; i < hasil.Count; i++)
@@ -286,7 +295,7 @@ namespace SuDesApp.Services
                         }
                     }
 
-                    hasil.Add(baris with { Bidang = bidang });
+                    hasil.Add(baris);
                     awalBidang = hasil.Count;
                 }
                 else
@@ -298,12 +307,18 @@ namespace SuDesApp.Services
             return hasil;
         }
 
-        private static string BidangDariNama(string indikator)
+        /// <summary>
+        /// Jenis baris subtotal menurut namanya ("IKS", "IKE", "IKL", "IDM",
+        /// "STATUS"); kosong berarti bukan subtotal resmi.
+        /// </summary>
+        private static string JenisSubtotal(string indikator)
         {
             var nama = indikator.Trim().ToUpperInvariant();
             if (nama.StartsWith("IKS", StringComparison.Ordinal)) return "IKS";
             if (nama.StartsWith("IKE", StringComparison.Ordinal)) return "IKE";
             if (nama.StartsWith("IKL", StringComparison.Ordinal)) return "IKL";
+            if (nama.StartsWith("IDM", StringComparison.Ordinal)) return "IDM";
+            if (nama.StartsWith("STATUS", StringComparison.Ordinal)) return "STATUS";
             return "";
         }
 

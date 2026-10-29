@@ -377,7 +377,28 @@ internal sealed class LayoutEngine
         float wordSpacing = 0f;
         if (align == TextAlign.Justify && !barisTerakhir && line.Spaces > 0 && line.Width < innerWidth)
         {
-            wordSpacing = (innerWidth - line.Width) / line.Spaces;
+            float perlu = (innerWidth - line.Width) / line.Spaces;
+
+            // Batas peregangan. Spasi normal Times selebar 0,25 em, jadi batas
+            // 0,75 em per spasi masih menyisakan celah paling lebar tiga kali
+            // spasi biasa — bentuk yang lazim pada surat yang diratakan penuh.
+            //
+            // Batas ini dulu 0,25 em dan akibatnya banyak baris TENGAH paragraf
+            // tidak diratakan sama sekali: satu paragraf jadi bercampur baris
+            // rata-kiri dan rata-kanan sehingga tepi kanannya bergerigi. Batas
+            // yang lebih longgar membuat seluruh baris (kecuali baris terakhir)
+            // benar-benar rata, dan hanya baris yang benar-benar ekstrem yang
+            // dibiarkan menggantung.
+            float em = 0f;
+            foreach (var bagian in line.Parts)
+            {
+                if (bagian.Size > em) em = bagian.Size;
+            }
+
+            if (em > 0f && perlu <= em * 0.75f)
+            {
+                wordSpacing = perlu;
+            }
         }
 
         float baseline = yTop - line.Baseline;

@@ -73,18 +73,21 @@ public partial class PdfViewer : System.Windows.Controls.UserControl, IAsyncDisp
     private double SkalaPiksel() =>
         Math.Min(8.0, VisualTreeHelper.GetDpi(this).DpiScaleX * 96.0 / 72.0);
 
+    /// <summary>DPI bitmap yang membuat satu pikselnya sama dengan satu piksel layar.</summary>
+    private double KerapatanLayar() => Math.Max(0.5, VisualTreeHelper.GetDpi(this).DpiScaleX) * 96.0;
+
     private async Task RenderPagesAsync()
     {
         if (_disposed) return;
         Pages.Children.Clear();
         ZoomLabel.Text = $"{_scale * 100:0}%";
         double pikselPerTitik = SkalaPiksel();
+        double kerapatan = KerapatanLayar();
         for (int page = 0; page < _document.PageCount; page++)
         {
-            // Render dua kali lebih rapat daripada ukuran tampil, lalu biarkan WPF
-            // mengecilkannya ke DIP. Supersampling ini meratakan tepi glif
-            // Times kecil yang sebelumnya tampak bergerigi pada pratinjau.
-            var image = await _document.RenderAsync(page, Math.Min(8.0, _scale * pikselPerTitik * 2.0));
+            // Satu piksel bitmap untuk satu piksel layar. Menggambar lebih rapat
+            // lalu membiarkan WPF memperkecilnya justru mengaburkan huruf tebal.
+            var image = await _document.RenderAsync(page, Math.Min(8.0, _scale * pikselPerTitik), kerapatan);
             var size = _document.PageSizes[page];
             var card = new Border
             {
@@ -97,13 +100,15 @@ public partial class PdfViewer : System.Windows.Controls.UserControl, IAsyncDisp
                 HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                 Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 16, ShadowDepth = 2, Opacity = 0.3 }
             };
-            card.Child = new System.Windows.Controls.Image
+            var tampil = new System.Windows.Controls.Image
             {
                 Source = image,
                 Width = LebarHalamanDip(page),
                 Height = size.Height * _scale * 96.0 / 72.0,
                 Stretch = Stretch.Uniform
             };
+            RenderOptions.SetBitmapScalingMode(tampil, BitmapScalingMode.HighQuality);
+            card.Child = tampil;
             Pages.Children.Add(card);
         }
     }
