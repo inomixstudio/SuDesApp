@@ -84,6 +84,20 @@ public sealed class Document : IAsyncDisposable
         return ToBitmap(image);
     }
 
+    /// <summary>
+    /// Gambar halaman pada kerapatan piksel perangkat lalu tandai bitmap dengan
+    /// DPI layar. Dengan begitu bitmap punya satu piksel untuk setiap piksel
+    /// layar dan WPF tidak perlu memperkecil/memperbesar apa pun — teks tidak
+    /// lagi melewati penskalaan bilinear yang membuatnya kabur.
+    /// </summary>
+    /// <param name="dpi">DPI bitmap; isi 96 × skala tampilan Windows.</param>
+    public async Task<BitmapSource> RenderAsync(
+        int pageIndex, double scale, double dpi, CancellationToken cancellationToken = default)
+    {
+        var image = await Task.Run(() => Render(pageIndex, scale), cancellationToken).ConfigureAwait(false);
+        return ToBitmap(image, dpi);
+    }
+
     public async Task<byte[]> RenderPngAsync(
         int pageIndex, double scale = 1.0, CancellationToken cancellationToken = default)
     {
@@ -150,13 +164,14 @@ public sealed class Document : IAsyncDisposable
         }
     }
 
-    internal static BitmapSource ToBitmap(RasterImage image)
+    internal static BitmapSource ToBitmap(RasterImage image, double dpi = 96)
     {
+        double kerapatan = double.IsFinite(dpi) && dpi > 0 ? dpi : 96;
         var bitmap = BitmapSource.Create(
             image.Width,
             image.Height,
-            96,
-            96,
+            kerapatan,
+            kerapatan,
             PixelFormats.Bgra32,
             null,
             image.Pixels,

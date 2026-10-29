@@ -621,6 +621,35 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public ICommand CetakCommand { get; }
 
+        /// <summary>
+        /// Keterangan tombol Cetak / PDF, termasuk saat tombolnya NONAKTIF.
+        /// Tombol nonaktif tidak menampilkan tooltip biasa (lihat
+        /// ToolTipService.ShowOnDisabled di IdmView), jadi tanpa teks ini pengguna
+        /// desa yang hanya punya penilaian Indeks Desa 2025 melihat tombol mati
+        /// tanpa tahu sebabnya — laporan IDM memang hanya memuat rincian indikator
+        /// seri IDM lama.
+        /// </summary>
+        public string TooltipCetak
+        {
+            get
+            {
+                if (_hasil != null)
+                {
+                    return "Cetak atau simpan ringkasan penilaian dan rincian indikator sebagai PDF "
+                           + "untuk dilampirkan pada laporan desa";
+                }
+
+                if (_indeks2025 != null)
+                {
+                    return "Desa ini hanya punya penilaian Indeks Desa 2025 (enam dimensi), "
+                           + "sedangkan laporan PDF memuat ringkasan dan rincian indikator seri IDM lama "
+                           + "— belum ada rincian indikator yang bisa dicetak.";
+                }
+
+                return "Muat data dari situs pusat terlebih dahulu untuk bisa mencetak laporan";
+            }
+        }
+
         // ===================== Pemuatan =====================
 
         /// <summary>
@@ -651,7 +680,7 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (_namaDesa.Length == 0 || _kecamatan.Length == 0 || _kabupaten.Length == 0)
                 {
-                    Kosongkan();
+                    KosongkanKonteks();
                     PesanStatus = string.Empty;
                     PesanGalat = "Data desa belum diisi. Buka Pengaturan Surat dan lengkapi nama desa, "
                                  + "kecamatan, dan kabupaten — setelah itu halaman ini menampilkan data pusat.";
@@ -663,7 +692,7 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (pencocokan.Status != StatusPencocokanWilayah.Ditemukan || pencocokan.Rantai == null)
                 {
-                    Kosongkan();
+                    KosongkanKonteks();
                     PesanStatus = string.Empty;
                     PesanGalat = PesanPencocokan(pencocokan);
                     return;
@@ -673,7 +702,7 @@ namespace SuDesApp.Wpf.ViewModels
                 _kodeDesa = KodeAngka(pencocokan.Rantai.Desa.Kode);
                 if (_kodeDesa.Length != 10)
                 {
-                    Kosongkan();
+                    KosongkanKonteks();
                     PesanStatus = string.Empty;
                     PesanGalat = "Kode desa \"" + pencocokan.Rantai.Desa.Kode
                                  + "\" pada data wilayah tidak berbentuk 10 digit, jadi tidak bisa dipakai "
@@ -957,6 +986,25 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Apakah data terakhir diambil tanpa enkripsi (dipakai uji/Diagnostik).</summary>
         public bool LewatHttp => _lewatHttp;
 
+        /// <summary>
+        /// Kosongkan data milik desa yang SEDANG dipilih, termasuk penilaian
+        /// Indeks Desa 2025. Dipakai saat pengaturan desa tidak lengkap atau
+        /// wilayahnya tidak bisa dicocokkan: tanpa ini, kartu Indeks Desa 2025
+        /// milik desa sebelumnya tetap tampil padahal halaman sudah menyatakan
+        /// desa belum bisa dikenali. Jalur "situs pusat gagal" TIDAK memakai
+        /// metode ini karena data 2025 yang baru dimuat tetap sah ditampilkan.
+        /// </summary>
+        private void KosongkanKonteks()
+        {
+            _indeks2025 = null;
+            _indeks2025BerhasilDiperiksa = false;
+            _kodeDesa = string.Empty;
+            _daftar = null;
+            _daftarKode = string.Empty;
+            _lewatHttp = false;
+            Kosongkan();
+        }
+
         private void Kosongkan()
         {
             _hasil = null;
@@ -992,6 +1040,7 @@ namespace SuDesApp.Wpf.ViewModels
                          nameof(StatusTampil), nameof(IksTampil), nameof(IkeTampil),
                          nameof(IklTampil), nameof(TargetTampil), nameof(SkorMinimalTampil),
                          nameof(PesanTarget), nameof(SumberTampil),
+                         nameof(TooltipCetak),
                          nameof(AdaPemberitahuanMenunggu), nameof(PesanMenunggu),
                          nameof(AdaPesanTahun), nameof(PesanTahun), nameof(DeretTren),
                          nameof(TerbitanBaru), nameof(AdaTerbitanBaru),

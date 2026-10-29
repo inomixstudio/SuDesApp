@@ -451,6 +451,8 @@ namespace SuDesApp.Wpf
                 sp.GetRequiredService<ILogger<IdmViewModel>>(),
                 simpanan: sp.GetRequiredService<SuDesApp.Services.IIdmSimpananStore>(),
                 navigasi: sp.GetRequiredService<NavigationService>(),
+                previewFactory: sp.GetRequiredService<Func<string, string, PdfPreviewViewModel>>(),
+                appConfig: sp.GetRequiredService<AppConfig>(),
                 pemantauan: sp.GetRequiredService<SuDesApp.Services.IIdmPemantauanStore>(),
                 dokumenFactory: sp.GetRequiredService<Func<string, string, Action?, DokumenBacaViewModel>>()));
 
@@ -470,7 +472,10 @@ namespace SuDesApp.Wpf
             // "data terbaru yang terbit" — termasuk saat yang tampil data cadangan.
             services.AddSingleton<SuDesApp.Services.IIdmPemantauanStore, SuDesApp.Services.IdmPemantauanStore>();
             services.AddTransient<ApbdesViewModel>();
-            services.AddTransient<IdmViewModel>();
+            // JANGAN mendaftarkan IdmViewModel lagi tanpa factory di sini:
+            // pendaftaran terakhir yang dipakai DI, sehingga factory di atas
+            // (navigasi + pratinjau PDF + pembaca dokumentasi) akan terabaikan
+            // dan tombol Cetak/PDF halaman IDM kehilangan pratinjaunya.
 
             // Template Surat: jenis surat buatan pengguna sendiri.
             services.AddScoped<ITemplateSuratRepository, TemplateSuratRepository>();

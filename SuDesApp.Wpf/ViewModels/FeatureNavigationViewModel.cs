@@ -202,8 +202,8 @@ public sealed class FeatureNavigationViewModel
         sotk.Description = "Susun SOTK dan rancangan Perdes SOTK yang tersambung ke Buku Perdes.";
         var apbdes = TambahTombol("APBDES", IkonMenu.Keuangan, "apbdes");
         apbdes.Description = "Arsip dokumen APBDes: Awal, Perubahan, dan Pertanggungjawaban — impor berkas Word, sunting rincian, simpan.";
-        IndeksDesa = TambahTombol("Indeks Desa (IDM)", IkonMenu.Pembangunan, "idm");
-        IndeksDesa.Description = "Indeks Desa Membangun resmi Kemendesa: status, skor IKS/IKE/IKL, tren tahunan, rincian indikator, dan laporan PDF.";
+        IndeksDesa = TambahTombol("Indeks Desa & IDM", IkonMenu.Pembangunan, "idm");
+        IndeksDesa.Description = "Indeks Desa resmi Kemendesa: status & skor 2025 (enam dimensi), riwayat IDM lama IKS/IKE/IKL, tren tahunan, rincian indikator, dan laporan PDF.";
 
         Header("DATA WARGA");
         TambahTombol("Data Warga", IkonMenu.Warga, "warga");

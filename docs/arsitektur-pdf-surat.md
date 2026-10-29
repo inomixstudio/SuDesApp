@@ -79,8 +79,12 @@ Aplikasi tidak lagi memakai pustaka PDF pihak ketiga. Susunannya dua proyek:
   - `PdfRenderer` — pintu masuk: `RenderPage` dan `ExtractText` (`IPdfSink`).
   - `PdfWriter*` (`PdfWriter`, `PdfWriterContent`, `PdfWriterFonts`, `PdfWriterImages`,
     `PdfWriterPage`) — **penulis** dokumen: katalog/halaman/xref, aliran isi, dan
-    sumber gambar; memakai metrik font Times bawaan PDF (`PdfStandardTimes`)
-    sehingga tidak ada berkas font yang perlu dibundel.
+    sumber gambar. Font surat adalah **Times New Roman asli yang disematkan**: tiap
+    muka diambil dari font sistem (`times.ttf`, `timesbd.ttf`, …), dipotong menjadi
+    subset `/FontFile2` berisi glif yang benar-benar dipakai, lalu lebar huruf pada
+    `/Widths` tetap memakai metrik `PdfStandardTimes` supaya pemenggalan baris tidak
+    berubah. Bila berkas font sistem tidak ada, penulis jatuh kembali ke font
+    standar PDF (`Times-Roman`) agar dokumen tetap terbentuk.
   - `Layout/*` — **penata letak surat**: `LayoutApi` (API berantai yang dipakai
     generator), `LayoutNodes` (model simpul + nilai), `LayoutTextLayout` (pemotongan
     baris), `LayoutEngine` (pengukuran, alih halaman, gambar). Berkas diproses
@@ -89,6 +93,11 @@ Aplikasi tidak lagi memakai pustaka PDF pihak ketiga. Susunannya dua proyek:
   menyajikan halaman sebagai bitmap, membaca teks, mencetak), `PdfViewer` untuk
   tata letak pratinjau, dan `PdfPrinter`/`PdfPrintPaginator` yang meraster halaman
   satu per satu saat printer memintanya.
+
+  Pratinjau merender halaman **tepat satu piksel bitmap per piksel layar**
+  (`RenderAsync(..., dpi = 96 × skala tampilan Windows)`) lalu menampilkannya tanpa
+  penskalaan. Menggambar lebih rapat lalu membiarkan WPF memperkecilnya justru
+  mengaburkan huruf tebal, karena tepi glif melewati penyaringan bilinear.
 
 Arah data saat **menulis**: generator (`SuDesApp.Core/GeneratorPdf/*`) →
 `SudesPdf.Layout` → `PdfWriter` → berkas PDF. Saat **membaca**: berkas →

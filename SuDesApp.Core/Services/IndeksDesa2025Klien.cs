@@ -62,6 +62,14 @@ public sealed class IndeksDesa2025Klien : IIndeksDesa2025Klien
     private readonly SemaphoreSlim _gerbang = new(1, 1);
     private Dictionary<string, IndeksDesa2025>? _data;
     private DateTimeOffset _berlakuSampai;
+
+    /// <summary>
+    /// Cache lama dimuat dari disk tanpa metadata waktu unduh: tampilkan sekali,
+    /// lalu paksa panggilan berikutnya mencoba jaringan. Tanpa penanda ini,
+    /// syarat "waktu unduh tidak diketahui" selalu benar dan dataset tidak pernah
+    /// diperbarui lagi selama proses berjalan.
+    /// </summary>
+    private bool _cacheLokalPerluRefresh;
     private DateTimeOffset _waktuUnduh;
     private DateTimeOffset? _tanggalPembaruanSumber;
 
@@ -99,9 +107,12 @@ public sealed class IndeksDesa2025Klien : IIndeksDesa2025Klien
 
             // Cache dari proses sebelumnya langsung ditampilkan. Lakukan refresh
             // di pemanggilan berikutnya, dan biarkan dataset lokal jadi fallback.
-            if (_data is not null && _waktuUnduh == DateTimeOffset.MinValue)
+            if (_data is not null && _cacheLokalPerluRefresh)
             {
-                _berlakuSampai = DateTimeOffset.UtcNow.Add(JedaUlangSaatOffline);
+                _cacheLokalPerluRefresh = false;
+                // Kedaluwarsa sekarang: panggilan berikutnya mencoba jaringan.
+                // Bila jaringan gagal, blok catch memasang jeda ulang 10 menit.
+                _berlakuSampai = DateTimeOffset.UtcNow;
                 return _data;
             }
 
@@ -136,6 +147,7 @@ public sealed class IndeksDesa2025Klien : IIndeksDesa2025Klien
                     File.Move(sementara, _cachePath, overwrite: true);
                     _tanggalPembaruanSumber = tanggalSumber;
                     _waktuUnduh = DateTimeOffset.UtcNow;
+                    _cacheLokalPerluRefresh = false;
                     SimpanMetadata(new MetadataCache(_waktuUnduh, _tanggalPembaruanSumber));
                     _data = dataBaru;
                     _berlakuSampai = DateTimeOffset.UtcNow.Add(UmurCache);
@@ -172,6 +184,7 @@ public sealed class IndeksDesa2025Klien : IIndeksDesa2025Klien
             _data = data;
             _tanggalPembaruanSumber = metadata?.TanggalPembaruanSumber;
             _waktuUnduh = metadata?.WaktuUnduh ?? DateTimeOffset.MinValue;
+            _cacheLokalPerluRefresh = metadata?.WaktuUnduh is null;
             _berlakuSampai = _waktuUnduh == DateTimeOffset.MinValue
                 ? DateTimeOffset.UtcNow
                 : _waktuUnduh.Add(UmurCache);

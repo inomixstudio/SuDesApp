@@ -17,6 +17,12 @@ public sealed class PdfContentStream
 
     internal HashSet<PdfTimesFace> FontsUsed { get; } = new();
 
+    /// <summary>
+    /// Kode WinAnsi yang benar-benar tertulis per muka font. Dipakai penyemat
+    /// font untuk memilih glif yang perlu ikut ke dalam subset TrueType.
+    /// </summary>
+    internal Dictionary<PdfTimesFace, HashSet<int>> CodesUsed { get; } = new();
+
     internal HashSet<string> ImagesUsed { get; } = new();
 
     /// <summary>Kotak terisi warna (dipakai latar, garis pemisah kop, dan bingkai sel).</summary>
@@ -63,6 +69,14 @@ public sealed class PdfContentStream
         if (string.IsNullOrEmpty(text)) return;
 
         FontsUsed.Add(face);
+        if (!CodesUsed.TryGetValue(face, out var kodeDipakai))
+        {
+            kodeDipakai = new HashSet<int>();
+            CodesUsed[face] = kodeDipakai;
+        }
+
+        foreach (char karakter in text) kodeDipakai.Add(PdfStandardTimes.EncodeChar(karakter));
+
         _operations.Append("q ").Append(Color(color)).Append(" BT /")
             .Append(PdfStandardTimes.ResourceName(face)).Append(' ').Append(Number(fontSize)).Append(" Tf ");
         if (wordSpacing > 0f)

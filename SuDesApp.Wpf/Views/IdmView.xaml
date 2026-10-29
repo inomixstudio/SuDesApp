@@ -199,7 +199,8 @@
                                  Ekspor ada di sana). Nonaktif selama belum ada data. -->
                             <Button Content="Cetak / PDF" Command="{Binding CetakCommand}"
                                     Style="{StaticResource PrimaryButton}" Margin="10,2,0,2"
-                                    ToolTip="Cetak atau simpan ringkasan penilaian dan rincian indikator sebagai PDF untuk dilampirkan pada laporan desa"/>
+                                    ToolTipService.ShowOnDisabled="True"
+                                    ToolTip="{Binding TooltipCetak}"/>
                         </WrapPanel>
 
                         <TextBlock Text="{Binding PesanStatus}" Margin="0,8,0,0" TextWrapping="Wrap"

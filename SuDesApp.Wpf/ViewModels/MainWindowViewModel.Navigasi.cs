@@ -644,7 +644,12 @@ namespace SuDesApp.Wpf.ViewModels
                 // Gunakan instance yang sudah ada jika masih tersedia
                 if (_idmViewModel == null)
                 {
-                    _idmViewModel = BuatScopeHalaman().GetRequiredService<IdmViewModel>();
+                    // Instance ini DISIMPAN seumur sesi (lihat _idmViewModel),
+                    // jadi scope-nya harus scope bertahan — bukan scope halaman
+                    // yang ditutup pada navigasi berikutnya. Memakai scope halaman
+                    // membuat VM bertahan dengan dependensi yang sudah dibuang
+                    // (koneksi SQLite, logger, pratinjau PDF).
+                    _idmViewModel = BuatScopeBertahan().GetRequiredService<IdmViewModel>();
                     _navigation.Navigate(_idmViewModel);
                     await _idmViewModel.MuatAsync();
                 }

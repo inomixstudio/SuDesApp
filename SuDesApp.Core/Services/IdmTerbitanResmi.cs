@@ -78,7 +78,10 @@ namespace SuDesApp.Services
                 return string.Empty;
             }
 
-            return "Kepmendesa PDT menetapkan status desa tahun " + terbitan.Tahun.ToString(CultureInfo.InvariantCulture) + ". Skor tahun 2025 kini ditampilkan terpisah sebagai Indeks Desa enam dimensi dari dataset resmi Kementerian Desa PDT.";
+            string tahun = terbitan.Tahun.ToString(CultureInfo.InvariantCulture);
+            return "Kepmendesa PDT menetapkan status desa tahun " + tahun
+                + ". Penilaian tahun " + tahun
+                + " ditampilkan terpisah sebagai Indeks Desa enam dimensi dari dataset resmi Kementerian Desa PDT.";
         }
     }
 }

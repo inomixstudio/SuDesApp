@@ -1,10 +1,16 @@
 # IDM: cetak & ekspor laporan PDF
 
-Tombol **Cetak / PDF** di halaman **Indeks Desa Membangun (IDM)** membuat satu
-berkas PDF berisi **ringkasan penilaian + seluruh rincian indikator** yang
-sedang tampil di layar, lalu membukanya di halaman pratinjau PDF yang sama
-dengan dokumen lain — di sana tombol **Cetak** dan **Ekspor** sudah tersedia
-(Ekspor menyimpan salinan ke lokasi pilihan, mis. folder lampiran laporan).
+Tombol **Cetak / PDF** di halaman **Indeks Desa & IDM** membuat satu berkas PDF
+berisi **ringkasan penilaian + seluruh rincian indikator** seri IDM yang sedang
+tampil di layar, lalu membukanya di halaman pratinjau PDF yang sama dengan
+dokumen lain — di sana tombol **Cetak** dan **Ekspor** sudah tersedia (Ekspor
+menyimpan salinan ke lokasi pilihan, mis. folder lampiran laporan).
+
+Laporan ini khusus seri **IDM lama (IKS/IKE/IKL)**. Penilaian **Indeks Desa 2025**
+(enam dimensi, lihat `docs/indeks-desa-2025.md`) tampil di halaman sebagai tahun
+utama, tetapi tidak dicetak di laporan IDM karena susunannya berbeda. Untuk desa
+yang hanya punya penilaian 2025, tombol Cetak/PDF **nonaktif** dan tooltip-nya
+menjelaskan sebabnya (`TooltipCetak` di `IdmViewModel`).
 
 ## Yang dicetak
 
@@ -36,20 +42,22 @@ menyimpang satu sama lain.
 ## Kabar data resmi pusat (tahun yang belum dimuat portal)
 
 Portal IDM bisa tertinggal dari penetapan resmi. Keadaan yang dijumpai pada
-Oktober 2026: portal hanya memuat sampai **2024**, sedangkan status desa **2025**
-sudah ditetapkan Menteri Desa dan PDT lewat **Kepmendesa PDT No. 343 Tahun 2025**
-(27 Agustus 2025, JDIH Kemendesa PDT). Angka per desa 2025/2026 belum ada di
-portal, jadi halaman **tidak** menampilkan skor 2025 dan tidak meminjam angka
-dari sumber lain — termasuk **tidak** memakai unggahan dataset daerah di
-data.go.id (mis. Kabupaten Nganjuk), karena cakupan dan angkanya bukan angka
-pusat untuk desa pengguna.
+Oktober 2026: portal hanya memuat seri IDM lama sampai **2024**, sedangkan
+status desa **2025** sudah ditetapkan Menteri Desa dan PDT lewat **Kepmendesa
+PDT No. 343 Tahun 2025** (27 Agustus 2025, JDIH Kemendesa PDT). Penilaian 2025
+tidak diambil dari portal IDM, melainkan dari dataset resmi **Indeks Desa 2025**
+(Satu Data Kemendesa) — lihat `docs/indeks-desa-2025.md`. Halaman **tidak**
+memakai unggahan dataset daerah di data.go.id (mis. Kabupaten Nganjuk) karena
+cakupan dan angkanya bukan angka pusat untuk desa pengguna.
 
 Yang tampil sebagai gantinya: kartu **Kabar data resmi pusat** berisi judul
-dokumen resmi 2025 + tautan halaman JDIH-nya, dengan penjelasan bahwa skor yang
-tampil adalah tahun terbit terakhir portal. Daftar dokumen resmi beserta
-tautannya dipusatkan di `SuDesApp.Core/Services/IdmTerbitanResmi.cs`; menambah
-terbitan tahun berikutnya cukup menambah satu baris di sana (hanya dokumen
-pemerintah pusat).
+dokumen resmi 2025 + tautan halaman JDIH-nya, dengan penjelasan bahwa skor seri
+IDM yang tampil adalah tahun terbit terakhir portal. Daftar dokumen resmi
+beserta tautannya dipusatkan di `SuDesApp.Core/Services/IdmTerbitanResmi.cs`;
+menambah terbitan tahun berikutnya cukup menambah satu baris di sana (hanya
+dokumen pemerintah pusat).
+
+
 
 ## Pemberitahuan data IDM tahun baru
 
