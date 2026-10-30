@@ -6,6 +6,7 @@ using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -386,10 +387,9 @@ namespace SuDesApp.Wpf.ViewModels
                 DateTime tanggal = ParseDate(Tanggal) ?? DateTime.Today;
                 byte[] pdf = new NaskahPerdesGenerator(desa, AmbilNaskah(), Nomor, tanggal).Buat();
 
-                Directory.CreateDirectory(_folderPdfSementara);
-                string path = Path.Combine(_folderPdfSementara,
-                    $"Pratinjau_Perdes_{DateTime.Now:yyyyMMddHHmmssfff}.pdf");
-                await File.WriteAllBytesAsync(path, pdf).ConfigureAwait(true);
+                string path = await PratinjauPdf
+                    .SimpanAsync(_folderPdfSementara, pdf, "Pratinjau_Perdes")
+                    .ConfigureAwait(true);
 
                 TampilkanPratinjau(path);
             }

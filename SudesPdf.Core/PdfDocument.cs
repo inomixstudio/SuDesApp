@@ -60,6 +60,14 @@ public sealed class PdfDocument
 {
     private readonly byte[] _data;
     private readonly Dictionary<long, PdfObject?> _cache = new();
+
+    /// <summary>
+    /// Gambar yang sudah diurai, per objek stream. Font sudah lama di-cache di
+    /// tingkat dokumen (<see cref="PdfContentInterpreter.Fonts"/>); gambar dulu
+    /// di-cache per halaman, sehingga kop yang sama di-inflate ulang di setiap
+    /// halaman dan setiap kali zoom.
+    /// </summary>
+    private readonly Dictionary<PdfStream, PdfImage?> _images = new(StreamIdentity.Instance);
     private readonly List<PdfPage> _pages = new();
     private Dictionary<int, XrefEntry>? _xref;
     private Dictionary<int, int>? _scanIndex;
@@ -614,6 +622,32 @@ public sealed class PdfDocument
 
     /// <summary>Ambil stream dari nilai apa pun (referensi, kamus, atau stream).</summary>
     public PdfStream? ResolveStream(PdfObject? value) => Resolve(value) as PdfStream;
+
+    /// <summary>
+    /// Urai stream gambar sekali untuk seluruh dokumen. Kuncinya identitas objek
+    /// stream: <see cref="Resolve"/> mengembalikan instance yang sama untuk satu
+    /// objek tak langsung, jadi halaman yang memakai gambar yang sama memakai
+    /// hasil urai yang sama.
+    /// </summary>
+    internal PdfImage? DecodeImage(PdfStream stream)
+    {
+        if (_images.TryGetValue(stream, out var cached)) return cached;
+
+        var image = PdfImages.Decode(this, stream);
+        _images[stream] = image;
+        return image;
+    }
+
+    /// <summary>Pembanding identitas objek untuk cache gambar.</summary>
+    private sealed class StreamIdentity : IEqualityComparer<PdfStream>
+    {
+        public static readonly StreamIdentity Instance = new();
+
+        public bool Equals(PdfStream? a, PdfStream? b) => ReferenceEquals(a, b);
+
+        public int GetHashCode(PdfStream stream) =>
+            System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(stream);
+    }
 
     // -------------------------------------------------------------- Halaman
 

@@ -12,6 +12,7 @@ using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
 using SuDesApp.Wilayah;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Services;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -1214,9 +1215,9 @@ namespace SuDesApp.Wpf.ViewModels
         public const double LebarKertasPratinjau = 600.0;
 
         private bool _pratinjauTerbuka = true;
-        private string _pratinjauJalurLogo = string.Empty;
-        private bool _pratinjauAdaLogo;
-        private double _pratinjauLebarLogo = KopSurat.LebarLogo;
+        private System.Windows.Media.ImageSource? _pratinjauKopGambar;
+        private CancellationTokenSource? _kopCetakBatal;
+        private string _kopCetakKunci = string.Empty;
         private string _pratinjauInfoKertas = string.Empty;
         private string _pratinjauInfoCamat = string.Empty;
         private string _pratinjauInfoSurel = string.Empty;
@@ -1224,9 +1225,6 @@ namespace SuDesApp.Wpf.ViewModels
         private string _pratinjauStatus = string.Empty;
         private bool _pratinjauSesuaiTersimpan = true;
         private int _pratinjauKolomPejabat = 2;
-
-        /// <summary>Baris kop pada pratinjau, sudah diskalakan untuk layar.</summary>
-        public ObservableCollection<PratinjauKopBarisViewModel> PratinjauKop { get; } = new();
 
         /// <summary>Blok tanda tangan pejabat pada pratinjau (Kepala Desa, Sekretaris Desa, Camat).</summary>
         public ObservableCollection<PratinjauPejabatViewModel> PratinjauPejabat { get; } = new();
@@ -1241,27 +1239,14 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Lebar kertas pratinjau (px) — acuan skala yang sama dengan perhitungan huruf.</summary>
         public double PratinjauLebarKertas => LebarKertasPratinjau;
 
-        /// <summary>Gambar logo yang dipakai kop (kosong bila tidak ada gambar sama sekali).</summary>
-        public string PratinjauJalurLogo
-        {
-            get => _pratinjauJalurLogo;
-            private set => SetProperty(ref _pratinjauJalurLogo, value ?? string.Empty);
-        }
-
-        public bool PratinjauAdaLogo
-        {
-            get => _pratinjauAdaLogo;
-            private set => SetProperty(ref _pratinjauAdaLogo, value);
-        }
-
         /// <summary>
-        /// Lebar kotak logo pada pratinjau (px). Kolomnya tetap disediakan walau tanpa
-        /// gambar, sama seperti PDF yang selalu menyediakan kotak logo selebar 60 point.
+        /// Kop surat sebagai gambar hasil mesin PDF — logo, baris kop, garis ganda,
+        /// dan jaraknya sama persis dengan yang tercetak. Bukan gambar ulang di XAML.
         /// </summary>
-        public double PratinjauLebarLogo
+        public System.Windows.Media.ImageSource? PratinjauKopGambar
         {
-            get => _pratinjauLebarLogo;
-            private set => SetProperty(ref _pratinjauLebarLogo, value);
+            get => _pratinjauKopGambar;
+            private set => SetProperty(ref _pratinjauKopGambar, value);
         }
 
         /// <summary>Keterangan surel kop: dipakai/dikosongkan, dan warnanya saat dicetak.</summary>
@@ -1343,19 +1328,6 @@ namespace SuDesApp.Wpf.ViewModels
             var desa = DariForm();
             var kop = PratinjauKopSurat.Susun(desa);
 
-            var (lebarHalaman, _) = PengaturanCetak.Dimensi(_ukuranKertas);
-            double skala = LebarKertasPratinjau / System.Math.Max(1.0, lebarHalaman);
-
-            PratinjauKop.Clear();
-            foreach (var baris in kop.Baris)
-            {
-                PratinjauKop.Add(new PratinjauKopBarisViewModel(
-                    baris.Teks,
-                    System.Math.Round(baris.FontSize * skala, 1),
-                    baris.Tebal,
-                    baris.Surel));
-            }
-
             PratinjauPejabat.Clear();
             PratinjauPejabat.Add(BlokPejabat(kop.KepalaDesa));
             PratinjauPejabat.Add(BlokPejabat(kop.SekretarisDesa));
@@ -1365,11 +1337,9 @@ namespace SuDesApp.Wpf.ViewModels
             }
 
             PratinjauKolomPejabat = kop.Camat == null ? 2 : 3;
-            PratinjauLebarLogo = System.Math.Round(kop.LebarLogo * skala, 1);
 
             string? logo = PengaturanCetak.JalurLogoEfektif();
-            PratinjauJalurLogo = logo ?? string.Empty;
-            PratinjauAdaLogo = logo != null;
+            PerbaruiKopCetak(desa, logo);
 
             string asalLogo = logo == null
                 ? "tanpa gambar logo"
@@ -1394,6 +1364,47 @@ namespace SuDesApp.Wpf.ViewModels
             PratinjauStatus = HasChanges
                 ? "Masih isian di layar — belum disimpan"
                 : "Sesuai data yang sudah disimpan";
+        }
+
+        /// <summary>
+        /// Perbarui gambar kop dari isian yang sedang di layar. Pengetikan memanggil
+        /// metode ini pada setiap huruf, jadi hasilnya ditunda sebentar dan hanya
+        /// dirender bila ada isian yang benar-benar memengaruhi kop.
+        /// </summary>
+        private void PerbaruiKopCetak(DesaData desa, string? logoPath)
+        {
+            string kunci = string.Join('\u001f',
+                desa.NamaDesa, desa.JenisLembaga, desa.Kecamatan, desa.Kabupaten, desa.JenisKabupaten,
+                desa.Alamat, desa.Kodepos, desa.Email, desa.NipKepalaDesa, logoPath ?? "-",
+                _ukuranKertas.ToString());
+            if (string.Equals(kunci, _kopCetakKunci, StringComparison.Ordinal)) return;
+            _kopCetakKunci = kunci;
+
+            _kopCetakBatal?.Cancel();
+            var batal = _kopCetakBatal = new CancellationTokenSource();
+            _ = MuatKopCetakAsync(desa, logoPath, _ukuranKertas, batal.Token);
+        }
+
+        private async Task MuatKopCetakAsync(
+            DesaData desa, string? logoPath, UkuranKertasSurat ukuran, CancellationToken batal)
+        {
+            try
+            {
+                // Ketikan cepat tidak perlu merender setiap huruf: tunggu sampai diam.
+                await Task.Delay(120, batal);
+                var gambar = await KopSuratPratinjauService.BuatAsync(desa, logoPath, ukuran, batal);
+                if (!batal.IsCancellationRequested) PratinjauKopGambar = gambar;
+            }
+            catch (OperationCanceledException)
+            {
+                // Isian berubah lagi sebelum selesai; percobaan terbaru yang dipakai.
+            }
+            catch (Exception ex)
+            {
+                // Pratinjau hanya bantuan tampilan: isian tetap bisa disimpan walau
+                // gambar kop gagal dibuat (mis. berkas logo hilang).
+                _logger.LogWarning(ex, "Gagal membuat pratinjau kop surat.");
+            }
         }
 
         private static PratinjauPejabatViewModel BlokPejabat(BlokPejabatPratinjau blok)

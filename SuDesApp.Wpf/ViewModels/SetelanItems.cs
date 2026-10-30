@@ -66,53 +66,6 @@ namespace SuDesApp.Wpf.ViewModels
     }
 
     /// <summary>
-    /// Satu baris kop pada pratinjau halaman Pengaturan Surat. Ukuran hurufnya sudah
-    /// diskalakan agar sebanding dengan lebar "kertas" pratinjau, jadi perbandingan
-    /// ukuran antar baris tetap terlihat (nama desa jauh lebih besar daripada baris alamat).
-    /// </summary>
-    public sealed class PratinjauKopBarisViewModel
-    {
-        public PratinjauKopBarisViewModel(string teks, double ukuran, bool tebal, string? surel = null)
-        {
-            Teks = teks ?? string.Empty;
-            Ukuran = ukuran;
-            Tebal = tebal;
-            Surel = (surel ?? string.Empty).Trim();
-        }
-
-        public string Teks { get; }
-
-        /// <summary>
-        /// Surel desa (opsional) yang dicetak <b>biru</b> sebagai baris tersendiri di
-        /// bawah nama kabupaten — sama dengan yang dicetak PDF. Kosong bila kolomnya
-        /// dikosongkan.
-        /// </summary>
-        public string Surel { get; }
-
-        /// <summary>
-        /// Surel siap tampil sebagai potongan baris: baris surel khusus (yang <see cref="Teks"/>
-        /// kosong) memuat surel apa adanya, sedangkan baris lain menyambungnya dengan satu
-        /// spasi — jaraknya sama dengan hasil cetak di <c>KopSurat</c>.
-        /// </summary>
-        public string TeksSurel => Surel.Length == 0 ? string.Empty : (Teks.Length == 0 ? Surel : " " + Surel);
-
-        public bool AdaSurel => Surel.Length > 0;
-
-        /// <summary>Warna surel — diambil dari warna yang sama dengan cetakan PDF.</summary>
-        public string WarnaSurel => KopSurat.WarnaSurel;
-
-        /// <summary>Ukuran huruf di layar (px), sudah dikalikan skala kertas pratinjau.</summary>
-        public double Ukuran { get; }
-
-        public bool Tebal { get; }
-
-        /// <summary>Ketebalan huruf siap pakai untuk <c>TextBlock.FontWeight</c>.</summary>
-        public FontWeight Ketebalan => Tebal ? FontWeights.Bold : FontWeights.Normal;
-
-        public override string ToString() => Teks;
-    }
-
-    /// <summary>
     /// Satu blok tanda tangan pejabat pada pratinjau (Kepala Desa, Sekretaris Desa,
     /// atau Camat) — memakai jabatan dan nama persis seperti yang dicetak surat.
     /// </summary>

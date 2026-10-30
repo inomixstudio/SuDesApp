@@ -18,6 +18,7 @@ using SuDesApp.Utilities;
 using SuDesApp.Wilayah;
 using SuDesApp.Wpf.Controls;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Services;
 using SuDesApp.Wpf.Utilities;
 
 namespace SuDesApp.Wpf.ViewModels
@@ -1255,13 +1256,9 @@ namespace SuDesApp.Wpf.ViewModels
                 using var penampung = new MemoryStream();
                 new LaporanIdmGenerator().GenerateLaporanPdf(penampung, data);
 
-                string folder = string.IsNullOrWhiteSpace(_appConfig?.TempPdfFolder)
-                    ? Path.Combine(Path.GetTempPath(), "SuDesApp")
-                    : _appConfig!.TempPdfFolder;
-                Directory.CreateDirectory(folder);
-
-                string jalur = Path.Combine(folder, data.NamaBerkas + ".pdf");
-                await File.WriteAllBytesAsync(jalur, penampung.ToArray());
+                string jalur = await PratinjauPdf
+                    .SimpanAsync(_appConfig, penampung.ToArray(), data.NamaBerkas)
+                    .ConfigureAwait(true);
 
                 string judul = "Laporan IDM — " + data.NamaDesa
                                + (data.Tahun > 0 ? " (" + data.Tahun + ")" : string.Empty);

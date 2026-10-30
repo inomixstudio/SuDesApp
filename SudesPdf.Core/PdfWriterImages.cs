@@ -48,6 +48,117 @@ public sealed class PdfWriterImage
     /// <summary>Nomor objek setelah ditulis (supaya gambar ditulis sekali saja).</summary>
     internal int ObjectId { get; set; }
 
+    /// <summary>
+    /// Kerapatan tertinggi yang perlu ditanam (dpi). Logo kop tampil 60 pt —
+    /// 250 px pada 300 dpi — sehingga pindaian 1507 px hanya menambah ukuran
+    /// berkas tanpa satu pun piksel yang terlihat saat dicetak.
+    /// </summary>
+    public const float DpiCetak = 300f;
+
+    /// <summary>
+    /// Piksel yang benar-benar dipakai bila gambar tampil selebar
+    /// <paramref name="widthPt"/> dan setinggi <paramref name="heightPt"/> point.
+    /// Tidak pernah melebihi ukuran asli; rasio gambar dipertahankan.
+    /// </summary>
+    public (int Width, int Height) PikselCetak(float widthPt, float heightPt)
+    {
+        if (Jpeg || widthPt <= 0f || heightPt <= 0f || Width <= 0 || Height <= 0)
+        {
+            return (Width, Height);
+        }
+
+        double factor = Math.Min(
+            widthPt * DpiCetak / 72.0 / Width,
+            heightPt * DpiCetak / 72.0 / Height);
+        if (factor >= 1.0) return (Width, Height);
+
+        return (
+            Math.Clamp((int)Math.Round(Width * factor), 1, Width),
+            Math.Clamp((int)Math.Round(Height * factor), 1, Height));
+    }
+
+    /// <summary>
+    /// Gambar siap tanam untuk ukuran tampil tertentu: versi yang diperkecil bila
+    /// resolusinya jauh melebihi kebutuhan cetak, atau gambar ini sendiri bila
+    /// sudah cukup kecil. JPEG tidak diperkecil karena datanya masih terkompresi
+    /// (butuh kodek untuk diurai).
+    /// </summary>
+    public PdfWriterImage UntukUkuran(float widthPt, float heightPt)
+    {
+        var (width, height) = PikselCetak(widthPt, heightPt);
+        return width == Width && height == Height ? this : Perkecil(width, height);
+    }
+
+    /// <summary>
+    /// Perkecil dengan rata-rata luas (box filter): setiap piksel tujuan adalah
+    /// purata piksel sumber yang tertutup di wilayahnya. Rata-rata dilakukan
+    /// dalam bentuk pramultiplied supaya tepi transparan tidak menarik warna ke
+    /// arah hitam, sama seperti aturan gambar di rasterizer.
+    /// </summary>
+    private PdfWriterImage Perkecil(int width, int height)
+    {
+        int komponen = ColorSpace == "/DeviceGray" ? 1 : 3;
+        var data = new byte[width * height * komponen];
+        byte[]? alfaSumber = Alpha;
+        var alpha = alfaSumber is null ? null : new byte[width * height];
+        var jumlah = new double[komponen];
+
+        for (int y = 0; y < height; y++)
+        {
+            double y0 = (double)y * Height / height;
+            double y1 = (double)(y + 1) * Height / height;
+            int sy0 = (int)Math.Floor(y0);
+            int sy1 = Math.Min(Height, (int)Math.Ceiling(y1));
+
+            for (int x = 0; x < width; x++)
+            {
+                double x0 = (double)x * Width / width;
+                double x1 = (double)(x + 1) * Width / width;
+                int sx0 = (int)Math.Floor(x0);
+                int sx1 = Math.Min(Width, (int)Math.Ceiling(x1));
+
+                Array.Clear(jumlah, 0, komponen);
+                double totalA = 0, totalW = 0;
+
+                for (int sy = sy0; sy < sy1; sy++)
+                {
+                    double wy = Math.Min(y1, sy + 1) - Math.Max(y0, sy);
+                    if (wy <= 0) continue;
+
+                    for (int sx = sx0; sx < sx1; sx++)
+                    {
+                        double wx = Math.Min(x1, sx + 1) - Math.Max(x0, sx);
+                        if (wx <= 0) continue;
+
+                        double w = wx * wy;
+                        int sumber = sy * Width + sx;
+                        double a = alfaSumber is null ? 1.0 : alfaSumber[sumber] / 255.0;
+                        totalW += w;
+                        totalA += w * a;
+                        for (int c = 0; c < komponen; c++)
+                        {
+                            jumlah[c] += w * a * Data[sumber * komponen + c] / 255.0;
+                        }
+                    }
+                }
+
+                int tujuan = y * width + x;
+                if (alpha is not null) alpha[tujuan] = KeByte(totalA / Math.Max(totalW, 1e-9));
+
+                // Warna dibagi alfa purata supaya hasilnya kembali "straight alpha".
+                double pembagi = Math.Max(totalA, 1e-9);
+                for (int c = 0; c < komponen; c++)
+                {
+                    data[tujuan * komponen + c] = KeByte(jumlah[c] / pembagi);
+                }
+            }
+        }
+
+        return new PdfWriterImage(width, height, ColorSpace, false, data, alpha);
+    }
+
+    private static byte KeByte(double nilai) => (byte)Math.Clamp((int)Math.Round(nilai * 255), 0, 255);
+
     /// <summary>Baca gambar dari berkas (PNG atau JPEG).</summary>
     public static PdfWriterImage FromFile(string path)
     {

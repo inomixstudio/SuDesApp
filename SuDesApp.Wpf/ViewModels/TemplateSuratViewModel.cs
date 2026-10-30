@@ -755,10 +755,9 @@ namespace SuDesApp.Wpf.ViewModels
                     return;
                 }
 
-                string berkas = Path.Combine(Path.GetTempPath(), "SuDesApp",
-                    $"pratinjau-template-{Guid.NewGuid():N}.pdf");
-                Directory.CreateDirectory(Path.GetDirectoryName(berkas)!);
-                await File.WriteAllBytesAsync(berkas, pdf);
+                string berkas = await PratinjauPdf
+                    .SimpanAsync((string?)null, pdf, "Pratinjau_Template")
+                    .ConfigureAwait(true);
 
                 _navigation.Navigate(_previewFactory($"Pratinjau template — {template.NamaTampil}", berkas));
             }

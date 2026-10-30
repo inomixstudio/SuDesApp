@@ -114,6 +114,7 @@ internal sealed class LayoutEngine
     private readonly int _totalPages;
     private readonly Dictionary<string, (int Width, int Height)> _ukuranGambar = new();
     private readonly Dictionary<string, string?> _namaGambar = new();
+    private readonly Dictionary<string, PdfWriterImage> _gambar = new();
 
     internal LayoutEngine(PdfWriter writer, int totalPages)
     {
@@ -844,29 +845,50 @@ internal sealed class LayoutEngine
         if (kunci.Length == 0) return (0, 0);
         if (_ukuranGambar.TryGetValue(kunci, out var ukuran)) return ukuran;
 
-        var gambar = BacaGambar(node);
+        var gambar = GambarAsli(node);
         ukuran = (gambar.Width, gambar.Height);
 
         _ukuranGambar[kunci] = ukuran;
         return ukuran;
     }
 
-    internal string? NamaGambar(LayoutNode node)
+    /// <summary>
+    /// Nama resource gambar untuk kotak selebar/tinggi <paramref name="widthPt"/> ×
+    /// <paramref name="heightPt"/> point. Gambar diperkecil ke resolusi cetak yang
+    /// benar-benar dipakai, sehingga kop 1507 px tidak lagi ditanam untuk 250 px.
+    /// </summary>
+    internal string? NamaGambar(LayoutNode node, float widthPt, float heightPt)
     {
         string kunci = KunciGambar(node);
         if (kunci.Length == 0) return null;
-        if (_namaGambar.TryGetValue(kunci, out var nama)) return nama;
 
-        nama = _writer.RegisterImage(BacaGambar(node));
+        var dasar = GambarAsli(node);
+        var (pikselX, pikselY) = dasar.PikselCetak(widthPt, heightPt);
+        string kunciTanam = $"{kunci}@{pikselX}x{pikselY}";
+        if (_namaGambar.TryGetValue(kunciTanam, out var nama)) return nama;
 
-        _namaGambar[kunci] = nama;
+        nama = _writer.RegisterImage(dasar.UntukUkuran(widthPt, heightPt));
+
+        _namaGambar[kunciTanam] = nama;
         return nama;
     }
 
-    private static PdfWriterImage BacaGambar(LayoutNode node) =>
-        node.ImageBytes is { Length: > 0 } bytes
+    /// <summary>
+    /// Gambar asli yang sudah diurai, sekali per isi/jalur. Ukuran gambar dibaca
+    /// dari sini juga, jadi setiap berkas hanya di-dekode satu kali.
+    /// </summary>
+    private PdfWriterImage GambarAsli(LayoutNode node)
+    {
+        string kunci = KunciGambar(node);
+        if (_gambar.TryGetValue(kunci, out var gambar)) return gambar;
+
+        gambar = node.ImageBytes is { Length: > 0 } bytes
             ? PdfWriterImage.FromBytes(bytes)
             : PdfWriterImage.FromFile(node.ImagePath!);
+
+        _gambar[kunci] = gambar;
+        return gambar;
+    }
 
     /// <summary>Kunci gambar: isi byte atau jalur berkasnya.</summary>
     private static string KunciGambar(LayoutNode node)
@@ -953,7 +975,7 @@ internal sealed class PageContext
     /// <summary>Gambar pada kotak selebar <paramref name="width"/> dan setinggi <paramref name="height"/>.</summary>
     internal void DrawImage(LayoutNode node, float x, float top, float width, float height)
     {
-        string? nama = _engine.NamaGambar(node);
+        string? nama = _engine.NamaGambar(node, width, height);
         if (nama is null) return;
         Page.Content.DrawImage(nama, x, top - height, width, height);
     }

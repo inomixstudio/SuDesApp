@@ -36,6 +36,20 @@ cause → action slot → hint:
 card, with a retry command in the action slot — not only by a modal dialog that
 covers the same empty page and then disappears without a trace.
 
+## PDF preview: one path, one owner
+
+Every "generate → temp file → preview" flow shares a single writer,
+`Services/PratinjauPdf`: it owns the folder (TempPDF from `AppConfig`, else a
+fallback temp folder), the safe file name, and the collision suffix, and it
+returns the full path `SudesPdf` needs. ViewModels only produce PDF bytes —
+writing them under their own names made previews pile up outside TempPDF.
+
+Letter geometry and base text style live in `TataLetakHalamanSurat`; the kop
+preview prints a mini page through the real engine (`KopSuratCetak`) instead of
+drawing a second layout in XAML. `Views/PdfPreviewView` owns zoom, page layout
+and the per-page bitmap budget; on zoom it resizes the existing cards and keeps
+the old bitmap until the new render arrives, so the panel never blanks.
+
 ## IDM page: one snapshot, one selection
 
 The IDM page loads several years from the center at once and lets the user pick

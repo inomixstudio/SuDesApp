@@ -202,20 +202,8 @@ namespace SuDesApp.GeneratorPdf
         /// Ukuran kertas, margin, dan gaya teks baku seluruh surat. Dipakai satu
         /// halaman tunggal maupun dokumen gabungan (mis. paket NTCR N1–N6).
         /// </summary>
-        protected static void SiapkanHalaman(PageDescriptor page, float lebarHalaman, float tinggiHalaman)
-        {
-            var kerapatan = KerapatanSurat.Aktif;
-
-            page.Size(new PageSize(lebarHalaman, tinggiHalaman, Unit.Point));
-            page.MarginTop(kerapatan.MarginAtas, Unit.Point);     // top, right, bottom, left
-            page.MarginRight(45, Unit.Point);
-            // Sisi bawah diberi ruang supaya tanda tangan tidak menyentuh
-            // tepi kertas (area cetak printer umumnya butuh ±20pt); margin menipis
-            // bersama kerapatan bila isi surat memang panjang.
-            page.MarginBottom(kerapatan.MarginBawah, Unit.Point);
-            page.MarginLeft(45, Unit.Point);
-            page.DefaultTextStyle(x => x.FontFamily("Times New Roman").FontSize(DEFAULT_FONT_SIZE));
-        }
+        protected static void SiapkanHalaman(PageDescriptor page, float lebarHalaman, float tinggiHalaman) =>
+            TataLetakHalamanSurat.Siapkan(page, lebarHalaman, tinggiHalaman, DEFAULT_FONT_SIZE);
 
         /// <summary>
         /// Jumlah halaman dokumen, dibaca dari pohon halaman berkas PDF yang dihasilkan.

@@ -12,6 +12,7 @@ using SuDesApp.Data.Models;
 using SuDesApp.Services;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Services;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -462,13 +463,7 @@ namespace SuDesApp.Wpf.ViewModels
                 var data = await _laporan.SusunAsync(KeteranganCakupan, TabelDipilih);
                 byte[] pdf = await _laporan.RenderPdfAsync(data);
 
-                string folder = TempFolder();
-                Directory.CreateDirectory(folder);
-
-                string nama = $"{data.NamaBerkas}_Pratinjau.pdf";
-                string jalur = Path.Combine(folder, nama);
-
-                await File.WriteAllBytesAsync(jalur, pdf);
+                string jalur = await PratinjauPdf.SimpanAsync(_appConfig, pdf, data.NamaBerkas + "_Pratinjau");
 
                 _data = data;
                 SusunTampilan(data);
@@ -553,14 +548,6 @@ namespace SuDesApp.Wpf.ViewModels
             if (jumlahByte < 1024 * 1024) return (jumlahByte / 1024.0).ToString("0.0") + " KB";
             return (jumlahByte / (1024.0 * 1024.0)).ToString("0.0") + " MB";
         }
-
-        /// <summary>
-        /// Folder tempat berkas pratinjau diletakkan. Harus folder TempPDF yang
-        /// dikonfigurasi aplikasi (<see cref="AppConfig.TempPdfFolder"/>) supaya
-        /// ikut dibersihkan <c>TempPdfCleanup</c> seperti berkas surat — kalau
-        /// pratinjau ditulis ke folder lain, berkasnya menumpuk selamanya.
-        /// </summary>
-        private string TempFolder() => _appConfig.TempPdfFolder;
 
         /// <summary>
         /// Buka halaman pratinjau PDF yang sama dengan yang dipakai surat dan

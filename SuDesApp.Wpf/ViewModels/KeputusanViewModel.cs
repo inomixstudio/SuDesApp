@@ -10,6 +10,7 @@ using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Services;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -491,8 +492,9 @@ namespace SuDesApp.Wpf.ViewModels
                 generator.GenerateKeputusanPdf(stream, dataToPrint, _jenisKeputusan, year);
 
                 string tahunLabel = year?.ToString() ?? "SemuaTahun";
-                string tempPath = Path.Combine(Path.GetTempPath(), $"Arsip_{_jenisKeputusan}_{tahunLabel}.pdf");
-                await File.WriteAllBytesAsync(tempPath, stream.ToArray());
+                string tempPath = await PratinjauPdf
+                    .SimpanAsync((string?)null, stream.ToArray(), $"Arsip_{_jenisKeputusan}_{tahunLabel}")
+                    .ConfigureAwait(true);
 
                 var preview = _previewFactory($"{HeaderTitle} {year?.ToString() ?? "Semua Tahun"}", tempPath);
                 _navigation.Navigate(preview);

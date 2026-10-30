@@ -34,6 +34,14 @@ namespace SuDesApp.Wpf.Views
         private const long AnggaranByteHalaman = 96L * 1024 * 1024;
 
         private readonly List<HalamanTampil> _halaman = new();
+
+        /// <summary>
+        /// Dokumen yang kerangka kartunya sedang terpasang. Kerangka hanya boleh
+        /// dipakai ulang untuk dokumen yang SAMA: PDF lain dengan jumlah halaman
+        /// kebetulan sama akan sempat menampilkan bitmap dokumen sebelumnya bila
+        /// yang dibandingkan hanya jumlah halamannya.
+        /// </summary>
+        private Document? _dokumenKerangka;
         private int _versiRender;
         private bool _renderBerjalan;
         private bool _renderUlang;
@@ -77,6 +85,7 @@ namespace SuDesApp.Wpf.Views
             _loadGeneration++;
             _versiRender++;
             _halaman.Clear();
+            _dokumenKerangka = null;
             _ = DisposeDocumentAsync();
             _currentPdfPath = null;
         }
@@ -219,115 +228,177 @@ namespace SuDesApp.Wpf.Views
 
             int versi = ++_versiRender;
             _renderUlang = false;
-            PagesPanel.Children.Clear();
-            _halaman.Clear();
 
             double skalaPerangkat = SkalaPerangkat();
             double kerapatan = skalaPerangkat * 96.0;
+
+            // Kerangka halaman dipakai ulang bila jumlah halamannya tidak berubah
+            // (zoom, ganti kertas): bitmap yang sudah tampil tetap terpasang dan
+            // hanya ukurannya yang diubah, lalu digambar ulang tepat di tempatnya.
+            // Membuang lalu membangun seluruh kartu seketika membuat panel kosong
+            // setiap kali zoom — kedipan putih yang terasa sebagai "berat".
+            bool pakaiUlang = ReferenceEquals(_dokumenKerangka, _document)
+                              && _halaman.Count == _document.PageCount;
+            if (!pakaiUlang)
+            {
+                PagesPanel.Children.Clear();
+                _halaman.Clear();
+                _dokumenKerangka = _document;
+            }
+
             for (int i = 0; i < _document.PageCount; i++)
             {
-                var size = _document.PageSizes[i];
-
-                // Ukuran gambar ditentukan dalam PIKsel layar, bukan DIP, lalu
-                // skala render diturunkan dari jumlah piksel itu. Dengan begitu
-                // lebar bitmap persis sama dengan lebar yang diminta tata letak —
-                // tidak ada selisih pecahan piksel yang membuat WPF menyaring
-                // ulang seluruh halaman (itulah yang mengaburkan huruf).
-                double lebarDip = LebarHalamanDip(i);
-                int lebarPiksel = Math.Max(1, (int)Math.Round(lebarDip * skalaPerangkat));
-                // Epsilon kecil supaya pembulatan ke atas di mesin render tidak
-                // menambah satu piksel (yang membuat WPF menyaring ulang).
-                double skalaGambar = Math.Min(16.0, lebarPiksel / Math.Max(1.0, size.Width) * (1 - 1e-9));
-
-                // Ukuran tampil diturunkan dari jumlah PIKsel bitmap yang akan
-                // dibuat (bukan dari DIP pecahan), persis seperti ukuran asli
-                // bitmap nanti. Dengan begitu WPF tidak perlu menskalakan satu
-                // piksel pun saat bitmap itu terpasang.
-                int tinggiPiksel = Math.Max(1, (int)Math.Ceiling(size.Height * skalaGambar));
-                double lebarTampil = lebarPiksel * 96.0 / kerapatan;
-                double tinggiTampil = tinggiPiksel * 96.0 / kerapatan;
-
-                var halaman = new Image
+                if (pakaiUlang)
                 {
-                    Width = lebarTampil,
-                    Height = tinggiTampil,
-                    Stretch = Stretch.Fill
-                };
-                RenderOptions.SetBitmapScalingMode(halaman, BitmapScalingMode.HighQuality);
-
-                var card = new Border
+                    AturUkuranHalaman(_halaman[i], skalaPerangkat, kerapatan);
+                }
+                else
                 {
-                    // Ukuran kartu ditetapkan sejak awal supaya penggulungan
-                    // tidak melompat ketika bitmap halaman selesai digambar.
-                    Width = lebarTampil + 16,
-                    Height = tinggiTampil + 16,
-                    Background = TryFindResource("KertasBrush") as Brush ?? Brushes.White,
-                    BorderBrush = TryFindResource("KertasTepiBrush") as Brush
-                                  ?? new SolidColorBrush(Color.FromRgb(0xC9, 0xCD, 0xD4)),
-                    BorderThickness = new Thickness(1),
-                    CornerRadius = new CornerRadius(3),
-                    Padding = new Thickness(7),
-                    Child = halaman
-                };
-
-                // Label "Halaman N dari M" di bawah setiap halaman DIHAPUS.
-                // Angka halaman sudah bisa dibaca dari jumlah kartu halaman yang
-                // berbentuk edge-to-edge (dan dari nomor surat pada dokumen),
-                // sementara label ini memakan tempat, mengulang informasi yang
-                // sama untuk setiap kartu, dan selalu tampil "Halaman 1 dari 1"
-                // pada surat satu halaman — seakan-ini pesan, bukan keterangan.
-
-                // Bayangan TIDAK dipasang pada kartu yang memuat halaman.
-                // Effect pada WPF menggambar seluruh isi elemen ke bitmap antara
-                // sebelum dikomposisikan, jadi memasang DropShadowEffect pada
-                // kartu membuat gambar halaman ikut disaring — teksnya kembali
-                // kabur. Bayangan ditaruh pada elemen kosong di belakang kartu.
-                var bayangan = new Border
-                {
-                    Background = card.Background,
-                    CornerRadius = new CornerRadius(3),
-                    Effect = new DropShadowEffect
-                    {
-                        Color = TryFindResource("BayanganHitamColor") is Color warnaBayangan
-                            ? warnaBayangan
-                            : Colors.Black,
-                        BlurRadius = 16,
-                        ShadowDepth = 2,
-                        Opacity = 0.3
-                    },
-                    // Bayangan tidak berubah saat halaman digulir; simpan
-                    // hasilnya sebagai bitmap supaya efek blur tidak dihitung
-                    // ulang setiap kali halaman bergerak di layar.
-                    CacheMode = new BitmapCache()
-                };
-
-                var wadah = new Grid
-                {
-                    Margin = new Thickness(0, 0, 0, 16),
-                    HorizontalAlignment = HorizontalAlignment.Center
-                };
-                wadah.Children.Add(bayangan);
-                wadah.Children.Add(card);
-                PagesPanel.Children.Add(wadah);
-
-                _halaman.Add(new HalamanTampil
-                {
-                    Index = i,
-                    Kartu = card,
-                    Gambar = halaman,
-                    SkalaGambar = skalaGambar,
-                    Kerapatan = kerapatan,
-                    PerkiraanByte = (long)lebarPiksel * tinggiPiksel * 4
-                });
+                    _halaman.Add(BuatKerangkaHalaman(i, skalaPerangkat, kerapatan));
+                }
             }
 
             ZoomText.Text = $"{_scale * 100.0:0}%";
 
             // Pastikan posisi kartu sudah terukur sebelum menentukan halaman
-            // mana yang tampak. Kartu masih kosong, jadi langkah ini murah.
+            // mana yang tampak.
             if (IsLoaded) ScrollViewer.UpdateLayout();
 
             await RenderTerlihatAsync(versi);
+        }
+
+        /// <summary>
+        /// Skala render untuk satu halaman. Ukuran gambar ditentukan dalam PIKsel
+        /// layar, bukan DIP, lalu skala render diturunkan dari jumlah piksel itu:
+        /// dengan begitu lebar bitmap persis sama dengan lebar yang diminta tata
+        /// letak, sehingga tidak ada selisih pecahan piksel yang membuat WPF
+        /// menyaring ulang seluruh halaman (itulah yang mengaburkan huruf).
+        /// </summary>
+        private double SkalaRender(int halaman, double skalaPerangkat)
+        {
+            double lebarDip = LebarHalamanDip(halaman);
+            int lebarPiksel = Math.Max(1, (int)Math.Round(lebarDip * skalaPerangkat));
+            // Epsilon kecil supaya pembulatan ke atas di mesin render tidak
+            // menambah satu piksel (yang membuat WPF menyaring ulang).
+            return Math.Min(16.0,
+                lebarPiksel / Math.Max(1.0, _document!.PageSizes[halaman].Width) * (1 - 1e-9));
+        }
+
+        /// <summary>
+        /// Ukuran tampil diturunkan dari jumlah PIKsel bitmap (bukan dari DIP
+        /// pecahan), persis seperti ukuran asli bitmap nanti — jadi WPF tidak
+        /// perlu menskalakan satu piksel pun saat bitmap itu terpasang.
+        /// </summary>
+        private void UkuranTampil(double skalaGambar, double kerapatan,
+            out double lebarTampil, out double tinggiTampil, out long perkiraanByte, int halaman = 0)
+        {
+            var size = _document!.PageSizes[halaman];
+            int lebarPiksel = Math.Max(1, (int)Math.Round(size.Width * skalaGambar));
+            int tinggiPiksel = Math.Max(1, (int)Math.Ceiling(size.Height * skalaGambar));
+            lebarTampil = lebarPiksel * 96.0 / kerapatan;
+            tinggiTampil = tinggiPiksel * 96.0 / kerapatan;
+            perkiraanByte = (long)lebarPiksel * tinggiPiksel * 4;
+        }
+
+        private HalamanTampil BuatKerangkaHalaman(int i, double skalaPerangkat, double kerapatan)
+        {
+            double skalaGambar = SkalaRender(i, skalaPerangkat);
+            UkuranTampil(skalaGambar, kerapatan, out double lebarTampil, out double tinggiTampil,
+                out long perkiraanByte, i);
+
+            var halaman = new Image
+            {
+                Width = lebarTampil,
+                Height = tinggiTampil,
+                Stretch = Stretch.Fill
+            };
+            RenderOptions.SetBitmapScalingMode(halaman, BitmapScalingMode.HighQuality);
+
+            var card = new Border
+            {
+                // Ukuran kartu ditetapkan sejak awal supaya penggulungan
+                // tidak melompat ketika bitmap halaman selesai digambar.
+                Width = lebarTampil + 16,
+                Height = tinggiTampil + 16,
+                Background = TryFindResource("KertasBrush") as Brush ?? Brushes.White,
+                BorderBrush = TryFindResource("KertasTepiBrush") as Brush
+                              ?? new SolidColorBrush(Color.FromRgb(0xC9, 0xCD, 0xD4)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(7),
+                Child = halaman
+            };
+
+            // Label "Halaman N dari M" di bawah setiap halaman DIHAPUS.
+            // Angka halaman sudah bisa dibaca dari jumlah kartu halaman yang
+            // berbentuk edge-to-edge (dan dari nomor surat pada dokumen),
+            // sementara label ini memakan tempat, mengulang informasi yang
+            // sama untuk setiap kartu, dan selalu tampil "Halaman 1 dari 1"
+            // pada surat satu halaman — seakan-ini pesan, bukan keterangan.
+
+            // Bayangan TIDAK dipasang pada kartu yang memuat halaman.
+            // Effect pada WPF menggambar seluruh isi elemen ke bitmap antara
+            // sebelum dikomposisikan, jadi memasang DropShadowEffect pada
+            // kartu membuat gambar halaman ikut disaring — teksnya kembali
+            // kabur. Bayangan ditaruh pada elemen kosong di belakang kartu.
+            var bayangan = new Border
+            {
+                Background = card.Background,
+                CornerRadius = new CornerRadius(3),
+                Effect = new DropShadowEffect
+                {
+                    Color = TryFindResource("BayanganHitamColor") is Color warnaBayangan
+                        ? warnaBayangan
+                        : Colors.Black,
+                    BlurRadius = 16,
+                    ShadowDepth = 2,
+                    Opacity = 0.3
+                },
+                // Bayangan tidak berubah saat halaman digulir; simpan
+                // hasilnya sebagai bitmap supaya efek blur tidak dihitung
+                // ulang setiap kali halaman bergerak di layar.
+                CacheMode = new BitmapCache()
+            };
+
+            var wadah = new Grid
+            {
+                Margin = new Thickness(0, 0, 0, 16),
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            wadah.Children.Add(bayangan);
+            wadah.Children.Add(card);
+            PagesPanel.Children.Add(wadah);
+
+            return new HalamanTampil
+            {
+                Index = i,
+                Kartu = card,
+                Gambar = halaman,
+                SkalaGambar = skalaGambar,
+                Kerapatan = kerapatan,
+                PerkiraanByte = perkiraanByte
+            };
+        }
+
+        /// <summary>
+        /// Sesuaikan halaman yang sudah ada dengan skala baru tanpa melepas
+        /// bitmapnya: gambar lama tetap tampil (diregangkan sesaat) sampai
+        /// penggambaran ulang selesai, jadi panel tidak pernah kosong.
+        /// </summary>
+        private void AturUkuranHalaman(HalamanTampil halaman, double skalaPerangkat, double kerapatan)
+        {
+            double skalaGambar = SkalaRender(halaman.Index, skalaPerangkat);
+            UkuranTampil(skalaGambar, kerapatan, out double lebarTampil, out double tinggiTampil,
+                out long perkiraanByte, halaman.Index);
+
+            halaman.SkalaGambar = skalaGambar;
+            halaman.Kerapatan = kerapatan;
+            halaman.PerkiraanByte = perkiraanByte;
+            halaman.SudahDirender = false;
+            halaman.Gambar.Width = lebarTampil;
+            halaman.Gambar.Height = tinggiTampil;
+            halaman.Kartu.Width = lebarTampil + 16;
+            halaman.Kartu.Height = tinggiTampil + 16;
         }
 
         /// <summary>
