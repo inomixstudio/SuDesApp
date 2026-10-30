@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.TemplateSuratView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.TemplateSuratView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -355,9 +355,9 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                             </Grid>
-                            <Button Grid.Column="2" Content="✕" Command="{Binding BersihkanPencarianCommand}"
+                            <Button Grid.Column="2" Content="{x:Static u:IkonMenu.Keluar}" Command="{Binding BersihkanPencarianCommand}"
                                     Style="{StaticResource BersihkanPencarianButton}"
-                                    ToolTip="Bersihkan pencarian"/>
+                                    ToolTip="Bersihkan pencarian" FontFamily="{StaticResource AppIconFont}"/>
                         </Grid>
                     </Border>
 

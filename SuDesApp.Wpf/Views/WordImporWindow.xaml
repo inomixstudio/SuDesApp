@@ -138,7 +138,8 @@
                                                         Margin="0,8,0,0" HorizontalAlignment="Left">
                                                     <StackPanel>
                                                         <Image Source="{Binding GambarPratinjau, Mode=OneWay}"
-                                                               Width="300" Stretch="Uniform" StretchDirection="DownOnly"/>
+                                                               Width="300" Stretch="Uniform" StretchDirection="DownOnly"
+                                                               RenderOptions.BitmapScalingMode="HighQuality"/>
                                                         <!-- Keterangan di atas kertas pratinjau yang SELALU putih: warnanya
                                                              dipatok abu gelap, bukan token tema — kalau memakai token, di
                                                              tema Gelap/Abu-abu tulisannya nyaris hilang di atas kertas putih. -->

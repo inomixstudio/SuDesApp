@@ -45,13 +45,19 @@ namespace SuDesApp.Wpf.ViewModels
     {
         /// <summary>
         /// Tahun yang dicoba mundur dari tahun berjalan. Situs pusat menerbitkan
-        /// IDM setahun sekali, dan data terbaru bisa tertinggal satu-dua tahun;
-        /// jendela ini cukup untuk menemukannya tanpa banyak permintaan.
+        /// IDM setahun sekali, dan data terbaru bisa tertinggal beberapa tahun
+        /// (seri IKS/IKE/IKL berhenti di 2024 saat Indeks Desa 2025 diterbitkan);
+        /// jendela ini harus cukup lebar untuk melewati tahun-tahun kosong itu.
         /// </summary>
-        private const int TahunDicoba = 6;
+        private const int TahunDicoba = 8;
 
-        /// <summary>Cukup tiga tahun terakhir: tahun terbaru untuk rincian, sisanya untuk tren.</summary>
-        private const int TahunDitampilkan = 3;
+        /// <summary>
+        /// Banyaknya tahun yang disimpan: tahun terbaru dipakai untuk rincian
+        /// indikator, sisanya mengisi daftar "tahun lain" dan grafik tren.
+        /// Lima tahun membuat tren terbaca tanpa membanjiri portal pusat dengan
+        /// permintaan (satu permintaan per tahun yang dicoba).
+        /// </summary>
+        private const int TahunDitampilkan = 5;
 
         /// <summary>
         /// Halaman IDM baru saja menampilkan data (segar maupun cadangan) —
@@ -186,8 +192,9 @@ namespace SuDesApp.Wpf.ViewModels
                 if (SetProperty(ref _sedangMemuat, value))
                 {
                     OnPropertyChanged(nameof(TidakSedangMemuat));
-                    OnPropertyChanged(nameof(PesanMenunggu));
-                    OnPropertyChanged(nameof(AdaPemberitahuanMenunggu));
+                    OnPropertyChanged(nameof(TampilkanKartuKeadaan));
+                    OnPropertyChanged(nameof(JudulKeadaan));
+                    OnPropertyChanged(nameof(IsiKeadaan));
                     ((AsyncRelayCommand)MuatCommand).RaiseCanExecuteChanged();
                     ((AsyncRelayCommand)CetakCommand).RaiseCanExecuteChanged();
                 }
@@ -217,7 +224,10 @@ namespace SuDesApp.Wpf.ViewModels
                 if (SetProperty(ref _pesanGalat, value))
                 {
                     OnPropertyChanged(nameof(AdaGalat));
-                    OnPropertyChanged(nameof(AdaPemberitahuanMenunggu));
+                    OnPropertyChanged(nameof(AdaGalatDiToolbar));
+                    OnPropertyChanged(nameof(TampilkanKartuKeadaan));
+                    OnPropertyChanged(nameof(JudulKeadaan));
+                    OnPropertyChanged(nameof(IsiKeadaan));
                 }
             }
         }
@@ -241,19 +251,40 @@ namespace SuDesApp.Wpf.ViewModels
         public bool AdaPesanCadangan => _pesanCadangan.Length > 0;
 
         /// <summary>
-        /// Halaman belum menampilkan data apa pun, tidak sedang menampilkan
-        /// galat, dan tidak sedang memuat — kotak petunjuk ("tekan Muat ulang")
-        /// tampil di tempat yang seharusnya berisi isi halaman. Saat memuat,
-        /// tempatnya digantikan dialog progres <see cref="TahapanMemuat"/>.
+        /// Tidak ada isi yang bisa ditampilkan dan tidak sedang memuat: tempat
+        /// yang seharusnya berisi kartu-kartu digantikan SATU kartu keadaan.
+        /// Kartu itu menangani dua sebab sekaligus — belum pernah dimuat dan
+        /// gagal dimuat — supaya halaman tidak pernah berakhir sebagai layar
+        /// kosong dengan satu baris galat di toolbar.
         /// </summary>
-        public bool AdaPemberitahuanMenunggu => !AdaData && !AdaGalat && !_sedangMemuat;
+        public bool TampilkanKartuKeadaan => !AdaData && !_sedangMemuat;
+
+        /// <summary>Judul kartu keadaan — membedakan "belum dimuat" dan "gagal".</summary>
+        public string JudulKeadaan => AdaGalat
+            ? "Data pusat belum bisa dimuat"
+            : "Data IDM belum dimuat";
 
         /// <summary>
-        /// Teks kotak petunjuk: hanya untuk keadaan belum pernah memuat
-        /// (memuatnya sendiri kini memakai dialog progres bergaya splash).
+        /// Isi kartu keadaan: alasan kegagalan dari situs/pengaturan, atau
+        /// petunjuk singkat saat halaman baru dibuka.
+        /// </summary>
+        public string IsiKeadaan => AdaGalat ? _pesanGalat : PesanMenunggu;
+
+        /// <summary>
+        /// Baris galat di toolbar hanya dipakai saat halaman SUDAH berisi data —
+        /// mis. muat ulang gagal tetapi angka lama tetap tampil. Tanpa data,
+        /// pesannya sudah dibawa kartu keadaan sehingga tidak tampil dua kali.
+        /// </summary>
+        public bool AdaGalatDiToolbar => AdaGalat && AdaData;
+
+        /// <summary>
+        /// Teks petunjuk saat halaman belum pernah memuat data. Ditulis sebagai
+        /// kalimat yang menyebut tombolnya sendiri dan sumber identitas desa,
+        /// karena dua hal itulah yang paling sering jadi sebab halaman kosong.
         /// </summary>
         public string PesanMenunggu =>
-            "Data belum ditampilkan. Tekan \"Muat ulang\" untuk mengambil data pusat (memerlukan internet).";
+            "Data diambil dari idm.kemendesa.go.id memakai nama desa pada Pengaturan Surat "
+            + "(memerlukan sambungan internet).";
 
         // ===================== Dialog progres (gaya splash) =====================
 
@@ -420,6 +451,61 @@ namespace SuDesApp.Wpf.ViewModels
             : _hasil == null
                 ? "—"
                 : "Penilaian tahun " + _hasil.Ringkasan.Tahun.ToString(CultureInfo.InvariantCulture);
+
+        /// <summary>Banyaknya tahun seri IDM yang berhasil dimuat pada sesi ini.</summary>
+        public int JumlahTahunDimuat => _daftar?.Count ?? 0;
+
+        /// <summary>
+        /// Tahun TERAKHIR data IDM yang datanya benar-benar terbit untuk desa ini
+        /// — bukan tahun berjalan. Dipakai sebagai penanda "tahun terakhir" pada
+        /// ringkasan tahun yang dimuat.
+        /// </summary>
+        public string TahunTerakhirIdmTampil => _hasil == null
+            ? IdmTeks.Kosong
+            : _hasil.Ringkasan.Tahun.ToString(CultureInfo.InvariantCulture);
+
+        /// <summary>
+        /// Kalimat yang menyebut berapa tahun IDM yang dimuat, rentangnya, dan
+        /// tahun terakhir yang rinciannya sedang tampil. Halaman mengambil beberapa
+        /// tahun sekaligus (tahun terbaru untuk rincian, sisanya untuk tren), jadi
+        /// tanpa kalimat ini pembaca tidak tahu bahwa tahun-tahun lain ikut dimuat
+        /// dan tahun mana yang sedang dibaca.
+        /// </summary>
+        public string RingkasanTahunDimuat
+        {
+            get
+            {
+                if (_hasil == null || _daftar is not { Count: > 0 }) return string.Empty;
+
+                return RingkasanTahun(_daftar.Select(h => h.Ringkasan.Tahun).ToList());
+            }
+        }
+
+        /// <summary>
+        /// Susun kalimat ringkasan dari daftar tahun yang berhasil dimuat
+        /// (boleh tidak urut dan berulang). Dipisah sebagai fungsi murni supaya
+        /// bunyinya bisa diuji tanpa memuat halaman atau menghubungi pusat.
+        /// </summary>
+        internal static string RingkasanTahun(IReadOnlyList<int> tahunDimuat)
+        {
+            var tahun = tahunDimuat.Distinct().OrderBy(t => t).ToList();
+            if (tahun.Count == 0) return string.Empty;
+
+            string terakhir = tahun[^1].ToString(CultureInfo.InvariantCulture);
+
+            if (tahun.Count == 1)
+            {
+                return "Seri IDM lama hanya tersedia untuk tahun " + terakhir
+                       + " — rincian indikator di halaman ini dari tahun tersebut.";
+            }
+
+            string rentang = tahun[0].ToString(CultureInfo.InvariantCulture) + "–" + terakhir;
+            return tahun.Count.ToString(CultureInfo.InvariantCulture) + " tahun dimuat (" + rentang
+                   + "). Rincian indikator di halaman ini dari tahun terakhir, " + terakhir + ".";
+        }
+
+        /// <summary>True bila ada daftar tahun untuk ditampilkan di bawah ringkasan.</summary>
+        public bool AdaRiwayatTahun => Riwayat.Count > 0;
 
         /// <summary>
         /// Indikator "data terbaru yang terbit": dari catatan pemeriksaan portal
@@ -757,7 +843,16 @@ namespace SuDesApp.Wpf.ViewModels
                     gagalBeruntun = 0;
                     if (muatan.Status == StatusMuatIdm.Berhasil && muatan.Hasil != null)
                     {
-                        hasil.Add(muatan.Hasil);
+                        // Pusat bisa menjawab dengan tahun yang SAMA untuk
+                        // permintaan tahun berbeda (parameter tahun diabaikan).
+                        // Satu tahun hanya disimpan sekali supaya daftar "tahun
+                        // lain", grafik tren, dan laporan tidak berganda — dan
+                        // supaya jumlah tahun yang berhasil tidak terhitung dari
+                        // jawaban kembar.
+                        if (!hasil.Any(h => h.Ringkasan.Tahun == muatan.Hasil.Ringkasan.Tahun))
+                        {
+                            hasil.Add(muatan.Hasil);
+                        }
                     }
                 }
 
@@ -837,13 +932,29 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private void PasangData(IReadOnlyList<HasilIdm> semua, string kodeDesa, DateTime? waktuMuat, bool lewatHttp)
         {
-            _hasil = semua.OrderByDescending(h => h.Ringkasan.Tahun).First();
+            // Tahun unik, terbaru dulu: cadangan dari versi aplikasi lama bisa
+            // memuat tahun kembar, dan daftar tahun yang tampil tidak boleh
+            // mengulang penilaian yang sama dua kali.
+            var unik = TahunUnik(semua);
+
+            _hasil = unik[0];
             _waktuMuat = waktuMuat;
             _lewatHttp = lewatHttp;
-            _daftar = semua.ToList();
+            _daftar = unik;
             _daftarKode = kodeDesa;
-            IsiKoleksi(_hasil, semua);
+            IsiKoleksi(_hasil, unik);
         }
+
+        /// <summary>
+        /// Satu entri per tahun, terbaru dulu. Entri pertama untuk sebuah tahun
+        /// dipertahankan — urutan permintaan selalu dari tahun berjalan mundur,
+        /// jadi itu salinan pertama yang diterima.
+        /// </summary>
+        internal static List<HasilIdm> TahunUnik(IEnumerable<HasilIdm> semua) => semua
+            .GroupBy(h => h.Ringkasan.Tahun)
+            .Select(g => g.First())
+            .OrderByDescending(h => h.Ringkasan.Tahun)
+            .ToList();
 
         private void Tampilkan(List<HasilIdm> hasil, bool lewatHttp)
         {
@@ -901,12 +1012,17 @@ namespace SuDesApp.Wpf.ViewModels
                 Indikator.Add(BarisTampil.Dari(baris));
             }
 
+            int tahunTerbaru = DeretTahunTerbaru(semua);
+
             foreach (var h in semua.OrderByDescending(h => h.Ringkasan.Tahun))
             {
+                int tahun = h.Ringkasan.Tahun;
                 Riwayat.Add(new RiwayatTampil(
-                    h.Ringkasan.Tahun,
+                    tahun,
                     IdmTeks.Angka(h.Ringkasan.Skor, "0.0000"),
-                    IdmTeks.Status(h.Ringkasan.Status)));
+                    IdmTeks.Status(h.Ringkasan.Status),
+                    Ditampilkan: tahun == utama.Ringkasan.Tahun,
+                    Terbaru: tahun == tahunTerbaru));
             }
 
             // Deret grafik tren: tahun yang sama, urut menaik (kiri → kanan).
@@ -1037,11 +1153,14 @@ namespace SuDesApp.Wpf.ViewModels
                          nameof(DimensiIndeksDesa2025), nameof(RincianSubDimensiIndeksDesa2025),
                          nameof(SumberIndeksDesa2025),
                          nameof(KodeDesaTampil), nameof(TahunTampil), nameof(SkorTampil),
+                         nameof(JumlahTahunDimuat), nameof(TahunTerakhirIdmTampil),
+                         nameof(RingkasanTahunDimuat), nameof(AdaRiwayatTahun),
                          nameof(StatusTampil), nameof(IksTampil), nameof(IkeTampil),
                          nameof(IklTampil), nameof(TargetTampil), nameof(SkorMinimalTampil),
                          nameof(PesanTarget), nameof(SumberTampil),
                          nameof(TooltipCetak),
-                         nameof(AdaPemberitahuanMenunggu), nameof(PesanMenunggu),
+                         nameof(TampilkanKartuKeadaan), nameof(JudulKeadaan), nameof(IsiKeadaan),
+                         nameof(AdaGalatDiToolbar), nameof(PesanMenunggu),
                          nameof(AdaPesanTahun), nameof(PesanTahun), nameof(DeretTren),
                          nameof(TerbitanBaru), nameof(AdaTerbitanBaru),
                          nameof(JudulTerbitanBaru), nameof(KeteranganTerbitanBaru),
@@ -1253,8 +1372,31 @@ namespace SuDesApp.Wpf.ViewModels
             };
         }
 
-        /// <summary>Satu tahun pada daftar kecil "tahun yang diterbitkan pusat".</summary>
-        public sealed record RiwayatTampil(int Tahun, string Skor, string Status);
+        /// <summary>
+        /// Satu tahun pada daftar kecil "tahun yang diterbitkan pusat".
+        /// <paramref name="Ditampilkan"/> menandai tahun yang rincian indikatornya
+        /// sedang terbuka (tahun terbaru), dan <paramref name="Terbaru"/> menandai
+        /// tahun terakhir yang datanya terbit — dua hal yang sama hari ini, tetapi
+        /// dipisah supaya tampilan tidak menebak.
+        /// </summary>
+        public sealed record RiwayatTampil(
+            int Tahun,
+            string Skor,
+            string Status,
+            bool Ditampilkan = false,
+            bool Terbaru = false);
+
+        /// <summary>Tahun terbesar pada daftar hasil; 0 bila daftarnya kosong.</summary>
+        private static int DeretTahunTerbaru(IEnumerable<HasilIdm> semua)
+        {
+            int terbaru = 0;
+            foreach (var h in semua)
+            {
+                if (h.Ringkasan.Tahun > terbaru) terbaru = h.Ringkasan.Tahun;
+            }
+
+            return terbaru;
+        }
 
         /// <summary>Satu langkah pada dialog progres pemuatan (gaya splash).</summary>
         public sealed class TahapMemuatTampil : ObservableObject

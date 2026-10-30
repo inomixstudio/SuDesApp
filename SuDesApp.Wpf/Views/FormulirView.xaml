@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="SuDesApp.Wpf.Views.FormulirView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.FormulirView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -35,10 +35,10 @@
                                 Background="{DynamicResource SurfaceBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                 VerticalAlignment="Center">
-                            <TextBlock x:Name="CheckMark" Text="&#x2713;" FontSize="11" FontWeight="Bold"
+                            <TextBlock x:Name="CheckMark" Text="{x:Static u:IkonMenu.Verifikasi}" FontSize="11"
                                        Foreground="{DynamicResource OnPrimaryTextBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Visibility="Collapsed"/>
+                                       Visibility="Collapsed" FontFamily="{StaticResource AppIconFont}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
@@ -128,8 +128,8 @@
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}" VerticalAlignment="Center">
-                        <TextBlock Text="&#x1F4C1;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Folder}" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="PENGATURAN FORMULIR" Style="{StaticResource HeaderTitle}"
@@ -144,7 +144,7 @@
                         ToolTip="{Binding IdentitasDesaAktif, Mode=OneWay}">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#x1F3DB;" FontSize="13" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                            <TextBlock Text="{x:Static u:IkonMenu.Peraturan}" FontSize="13" VerticalAlignment="Center" Margin="0,0,7,0" FontFamily="{StaticResource AppIconFont}"/>
                             <TextBlock Text="{Binding KabupatenAktif, Mode=OneWay}" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource HeaderTextBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -171,8 +171,8 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Margin="0,0,10,0">
-                                <TextBlock Text="&#x1F4C4;" FontSize="15" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="{x:Static u:IkonMenu.Berkas}" FontSize="15" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="Formulir tersedia" Style="{StaticResource KpiLabel}"/>
@@ -188,8 +188,8 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Margin="0,0,10,0">
-                                <TextBlock Text="&#x2713;" FontSize="15" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" Foreground="{DynamicResource AccentTextBrush}"/>
+                                <TextBlock Text="{x:Static u:IkonMenu.Verifikasi}" FontSize="15" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" Foreground="{DynamicResource AccentTextBrush}" FontFamily="{StaticResource AppIconFont}"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="Pilihan Anda" Style="{StaticResource KpiLabel}"/>
@@ -206,8 +206,8 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Margin="0,0,10,0">
-                                <TextBlock Text="&#x2601;" FontSize="15" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="{x:Static u:IkonMenu.Awan}" FontSize="15" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="Cadangan Google Drive" Style="{StaticResource KpiLabel}"/>
@@ -290,8 +290,8 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Border Grid.Column="0" Style="{StaticResource KpiIconChip}" Margin="0,0,10,0">
-                                    <TextBlock Text="&#x1F3DB;" FontSize="15" HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="{x:Static u:IkonMenu.Peraturan}" FontSize="15" HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                                 </Border>
 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -413,8 +413,8 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="&#x26A0;" FontSize="20" Margin="0,0,10,0"
-                                   VerticalAlignment="Top" Foreground="{DynamicResource WarningTextBrush}"/>
+                        <TextBlock Grid.Column="0" Text="{x:Static u:IkonMenu.Peringatan}" FontSize="20" Margin="0,0,10,0"
+                                   VerticalAlignment="Top" Foreground="{DynamicResource WarningTextBrush}" FontFamily="{StaticResource AppIconFont}"/>
 
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="Formulir belum lengkap" FontWeight="SemiBold" TextWrapping="Wrap"
@@ -457,11 +457,13 @@
                         <TextBlock Grid.Column="0" FontSize="15" Margin="0,0,10,0" VerticalAlignment="Top">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="&#x2714;"/>
+                                    <Setter Property="Text" Value="{x:Static u:IkonMenu.Verifikasi}"/>
+                                    <Setter Property="FontFamily" Value="{StaticResource AppIconFont}"/>
                                     <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding HasilUnduhanBerhasil}" Value="False">
-                                            <Setter Property="Text" Value="&#x2715;"/>
+                                            <Setter Property="Text" Value="{x:Static u:IkonMenu.Keluar}"/>
+                                            <Setter Property="FontFamily" Value="{StaticResource AppIconFont}"/>
                                             <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -488,12 +490,12 @@
                             </ItemsControl>
                         </StackPanel>
 
-                        <Button Grid.Column="2" Content="&#x2715;" Command="{Binding TutupHasilUnduhanCommand}"
+                        <Button Grid.Column="2" Content="{x:Static u:IkonMenu.Keluar}" Command="{Binding TutupHasilUnduhanCommand}"
                                 Width="26" Height="26" VerticalAlignment="Top" BorderThickness="0"
                                 FontSize="13" Cursor="Hand" ToolTip="Tutup ringkasan ini"
                                 Background="Transparent"
                                 Foreground="{DynamicResource TextSecondaryBrush}"
-                                AutomationProperties.Name="Tutup ringkasan unduhan"/>
+                                AutomationProperties.Name="Tutup ringkasan unduhan" FontFamily="{StaticResource AppIconFont}"/>
                     </Grid>
                 </Border>
 
@@ -644,7 +646,9 @@
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                 CornerRadius="8" Padding="12" Margin="0,0,0,12">
                             <StackPanel>
-                                <TextBlock Text="&#x1F310;  Sumber Menurut Kabupaten" Style="{StaticResource InformasiJudul}"/>
+                                <TextBlock Style="{StaticResource InformasiJudul}">
+                                    <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Dunia}"/><Run Text=" Sumber Menurut Kabupaten"/>
+                                </TextBlock>
                                 <TextBlock Style="{StaticResource InformasiIsi}"
                                            Text="{Binding KeteranganSumber, Mode=OneWay}"/>
                                 <TextBlock Style="{StaticResource InformasiIsi}" FontSize="11"
@@ -669,7 +673,9 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                <TextBlock Text="&#x1F4C4;  Folder Templates" Style="{StaticResource InformasiJudul}"/>
+                                <TextBlock Style="{StaticResource InformasiJudul}">
+                                    <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Berkas}"/><Run Text=" Folder Templates"/>
+                                </TextBlock>
                                 <TextBlock Style="{StaticResource InformasiIsi}"
                                            Text="Setiap berkas PDF di folder Templates menjadi satu formulir pada menu Formulir. Nama berkas digunakan sebagai nama formulir — ganti nama berkas jika ingin nama yang lebih rapi."/>
                                 <TextBlock Style="{StaticResource InformasiIsi}" FontSize="13" FontWeight="SemiBold"
@@ -679,13 +685,17 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                                <TextBlock Text="&#x2601;  Cadangan Google Drive" Style="{StaticResource InformasiJudul}"/>
+                                <TextBlock Style="{StaticResource InformasiJudul}">
+                                    <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Awan}"/><Run Text=" Cadangan Google Drive"/>
+                                </TextBlock>
                                 <TextBlock Style="{StaticResource InformasiIsi}"
                                            Text="{Binding KeteranganCadanganDrive, Mode=OneWay}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="&#x1F6E1;  Keamanan Data" Style="{StaticResource InformasiJudul}"/>
+                                <TextBlock Style="{StaticResource InformasiJudul}">
+                                    <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Perisai}"/><Run Text=" Keamanan Data"/>
+                                </TextBlock>
                                 <TextBlock Style="{StaticResource InformasiIsi}"
                                            Text="Halaman ini hanya mengelola berkas formulir. Database surat, template surat, dan pengaturan desa tidak pernah diubah oleh operasi tambah, unduh, maupun hapus formulir. Sebelum berkas dihapus, aplikasi selalu meminta konfirmasi terlebih dahulu."/>
                             </StackPanel>

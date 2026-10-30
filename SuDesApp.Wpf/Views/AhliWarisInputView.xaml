@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.AhliWarisInputView"
+<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.AhliWarisInputView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -117,7 +117,7 @@
                             <TextBlock Grid.Row="7" Grid.Column="0" Text="Tanggal Kematian *" Style="{StaticResource FormLabel}"/>
                             <TextBox Grid.Row="7" Grid.Column="1" Style="{StaticResource FormField}"
                                      Text="{Binding TanggalKematian, UpdateSourceTrigger=LostFocus}"
-                                     ToolTip="Format: DD-MM-YYYY"/>
+                                     ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                             <TextBlock Grid.Row="8" Grid.Column="0" Text="Hari Kematian" Style="{StaticResource FormLabel}"/>
                             <TextBox Grid.Row="8" Grid.Column="1" Style="{StaticResource FormField}"
@@ -163,7 +163,7 @@
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="Tgl. Lahir" Style="{StaticResource FormLabel}"/>
                             <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
                                      Text="{Binding TanggalLahirPasangan, UpdateSourceTrigger=LostFocus}"
-                                     ToolTip="Format: DD-MM-YYYY"/>
+                                     ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                             <TextBlock Grid.Row="3" Grid.Column="0" Text="Jenis Kelamin" Style="{StaticResource FormLabel}"/>
                             <ComboBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormCombo}"
@@ -255,7 +255,14 @@
                             <DataGridTextColumn Header="Tempat Lahir" Width="0.8*" MinWidth="90"
                                                 Binding="{Binding TempatLahir, UpdateSourceTrigger=PropertyChanged}"/>
                             <DataGridTextColumn Header="Tgl Lahir" Width="0.8*" MinWidth="85"
-                                                Binding="{Binding TanggalLahir, UpdateSourceTrigger=PropertyChanged}"/>
+                                                Binding="{Binding TanggalLahir, UpdateSourceTrigger=PropertyChanged}">
+                                <!-- Sel yang sedang disunting juga menyusun tanda hubung sendiri. -->
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="u:TanggalIsianOtomatis.Aktif" Value="True"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
                             <DataGridTemplateColumn Header="Jenis Kelamin" Width="0.9*" MinWidth="95">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -327,7 +334,7 @@
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Tgl. Lahir" Style="{StaticResource FormLabel}"/>
                         <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding TanggalLahirPenerimaKuasa, UpdateSourceTrigger=LostFocus}"
-                                 ToolTip="Format: DD-MM-YYYY"/>
+                                 ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Jenis Kelamin" Style="{StaticResource FormLabel}"/>
                         <ComboBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormCombo}"

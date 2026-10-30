@@ -1,8 +1,16 @@
 <UserControl x:Class="SuDesApp.Wpf.Views.GoogleDriveView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
+             xmlns:local="clr-namespace:SuDesApp.Wpf.Views"
+             xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
              xmlns:vm="clr-namespace:SuDesApp.Wpf.ViewModels"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <UserControl.Resources>
+        <!-- Isi tabel disembunyikan saat kartu keadaan tampil. -->
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+    </UserControl.Resources>
+
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -62,7 +70,8 @@
              memicu loop layout (stack overflow), tinggi tetap memotong teks.
              Kepala kolom ada di dalam ScrollViewer yang sama sehingga selalu
              sejajar dengan baris. -->
-        <Border Grid.Row="3" Style="{StaticResource GridHostCard}">
+        <Border Grid.Row="3" Style="{StaticResource GridHostCard}"
+                Visibility="{Binding TampilkanKartuKeadaan, Converter={StaticResource InverseBoolToVis}}">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
@@ -144,6 +153,25 @@
                     </ListBox>
                 </StackPanel>
             </ScrollViewer>
+        </Border>
+
+        <!-- KEADAAN KOSONG — daftar gagal dimuat, belum tersambung, ATAU folder
+             memang kosong. Dulu kegagalan hanya meninggalkan kepala kolom dan
+             kotak kosong, sehingga halaman terbaca seolah folder tidak berisi apa pun. -->
+        <Border Grid.Row="3" Style="{StaticResource FormCard}" Padding="24,22" VerticalAlignment="Top"
+                Visibility="{Binding TampilkanKartuKeadaan, Converter={StaticResource BoolToVis}}"
+                AutomationProperties.Name="Keadaan daftar Google Drive">
+            <c:EmptyStateView Ikon="{x:Static u:IkonMenu.Folder}"
+                              Judul="{Binding JudulKeadaan}"
+                              Pesan="{Binding SebabKeadaan}"
+                              Petunjuk="{Binding PetunjukKeadaan}">
+                <c:EmptyStateView.Aksi>
+                    <Button Content="Segarkan daftar"
+                            Command="{Binding RefreshCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            ToolTip="Baca ulang isi folder Google Drive"/>
+                </c:EmptyStateView.Aksi>
+            </c:EmptyStateView>
         </Border>
 
         <!-- Status -->

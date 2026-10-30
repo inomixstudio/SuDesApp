@@ -283,7 +283,11 @@ namespace SuDesApp.GeneratorPdf
             {
                 var desa = suratData.Desa;
                 string logoPath = CariLogoPath();
-                halaman.Blok(c => KopSurat.Gambar(c, desa, logoPath));
+                float jarakJudul = KerapatanSurat.Aktif.JarakKopJudul;
+
+                // Jarak napas antara garis ganda kop dan judul surat. Tanpa ini
+                // judul menempel di garis (sisa ±3 pt) dan terlihat sesak.
+                halaman.Blok(c => KopSurat.Gambar(c.PaddingBottom(jarakJudul), desa, logoPath));
             }
 
             ComposeJudul(halaman, suratData);

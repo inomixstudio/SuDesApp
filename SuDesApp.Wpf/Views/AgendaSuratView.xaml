@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.AgendaSuratView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.AgendaSuratView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -105,8 +105,8 @@
                     </StackPanel>
                     <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
                             Background="{DynamicResource SuccessSubtleBrush}" VerticalAlignment="Center">
-                        <TextBlock Text="▤" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource SuccessTextBrush}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Pratinjau}" FontSize="20" Foreground="{DynamicResource SuccessTextBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                 </Grid>
             </Border>
@@ -182,7 +182,7 @@
                                 ToolTip="Bersihkan pencarian" Visibility="Collapsed"
                                 Background="Transparent" BorderThickness="0" Padding="0"
                                 Foreground="{DynamicResource TextSecondaryBrush}">
-                            <TextBlock Text="✕" FontSize="13" FontWeight="Bold"/>
+                            <TextBlock Text="{x:Static u:IkonMenu.Keluar}" FontSize="13" FontFamily="{StaticResource AppIconFont}"/>
                         </Button>
                     </Grid>
                 </Border>

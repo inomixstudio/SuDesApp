@@ -1,7 +1,7 @@
-using Dapper;
+﻿using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
-using OfficeOpenXml;
+using SudesExPlus;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
 using System;
@@ -82,8 +82,6 @@ namespace SuDesApp.Data.Repositories
         /// <summary>Inisialisasi tabel + impor legacy hanya sekali per proses.</summary>
         private static bool _initialized;
         private static readonly SemaphoreSlim _initLock = new(1, 1);
-
-        static ArsipSuratRepository() => ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
 
         public ArsipSuratRepository(
             SqliteConnection connection,

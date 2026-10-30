@@ -72,6 +72,7 @@ namespace SuDesApp.Wpf.ViewModels
             ResetSandiCommand = new AsyncRelayCommand(ResetSandiAsync, () => !SedangSibuk && _terpilih != null && !_modeBaru);
             HapusCommand = new AsyncRelayCommand(HapusAsync, () => !SedangSibuk && _terpilih != null && !_modeBaru);
             BersihkanCariCommand = new RelayCommand(() => CariTeks = string.Empty);
+            MuatUlangCommand = new AsyncRelayCommand(MuatAsync);
             BukaPanelSandiCommand = new RelayCommand(BukaPanelSandi);
             TutupPanelSandiCommand = new RelayCommand(() => IsPanelSandiTerbuka = false);
             SimpanSandiCommand = new AsyncRelayCommand(SimpanSandiAsync);
@@ -170,6 +171,57 @@ namespace SuDesApp.Wpf.ViewModels
         public bool AdaCatatanAkunSaya => !string.IsNullOrEmpty(AkunSayaCatatan);
 
         public ObservableCollection<Pengguna> Daftar { get; } = new();
+
+        // ===================== Keadaan pemuatan =====================
+
+        private string _galatMuat = string.Empty;
+
+        /// <summary>
+        /// Sebab daftar akun terakhir gagal dimuat; kosong bila berhasil. Dipisah
+        /// dari <see cref="Pesan"/> karena Pesan dipakai untuk hasil tindakan
+        /// (simpan/reset/hapus) yang tampil di form, bukan di daftar.
+        /// </summary>
+        public string GalatMuatDaftar
+        {
+            get => _galatMuat;
+            private set
+            {
+                if (SetProperty(ref _galatMuat, value))
+                {
+                    OnPropertyChanged(nameof(AdaGalatMuatDaftar));
+                    OnPropertyChanged(nameof(TampilkanKartuKeadaan));
+                    OnPropertyChanged(nameof(JudulKeadaan));
+                    OnPropertyChanged(nameof(SebabKeadaan));
+                }
+            }
+        }
+
+        public bool AdaGalatMuatDaftar => _galatMuat.Length > 0;
+
+        /// <summary>
+        /// Tidak ada satu akun pun untuk ditampilkan: database gagal dibaca atau
+        /// memang kosong. Tempat daftar digantikan satu kartu keadaan — tanpa ini
+        /// kegagalan hanya menyisakan kotak daftar kosong tanpa penjelasan.
+        /// </summary>
+        public bool TampilkanKartuKeadaan => BolehAkses && _semua.Count == 0;
+
+        /// <summary>Judul kartu keadaan — membedakan "gagal dimuat" dan "belum ada akun".</summary>
+        public string JudulKeadaan => AdaGalatMuatDaftar
+            ? "Daftar akun belum bisa dimuat"
+            : "Belum ada akun terdaftar";
+
+        /// <summary>Sebab kegagalan dari basis data, atau penjelasan keadaan kosong.</summary>
+        public string SebabKeadaan => AdaGalatMuatDaftar
+            ? _galatMuat
+            : "Basis data tidak memuat satu akun pun. Ini tidak biasa: akun yang sedang Anda pakai seharusnya ada di daftar.";
+
+        /// <summary>
+        /// Petunjuk lanjutan: menegaskan bahwa pemuatan hanya membaca data dan
+        /// menunjukkan di mana berkas basis datanya diperiksa.
+        /// </summary>
+        public string PetunjukKeadaan =>
+            "Pemuatan hanya membaca data — tidak ada akun yang diubah atau dihapus. "
+            + "Bila akun benar-benar hilang, periksa berkas basis data di Pengaturan Aplikasi atau pulihkan dari cadangan.";
 
         /// <summary>Saring daftar akun menurut nama tampilan, nama akun, atau peran.</summary>
         public string CariTeks
@@ -296,6 +348,9 @@ namespace SuDesApp.Wpf.ViewModels
         public ICommand SimpanCommand { get; }
         public ICommand ResetSandiCommand { get; }
         public ICommand HapusCommand { get; }
+
+        /// <summary>Muat ulang daftar akun — aksi pada kartu keadaan.</summary>
+        public ICommand MuatUlangCommand { get; }
 
         /// <summary>Kosongkan kotak pencarian daftar akun (tombol ✕ di kotak cari).</summary>
         public ICommand BersihkanCariCommand { get; }
@@ -471,12 +526,20 @@ namespace SuDesApp.Wpf.ViewModels
                 // Ringkasan dipasang di judul kartu daftar akun, bukan di baris status.
                 // Baris status hanya dipakai untuk hasil tindakan (simpan/reset/hapus).
                 RingkasanDaftar = $"{_semua.Count(p => p.Aktif)} aktif dari {_semua.Count} akun";
+                GalatMuatDaftar = string.Empty;
+                OnPropertyChanged(nameof(TampilkanKartuKeadaan));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Gagal memuat daftar pengguna");
                 Pesan = "Gagal memuat daftar akun: " + ex.Message;
                 AdaGalat = true;
+
+                // Sebabnya juga dibawa kartu keadaan di halaman, bukan hanya baris
+                // pesan di form, supaya daftar yang kosong tidak tampak seperti
+                // "tidak ada akun" padahal pembacaannya yang gagal.
+                GalatMuatDaftar = ex.Message;
+                OnPropertyChanged(nameof(TampilkanKartuKeadaan));
             }
         }
 
@@ -496,6 +559,7 @@ namespace SuDesApp.Wpf.ViewModels
             int? idTerpilih = _terpilih?.ID;
             Daftar.Clear();
             foreach (var akun in sumber) Daftar.Add(akun);
+            OnPropertyChanged(nameof(TampilkanKartuKeadaan));
 
             // Daftar dibangun ulang dari nol, jadi ListBox sempat kehilangan pilihannya
             // (dan tombol Reset/Hapus ikut mati). Kembalikan pilihan lama bila akunnya

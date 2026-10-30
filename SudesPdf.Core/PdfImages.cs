@@ -234,6 +234,7 @@ public static class PdfImages
         bool isMask = dict.GetBool("ImageMask") ?? false;
         var filters = PdfFilters.FiltersOf(dict);
         var encoding = PdfImageEncoding.Raw;
+        int ccittIndex = -1;
         if (filters.Length > 0)
         {
             string last = PdfFilters.Normalize(filters[^1]);
@@ -245,6 +246,11 @@ public static class PdfImages
                 "JBIG2Decode" => PdfImageEncoding.Jbig2,
                 _ => PdfImageEncoding.Raw
             };
+            // /DecodeParms faks beralamat pada posisi CCITT di rantai filter.
+            for (int i = 0; i < filters.Length; i++)
+            {
+                if (PdfFilters.Normalize(filters[i]) == "CCITTFaxDecode") ccittIndex = i;
+            }
         }
 
         // DecodeStream mendekripsi stream lalu menjalankan filter sebelum DCT/JPX,
@@ -257,6 +263,35 @@ public static class PdfImages
         catch (PdfException)
         {
             return null;
+        }
+
+        // JBIG2 belum mempunyai dekoder jelaga sendiri: lebih aman mengosongkan
+        // gambar daripada merawat data terkompresi sebagai sampel raw (halaman
+        // jadi hitam bengkok).
+        if (encoding == PdfImageEncoding.Jbig2)
+        {
+            return null;
+        }
+
+        bool sudahFax = false;
+        if (encoding == PdfImageEncoding.CcittFax)
+        {
+            var parms = PdfFilters.ParmsOf(dict, filters.Length);
+            var parm = ccittIndex >= 0 && ccittIndex < parms.Length ? parms[ccittIndex] : null;
+            int k = parm?.GetInt("K") ?? 0;
+            bool endOfLine = parm?.GetBool("EndOfLine") ?? false;
+            bool byteAligned = parm?.GetBool("EncodedByteAlign") ?? false;
+            bool blackIs1 = parm?.GetBool("BlackIs1") ?? false;
+            int kolom = (int)(parm?.GetNumber("Columns") ?? width);
+            int baris = (int)(parm?.GetNumber("Rows") ?? height);
+            var fax = PdfCcitt.Decode(data, kolom, baris, k, endOfLine, byteAligned, blackIs1);
+            if (fax is null) return null;
+
+            // Bitmap telah raster (bit 1 = putih) sehingga tidak ada lagi data
+            // terkompresi; sampelnya selalu 1 bit tiap piksel.
+            data = fax;
+            encoding = PdfImageEncoding.Raw;
+            sudahFax = true;
         }
 
         var colorSpace = PdfColorSpace.Resolve(dict.Raw("ColorSpace"), document);
@@ -298,7 +333,7 @@ public static class PdfImages
             }
         }
 
-        int bitsPerComponent = (int)(dict.GetNumber("BitsPerComponent") ?? (isMask ? 1 : 8));
+        int bitsPerComponent = sudahFax ? 1 : (int)(dict.GetNumber("BitsPerComponent") ?? (isMask ? 1 : 8));
         return new PdfImage
         {
             Width = width,

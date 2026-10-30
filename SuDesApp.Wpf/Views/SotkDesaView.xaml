@@ -86,7 +86,7 @@
                             <StackPanel Grid.Column="1" Margin="8,0,0,0">
                                 <TextBlock Text="Tanggal Perdes (dd-mm-yyyy)" Style="{StaticResource FormLabel}"/>
                                 <TextBox Style="{StaticResource FormField}"
-                                         Text="{Binding TanggalPerdes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                         Text="{Binding TanggalPerdes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" u:TanggalIsianOtomatis.Aktif="True" />
                             </StackPanel>
                         </Grid>
 

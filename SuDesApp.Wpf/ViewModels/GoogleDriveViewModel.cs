@@ -109,9 +109,60 @@ namespace SuDesApp.Wpf.ViewModels
                 if (SetProperty(ref _isBusy, value))
                 {
                     RaiseCanExecuteChanged();
+                    OnPropertyChanged(nameof(TampilkanKartuKeadaan));
                 }
             }
         }
+
+        // ===================== Keadaan pemuatan =====================
+
+        private string _galatMuat = string.Empty;
+
+        /// <summary>
+        /// Sebab daftar berkas Drive terakhir gagal dimuat atau belum bisa
+        /// dihubungi (mis. kredensial OAuth belum ada); kosong bila berhasil.
+        /// </summary>
+        public string GalatMuat
+        {
+            get => _galatMuat;
+            private set
+            {
+                if (SetProperty(ref _galatMuat, value))
+                {
+                    OnPropertyChanged(nameof(AdaGalatMuat));
+                    OnPropertyChanged(nameof(TampilkanKartuKeadaan));
+                    OnPropertyChanged(nameof(JudulKeadaan));
+                    OnPropertyChanged(nameof(SebabKeadaan));
+                }
+            }
+        }
+
+        public bool AdaGalatMuat => _galatMuat.Length > 0;
+
+        /// <summary>
+        /// Daftar kosong dan tidak sedang memuat: tabel digantikan satu kartu
+        /// keadaan. Tanpa ini kegagalan login/pembacaan hanya meninggalkan kotak
+        /// daftar kosong dengan kepala kolom, seolah folder tidak berisi apa pun.
+        /// </summary>
+        public bool TampilkanKartuKeadaan => Items.Count == 0 && !IsBusy;
+
+        /// <summary>Judul kartu keadaan — membedakan gagal/belum tersambung dan folder kosong.</summary>
+        public string JudulKeadaan => AdaGalatMuat
+            ? "Daftar berkas Drive belum bisa dimuat"
+            : "Folder ini kosong";
+
+        /// <summary>Sebab kegagalan dari layanan Drive, atau penjelasan folder kosong.</summary>
+        public string SebabKeadaan => AdaGalatMuat
+            ? _galatMuat
+            : "Google Drive tidak memuat satu berkas pun di folder ini.";
+
+        /// <summary>
+        /// Petunjuk lanjutan: menegaskan bahwa halaman ini hanya membaca Drive dan
+        /// menunjukkan tempat mengatur kredensial bila penyebabnya login.
+        /// </summary>
+        public string PetunjukKeadaan =>
+            "Daftar hanya dibaca dari Drive — berkas tidak diubah atau dihapus oleh pemuatan ini. "
+            + "Bila akun Google belum terhubung, atur kredensialnya di Pengaturan Aplikasi → Kredensial Google, lalu tekan Segarkan.";
 
         public bool CanGoUp => _folderStack.Count > 0;
         public bool CanDownload => SelectedRow != null && !SelectedRow.IsFolder;
@@ -150,6 +201,7 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     StatusText = "Login Google belum dikonfigurasi.";
                     PathLabel = "Google Drive";
+                    GalatMuat = "Fitur Google Drive belum aktif: kredensial OAuth belum tersimpan di komputer ini.";
                     await _messageService.ShowInfoAsync(
                         "Fitur Google Drive belum aktif.\n\n" +
                         "Aplikasi perlu OAuth Client ID & Client Secret agar setiap pengguna login ke akun Google Drive miliknya sendiri (bukan akun bersama).\n\n" +
@@ -177,7 +229,7 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 _logger.LogError(ex, "Gagal menghubungkan Google Drive");
                 StatusText = "Belum terhubung.";
-                await _messageService.ShowErrorAsync($"Gagal menghubungkan Google Drive.\n\n{ex.Message}");
+                GalatMuat = ex.Message;
             }
             finally
             {
@@ -394,6 +446,9 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     Items.Add(new DriveItemRow(item));
                 }
+
+                GalatMuat = string.Empty;
+                OnPropertyChanged(nameof(TampilkanKartuKeadaan));
                 StatusText = Items.Count == 0 ? "Folder kosong." : $"{Items.Count} item.";
             }
             catch (OperationCanceledException)
@@ -404,7 +459,12 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 _logger.LogError(ex, "Gagal memuat folder Drive {FolderId}", folderId);
                 StatusText = $"Gagal memuat: {ex.Message}";
-                await _messageService.ShowErrorAsync($"Gagal memuat folder Google Drive.\n\n{ex.Message}");
+
+                // Sebabnya dibawa kartu keadaan yang tampil di tempat daftar
+                // (dengan tombol Segarkan), bukan dialog modal yang menutupi
+                // layar kosong lalu hilang tanpa jejak.
+                Items.Clear();
+                GalatMuat = ex.Message;
             }
             finally
             {

@@ -130,19 +130,25 @@ namespace SuDesApp.GeneratorPdf
                 // Landscape memuat banyak kolom → teks sedikit lebih kecil agar tidak berlipat.
                 page.DefaultTextStyle(x => x.FontFamily("Times New Roman").FontSize(Landscape ? 10 : 11));
 
-                // Kop + judul diletakkan di header agar tetap tampil di tiap halaman.
-                page.Header().Element(ComposeHeader);
+                // Kop + judul BUKAN header halaman: keduanya dicetak sekali di
+                // awal isi, sehingga hanya muncul di halaman pertama. Baris kepala
+                // tabel tetap berulang sendiri di setiap halaman (table.Header).
                 page.Content().Element(ComposeContent);
             });
         }
 
+        /// <summary>
+        /// Kepala dokumen (kop surat, judul, dan baris Hari/Pukul/Tempat).
+        /// Dicetak sekali di halaman pertama saja — bukan header halaman — supaya
+        /// halaman lanjutan langsung berisi tabel. Tanpa kop, judul diberi jarak
+        /// atas sendiri agar lembar tetap lega untuk cap/stempel manual.
+        /// </summary>
         void ComposeHeader(IContainer container)
         {
             container.Column(column =>
             {
                 // Kop surat hanya dicetak bila dipilih pengguna (ceklis
-                // "Tampilkan Kop Surat"). Tanpa kop, margin atas diperluas agar
-                // lembar tetap lega untuk cap/stempel manual.
+                // "Tampilkan Kop Surat").
                 if (_data.TampilkanKopSurat)
                 {
                     column.Item().Element(ComposeKopSurat);
@@ -208,9 +214,13 @@ namespace SuDesApp.GeneratorPdf
 
             container.AlignCenter().Text(text =>
             {
+                // Baris pertama memakai potongan yang sudah disediakan blok teks;
+                // baris berikutnya WAJIB lewat Line(), bukan Span() — Span
+                // menyambung ke baris yang sama sehingga judul dua baris dulu
+                // tercetak menempel ("DAFTAR HADIRRAPAT MUSYAWARAH DESA").
                 for (int i = 0; i < baris.Count; i++)
                 {
-                    var span = i < baris.Count - 1 ? text.Line(baris[i]) : text.Span(baris[i]);
+                    var span = i == 0 ? text.Span(baris[i]) : text.Line(baris[i]);
                     span.FontSize(15).SemiBold().Underline();
                 }
             });
@@ -250,6 +260,9 @@ namespace SuDesApp.GeneratorPdf
         {
             container.Column(column =>
             {
+                // Kop, judul, dan baris Hari/Pukul/Tempat hanya pada halaman pertama.
+                column.Item().Element(ComposeHeader);
+
                 column.Item().PaddingTop(12).Table(ComposeTable);
 
                 if (_data.TampilkanFooterKepalaDesa)
@@ -280,18 +293,20 @@ namespace SuDesApp.GeneratorPdf
                 // supaya nomor panjang tidak berlipat; di portrait porsi itu
                 // dikembalikan ke Nama/Alamat.
                 if (_data.TampilkanNo) columns.ConstantColumn(30);
-                if (_data.TampilkanNama) columns.RelativeColumn(Landscape ? 3.7f : 4f);
-                if (_data.TampilkanJenisKelamin) columns.RelativeColumn(1.4f);
-                if (_data.TampilkanJabatan) columns.RelativeColumn(Landscape ? 2.8f : 3f);
-                // NIP (18 digit) diberi porsi cukup agar tidak terbelah dua baris.
-                if (_data.TampilkanNip) columns.RelativeColumn(Landscape ? 3.2f : 2f);
-                if (_data.TampilkanNik) columns.RelativeColumn(Landscape ? 3f : 3f);
+                if (_data.TampilkanNama) columns.RelativeColumn(4f);
+                if (_data.TampilkanJenisKelamin) columns.RelativeColumn(Landscape ? 1.2f : 1.4f);
+                if (_data.TampilkanJabatan) columns.RelativeColumn(Landscape ? 2.5f : 3f);
+                // NIP (18 digit) dan NIK (16 digit) diberi porsi cukup agar angkanya
+                // muat satu baris tanpa terpotong di tepi sel.
+                if (_data.TampilkanNip) columns.RelativeColumn(Landscape ? 3.5f : 2f);
+                if (_data.TampilkanNik) columns.RelativeColumn(Landscape ? 3.1f : 3f);
                 // No. Handphone pakai lebar tetap seperlunya (cukup untuk nomor 14 digit
                 // dan judul kolomnya), tidak ikut melebar walau kolom lain dihidupkan.
                 if (_data.TampilkanNoHp) columns.ConstantColumn(88);
-                if (_data.TampilkanAlamat) columns.RelativeColumn(Landscape ? 2.8f : 3.4f);
-                if (_data.TampilkanKeterangan) columns.RelativeColumn(Landscape ? 2.1f : 2.4f);
-                if (_data.TampilkanTandaTangan) columns.RelativeColumn(Landscape ? 2.5f : 3f);
+                if (_data.TampilkanAlamat) columns.RelativeColumn(Landscape ? 3.1f : 3.4f);
+                // Cukup untuk judul "Keterangan" satu baris (tidak terpecah "Keterang/an").
+                if (_data.TampilkanKeterangan) columns.RelativeColumn(Landscape ? 2.3f : 2.4f);
+                if (_data.TampilkanTandaTangan) columns.RelativeColumn(Landscape ? 2.2f : 3f);
             });
 
             table.Header(header =>
@@ -404,22 +419,29 @@ namespace SuDesApp.GeneratorPdf
                 ? TanggalIndo(tanggalKaki)
                 : $"{namaDesa}, {TanggalIndo(tanggalKaki)}";
 
-            // Kolomnya menempel di sisi kanan halaman; isi bloknya rata tengah.
-            container.AlignRight().Width(260).Column(column =>
+            // Blok menempel di sisi KANAN halaman, isinya rata tengah. Dipakai
+            // baris (spacer + lebar tetap) dan bukan Width() pada kolom: pada mesin
+            // tata letak, lebar tetap sebuah kolom hanya dipakai saat mengukur,
+            // sehingga blok ini dulu tercetak di tengah halaman.
+            container.Row(row =>
             {
-                column.Item().AlignCenter().Text(tempatTanggal);
-                // Jabatan mengikuti lembaga: “LURAH …” pada kelurahan.
-                column.Item().AlignCenter().Text($"{KopSurat.KataPejabat(desa)} {(desa.NamaDesa ?? string.Empty).ToUpperInvariant()}".ToUpperInvariant());
-                column.Item().Height(Landscape ? 36 : 55);
-                column.Item().AlignCenter().Text((desa.KepalaDesa ?? "...........................").ToUpperInvariant()).Bold().Underline();
-                // NIP hanya untuk pejabat ASN kelurahan (Lurah).
-                string nipPejabat = KopSurat.IsKelurahan(desa)
-                    ? (desa.NipKepalaDesa ?? string.Empty).Trim()
-                    : string.Empty;
-                if (!string.IsNullOrWhiteSpace(nipPejabat))
+                row.RelativeItem();
+                row.ConstantItem(260).Column(column =>
                 {
-                    column.Item().AlignCenter().Text($"NIP {nipPejabat}");
-                }
+                    column.Item().AlignCenter().Text(tempatTanggal);
+                    // Jabatan mengikuti lembaga: “LURAH …” pada kelurahan.
+                    column.Item().AlignCenter().Text($"{KopSurat.KataPejabat(desa)} {(desa.NamaDesa ?? string.Empty).ToUpperInvariant()}".ToUpperInvariant());
+                    column.Item().Height(Landscape ? 30 : 55);
+                    column.Item().AlignCenter().Text((desa.KepalaDesa ?? "...........................").ToUpperInvariant()).Bold().Underline();
+                    // NIP hanya untuk pejabat ASN kelurahan (Lurah).
+                    string nipPejabat = KopSurat.IsKelurahan(desa)
+                        ? (desa.NipKepalaDesa ?? string.Empty).Trim()
+                        : string.Empty;
+                    if (!string.IsNullOrWhiteSpace(nipPejabat))
+                    {
+                        column.Item().AlignCenter().Text($"NIP {nipPejabat}");
+                    }
+                });
             });
         }
 

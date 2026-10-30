@@ -154,25 +154,32 @@ namespace SuDesApp.Wpf.ViewModels
         /// lalu tampilkan di halaman pratinjau — tanpa mencatat ke register dan tanpa
         /// memakai nomor surat, jadi aman dilihat berulang sebelum benar-benar disimpan.
         /// Ini hanya pratinjau; Simpan tetap wajib untuk mencatat permohonan.
+        ///
+        /// Isian yang belum lengkap TIDAK menghalangi pratinjau — sama seperti form
+        /// surat lain: selama PDF dibuat, <see cref="PratinjauIsian"/> mencetak kolom
+        /// kosong sebagai titik-titik sehingga kerangka surat tetap terbaca. Inilah
+        /// gunanya pratinjau: melihat bentuk surat sebelum mulai mengisi. Pemeriksaan
+        /// kelengkapan hanya berlaku pada Simpan (lihat <see cref="SaveAsync"/>).
         /// </summary>
         private async Task PratinjauAsync()
         {
             if (IsBusy) return;
 
-            if (!ValidateInputs(out DateTime periodeMulai, out DateTime periodeSelesai, out var error))
-            {
-                await _messageService.ShowWarningAsync(error);
-                return;
-            }
-
             IsBusy = true;
             try
             {
-                var data = CreateData(periodeMulai, periodeSelesai);
+                var data = CreateData(PeriodePratinjau());
                 _logger.LogInformation("Membuat pratinjau PDF Rekening Koran NomorSurat={NomorSurat}", data.NomorSurat);
 
                 using var memoryStream = new MemoryStream();
-                await _pdfGenerator.GeneratePdfAsync(memoryStream, data);
+                // Penanda pratinjau berlaku sampai PDF selesai dibuat: generator
+                // melewati pemeriksaan kelengkapan dan mencetak titik-titik pada
+                // kolom yang masih kosong.
+                using (PratinjauIsian.Pakai())
+                {
+                    await _pdfGenerator.GeneratePdfAsync(memoryStream, data);
+                }
+
                 var pdfBytes = memoryStream.ToArray();
                 if (pdfBytes.Length == 0)
                 {
@@ -185,8 +192,11 @@ namespace SuDesApp.Wpf.ViewModels
                 var path = Path.Combine(folder, $"Pratinjau_Rekening_Koran_{DateTime.Now:yyyyMMddHHmmss}.pdf");
                 await File.WriteAllBytesAsync(path, pdfBytes);
 
+                string judulNomor = string.IsNullOrWhiteSpace(data.NomorSurat)
+                    ? "(nomor surat belum ada)"
+                    : data.NomorSurat;
                 var preview = _previewFactory(
-                    $"Pratinjau Permohonan Rekening Koran — {data.NomorSurat}", path);
+                    $"Pratinjau Permohonan Rekening Koran — {judulNomor}", path);
                 _navigation.Navigate(preview);
             }
             catch (Exception ex)
@@ -358,24 +368,56 @@ namespace SuDesApp.Wpf.ViewModels
             return true;
         }
 
+        /// <summary>
+        /// Periode rekening untuk PRATINJAU: dibaca selonggar mungkin. Tanggal yang
+        /// belum terbaca dipakai apa adanya sebagai teks supaya pratinjau tetap
+        /// menampilkan apa yang sedang diketik, dan hanya bila keduanya kosong
+        /// dipakai tanggal hari ini.
+        /// </summary>
+        private string PeriodePratinjau()
+        {
+            bool mulaiTerbaca = TanggalIsian.Baca(TanggalMulai, "Periode Mulai", out DateTime? mulai, out _);
+            bool selesaiTerbaca = TanggalIsian.Baca(TanggalSelesai, "Periode Akhir", out DateTime? selesai, out _);
+
+            if (mulaiTerbaca && selesaiTerbaca && mulai.HasValue && selesai.HasValue)
+            {
+                return $"{TanggalIsian.KeTeks(mulai.Value)} s/d {TanggalIsian.KeTeks(selesai.Value)}";
+            }
+
+            string teksMulai = (TanggalMulai ?? string.Empty).Trim();
+            string teksSelesai = (TanggalSelesai ?? string.Empty).Trim();
+            if (teksMulai.Length == 0 && teksSelesai.Length == 0)
+            {
+                string hariIni = TanggalIsian.KeTeks(DateTime.Now);
+                return $"{hariIni} s/d {hariIni}";
+            }
+
+            return $"{teksMulai} s/d {teksSelesai}";
+        }
+
         private bool ValidateInputs(out DateTime periodeMulai, out DateTime periodeSelesai, out string error)
         {
             periodeMulai = default;
             periodeSelesai = default;
 
-            if (string.IsNullOrWhiteSpace(NomorSurat) ||
-                string.IsNullOrWhiteSpace(NamaKades) ||
-                string.IsNullOrWhiteSpace(Jabatan) ||
-                string.IsNullOrWhiteSpace(AlamatDusun) ||
-                string.IsNullOrWhiteSpace(AlamatDesa) ||
-                string.IsNullOrWhiteSpace(AlamatKecamatan) ||
-                string.IsNullOrWhiteSpace(AlamatKabupaten) ||
-                string.IsNullOrWhiteSpace(NamaRekening) ||
-                string.IsNullOrWhiteSpace(NomorRekening) ||
-                string.IsNullOrWhiteSpace(Bank) ||
-                string.IsNullOrWhiteSpace(KCP))
+            // Sebutkan kolom mana yang kurang: pesan "semua kolom wajib diisi"
+            // menyulitkan pengguna mencari kolom yang terlewat.
+            var kurang = new List<string>();
+            if (string.IsNullOrWhiteSpace(NomorSurat)) kurang.Add("Nomor Surat");
+            if (string.IsNullOrWhiteSpace(NamaKades)) kurang.Add("Nama Kepala Desa");
+            if (string.IsNullOrWhiteSpace(Jabatan)) kurang.Add("Jabatan");
+            if (string.IsNullOrWhiteSpace(AlamatDusun)) kurang.Add("Dusun/Jalan");
+            if (string.IsNullOrWhiteSpace(AlamatDesa)) kurang.Add("Desa");
+            if (string.IsNullOrWhiteSpace(AlamatKecamatan)) kurang.Add("Kecamatan");
+            if (string.IsNullOrWhiteSpace(AlamatKabupaten)) kurang.Add("Kabupaten");
+            if (string.IsNullOrWhiteSpace(NamaRekening)) kurang.Add("Nama Pemegang Rekening");
+            if (string.IsNullOrWhiteSpace(NomorRekening)) kurang.Add("Nomor Rekening");
+            if (string.IsNullOrWhiteSpace(Bank)) kurang.Add("Bank");
+            if (string.IsNullOrWhiteSpace(KCP)) kurang.Add("KCP");
+
+            if (kurang.Count > 0)
             {
-                error = "Semua kolom wajib diisi!";
+                error = "Kolom berikut harus diisi: " + string.Join(", ", kurang) + ".";
                 return false;
             }
 
@@ -411,7 +453,7 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        private RekeningKoranData CreateData(DateTime periodeMulai, DateTime periodeSelesai)
+        private RekeningKoranData CreateData(string periodeRekening)
         {
             return new RekeningKoranData
             {
@@ -432,7 +474,7 @@ namespace SuDesApp.Wpf.ViewModels
 
                 NamaPemegangRekening = NamaRekening,
                 NomorRekening = NomorRekening,
-                PeriodeRekening = $"{TanggalIsian.KeTeks(periodeMulai)} s/d {TanggalIsian.KeTeks(periodeSelesai)}",
+                PeriodeRekening = periodeRekening,
                 Bank = Bank,
                 KCP = KCP,
 
@@ -476,7 +518,8 @@ namespace SuDesApp.Wpf.ViewModels
             IsBusy = true;
             try
             {
-                var data = CreateData(periodeMulai, periodeSelesai);
+                var data = CreateData(
+                    $"{TanggalIsian.KeTeks(periodeMulai)} s/d {TanggalIsian.KeTeks(periodeSelesai)}");
                 _logger.LogInformation("Membuat PDF Rekening Koran NomorSurat={NomorSurat}", data.NomorSurat);
 
                 using var memoryStream = new MemoryStream();

@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.BedaNamaInputView"
+<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.BedaNamaInputView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -70,7 +70,7 @@
 
                             <TextBlock Grid.Row="4" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
                             <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormField}"
-                                     Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}" ToolTip="Format: DD-MM-YYYY"/>
+                                     Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}" ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                             <TextBlock Grid.Row="5" Grid.Column="0" Text="Jenis Kelamin *" Style="{StaticResource FormLabel}"/>
                             <ComboBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormCombo}"
@@ -182,7 +182,7 @@
 
                             <TextBlock Grid.Row="4" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
                             <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormField}"
-                                     Text="{Binding TanggalLahir2, UpdateSourceTrigger=LostFocus}" ToolTip="Format: DD-MM-YYYY"/>
+                                     Text="{Binding TanggalLahir2, UpdateSourceTrigger=LostFocus}" ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                             <TextBlock Grid.Row="5" Grid.Column="0" Text="Jenis Kelamin *" Style="{StaticResource FormLabel}"/>
                             <ComboBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormCombo}"

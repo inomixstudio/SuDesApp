@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -7,8 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
+using SudesExPlus;
+using SudesExPlus.Style;
 using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
@@ -130,7 +130,6 @@ namespace SuDesApp.Services
 
         internal static byte[] RenderExcel(RegisterTahunanData data)
         {
-            ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
 
             using var package = new ExcelPackage();
             TulisRingkasan(package, data);

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="SuDesApp.Wpf.Views.InputKeputusanView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.InputKeputusanView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
@@ -60,7 +60,7 @@
                                 <TextBox Style="{StaticResource FormField}"
                                          Text="{Binding Tanggal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          AutomationProperties.Name="Tanggal Keputusan"
-                                         ToolTip="Format DD-MM-YYYY, misal 15-08-2026"/>
+                                         ToolTip="Format DD-MM-YYYY, misal 15-08-2026" u:TanggalIsianOtomatis.Aktif="True" />
                                 <TextBlock Text="Format: DD-MM-YYYY (mis. 15-08-2026)" FontSize="11" Margin="0,0,0,4"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>

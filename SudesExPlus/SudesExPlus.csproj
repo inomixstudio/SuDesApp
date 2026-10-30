@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SudesExPlus</RootNamespace>
+    <AssemblyName>SudesExPlus</AssemblyName>
+    <!--
+      SudesExPlus adalah pustaka Excel (.xlsx) milik aplikasi sendiri:
+      pengganti EPPlus tanpa paket pihak ketiga dan tanpa permintaan lisensi
+      komersial. Yang diimplementasikan hanya bagian yang dipakai SuDesApp —
+      tulis dan baca workbook, gaya sel (font, isian, garis, perataan, format
+      angka), gabung sel, lebar kolom, tinggi baris, dan bekukan panel — tetapi
+      berkas yang dihasilkan tetap .xlsx standar (OOXML) sehingga bisa dibuka
+      Excel, LibreOffice, dan WPS.
+    -->
+  </PropertyGroup>
+</Project>

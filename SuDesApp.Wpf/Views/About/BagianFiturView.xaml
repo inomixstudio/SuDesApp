@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.About.BagianFiturView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.About.BagianFiturView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
@@ -86,9 +86,9 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="&#x2713;" FontSize="13" FontWeight="Bold"
+                                                <TextBlock Grid.Column="0" Text="{x:Static u:IkonMenu.Verifikasi}" FontSize="13"
                                                            Foreground="{DynamicResource AccentTextBrush}"
-                                                           VerticalAlignment="Top" Margin="0,1,9,0"/>
+                                                           VerticalAlignment="Top" Margin="0,1,9,0" FontFamily="{StaticResource AppIconFont}"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
                                                            Foreground="{DynamicResource TextSecondaryBrush}" LineHeight="20"/>
                                             </Grid>

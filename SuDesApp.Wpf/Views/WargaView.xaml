@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.WargaView"
+﻿<UserControl x:Class="SuDesApp.Wpf.Views.WargaView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -132,9 +132,9 @@
                             <ColumnDefinition Width="28"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="🔍" FontSize="13" VerticalAlignment="Center"
+                        <TextBlock Grid.Column="0" Text="{x:Static u:IkonMenu.Cari}" FontSize="13" VerticalAlignment="Center"
                                    HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                   Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource AppIconFont}"/>
                         <TextBox x:Name="SearchBox" Grid.Column="1"
                                  Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  VerticalContentAlignment="Center"
@@ -642,9 +642,9 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="⚠️" FontSize="15" Margin="0,0,10,0"
+                            <TextBlock Grid.Column="0" Text="{x:Static u:IkonMenu.Peringatan}" FontSize="15" Margin="0,0,10,0"
                                        VerticalAlignment="Top"
-                                       Foreground="{DynamicResource ErrorTextBrush}"/>
+                                       Foreground="{DynamicResource ErrorTextBrush}" FontFamily="{StaticResource AppIconFont}"/>
                             <TextBlock Grid.Column="1" Text="{Binding FormGalat}" TextWrapping="Wrap"
                                        FontSize="13" Foreground="{DynamicResource ErrorTextBrush}"/>
                         </Grid>

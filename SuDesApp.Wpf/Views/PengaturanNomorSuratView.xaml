@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.PengaturanNomorSuratView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.PengaturanNomorSuratView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
@@ -116,7 +116,7 @@
         <Border Grid.Row="0" Style="{StaticResource PageHeader}">
             <DockPanel>
                 <Border Style="{StaticResource HeaderIconChip}" DockPanel.Dock="Left">
-                    <TextBlock Text="&#xE8F1;" FontFamily="{StaticResource AppIconFont}" FontSize="20"
+                    <TextBlock Text="{x:Static u:IkonMenu.Dokumen}" FontFamily="{StaticResource AppIconFont}" FontSize="20"
                                Foreground="{DynamicResource PrimaryBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
@@ -140,7 +140,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE8F1;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="{x:Static u:IkonMenu.Blanko}" FontFamily="{StaticResource AppIconFont}"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Format Nomor per Jenis Surat" Margin="10,0,0,0"/>
                             </DockPanel>

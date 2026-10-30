@@ -130,4 +130,150 @@ public sealed class TataLetakHalamanTests
         if (mulai >= 0) pusat.Add((mulai + tinggi - 1) / 2.0);
         return pusat.ToArray();
     }
+
+    // ===== Tabel penuh halaman + blok tanda tangan (ShowEntire) =====
+
+    private const float MarginUji = 50f;
+    private static readonly PageSize KertasUji = PageSizes.A4;
+
+    [Fact]
+    public async Task BlokTandaTanganSesudahTabelPenuhPindahHalamanTidakTerpotong()
+    {
+        byte[] pdf = BuatTabelDanBlokTandaTangan();
+
+        await using var dokumen = await SudesPdf.Document.LoadAsync(pdf);
+
+        // Seluruh isi tabel tetap ada, dan blok tanda tangan utuh di SATU halaman.
+        var teks = new StringBuilder();
+        for (int nomor = 0; nomor < dokumen.PageCount; nomor++)
+        {
+            teks.AppendLine(await dokumen.GetTextAsync(nomor));
+        }
+
+        Assert.Contains("PESERTA 30", teks.ToString(), StringComparison.Ordinal);
+        Assert.Contains("KEPALA DESA", teks.ToString(), StringComparison.Ordinal);
+
+        // Baris kota, jabatan, DAN nama pejabat harus berada di halaman yang sama:
+        // dulu blok ini mulai di sisa ruang beberapa titik di tepi bawah kertas,
+        // sehingga dua barisnya tercetak lalu sisanya terpotong hilang.
+        int halamanBlok = -1;
+        for (int nomor = 0; nomor < dokumen.PageCount; nomor++)
+        {
+            string isi = await dokumen.GetTextAsync(nomor);
+            if (!isi.Contains("KEPALA DESA", StringComparison.Ordinal)) continue;
+
+            Assert.Equal(-1, halamanBlok);
+            halamanBlok = nomor;
+            Assert.Contains("NAMA PEJABAT", isi, StringComparison.Ordinal);
+            Assert.Contains("Sukamaju,", isi, StringComparison.Ordinal);
+        }
+
+        Assert.True(halamanBlok > 0,
+            "Blok tanda tangan seharusnya pindah ke halaman berikutnya, bukan menempel di bawah tabel.");
+
+        // Tidak ada tinta yang jatuh ke dalam margin bawah (atau lewat tepi kertas).
+        double batasBawah = KertasUji.Height - MarginUji + 1.0;
+        for (int nomor = 0; nomor < dokumen.PageCount; nomor++)
+        {
+            double[] pita = await Pita(dokumen, nomor);
+            Assert.NotEmpty(pita);
+            Assert.True(pita[^1] <= batasBawah,
+                $"Halaman {nomor + 1}: ada tinta di y={pita[^1]:F1}, melewati batas cetak {batasBawah:F1}.");
+        }
+    }
+
+    private static byte[] BuatTabelDanBlokTandaTangan()
+    {
+        var dokumen = Document.Create(container =>
+        {
+            container.Page(halaman =>
+            {
+                halaman.Size(KertasUji);
+                halaman.Margin(MarginUji);
+                halaman.DefaultTextStyle(x => x.FontSize(11));
+                halaman.Content().Column(kolom =>
+                {
+                    kolom.Item().Table(tabel =>
+                    {
+                        tabel.ColumnsDefinition(k =>
+                        {
+                            k.ConstantColumn(30);
+                            k.RelativeColumn(3);
+                        });
+
+                        tabel.Header(kepala =>
+                        {
+                            kepala.Cell().Border(1).Padding(4).Text("NO");
+                            kepala.Cell().Border(1).Padding(4).Text("NAMA");
+                        });
+
+                        // 30 baris setinggi 46 pt: tabel berlanjut ke halaman kedua dan
+                        // justru DI SANA menghabiskan hampir seluruh area cetak,
+                        // menyisakan beberapa titik saja di bawahnya.
+                        for (int i = 1; i <= 30; i++)
+                        {
+                            tabel.Cell().Border(1).MinHeight(46).Padding(4).Text(i.ToString());
+                            tabel.Cell().Border(1).MinHeight(46).Padding(4).Text($"PESERTA {i}");
+                        }
+                    });
+
+                    kolom.Item().PaddingTop(12).ShowEntire().Column(blok =>
+                    {
+                        blok.Item().AlignCenter().Text("Sukamaju, 30 Oktober 2026");
+                        blok.Item().AlignCenter().Text("KEPALA DESA");
+                        blok.Item().Height(40);
+                        blok.Item().AlignCenter().Text("NAMA PEJABAT").Bold().Underline();
+                    });
+                });
+            });
+        });
+
+        using var aliran = new MemoryStream();
+        dokumen.GeneratePdf(aliran);
+        return aliran.ToArray();
+    }
+
+    // ===== Pemisah halaman (PageBreak) =====
+
+    /// <summary>
+    /// <c>PageBreak()</c> harus benar-benar memulai lembar baru. Dulu sisa isi
+    /// sesudahnya ditaruh di sisa ruang halaman yang sama, sehingga judul lampiran
+    /// (mis. “LAMPIRAN” pada Perdes SOTK) menempel di bawah blok tanda tangan.
+    /// </summary>
+    [Fact]
+    public async Task PemisahHalamanMemindahkanIsiBerikutnyaKeLembarBaru()
+    {
+        var dokumen = Document.Create(container =>
+        {
+            container.Page(halaman =>
+            {
+                halaman.Size(PageSizes.A4);
+                halaman.Margin(36);
+                halaman.Content().Column(kolom =>
+                {
+                    kolom.Item().Text("SEBELUM PEMISAH");
+                    kolom.Item().PageBreak();
+                    kolom.Item().Text("SESUDAH PEMISAH");
+                });
+            });
+        });
+
+        using var aliran = new MemoryStream();
+        dokumen.GeneratePdf(aliran);
+
+        await using var hasil = await SudesPdf.Document.LoadAsync(aliran.ToArray());
+        Assert.Equal(2, hasil.PageCount);
+
+        string pertama = await hasil.GetTextAsync(0);
+        string kedua = await hasil.GetTextAsync(1);
+        Assert.Contains("SEBELUM PEMISAH", pertama, StringComparison.Ordinal);
+        Assert.DoesNotContain("SESUDAH PEMISAH", pertama, StringComparison.Ordinal);
+        Assert.Contains("SESUDAH PEMISAH", kedua, StringComparison.Ordinal);
+
+        // Halaman kedua dimulai dari tepi atas area cetak, bukan di tengah kertas.
+        double[] pita = await Pita(hasil, 1);
+        Assert.NotEmpty(pita);
+        Assert.True(pita[0] <= 60,
+            $"Isi sesudah pemisah tercetak di y={pita[0]:F1} — bukan di awal halaman baru.");
+    }
 }

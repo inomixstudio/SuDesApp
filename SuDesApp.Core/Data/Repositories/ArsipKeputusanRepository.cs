@@ -1,7 +1,7 @@
-using Dapper;
+﻿using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
-using OfficeOpenXml;
+using SudesExPlus;
 using SuDesApp.Data.Models;
 using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
@@ -307,8 +307,6 @@ namespace SuDesApp.Data.Repositories
         // =====================================================================
         // Pembacaan Excel legacy (sumber impor)
         // =====================================================================
-
-        static ArsipKeputusanRepository() => ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
 
         private List<object> ReadLegacyExcel(string excelPath)
         {

@@ -86,6 +86,27 @@ internal static class TextLayout
         {
             var current = new LaidOutLine();
             float x = barisPertama ? indent : 0f;
+
+            // Tambahkan satu potongan kata ke baris berjalan (dipakai baik untuk
+            // kata utuh maupun untuk pecahan kata yang terlalu panjang).
+            void TambahBagian(string bagian, bool spasi, (PdfTimesFace Face, float Size, bool Underline, PdfRgb Color, float LineHeightFactor) gaya)
+            {
+                float lebarBagian = TextMeasure(bagian, gaya);
+                current.Parts.Add(new LaidOutPart
+                {
+                    Text = bagian,
+                    X = x,
+                    Width = lebarBagian,
+                    Face = gaya.Face,
+                    Size = gaya.Size,
+                    Underline = gaya.Underline,
+                    Color = gaya.Color,
+                    IsSpace = spasi,
+                    LineHeightFactor = gaya.LineHeightFactor,
+                });
+                if (spasi) current.Spaces++;
+                x += lebarBagian;
+            }
             // x sudah menyertakan indentasi paragraf; lebar tetap dihitung dari
             // tepi kanan kotak agar ruang baris pertama tidak terpotong dua kali.
             float lebarTersedia = Math.Max(1f, maxWidth);
@@ -120,20 +141,37 @@ internal static class TextLayout
                         x = 0f;
                     }
 
-                    current.Parts.Add(new LaidOutPart
+                    // Satu kata yang sendirian lebih lebar dari kotak — mis. NIK 16
+                    // digit atau nomor rekening pada kolom sempit — dipecah per
+                    // karakter. Tanpa ini teksnya menembus bingkai dan menimpa sel
+                    // sebelahnya, bukan turun ke baris berikut di dalam sel.
+                    if (!token.Space && x + lebarToken > lebarTersedia + 0.001f)
                     {
-                        Text = token.Text,
-                        X = x,
-                        Width = lebarToken,
-                        Face = style.Face,
-                        Size = style.Size,
-                        Underline = style.Underline,
-                        Color = style.Color,
-                        IsSpace = token.Space,
-                        LineHeightFactor = style.LineHeightFactor,
-                    });
-                    if (token.Space) current.Spaces++;
-                    x += lebarToken;
+                        string sisa = token.Text;
+                        while (sisa.Length > 0)
+                        {
+                            int ambil = sisa.Length;
+                            while (ambil > 1 && x + TextMeasure(sisa[..ambil], style) > lebarTersedia + 0.001f)
+                            {
+                                ambil--;
+                            }
+
+                            TambahBagian(sisa[..ambil], false, style);
+                            sisa = sisa[ambil..];
+
+                            if (sisa.Length > 0)
+                            {
+                                SelesaikanBaris(current);
+                                hasil.Lines.Add(current);
+                                current = new LaidOutLine();
+                                x = 0f;
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    TambahBagian(token.Text, token.Space, style);
                 }
             }
 

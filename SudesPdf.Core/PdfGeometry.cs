@@ -271,6 +271,12 @@ public sealed class PdfPathBuilder
         }
 
         AddPoint(x, y);
+        // Titik aktif WAJIB ikut berpindah. Bila tidak, kurva berikutnya
+        // dihitung dari titik yang salah: pada glif huruf, garis serif yang
+        // disusul kurva membuat kurva itu melengkung jauh melewati batang dan
+        // bentuk hurufnya bolong.
+        _x = x;
+        _y = y;
     }
 
     public void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3)
@@ -298,6 +304,9 @@ public sealed class PdfPathBuilder
         if (!_open) return;
         FinishCurrent(true);
         _closedAtStart = true;
+        // Menurut PDF, setelah 'h' titik aktif kembali ke awal subjalur.
+        _x = _startX;
+        _y = _startY;
     }
 
     public void AddRectangle(double x, double y, double width, double height)
@@ -309,6 +318,8 @@ public sealed class PdfPathBuilder
         AddPoint(x, y + height);
         FinishCurrent(true);
         _closedAtStart = true;
+        _x = x;
+        _y = y;
     }
 
     /// <summary>Tambahkan jalur lain apa adanya (mis. glif pada matriks lain).</summary>
@@ -329,6 +340,13 @@ public sealed class PdfPathBuilder
 
             FinishCurrent(contour.Closed);
             _closedAtStart = contour.Closed;
+            _x = contour.X(contour.Count - 1);
+            _y = contour.Y(contour.Count - 1);
+            if (contour.Closed)
+            {
+                _x = contour.X(0);
+                _y = contour.Y(0);
+            }
         }
     }
 

@@ -2,6 +2,7 @@
   <Project Path="Analyzers/SudesApp.Analyzers/SudesApp.Analyzers.csproj" />
   <Project Path="SuDesApp.Core/SuDesApp.Core.csproj" />
   <Project Path="SudesPdf.Core/SudesPdf.Core.csproj" />
+  <Project Path="SudesExPlus/SudesExPlus.csproj" />
   <Project Path="SudesPdf/SudesPdf.csproj" />
   <Project Path="SuDesApp.Server/SuDesApp.Server.csproj" />
   <Project Path="SuDesApp.Wpf/SuDesApp.Wpf.csproj" />

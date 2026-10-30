@@ -207,9 +207,12 @@
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    Visibility="{Binding AdaPesanStatus, Converter={StaticResource BoolToVis}}"/>
 
+                        <!-- Hanya saat halaman SUDAH berisi data (mis. muat ulang gagal):
+                             tanpa data, pesannya dibawa kartu keadaan di bawah supaya
+                             kalimat yang sama tidak muncul dua kali. -->
                         <TextBlock Text="{Binding PesanGalat}" Foreground="{DynamicResource ErrorTextBrush}"
                                    TextWrapping="Wrap" Margin="0,10,0,0"
-                                   Visibility="{Binding AdaGalat, Converter={StaticResource BoolToVis}}"/>
+                                   Visibility="{Binding AdaGalatDiToolbar, Converter={StaticResource BoolToVis}}"/>
 
                         <!-- Internet mati: data terakhir yang berhasil dimuat tetap tampil,
                              dan baris ini memberi tahu tanggal pengambilannya. -->
@@ -229,14 +232,42 @@
                               Focusable="False">
                 <StackPanel>
 
-                <!-- Belum ada data yang tampil dan tidak sedang memuat (mis. baru dibuka):
-                     tampilkan petunjuk cara menampilkan data. -->
-                <Border Style="{StaticResource FormCard}" Padding="16,14" Margin="0,0,0,12"
-                        Visibility="{Binding AdaPemberitahuanMenunggu, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="{Binding PesanMenunggu}" TextWrapping="Wrap" TextAlignment="Center"
-                               HorizontalAlignment="Center" MaxWidth="560"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               AutomationProperties.Name="Pemberitahuan IDM"/>
+                <!-- KEADAAN KOSONG — belum pernah dimuat ATAU gagal dimuat.
+                     Satu kartu untuk kedua sebab: ikon, judul yang menyebut
+                     keadaannya, penjelasan, tombol muat, dan petunjuk ke
+                     Pengaturan Surat (sumber nama desa yang dicocokkan). Tanpa
+                     ini, kegagalan hanya menyisakan satu baris merah di toolbar
+                     dan halaman tampak seperti layar kosong tanpa jalan keluar. -->
+                <Border Style="{StaticResource FormCard}" Padding="24,22" Margin="0,0,0,12"
+                        Visibility="{Binding TampilkanKartuKeadaan, Converter={StaticResource BoolToVis}}"
+                        AutomationProperties.Name="Keadaan halaman IDM">
+                    <StackPanel HorizontalAlignment="Center" MaxWidth="560">
+                        <Border Width="52" Height="52" CornerRadius="14"
+                                HorizontalAlignment="Center"
+                                Background="{DynamicResource PanelBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                            <TextBlock Text="{x:Static u:IkonMenu.Pembangunan}" FontSize="22"
+                                       FontFamily="{StaticResource AppIconFont}"
+                                       Foreground="{DynamicResource PrimaryBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <TextBlock Text="{Binding JudulKeadaan}" FontSize="16" FontWeight="SemiBold"
+                                   TextAlignment="Center" TextWrapping="Wrap" Margin="0,14,0,0"
+                                   AutomationProperties.Name="Judul keadaan halaman"/>
+
+                        <TextBlock Text="{Binding IsiKeadaan}" Style="{StaticResource TeksBantu}"
+                                   TextAlignment="Center" Margin="0,6,0,0"
+                                   AutomationProperties.Name="Penjelasan keadaan halaman"/>
+
+                        <Button Content="Muat data sekarang" Command="{Binding MuatCommand}"
+                                Style="{StaticResource PrimaryButton}"
+                                HorizontalAlignment="Center" Margin="0,16,0,0"/>
+
+                        <TextBlock Text="Nama desa, kecamatan, dan kabupaten diambil dari Pengaturan Surat. Bila desa Anda tidak ditemukan, lengkapi datanya di sana lalu muat ulang."
+                                   Style="{StaticResource TeksBantuKecil}"
+                                   TextAlignment="Center" Margin="0,12,0,0"/>
+                    </StackPanel>
                 </Border>
 
                 <!-- TIGA KARTU ATAS — status desa, tren penilaian (grafik), dan
@@ -252,8 +283,19 @@
                         <StackPanel>
                             <StackPanel Style="{StaticResource JudulSectionIdm}">
                                 <Border Style="{StaticResource AccentSectionBar}"/>
+                                <!-- Nomor urut kartu: pada layar lebar tiga kartu tampil
+                                     berdampingan, jadi urutan baca tidak lagi jelas dari
+                                     posisi saja. Nomor kecil ini yang menunjuk urutannya. -->
+                                <TextBlock Text="01" FontFamily="Consolas" FontSize="11" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <TextBlock Text="STATUS DESA" Style="{StaticResource FormSectionTitle}"/>
                             </StackPanel>
+
+                            <!-- Kalimat pengantar: menyejajarkan kartu ini dengan dua kartu
+                                 lain yang sudah punya keterangan "apa isinya". -->
+                            <TextBlock Text="Identitas desa dan angka terakhir yang diterbitkan pusat."
+                                       Style="{StaticResource TeksBantu}" Margin="0,2,0,0"/>
 
                             <!-- Identitas desa: nama desa sebagai judul kartu, wilayah
                                  dan kode desa sebagai meta sekunder. -->
@@ -377,6 +419,13 @@
                                 <TextBlock Text="{Binding PesanTarget}" Style="{StaticResource TeksBantu}"
                                            Margin="0,8,0,0"/>
 
+                                <!-- Berapa tahun yang dimuat dan tahun mana yang rinciannya
+                                     sedang terbuka — halaman mengambil beberapa tahun sekaligus. -->
+                                <TextBlock Text="{Binding RingkasanTahunDimuat}" Style="{StaticResource TeksBantuKecil}"
+                                           Margin="0,8,0,0"
+                                           Visibility="{Binding AdaDataIdm, Converter={StaticResource BoolToVis}}"
+                                           AutomationProperties.Name="Tahun IDM yang dimuat"/>
+
                                 <!-- Tahun lain + sumber data. -->
                                 <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
                                     <TextBlock Text="Tahun lain:" Style="{StaticResource TeksBantu}"
@@ -390,14 +439,32 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Style="{StaticResource ChipPil}">
-                                                    <TextBlock FontSize="11" Foreground="{DynamicResource TextBrush}">
-                                                        <Run Text="{Binding Tahun, Mode=OneWay}" FontWeight="SemiBold"/>
-                                                        <Run Text=" · "/>
-                                                        <Run Text="{Binding Skor, Mode=OneWay}"/>
-                                                        <Run Text=" · "/>
-                                                        <Run Text="{Binding Status, Mode=OneWay}"/>
-                                                    </TextBlock>
+                                                <!-- Tahun yang rinciannya sedang tampil diberi latar aksen;
+                                                     tahun terakhir terbit membawa label kecil "TERAKHIR". -->
+                                                <Border>
+                                                    <Border.Style>
+                                                        <Style TargetType="Border" BasedOn="{StaticResource ChipPil}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Ditampilkan}" Value="True">
+                                                                    <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextBrush}">
+                                                            <Run Text="{Binding Tahun, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                            <Run Text=" · "/>
+                                                            <Run Text="{Binding Skor, Mode=OneWay}"/>
+                                                            <Run Text=" · "/>
+                                                            <Run Text="{Binding Status, Mode=OneWay}"/>
+                                                        </TextBlock>
+                                                        <TextBlock Text="TERAKHIR" FontSize="9" FontWeight="Bold" Margin="6,1,0,0"
+                                                                   Foreground="{DynamicResource AccentTextBrush}"
+                                                                   VerticalAlignment="Center"
+                                                                   Visibility="{Binding Terbaru, Converter={StaticResource BoolToVis}}"/>
+                                                    </StackPanel>
                                                 </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -449,6 +516,9 @@
                         <StackPanel>
                             <StackPanel Style="{StaticResource JudulSectionIdm}">
                                 <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="02" FontFamily="Consolas" FontSize="11" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <TextBlock Text="TREN PENILAIAN" Style="{StaticResource FormSectionTitle}"/>
                             </StackPanel>
                             <TextBlock Text="Skor IDM, IKS, IKE, dan IKL per tahun terbit."
@@ -557,6 +627,9 @@
                         <StackPanel>
                             <StackPanel Style="{StaticResource JudulSectionIdm}">
                                 <Border Style="{StaticResource AccentSectionBar}"/>
+                                <TextBlock Text="03" FontFamily="Consolas" FontSize="11" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <TextBlock Text="INDEKS DESA 2025" Style="{StaticResource FormSectionTitle}"/>
                             </StackPanel>
 

@@ -533,7 +533,7 @@ namespace SuDesApp.Wpf.ViewModels
                 new("\u26A1", "Dapper", "Akses data", "https://github.com/DapperLib/Dapper", "Data & dokumen"),
                 new("\U0001F4C4", "SudesPdf.Core", "Mesin PDF: tulis, baca & render", string.Empty, "Data & dokumen"),
                 new("\U0001F4D1", "SudesPdf", "Pratinjau, cetak & teks PDF", string.Empty, "Data & dokumen"),
-                new("\U0001F4CA", "EPPlus", "Excel", "https://epplussoftware.com", "Data & dokumen"),
+                new("\U0001F4CA", "SudesExPlus", "Excel: tulis & baca .xlsx", string.Empty, "Data & dokumen"),
                 new("\U0001F4C1", "Google Drive API", "Cadangan & arsip", "https://developers.google.com/drive", "Layanan Google"),
                 new("\U0001F4E6", "Newtonsoft.Json", "Serialisasi", "https://www.newtonsoft.com/json", "Data & dokumen"),
                 new("\U0001F510", "DPAPI", "Kredensial aman", "https://learn.microsoft.com/dotnet/api/system.security.cryptography.protecteddata", "Keamanan"),
@@ -553,7 +553,7 @@ namespace SuDesApp.Wpf.ViewModels
                 new("\U0001F9E9", "Komunitas & pencipta perangkat lunak open-source", new List<string>
                 {
                     "Microsoft — .NET dan WPF yang menjadi fondasi aplikasi ini, beserta Microsoft.Extensions (dependency injection, logging, konfigurasi) yang dipakai di seluruh lapisan kode.",
-                    "Dapper dan EPPlus — akses data yang ringan serta ekspor Excel yang andal untuk register, laporan, dan arsip.",
+                    "Dapper — akses data yang ringan untuk seluruh data desa, surat, dan arsip.",
                     "SudesPdf.Core dan SudesPdf — mesin PDF yang ditulis sendiri untuk aplikasi ini: penyusunan, pembacaan, render, ekstraksi teks, pratinjau, dan cetak. Pratinjau surat, laporan, blanko, dan register tidak bergantung pada pustaka PDF pihak ketiga.",
                     "SQLite — basis data desa.db yang menampung seluruh data desa; tanpanya aplikasi tidak dapat bekerja sama sekali.",
                     "Pustaka klien Google API (Drive) dan Newtonsoft.Json — integrasi login Google dan pencadangan Drive.",

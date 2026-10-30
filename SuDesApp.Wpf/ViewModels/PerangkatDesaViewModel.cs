@@ -7,8 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
+using SudesExPlus;
+using SudesExPlus.Style;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
@@ -1745,7 +1745,6 @@ namespace SuDesApp.Wpf.ViewModels
         private static async Task TulisExcelAsync(
             IReadOnlyList<BarisPerangkatViewModel> baris, string path, string judulLembar, string namaDesa)
         {
-            ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
             using var package = new ExcelPackage();
             var ws = package.Workbook.Worksheets.Add(judulLembar);
 

@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.RekeningKoranView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.RekeningKoranView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -23,8 +23,8 @@
         <Border Grid.Row="0" Style="{StaticResource PageHeader}">
             <StackPanel Orientation="Horizontal">
                 <Border Style="{StaticResource HeaderIconChip}">
-                    <TextBlock Text="&#x1F4B3;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.Rekening}" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                 </Border>
                 <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Permohonan Rekening Koran" Style="{StaticResource HeaderTitle}"
@@ -203,12 +203,12 @@
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Periode Mulai * (dd-mm-yyyy)" Style="{StaticResource FormLabel}"/>
                             <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource FormField}"
                                      Text="{Binding TanggalMulai, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="Tulis periode mulai dengan format dd-mm-yyyy, mis. 17-08-2026"/>
+                                     ToolTip="Tulis periode mulai dengan format dd-mm-yyyy, mis. 17-08-2026" u:TanggalIsianOtomatis.Aktif="True" />
 
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Periode Akhir * (dd-mm-yyyy)" Style="{StaticResource FormLabel}"/>
                             <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}"
                                      Text="{Binding TanggalSelesai, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="Tulis periode akhir dengan format dd-mm-yyyy, mis. 17-08-2026"/>
+                                     ToolTip="Tulis periode akhir dengan format dd-mm-yyyy, mis. 17-08-2026" u:TanggalIsianOtomatis.Aktif="True" />
                         </Grid>
 
                     </StackPanel>
@@ -221,7 +221,7 @@
                         BorderBrush="{DynamicResource AccentBrush}" Padding="12,6"
                         HorizontalAlignment="Left" Margin="0,0,0,4">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#x1F4C5;" FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Kalender}" FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0" FontFamily="{StaticResource AppIconFont}"/>
                         <TextBlock Text="Periode surat otomatis menggunakan tanggal saat PDF dibuat."
                                    FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center" TextWrapping="Wrap"/>

@@ -241,7 +241,7 @@
         <Border Grid.Row="0" Style="{StaticResource PageHeader}">
             <DockPanel>
                 <Border Style="{StaticResource HeaderIconChip}" DockPanel.Dock="Left">
-                    <TextBlock Text="&#xE713;" FontFamily="{StaticResource AppIconFont}" FontSize="20"
+                    <TextBlock Text="{x:Static u:IkonMenu.Pengaturan}" FontFamily="{StaticResource AppIconFont}" FontSize="20"
                                Foreground="{DynamicResource PrimaryBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
@@ -371,7 +371,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE713;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="{x:Static u:IkonMenu.Preferensi}" FontFamily="{StaticResource AppIconFont}"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Preferensi Aplikasi" Margin="10,0,0,0"/>
                             </DockPanel>
@@ -477,7 +477,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE823;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="{x:Static u:IkonMenu.Pembangunan}" FontFamily="{StaticResource AppIconFont}"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Pemantauan Data IDM" Margin="10,0,0,0"/>
                             </DockPanel>
@@ -514,7 +514,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#x23F1;&#xFE0F;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="{x:Static u:IkonMenu.Kecepatan}" FontFamily="{StaticResource AppIconFont}"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Kecepatan Animasi Antarmuka" Margin="10,0,0,0"/>
                             </DockPanel>
@@ -636,7 +636,7 @@
                                                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                                 <StackPanel>
                                                     <DockPanel>
-                                                        <TextBlock x:Name="ContohChevron" DockPanel.Dock="Right" Text="&#xE76C;"
+                                                        <TextBlock x:Name="ContohChevron" DockPanel.Dock="Right" Text="{x:Static u:IkonMenu.ChevronKanan}"
                                                                    FontFamily="{StaticResource AppIconFont}"
                                                                    FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"
                                                                    Foreground="{DynamicResource SidebarAccentBrush}">
@@ -802,7 +802,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE74E;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="{x:Static u:IkonMenu.Cadangkan}" FontFamily="{StaticResource AppIconFont}"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Lokasi Berkas Database" Margin="10,0,0,0"/>
                             </DockPanel>
@@ -870,7 +870,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE7BA;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="{x:Static u:IkonMenu.Peringatan}" FontFamily="{StaticResource AppIconFont}"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Sebelum Berpindah Lokasi" Margin="10,0,0,0"/>
                             </DockPanel>
@@ -899,7 +899,7 @@
                         <Border Style="{StaticResource SettingHead}">
                             <DockPanel>
                                 <Border Style="{StaticResource SectionIcon}" DockPanel.Dock="Left">
-                                    <TextBlock Style="{StaticResource SectionIconText}" Text="&#xE946;"/>
+                                    <TextBlock Style="{StaticResource SectionIconText}" Text="{x:Static u:IkonMenu.Info}" FontFamily="{StaticResource AppIconFont}"/>
                                 </Border>
                                 <TextBlock Style="{StaticResource SettingTitle}" Text="Sesi &amp; Lokasi Pengaturan" Margin="10,0,0,0"/>
                             </DockPanel>

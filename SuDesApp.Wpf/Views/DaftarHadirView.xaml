@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.DaftarHadirView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.DaftarHadirView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource WindowBackgroundBrush}"
@@ -33,8 +33,8 @@
         <Border Grid.Row="0" Style="{StaticResource PageHeader}">
             <StackPanel Orientation="Horizontal">
                 <Border Style="{StaticResource HeaderIconChip}">
-                    <TextBlock Text="&#x1F4CB;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.DaftarHadir}" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                 </Border>
                 <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Daftar Hadir" Style="{StaticResource HeaderTitle}"
@@ -57,7 +57,7 @@
                 <Border.Child>
                     <StackPanel Orientation="Horizontal">
                         <Border Style="{StaticResource KpiIconChip}">
-                            <TextBlock Text="&#x1F4CB;" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="{x:Static u:IkonMenu.Orang}" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                         </Border>
                         <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding JumlahPeserta, StringFormat='{}{0} baris'}" Style="{StaticResource KpiValue}"/>
@@ -71,7 +71,7 @@
                 <Border.Child>
                     <StackPanel Orientation="Horizontal">
                         <Border Style="{StaticResource KpiIconChip}">
-                            <TextBlock Text="&#x2611;" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="{x:Static u:IkonMenu.Blanko}" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                         </Border>
                         <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource KpiValue}">
@@ -87,7 +87,7 @@
                 <Border.Child>
                     <StackPanel Orientation="Horizontal">
                         <Border Style="{StaticResource KpiIconChip}">
-                            <TextBlock Text="&#x1F4D0;" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="{x:Static u:IkonMenu.Putar}" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                         </Border>
                         <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding OrientasiDokumen}" Style="{StaticResource KpiValue}"/>
@@ -112,7 +112,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="&#x1F4BE;" FontSize="15" VerticalAlignment="Top" Margin="0,0,8,0"/>
+                        <TextBlock Grid.Column="0" Text="{x:Static u:IkonMenu.Cadangkan}" FontSize="15" VerticalAlignment="Top" Margin="0,0,8,0" FontFamily="{StaticResource AppIconFont}"/>
                         <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="13"
                                    Foreground="{DynamicResource AccentTextBrush}">
                             <Run FontWeight="SemiBold" Text="Isian tersimpan sementara: "/>

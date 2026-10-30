@@ -626,8 +626,8 @@ punya barisnya sendiri bertanda **belum terisi**.
   Pengaturan Surat; kolom `JABATAN` bernomor urut per jabatan berbeda (mis.
   `1. Kepala Desa`, `8. Kepala Dusun` untuk lima Kepala Dusun) meniru berkas
   contoh; nilai kosong ditulis `-`.
-- Ditulis dengan EPPlus; NIK/rekening sebagai teks supaya angka awal nol tidak
-  hilang; header diberi latar biru tebal.
+- Ditulis dengan SudesExPlus (pustaka .xlsx milik aplikasi sendiri); NIK/rekening
+  sebagai teks supaya angka awal nol tidak hilang; header diberi latar biru tebal.
 
 **Cetak PDF** (`CetakPdfCommand`) — **hanya bagian yang sedang tampil**:
 

@@ -78,11 +78,12 @@ internal static class LayoutFlow
 /// <summary>Sisa isi yang belum tertata: simpul, indeks anak/baris, dan sisanya di dalamnya.</summary>
 internal sealed class Continuation
 {
-    internal Continuation(LayoutNode node, int index, Continuation? inner)
+    internal Continuation(LayoutNode node, int index, Continuation? inner, bool hentikanHalaman = false)
     {
         Node = node;
         Index = index;
         Inner = inner;
+        HentikanHalaman = hentikanHalaman;
     }
 
     internal LayoutNode Node { get; }
@@ -92,6 +93,12 @@ internal sealed class Continuation
 
     /// <summary>Lanjutan di dalam anak yang sedang dikerjakan.</summary>
     internal Continuation? Inner { get; }
+
+    /// <summary>
+    /// Sisa isi ini harus dimulai di lembar baru karena naskah meminta pemisah
+    /// halaman (<c>PageBreak()</c>) — bukan karena ruang halaman habis.
+    /// </summary>
+    internal bool HentikanHalaman { get; }
 }
 
 /// <summary>
@@ -172,6 +179,11 @@ internal sealed class LayoutEngine
             // Tidak ada yang tertata dan masih ada sisa: pindah ke halaman berikutnya.
             if (dipakai <= 0.001f && next is not null) return next;
 
+            // Sisa ruang halaman sudah habis padahal isi belum selesai, atau
+            // naskah meminta pemisah halaman: lanjutkan di lembar baru, jangan
+            // menaruh sisanya di sisa ruang halaman ini.
+            if (next is not null && (next.HentikanHalaman || y <= ctx.ContentBottom + Epsilon)) return next;
+
             current = next;
         }
 
@@ -243,9 +255,13 @@ internal sealed class LayoutEngine
         float boxWidth = node.Width is { } fixedWidth
             ? fixedWidth + node.PaddingLeft + node.PaddingRight
             : Math.Max(0f, width - node.MarginLeft - node.MarginRight);
-        float innerWidth = Math.Max(0f, boxWidth - node.PaddingLeft - node.PaddingRight);
 
-        float innerHeight = MeasureContentHeight(node, innerWidth, ctx);
+        // PlaceContent memakai kontrak KOTAK LUAR: padding dan margin simpul ini
+        // dikurangi sendiri oleh fungsi isi (PlaceText, PlaceColumn, PlaceTable).
+        // Ukuran yang diberikan harus kotak yang sama dengan yang dipakai saat
+        // menggambar; dulu di sini dipakai lebar DALAM sehingga isi sel diukur
+        // lebih sempit daripada saat dicetak.
+        float innerHeight = MeasureContentHeight(node, boxWidth, ctx);
         float boxHeight = forcedHeight ?? innerHeight + node.PaddingTop + node.PaddingBottom;
 
         if (draw)
@@ -258,8 +274,13 @@ internal sealed class LayoutEngine
                 VerticalAlign.Bottom => free,
                 _ => 0f,
             };
-            float contentTop = boxTop - node.PaddingTop - offset;
-            PlaceContent(node, left + node.PaddingLeft, contentTop, innerWidth, ctx, draw: true, budget: float.MaxValue);
+
+            // Isi ditata pada koordinat kotak luar, bukan koordinat dalam: dulu
+            // padding dikurangkan di sini LALU dikurangkan lagi di PlaceText,
+            // sehingga teks sel bergeser selebar dua kali padding dan terbungkus
+            // jauh sebelum tepi sel — sel jadi sempit, baris jadi tinggi, dan
+            // judul kolom terpecah di tengah kata.
+            PlaceContent(node, x, yTop - offset, width, ctx, draw: true, budget: float.MaxValue);
         }
 
         return node.MarginTop + boxHeight + node.MarginBottom;
@@ -441,6 +462,7 @@ internal sealed class LayoutEngine
         float left = x + node.MarginLeft + node.PaddingLeft;
         float y = yTop - node.MarginTop - node.PaddingTop;
         float dipakai = node.MarginTop + node.PaddingTop;
+        float dipakaiAwal = dipakai;
 
         // Anak yang terpotong halaman sebelumnya dilanjutkan lebih dulu.
         bool sedangLanjutan = inner is not null;
@@ -455,7 +477,9 @@ internal sealed class LayoutEngine
             {
                 if (index > startIndex)
                 {
-                    next = new Continuation(node, index + 1, null);
+                    // Tandai sebagai pemisah halaman supaya PlacePage memulai
+                    // lembar baru, bukan menaruh isi berikutnya di sisa ruang.
+                    next = new Continuation(node, index + 1, null, hentikanHalaman: true);
                     return dipakai + node.PaddingBottom;
                 }
 
@@ -466,7 +490,13 @@ internal sealed class LayoutEngine
             }
 
             var childState = sedangLanjutan ? inner! : new Continuation(child, 0, null);
-            bool paksaAnak = !sedangLanjutan && force && index == startIndex;
+            // Izin "cetak walau melebihi halaman" hanya untuk anak PERTAMA pada
+            // halaman baru yang belum memakai ruang apa pun. Dulu syaratnya cuma
+            // index == startIndex; saat melanjutkan tabel, index tidak bertambah,
+            // sehingga blok tanda tangan SESUDAH tabel ikut dipaksa cetak di sisa
+            // ruang beberapa titik dan terpotong di tepi bawah kertas.
+            bool paksaAnak = !sedangLanjutan && force && index == startIndex
+                && dipakai <= dipakaiAwal + Epsilon;
             float tinggiAnak = PlaceNode(child, left, y, budget - dipakai, innerWidth, ctx, childState, out var lanjutan, paksaAnak, draw);
             dipakai += tinggiAnak;
             y -= tinggiAnak;
@@ -631,6 +661,29 @@ internal sealed class LayoutEngine
         float left = x + node.PaddingLeft;
         float y = yTop - node.PaddingTop;
         float dipakai = node.PaddingTop;
+
+        // Baris kepala dicetak ulang di setiap halaman, tetapi hanya bila sedikitnya
+        // satu baris isi masih muat di bawahnya. Tanpa pemeriksaan ini tabel yang
+        // sisanya tidak muat tetap dianggap "tertata" (karena baris kepala dan
+        // padding-nya menagih tinggi), halaman tidak pernah berganti, dan baris
+        // berikutnya hilang begitu saja — persis kasus daftar hadir dengan peserta
+        // banyak yang terpotong di tepi bawah kertas.
+        if (startRow < barisIsi.Count && !force)
+        {
+            float tinggiKepala = 0f;
+            foreach (var baris in barisKepala)
+            {
+                tinggiKepala += MeasureRowHeight(baris, lebar, jumlahKolom, ctx);
+            }
+
+            float tinggiBarisPertama = MeasureRowHeight(barisIsi[startRow], lebar, jumlahKolom, ctx);
+            if (node.PaddingTop + tinggiKepala + tinggiBarisPertama > budget + Epsilon)
+            {
+                // Tidak ada yang tertata di halaman ini: minta halaman baru.
+                next = new Continuation(node, startRow, null);
+                return 0f;
+            }
+        }
 
         foreach (var baris in barisKepala)
         {

@@ -21,6 +21,39 @@ namespace SuDesApp.Wpf.Views
         private DateTime _cachedLastWrite = DateTime.MinValue;
         private double _scale = 1.0d;
 
+        /// <summary>
+        /// Batas bitmap halaman yang disimpan sekaligus. Dokumen panjang bisa
+        /// berpuluh halaman; tanpa batas, seluruh bitmap (beberapa MB per
+        /// halaman) menumpuk di memori walaupun halaman itu jauh di luar layar.
+        /// </summary>
+        private const int MaksHalamanTersimpan = 10;
+
+        /// <summary>Anggaran memori bitmap halaman (byte). Pada zoom besar satu
+        /// halaman bisa jauh lebih besar dari biasanya, jadi jumlah halaman saja
+        /// tidak cukup untuk membatasi pemakaian memori.</summary>
+        private const long AnggaranByteHalaman = 96L * 1024 * 1024;
+
+        private readonly List<HalamanTampil> _halaman = new();
+        private int _versiRender;
+        private bool _renderBerjalan;
+        private bool _renderUlang;
+
+        /// <summary>
+        /// Satu halaman di daftar pratinjau. Kartu dan ukuran placeholder dibuat
+        /// lebih dulu; bitmap baru diisi saat halaman itu (atau tetangganya)
+        /// terlihat di layar.
+        /// </summary>
+        private sealed class HalamanTampil
+        {
+            public int Index;
+            public Border Kartu = null!;
+            public Image Gambar = null!;
+            public double SkalaGambar;
+            public double Kerapatan;
+            public long PerkiraanByte;
+            public bool SudahDirender;
+        }
+
         public PdfPreviewView()
         {
             InitializeComponent();
@@ -42,6 +75,8 @@ namespace SuDesApp.Wpf.Views
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             _loadGeneration++;
+            _versiRender++;
+            _halaman.Clear();
             _ = DisposeDocumentAsync();
             _currentPdfPath = null;
         }
@@ -151,18 +186,11 @@ namespace SuDesApp.Wpf.Views
             _document!.PageSizes[halaman].Width * _scale * 96.0 / 72.0;
 
         /// <summary>
-        /// Piksel per titik PDF. Halaman dirender pada kerapatan perangkat layar
-        /// (bukan hanya DIP), sehingga teks tetap tajam pada Windows 125%/150%
-        /// dan saat diperbesar.
+        /// Rasio piksel layar terhadap DIP (1,0 pada 96 dpi, 1,25 pada 125%).
+        /// Bitmap halaman dibuat tepat sebanyak piksel layar, bukan sekadar DIP,
+        /// supaya teks tidak melewati penskalaan apa pun saat digambar WPF.
         /// </summary>
-        private double SkalaPiksel()
-        {
-            double dpi = VisualTreeHelper.GetDpi(this).DpiScaleX;
-            return Math.Min(8.0, dpi * 96.0 / 72.0);
-        }
-
-        /// <summary>DPI bitmap yang membuat satu pikselnya sama dengan satu piksel layar.</summary>
-        private double KerapatanLayar() => Math.Max(0.5, VisualTreeHelper.GetDpi(this).DpiScaleX) * 96.0;
+        private double SkalaPerangkat() => Math.Max(0.5, VisualTreeHelper.GetDpi(this).DpiScaleX);
 
         private void ZoomIn_Click(object sender, RoutedEventArgs e) => _ = SetScaleAsync(_scale * 1.2);
         private void ZoomOut_Click(object sender, RoutedEventArgs e) => _ = SetScaleAsync(_scale / 1.2);
@@ -173,6 +201,15 @@ namespace SuDesApp.Wpf.Views
             await RenderPagesAsync();
         }
 
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e) =>
+            _ = RenderTerlihatAsync(_versiRender);
+
+        /// <summary>
+        /// Bangun kerangka semua halaman, lalu gambar hanya halaman yang sedang
+        /// terlihat. Halaman lain digambar saat digulir ke layar. Dulu seluruh
+        /// halaman diraster lebih dulu, sehingga membuka PDF panjang terasa
+        /// berat dan zoom harus menunggu semua halaman selesai.
+        /// </summary>
         private async Task RenderPagesAsync()
         {
             if (_document is null)
@@ -180,58 +217,58 @@ namespace SuDesApp.Wpf.Views
                 return;
             }
 
+            int versi = ++_versiRender;
+            _renderUlang = false;
             PagesPanel.Children.Clear();
-            int generation = _loadGeneration;
+            _halaman.Clear();
 
-            double pikselPerTitik = SkalaPiksel();
-            double kerapatan = KerapatanLayar();
+            double skalaPerangkat = SkalaPerangkat();
+            double kerapatan = skalaPerangkat * 96.0;
             for (int i = 0; i < _document.PageCount; i++)
             {
                 var size = _document.PageSizes[i];
-                BitmapSource bitmap;
-                // Dirender tepat satu piksel bitmap per piksel layar. Sebelumnya
-                // halaman digambar dua kali lebih rapat lalu diperkecil WPF dengan
-                // penyaringan bilinear — huruf tebal berubah abu-abu dan tepinya
-                // kabur. Tanpa pembesaran itu teks tampil setajam penampil PDF.
-                try { bitmap = await _document.RenderAsync(i, Math.Min(8.0, _scale * pikselPerTitik), kerapatan); }
-                catch (Exception) { return; }
-                if (generation != _loadGeneration || _document is null) return;
-                int w = Math.Max(1, (int)Math.Round(LebarHalamanDip(i)));
-                int h = Math.Max(1, (int)Math.Round(size.Height * _scale * 96.0 / 72.0));
+
+                // Ukuran gambar ditentukan dalam PIKsel layar, bukan DIP, lalu
+                // skala render diturunkan dari jumlah piksel itu. Dengan begitu
+                // lebar bitmap persis sama dengan lebar yang diminta tata letak —
+                // tidak ada selisih pecahan piksel yang membuat WPF menyaring
+                // ulang seluruh halaman (itulah yang mengaburkan huruf).
+                double lebarDip = LebarHalamanDip(i);
+                int lebarPiksel = Math.Max(1, (int)Math.Round(lebarDip * skalaPerangkat));
+                // Epsilon kecil supaya pembulatan ke atas di mesin render tidak
+                // menambah satu piksel (yang membuat WPF menyaring ulang).
+                double skalaGambar = Math.Min(16.0, lebarPiksel / Math.Max(1.0, size.Width) * (1 - 1e-9));
+
+                // Ukuran tampil diturunkan dari jumlah PIKsel bitmap yang akan
+                // dibuat (bukan dari DIP pecahan), persis seperti ukuran asli
+                // bitmap nanti. Dengan begitu WPF tidak perlu menskalakan satu
+                // piksel pun saat bitmap itu terpasang.
+                int tinggiPiksel = Math.Max(1, (int)Math.Ceiling(size.Height * skalaGambar));
+                double lebarTampil = lebarPiksel * 96.0 / kerapatan;
+                double tinggiTampil = tinggiPiksel * 96.0 / kerapatan;
+
+                var halaman = new Image
+                {
+                    Width = lebarTampil,
+                    Height = tinggiTampil,
+                    Stretch = Stretch.Fill
+                };
+                RenderOptions.SetBitmapScalingMode(halaman, BitmapScalingMode.HighQuality);
+
                 var card = new Border
                 {
+                    // Ukuran kartu ditetapkan sejak awal supaya penggulungan
+                    // tidak melompat ketika bitmap halaman selesai digambar.
+                    Width = lebarTampil + 16,
+                    Height = tinggiTampil + 16,
                     Background = TryFindResource("KertasBrush") as Brush ?? Brushes.White,
                     BorderBrush = TryFindResource("KertasTepiBrush") as Brush
                                   ?? new SolidColorBrush(Color.FromRgb(0xC9, 0xCD, 0xD4)),
                     BorderThickness = new Thickness(1),
                     CornerRadius = new CornerRadius(3),
                     Padding = new Thickness(7),
-                    Margin = new Thickness(0, 0, 0, 16),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    Effect = new DropShadowEffect
-                    {
-                        Color = TryFindResource("BayanganHitamColor") is Color bayangan
-                            ? bayangan
-                            : Colors.Black,
-                        BlurRadius = 16,
-                        ShadowDepth = 2,
-                        Opacity = 0.3
-                    }
+                    Child = halaman
                 };
-
-                var pageStack = new StackPanel();
-                var halaman = new Image
-                {
-                    Source = bitmap,
-                    Width = w,
-                    Height = h,
-                    Stretch = Stretch.Uniform
-                };
-                // Kalau pembulatan ukuran menyisakan pecahan piksel, WPF tetap
-                // perlu menyesuaikan sedikit; filter kelas atas menjaga tepi huruf
-                // tetap tegas alih-alih bilinear yang mengaburkannya.
-                RenderOptions.SetBitmapScalingMode(halaman, BitmapScalingMode.HighQuality);
-                pageStack.Children.Add(halaman);
 
                 // Label "Halaman N dari M" di bawah setiap halaman DIHAPUS.
                 // Angka halaman sudah bisa dibaca dari jumlah kartu halaman yang
@@ -240,11 +277,211 @@ namespace SuDesApp.Wpf.Views
                 // sama untuk setiap kartu, dan selalu tampil "Halaman 1 dari 1"
                 // pada surat satu halaman — seakan-ini pesan, bukan keterangan.
 
-                card.Child = pageStack;
-                PagesPanel.Children.Add(card);
+                // Bayangan TIDAK dipasang pada kartu yang memuat halaman.
+                // Effect pada WPF menggambar seluruh isi elemen ke bitmap antara
+                // sebelum dikomposisikan, jadi memasang DropShadowEffect pada
+                // kartu membuat gambar halaman ikut disaring — teksnya kembali
+                // kabur. Bayangan ditaruh pada elemen kosong di belakang kartu.
+                var bayangan = new Border
+                {
+                    Background = card.Background,
+                    CornerRadius = new CornerRadius(3),
+                    Effect = new DropShadowEffect
+                    {
+                        Color = TryFindResource("BayanganHitamColor") is Color warnaBayangan
+                            ? warnaBayangan
+                            : Colors.Black,
+                        BlurRadius = 16,
+                        ShadowDepth = 2,
+                        Opacity = 0.3
+                    },
+                    // Bayangan tidak berubah saat halaman digulir; simpan
+                    // hasilnya sebagai bitmap supaya efek blur tidak dihitung
+                    // ulang setiap kali halaman bergerak di layar.
+                    CacheMode = new BitmapCache()
+                };
+
+                var wadah = new Grid
+                {
+                    Margin = new Thickness(0, 0, 0, 16),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                wadah.Children.Add(bayangan);
+                wadah.Children.Add(card);
+                PagesPanel.Children.Add(wadah);
+
+                _halaman.Add(new HalamanTampil
+                {
+                    Index = i,
+                    Kartu = card,
+                    Gambar = halaman,
+                    SkalaGambar = skalaGambar,
+                    Kerapatan = kerapatan,
+                    PerkiraanByte = (long)lebarPiksel * tinggiPiksel * 4
+                });
             }
 
             ZoomText.Text = $"{_scale * 100.0:0}%";
+
+            // Pastikan posisi kartu sudah terukur sebelum menentukan halaman
+            // mana yang tampak. Kartu masih kosong, jadi langkah ini murah.
+            if (IsLoaded) ScrollViewer.UpdateLayout();
+
+            await RenderTerlihatAsync(versi);
+        }
+
+        /// <summary>
+        /// Gambar halaman yang terlihat satu per satu. Permintaan yang datang
+        /// saat penggambaran berjalan (mis. pengguna menggulir atau memperbesar)
+        /// tidak dibuang: setelah halaman berjalan selesai, putaran baru dimulai
+        /// dengan versi tata letak terbaru.
+        /// </summary>
+        private async Task RenderTerlihatAsync(int versi)
+        {
+            if (_document is null || versi != _versiRender) return;
+
+            _renderUlang = true;
+            if (_renderBerjalan) return;
+
+            _renderBerjalan = true;
+            try
+            {
+                while (true)
+                {
+                    _renderUlang = false;
+                    int versiKini = _versiRender;
+                    var dokumen = _document;
+                    if (dokumen is null) break;
+
+                    while (versiKini == _versiRender)
+                    {
+                        var halaman = HalamanBerikutnya();
+                        if (halaman is null) break;
+
+                        BitmapSource bitmap;
+                        try
+                        {
+                            bitmap = await dokumen.RenderAsync(
+                                halaman.Index, halaman.SkalaGambar, halaman.Kerapatan);
+                        }
+                        catch (Exception)
+                        {
+                            return;
+                        }
+
+                        if (versiKini != _versiRender || !ReferenceEquals(_document, dokumen))
+                        {
+                            break;
+                        }
+
+                        halaman.Gambar.Source = bitmap;
+                        halaman.SudahDirender = true;
+                        BuangHalamanJauh();
+                    }
+
+                    if (versiKini == _versiRender && !_renderUlang) break;
+                }
+            }
+            finally
+            {
+                _renderBerjalan = false;
+                // Bila permintaan baru datang tepat saat penggambaran berakhir,
+                // jalankan sekali lagi untuk versi yang sekarang.
+                if (_renderUlang && _document is not null) _ = RenderTerlihatAsync(_versiRender);
+            }
+        }
+
+        /// <summary>Halaman tak terlihat pertama, atau null bila semua yang tampak sudah digambar.</summary>
+        private HalamanTampil? HalamanBerikutnya()
+        {
+            bool adaYangDirender = false;
+            foreach (var halaman in _halaman)
+            {
+                if (halaman.SudahDirender)
+                {
+                    adaYangDirender = true;
+                    continue;
+                }
+
+                if (Terlihat(halaman)) return halaman;
+            }
+
+            // Bila ukuran viewport belum siap (mis. baru pertama ditampilkan),
+            // jangan biarkan pratinjau kosong: halaman pertama selalu digambar.
+            return !adaYangDirender && _halaman.Count > 0 ? _halaman[0] : null;
+        }
+
+        /// <summary>
+        /// Benar bila kartu halaman menyentuh area pandang, dengan cadangan
+        /// setengah layar di atas dan di bawah supaya menggulir terasa mulus.
+        /// </summary>
+        private bool Terlihat(HalamanTampil halaman)
+        {
+            try
+            {
+                double atas = halaman.Kartu.TranslatePoint(new Point(0, 0), ScrollViewer).Y;
+                double bawah = atas + halaman.Kartu.Height;
+                double tinggi = ScrollViewer.ViewportHeight > 0 ? ScrollViewer.ViewportHeight : 800;
+                return bawah > -tinggi * 0.5 && atas < tinggi * 1.5;
+            }
+            catch (InvalidOperationException)
+            {
+                // Kartu belum terpasang di pohon visual (mis. saat berpindah
+                // dokumen); anggap tidak terlihat dan biarkan putaran berikutnya
+                // yang menggambar.
+                return false;
+            }
+        }
+
+        /// <summary>Lepas bitmap halaman yang paling jauh dari layar bila sudah terlalu banyak.</summary>
+        private void BuangHalamanJauh()
+        {
+            int tersimpan = 0;
+            long totalByte = 0;
+            foreach (var halaman in _halaman)
+            {
+                if (!halaman.SudahDirender) continue;
+                tersimpan++;
+                totalByte += halaman.PerkiraanByte;
+            }
+
+            if (tersimpan <= MaksHalamanTersimpan && totalByte <= AnggaranByteHalaman) return;
+
+            while (tersimpan > MaksHalamanTersimpan || totalByte > AnggaranByteHalaman)
+            {
+                HalamanTampil? terjauh = null;
+                double jarakTerjauh = -1;
+                foreach (var halaman in _halaman)
+                {
+                    // Halaman yang masih tampak (termasuk cadangan setengah
+                    // layar) tidak pernah dilepas.
+                    if (!halaman.SudahDirender || Terlihat(halaman)) continue;
+
+                    double jarak;
+                    try
+                    {
+                        double atas = halaman.Kartu.TranslatePoint(new Point(0, 0), ScrollViewer).Y;
+                        double tengah = ScrollViewer.ViewportHeight / 2.0;
+                        jarak = Math.Abs(atas - tengah);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        continue;
+                    }
+
+                    if (jarak > jarakTerjauh)
+                    {
+                        jarakTerjauh = jarak;
+                        terjauh = halaman;
+                    }
+                }
+
+                if (terjauh is null) return;
+                terjauh.Gambar.Source = null;
+                terjauh.SudahDirender = false;
+                tersimpan--;
+                totalByte -= terjauh.PerkiraanByte;
+            }
         }
 
         private void Print_Click(object sender, RoutedEventArgs e) => _ = PrintAsync();

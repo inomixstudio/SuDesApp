@@ -162,6 +162,8 @@ public sealed class Rasterizer
     private readonly int _width;
     private readonly int _height;
     private float[] _coverage = Array.Empty<float>();
+    private double[] _luasTepat = Array.Empty<double>();
+    private double[] _tutupTepat = Array.Empty<double>();
     private readonly List<Edge> _edges = new(256);
     private readonly List<(float X, int Winding)> _crossings = new(64);
 
@@ -198,6 +200,10 @@ public sealed class Rasterizer
         public double Y1 { get; }
 
         public int Winding { get; }
+
+        /// <summary>Posisi x tepi pada ketinggian y (tepi selalu lurus).</summary>
+        public double XAt(double y) =>
+            Y1 - Y0 <= 0 ? X0 : X0 + (y - Y0) * (X1 - X0) / (Y1 - Y0);
     }
 
     // ----------------------------------------------------------------- Isi
@@ -209,7 +215,8 @@ public sealed class Rasterizer
     /// </param>
     public void Fill(
         PdfPath path, PdfFillRule rule, double red, double green, double blue, double alpha,
-        PdfBlendMode blend, byte[]? clipMask, double coverageGamma = 1.0, int subSamples = SubSamples)
+        PdfBlendMode blend, byte[]? clipMask, double coverageGamma = 1.0, int subSamples = SubSamples,
+        byte[]? coverageTable = null)
     {
         if (path.IsEmpty || alpha <= 0) return;
         BuildEdges(path, closedOnly: false);
@@ -234,8 +241,158 @@ public sealed class Rasterizer
             }
 
             if (!any) continue;
-            CompositeRow(y, minX, maxX, red, green, blue, alpha, blend, clipMask, coverageGamma);
+            CompositeRow(y, minX, maxX, red, green, blue, alpha, blend, clipMask, coverageGamma, coverageTable);
         }
+    }
+
+    /// <summary>
+    /// Isi jalur dengan cakupan luas yang EKSAK — tiruan rasterizer FreeType yang
+    /// dipakai pdfium, bukan perkiraan dari beberapa sampel per piksel.
+    ///
+    /// Setiap tepi lurus di dalam satu baris piksel menyumbangkan LUAS trapesium
+    /// yang dilaluinya kepada tiap kolom, sedangkan kolom di kanan tepi mendapat
+    /// penutup (cover) penuh. Cakupan sebuah piksel lalu = jumlah penutup dari
+    /// kiri + luas bagiannya sendiri, yaitu luas huruf yang benar-benar jatuh di
+    /// piksel itu. Karena angkanya sebanding dengan luas, tepi melengkung dan
+    /// batang huruf tebal tidak lagi bergerigi atau tampak bergaris seperti pada
+    /// pengambilan sampel (8 sampel vertikal hanya punya 9 tingkat keabuan).
+    ///
+    /// Aturan even-odd tidak bisa dihitung dari penjumlahan belitan, jadi jalur
+    /// itu tetap memakai <see cref="Fill"/>.
+    /// </summary>
+    public void FillTepat(
+        PdfPath path, PdfFillRule rule, double red, double green, double blue, double alpha,
+        PdfBlendMode blend, byte[]? clipMask, double coverageGamma = 1.0, byte[]? coverageTable = null)
+    {
+        if (path.IsEmpty || alpha <= 0) return;
+        if (rule != PdfFillRule.NonZero)
+        {
+            Fill(path, rule, red, green, blue, alpha, blend, clipMask, coverageGamma, SubSamples, coverageTable);
+            return;
+        }
+
+        BuildEdges(path, closedOnly: false);
+        if (_edges.Count == 0) return;
+
+        int minY = Math.Max(0, (int)Math.Floor(path.Bounds.Bottom));
+        int maxY = Math.Min(_height - 1, (int)Math.Ceiling(path.Bounds.Top));
+        int minX = Math.Max(0, (int)Math.Floor(path.Bounds.Left));
+        int maxX = Math.Min(_width - 1, (int)Math.Ceiling(path.Bounds.Right));
+        if (minY > maxY || minX > maxX) return;
+
+        EnsureCoverage(_width);
+        EnsureLuasTepat(_width);
+
+        for (int y = minY; y <= maxY; y++)
+        {
+            Array.Clear(_luasTepat, 0, maxX + 1);
+            Array.Clear(_tutupTepat, 0, maxX + 1);
+
+            double atas = y;
+            double bawah = y + 1;
+            double tutupAwal = 0;
+            bool ada = false;
+
+            foreach (var edge in _edges)
+            {
+                if (edge.Y1 <= atas || edge.Y0 >= bawah) continue;
+
+                double ya = Math.Max(atas, edge.Y0);
+                double yb = Math.Min(bawah, edge.Y1);
+                double tinggi = yb - ya;
+                if (tinggi <= 0) continue;
+
+                double xa = edge.XAt(ya);
+                double xb = edge.XAt(yb);
+                double arah = edge.Winding;
+
+                int kolomKiri = (int)Math.Floor(Math.Min(xa, xb));
+                int kolomKanan = (int)Math.Floor(Math.Max(xa, xb));
+
+                // Tepi yang seluruhnya di kanan gambar tidak menyentuh piksel
+                // terlihat sama sekali.
+                if (kolomKiri > maxX) continue;
+
+                // Tepi yang seluruhnya di kiri piksel pertama memberi cakupan
+                // penuh pada SEMUA piksel terlihat di baris ini.
+                if (kolomKanan < minX)
+                {
+                    tutupAwal += arah * tinggi;
+                    ada = true;
+                    continue;
+                }
+
+                // Kolom di kanan tepi tertutup penuh setinggi bagian tepi di
+                // baris ini; penandanya ditaruh tepat setelah kolom terakhir
+                // yang masih tersentuh sebagian, lalu dibaca SETELAH piksel itu
+                // (bukan sebelum) supaya kolom batas tidak ikut penuh.
+                int awalPenuh = kolomKanan + 1;
+                if (awalPenuh <= maxX) _tutupTepat[awalPenuh] += arah * tinggi;
+
+                int dari = Math.Max(0, kolomKiri);
+                int sampai = Math.Min(kolomKanan, maxX);
+                for (int kolom = dari; kolom <= sampai; kolom++)
+                {
+                    // Luas kolom yang tertutup: tinggi dikurangi bagian yang
+                    // masih di kiri tepi, yaitu ∫ clamp(kolom + 1 − x, 0, 1).
+                    _luasTepat[kolom] += arah
+                        * (tinggi - LuasTerpotong(xa - kolom, xb - kolom, tinggi));
+                }
+
+                ada = true;
+            }
+
+            if (!ada) continue;
+
+            double tutup = tutupAwal;
+            for (int x = minX; x <= maxX; x++)
+            {
+                // Penanda "kolom ini dan seterusnya tertutup penuh" dibaca SEBELUM
+                // luas kolom ditambahkan: penandanya ditaruh di kolom pertama yang
+                // sudah penuh (kolomKanan + 1), jadi kolom batas itu sendiri harus
+                // ikut menerimanya.
+                tutup += _tutupTepat[x];
+
+                // Belitan di dalam huruf bisa bernilai +1 atau −1 tergantung arah
+                // kontur di ruang perangkat; nonzero menganggap keduanya terisi,
+                // jadi cakupan diambil nilai mutlaknya. Kontur berlubang (mis.
+                // lawang "o") berbelitan berlawanan sehingga jumlahnya nol di
+                // lubang, tepat seperti penggabungan belitan di <see cref="Fill"/>.
+                double nilai = tutup + _luasTepat[x];
+                if (nilai < 0) nilai = -nilai;
+                _coverage[x] = nilai >= 1 ? 1f : (float)nilai;
+            }
+
+            CompositeRow(y, minX, maxX, red, green, blue, alpha, blend, clipMask, coverageGamma, coverageTable);
+        }
+    }
+
+    /// <summary>
+    /// ∫ clamp(u(t), 0, 1) dt sepanjang satu baris piksel, dengan u berubah
+    /// linear dari <paramref name="ua"/> ke <paramref name="ub"/>. Inilah luas
+    /// bagian kolom yang tertutup tepi. Hasilnya dibagi dengan panjang u agar
+    /// tidak membagi nol pada tepi yang hampir tegak.
+    /// </summary>
+    private static double LuasTerpotong(double ua, double ub, double tinggi)
+    {
+        double selisih = ub - ua;
+        if (Math.Abs(selisih) < 1e-12)
+        {
+            return tinggi * Math.Clamp(ua, 0.0, 1.0);
+        }
+
+        return tinggi * (PrimitifTerpotong(ub) - PrimitifTerpotong(ua)) / selisih;
+    }
+
+    /// <summary>∫₀^u clamp(t, 0, 1) dt.</summary>
+    private static double PrimitifTerpotong(double u) =>
+        u <= 0 ? 0 : u >= 1 ? u - 0.5 : 0.5 * u * u;
+
+    private void EnsureLuasTepat(int lebar)
+    {
+        if (_luasTepat.Length >= lebar) return;
+        _luasTepat = new double[lebar];
+        _tutupTepat = new double[lebar];
     }
 
     /// <summary>Hitung cakupan jalur ke topeng 8-bit (dipakai untuk kliping).</summary>
@@ -822,7 +979,7 @@ public sealed class Rasterizer
 
     private void CompositeRow(
         int y, int minX, int maxX, double red, double green, double blue, double alpha,
-        PdfBlendMode blend, byte[]? clipMask, double coverageGamma = 1.0)
+        PdfBlendMode blend, byte[]? clipMask, double coverageGamma = 1.0, byte[]? coverageTable = null)
     {
         int rowStart = y * _width;
         for (int x = minX; x <= maxX; x++)
@@ -832,8 +989,23 @@ public sealed class Rasterizer
             int index = rowStart + x;
             double clip = clipMask is null ? 1 : clipMask[index] / 255.0;
             if (clip <= 0) continue;
-            Composite(index, red, green, blue, alpha * TerapkanGamma(coverage, coverageGamma) * clip, blend);
+            double cakupan = coverageTable is null
+                ? TerapkanGamma(coverage, coverageGamma)
+                : TerapkanTabel(coverage, coverageTable);
+            Composite(index, red, green, blue, alpha * cakupan * clip, blend);
         }
+    }
+
+    /// <summary>
+    /// Koreksi cakupan huruf memakai TABEL persis seperti pdfium
+    /// (<see cref="PdfTeksGamma"/>), dipakai untuk jalur huruf.
+    /// </summary>
+    private static double TerapkanTabel(float coverage, byte[] tabel)
+    {
+        int i = (int)(coverage * 255f + 0.5f);
+        if (i < 0) i = 0;
+        else if (i >= tabel.Length) i = tabel.Length - 1;
+        return tabel[i] / 255.0;
     }
 
     /// <summary>

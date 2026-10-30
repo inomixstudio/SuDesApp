@@ -1,6 +1,7 @@
 <UserControl x:Class="SudesPdf.PdfViewer"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             SnapsToDevicePixels="True" UseLayoutRounding="True"
              Loaded="UserControl_Loaded">
     <Grid>
         <Grid.RowDefinitions>

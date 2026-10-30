@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.ExImdbView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.ExImdbView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -125,8 +125,8 @@
                 </Grid.ColumnDefinitions>
 
                 <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}">
-                    <TextBlock Text="&#x1F4BE;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.Cadangkan}" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                 </Border>
                 <StackPanel Grid.Column="1" Margin="14,0,12,0" VerticalAlignment="Center">
                     <TextBlock Text="CADANGKAN &amp; PULIHKAN" Style="{StaticResource HeaderTitle}"
@@ -235,11 +235,13 @@
                         <TextBlock Grid.Column="0" FontSize="15" Margin="0,0,10,0" VerticalAlignment="Top">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="&#x2714;"/>
+                                    <Setter Property="Text" Value="{x:Static u:IkonMenu.Verifikasi}"/>
+                                    <Setter Property="FontFamily" Value="{StaticResource AppIconFont}"/>
                                     <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding PesanBerhasil}" Value="False">
-                                            <Setter Property="Text" Value="&#x2715;"/>
+                                            <Setter Property="Text" Value="{x:Static u:IkonMenu.Keluar}"/>
+                                            <Setter Property="FontFamily" Value="{StaticResource AppIconFont}"/>
                                             <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -263,11 +265,11 @@
                             </ItemsControl>
                         </StackPanel>
 
-                        <Button Grid.Column="2" Content="&#x2715;" Command="{Binding TutupTerakhirCommand}"
+                        <Button Grid.Column="2" Content="{x:Static u:IkonMenu.Keluar}" Command="{Binding TutupTerakhirCommand}"
                                 Width="26" Height="26" VerticalAlignment="Top" BorderThickness="0"
                                 FontSize="13" Cursor="Hand" Background="Transparent"
                                 Foreground="{DynamicResource TextSecondaryBrush}"
-                                ToolTip="Tutup kabar ini" AutomationProperties.Name="Tutup kabar"/>
+                                ToolTip="Tutup kabar ini" AutomationProperties.Name="Tutup kabar" FontFamily="{StaticResource AppIconFont}"/>
                     </Grid>
                 </Border>
 
@@ -289,8 +291,8 @@
                                             <Border Grid.Column="0" Width="46" Height="46" CornerRadius="11"
                                                     Background="{DynamicResource AccentSubtleBrush}" Margin="0,0,14,0"
                                                     VerticalAlignment="Top">
-                                                <TextBlock Text="&#x1F4BE;" FontSize="24" HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"/>
+                                                <TextBlock Text="{x:Static u:IkonMenu.Cadangkan}" FontSize="24" HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                                             </Border>
 
                                             <StackPanel Grid.Column="1">
@@ -373,11 +375,15 @@
                                                        Text="Cadangan cepat membuat berkas bertanggal di folder database tanpa perlu memilih lokasi. Cocok dilakukan sebelum mengubah data penting."/>
 
                                             <WrapPanel>
-                                                <Button Content="&#x1F4BE;  Buat Cadangan Cepat"
+                                                <Button
                                                         Command="{Binding BuatCadanganCepatCommand}"
                                                         Style="{StaticResource PrimaryButton}" Padding="14,0"
                                                         Margin="0,0,8,8"
-                                                        AutomationProperties.Name="Buat cadangan cepat"/>
+                                                        AutomationProperties.Name="Buat cadangan cepat">
+                                                        <TextBlock>
+                                                        <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Cadangkan}"/><Run Text=" Buat Cadangan Cepat"/>
+                                                        </TextBlock>
+                                                    </Button>
                                                 <Button Content="Segarkan Data"
                                                         Command="{Binding MuatCadanganCommand}"
                                                         Style="{StaticResource OutlineButton}" Padding="12,0"
@@ -416,19 +422,25 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                                    <TextBlock Text="&#x1F4E6;  Isi cadangan" Style="{StaticResource JudulKartu}" FontSize="13"/>
+                                                    <TextBlock Style="{StaticResource JudulKartu}" FontSize="13">
+                                                        <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Dokumen}"/><Run Text=" Isi cadangan"/>
+                                                    </TextBlock>
                                                     <TextBlock Style="{StaticResource KeteranganKecil}"
                                                                Text="Surat &amp; register, agenda, buku SK/Peraturan, data warga, pengaturan desa, template, dan penomoran."/>
                                                 </StackPanel>
 
                                                 <StackPanel Grid.Column="1" Margin="0,0,12,0">
-                                                    <TextBlock Text="&#x1F6E1;  Sebelum impor" Style="{StaticResource JudulKartu}" FontSize="13"/>
+                                                    <TextBlock Style="{StaticResource JudulKartu}" FontSize="13">
+                                                        <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Perisai}"/><Run Text=" Sebelum impor"/>
+                                                    </TextBlock>
                                                     <TextBlock Style="{StaticResource KeteranganKecil}"
                                                                Text="Database lama otomatis disalin sebagai desa_backup_before_import supaya masih bisa dikembalikan."/>
                                                 </StackPanel>
 
                                                 <StackPanel Grid.Column="2">
-                                                    <TextBlock Text="&#x2601;  Simpan di luar komputer" Style="{StaticResource JudulKartu}" FontSize="13"/>
+                                                    <TextBlock Style="{StaticResource JudulKartu}" FontSize="13">
+                                                        <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Awan}"/><Run Text=" Simpan di luar komputer"/>
+                                                    </TextBlock>
                                                     <TextBlock Style="{StaticResource KeteranganKecil}"
                                                                Text="Salin berkas .db ke flashdisk atau Drive. Cadangan di komputer yang sama tidak ikut selamat bila perangkat rusak."/>
                                                 </StackPanel>
@@ -451,11 +463,15 @@
                                                 <Border Style="{StaticResource AccentSectionBar}"/>
                                                 <TextBlock Text="CADANGAN DI FOLDER DATABASE" Style="{StaticResource FormSectionTitle}"/>
                                             </StackPanel>
-                                            <Button Grid.Column="1" Content="&#x21BB;  Segarkan"
+                                            <Button Grid.Column="1"
                                                     Command="{Binding MuatCadanganCommand}"
                                                     Style="{StaticResource OutlineButton}" Padding="10,3"
                                                     VerticalAlignment="Center" FontSize="11"
-                                                    ToolTip="Pindai ulang folder database"/>
+                                                    ToolTip="Pindai ulang folder database">
+                                                    <TextBlock>
+                                                    <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.MuatUlang}"/><Run Text=" Segarkan"/>
+                                                    </TextBlock>
+                                                </Button>
                                         </Grid>
 
                                         <TextBlock Text="{Binding KeteranganCadangan, Mode=OneWay}"
@@ -526,8 +542,8 @@
                                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                                 Padding="24,22">
                                             <StackPanel HorizontalAlignment="Center">
-                                                <TextBlock Text="&#x1F5C3;" FontSize="28" Opacity="0.55"
-                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{x:Static u:IkonMenu.Arsip}" FontSize="28" Opacity="0.55"
+                                                           HorizontalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                                                 <TextBlock Text="Belum ada cadangan di folder database"
                                                            Style="{StaticResource JudulKartu}" FontSize="13"
                                                            HorizontalAlignment="Center" Margin="0,8,0,0"/>
@@ -540,9 +556,11 @@
 
                                         <Border Background="{DynamicResource WarningSubtleBrush}" CornerRadius="8"
                                                 Padding="10,8" Margin="0,12,0,0">
-                                            <TextBlock Text="&#x2139;  Cadangan bertanda “Otomatis sebelum impor” dibuat aplikasi sendiri dan aman dipakai untuk kembali ke keadaan sebelumnya."
+                                            <TextBlock
                                                        FontSize="11" TextWrapping="Wrap" LineHeight="17"
-                                                       Foreground="{DynamicResource WarningTextBrush}"/>
+                                                       Foreground="{DynamicResource WarningTextBrush}">
+                                                <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Info}"/><Run Text=" Cadangan bertanda “Otomatis sebelum impor” dibuat aplikasi sendiri dan aman dipakai untuk kembali ke keadaan sebelumnya."/>
+                                            </TextBlock>
                                         </Border>
                                     </StackPanel>
                                 </Border>
@@ -735,9 +753,10 @@
                                                     BorderBrush="{DynamicResource WarningBrush}"
                                                     Visibility="{Binding AdaKonfirmasiImpor, Converter={StaticResource BoolToVis}}">
                                                 <StackPanel>
-                                                    <TextBlock Text="&#x26A0;  Pulihkan database dari cadangan ini?"
-                                                               FontWeight="SemiBold" TextWrapping="Wrap"
-                                                               Foreground="{DynamicResource WarningTextBrush}"/>
+                                                    <TextBlock TextWrapping="Wrap"
+                                                               Foreground="{DynamicResource WarningTextBrush}">
+                                                        <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Peringatan}"/><Run Text=" Pulihkan database dari cadangan ini?"/>
+                                                    </TextBlock>
                                                     <TextBlock Text="Seluruh data yang ada sekarang akan diganti dengan isi berkas cadangan. Salinan database lama sebelum impor tetap dibuat otomatis, sehingga langkah ini masih bisa dibatalkan nanti dengan berkas cadangan tersebut."
                                                                TextWrapping="Wrap" FontSize="13" Margin="0,6,0,0"
                                                                Foreground="{DynamicResource WarningTextBrush}"/>
@@ -778,8 +797,10 @@
                                     <!-- Cara kembali setelah impor -->
                                     <Border Style="{StaticResource FormCard}" Padding="16,14">
                                         <StackPanel>
-                                            <TextBlock Text="&#x21A9;  Ingin kembali ke data sebelumnya?"
-                                                       Style="{StaticResource JudulKartu}" FontSize="13"/>
+                                            <TextBlock
+                                                       Style="{StaticResource JudulKartu}" FontSize="13">
+                                                <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Kembali}"/><Run Text=" Ingin kembali ke data sebelumnya?"/>
+                                            </TextBlock>
                                             <TextBlock Style="{StaticResource KeteranganKecil}"
                                                        Text="Buka bagian Cadangan, lalu pilih berkas desa_backup_before_import terbaru dan tekan Pulihkan. Berkas itu dibuat otomatis tepat sebelum setiap impor."/>
                                         </StackPanel>

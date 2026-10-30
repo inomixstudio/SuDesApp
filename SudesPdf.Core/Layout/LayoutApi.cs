@@ -385,7 +385,20 @@ public sealed class TableDescriptor
     {
         ArgumentNullException.ThrowIfNull(handler);
         _node.HeaderCells ??= new List<LayoutNode>();
-        handler(new TableDescriptor(new LayoutNode { IsTableCell = false }));
+
+        // Sel kepala dibuat di wadah sementara, lalu DIPINDAHKAN ke daftar kepala
+        // tabel. Sebelumnya wadahnya dibuang begitu saja sesudah handler selesai,
+        // sehingga seluruh baris kepala ("No.", "Nama", …) hilang dari hasil cetak
+        // dan tabel dimulai langsung dengan baris data pertama.
+        var wadah = new LayoutNode { IsTableCell = false, Parent = _node };
+        handler(new TableDescriptor(wadah));
+        foreach (var sel in wadah.Children)
+        {
+            sel.Parent = _node;
+            _node.HeaderCells.Add(sel);
+        }
+
+        wadah.Children.Clear();
     }
 }
 

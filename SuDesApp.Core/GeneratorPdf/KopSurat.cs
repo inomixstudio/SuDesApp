@@ -165,8 +165,13 @@ namespace SuDesApp.GeneratorPdf
                     });
                 });
 
-                column.Item().PaddingTop(3).Height(GarisTipis).Background(Colors.Black);
-                column.Item().PaddingTop(1).Height(GarisTebal).Background(Colors.Black);
+                // Jarak di atas garis memakai MarginTop, bukan PaddingTop: latar
+                // sebuah kotak dicat sampai ke padding-nya, jadi padding akan
+                // ikut menjadi tebal garis (3+0,8 = 3,8 pt) dan kedua garis
+                // tampak menyatu menjadi satu balok hitam. Margin berada di luar
+                // kotak, sehingga garis benar-benar setipis GarisTipis/GarisTebal.
+                column.Item().MarginTop(3).Height(GarisTipis).Background(Colors.Black);
+                column.Item().MarginTop(1).Height(GarisTebal).Background(Colors.Black);
             });
         }
 

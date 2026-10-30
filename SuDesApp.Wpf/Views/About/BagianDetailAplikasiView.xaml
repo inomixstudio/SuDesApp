@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.About.BagianDetailAplikasiView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.About.BagianDetailAplikasiView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
@@ -55,28 +55,28 @@
 
                     <!-- Produk -->
                     <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x1F4E6;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Arsip}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="0" Grid.Column="1" Text="Produk" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding AssemblyProduct}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
 
                     <!-- Versi -->
                     <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x1F3F7;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Label}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="1" Grid.Column="1" Text="Versi" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding VersiTampil}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
 
                     <!-- Nomor build -->
                     <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x1F6E0;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Alat}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="2" Grid.Column="1" Text="Nomor build" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding VersiBuild}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
 
                     <!-- Pengembang -->
                     <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x1F464;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Orang}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="3" Grid.Column="1" Text="Pengembang" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding AssemblyCompany}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
@@ -84,7 +84,7 @@
                     <!-- Perusahaan induk — ditulis di sini sekaligus sebagai penunjuk
                          ke bagian "Perusahaan" yang memuat logo & penjelasannya. -->
                     <Border Grid.Row="4" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x1F3E2;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Perusahaan}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="4" Grid.Column="1" Text="Perusahaan induk" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding PerusahaanInduk}"
@@ -93,14 +93,14 @@
 
                     <!-- Copyright -->
                     <Border Grid.Row="5" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x00A9;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Info}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="5" Grid.Column="1" Text="Copyright" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding AssemblyCopyright}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
 
                     <!-- Repository -->
                     <Border Grid.Row="6" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x1F419;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Kode}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="6" Grid.Column="1" Text="Repository" Style="{StaticResource DetailLabel}" Margin="0,4,0,0"/>
                     <Button Grid.Row="6" Grid.Column="2" Content="{Binding RepoTampil}"
@@ -138,21 +138,21 @@
 
                     <!-- Runtime -->
                     <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x2699;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Pengaturan}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="0" Grid.Column="1" Text="Runtime" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding RuntimeVersi}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
 
                     <!-- Berjalan selama -->
                     <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x23F1;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Kecepatan}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="1" Grid.Column="1" Text="Berjalan selama" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Uptime}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
 
                     <!-- Folder aplikasi: program + berkas database (desa.db). -->
                     <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x1F4C1;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Folder}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="2" Grid.Column="1" Text="Folder aplikasi" Style="{StaticResource DetailLabel}" VerticalAlignment="Top" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding LokasiData}"
@@ -162,7 +162,7 @@
 
                     <!-- Preferensi & kunci: berkas milik pengguna di luar folder aplikasi. -->
                     <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="&#x1F510;" Style="{StaticResource DetailIkonText}"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Gembok}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                     <TextBlock Grid.Row="3" Grid.Column="1" Text="Preferensi &amp; kunci" Style="{StaticResource DetailLabel}" VerticalAlignment="Top" Margin="0,4,0,0"/>
                     <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding LokasiPreferensi}"
