@@ -1,0 +1,128 @@
+name: Rilis Otomatis
+
+# Satu tombol untuk seluruh urutan rilis:
+#   1. naikkan versi aplikasi + sisipkan entri Catatan Rilis;
+#   2. gerbang build solusi dan uji E2E trial server (dijalankan Tools/rilis.ps1);
+#   3. commit, tag anotasi v<versi>, dorong keduanya ke origin;
+#   4. panggil workflow "Release" untuk publish win-x64, installer Inno Setup,
+#      sidik jari SHA-256, dan unggah seluruh aset ke GitHub Releases.
+#
+# Hanya dijalankan manual: menaikkan versi mengubah repo dan menerbitkan aset
+# publik, jadi keputusan itu tetap di tangan manusia.
+#
+# Catatan penting: tag yang didorong di sini dibuat dengan GITHUB_TOKEN, dan
+# GitHub tidak menjalankan workflow dari event yang dipicu GITHUB_TOKEN. Karena
+# itu build TIDAK mengandalkan pemicu "push tag", melainkan memanggil
+# release.yml sebagai reusable workflow - sehingga tidak ada dua rilis ganda.
+on:
+  workflow_dispatch:
+    inputs:
+      versi:
+        description: 'Versi baru x.y.z, lebih tinggi dari versi sekarang (mis. 2.11.0)'
+        required: true
+        type: string
+      fitur:
+        description: 'Butir Fitur Baru, pisahkan dengan ";" bila lebih dari satu (boleh kosong)'
+        required: false
+        type: string
+      peningkatan:
+        description: 'Butir Peningkatan, pisahkan dengan ";" (boleh kosong)'
+        required: false
+        type: string
+      perbaikan:
+        description: 'Butir Perbaikan, pisahkan dengan ";" (boleh kosong)'
+        required: false
+        type: string
+      tanpa_tanda_tangan:
+        description: 'Lewati tanda tangan Authenticode (hanya untuk uji - aset tidak layak dibagikan)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+# Dua rilis otomatis yang berjalan bersamaan akan berebut nomor versi dan tag.
+concurrency:
+  group: rilis-otomatis
+  cancel-in-progress: false
+
+jobs:
+  naikkan-versi:
+    name: Naikkan versi + tag anotasi
+    runs-on: windows-latest
+    timeout-minutes: 45
+    outputs:
+      versi: ${{ steps.rilis.outputs.versi }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Riwayat dan tag lengkap: rilis.ps1 memeriksa tag yang sudah ada dan
+          # publish membandingkan dengan tag rilis sebelumnya.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.401
+
+      # Commit dan tag dibuat atas nama bot, bukan akun pribadi. Tanpa ini git
+      # menolak commit dengan "Please tell me who you are".
+      - name: Siapkan identitas git
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Naikkan versi, commit, tag anotasi, dorong
+        id: rilis
+        shell: pwsh
+        env:
+          VERSI: ${{ inputs.versi }}
+          FITUR: ${{ inputs.fitur }}
+          PENINGKATAN: ${{ inputs.peningkatan }}
+          PERBAIKAN: ${{ inputs.perbaikan }}
+        run: |
+          $versi = $env:VERSI.Trim().TrimStart('v', 'V')
+          if ($versi -notmatch '^\d+\.\d+\.\d+$') { throw "Versi tidak valid: '$versi' (harus x.y.z)." }
+
+          # Satu butir per pemisah ";" (atau baris baru bila dipanggil lewat API).
+          function BacaButir([string]$teks) {
+            if (-not $teks) { return @() }
+            return @($teks -split '[;\r\n]' | ForEach-Object { $_.Trim() } | Where-Object { $_.Length -gt 0 })
+          }
+          $fitur = BacaButir $env:FITUR
+          $peningkatan = BacaButir $env:PENINGKATAN
+          $perbaikan = BacaButir $env:PERBAIKAN
+
+          $arg = @{ Versi = $versi; Cabang = 'master' }
+          if ($fitur.Count -gt 0)       { $arg['Fitur'] = $fitur }
+          if ($peningkatan.Count -gt 0) { $arg['Peningkatan'] = $peningkatan }
+          if ($perbaikan.Count -gt 0)   { $arg['Perbaikan'] = $perbaikan }
+
+          # rilis.ps1 sendiri yang menjalankan gerbang build + uji E2E, menulis
+          # versi ke csproj dan CatatanRilisViewModel, lalu commit + tag + push.
+          # Kegagalan di gerbang mana pun menghentikan rilis sebelum ada tag.
+          ./Tools/rilis.ps1 @arg
+
+          "versi=$versi" >> $env:GITHUB_OUTPUT
+
+      - name: Pastikan tag terkirim ke origin
+        shell: pwsh
+        env:
+          VERSI: ${{ steps.rilis.outputs.versi }}
+        run: |
+          $tag = 'v' + $env:VERSI
+          $ada = (& git ls-remote --tags origin ("refs/tags/" + $tag) | Out-String).Trim()
+          if (-not $ada) { throw "Tag $tag tidak ditemukan di origin setelah push - rilis dibatalkan." }
+          Write-Host ("Tag " + $tag + " terkirim: " + $ada)
+
+  terbitkan:
+    name: Publish, installer, unggah
+    needs: naikkan-versi
+    # Jalur build/publish hanya ada di release.yml; memanggilnya sebagai reusable
+    # workflow menjaga satu sumber kebenaran untuk langkah CI.
+    uses: ./.github/workflows/release.yml
+    with:
+      versi: ${{ needs.naikkan-versi.outputs.versi }}
+      tanpa_tanda_tangan: ${{ inputs.tanpa_tanda_tangan }}
+    secrets: inherit
