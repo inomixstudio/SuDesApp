@@ -52,6 +52,25 @@ public sealed class ExcelRange
         }
     }
 
+    /// <summary>
+    /// Rumus tanpa "=" di depan. Membaca mengambil sel kiri-atas; menulis
+    /// memasang rumus yang sama ke semua sel pada rentang (berguna untuk kolom
+    /// hitung yang diisi sekaligus). Menyetel null menghapus rumus tanpa
+    /// menghapus nilai sel.
+    /// </summary>
+    public string? Formula
+    {
+        get => _lembar.CariSel(_barisAwal, _kolomAwal)?.Formula;
+        set
+        {
+            string? bersih = ExcelCell.NormalisasiRumus(value);
+            foreach (var sel in SelRentang())
+            {
+                sel.Formula = bersih;
+            }
+        }
+    }
+
     /// <summary>Teks tampilan sel kiri-atas.</summary>
     public string Text => _lembar.CariSel(_barisAwal, _kolomAwal)?.Text ?? string.Empty;
 

@@ -104,6 +104,12 @@ public sealed class ExcelSheetView
     {
         _lembar.Bekukan = (Math.Max(1, baris), Math.Max(1, kolom));
     }
+
+    /// <summary>Banyaknya baris yang dibekukan di atas (0 bila tidak ada).</summary>
+    public int FrozenRows => _lembar.Bekukan is { } beku ? beku.Baris - 1 : 0;
+
+    /// <summary>Banyaknya kolom yang dibekukan di kiri (0 bila tidak ada).</summary>
+    public int FrozenColumns => _lembar.Bekukan is { } beku ? beku.Kolom - 1 : 0;
 }
 
 /// <summary>
@@ -131,6 +137,9 @@ public sealed class ExcelWorksheet
     internal (int Baris, int Kolom)? Bekukan { get; set; }
 
     internal IReadOnlyList<string> Gabungan => _gabungan;
+
+    /// <summary>Rujukan sel gabungan pada lembar ini (mis. "A1:D1").</summary>
+    public IReadOnlyList<string> MergedCells => _gabungan;
 
     /// <summary>Nama sheet; dibersihkan dari karakter terlarang saat ditulis.</summary>
     public string Name { get; set; }
@@ -194,10 +203,15 @@ public sealed class ExcelWorksheet
     internal ExcelCell SelUntukGaya(int baris, int kolom) => SelAtauBuat(baris, kolom);
 
     /// <summary>Gabungkan rentang menjadi satu sel tampilan.</summary>
-    internal void Gabungkan(int barisAwal, int kolomAwal, int barisAkhir, int kolomAkhir)
+    internal void Gabungkan(int barisAwal, int kolomAwal, int barisAkhir, int kolomAkhir) =>
+        TambahGabungan(ExcelRujukan.Rentang(barisAwal, kolomAwal, barisAkhir, kolomAkhir));
+
+    /// <summary>Tambahkan rujukan gabungan apa adanya (dipakai pembaca berkas).</summary>
+    internal void TambahGabungan(string rujukan)
     {
-        string rujukan = ExcelRujukan.Rentang(barisAwal, kolomAwal, barisAkhir, kolomAkhir);
-        if (!_gabungan.Contains(rujukan)) _gabungan.Add(rujukan);
+        string bersih = (rujukan ?? string.Empty).Trim().ToUpperInvariant();
+        if (bersih.Length == 0 || !bersih.Contains(':')) return;
+        if (!_gabungan.Contains(bersih)) _gabungan.Add(bersih);
     }
 
     /// <summary>Lebar kolom otomatis dari panjang teks, dibatasi min/maks.</summary>

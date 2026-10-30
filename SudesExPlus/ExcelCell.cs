@@ -11,6 +11,7 @@ namespace SudesExPlus;
 public sealed class ExcelCell
 {
     private object? _nilai;
+    private string? _rumus;
 
     internal ExcelCell(ExcelWorksheet lembar, int baris, int kolom)
     {
@@ -37,8 +38,31 @@ public sealed class ExcelCell
         set => _nilai = value;
     }
 
-    /// <summary>True bila sel punya nilai atau gaya yang perlu ditulis.</summary>
-    internal bool AdaIsi => _nilai != null || Gaya.AdaGaya;
+    /// <summary>
+    /// Rumus sel tanpa tanda "=" di depan (mis. <c>SUM(A1:A5)</c>). Saat berkas
+    /// pihak lain dibaca, rumus aslinya dipertahankan; <see cref="Value"/> tetap
+    /// berisi nilai terakhir yang tersimpan di berkas. Menyetel rumus tidak
+    /// menghapus nilai — Excel memakai keduanya (rumus + hasil terakhir).
+    /// </summary>
+    public string? Formula
+    {
+        get => _rumus;
+        set => _rumus = NormalisasiRumus(value);
+    }
+
+    /// <summary>Rumus siap tulis, atau null.</summary>
+    internal string? Rumus => _rumus;
+
+    /// <summary>True bila sel punya nilai, rumus, atau gaya yang perlu ditulis.</summary>
+    internal bool AdaIsi => _nilai != null || _rumus != null || Gaya.AdaGaya;
+
+    /// <summary>Bersihkan rumus: buang "=" di depan dan spasi pinggir.</summary>
+    internal static string? NormalisasiRumus(string? rumus)
+    {
+        if (string.IsNullOrWhiteSpace(rumus)) return null;
+        string bersih = rumus.Trim();
+        return bersih.StartsWith('=') ? bersih[1..].Trim() : bersih;
+    }
 
     /// <summary>
     /// Teks tampilan sel: nilai yang sudah diformat menurut format angkanya.

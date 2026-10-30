@@ -45,6 +45,13 @@ public sealed class ExcelStyle
         get => _target.Contoh.RataTegak ?? ExcelVerticalAlignment.Bottom;
         set => _target.Ubah(g => g.RataTegak = value);
     }
+
+    /// <summary>Bungkus teks panjang ke beberapa baris di dalam satu sel.</summary>
+    public bool WrapText
+    {
+        get => _target.Contoh.BungkusTeks;
+        set => _target.Ubah(g => g.BungkusTeks = value);
+    }
 }
 
 /// <summary>Huruf sel: tebal, miring, ukuran, dan warna.</summary>
@@ -55,7 +62,8 @@ public sealed class ExcelFont
     internal ExcelFont(ITargetGaya target)
     {
         _target = target;
-        Color = new ExcelColor(warna => _target.Ubah(g => g.WarnaHuruf = warna));
+        Color = new ExcelColor(warna => _target.Ubah(g => g.WarnaHuruf = warna),
+            () => _target.Contoh.WarnaHuruf);
     }
 
     public bool Bold
@@ -76,6 +84,23 @@ public sealed class ExcelFont
         set => _target.Ubah(g => g.UkuranHuruf = value);
     }
 
+    /// <summary>
+    /// Nama huruf (mis. "Calibri", "Arial"). Nilai yang dibaca dari berkas
+    /// pihak lain disimpan kembali apa adanya supaya tampilannya tidak berubah.
+    /// </summary>
+    public string Name
+    {
+        get => _target.Contoh.NamaHuruf ?? "Calibri";
+        set => _target.Ubah(g => g.NamaHuruf = string.IsNullOrWhiteSpace(value) ? null : value.Trim());
+    }
+
+    /// <summary>Garis bawah huruf.</summary>
+    public bool Underline
+    {
+        get => _target.Contoh.GarisBawahHuruf;
+        set => _target.Ubah(g => g.GarisBawahHuruf = value);
+    }
+
     /// <summary>Warna huruf: <c>sel.Style.Font.Color.SetColor(warna)</c>.</summary>
     public ExcelColor Color { get; }
 }
@@ -84,8 +109,16 @@ public sealed class ExcelFont
 public sealed class ExcelColor
 {
     private readonly Action<Color> _pasang;
+    private readonly Func<Color?> _baca;
 
-    internal ExcelColor(Action<Color> pasang) => _pasang = pasang;
+    internal ExcelColor(Action<Color> pasang, Func<Color?>? baca = null)
+    {
+        _pasang = pasang;
+        _baca = baca ?? (() => null);
+    }
+
+    /// <summary>Warna yang sedang terpasang, atau null bila belum ada.</summary>
+    public Color? Value => _baca();
 
     /// <summary>Pasang warna; bentuk pemanggilan sama dengan pustaka sebelumnya.</summary>
     public void SetColor(Color warna) => _pasang(warna);
@@ -99,7 +132,8 @@ public sealed class ExcelFill
     internal ExcelFill(ITargetGaya target)
     {
         _target = target;
-        BackgroundColor = new ExcelColor(warna => _target.Ubah(g => g.WarnaIsian = warna));
+        BackgroundColor = new ExcelColor(warna => _target.Ubah(g => g.WarnaIsian = warna),
+            () => _target.Contoh.WarnaIsian);
     }
 
     /// <summary>
