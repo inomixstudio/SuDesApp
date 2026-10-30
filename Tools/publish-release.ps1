@@ -554,6 +554,13 @@ $releaseNotes = Join-Path $repoRoot 'artifacts/RELEASE.md'
 Set-Content -LiteralPath $releaseNotes -Value $lines -Encoding UTF8
 Write-Host ("Catatan   : " + $releaseNotes)
 
+# Badan rilis di GitHub: catatan rilis versi ini lalu daftar aset. Halaman rilis
+# yang hanya berisi daftar aset menyulitkan pengguna melihat apa yang berubah.
+$badanRilis = (Get-Content -LiteralPath $releaseNotes -Raw).Trim()
+if (Test-Path -LiteralPath $berkasCatatan) {
+    $badanRilis = (Get-Content -LiteralPath $berkasCatatan -Raw).Trim() + "`n`n## Sidik jari aset`n`n" + $badanRilis
+}
+
 # ---------- daftar aset untuk diunggah ----------
 $daftarAset = @()
 if ($setup) {
@@ -621,10 +628,7 @@ if ($Unggah) {
     $daftarRilis = @(KirimApiGitHub -Metode 'Get' -Uri ($api + '/releases?per_page=100') -Kepala $kepala)
     $rilis = $daftarRilis | Where-Object { $_.tag_name -eq $tagRilis } | Select-Object -First 1
 
-    $catatanRilis = ''
-    if (Test-Path -LiteralPath $releaseNotes) {
-        $catatanRilis = (Get-Content -LiteralPath $releaseNotes -Raw).Trim()
-    }
+    $catatanRilis = $badanRilis
 
     if ($rilis) {
         Write-Host ('Rilis ' + $tagRilis + ' sudah ada (' + $rilis.html_url + ', draft=' + $rilis.draft + ') - aset akan diganti.')
