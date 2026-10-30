@@ -44,10 +44,15 @@ dengan pustaka Excel sendiri, dan merapikan pratinjau PDF serta antarmuka.
 
 | Berkas | Keterangan |
 |---|---|
+| `SuDesApp_2.10.0_Setup.exe` | Installer Windows x64: memasang ke `%LocalAppData%\Programs\SuDesApp` tanpa UAC, membuat pintasan Start Menu, dan menyediakan pencopotan lewat *Apps & features* |
+| `SuDesApp_2.10.0_Setup.exe.sha256` | Sidik jari SHA-256 installer |
 | `SuDesApp_2.10.0_win-x64_portable.zip` | Aplikasi desktop Windows x64, self-contained .NET 10 (tanpa instalasi runtime) |
-| `SuDesApp_2.10.0_win-x64_portable.zip.sha256` | Sidik jari SHA-256 paket |
+| `SuDesApp_2.10.0_win-x64_portable.zip.sha256` | Sidik jari SHA-256 paket portable |
 
-Ekstrak ZIP lalu jalankan `SuDesApp.exe`. Paket ini belum ditandatangani
-Authenticode dan konfigurasi server lisensinya masih menunjuk `localhost`;
-paket produksi dibuat lewat workflow Release dengan sertifikat dan secret
-lisensi. Aplikasi web/API dijalankan terpisah dari paket desktop ini.
+Jalankan `SuDesApp_2.10.0_Setup.exe` untuk memasang aplikasi; data desa
+(`desa.db`, `Templates`, hasil PDF) tidak ditimpa saat pemasangan versi baru dan
+`Templates` tidak dihapus saat pencopotan. Tanpa instalasi, ekstrak ZIP lalu
+jalankan `SuDesApp.exe`. Kedua paket belum ditandatangani Authenticode dan
+konfigurasi server lisensinya masih menunjuk `localhost`; paket produksi dibuat
+lewat workflow Release dengan sertifikat dan secret lisensi. Aplikasi web/API
+dijalankan terpisah dari paket desktop ini.
