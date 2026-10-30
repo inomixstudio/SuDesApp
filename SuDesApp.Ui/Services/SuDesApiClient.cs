@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 
 namespace SuDesApp.Ui.Services;
@@ -105,6 +105,8 @@ public sealed class SuDesApiClient
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
+            // Sesi server tidak terjangkau: token tetap kedaluwarsa sendiri,
+            // jadi keluar lokal tidak perlu digagalkan oleh galat jaringan.
         }
     }
 

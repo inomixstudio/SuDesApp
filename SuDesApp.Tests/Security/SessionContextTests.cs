@@ -45,7 +45,7 @@ namespace SuDesApp.Tests.Security
             // Izin yang memang milik Operator tetap lolos — penolakan bukan
             // karena penegakan memblokir semua hal.
             SessionContext.Wajib(IzinAplikasi.BuatSurat);
-            Assert.True(SessionContext.Boleh(IzinAplikasi.LayananOnline));
+            Assert.True(SessionContext.Boleh(IzinAplikasi.KelolaWarga));
             Assert.False(SessionContext.Boleh(IzinAplikasi.KelolaPengguna));
         }
 

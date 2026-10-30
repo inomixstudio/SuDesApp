@@ -1,4 +1,4 @@
-// SuDesApp.Api — backend tunggal untuk ketiga platform (desktop, Android, browser).
+﻿// SuDesApp.Api — backend tunggal untuk ketiga platform (desktop, Android, browser).
 // Seluruh logika bisnis tetap di SuDesApp.Core; proyek ini hanya membungkusnya
 // sebagai HTTP supaya WPF/MAUI/Web membaca dan menulis data yang sama.
 //
@@ -37,12 +37,8 @@ builder.Services.AddSingleton(sp =>
     var cfg = new AppConfig(
         builder.Configuration,
         sp.GetService<ILogger<AppConfig>>());
-    // Sama seperti startup WPF (App.xaml.cs): kunci database dari DPAPI + provider
-    // SQLCipher dulu, baru connection string dipakai. Tanpa langkah ini berkas
-    // terenkripsi dibuka tanpa Password dan SQLite menjawab "file is not a database".
-    cfg.DatabaseConnectionString = EnkripsiDatabase.JaminTerkunci(
-        cfg.DatabaseConnectionString,
-        sp.GetService<ILogger<AppConfig>>());
+    // Database desa kini SQLite biasa tanpa berkas kunci (lihat catatan rilis
+    // 2.8.0): connection string dipakai apa adanya, sama seperti startup WPF.
     return cfg;
 });
 
