@@ -13,11 +13,21 @@ internal sealed class GayaSel
 {
     public bool Bold { get; set; }
     public bool Italic { get; set; }
+
+    /// <summary>Garis bawah huruf; dipertahankan saat berkas pihak lain dibaca.</summary>
+    public bool GarisBawahHuruf { get; set; }
+
+    /// <summary>Nama huruf (mis. Calibri, Arial); null berarti huruf bawaan.</summary>
+    public string? NamaHuruf { get; set; }
+
     public double? UkuranHuruf { get; set; }
     public Color? WarnaHuruf { get; set; }
     public Color? WarnaIsian { get; set; }
     public ExcelHorizontalAlignment? RataMendatar { get; set; }
     public ExcelVerticalAlignment? RataTegak { get; set; }
+
+    /// <summary>Teks dibungkus ke baris berikutnya di dalam sel.</summary>
+    public bool BungkusTeks { get; set; }
     public string? FormatAngka { get; set; }
     public ExcelBorderStyle GarisKiri { get; set; }
     public ExcelBorderStyle GarisKanan { get; set; }
@@ -26,8 +36,9 @@ internal sealed class GayaSel
 
     /// <summary>True bila sel memakai gaya apa pun; dipakai penulis untuk memilih xf.</summary>
     public bool AdaGaya =>
-        Bold || Italic || UkuranHuruf.HasValue || WarnaHuruf.HasValue || WarnaIsian.HasValue ||
-        RataMendatar.HasValue || RataTegak.HasValue || !string.IsNullOrEmpty(FormatAngka) ||
+        Bold || Italic || GarisBawahHuruf || !string.IsNullOrEmpty(NamaHuruf) ||
+        UkuranHuruf.HasValue || WarnaHuruf.HasValue || WarnaIsian.HasValue ||
+        RataMendatar.HasValue || RataTegak.HasValue || BungkusTeks || !string.IsNullOrEmpty(FormatAngka) ||
         GarisKiri != ExcelBorderStyle.None || GarisKanan != ExcelBorderStyle.None ||
         GarisAtas != ExcelBorderStyle.None || GarisBawah != ExcelBorderStyle.None;
 

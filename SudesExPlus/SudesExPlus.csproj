@@ -10,10 +10,12 @@
       SudesExPlus adalah pustaka Excel (.xlsx) milik aplikasi sendiri:
       pengganti EPPlus tanpa paket pihak ketiga dan tanpa permintaan lisensi
       komersial. Yang diimplementasikan hanya bagian yang dipakai SuDesApp —
-      tulis dan baca workbook, gaya sel (font, isian, garis, perataan, format
-      angka), gabung sel, lebar kolom, tinggi baris, dan bekukan panel — tetapi
-      berkas yang dihasilkan tetap .xlsx standar (OOXML) sehingga bisa dibuka
-      Excel, LibreOffice, dan WPS.
+      tulis dan baca workbook, gaya sel (font, isian, garis, perataan, bungkus
+      teks, format angka), gabung sel, lebar kolom, tinggi baris, bekukan panel,
+      dan rumus sel — tetapi berkas yang dihasilkan tetap .xlsx standar (OOXML)
+      sehingga bisa dibuka Excel, LibreOffice, dan WPS. Pembaca mempertahankan
+      seluruh atribut itu (termasuk warna tema+tint dan rumus bersama) supaya
+      berkas pihak lain bisa dibuka lalu disimpan ulang tanpa kehilangan format.
     -->
   </PropertyGroup>
 </Project>

@@ -190,6 +190,7 @@ internal static class XlsxWriter
                 xml.WriteStartElement("font");
                 if (font.Bold) xml.WriteElementString("b", string.Empty);
                 if (font.Italic) xml.WriteElementString("i", string.Empty);
+                if (font.GarisBawah) xml.WriteElementString("u", string.Empty);
 
                 xml.WriteStartElement("sz");
                 xml.WriteAttributeString("val", font.Ukuran.ToString("0.##", CultureInfo.InvariantCulture));
@@ -203,7 +204,7 @@ internal static class XlsxWriter
                 }
 
                 xml.WriteStartElement("name");
-                xml.WriteAttributeString("val", "Calibri");
+                xml.WriteAttributeString("val", string.IsNullOrWhiteSpace(font.Nama) ? "Calibri" : font.Nama!);
                 xml.WriteEndElement();
                 xml.WriteEndElement();
             }
@@ -284,7 +285,7 @@ internal static class XlsxWriter
                 if (xf.FillId != 0) xml.WriteAttributeString("applyFill", "1");
                 if (xf.BorderId != 0) xml.WriteAttributeString("applyBorder", "1");
 
-                if (xf.RataMendatar.HasValue || xf.RataTegak.HasValue)
+                if (xf.RataMendatar.HasValue || xf.RataTegak.HasValue || xf.BungkusTeks)
                 {
                     xml.WriteAttributeString("applyAlignment", "1");
                     xml.WriteStartElement("alignment");
@@ -297,6 +298,8 @@ internal static class XlsxWriter
                     {
                         xml.WriteAttributeString("vertical", TeksRataTegak(xf.RataTegak.Value));
                     }
+
+                    if (xf.BungkusTeks) xml.WriteAttributeString("wrapText", "1");
 
                     xml.WriteEndElement();
                 }
@@ -479,6 +482,13 @@ internal static class XlsxWriter
             xml.WriteAttributeString("s", indeksGaya.ToString(CultureInfo.InvariantCulture));
         }
 
+        if (sel.Rumus is { } rumus)
+        {
+            TulisSelRumus(xml, nilai, rumus);
+            xml.WriteEndElement();
+            return;
+        }
+
         switch (nilai)
         {
             case null:
@@ -525,6 +535,56 @@ internal static class XlsxWriter
         }
 
         xml.WriteEndElement();
+    }
+
+    /// <summary>
+    /// Sel berumus: tulis <c>&lt;f&gt;</c> lalu nilai terakhir yang tersimpan
+    /// (kalau ada) sebagai <c>&lt;v&gt;</c>. Excel menghitung ulang saat berkas
+    /// dibuka, dan pembaca lain tetap melihat hasil terakhir tanpa menghitung.
+    /// </summary>
+    private static void TulisSelRumus(XmlWriter xml, object? nilai, string rumus)
+    {
+        switch (nilai)
+        {
+            case string teks:
+                xml.WriteAttributeString("t", "str");
+                xml.WriteStartElement("f");
+                xml.WriteString(rumus);
+                xml.WriteEndElement();
+                xml.WriteStartElement("v");
+                xml.WriteString(teks);
+                xml.WriteEndElement();
+                break;
+
+            case bool logika:
+                xml.WriteAttributeString("t", "b");
+                xml.WriteStartElement("f");
+                xml.WriteString(rumus);
+                xml.WriteEndElement();
+                xml.WriteElementString("v", logika ? "1" : "0");
+                break;
+
+            case DateTime waktu:
+                xml.WriteStartElement("f");
+                xml.WriteString(rumus);
+                xml.WriteEndElement();
+                xml.WriteElementString("v", SerialTanggal(waktu).ToString("R", CultureInfo.InvariantCulture));
+                break;
+
+            case null:
+                xml.WriteStartElement("f");
+                xml.WriteString(rumus);
+                xml.WriteEndElement();
+                break;
+
+            default:
+                xml.WriteStartElement("f");
+                xml.WriteString(rumus);
+                xml.WriteEndElement();
+                xml.WriteElementString("v",
+                    Convert.ToDouble(nilai, CultureInfo.InvariantCulture).ToString("R", CultureInfo.InvariantCulture));
+                break;
+        }
     }
 
     /// <summary>Serial tanggal Excel (sistem 1900, seperti yang dipakai Excel).</summary>
@@ -581,7 +641,7 @@ internal static class XlsxWriter
             Isian.Add(null);
             Isian.Add(null); // gray125: slot wajib kedua pada berkas Excel
             IsiGaris(new EntriGaris());
-            Xf.Add(new EntriXf(0, 0, 0, 0, null, null));
+            Xf.Add(new EntriXf(0, 0, 0, 0, null, null, false));
             _indeksXf["0"] = 0;
         }
 
@@ -595,11 +655,13 @@ internal static class XlsxWriter
             string kunci = string.Join('|',
                 numFmtId, fontId, fillId, borderId,
                 gaya.RataMendatar?.ToString() ?? "-",
-                gaya.RataTegak?.ToString() ?? "-");
+                gaya.RataTegak?.ToString() ?? "-",
+                gaya.BungkusTeks);
 
             if (_indeksXf.TryGetValue(kunci, out int ada)) return ada;
 
-            var xf = new EntriXf(numFmtId, fontId, fillId, borderId, gaya.RataMendatar, gaya.RataTegak);
+            var xf = new EntriXf(numFmtId, fontId, fillId, borderId,
+                gaya.RataMendatar, gaya.RataTegak, gaya.BungkusTeks);
             Xf.Add(xf);
             _indeksXf[kunci] = Xf.Count - 1;
             return Xf.Count - 1;
@@ -627,7 +689,9 @@ internal static class XlsxWriter
 
         private int FontId(GayaSel gaya)
         {
-            if (!gaya.Bold && !gaya.Italic && !gaya.UkuranHuruf.HasValue && !gaya.WarnaHuruf.HasValue)
+            if (!gaya.Bold && !gaya.Italic && !gaya.GarisBawahHuruf &&
+                string.IsNullOrEmpty(gaya.NamaHuruf) &&
+                !gaya.UkuranHuruf.HasValue && !gaya.WarnaHuruf.HasValue)
             {
                 return 0;
             }
@@ -636,7 +700,8 @@ internal static class XlsxWriter
             // kunci di IsiFont; kalau tidak, sel tanpa ukuran eksplisit akan
             // dianggap font baru setiap kali dan menghasilkan xf tambahan di
             // luar indeks yang sudah ditulis ke styles.xml.
-            string kunci = string.Join('|', gaya.Bold, gaya.Italic,
+            string kunci = string.Join('|', gaya.Bold, gaya.Italic, gaya.GarisBawahHuruf,
+                gaya.NamaHuruf ?? "Calibri",
                 (gaya.UkuranHuruf ?? 11).ToString(CultureInfo.InvariantCulture),
                 gaya.WarnaHuruf.HasValue ? Rgb(gaya.WarnaHuruf.Value) : "-");
 
@@ -646,6 +711,8 @@ internal static class XlsxWriter
             {
                 Bold = gaya.Bold,
                 Italic = gaya.Italic,
+                GarisBawah = gaya.GarisBawahHuruf,
+                Nama = gaya.NamaHuruf,
                 Ukuran = gaya.UkuranHuruf ?? 11,
                 Warna = gaya.WarnaHuruf,
             });
@@ -653,7 +720,8 @@ internal static class XlsxWriter
 
         private int IsiFont(EntriFont font)
         {
-            string kunci = string.Join('|', font.Bold, font.Italic,
+            string kunci = string.Join('|', font.Bold, font.Italic, font.GarisBawah,
+                font.Nama ?? "Calibri",
                 font.Ukuran.ToString(CultureInfo.InvariantCulture),
                 font.Warna.HasValue ? Rgb(font.Warna.Value) : "-");
 
@@ -714,6 +782,11 @@ internal static class XlsxWriter
 
         public bool Italic { get; init; }
 
+        public bool GarisBawah { get; init; }
+
+        /// <summary>Nama huruf; null berarti Calibri.</summary>
+        public string? Nama { get; init; }
+
         public double Ukuran { get; init; } = 11;
 
         public Color? Warna { get; init; }
@@ -736,5 +809,6 @@ internal static class XlsxWriter
         int FillId,
         int BorderId,
         ExcelHorizontalAlignment? RataMendatar,
-        ExcelVerticalAlignment? RataTegak);
+        ExcelVerticalAlignment? RataTegak,
+        bool BungkusTeks);
 }
