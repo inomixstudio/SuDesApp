@@ -179,6 +179,32 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.10.1 (31 Oktober 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Perbaikan — Tanda Tangan Rekening Koran di Kolom Kanan", new List<string>
+                        {
+                            "Blok tanda tangan Kepala Desa pada permohonan print out rekening koran kini benar-benar berdiri di kolom kanan surat, dengan jabatan dan nama rata tengah di dalam kolom itu. Sebelumnya kotak blok memang diletakkan di kanan, tetapi isinya tertata selebar halaman sehingga kedua baris tercetak di tengah kertas.",
+                            "Perbaikan yang sama berlaku untuk pratinjau maupun cetak ulang surat lama, karena keduanya menyusun berkas lewat jalur yang sama."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Pratinjau PDF Jauh Lebih Ringan", new List<string>
+                        {
+                            "Gambar kop dan pindaian besar tidak lagi ditanam seluruhnya ke PDF: gambar diperkecil ke kerapatan cetak yang benar-benar dipakai (300 dpi), dan saat ditampilkan di layar hanya bagian yang tampak yang dibaca. Pindaian kop 1507×2050 piksel yang tampil sekitar 70 piksel tidak lagi dikonversi penuh ke RGBA di setiap halaman.",
+                            "Setiap berkas gambar hanya diurai sekali per dokumen, dan halaman pratinjau tidak lagi dibangun ulang seluruhnya saat memperbesar atau memperkecil tampilan — kerangkanya dipakai ulang dan bitmap lama tetap terpasang sampai hasil baru siap, sehingga panel tidak berkedip putih.",
+                            "Hasil pengukuran Release pada surat satu halaman: render halaman turun dari sekitar 180 ms menjadi sekitar 60 ms, dan berkas PDF surat berisi kop menjadi lebih kecil. Tampilan halamannya sendiri tetap sama; kesetaraan hasil dicek piksel demi piksel pada empat belas halaman contoh sebelum perubahan ini dijadikan rilis."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Satu Jalur untuk Semua Pratinjau", new List<string>
+                        {
+                            "Seluruh alur “susun surat, simpan berkas sementara, buka pratinjau” kini memakai satu penulis berkas pratinjau. Berkas pratinjau selalu berada di folder TempPDF aplikasi dan ikut dibersihkan saat aplikasi dijalankan; sebelumnya tiap halaman menulis berkas dengan namanya sendiri sehingga sisa pratinjau menumpuk di luar folder itu.",
+                            "Kop pada pratinjau disusun oleh mesin tata letak yang sama dengan surat, bukan tata letak kedua di XAML, jadi bentuk kop di layar tidak bisa lagi berbeda dari hasil cetak."
+                        }),
+                        new CatatanRilisSubSection("Pembaruan — Cara Memasang Pembaruan Ini", new List<string>
+                        {
+                            "Dari versi 2.10.0, aplikasi memasang pembaruan kecil: hanya berkas yang berubah yang diunduh, jadi jauh lebih ringan daripada installer penuh.",
+                            "Dari versi mana pun di bawah 2.10.0, aplikasi memakai installer penuh 2.10.1. Tidak perlu memasang 2.10.0 lebih dulu: installer 2.10.1 sudah memuat seluruh isi 2.10.0 beserta semua perbaikan pada versi ini. Hal yang sama berlaku bila folder aplikasi tidak dapat ditulis atau pembaruan kecilnya gagal."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.10.0 (30 Oktober 2026)",
                     new List<CatatanRilisSubSection>
                     {

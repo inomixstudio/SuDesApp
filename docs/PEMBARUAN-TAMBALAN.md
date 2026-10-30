@@ -136,6 +136,13 @@ Ambang itu bisa disetel saat memanggil skrip. Untuk perubahan arsitektur
 pasti cocok. Bila ingin melayani lompatan versi, buat tambalan dengan
 `-VersiLama 2.4.3` (diff terhadap rilis yang lebih tua).
 
+Pembanding tambalan di CI adalah **tag tertinggi di bawah versi rilis** (untuk 2.10.1
+berarti `v2.10.0`), bukan versi yang kebetulan terpasang di komputer pengguna — jadi
+tag rilis sebelumnya harus sudah ada di origin sebelum workflow Release berjalan.
+Pengguna dengan versi di bawah baseline tidak perlu melewati versi perantara:
+installer rilis terbaru sudah memuat seluruh isi baseline beserta perbaikannya, dan
+itulah yang dipakai aplikasi ketika `dariVersi` tidak cocok.
+
 ## Pengamanan yang berlaku di aplikasi
 
 - ZIP tambalan diverifikasi **SHA-256** sebelum diekstrak (memakai digest resmi GitHub
