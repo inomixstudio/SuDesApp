@@ -126,18 +126,37 @@ jobs:
             throw "Tag $tag belum ada di origin. Buat dan dorong tag itu dulu - rilis GitHub menuntut tag yang menunjuk commit rilis."
           }
 
-          # Pembanding tambalan: tag tertinggi yang lebih rendah dari versi ini.
-          # Bila zip-nya tidak bisa diunduh, publish-release.ps1 jatuh ke
-          # patch.json berjenis "besar" dengan sendirinya.
-          $lama = ''
-          foreach ($t in @(git tag --list 'v*' --sort=-v:refname)) {
-            if ($t -notmatch '^v(\d+\.\d+\.\d+)$') { continue }
-            if ([version]$Matches[1] -lt [version]$versi) { $lama = $Matches[1]; break }
+          # Pembanding tambalan: versi TERTUA yang lebih rendah dari versi ini,
+          # bukan versi tepat sebelumnya. Perubahan berkas dari versi tertua sudah
+          # mencakup perubahan semua versi sesudahnya, jadi satu tambalan melayani
+          # pengguna yang tertinggal beberapa versi (2.8.x/2.9.x -> 2.10.1) tanpa
+          # memasang versi perantara lebih dulu.
+          $semua = @()
+          foreach ($t in @(git tag --list 'v*')) {
+            if ($t -match '^v(\d+\.\d+\.\d+)$' -and [version]$Matches[1] -lt [version]$versi) {
+              $semua += $Matches[1]
+            }
           }
+          $semua = @($semua | Sort-Object { [version]$_ })
+          $lama = if ($semua.Count -gt 0) { $semua[0] } else { '' }
+          $dari = @($semua | Where-Object { $lama -and [version]$_ -ge [version]$lama }) -join ','
 
           "versi=$versi" >> $env:GITHUB_OUTPUT
           "versi_lama=$lama" >> $env:GITHUB_OUTPUT
-          Write-Host ("Versi: {0}   pembanding: {1}" -f $versi, $(if ($lama) { $lama } else { '(tidak ada)' }))
+          "dari_versi=$dari" >> $env:GITHUB_OUTPUT
+          Write-Host ("Versi: {0}   pembanding: {1}   versi asal: {2}" -f $versi, $(if ($lama) { $lama } else { '(tidak ada)' }), $(if ($dari) { $dari } else { '(tidak ada)' }))
+
+      - name: Siapkan pembanding tambalan dari tag bila belum tersedia
+        shell: pwsh
+        env:
+          LAMA: ${{ steps.versi.outputs.versi_lama }}
+        run: |
+          # Rilis lama kadang tidak punya zip portable (hanya tag). Tanpa isi versi
+          # asal, tambalan tidak bisa dibangun - jadi paketnya dibuat dari tag.
+          if (-not $env:LAMA) { Write-Host 'Tanpa pembanding - tambalan dilewati.'; exit 0 }
+          $zip = 'artifacts/SuDesApp_' + $env:LAMA + '_win-x64.zip'
+          if (Test-Path -LiteralPath $zip) { Write-Host ('Pembanding sudah ada: ' + $zip); exit 0 }
+          ./Tools/siapkan-pembanding.ps1 -Versi $env:LAMA
 
       - name: Terapkan konfigurasi lisensi produksi
         shell: pwsh
@@ -182,6 +201,7 @@ jobs:
           SUDESAPP_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
           VERSI: ${{ steps.versi.outputs.versi }}
           VERSI_LAMA: ${{ steps.versi.outputs.versi_lama }}
+          DARI_VERSI: ${{ steps.versi.outputs.dari_versi }}
           REPO: ${{ github.repository }}
         run: |
           # CI tidak pernah memegang berkas rahasia kredensial Google (sengaja tidak
@@ -196,4 +216,5 @@ jobs:
             IzinkanTanpaKredensial = $true
           }
           if ($env:VERSI_LAMA) { $arg['VersiLama'] = $env:VERSI_LAMA }
+          if ($env:DARI_VERSI) { $arg['DariVersi'] = $env:DARI_VERSI }
           ./Tools/publish-release.ps1 @arg

@@ -1,7 +1,7 @@
 # SuDesApp 2.10.1 — 31 Oktober 2026
 
-Rilis tambalan untuk 2.10.0: memperbaiki letak tanda tangan pada permohonan
-rekening koran dan membuat pratinjau/cetak PDF jauh lebih ringan. Tidak ada
+Rilis tambalan untuk 2.7.2 sampai 2.10.0: memperbaiki letak tanda tangan pada
+permohonan rekening koran dan membuat pratinjau/cetak PDF jauh lebih ringan. Tidak ada
 perubahan format data, jadi `desa.db`, `Templates`, dan arsip surat lama dipakai
 apa adanya.
 
@@ -39,15 +39,15 @@ belas halaman contoh sebelum rilis ini diterbitkan.
 
 | Versi terpasang | Yang dipakai | Unduhan |
 |---|---|---|
-| 2.10.0 | pembaruan kecil (tambalan) | hanya berkas yang berubah |
-| di bawah 2.10.0 | installer penuh 2.10.1 | ± 100 MB |
+| 2.7.2, 2.8.0, 2.9.0, 2.10.0 | satu pembaruan kecil (tambalan) | hanya berkas yang berubah (± 5 MB) |
+| di bawah 2.7.2 | installer penuh 2.10.1 | ± 100 MB |
 
-Versi di bawah 2.10.0 **tidak perlu** memasang 2.10.0 lebih dulu: installer
-2.10.1 sudah memuat seluruh isi 2.10.0 beserta perbaikan pada versi ini. Aplikasi
-memilih jalur ini sendiri — tambalan hanya dipasang bila versi terpasang sama
-dengan versi asal tambalan (`dariVersi` pada `patch.json`), sedangkan versi lain
-diarahkan ke installer penuh. Jalur yang sama dipakai bila folder aplikasi tidak
-dapat ditulis atau tambalan gagal dipasang.
+Pengguna 2.8.x dan 2.9.x **tidak perlu** memasang 2.10.0 lebih dulu, dan installer
+penuh tidak dipakai: tambalan ini dibangun terhadap versi 2.7.2, jadi isinya sudah
+mencakup perubahan pada 2.8.0 dan 2.9.0 sekaligus. Aplikasi memilih jalur ini sendiri —
+tambalan hanya dipasang bila versi terpasang tercantum di `dariVersi` pada
+`patch.json`, sedangkan versi lain diarahkan ke installer penuh. Jalur installer juga
+dipakai bila folder aplikasi tidak dapat ditulis atau tambalan gagal dipasang.
 
 Aplikasi versi 2.9.0 ke atas mengunduh paketnya sendiri di latar belakang setelah
 pengguna masuk; versi yang lebih lama belum punya unduhan latar, jadi paket
@@ -61,7 +61,7 @@ diunduh manual dari halaman rilis dan dijalankan seperti biasa.
 | `SuDesApp_2.10.1_Setup.exe.sha256` | Sidik jari SHA-256 installer |
 | `SuDesApp_2.10.1_win-x64_portable.zip` | Aplikasi desktop Windows x64, self-contained .NET 10 (tanpa instalasi runtime) |
 | `SuDesApp_2.10.1_win-x64_portable.zip.sha256` | Sidik jari SHA-256 paket portable |
-| `patch.json` + `patch-2.10.1.zip` | Pembaruan kecil untuk aplikasi 2.10.0 yang sudah terpasang |
+| `patch.json` + `patch-2.10.1.zip` | Pembaruan kecil untuk aplikasi 2.7.2–2.10.0 yang sudah terpasang |
 
 Data desa (`desa.db`, `Templates`, hasil PDF) tidak ditimpa saat pemasangan versi
 baru, dan `Templates` tidak dihapus saat pencopotan. Tanpa instalasi, ekstrak ZIP

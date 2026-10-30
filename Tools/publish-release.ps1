@@ -27,8 +27,14 @@ param(
     # diambil dari -PublishLama, dari zip portable rilis lama di artifacts/
     # (SuDesApp_<versiLama>_win-x64.zip), atau bila keduanya kosong - diunduh
     # sendiri dari rilis GitHub (dengan verifikasi sha256 terhadap digest aset).
-    [string]$VersiLama,
-    [string]$PublishLama,
+    # Beberapa versi dipisah koma: tiap pembanding disatukan sehingga satu
+    # tambalan juga melayani versi-versi yang lebih tua (lihat -DariVersi).
+    [string[]]$VersiLama,
+    [string[]]$PublishLama,
+
+    # Versi yang boleh memasang tambalan ini. Bawaannya hanya versi yang benar-benar
+    # dibandingkan; versi yang lebih tua pemilik paketnya harus dinyatakan sendiri.
+    [string[]]$DariVersi,
     [string]$Ringkasan,
     [switch]$Besar,
 
@@ -49,6 +55,19 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
+
+# -VersiLama/-DariVersi boleh datang sebagai satu string berkoma (input workflow).
+$VersiLama = @($VersiLama | ForEach-Object { $_ -split ',' } |
+    ForEach-Object { $_.Trim().TrimStart('v', 'V') } | Where-Object { $_.Length -gt 0 })
+$DariVersi = @($DariVersi | ForEach-Object { $_ -split ',' } |
+    ForEach-Object { $_.Trim().TrimStart('v', 'V') } | Where-Object { $_.Length -gt 0 })
+$PublishLama = @($PublishLama | Where-Object { $_ })
+if ($DariVersi.Count -gt 0 -and $VersiLama.Count -eq 0) {
+    # Tanpa pembanding tidak ada isi berkas lama untuk dibandingkan; daftar versi
+    # asal saja tidak cukup, jadi jangan diam-diam mengklaim cakupan itu.
+    Write-Host '-DariVersi diabaikan: isi tambalan hanya bisa dihitung dari -VersiLama.' -ForegroundColor Yellow
+    $DariVersi = @()
+}
 
 # Jangan pernah menghasilkan installer yang diam-diam menunjuk server lokal,
 # HTTP, atau akar kunci yang tidak cocok dengan server aktivasi produksi.
@@ -428,47 +447,58 @@ Write-Host ("Tanda tgn : " + $statusTandaTangan)
 # Bandingkan hasil publish ini dengan hasil publish rilis lama. Pembanding bisa
 # diberikan lewat -PublishLama, dipakai dari zip portable rilis lama di artifacts/
 # bila ada, atau diunduh dari rilis GitHub bila belum ada di mesin ini.
-if ($VersiLama) {
-    if (-not $PublishLama) {
-        $zipLama = Join-Path $repoRoot ("artifacts/SuDesApp_{0}_win-x64.zip" -f $VersiLama)
+# Setiap pembanding dikumpulkan dulu; yang gagal (zip tak ada / unduhan gagal)
+# dilewati sendirian, bukan membatalkan seluruh tambalan.
+$pembanding = @()
+if ($PublishLama.Count -gt 0 -and $PublishLama.Count -ne $VersiLama.Count) {
+    throw ('-PublishLama ({0}) harus sejumlah -VersiLama ({1}).' -f $PublishLama.Count, $VersiLama.Count)
+}
+for ($i = 0; $i -lt $VersiLama.Count; $i++) {
+    $versiBanding = $VersiLama[$i]
+    $folderBanding = if ($PublishLama.Count -gt 0) { $PublishLama[$i] } else { '' }
+    if (-not $folderBanding) {
+        $zipLama = Join-Path $repoRoot ("artifacts/SuDesApp_{0}_win-x64.zip" -f $versiBanding)
         if (-not (Test-Path -LiteralPath $zipLama)) {
             try {
-                UnduhZipRilisLama -Versi $VersiLama -Tujuan $zipLama
+                UnduhZipRilisLama -Versi $versiBanding -Tujuan $zipLama
             } catch {
                 # Kegagalan lingkungan (jaringan/token/rilis tak ada) tidak boleh
-                # mematikan rilis: tambalan dilewati, patch.json jatuh ke "besar".
-                Write-Host ('Pembanding tidak tersedia: ' + $_.Exception.Message) -ForegroundColor Yellow
-                Write-Host 'Tambalan dilewati - patch.json akan berjenis "besar" (installer penuh).' -ForegroundColor Yellow
-                $VersiLama = ''
+                # mematikan rilis: pembanding ini dilewati, tambalan menyusut.
+                Write-Host ('Pembanding {0} tidak tersedia: {1}' -f $versiBanding, $_.Exception.Message) -ForegroundColor Yellow
+                continue
             }
         }
+        $folderBanding = Join-Path $repoRoot ("artifacts/publish-lama-{0}" -f $versiBanding)
+        if (Test-Path -LiteralPath $folderBanding) { Remove-Item -LiteralPath $folderBanding -Recurse -Force }
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($zipLama, $folderBanding)
+        Write-Host ("Pembanding: {0} diekstrak ke {1}" -f $zipLama, $folderBanding)
     }
+    $pembanding += @{ Versi = $versiBanding; Folder = $folderBanding }
 }
 
-if ($VersiLama) {
-    if (-not $PublishLama) {
-        $PublishLama = Join-Path $repoRoot 'artifacts/publish-lama'
-        if (Test-Path -LiteralPath $PublishLama) { Remove-Item -LiteralPath $PublishLama -Recurse -Force }
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($zipLama, $PublishLama)
-        Write-Host ("Pembanding: {0} diekstrak ke {1}" -f $zipLama, $PublishLama)
-    }
-    # Ringkasan otomatis dari judul commit sejak tag rilis lama (bila -Ringkasan
-    # tidak diberi) - dipakai Buat-Tambalan dan, bila tambalan gagal, badan
-    # patch.json fallback.
+if ($VersiLama.Count -gt 0 -and $pembanding.Count -eq 0) {
+    Write-Host 'Tambalan dilewati - patch.json akan berjenis "besar" (installer penuh).' -ForegroundColor Yellow
+}
+
+if ($pembanding.Count -gt 0) {
+    # Ringkasan otomatis dari judul commit sejak tag pembanding pertama (bila
+    # -Ringkasan tidak diberi) - dipakai Buat-Tambalan dan, bila tambalan gagal,
+    # badan patch.json fallback.
     if (-not $Ringkasan) {
-        $Ringkasan = BuatRingkasanOtomatis -VersiLama $VersiLama
+        $Ringkasan = BuatRingkasanOtomatis -VersiLama $pembanding[0].Versi
     }
     # Hashtable splat: -Ringkasan/-Besar harus diteruskan sebagai argumen bernama.
     # Array splat memposisikan argumen dan path RINGKASAN.txt mendarat di parameter
     # int lain (BatasBerkasPersen).
     $argTambalan = @{
         Versi       = $Version
-        VersiLama   = $VersiLama
+        VersiLama   = @($pembanding | ForEach-Object { $_.Versi })
         PublishBaru = $publishDir
-        PublishLama = $PublishLama
+        PublishLama = @($pembanding | ForEach-Object { $_.Folder })
         Keluaran    = (Join-Path $repoRoot 'artifacts')
     }
+    if ($DariVersi.Count -gt 0) { $argTambalan['DariVersi'] = $DariVersi }
     if ($Ringkasan) { $argTambalan['Ringkasan'] = $Ringkasan }
     if ($Besar)     { $argTambalan['Besar'] = $true }
 
