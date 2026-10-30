@@ -188,8 +188,20 @@ function UnduhZipRilisLama {
     $rilis = $daftar | Where-Object { $_.tag_name -eq $tag -and -not $_.draft } | Select-Object -First 1
     if (-not $rilis) { throw ("rilis {0} tidak ditemukan di GitHub (atau masih draft)" -f $tag) }
 
-    $aset = @($rilis.assets) | Where-Object { $_.name -like 'SuDesApp_*_win-x64.zip' } | Select-Object -First 1
-    if (-not $aset) { throw ("rilis {0} tidak memuat zip portable SuDesApp_*_win-x64.zip" -f $tag) }
+    # Nama zip portable tidak seragam antar rilis: skrip ini mengunggah
+    # SuDesApp_<versi>_win-x64.zip, sedangkan rilis 2.10.0 memakai akhiran
+    # _portable. Tanpa menerima keduanya, pembanding tidak ditemukan, tambalan
+    # dilewati diam-diam, dan rilis hanya keluar sebagai installer penuh.
+    $aset = $null
+    foreach ($nama in @(("SuDesApp_{0}_win-x64.zip" -f $Versi),
+                        ("SuDesApp_{0}_win-x64_portable.zip" -f $Versi))) {
+        $aset = @($rilis.assets) | Where-Object { $_.name -eq $nama } | Select-Object -First 1
+        if ($aset) { break }
+    }
+    if (-not $aset) {
+        $aset = @($rilis.assets) | Where-Object { $_.name -like 'SuDesApp_*_win-x64*.zip' } | Select-Object -First 1
+    }
+    if (-not $aset) { throw ("rilis {0} tidak memuat zip portable SuDesApp_*_win-x64*.zip" -f $tag) }
 
     # Dua jalur unduh: URL unduh langsung tanpa header (paling tahan redirect untuk
     # repo publik), bila gagal memakai endpoint API asset + token (repo privat).
@@ -502,6 +514,12 @@ if ($isiPatch.jenis -eq 'kecil') { $lines += ('Tambalan: `{0}`' -f $isiPatch.ber
 Write-Host ("Tambalan  : " + $manifestPatch) -ForegroundColor Green
 
 # ---------- catatan rilis ----------
+# Tautkan catatan rilis versi ini (fitur, perbaikan, cara memasang) supaya halaman
+# rilis tidak hanya berisi daftar aset.
+$berkasCatatan = Join-Path $repoRoot ("docs/catatan-rilis-{0}.md" -f $Version)
+if (Test-Path -LiteralPath $berkasCatatan) {
+    $lines += ('Catatan rilis: https://github.com/{0}/blob/v{1}/docs/catatan-rilis-{1}.md' -f $Repo, $Version)
+}
 $releaseNotes = Join-Path $repoRoot 'artifacts/RELEASE.md'
 Set-Content -LiteralPath $releaseNotes -Value $lines -Encoding UTF8
 Write-Host ("Catatan   : " + $releaseNotes)
