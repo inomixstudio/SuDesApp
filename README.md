@@ -95,7 +95,7 @@ dotnet run --project SuDesApp.Web --urls http://127.0.0.1:5189
 ```
 
 GitHub Actions menjalankan restore, build Release, dan uji otomatis pada Windows
-untuk setiap pull request dan push ke `main` (`.github/workflows/ci.yml`). Cakupan
+untuk setiap pull request dan push ke `master` (`.github/workflows/ci.yml`). Cakupan
 uji saat ini mencakup tanda tangan token lisensi, termasuk kompatibilitas verifikasi
 server dan aplikasi desktop. Workflow publikasi `.github/workflows/release.yml`
 ikut disertakan dan menandatangani aset dengan Authenticode — lihat
