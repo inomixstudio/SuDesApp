@@ -168,8 +168,10 @@ public sealed class PdfColorSpace
             case "DeviceGray":
             case "CalGray":
             {
-                double gray = Math.Pow(Math.Clamp(Component(0), 0, 1), 1.0 / _gamma);
-                gray = Math.Clamp(gray, 0, 1);
+                double value = Math.Clamp(Component(0), 0, 1);
+                // Gamma 1 (hampir semua DeviceGray) tidak perlu Math.Pow; biaya itu
+                // terasa saat tiga juta piksel pindaian dikonversi satu per satu.
+                double gray = _gamma == 1 ? value : Math.Clamp(Math.Pow(value, 1.0 / _gamma), 0, 1);
                 red = green = blue = gray;
                 return;
             }
