@@ -44,6 +44,14 @@ diunduh ulang bila rilis menyertakan SHA-256 untuk memverifikasinya.
    halaman **Tentang**, dan footer login (kebiasaan proyek ini).
 2. Commit, lalu buat tag: `git tag v2.5.1 && git push origin v2.5.1`
    (atau jalankan workflow **Release** secara manual dengan mengisi versi).
+
+   Langkah 1–2 juga bisa dikerjakan dari GitHub: buka **Actions → Rilis Otomatis
+   → Run workflow**, isi versi baru serta butir Fitur/Peningkatan/Perbaikan
+   (beberapa butir dipisah `;`). Workflow itu menaikkan versi di csproj dan
+   Catatan Rilis, menjalankan gerbang build + uji E2E trial server, membuat tag
+   **anotasi**, mendorong commit dan tag, lalu memanggil `release.yml` untuk
+   publish, installer, dan unggah aset — tag yang didorong memakai `GITHUB_TOKEN`
+   sehingga tidak memicu job kedua, jadi rilis tidak terbit dua kali.
 3. Workflow `.github/workflows/release.yml` akan:
    - `dotnet publish` self-contained win-x64;
    - membuat zip portable + installer Inno Setup;

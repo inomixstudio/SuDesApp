@@ -20,6 +20,22 @@ on:
         default: false
         type: boolean
 
+  # Dipanggil workflow "Rilis Otomatis" setelah ia menaikkan versi, membuat tag
+  # anotasi, dan mendorongnya. Dengan cara ini urutan build, tanda tangan, dan
+  # unggah hanya ditulis sekali - jalur manual, tag, dan rilis otomatis memakai
+  # langkah yang sama persis.
+  workflow_call:
+    inputs:
+      versi:
+        description: 'Versi rilis x.y.z (tag v<versi> sudah ada di origin)'
+        required: true
+        type: string
+      tanpa_tanda_tangan:
+        description: 'Lewati tanda tangan Authenticode (hanya untuk uji)'
+        required: false
+        type: boolean
+        default: false
+
 permissions:
   contents: write
 
@@ -34,6 +50,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Bila dipanggil "Rilis Otomatis", commit kenaikan versi baru saja
+          # sampai ke origin sehingga github.sha masih commit lama; bangun dari
+          # tag rilis supaya yang diuji benar-benar isi rilisnya.
+          ref: ${{ inputs.versi && format('refs/tags/v{0}', inputs.versi) || github.ref }}
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -58,6 +79,8 @@ jobs:
         with:
           # Riwayat dan tag lengkap: versi pembanding tambalan dibaca dari tag.
           fetch-depth: 0
+          # Tag rilis, bukan commit cabang: lihat alasan di job verifikasi.
+          ref: ${{ inputs.versi && format('refs/tags/v{0}', inputs.versi) || github.ref }}
 
       - uses: actions/setup-dotnet@v4
         with:

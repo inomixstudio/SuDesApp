@@ -99,7 +99,11 @@ untuk setiap pull request dan push ke `master` (`.github/workflows/ci.yml`). Cak
 uji saat ini mencakup tanda tangan token lisensi, termasuk kompatibilitas verifikasi
 server dan aplikasi desktop. Workflow publikasi `.github/workflows/release.yml`
 ikut disertakan dan menandatangani aset dengan Authenticode — lihat
-[`docs/TANDA-TANGAN-RILIS.md`](docs/TANDA-TANGAN-RILIS.md).
+[`docs/TANDA-TANGAN-RILIS.md`](docs/TANDA-TANGAN-RILIS.md). Workflow
+`.github/workflows/rilis-otomatis.yml` menjalankan seluruh urutan rilis dari satu
+tombol: menaikkan versi aplikasi, menjalankan gerbang build dan uji E2E, membuat
+tag anotasi, lalu memanggil `release.yml` untuk publish, installer, dan unggah
+aset.
 Untuk pemeriksaan kontras tema, jalankan `Tools/check-kontras-wcag.ps1` secara
 terpisah (lihat [`docs/tema-dan-warna.md`](docs/tema-dan-warna.md)). Skrip
 `Tools/publish-release.ps1` dan `Tools/rilis-sekali-jalan.ps1` menyiapkan aset
