@@ -12,6 +12,7 @@ using SuDesApp.GeneratorPdf;
 using SuDesApp.Services;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Services;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -1533,11 +1534,9 @@ namespace SuDesApp.Wpf.ViewModels
                     return;
                 }
 
-                string berkas = Path.Combine(
-                    Path.GetTempPath(), "SuDesApp",
-                    $"pratinjau-template-{Guid.NewGuid():N}.pdf");
-                Directory.CreateDirectory(Path.GetDirectoryName(berkas)!);
-                await File.WriteAllBytesAsync(berkas, pdf);
+                string berkas = await PratinjauPdf
+                    .SimpanAsync((string?)null, pdf, "Pratinjau_Template")
+                    .ConfigureAwait(true);
 
                 Pratinjau = _previewFactory($"Pratinjau — {template.NamaTampil}", berkas, Kembali);
                 BersihkanBerkasPratinjauLama(berkas);

@@ -351,7 +351,6 @@ public sealed class PdfContentInterpreter
     private readonly Dictionary<string, PdfColorSpace?> _colorSpaces = new(StringComparer.Ordinal);
     private readonly Dictionary<string, PdfExtGState?> _extGStates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, PdfTilingPattern?> _patterns = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, PdfImage?> _images = new(StringComparer.Ordinal);
     private readonly Stack<State> _stack = new();
     private readonly PdfPathData _path = new();
     private readonly List<double> _operands = new();
@@ -436,7 +435,6 @@ public sealed class PdfContentInterpreter
         _colorSpaces.Clear();
         _extGStates.Clear();
         _patterns.Clear();
-        _images.Clear();
 
         foreach (byte[] content in contents)
         {
@@ -1188,17 +1186,12 @@ public sealed class PdfContentInterpreter
         var stream = _document.ResolveStream(value);
         if (stream is null) return;
 
-        if (_images.TryGetValue(name, out var cachedImage))
-        {
-            if (cachedImage is not null) DrawImageObject(cachedImage);
-            return;
-        }
-
         string? subtype = stream.Dictionary.GetNameValue("Subtype");
         if (subtype == "Image")
         {
-            var image = PdfImages.Decode(_document, stream);
-            _images[name] = image;
+            // Cache milik dokumen: nama resource hanya berlaku per halaman,
+            // sedangkan stream yang sama (kop) dipakai ulang di banyak halaman.
+            var image = _document.DecodeImage(stream);
             if (image is not null) DrawImageObject(image);
             return;
         }

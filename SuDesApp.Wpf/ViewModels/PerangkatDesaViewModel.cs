@@ -15,6 +15,7 @@ using SuDesApp.GeneratorPdf;
 using SuDesApp.Services;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Services;
 using SuDesApp.Wpf.Utilities;
 
 namespace SuDesApp.Wpf.ViewModels
@@ -1827,11 +1828,9 @@ namespace SuDesApp.Wpf.ViewModels
                 // Pratinjau ditulis ke folder TempPDF supaya ikut dibersihkan
                 // TempPdfCleanup seperti keluaran lain; SudesPdf membutuhkan
                 // jalur penuh — nama berkas saja membuat dokumen gagal dimuat.
-                string folder = _appConfig.TempPdfFolder;
-                Directory.CreateDirectory(folder);
-                string jalur = Path.Combine(folder,
-                    $"PerangkatDesa{SufiksNamaBerkas}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
-                await File.WriteAllBytesAsync(jalur, isi).ConfigureAwait(true);
+                string jalur = await PratinjauPdf
+                    .SimpanAsync(_appConfig, isi, $"PerangkatDesa{SufiksNamaBerkas}")
+                    .ConfigureAwait(true);
 
                 _activityLog.Log("PERANGKAT", $"{data.JumlahOrang} orang {NamaBagianAktif}", "Cetak PDF", jalur);
                 StatusText = $"Daftar {NamaBagianTampil} ({data.JumlahOrang} orang) dibuka di pratinjau PDF.";
@@ -1878,11 +1877,9 @@ namespace SuDesApp.Wpf.ViewModels
 
                 // Sama seperti cetak daftar: berkas ditulis ke TempPDF supaya ikut
                 // dibersihkan TempPdfCleanup, lalu dibuka di pratinjau SudesPdf.
-                string folder = _appConfig.TempPdfFolder;
-                Directory.CreateDirectory(folder);
-                string jalur = Path.Combine(folder,
-                    $"FormulirPerangkat_{DateTime.Now:yyyyMMddHHmmss}.pdf");
-                await File.WriteAllBytesAsync(jalur, isi).ConfigureAwait(true);
+                string jalur = await PratinjauPdf
+                    .SimpanAsync(_appConfig, isi, "FormulirPerangkat")
+                    .ConfigureAwait(true);
 
                 _activityLog.Log("PERANGKAT", "Formulir pendataan (18 kolom DATA PERANGKAT)",
                     "Cetak Formulir", jalur);
@@ -2257,12 +2254,10 @@ namespace SuDesApp.Wpf.ViewModels
 
                 // Pratinjau ditulis ke TempPDF supaya ikut dibersihkan
                 // TempPdfCleanup seperti keluaran lain; SudesPdf butuh jalur penuh.
-                string folder = _appConfig.TempPdfFolder;
-                Directory.CreateDirectory(folder);
                 string awalan = bersama ? "SK_Bersama" : "SK";
-                string jalur = Path.Combine(folder,
-                    $"{awalan}_{_skJabatan.Replace(' ', '_')}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
-                await File.WriteAllBytesAsync(jalur, pdf).ConfigureAwait(true);
+                string jalur = await PratinjauPdf
+                    .SimpanAsync(_appConfig, pdf, $"{awalan}_{_skJabatan.Replace(' ', '_')}")
+                    .ConfigureAwait(true);
 
                 _activityLog.Log("PERANGKAT", $"{_skJabatan}",
                     bersama ? "Pratinjau SK bersama" : "Pratinjau SK", jalur);

@@ -187,10 +187,7 @@ namespace SuDesApp.Wpf.ViewModels
                     return;
                 }
 
-                string folder = _appConfig.TempPdfFolder;
-                Directory.CreateDirectory(folder);
-                var path = Path.Combine(folder, $"Pratinjau_Rekening_Koran_{DateTime.Now:yyyyMMddHHmmss}.pdf");
-                await File.WriteAllBytesAsync(path, pdfBytes);
+                string path = await PratinjauPdf.SimpanAsync(_appConfig, pdfBytes, "Pratinjau_Rekening_Koran");
 
                 string judulNomor = string.IsNullOrWhiteSpace(data.NomorSurat)
                     ? "(nomor surat belum ada)"

@@ -16,7 +16,11 @@ namespace SudesPdf;
 /// </summary>
 internal static class PdfPrinter
 {
-    private const double RenderScale = 300.0 / 72.0;
+    /// <summary>
+    /// Batas atas skala raster. Printer 600 dpi butuh 8,3× halaman dalam point;
+    /// di atas ±1150 dpi rasternya hanya menghabiskan memori tanpa tambahan ketajaman.
+    /// </summary>
+    private const double SkalaMaksimal = 16.0;
 
     public static void ShowDialogAndPrint(Document document, string documentName)
     {
@@ -56,14 +60,33 @@ internal static class PdfPrinter
 
         printDocument.PrintPage += (_, args) =>
         {
-            using var bitmap = ToBitmap(document.Render(currentPage - 1, RenderScale));
-            RectangleF target = FitPageInside(bitmap, args.MarginBounds);
-
             Graphics graphics = args.Graphics!;
-            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            PageSize ukuranHalaman = document.PageSizes[currentPage - 1];
+
+            // Raster dibuat persis sebanyak piksel printer untuk kotak cetak, lalu
+            // digambar 1:1. Dulu halaman selalu diraster 300 dpi lalu di-bicubic ke
+            // margin, sehingga seluruh huruf melewati penskalaan kedua.
+            double dpiX = Math.Max(72.0, graphics.DpiX);
+            double dpiY = Math.Max(72.0, graphics.DpiY);
+            RectangleF margin = args.MarginBounds;
+            double lebarKotakPx = margin.Width / 100.0 * dpiX;
+            double tinggiKotakPx = margin.Height / 100.0 * dpiY;
+            double skala = Math.Min(
+                lebarKotakPx / Math.Max(1.0, ukuranHalaman.Width),
+                tinggiKotakPx / Math.Max(1.0, ukuranHalaman.Height));
+            skala = Math.Clamp(skala, 0.05, SkalaMaksimal);
+
+            using var bitmap = ToBitmap(document.Render(currentPage - 1, skala));
+
+            var satuanAsal = graphics.PageUnit;
+            graphics.PageUnit = GraphicsUnit.Pixel;
+            graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
             graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-            graphics.CompositingQuality = CompositingQuality.HighQuality;
-            graphics.DrawImage(bitmap, target);
+
+            int kiri = (int)Math.Round(margin.Left / 100.0 * dpiX + (lebarKotakPx - bitmap.Width) / 2.0);
+            int atas = (int)Math.Round(margin.Top / 100.0 * dpiY + (tinggiKotakPx - bitmap.Height) / 2.0);
+            graphics.DrawImage(bitmap, new Rectangle(kiri, atas, bitmap.Width, bitmap.Height));
+            graphics.PageUnit = satuanAsal;
 
             currentPage++;
             args.HasMorePages = currentPage <= lastPage;
@@ -93,18 +116,6 @@ internal static class PdfPrinter
         }
 
         return bitmap;
-    }
-
-    private static RectangleF FitPageInside(Bitmap bitmap, Rectangle bounds)
-    {
-        float scale = Math.Min((float)bounds.Width / bitmap.Width, (float)bounds.Height / bitmap.Height);
-        float width = bitmap.Width * scale;
-        float height = bitmap.Height * scale;
-        return new RectangleF(
-            bounds.Left + (bounds.Width - width) / 2f,
-            bounds.Top + (bounds.Height - height) / 2f,
-            width,
-            height);
     }
 
     private sealed class WindowOwner : System.Windows.Forms.IWin32Window

@@ -60,6 +60,137 @@ public sealed class GambarPdfTests
         Assert.True(HitungPikselBerwarna(pdf) > 100, "Logo JPEG tidak tergambar pada halaman PDF.");
     }
 
+    /// <summary>
+    /// Gambar pindaian yang tampil kecil harus diturunkan ke resolusi cetak:
+    /// rasio tetap, tidak diperbesar, dan tidak menggelapkan tepi transparan
+    /// (rata-rata dilakukan dalam bentuk pramultiplied).
+    /// </summary>
+    [Fact]
+    public void GambarBesarDiperkecilTanpaMenggelapkanTepiTransparan()
+    {
+        var asli = PdfWriterImage.FromFile(CariBerkas(Path.Combine("Resources", "logo.png")));
+
+        // Kotak 60 pt pada 300 dpi = 250 px; aslinya ribuan piksel.
+        var kecil = asli.UntukUkuran(60f, 60f * asli.Height / asli.Width);
+        Assert.Equal(250, kecil.Width);
+        Assert.True(kecil.Height < asli.Height / 4);
+        Assert.Equal(
+            (double)asli.Width / asli.Height,
+            (double)kecil.Width / kecil.Height,
+            precision: 2);
+
+        double terangAsli = RataRataTerlihat(asli);
+        double terangKecil = RataRataTerlihat(kecil);
+        Assert.InRange(terangKecil, terangAsli - 6, terangAsli + 6);
+
+        // Gambar yang sudah cukup kecil tidak diperbesar maupun disalin ulang.
+        Assert.Same(asli, asli.UntukUkuran(2000f, 2000f));
+    }
+
+    /// <summary>JPEG tetap ditanam apa adanya: isinya belum diurai, jadi tidak bisa diperkecil tanpa kodek.</summary>
+    [Fact]
+    public void GambarJpegTidakDiperkecil()
+    {
+        byte[] jpeg = JpegKecil(CariBerkas(Path.Combine("Resources", "logo.png")));
+        var gambar = PdfWriterImage.FromBytes(jpeg);
+
+        Assert.True(gambar.Jpeg);
+        Assert.Same(gambar, gambar.UntukUkuran(60f, 82f));
+    }
+
+    /// <summary>
+    /// Pratinjau kop di Pengaturan Surat dicetak mesin PDF yang sama dengan surat:
+    /// baris kop, surel, logo, dan lebar kertasnya harus ikut, dalam satu halaman mini.
+    /// </summary>
+    [Fact]
+    public void PratinjauKopMencetakBarisDanLogoDalamSatuHalaman()
+    {
+        var desa = new Data.Models.DesaData
+        {
+            NamaDesa = "Sukamaju",
+            Kecamatan = "Cikarang",
+            Kabupaten = "Bekasi",
+            JenisKabupaten = "Kabupaten",
+            Alamat = "Jl. Raya No. 1",
+            Kodepos = "17530",
+            Email = "desa@sukamaju.id",
+        };
+
+        byte[] pdf = KopSuratCetak.BuatPdf(
+            desa, CariBerkas(Path.Combine("Resources", "logo.png")), SuDesApp.Utilities.UkuranKertasSurat.A4);
+
+        var dokumen = PdfDocument.Load(pdf);
+        Assert.Equal(1, dokumen.PageCount);
+        Assert.Equal(595.28, dokumen.Pages[0].Width, precision: 1);
+
+        string teks = PdfRenderer.ExtractText(dokumen.Pages[0]);
+        foreach (var baris in KopSurat.BarisKop(desa).Where(baris => baris.Teks.Length > 0))
+        {
+            Assert.Contains(baris.Teks, teks, StringComparison.Ordinal);
+        }
+
+        Assert.Contains(KopSurat.SurelKop(desa), teks, StringComparison.Ordinal);
+        Assert.True(HitungPikselBerwarna(pdf) > 100, "Logo kop tidak tergambar pada pratinjau.");
+    }
+
+    /// <summary>
+    /// Gambar yang sama dipakai di dua halaman harus menghasilkan halaman yang
+    /// identik. Cache gambar sekarang milik dokumen (bukan per halaman), jadi
+    /// salah kunci akan menampilkan gambar halaman lain.
+    /// </summary>
+    [Fact]
+    public void GambarSamaDiDuaHalamanMenghasilkanHalamanIdentik()
+    {
+        byte[] logo = File.ReadAllBytes(CariBerkas(Path.Combine("Resources", "logo.png")));
+        var dokumen = Document.Create(container =>
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                container.Page(halaman =>
+                {
+                    halaman.Size(PageSizes.A4);
+                    halaman.Margin(36);
+                    halaman.Content().Column(kolom =>
+                    {
+                        kolom.Item().Width(60).Height(82).Image(logo).FitArea();
+                    });
+                });
+            }
+        });
+
+        using var aliran = new MemoryStream();
+        dokumen.GeneratePdf(aliran);
+
+        var mesin = PdfDocument.Load(aliran.ToArray());
+        var pertama = PdfRenderer.RenderPage(mesin, 0, 1.0);
+        var kedua = PdfRenderer.RenderPage(mesin, 1, 1.0);
+
+        Assert.Equal(pertama.Width, kedua.Width);
+        Assert.Equal(pertama.Height, kedua.Height);
+        Assert.Equal(pertama.Pixels, kedua.Pixels);
+    }
+
+    /// <summary>Rata-rata kecerahan piksel yang benar-benar terlihat (alfa ≥ 128).</summary>
+    private static double RataRataTerlihat(PdfWriterImage gambar)
+    {
+        int komponen = gambar.ColorSpace == "/DeviceGray" ? 1 : 3;
+        double jumlah = 0;
+        int dihitung = 0;
+        for (int i = 0; i < gambar.Width * gambar.Height; i++)
+        {
+            if (gambar.Alpha is { } alfa && alfa[i] < 128) continue;
+
+            int o = i * komponen;
+            jumlah += komponen == 1
+                ? gambar.Data[o]
+                : (gambar.Data[o] + gambar.Data[o + 1] + gambar.Data[o + 2]) / 3.0;
+            dihitung++;
+        }
+
+        Assert.True(dihitung > 0, "Gambar tidak punya piksel terlihat.");
+        return jumlah / dihitung;
+    }
+
     /// <summary>Logo diperkecil lalu disimpan sebagai JPEG RGB — seperti logo .jpg milik desa.</summary>
     private static byte[] JpegKecil(string jalur)
     {
