@@ -794,12 +794,18 @@ public sealed class Rasterizer
 
     // ---------------------------------------------------------------- Gambar
 
+    /// <summary>
+    /// Berapa kali lipat biaya membaca satu sampel mentah dibandingkan membaca
+    /// satu piksel RGBA yang sudah dikonversi. Hanya dipakai untuk memilih antara
+    /// konversi utuh dan pengambilan sampel langsung; kedua jalur menghasilkan
+    /// warna yang sama, jadi angkanya cukup longgar.
+    /// </summary>
+    private const int BiayaSampelMentah = 8;
+
     public void DrawImage(
         PdfImage image, in PdfMatrix matrix, double alpha, byte[]? clipMask, PdfBlendMode blend)
     {
         if (!matrix.TryInvert(out var inverse)) return;
-        byte[] rgba = image.ToRgba();
-        if (rgba.Length < image.Width * image.Height * 4) return;
 
         // Kotak batas gambar pada perangkat.
         var corners = new[]
@@ -833,6 +839,22 @@ public sealed class Rasterizer
         int samples = scale > 1.5 ? Math.Clamp((int)Math.Ceiling(scale), 2, 4) : 1;
         var maskPaint = image.MaskPaint;
 
+        // Mengonversi seluruh gambar menjadi RGBA baru sepadan bila bagian yang
+        // tampil menutupi sebagian besar gambar. Kop surat 1507×2050 px yang
+        // tercetak sebagai ±90 px cukup diambil sampelnya langsung per titik —
+        // mengonversi seluruh pindaian hanya untuk 5.000 piksel terbuang.
+        long jepitan = (long)(x1 - x0 + 1) * (y1 - y0 + 1) * samples * samples;
+        bool perluRgba = image.Encoding is PdfImageEncoding.Jpeg or PdfImageEncoding.Jpeg2000
+                         || jepitan * BiayaSampelMentah >= (long)image.Width * image.Height;
+        byte[]? rgba = null;
+        if (perluRgba)
+        {
+            rgba = image.ToRgba();
+            if (rgba.Length < image.Width * image.Height * 4) return;
+        }
+
+        var sampler = new PdfImageSampler(image, rgba);
+
         for (int y = y0; y <= y1; y++)
         {
             for (int x = x0; x <= x1; x++)
@@ -854,7 +876,7 @@ public sealed class Rasterizer
                         // byte PNG/JPEG selalu berawal dari sisi atas. Balik sumbu
                         // Y saat mengambil sampel agar logo dan lambang tidak terbalik.
                         double sourceY = image.Height - source.Y;
-                        SampleImage(rgba, image, source.X, sourceY, out double sr, out double sg, out double sb, out double sa);
+                        sampler.Sample(source.X, sourceY, out double sr, out double sg, out double sb, out double sa);
                         r += sr * sa;
                         g += sg * sa;
                         b += sb * sa;
@@ -884,61 +906,6 @@ public sealed class Rasterizer
                 Composite(index, r, g, b, a * alpha * clip, blend);
             }
         }
-    }
-
-    /// <summary>
-    /// Warna satu titik gambar dengan interpolasi bilinear (warna rata-rata
-    /// berbobot alfa), mengembalikan warna tak pramultiplied.
-    ///
-    /// <see cref="PdfImage.ToRgba"/> menyusun kanal sebagai R, G, B, A — urutan
-    /// itu yang dibaca di sini. Membacanya sebagai B, G, R (urutan permukaan
-    /// raster) pernah membuat lambang Garuda dan logo kop tercetak biru.
-    /// </summary>
-    private static void SampleImage(
-        byte[] rgba, PdfImage image, double x, double y,
-        out double red, out double green, out double blue, out double alpha)
-    {
-        double fx = x - 0.5;
-        double fy = y - 0.5;
-        int x0 = (int)Math.Floor(fx);
-        int y0 = (int)Math.Floor(fy);
-        double tx = fx - x0;
-        double ty = fy - y0;
-
-        double sumR = 0, sumG = 0, sumB = 0, sumA = 0;
-        for (int dy = 0; dy <= 1; dy++)
-        {
-            double wy = dy == 0 ? 1.0 - ty : ty;
-            if (wy <= 0) continue;
-            int py = Math.Clamp(y0 + dy, 0, image.Height - 1);
-            for (int dx = 0; dx <= 1; dx++)
-            {
-                double wx = dx == 0 ? 1.0 - tx : tx;
-                if (wx <= 0) continue;
-                int px = Math.Clamp(x0 + dx, 0, image.Width - 1);
-                int index = (py * image.Width + px) * 4;
-                if (index + 3 >= rgba.Length) continue;
-
-                double w = wx * wy;
-                double a = rgba[index + 3] / 255.0;
-                sumR += w * (rgba[index] / 255.0) * a;
-                sumG += w * (rgba[index + 1] / 255.0) * a;
-                sumB += w * (rgba[index + 2] / 255.0) * a;
-                sumA += w * a;
-            }
-        }
-
-        if (sumA <= 0.0001)
-        {
-            red = green = blue = 0;
-            alpha = 0;
-            return;
-        }
-
-        red = sumR / sumA;
-        green = sumG / sumA;
-        blue = sumB / sumA;
-        alpha = sumA;
     }
 
     // -------------------------------------------------------------- Gradien
