@@ -137,47 +137,15 @@
                       Visibility="{Binding PratinjauTerbuka, Converter={StaticResource BoolToVis}}">
                     <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center">
                         <Border Background="{DynamicResource KertasBrush}" BorderBrush="{DynamicResource KertasTepiBrush}" BorderThickness="1"
-                                CornerRadius="3" Padding="22,14" Width="{Binding PratinjauLebarKertas}">
+                                CornerRadius="3" Padding="0" Width="{Binding PratinjauLebarKertas}">
                             <StackPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
+                                <!-- Kop digambar mesin PDF yang sama dengan surat tercetak,
+                                     termasuk lebar kertas, margin, logo, dan garis gandanya. -->
+                                <Image Source="{Binding PratinjauKopGambar, Mode=OneWay}"
+                                       Stretch="Uniform" HorizontalAlignment="Stretch"
+                                       AutomationProperties.Name="Pratinjau kop surat"/>
 
-                                    <!-- Kotak logo: lebarnya tetap walau tanpa gambar, sama seperti PDF -->
-                                    <Border Grid.Column="0" Width="{Binding PratinjauLebarLogo}"
-                                            VerticalAlignment="Top">
-                                        <Image Source="{Binding PratinjauJalurLogo, Mode=OneWay}"
-                                               Stretch="Uniform" StretchDirection="DownOnly"
-                                               HorizontalAlignment="Left" VerticalAlignment="Top"
-                                               Visibility="{Binding PratinjauAdaLogo, Converter={StaticResource BoolToVis}}"
-                                               AutomationProperties.Name="Pratinjau logo kop surat"/>
-                                    </Border>
-
-                                    <ItemsControl Grid.Column="1" ItemsSource="{Binding PratinjauKop}"
-                                                  HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <!-- Baris kop: teks utama, lalu surel desa (bila diisi)
-                                                     dengan warna biru — sama seperti yang dicetak PDF. -->
-                                                <TextBlock FontSize="{Binding Ukuran, Mode=OneWay}"
-                                                           FontWeight="{Binding Ketebalan}"
-                                                           FontFamily="Times New Roman"
-                                                           Foreground="{DynamicResource KertasTintaBrush}" TextAlignment="Center">
-                                                    <Run Text="{Binding Teks, Mode=OneWay}"/>
-                                                    <Run Text="{Binding TeksSurel, Mode=OneWay}"
-                                                         Foreground="{Binding WarnaSurel}"/>
-                                                </TextBlock>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </Grid>
-
-                                <!-- Garis ganda pemisah kop, seperti pada surat tercetak -->
-                                <Rectangle Height="1.2" Fill="{DynamicResource KertasTintaBrush}" Margin="0,6,0,0"/>
-                                <Rectangle Height="2.4" Fill="{DynamicResource KertasTintaBrush}" Margin="0,2,0,0"/>
-
+                                <StackPanel Margin="40,0,40,14">
                                 <TextBlock Text="Blok tanda tangan di bagian bawah surat" FontSize="10"
                                            FontFamily="{DynamicResource AppFontFamily}" Margin="0,8,0,0" Foreground="{DynamicResource KertasTintaTersierBrush}"/>
 
@@ -217,6 +185,7 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </Viewbox>

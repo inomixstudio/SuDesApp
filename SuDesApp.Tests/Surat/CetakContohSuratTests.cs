@@ -645,6 +645,146 @@ public sealed class CetakContohSuratTests : IDisposable
         }
     }
 
+    /// <summary>
+    /// Logo kop 1507×2050 px pernah ditanam utuh ke kotak 60 pt, sehingga setiap
+    /// surat ±490 KB padahal yang tercetak hanya ±250 px (300 dpi). Gambar harus
+    /// diturunkan ke resolusi cetak saat disisipkan, bukan saat digambar.
+    /// </summary>
+    [Fact]
+    public async Task LogoKopDitanamPadaResolusiCetak()
+    {
+        var config = BuatConfig();
+        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var pdf = await CetakAsync(gen, SuratContoh(SuratConstants.SKD_UMUM));
+        SimpanSampel("14-logo-resolusi-cetak", pdf);
+
+        var lebar = Regex.Matches(Encoding.Latin1.GetString(pdf), @"/Width (\d+)")
+            .Select(cocok => int.Parse(cocok.Groups[1].Value, CultureInfo.InvariantCulture))
+            .ToArray();
+
+        Assert.NotEmpty(lebar);
+        Assert.All(lebar, px => Assert.InRange(px, 230, 260));
+        Assert.True(pdf.Length < 300_000,
+            $"Surat satu halaman seharusnya di bawah 300 KB setelah gambar diturunkan, tetapi {pdf.Length} byte.");
+    }
+
+    /// <summary>
+    /// Blok tanda tangan permohonan rekening koran menempel di sisi kanan dengan
+    /// isi rata tengah. Dulu blok ditulis `AlignRight().Width(250)` pada anak kolom:
+    /// mesin tata letak menata ISI kotak selebar induknya, jadi jabatan dan nama
+    /// kepala desa tercetak rata tengah HALAMAN — bukan di kolom kanan.
+    /// </summary>
+    [Fact]
+    public async Task RekeningKoranMenaruhTandaTanganRataTengahDiSisiKanan()
+    {
+        var config = BuatConfig();
+        var gen = new RekeningKoranGenerator(config,
+            new FileService(config, NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<RekeningKoranGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var data = new RekeningKoranData
+        {
+            NomorSurat = "470/002/Ds/2026",
+            Perihal = "Permohonan Print Out Rekening Koran",
+            TanggalSurat = new DateTime(2026, 10, 30),
+            NamaPejabat = "H. Ahmad Suryana",
+            Jabatan = "Kepala Desa Sukamaju",
+            AlamatDusun = "Jl. Melati No. 12",
+            AlamatDesa = "Sukamaju",
+            AlamatKecamatan = "Cikarang",
+            AlamatKabupaten = "Bekasi",
+            NamaPemegangRekening = "Pemerintah Desa Sukamaju",
+            NomorRekening = "1234567890",
+            PeriodeRekening = "01-01-2026 s/d 31-03-2026",
+            Bank = "BJB",
+            KCP = "Cikarang",
+            Desa = DesaContoh()
+        };
+
+        byte[] pdf;
+        using (var penampung = new MemoryStream())
+        {
+            await gen.GeneratePdfAsync(penampung, data);
+            pdf = penampung.ToArray();
+        }
+
+        SimpanSampel("15-rekening-koran-ttd", pdf);
+
+        var dokumen = PdfDocument.Load(pdf);
+        Assert.Equal(1, dokumen.PageCount);
+        double lebarHalaman = dokumen.Pages[0].Width;
+
+        // Dua baris terakhir halaman adalah jabatan lalu nama kepala desa.
+        var baris = BarisBerTinta(dokumen);
+        Assert.True(baris.Count >= 2, "Tanda tangan tidak tercetak sama sekali.");
+        var nama = baris[^1];
+        var jabatan = baris[^2];
+
+        double tengahNama = (nama.Kiri + nama.Kanan) / 2;
+        double tengahJabatan = (jabatan.Kiri + jabatan.Kanan) / 2;
+
+        // Isi blok rata tengah: kedua baris punya sumbu yang sama.
+        Assert.InRange(tengahNama, tengahJabatan - 6, tengahJabatan + 6);
+
+        // Bloknya di sisi kanan, bukan di tengah halaman.
+        Assert.True(tengahJabatan > lebarHalaman * 0.65,
+            $"Blok tanda tangan berada di x={tengahJabatan:0.0} pt dari lebar {lebarHalaman:0.0} pt — " +
+            "seharusnya menempel di sisi kanan.");
+    }
+
+    /// <summary>
+    /// Rentang mendatar setiap baris ber-tinta pada halaman pertama (satuan point),
+    /// diukur dari raster — ekstraksi teks PDF tidak membawa koordinat.
+    /// </summary>
+    private static List<(double Kiri, double Kanan)> BarisBerTinta(PdfDocument dokumen)
+    {
+        const double skala = 2.0;
+        var raster = PdfRenderer.RenderPage(dokumen, 0, skala);
+        var hasil = new List<(double, double)>();
+
+        bool Gelap(int x, int y)
+        {
+            int o = (y * raster.Width + x) * 4;
+            return raster.Pixels[o] < 160 && raster.Pixels[o + 1] < 160 && raster.Pixels[o + 2] < 160;
+        }
+
+        int? atas = null;
+        for (int y = 0; y <= raster.Height; y++)
+        {
+            bool ada = false;
+            for (int x = 0; y < raster.Height && x < raster.Width && !ada; x++)
+            {
+                ada = Gelap(x, y);
+            }
+
+            if (ada && atas is null) atas = y;
+            if (ada || atas is null) continue;
+
+            int bawah = y - 1;
+            int kiri = int.MaxValue, kanan = -1;
+            for (int baris = atas.Value; baris <= bawah; baris++)
+            {
+                for (int x = 0; x < raster.Width; x++)
+                {
+                    if (!Gelap(x, baris)) continue;
+                    if (x < kiri) kiri = x;
+                    if (x > kanan) kanan = x;
+                }
+            }
+
+            hasil.Add((kiri / skala, kanan / skala));
+            atas = null;
+        }
+
+        return hasil;
+    }
+
     /// <summary>Tulis PDF ke folder sampel lalu kembalikan jalurnya (untuk dibaca ulang).</summary>
     private string Penyimpanan(byte[] pdf, string nama)
     {

@@ -240,10 +240,9 @@ namespace SuDesApp.Wpf.ViewModels
                     return;
                 }
 
-                string folder = _appConfig.TempPdfFolder;
-                Directory.CreateDirectory(folder);
-                string jalur = Path.Combine(folder, $"SOTK_{DateTime.Now:yyyyMMddHHmmss}.pdf");
-                await File.WriteAllBytesAsync(jalur, isi).ConfigureAwait(true);
+                string jalur = await PratinjauPdf
+                    .SimpanAsync(_appConfig, isi, "SOTK")
+                    .ConfigureAwait(true);
 
                 _activityLog.Log("PERANGKAT", $"SOTK {Ringkasan}", "Pratinjau SOTK", jalur);
                 StatusText = "SOTK Pemerintah Desa dibuka di pratinjau PDF.";
@@ -278,10 +277,9 @@ namespace SuDesApp.Wpf.ViewModels
                 await _perdesStore.SimpanAsync(NomorPerdes, TanggalPerdes, RujukanDaerah, _arsipId)
                     .ConfigureAwait(true);
 
-                string folder = _appConfig.TempPdfFolder;
-                Directory.CreateDirectory(folder);
-                string jalur = Path.Combine(folder, $"PerdesSOTK_{DateTime.Now:yyyyMMddHHmmss}.pdf");
-                await File.WriteAllBytesAsync(jalur, isi).ConfigureAwait(true);
+                string jalur = await PratinjauPdf
+                    .SimpanAsync(_appConfig, isi, "PerdesSOTK")
+                    .ConfigureAwait(true);
                 string judul = $"Perdes SOTK Nomor {NomorPerdes.Trim()} Tahun {data.Tanggal.Year}";
                 _activityLog.Log("PERANGKAT", judul, "Pratinjau Perdes", jalur);
                 StatusPerdes = $"{judul} dibuka di pratinjau PDF.";

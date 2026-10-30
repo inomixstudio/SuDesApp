@@ -133,14 +133,7 @@ namespace SuDesApp.GeneratorPdf
         private static void SiapkanHalaman(PageDescriptor page)
         {
             var (lebar, tinggi) = PengaturanCetak.Dimensi();
-            var kerapatan = KerapatanSurat.Aktif;
-
-            page.Size(new PageSize(lebar, tinggi, Unit.Point));
-            page.MarginTop(kerapatan.MarginAtas, Unit.Point);
-            page.MarginRight(45, Unit.Point);
-            page.MarginBottom(kerapatan.MarginBawah, Unit.Point);
-            page.MarginLeft(45, Unit.Point);
-            page.DefaultTextStyle(x => x.FontFamily("Times New Roman").FontSize(SuratRenderer.UkuranTeks));
+            TataLetakHalamanSurat.Siapkan(page, lebar, tinggi);
         }
 
         /// <summary>Susun seluruh elemen surat sesuai pilihan pada definisi template.</summary>

@@ -226,16 +226,24 @@ namespace SuDesApp.GeneratorPdf
             // NIP hanya untuk pejabat ASN kelurahan (Lurah); Kepala Desa tidak ASN.
             string nipPejabat = KopSurat.IsKelurahan(desa) ? (desa.NipKepalaDesa ?? string.Empty).Trim() : string.Empty;
 
-            halaman.Blok(c => c.PaddingTop(SuratRenderer.JarakBlok(12)).AlignRight().Width(250).Column(kolom =>
+            // Lebar blok ditentukan lewat baris (RelativeItem kosong + ConstantItem),
+            // bukan Width pada anak kolom: mesin tata letak menata ISI kotak selebar
+            // induknya, sehingga Width + AlignRight di sini menaruh teks di tengah
+            // halaman, bukan di sisi kanan.
+            halaman.Blok(c => c.PaddingTop(SuratRenderer.JarakBlok(12)).Row(row =>
             {
-                kolom.Item().AlignCenter().Text(JabatanTercetak(data, desa)).Bold();
-                kolom.Item().Height(SuratRenderer.RuangTandaTangan);
-                kolom.Item().AlignCenter().Text(
-                    string.IsNullOrWhiteSpace(namaPejabat) ? "_______________________" : namaPejabat).Bold();
-                if (!string.IsNullOrWhiteSpace(nipPejabat))
+                row.RelativeItem();
+                row.ConstantItem(250).Column(kolom =>
                 {
-                    kolom.Item().AlignCenter().Text($"NIP {nipPejabat}");
-                }
+                    kolom.Item().AlignCenter().Text(JabatanTercetak(data, desa)).Bold();
+                    kolom.Item().Height(SuratRenderer.RuangTandaTangan);
+                    kolom.Item().AlignCenter().Text(
+                        string.IsNullOrWhiteSpace(namaPejabat) ? "_______________________" : namaPejabat).Bold();
+                    if (!string.IsNullOrWhiteSpace(nipPejabat))
+                    {
+                        kolom.Item().AlignCenter().Text($"NIP {nipPejabat}");
+                    }
+                });
             }));
         }
 

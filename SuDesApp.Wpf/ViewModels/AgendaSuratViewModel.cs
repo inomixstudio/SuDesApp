@@ -9,6 +9,7 @@ using SuDesApp.Data.Repositories;
 using SuDesApp.GeneratorPdf;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
+using SuDesApp.Wpf.Services;
 
 namespace SuDesApp.Wpf.ViewModels
 {
@@ -62,6 +63,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly IMessageService _messageService;
         private readonly Func<string, SuratKeluarMasukData?, SuratKeluarMasukData?, InputAgendaViewModel> _inputFactory;
         private readonly Func<string, string, PdfPreviewViewModel> _previewFactory;
+        private readonly AppConfig _appConfig;
         private readonly ILogger<AgendaSuratViewModel> _logger;
 
         private string _jenisSurat = "MASUK";
@@ -86,8 +88,10 @@ namespace SuDesApp.Wpf.ViewModels
             IMessageService messageService,
             Func<string, SuratKeluarMasukData?, SuratKeluarMasukData?, InputAgendaViewModel> inputFactory,
             Func<string, string, PdfPreviewViewModel> previewFactory,
+            AppConfig appConfig,
             ILogger<AgendaSuratViewModel> logger)
         {
+            _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _desaRepository = desaRepository ?? throw new ArgumentNullException(nameof(desaRepository));
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
@@ -485,8 +489,8 @@ namespace SuDesApp.Wpf.ViewModels
                 using var stream = new MemoryStream();
                 generator.GenerateAllSuratPdf(stream, dataToPrint, _jenisSurat, semuaTahun ? null : year);
 
-                string tempPath = Path.Combine(Path.GetTempPath(), $"Arsip_{_jenisSurat}_{labelTahun.Replace(' ', '_')}.pdf");
-                await File.WriteAllBytesAsync(tempPath, stream.ToArray());
+                string tempPath = await PratinjauPdf.SimpanAsync(
+                    _appConfig, stream.ToArray(), $"Arsip_{_jenisSurat}_{labelTahun.Replace(' ', '_')}");
 
                 var preview = _previewFactory($"Arsip {_jenisSurat} {labelTahun}", tempPath);
                 _navigation.Navigate(preview);

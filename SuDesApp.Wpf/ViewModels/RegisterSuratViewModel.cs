@@ -1148,14 +1148,11 @@ namespace SuDesApp.Wpf.ViewModels
                 }
 
                 var generator = _serviceProvider.GetRequiredService<SuDesApp.GeneratorPdf.SuratRegisterGenerator>();
-                var tempFolder = _appConfig.TempPdfFolder;
-                Directory.CreateDirectory(tempFolder);
-                var tempPdfPath = Path.Combine(tempFolder, $"{RegisterFileBaseName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
-
-                using (var fs = File.Create(tempPdfPath))
-                {
-                    await generator.GenerateRegisterPdfAsync(fs, suratList);
-                }
+                using var penampung = new MemoryStream();
+                await generator.GenerateRegisterPdfAsync(penampung, suratList);
+                string tempPdfPath = await PratinjauPdf
+                    .SimpanAsync(_appConfig, penampung.ToArray(), RegisterFileBaseName)
+                    .ConfigureAwait(true);
 
                 // Cetak menjadi PDF: navigasi ke halaman pratinjau PDF agar pengguna
                 // dapat menyimpan (Ekspor PDF) atau mencetaknya dari pratinjau.
