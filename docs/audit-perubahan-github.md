@@ -1,6 +1,12 @@
 # Audit perubahan lokal sebelum upload ke GitHub
 
-Status diperiksa pada branch `upgrade-dotnet-10`.
+> **Dokumen historis (20 Oktober 2026).** Isi di bawah menggambarkan keadaan
+> working tree saat audit itu dibuat, bukan keadaan repo sekarang. Sejak
+> 30 Oktober 2026 branch default adalah `master`; perubahan sudah di-commit,
+> artefak build/probe sudah dihapus, dan rilis 2.10.0 diterbitkan. Bagian
+> rekomendasi di bawah disimpan hanya sebagai catatan proses.
+
+Status diperiksa pada branch `upgrade-dotnet-10` (nama branch saat itu).
 
 ## Ringkasan working tree
 
