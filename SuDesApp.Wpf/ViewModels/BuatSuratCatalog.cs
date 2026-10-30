@@ -5,27 +5,11 @@ namespace SuDesApp.Wpf.ViewModels;
 /// <summary>Defines the built-in letter choices and resolves names used by quick links.</summary>
 internal static class BuatSuratCatalog
 {
+    // Daftar pilihannya tinggal di Core (MenuSuratKatalog) supaya menu desktop
+    // dan menu web membaca satu sumber yang sama — menambah jenis surat baru
+    // cukup sekali, dan kedua platform langsung ikut.
     public static IReadOnlyList<(string Label, string Template)> MenuSurat { get; } =
-    [
-        ("SKD Belum Menikah", SuratConstants.SKD_UMUM),
-        ("Domisili Warga", SuratConstants.DOMISILI_WARGA),
-        ("Domisili Instansi", SuratConstants.INSTANSI),
-        ("SKU", SuratConstants.SKU),
-        ("Pengantar SKCK", SuratConstants.PENGANTAR_SKCK),
-        ("Izin Suami / Orang Tua", SuratConstants.IZIN_ORTU),
-        ("SKTM", SuratConstants.SKTM),
-        ("Belum Terbit", SuratConstants.SK_BELUM_TERBIT),
-        ("Garapan Sawah", SuratConstants.GARAPAN_SAWAH),
-        ("Kematian", SuratConstants.KEMATIAN),
-        ("Beda Nama", SuratConstants.BEDANAMA),
-        ("Kenal Lahir", SuratConstants.KENAL_LAHIR),
-        ("Tinggal Sementara", SuratConstants.IJIN_TINGGAL),
-        ("Ahli Waris", SuratConstants.AHLI_WARIS),
-        ("Pengantar Adminduk", SuratConstants.PENGANTAR_ADMINDUK),
-        ("Surat Keterangan Pindah", SuratConstants.SK_PINDAH),
-        ("SK Tidak Punya Rumah", SuratConstants.SK_TIDAK_PUNYA_RUMAH),
-        ("Izin Keramaian", SuratConstants.IZIN_KERAMAIAN)
-    ];
+        MenuSuratKatalog.Semua.Select(p => (p.Label, p.Jenis)).ToList();
 
     private static readonly IReadOnlyDictionary<string, string> TemplateByDisplay =
         MenuSurat.ToDictionary(item => item.Label, item => item.Template, StringComparer.OrdinalIgnoreCase)

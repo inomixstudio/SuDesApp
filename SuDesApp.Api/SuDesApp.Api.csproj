@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!--
+      Ber-target net10.0-windows7.0 agar bisa merujuk SuDesApp.Core yang juga
+      ber-target windows (karena DPAPI/ProtectedData di KunciDatabase, ApiKunci,
+      GoogleClientCredentials, dan ProtectedGoogleTokenDataStore).
+      Begitu kripto tersebut diabstraksi, ubah kembali ke <TargetFramework>net10.0</TargetFramework>
+      agar backend ini bisa di-deploy ke Linux.
+    -->
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SuDesApp.Api</RootNamespace>
+    <!-- Sama seperti SuDesApp.Core: beberapa paket transitif (mis. Microsoft.Win32.SystemEvents)
+         masih membawa target build ber-TFM lama dan akan menolak net10.0-windows7.0. -->
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SuDesApp.Core\SuDesApp.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Berkas yang di-hardcode Core terhadap AppContext.BaseDirectory,
+         sama seperti yang disalin SuDesApp.Wpf.csproj. -->
+    <None Include="..\SuDesApp.Core\Data\Queries\SuratQueries.sql" Link="Data\Queries\SuratQueries.sql" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\SuDesApp.Core\Configuration\JenisSuratConfig.json" Link="Configuration\JenisSuratConfig.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Skema database dasar untuk DatabaseInitializer (tabel Surat dll.). -->
+    <None Include="..\desa.db.sql" Link="desa.db.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

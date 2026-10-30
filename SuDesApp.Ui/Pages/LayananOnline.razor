@@ -1,0 +1,107 @@
+@page "/modul/layanan-online"
+@inject SuDesApiClient Api
+
+<PageTitle>Layanan Online — SuDesApp</PageTitle>
+
+<h1>Layanan Online</h1>
+<p class="sapaan">
+    Semua permintaan surat warga masuk ke antrean ini: formulir di website desa
+    dan kiriman sistem desa lewat API desa. Warga mengisi sendiri formulirnya —
+    operator cukup memeriksa, membuat surat, lalu memberi tahu warga.
+</p>
+
+<section class="panel">
+    <div class="kepala">
+        <h2>Antrean operator</h2>
+        <div class="aksi">
+            <a class="tautan-formulir" href="layanan-online" target="_blank" rel="noopener">
+                Buka formulir warga
+            </a>
+            <button @onclick="MuatAsync" disabled="@_sibuk">Muat ulang</button>
+        </div>
+    </div>
+
+    @if (_antrean is null)
+    {
+        <p class="memuat">Memuat antrean…</p>
+    }
+    else if (_antrean.Count == 0)
+    {
+        <p class="memuat">
+            Belum ada permintaan masuk. Bagikan tautan formulir warga
+            (<code>layanan-online</code>) di website desa agar warga bisa mengajukan sendiri.
+        </p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Kode</th>
+                    <th>Tanggal</th>
+                    <th>Jenis surat</th>
+                    <th>Pemohon</th>
+                    <th>No. HP</th>
+                    <th>Status</th>
+                    <th>Sumber</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in _antrean)
+                {
+                    <tr>
+                        <td><strong>@p.Kode</strong></td>
+                        <td>@p.Tanggal.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td>
+                        <td>@p.Jenis</td>
+                        <td>@p.Nama</td>
+                        <td>@p.NomorHp</td>
+                        <td><span class="lencana @KelasStatus(p.Status)">@p.Status</span></td>
+                        <td>@LabelSumber(p.Sumber)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@code {
+    private bool _sibuk;
+    private IReadOnlyList<BarisPermintaan>? _antrean;
+
+    protected override async Task OnInitializedAsync() => await MuatAsync();
+
+    private async Task MuatAsync()
+    {
+        _sibuk = true;
+        try
+        {
+            _antrean = await Api.AntreanAsync();
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private static string KelasStatus(string status) => status.ToUpperInvariant() switch
+    {
+        "BARU" => "baru",
+        "DIPROSES" => "proses",
+        "SELESAI" => "selesai",
+        "DITOLAK" => "tolak",
+        _ => "perbaikan"
+    };
+
+    /// <summary>
+    /// Label sumber untuk layar antrean. Kanal WhatsApp dan Google Sheet sudah
+    /// dihapus; baris lama tetap terbaca dan diberi tanda "(lama)" supaya tidak
+    /// disangka permintaan baru dari kanal yang masih berjalan.
+    /// </summary>
+    private static string LabelSumber(string? sumber) => (sumber ?? string.Empty).ToUpperInvariant() switch
+    {
+        "API" or "" => "Website",
+        "WA" => "WhatsApp (lama)",
+        "SHEET" => "Google Form (lama)",
+        _ => "Lainnya"
+    };
+}

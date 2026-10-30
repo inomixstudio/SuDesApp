@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <RootNamespace>SuDesApp.Web</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- UI bersama: layout, menu utama, dan semua halaman modul. -->
+    <ProjectReference Include="..\SuDesApp.Ui\SuDesApp.Ui.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,117 @@
+/* Halaman masuk — berdiri sendiri (tanpa sidebar), tampil sama di
+   desktop, Android, dan browser. */
+
+.halaman-masuk {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #f4f6fa;
+}
+
+.kartu-masuk {
+    width: 100%;
+    max-width: 400px;
+    background: #ffffff;
+    border: 1px solid #e3e8ef;
+    border-radius: 12px;
+    padding: 28px 26px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+}
+
+.kartu-masuk .merek {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.kartu-masuk .logo {
+    font-weight: 800;
+    font-size: 20px;
+    color: #1d6f42;
+}
+
+.kartu-masuk .versi {
+    font-size: 12px;
+    color: #7b8794;
+}
+
+.kartu-masuk h1 {
+    font-size: 20px;
+    margin: 0 0 6px;
+}
+
+.keterangan {
+    color: #5b6675;
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin: 0 0 18px;
+}
+
+.bidang {
+    margin-bottom: 14px;
+}
+
+.bidang label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #374151;
+}
+
+.input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+}
+
+.input:focus {
+    outline: 2px solid #1d6f42;
+    outline-offset: 1px;
+    border-color: #1d6f42;
+}
+
+.peringatan {
+    background: #fdecec;
+    border: 1px solid #f5c2c2;
+    color: #a02626;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    margin: 4px 0 14px;
+}
+
+.tombol-utama {
+    width: 100%;
+    padding: 11px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #1d6f42;
+    color: #fff;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tombol-utama:hover:not(:disabled) {
+    background: #175c37;
+}
+
+.tombol-utama:disabled {
+    opacity: 0.65;
+    cursor: default;
+}
+
+.catatan-akun {
+    margin: 16px 0 0;
+    font-size: 12.5px;
+    color: #6b7684;
+    line-height: 1.55;
+}

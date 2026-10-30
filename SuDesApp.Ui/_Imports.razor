@@ -1,0 +1,14 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using SuDesApp.Ui.Layout
+@using SuDesApp.Ui.Shared
+@using SuDesApp.Ui.Pages
+@using SuDesApp.Ui.Services
+@* Semua halaman aplikasi (beranda, modul, layanan online, …) hanya terbuka
+   setelah ada sesi login. Halaman /masuk sendiri mengecualikan diri dengan
+   [AllowAnonymous]. Izin per-peran tetap ditegakkan di lapis data, bukan
+   sekadar lewat halaman ini (lihat docs/policy-peran-pengguna.md). *@
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]

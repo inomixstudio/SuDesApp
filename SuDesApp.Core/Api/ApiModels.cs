@@ -8,7 +8,7 @@ namespace SuDesApp.Api
     /// <summary>
     /// Tingkat keluasan data sebuah endpoint. Nilai ini menentukan apa yang
     /// boleh keluar lewat API: hanya angka agregat, data perangkat desa, atau
-    /// pemeriksaan keaslian surat.
+    /// permintaan yang masuk.
     ///
     /// PENTING: tidak ada kategori untuk data pribadi warga. NIK, alamat,
     /// nomor HP, dan tanggal lahir warga TIDAK PERNAH dikeluarkan lewat API.
@@ -22,6 +22,9 @@ namespace SuDesApp.Api
 
         /// <summary>Data perangkat desa: nama jabatan, nama pejabat, masa jabatan.</summary>
         Perangkat,
+
+        /// <summary>Permintaan surat yang dikirim dari luar dan masuk ke antrean operator.</summary>
+        Permintaan,
 
         /// <summary>
         /// Pemeriksaan keaslian surat dari kode yang tercetak di kaki surat.
@@ -67,7 +70,8 @@ namespace SuDesApp.Api
         {
             ApiKategori.Agregat => "Agregat",
             ApiKategori.Perangkat => "Perangkat Desa",
-            _ => "Verifikasi Surat"
+            ApiKategori.Verifikasi => "Verifikasi Surat",
+            _ => "Permintaan Masuk"
         };
     }
 
@@ -124,6 +128,82 @@ namespace SuDesApp.Api
         public const string KodeTidakDikenal = "kode_tidak_dikenal";
     }
 
+    /// <summary>
+    /// Isi permintaan surat yang dikirim dari luar aplikasi. Nama field memakai
+    /// snake_case (paham yang lazim di API) dan nama camelCase tetap diterima
+    /// karena <c>PropertyNameCaseInsensitive</c> diaktifkan.
+    /// </summary>
+    public sealed class ApiPermintaanMasuk
+    {
+        /// <summary>
+        /// Kode unik dari sistem pengirim. Bila diisi, pengiriman ulang dengan
+        /// referensi sama tidak menghasilkan permintaan ganda — penting karena
+        /// pemanggil biasanya mencoba ulang bila jawabannya lambat.
+        /// </summary>
+        [JsonPropertyName("referensi")]
+        public string? Referensi { get; set; }
+
+        [JsonPropertyName("nama_warga")]
+        public string? NamaWarga { get; set; }
+
+        [JsonPropertyName("nik")]
+        public string? Nik { get; set; }
+
+        [JsonPropertyName("no_hp")]
+        public string? NomorHp { get; set; }
+
+        /// <summary>Jenis surat, mis. "SKTM". Boleh dikosongkan bila <see cref="Pesan"/> memuat jenisnya.</summary>
+        [JsonPropertyName("jenis_surat")]
+        public string? JenisSurat { get; set; }
+
+        /// <summary>
+        /// Isi pesan warga dalam format bebas (dipakai parser yang sama dengan
+        /// percakapan WhatsApp), mis. "SKTM\nNama: Budi\nNIK: 3204...".
+        /// </summary>
+        [JsonPropertyName("pesan")]
+        public string? Pesan { get; set; }
+
+        /// <summary>Isian terstruktur per jenis surat (opsional; dibaca operator di panel layanan online).</summary>
+        [JsonPropertyName("data")]
+        public Dictionary<string, string>? Data { get; set; }
+    }
+
+    /// <summary>Hasil pembuatan permintaan dari API.</summary>
+    public sealed class ApiHasilPermintaan
+    {
+        public bool Berhasil { get; set; }
+
+        /// <summary>Kode permintaan (mis. PMT-2026-0001) supaya pemanggil bisa melacak statusnya.</summary>
+        public string? Kode { get; set; }
+
+        public string? Pesan { get; set; }
+
+        /// <summary>True bila permintaan ini sebenarnya sudah pernah dibuat (referensi sama).</summary>
+        public bool SudahAda { get; set; }
+    }
+
+    /// <summary>
+    /// Status satu permintaan untuk <c>GET /permintaan/{kode}</c>. Sengaja tidak
+    /// memuat NIK maupun nama warga: pemanggil luar sudah mengetahui datanya
+    /// sendiri, sedangkan log akses tidak perlu menyalin data pribadi.
+    /// </summary>
+    public sealed class ApiStatusPermintaan
+    {
+        public string Kode { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string Sumber { get; set; } = string.Empty;
+        public string JenisSurat { get; set; } = string.Empty;
+        public DateTime Tanggal { get; set; }
+
+        /// <summary>Catatan operator (mis. alasan permintaan perlu diperbaiki).</summary>
+        public string? Catatan { get; set; }
+
+        public bool AdaSurat { get; set; }
+
+        /// <summary>Nomor surat yang sudah dibuat dari permintaan ini (bila ada).</summary>
+        public string? NomorSurat { get; set; }
+    }
+
     /// <summary>Angka agregat untuk <c>GET /statistik</c>.</summary>
     public sealed class ApiRingkasan
     {
@@ -154,6 +234,11 @@ namespace SuDesApp.Api
         /// tidak perlu menangani kunci yang muncul-hilang.
         /// </summary>
         public IReadOnlyDictionary<string, int> SuratPerStatusPersetujuan { get; set; } =
+            new Dictionary<string, int>();
+
+        public int PermintaanTotal { get; set; }
+        public int PermintaanBelumDibaca { get; set; }
+        public IReadOnlyDictionary<string, int> PermintaanPerStatus { get; set; } =
             new Dictionary<string, int>();
     }
 

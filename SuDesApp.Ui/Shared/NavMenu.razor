@@ -1,0 +1,126 @@
+@implements IDisposable
+@inject SuDesApiClient Api
+@inject NavigationManager Nav
+
+@* Menu ini mengikuti menu sidebar aplikasi desktop (FeatureNavigationViewModel):
+   bagian, nama item, dan urutannya sama, supaya operator yang berpindah antara
+   desktop dan browser menemukan menu di tempat yang sama. Daftar pilihan pada
+   "Buat Surat Baru" dan "NTCR" dibaca dari API (/sudes/api/v1/menu) yang
+   bersumber dari katalog Core — bukan salinan yang bisa ketinggalan.
+
+   Yang sengaja tidak ada di sini karena khas perangkat/aplikasi desktop:
+   Login dengan Google (OAuth desktop), Tema, Pembaruan, Panduan Awal, dan
+   Keluar (tersedia di bilah atas). *@
+
+<nav class="menu">
+    <NavLink class="tautan" href="" Match="NavLinkMatch.All">Beranda</NavLink>
+
+    <div class="kelompok">Buat Surat</div>
+    <NavLink class="tautan" href="modul/register-surat">Register Surat</NavLink>
+
+    <details class="akordeon">
+        <summary>Buat Surat Baru</summary>
+        @if (_menu is null)
+        {
+            <span class="memuat">Memuat daftar surat…</span>
+        }
+        else
+        {
+            @foreach (var s in _menu.Surat)
+            {
+                <NavLink class="tautan sub" href="@($"modul/buat-surat?jenis={Uri.EscapeDataString(s.Jenis)}")">@s.Label</NavLink>
+            }
+        }
+        <NavLink class="tautan sub" href="modul/rekening-koran">Permohonan Rekening Koran</NavLink>
+    </details>
+
+    <NavLink class="tautan" href="modul/template-surat">Buat Surat Sendiri</NavLink>
+    <NavLink class="tautan" href="modul/daftar-hadir">Daftar Hadir</NavLink>
+
+    <details class="akordeon">
+        <summary>Surat Peraturan</summary>
+        <NavLink class="tautan sub" href="modul/keputusan?jenis=SK">SK / Keputusan</NavLink>
+        <NavLink class="tautan sub" href="modul/keputusan?jenis=PERDES">PERDES</NavLink>
+        <NavLink class="tautan sub" href="modul/keputusan?jenis=PERKADES">PERKADES</NavLink>
+    </details>
+
+    <details class="akordeon">
+        <summary>Surat Masuk/Keluar</summary>
+        <NavLink class="tautan sub" href="modul/agenda?jenis=MASUK">Surat Masuk</NavLink>
+        <NavLink class="tautan sub" href="modul/agenda?jenis=KELUAR">Surat Keluar</NavLink>
+    </details>
+
+    <details class="akordeon">
+        <summary>NTCR</summary>
+        <NavLink class="tautan sub" href="modul/ntcr-paket">Paket N1–N6 (satu pasangan)</NavLink>
+        @if (_menu is not null)
+        {
+            @foreach (var n in _menu.Ntcr)
+            {
+                <NavLink class="tautan sub" href="@($"modul/buat-surat?jenis={Uri.EscapeDataString(n.Jenis)}")"
+                         title="@n.Keterangan">@n.Judul</NavLink>
+            }
+        }
+    </details>
+
+    <NavLink class="tautan" href="modul/register-ntcr">Register NTCR</NavLink>
+    <NavLink class="tautan" href="modul/tutup-buku">Tutup Buku Tahunan</NavLink>
+    <NavLink class="tautan" href="modul/verifikasi-surat">Verifikasi Surat</NavLink>
+    <NavLink class="tautan" href="modul/riwayat">Riwayat Aktivitas</NavLink>
+
+    <div class="kelompok">Formulir</div>
+    <NavLink class="tautan" href="modul/formulir">Formulir</NavLink>
+
+    <div class="kelompok">Data Desa</div>
+    <NavLink class="tautan" href="modul/perangkat-desa">Perangkat Desa</NavLink>
+    <NavLink class="tautan" href="modul/sotk-desa">SOTK Desa</NavLink>
+    <NavLink class="tautan" href="modul/apbdes">APBDES</NavLink>
+    <NavLink class="tautan" href="modul/idm">Indeks Desa (IDM)</NavLink>
+
+    <div class="kelompok">Data Warga</div>
+    <NavLink class="tautan" href="modul/warga">Data Warga</NavLink>
+    <NavLink class="tautan" href="modul/laporan-penduduk">Laporan Penduduk</NavLink>
+
+    <div class="kelompok">Pengaturan</div>
+    <NavLink class="tautan" href="modul/pengaturan-aplikasi">Pengaturan Aplikasi</NavLink>
+    <NavLink class="tautan" href="modul/pengaturan-surat">Pengaturan Surat</NavLink>
+    <NavLink class="tautan" href="modul/penomoran-surat">Pengaturan Nomor Surat</NavLink>
+    <NavLink class="tautan" href="modul/pengaturan-formulir">Pengaturan Formulir</NavLink>
+    @* Kelola pengguna hanya ditampilkan ke Administrator. Ini semata kenyamanan
+       tampilan: penegakan sebenarnya tetap di Core (KelolaPengguna) sehingga
+       peran lain yang mengetik alamat halamannya tetap ditolak server. *@
+    <AuthorizeView Roles="ADMINISTRATOR">
+        <NavLink class="tautan" href="modul/pengguna">Kelola Pengguna</NavLink>
+    </AuthorizeView>
+    <NavLink class="tautan" href="modul/cadangkan-pulihkan">Cadangkan &amp; Pulihkan</NavLink>
+
+    <div class="kelompok">Langganan</div>
+    <NavLink class="tautan" href="modul/langganan">Langganan</NavLink>
+
+    <div class="kelompok">Layanan Online</div>
+    <NavLink class="tautan" href="modul/layanan-online">Layanan Online</NavLink>
+    <NavLink class="tautan" href="layanan-online">Formulir Warga</NavLink>
+
+    <div class="kelompok">Bantuan</div>
+    <NavLink class="tautan" href="modul/api-desa">API Desa</NavLink>
+    <NavLink class="tautan" href="modul/catatan-rilis">Catatan Rilis</NavLink>
+    <NavLink class="tautan" href="modul/tentang">Tentang</NavLink>
+</nav>
+
+@code {
+    [Parameter] public EventCallback Tutup { get; set; }
+
+    private MenuAplikasi? _menu;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Nav.LocationChanged += LokasiBerubah;
+        _menu = await Api.MenuAsync();
+    }
+
+    /// <summary>Drawer ponsel ditutup setiap kali halaman berpindah.</summary>
+    private void LokasiBerubah(object? sender, LocationChangedEventArgs e)
+        => _ = InvokeAsync(() => Tutup.InvokeAsync());
+
+    public void Dispose() => Nav.LocationChanged -= LokasiBerubah;
+}

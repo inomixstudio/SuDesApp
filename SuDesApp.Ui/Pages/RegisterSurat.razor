@@ -1,0 +1,252 @@
+@page "/modul/register-surat"
+@inject SuDesApiClient Api
+
+<PageTitle>Register Surat — SuDesApp</PageTitle>
+
+<h1>Register Surat</h1>
+<p class="sapaan">
+    Daftar surat yang sudah tercatat di database desa — sama isinya dengan
+    Register Surat di aplikasi desktop, karena keduanya memakai filter dan
+    kueri yang sama di Core. Surat jenis NTCR tidak tampil di sini; formulir
+    NTCR punya registernya sendiri.
+</p>
+
+<section class="panel">
+    <div class="saring">
+        <label class="cari">
+            <span>Cari surat</span>
+            <div class="cari-baris">
+                <input @bind="_cari" @bind:event="oninput" @onkeydown="TombolCari"
+                       placeholder="Nomor surat, nama warga, NIK, atau keperluan"
+                       disabled="@_sibuk" autocomplete="off" />
+                <button class="utama" @onclick="CariAsync" disabled="@_sibuk">Cari</button>
+            </div>
+        </label>
+
+        <label>
+            <span>Status</span>
+            <select @bind="_status" @bind:after="CariAsync" disabled="@_sibuk">
+                <option value="">Semua status</option>
+                @foreach (var s in StatusPilihan)
+                {
+                    <option value="@s.Status">@s.Label</option>
+                }
+            </select>
+        </label>
+
+        <label>
+            <span>Tahun</span>
+            <select @bind="_tahun" @bind:after="CariAsync" disabled="@_sibuk">
+                <option value="">Semua tahun</option>
+                @foreach (var t in _tahunPilihan)
+                {
+                    <option value="@t">@t</option>
+                }
+            </select>
+        </label>
+
+        <label>
+            <span>Jenis surat</span>
+            <select @bind="_jenis" @bind:after="CariAsync" disabled="@_sibuk">
+                <option value="">Semua jenis</option>
+                @foreach (var j in _jenisPilihan)
+                {
+                    <option value="@j.Jenis">@j.Label</option>
+                }
+            </select>
+        </label>
+
+        <label>
+            <span>Baris per halaman</span>
+            <select @bind="_ukuran" @bind:after="CariAsync" disabled="@_sibuk">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </label>
+    </div>
+
+    @if (_galat is not null)
+    {
+        <div class="peringatan" role="alert">@_galat</div>
+    }
+    else if (_hasil is null)
+    {
+        <p class="memuat">Memuat register surat…</p>
+    }
+    else
+    {
+        <div class="status-baris" aria-label="Jumlah surat per status">
+            @foreach (var s in _hasil.PerStatus)
+            {
+                <span class="status-chip">
+                    <span class="lencana @KelasStatus(s.Status)">@s.Label</span>
+                    <strong>@s.Jumlah</strong>
+                </span>
+            }
+            <span class="status-chip total">
+                <span>Total</span>
+                <strong>@_hasil.Total</strong>
+            </span>
+        </div>
+
+        <div class="kepala">
+            <p class="ringkasan">@_hasil.Ringkasan</p>
+            <button @onclick="CariAsync" disabled="@_sibuk">Muat ulang</button>
+        </div>
+
+        @if (_hasil.Items.Count == 0)
+        {
+            <p class="memuat">
+                Tidak ada surat yang cocok. Hapus kata kunci atau pilih
+                <em>Semua status</em> untuk melihat seluruh register.
+            </p>
+        }
+        else
+        {
+            <div class="tabel-gulir">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Nomor surat</th>
+                            <th scope="col">Tanggal</th>
+                            <th scope="col">Jenis</th>
+                            <th scope="col">Warga / penerima</th>
+                            <th scope="col">Keperluan</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in _hasil.Items)
+                        {
+                            <tr>
+                                <td class="mono">@(string.IsNullOrWhiteSpace(s.Nomor) ? "-" : s.Nomor)</td>
+                                <td class="mono">@s.Tanggal.ToString("dd-MM-yyyy")</td>
+                                <td>
+                                    <strong>@s.LabelJenis</strong>
+                                    @if (!string.Equals(s.LabelJenis, s.Jenis, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <div class="kecil mono">@s.Jenis</div>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@s.Nama</strong>
+                                    <div class="kecil">@RincianPenerima(s)</div>
+                                </td>
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(s.Keperluan) ? "-" : s.Keperluan)
+                                    @if (!string.IsNullOrWhiteSpace(s.StatusPersetujuan))
+                                    {
+                                        <div class="kecil">Alur: @s.StatusPersetujuan</div>
+                                    }
+                                </td>
+                                <td><span class="lencana @KelasStatus(s.Status)">@s.StatusLabel</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="halaman">
+                <button @onclick="() => PindahAsync(-1)" disabled="@(_sibuk || _hasil.Halaman <= 1)">
+                    ← Sebelumnya
+                </button>
+                <span>Halaman @_hasil.Halaman dari @Math.Max(1, _hasil.TotalHalaman)</span>
+                <button @onclick="() => PindahAsync(1)"
+                        disabled="@(_sibuk || _hasil.Halaman >= _hasil.TotalHalaman)">
+                    Berikutnya →
+                </button>
+            </div>
+        }
+    }
+</section>
+
+<p class="catatan">
+    Halaman ini membaca register apa adanya. Membuat surat baru, mengubah status,
+    mencetak, dan memindai tanda tangan masih dilakukan dari aplikasi desktop
+    sampai formulirnya diporting ke sini — datanya tetap satu database yang sama.
+</p>
+
+@code {
+    /// <summary>Urutan status tetap sama dengan kotak pilihan desktop.</summary>
+    private static readonly (string Status, string Label)[] StatusPilihan =
+    {
+        ("Draft", "Draft"),
+        ("Active", "Aktif"),
+        ("Cancelled", "Dibatalkan")
+    };
+
+    private string? _cari;
+    private string? _status;
+    private string? _tahun;
+    private string? _jenis;
+    private int _ukuran = 25;
+    private bool _sibuk;
+    private HasilDaftarSurat? _hasil;
+    private string? _galat;
+
+    // Pilihan penyaring disimpan terpisah dari _hasil supaya isinya tidak
+    // kosong sekejap saat halaman memuat ulang atau pencarian tidak menemukan apa pun.
+    private List<string> _tahunPilihan = new();
+    private List<PilihanJenisSurat> _jenisPilihan = new();
+
+    protected override async Task OnInitializedAsync() => await MuatAsync();
+
+    private async Task CariAsync() => await MuatAsync(1);
+
+    private async Task PindahAsync(int arah)
+    {
+        if (_hasil is null) return;
+        await MuatAsync(Math.Max(1, _hasil.Halaman + arah));
+    }
+
+    private async Task MuatAsync(int halaman = 1)
+    {
+        _sibuk = true;
+        try
+        {
+            _galat = null;
+            var hasil = await Api.SuratAsync(_cari, _status, _tahun, _jenis, halaman, _ukuran);
+            if (!hasil.Sukses)
+            {
+                _galat = hasil.Pesan;
+                _hasil = null;
+                return;
+            }
+
+            _hasil = hasil;
+
+            // Tahun terbaru di atas; daftar dari server boleh berurutan apa saja.
+            _tahunPilihan = hasil.TahunTersedia
+                .OrderByDescending(t => t, StringComparer.Ordinal)
+                .ToList();
+            _jenisPilihan = hasil.JenisTersedia;
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private async Task TombolCari(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await CariAsync();
+    }
+
+    /// <summary>TTL, JK, dan alamat dalam satu baris kecil di bawah nama.</summary>
+    private static string RincianPenerima(BarisSurat s)
+    {
+        var bagian = new List<string>();
+        if (!string.IsNullOrWhiteSpace(s.Jk)) bagian.Add($"JK {s.Jk}");
+        if (!string.IsNullOrWhiteSpace(s.Ttl) && s.Ttl != "-") bagian.Add(s.Ttl!);
+        if (!string.IsNullOrWhiteSpace(s.Alamat) && s.Alamat != "-") bagian.Add(s.Alamat!);
+        return bagian.Count == 0 ? "-" : string.Join(" · ", bagian);
+    }
+
+    private static string KelasStatus(string? status) => (status ?? string.Empty).ToUpperInvariant() switch
+    {
+        "ACTIVE" => "aktif",
+        "CANCELLED" => "dibatalkan",
+        _ => "draft"
+    };
+}

@@ -1,0 +1,18 @@
+@inject NavigationManager Nav
+
+@code {
+    /// <summary>
+    /// Dihelai oleh AuthorizeRouteView saat belum ada sesi: mengarahkan ke
+    /// /masuk sambil membawa halaman tujuan lewat query ?ke=, supaya setelah
+    /// berhasil masuk pengguna kembali ke halaman yang ia tuju — bukan beranda.
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        var kembali = Nav.ToBaseRelativePath(Nav.Uri); // tanpa "/" depan
+        var tujuan = "/" + kembali;
+        Nav.NavigateTo(tujuan == "/"
+            ? "/masuk"
+            : $"/masuk?ke={Uri.EscapeDataString(tujuan)}",
+            replace: true);
+    }
+}

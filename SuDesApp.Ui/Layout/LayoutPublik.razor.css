@@ -1,0 +1,66 @@
+.publik {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f5f7fb;
+    color: #1d2733;
+}
+
+.kepala-publik {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 22px;
+    background: #ffffff;
+    border-bottom: 1px solid #e3e8ef;
+}
+
+.merek {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #14213d;
+}
+
+.versi {
+    font-size: 12px;
+    color: #6b7787;
+}
+
+.tautan-masuk {
+    font-size: 13px;
+    color: #1f4fa8;
+    text-decoration: none;
+    padding: 7px 14px;
+    border: 1px solid #c9d6ea;
+    border-radius: 8px;
+    background: #f7faff;
+}
+
+.tautan-masuk:hover {
+    background: #eaf1ff;
+}
+
+.isi-publik {
+    flex: 1;
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 26px 22px 34px;
+}
+
+.kaki-publik {
+    padding: 14px 22px;
+    font-size: 12px;
+    color: #6b7787;
+    text-align: center;
+    border-top: 1px solid #e3e8ef;
+    background: #ffffff;
+}

@@ -1,0 +1,209 @@
+h1 {
+    font-size: 22px;
+    margin: 0 0 8px;
+    color: #14213d;
+}
+
+h2 {
+    font-size: 16px;
+    margin: 0 0 14px;
+    color: #14213d;
+}
+
+.sapaan {
+    color: #5b6675;
+    margin: 0 0 18px;
+    max-width: 780px;
+    line-height: 1.6;
+}
+
+.panel {
+    background: #ffffff;
+    border: 1px solid #e3e8ef;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 18px;
+}
+
+.kepala {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.kepala h2 {
+    margin: 0;
+}
+
+.berhasil,
+.peringatan {
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.berhasil {
+    background: #e9f7ef;
+    border: 1px solid #7bc69a;
+    color: #14522f;
+}
+
+.peringatan {
+    background: #fdecec;
+    border: 1px solid #e39a9a;
+    color: #7a1f1f;
+}
+
+/* ---- Form tambah ---- */
+.form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #445061;
+}
+
+input:not([type="checkbox"]),
+select {
+    padding: 9px 10px;
+    border: 1px solid #c3ccd9;
+    border-radius: 8px;
+    font: inherit;
+    background: #fbfcfe;
+    min-width: 0;
+}
+
+input:focus,
+select:focus {
+    outline: 2px solid #4f8cff55;
+    border-color: #4f8cff;
+}
+
+input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+}
+
+button {
+    padding: 8px 14px;
+    border: 1px solid #c3ccd9;
+    border-radius: 8px;
+    background: #ffffff;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+button.utama {
+    background: #14213d;
+    border-color: #14213d;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+button.simpan {
+    background: #f3f7ff;
+    border-color: #c9d6ea;
+    color: #1f4fa8;
+}
+
+button.hapus {
+    background: #fff6f6;
+    border-color: #e9b5b5;
+    color: #8a2020;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.petunjuk {
+    font-size: 12.5px;
+    color: #5b6675;
+    line-height: 1.6;
+    margin: 10px 0 0;
+    max-width: 780px;
+}
+
+/* ---- Tabel akun ---- */
+.tabel-gulir {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 8px 9px;
+    border-bottom: 1px solid #eef2f7;
+    vertical-align: middle;
+}
+
+th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5b6675;
+    background: #f7f9fc;
+    white-space: nowrap;
+}
+
+td.username {
+    font-family: ui-monospace, "Cascadia Mono", Menlo, monospace;
+    color: #445061;
+    white-space: nowrap;
+}
+
+td.tengah {
+    text-align: center;
+}
+
+td.waktu {
+    white-space: nowrap;
+    color: #5b6675;
+    font-size: 12.5px;
+}
+
+tr.nonaktif td {
+    background: #fbfaf7;
+}
+
+.sandi {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.sandi input {
+    width: 150px;
+}
+
+td.aksi {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.memuat {
+    color: #5b6675;
+    font-size: 14px;
+}

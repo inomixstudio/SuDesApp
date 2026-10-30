@@ -1,0 +1,348 @@
+@page "/modul/pengguna"
+@inject SuDesApiClient Api
+@inject SesiState Sesi
+
+<PageTitle>Pengguna &amp; Peran — SuDesApp</PageTitle>
+
+<h1>Pengguna &amp; Peran</h1>
+
+@if (!Administrator)
+{
+    <div class="peringatan">
+        Halaman ini hanya untuk Administrator. Akun Anda masuk sebagai
+        <strong>@(Sesi.Pengguna?.Peran ?? "tanpa peran")</strong>; minta Administrator
+        desa menambah atau mengubah akun.
+    </div>
+}
+else
+{
+    <p class="sapaan">
+        Akun desa dipakai bersama oleh desktop, Android, dan browser — akun yang
+        dibuat di sini langsung bisa dipakai masuk di ketiga tempat. Wewenangnya
+        mengikuti peran, dan pemeriksaannya tetap dilakukan lapis data, bukan
+        sekadar disembunyikan dari menu.
+    </p>
+
+    @if (_pesanSukses is not null)
+    {
+        <div class="berhasil" role="status">@_pesanSukses</div>
+    }
+    @if (_pesanGalat is not null)
+    {
+        <div class="peringatan" role="alert">@_pesanGalat</div>
+    }
+
+    <section class="panel">
+        <h2>Tambah akun</h2>
+        <div class="form">
+            <label>
+                Nama pengguna
+                <input @bind="_baruUsername" @bind:event="oninput" placeholder="mis. operator2" disabled="@_sibuk" autocomplete="off" />
+            </label>
+            <label>
+                Nama lengkap
+                <input @bind="_baruNama" @bind:event="oninput" placeholder="Nama yang tampil di layar" disabled="@_sibuk" />
+            </label>
+            <label>
+                Peran
+                <select @bind="_baruPeran" disabled="@_sibuk">
+                    @foreach (var p in PeranSemua)
+                    {
+                        <option value="@p.Kode">@p.Tampilan</option>
+                    }
+                </select>
+            </label>
+            <label>
+                Kata sandi awal
+                <input type="password" @bind="_baruSandi" @bind:event="oninput" disabled="@_sibuk" autocomplete="new-password" />
+            </label>
+        </div>
+        <button class="utama" @onclick="TambahAsync" disabled="@_sibuk">Tambah akun</button>
+        <p class="petunjuk">@KeteranganPeran(_baruPeran)</p>
+    </section>
+
+    <section class="panel">
+        <div class="kepala">
+            <h2>Daftar akun (@(_daftar?.Count ?? 0))</h2>
+            <button @onclick="MuatAsync" disabled="@_sibuk">Muat ulang</button>
+        </div>
+
+        @if (_daftar is null)
+        {
+            <p class="memuat">Memuat akun…</p>
+        }
+        else if (_daftar.Count == 0)
+        {
+            <p class="memuat">Belum ada akun.</p>
+        }
+        else
+        {
+            <div class="tabel-gulir">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama lengkap</th>
+                            <th>Nama pengguna</th>
+                            <th>Peran</th>
+                            <th>Aktif</th>
+                            <th>Masuk terakhir</th>
+                            <th>Kata sandi baru</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in _daftar)
+                        {
+                            <tr class="@(p.Aktif ? "" : "nonaktif")">
+                                <td>
+                                    <input @bind="p.Nama" @bind:event="oninput" disabled="@_sibuk" aria-label="Nama lengkap @p.Username" />
+                                </td>
+                                <td class="username">@p.Username</td>
+                                <td>
+                                    <select @bind="p.Peran" disabled="@_sibuk" aria-label="Peran @p.Username">
+                                        @foreach (var peran in PeranSemua)
+                                        {
+                                            <option value="@peran.Kode">@peran.Tampilan</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td class="tengah">
+                                    <input type="checkbox" @bind="p.Aktif" disabled="@_sibuk"
+                                           aria-label="Aktif @p.Username" />
+                                </td>
+                                <td class="waktu">@Waktu(p.LoginTerakhir)</td>
+                                <td>
+                                    <div class="sandi">
+                                        <input type="password" @bind="_sandiBaru[p.Id]" @bind:event="oninput"
+                                               placeholder="min. 8 karakter" disabled="@_sibuk"
+                                               autocomplete="new-password"
+                                               aria-label="Kata sandi baru @p.Username" />
+                                        <button @onclick="() => ResetAsync(p)" disabled="@_sibuk">Reset</button>
+                                    </div>
+                                </td>
+                                <td class="aksi">
+                                    <button class="simpan" @onclick="() => SimpanAsync(p)" disabled="@_sibuk">Simpan</button>
+                                    @if (_konfirmasiHapusId == p.Id)
+                                    {
+                                        <button class="hapus" @onclick="() => HapusAsync(p)" disabled="@_sibuk">Yakin hapus?</button>
+                                        <button @onclick="() => _konfirmasiHapusId = null" disabled="@_sibuk">Batal</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="hapus" @onclick="() => _konfirmasiHapusId = p.Id" disabled="@_sibuk">Hapus</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="petunjuk">
+                Akun Administrator aktif terakhir tidak bisa diturunkan perannya,
+                dinonaktifkan, atau dihapus — desa tidak boleh terkunci dari
+                pengelolaannya sendiri. Mengubah peran, menonaktifkan, atau
+                mereset kata sandi langsung memutus sesi akun itu.
+            </p>
+        }
+    </section>
+}
+
+@code {
+    private sealed record PeranItem(string Kode, string Tampilan, string Keterangan);
+
+    private static readonly IReadOnlyList<PeranItem> PeranSemua = new[]
+    {
+        new PeranItem("ADMINISTRATOR", "Administrator",
+            "Semua menu, termasuk membuat akun dan mengganti peran pengguna."),
+        new PeranItem("SEKDES", "Sekretaris Desa",
+            "Semua menu kecuali kelola pengguna; termasuk pengaturan aplikasi dan cadangan."),
+        new PeranItem("OPERATOR", "Operator",
+            "Membuat surat, mengelola data warga dan perangkat, layanan online, dan laporan."),
+        new PeranItem("KADES", "Kepala Desa",
+            "Memeriksa dan menandatangani surat, laporan, verifikasi keaslian, dan riwayat aktivitas."),
+        new PeranItem("AUDITOR", "Auditor",
+            "Hanya membaca: laporan, verifikasi keaslian surat, dan riwayat aktivitas.")
+    };
+
+    private List<BarisPengguna>? _daftar;
+    private readonly Dictionary<int, string> _sandiBaru = new();
+    private int? _konfirmasiHapusId;
+
+    private string? _baruUsername, _baruNama, _baruSandi;
+    private string _baruPeran = "OPERATOR";
+
+    private bool _sibuk;
+    private string? _pesanGalat, _pesanSukses;
+
+    private bool Administrator =>
+        string.Equals(Sesi.Pengguna?.Peran, "ADMINISTRATOR", StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Administrator) await MuatAsync();
+    }
+
+    private async Task MuatAsync()
+    {
+        _sibuk = true;
+        try
+        {
+            var hasil = await Api.DaftarPenggunaAsync();
+            if (!hasil.Sukses)
+            {
+                _pesanGalat = hasil.Pesan;
+                _daftar = null;
+                return;
+            }
+
+            _daftar = hasil.Daftar.ToList();
+            _sandiBaru.Clear();
+            foreach (var p in _daftar) _sandiBaru[p.Id] = string.Empty;
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private async Task TambahAsync()
+    {
+        BersihkanPesan();
+
+        if (string.IsNullOrWhiteSpace(_baruUsername) || string.IsNullOrWhiteSpace(_baruSandi))
+        {
+            _pesanGalat = "Nama pengguna dan kata sandi awal wajib diisi.";
+            return;
+        }
+
+        _sibuk = true;
+        try
+        {
+            var hasil = await Api.TambahPenggunaAsync(
+                _baruUsername.Trim(),
+                string.IsNullOrWhiteSpace(_baruNama) ? _baruUsername.Trim() : _baruNama.Trim(),
+                _baruPeran,
+                _baruSandi);
+
+            if (!hasil.Sukses)
+            {
+                _pesanGalat = hasil.Pesan ?? "Akun tidak tersimpan.";
+                return;
+            }
+
+            _pesanSukses = $"Akun {_baruUsername.Trim()} dibuat dengan peran {TampilanPeran(_baruPeran)}.";
+            _baruUsername = _baruNama = _baruSandi = null;
+            _baruPeran = "OPERATOR";
+            await MuatAsync();
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private async Task SimpanAsync(BarisPengguna p)
+    {
+        BersihkanPesan();
+
+        if (string.IsNullOrWhiteSpace(p.Nama))
+        {
+            _pesanGalat = "Nama lengkap tidak boleh kosong.";
+            return;
+        }
+
+        _sibuk = true;
+        try
+        {
+            var hasil = await Api.UbahPenggunaAsync(p.Id, p.Nama.Trim(), p.Peran, p.Aktif);
+            if (!hasil.Sukses)
+            {
+                _pesanGalat = hasil.Pesan ?? "Perubahan tidak tersimpan.";
+                await MuatAsync(); // kembalikan nilai yang benar-benar tersimpan
+                return;
+            }
+
+            _pesanSukses = hasil.SesiDiputus > 0
+                ? $"Perubahan {p.Username} tersimpan. {hasil.SesiDiputus} sesi akun itu diputus agar wewenang baru langsung berlaku."
+                : $"Perubahan {p.Username} tersimpan.";
+            await MuatAsync();
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private async Task ResetAsync(BarisPengguna p)
+    {
+        BersihkanPesan();
+
+        var sandi = _sandiBaru.TryGetValue(p.Id, out var nilai) ? nilai : string.Empty;
+        if (string.IsNullOrWhiteSpace(sandi))
+        {
+            _pesanGalat = "Isi kata sandi baru pada kolom di samping tombol Reset.";
+            return;
+        }
+
+        _sibuk = true;
+        try
+        {
+            var hasil = await Api.ResetKataSandiPenggunaAsync(p.Id, sandi);
+            if (!hasil.Sukses)
+            {
+                _pesanGalat = hasil.Pesan ?? "Kata sandi tidak tersimpan.";
+                return;
+            }
+
+            _sandiBaru[p.Id] = string.Empty;
+            _pesanSukses = hasil.SesiDiputus > 0
+                ? $"Kata sandi {p.Username} diganti; {hasil.SesiDiputus} sesi lama diputus."
+                : $"Kata sandi {p.Username} diganti. Sampaikan kata sandi baru langsung kepada yang bersangkutan.";
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private async Task HapusAsync(BarisPengguna p)
+    {
+        BersihkanPesan();
+        _konfirmasiHapusId = null;
+
+        _sibuk = true;
+        try
+        {
+            var hasil = await Api.HapusPenggunaAsync(p.Id);
+            if (!hasil.Sukses)
+            {
+                _pesanGalat = hasil.Pesan ?? "Akun tidak terhapus.";
+                return;
+            }
+
+            _pesanSukses = hasil.SesiDiputus > 0
+                ? $"Akun {p.Username} dihapus; {hasil.SesiDiputus} sesinya ikut diputus."
+                : $"Akun {p.Username} dihapus.";
+            await MuatAsync();
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private void BersihkanPesan()
+    {
+        _pesanGalat = null;
+        _pesanSukses = null;
+    }
+
+    private static string KeteranganPeran(string? kode) =>
+        PeranSemua.FirstOrDefault(p => p.Kode == kode)?.Keterangan ?? "Peran tidak dikenal.";
+
+    private static string TampilanPeran(string? kode) =>
+        PeranSemua.FirstOrDefault(p => p.Kode == kode)?.Tampilan ?? kode ?? "-";
+
+    private static string Waktu(DateTime? waktu) =>
+        waktu is null ? "belum pernah" : waktu.Value.ToLocalTime().ToString("dd-MM-yyyy HH:mm");
+}
