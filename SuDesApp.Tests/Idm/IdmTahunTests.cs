@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.Linq;
 using SuDesApp.Services;
-using SuDesApp.Wpf.ViewModels;
 using Xunit;
 
 namespace SuDesApp.Tests.Idm;
@@ -9,9 +7,9 @@ namespace SuDesApp.Tests.Idm;
 /// <summary>
 /// Halaman IDM mengambil beberapa tahun sekaligus, lalu menampilkan tahun
 /// TERAKHIR yang datanya benar-benar terbit. Dua hal yang mudah rusak tanpa
-/// terlihat diuji di sini: daftar tahun tidak boleh memuat tahun kembar (pusat
+/// terlihat diuji di sini: deret tahun tidak boleh memuat tahun kembar (pusat
 /// kadang mengabaikan parameter tahun), dan kalimat ringkasan harus menyebut
-/// tahun terakhir — bukan tahun berjalan.
+/// tahun terakhir — bukan tahun berjalan maupun tahun yang sedang dibuka.
 /// </summary>
 public sealed class IdmTahunTests
 {
@@ -23,7 +21,7 @@ public sealed class IdmTahunTests
     [Fact]
     public void TahunUnik_membuang_tahun_kembar_dan_mengurutkan_terbaru_dulu()
     {
-        var hasil = IdmViewModel.TahunUnik(new[]
+        var seri = IdmSeriTahun.Dari(new[]
         {
             Tahun(2024, 0.74),
             Tahun(2024, 0.74), // jawaban kembar untuk permintaan tahun lain
@@ -31,14 +29,20 @@ public sealed class IdmTahunTests
             Tahun(2023),
         });
 
-        Assert.Equal(new[] { 2024, 2023, 2022 }, hasil.Select(h => h.Ringkasan.Tahun));
-        Assert.Equal(0.74, hasil[0].Ringkasan.Skor, 4);
+        Assert.Equal(new[] { 2024, 2023, 2022 }, seri.Tahun.Select(h => h.Ringkasan.Tahun));
+        Assert.Equal(0.74, seri.Tahun[0].Ringkasan.Skor, 4);
+        Assert.Equal(2024, seri.Terbaru);
     }
 
     [Fact]
     public void RingkasanTahun_menyebut_tahun_terakhir_bukan_tahun_berjalan()
     {
-        var kalimat = IdmViewModel.RingkasanTahun(new List<int> { 2022, 2020, 2024, 2021, 2023 });
+        var seri = IdmSeriTahun.Dari(new[]
+        {
+            Tahun(2022), Tahun(2020), Tahun(2024), Tahun(2021), Tahun(2023),
+        });
+
+        var kalimat = seri.RingkasanTahun();
 
         Assert.Contains("5 tahun dimuat", kalimat);
         Assert.Contains("2020–2024", kalimat);
@@ -47,18 +51,18 @@ public sealed class IdmTahunTests
     }
 
     [Fact]
-    public void CariTahun_mengambil_tahun_yang_diminta_dan_menolak_tahun_lain()
+    public void Cari_mengambil_tahun_yang_diminta_dan_menolak_tahun_lain()
     {
-        var daftar = new[] { Tahun(2024), Tahun(2023), Tahun(2022) };
+        var seri = IdmSeriTahun.Dari(new[] { Tahun(2024), Tahun(2023), Tahun(2022) });
 
-        Assert.Equal(2023, IdmViewModel.CariTahun(daftar, 2023)?.Ringkasan.Tahun);
-        Assert.Null(IdmViewModel.CariTahun(daftar, 2019));
+        Assert.Equal(2023, seri.Cari(2023)?.Ringkasan.Tahun);
+        Assert.Null(seri.Cari(2019));
     }
 
     [Fact]
     public void RingkasanTahun_satu_tahun_tidak_menyebut_rentang()
     {
-        var kalimat = IdmViewModel.RingkasanTahun(new List<int> { 2024 });
+        var kalimat = IdmSeriTahun.Dari(new[] { Tahun(2024) }).RingkasanTahun();
 
         Assert.Contains("hanya tersedia untuk tahun 2024", kalimat);
         Assert.DoesNotContain("–", kalimat);
@@ -67,6 +71,7 @@ public sealed class IdmTahunTests
     [Fact]
     public void RingkasanTahun_kosong_tidak_menghasilkan_kalimat()
     {
-        Assert.Equal(string.Empty, IdmViewModel.RingkasanTahun(new List<int>()));
+        Assert.Equal(string.Empty, IdmSeriTahun.Kosong.RingkasanTahun());
+        Assert.Equal(0, IdmSeriTahun.Kosong.Terbaru);
     }
 }
