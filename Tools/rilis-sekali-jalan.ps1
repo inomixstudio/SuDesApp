@@ -90,6 +90,9 @@ param(
     [string[]]$Perbaikan = @(),
     [string]$CatatanBerkas = '',
     [string]$VersiLama = '',
+    # Versi lain yang ikut dilayani tambalan (mis. 2.8.0,2.9.0 saat pembandingnya
+    # versi tertua). Diteruskan ke publish-release.ps1 -DariVersi.
+    [string[]]$DariVersi = @(),
     [string]$Cabang = '',
     [switch]$Unggah,
     [switch]$LewatiInstaller,
@@ -200,6 +203,7 @@ if ($LASTEXITCODE -ne 0) { throw ('Tahap rilis.ps1 gagal (exit ' + $LASTEXITCODE
 Tahap 'Tahap 2/3 - publish, installer, tambalan, patch.json (Tools/publish-release.ps1)'
 $argPublish = @{ Version = $Versi }
 if ($pakaiPembaruan)            { $argPublish['VersiLama'] = $VersiLama }
+if ($pakaiPembaruan -and $DariVersi.Count) { $argPublish['DariVersi'] = $DariVersi }
 if ($LewatiInstaller)           { $argPublish['SkipInstaller'] = $true }
 if ($Besar)                     { $argPublish['Besar'] = $true }
 if ($IzinkanTanpaKredensial)    { $argPublish['IzinkanTanpaKredensial'] = $true }
