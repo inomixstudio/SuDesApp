@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <!--
+      UI bersama untuk desktop (MAUI Blazor Hybrid), Android, dan browser (Blazor Web).
+      Target framework-nya net10.0 murni supaya bisa dikonsumsi oleh:
+        - SuDesApp.Maui (net10.0-windows / net10.0-android)
+        - SuDesApp.Web  (net10.0)
+      Jangan mengganti ke net10.0-windows, karena Android tidak bisa merujuknya.
+      Proyek ini juga tidak boleh merujuk SuDesApp.Core (ber-target windows) —
+      komunikasi dengan data dilakukan lewat HTTP ke SuDesApp.Api.
+    -->
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SuDesApp.Ui</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+    <SupportedPlatform Include="android" />
+    <SupportedPlatform Include="windows" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
+    <!-- AuthenticationStateProvider, AuthorizeRouteView, [Authorize] — sesi
+         login lintas platform. Paket, bukan FrameworkReference, supaya tetap
+         bisa dikonsumsi proyek MAUI Android/iOS. -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.13" />
+  </ItemGroup>
+
+</Project>

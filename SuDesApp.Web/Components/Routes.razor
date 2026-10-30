@@ -1,0 +1,26 @@
+<Router AppAssembly="typeof(Program).Assembly"
+        AdditionalAssemblies="new[] { typeof(SuDesApp.Ui.Pages.Beranda).Assembly }"
+        NotFoundPage="typeof(Pages.NotFound)">
+    <Found Context="routeData">
+        @* AuthorizeRouteView menegakkan @attribute [Authorize] yang terpasang di
+           _Imports.razor SuDesApp.Ui: tanpa sesi, pengguna diarahkan ke /masuk
+           (membawa halaman tujuan), dengan sesi tetapi tanpa hak akses, muncul
+           pesan — bukan dialihkan ke login. *@
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(SuDesApp.Ui.Layout.MainLayout)">
+            <NotAuthorized>
+                @if (context.User.Identity?.IsAuthenticated != true)
+                {
+                    <RedirectToMasuk />
+                }
+                else
+                {
+                    <div class="peringatan">Akun Anda tidak memiliki hak akses ke halaman ini.</div>
+                }
+            </NotAuthorized>
+            <Authorizing>
+                <p class="memuat">Memeriksa sesi…</p>
+            </Authorizing>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

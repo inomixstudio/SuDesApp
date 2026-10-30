@@ -89,6 +89,14 @@ namespace SuDesApp.Utilities
         /// </summary>
         private readonly SemaphoreSlim _clientLock = new(1, 1);
 
+        /// <summary>
+        /// Dipicu setiap kali klien Google dibuang (token dihapus / ganti akun /
+        /// kredensial klien berubah). Layanan lain yang men-cache klien turunan
+        /// — mis. layanan lain yang memakai token yang sama — wajib membuang cache-nya
+        /// agar tidak terus memakai akun lama.
+        /// </summary>
+        public event Action? ClientInvalidated;
+
         public GoogleDriveService(IConfiguration configuration, ILogger<GoogleDriveService>? logger = null)
         {
             _logger = logger ?? NullLogger<GoogleDriveService>.Instance;
@@ -193,6 +201,7 @@ namespace SuDesApp.Utilities
             // Klien lama dibangun dengan kredensial lama — buang agar percobaan
             // berikutnya memakai kredensial baru tanpa perlu menjalankan ulang.
             ResetClient();
+            ClientInvalidated?.Invoke();
         }
 
         /// <summary>Lokasi file penyimpanan kredensial (untuk pesan petunjuk setup).</summary>
@@ -225,6 +234,10 @@ namespace SuDesApp.Utilities
         {
             ResetClient();
             await new ProtectedGoogleTokenDataStore(_tokenFolder).ClearAsync().ConfigureAwait(false);
+
+            // Beri tahu konsumen agar membuang klien
+            // turunan yang masih memakai akun/token lama.
+            ClientInvalidated?.Invoke();
             await Task.CompletedTask;
         }
 
@@ -286,9 +299,6 @@ namespace SuDesApp.Utilities
             return BuildOAuthClient(ct);
         }
 
-        public const string FormsBodyScope = "https://www.googleapis.com/auth/forms.body";
-        public const string FormsResponsesScope = "https://www.googleapis.com/auth/forms.responses.readonly";
-
         private DriveService BuildOAuthClient(CancellationToken ct)
         {
             try
@@ -297,12 +307,10 @@ namespace SuDesApp.Utilities
                 var secrets = new ClientSecrets { ClientId = _clientId, ClientSecret = _clientSecret };
                 var dataStore = new ProtectedGoogleTokenDataStore(_tokenFolder);
 
-                var scopes = new[]
-                {
-                    DriveService.Scope.Drive,
-                    FormsBodyScope,
-                    FormsResponsesScope
-                };
+                // Hanya Drive: izin Forms/Sheets sudah tidak diminta karena
+                // kanal Google Form/Sheet dihapus. Login Google kini semata-mata
+                // untuk pencadangan ke Drive.
+                var scopes = new[] { DriveService.Scope.Drive };
 
                 var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
                 {
@@ -382,6 +390,21 @@ namespace SuDesApp.Utilities
             var old = _service;
             _service = null;
             old?.Dispose();
+        }
+
+        /// <summary>
+        /// Membangun initializer klien Google API (OAuth credential + ApplicationName)
+        /// untuk layanan lain di luar Drive yang memakai token OAuth yang sama
+        /// (mode layanan online Google Sheet/Form) supaya warga cukup login Google sekali.
+        /// </summary>
+        public async Task<BaseClientService.Initializer> BuildSharedInitializerAsync(CancellationToken ct = default)
+        {
+            var drive = await GetClientAsync(ct).ConfigureAwait(false);
+            return new BaseClientService.Initializer
+            {
+                HttpClientInitializer = drive.HttpClientInitializer,
+                ApplicationName = "SuDesApp"
+            };
         }
 
         public async Task<IList<DriveItem>> ListItemsAsync(string? folderId = null, CancellationToken ct = default)
