@@ -35,3 +35,26 @@ cause → action slot → hint:
 `GoogleDriveViewModel` follow this pattern. A failed load is explained by the
 card, with a retry command in the action slot — not only by a modal dialog that
 covers the same empty page and then disappears without a trace.
+
+## IDM page: one snapshot, one selection
+
+The IDM page loads several years from the center at once and lets the user pick
+which year's indicators are on screen. State is split by owner:
+
+- `IdmSeriTahun` (`SuDesApp.Core/Services/IdmSeriTahun.cs`) owns the loaded year
+  series: one entry per year, newest first, `Cari(tahun)` for lookup,
+  `Terbaru` for the latest *published* year, and `RingkasanTahun()` for the
+  "how many years were loaded" sentence. Duplicate-year suppression lives here
+  only; the load loop, the page, and the tests all read these rules.
+- `IdmViewModel.DataIdm` (private record) owns one successful load: village
+  code, load time, HTTP-fallback flag, and the series. It is replaced only when
+  data is installed (fresh from the center or from the backup file).
+- `IdmViewModel._tahunDipilih` owns the year whose detail is showing (`0` =
+  none). `Hasil` derives from it; there is no stored “current year”.
+
+Data flows one way: client → `PasangData` (build the snapshot, select the newest
+year) → derived view. Selecting a year moves `_tahunDipilih` and rebuilds only
+the pieces that depend on it (`Indikator`, `Riwayat`); the snapshot is untouched,
+so captions about the latest published year and the PDF cannot drift from the
+chips. `DeretTren` and the Indeks Desa 2025 card depend on the snapshot, not the
+selection.
