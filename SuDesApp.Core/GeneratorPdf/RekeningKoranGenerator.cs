@@ -62,7 +62,14 @@ namespace SuDesApp.GeneratorPdf
             // dipakai untuk kolom yang memang diisi form (nama desa & kepala desa).
             data.Desa = await DesaLengkapAsync(data.Desa).ConfigureAwait(false);
 
-            ValidateRekeningKoranData(data);
+            // Kelengkapan hanya dituntut saat surat benar-benar diterbitkan. Pada
+            // pratinjau form isian sengaja boleh kosong: kolom yang belum diisi
+            // dicetak sebagai titik-titik, karena justru itu yang ingin dilihat
+            // pengguna sebelum mengisi apa pun.
+            if (!PratinjauIsian.Aktif)
+            {
+                ValidateRekeningKoranData(data);
+            }
 
             _logger.LogDebug(
                 "Membuat PDF Permohonan Rekening Koran, NomorSurat={NomorSurat}",
@@ -166,16 +173,18 @@ namespace SuDesApp.GeneratorPdf
             {
                 row.RelativeItem().Column(kolom =>
                 {
-                    kolom.Item().Text($"Nomor\t\t: {data.NomorSurat}");
-                    kolom.Item().PaddingTop(3).Text($"Perihal\t\t: {data.Perihal}");
+                    // Pratinjau mencetak titik-titik pada nomor yang belum ada, bukan
+                    // baris kosong: kerangka surat tetap terbaca utuh.
+                    kolom.Item().Text($"Nomor\t\t: {PratinjauIsian.Tampil(data.NomorSurat)}");
+                    kolom.Item().PaddingTop(3).Text($"Perihal\t\t: {PratinjauIsian.Tampil(data.Perihal)}");
                 });
 
                 row.RelativeItem().PaddingLeft(40).Column(kolom =>
                 {
                     kolom.Item().Text("Kepada Yth,").Bold();
                     kolom.Item().Text("Customer Service");
-                    kolom.Item().Text($"Bank {data.Bank}");
-                    kolom.Item().Text($"KCP {data.KCP}");
+                    kolom.Item().Text($"Bank {PratinjauIsian.Tampil(data.Bank)}");
+                    kolom.Item().Text($"KCP {PratinjauIsian.Tampil(data.KCP)}");
                     kolom.Item().PaddingTop(5).Text("Di -");
                     kolom.Item().PaddingLeft(20).Text("Tempat");
                 });

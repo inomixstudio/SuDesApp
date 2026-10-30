@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -48,7 +48,7 @@ namespace SuDesApp.Wpf.Services
     /// Latar: portal pusat (PELITA Kemendagri, SIKD Dana Desa, PPID) menampilkan
     /// data tetapi tidak membuka API unduhan programatik, jadi jalur yang andal
     /// adalah pengguna mengunduh berkas publikasinya lalu mengimpornya di sini.
-    /// .xlsx dibaca EPPlus yang sudah dipakai proyek — tanpa dependensi baru.
+    /// .xlsx dibaca SudesExPlus, pustaka Excel milik proyek ini.
     /// </summary>
     public static class ApbdesPublikasiReader
     {
@@ -207,8 +207,7 @@ namespace SuDesApp.Wpf.Services
 
         internal static HasilBacaPublikasi BacaExcel(string jalur)
         {
-            OfficeOpenXml.ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
-            using var paket = new OfficeOpenXml.ExcelPackage(new FileInfo(jalur));
+            using var paket = new SudesExPlus.ExcelPackage(new FileInfo(jalur));
             var lembar = paket.Workbook.Worksheets.FirstOrDefault(w => w.Dimension != null)
                          ?? throw new InvalidDataException("Lembar kerja Excel kosong.");
 
@@ -223,7 +222,7 @@ namespace SuDesApp.Wpf.Services
         }
 
         private static IEnumerable<string[]> BacaSel(
-            OfficeOpenXml.ExcelWorksheet lembar, int barisAkhir, int kolomAkhir)
+            SudesExPlus.ExcelWorksheet lembar, int barisAkhir, int kolomAkhir)
         {
             for (int r = 1; r <= barisAkhir; r++)
             {

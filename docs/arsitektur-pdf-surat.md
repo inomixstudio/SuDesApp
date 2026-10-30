@@ -39,6 +39,10 @@ Generator surat berada di `SuDesApp.Core/GeneratorPdf/`, sedangkan mesin PDF-nya
 6. **Kelas bantu bersama tinggal di Core.** `TanggalIsian`, `NamaFormatter`,
    `AlamatFormatter`, dan `BerkasDokumentasi` hanya punya satu salinan; proyek WPF
    memakainya lewat referensi proyek, bukan dengan menyalin berkasnya.
+7. **Jarak di luar latar memakai margin, bukan padding.** `Background` dicat sampai
+   ke padding, jadi `PaddingTop(3).Height(0.8).Background(...)` menghasilkan balok
+   setinggi 3,8 pt — garis tipis kop hilang dan kedua garis menyatu. Garis ganda kop
+   karena itu memakai `MarginTop` supaya tingginya benar-benar 0,8 pt dan 1,5 pt.
 7. **`ISuratGenerator` tidak lagi ada.** Kontrak generator surat adalah
    `SuratGeneratorBase`; generator yang berdiri sendiri (`SuratRegisterGenerator`,
    `TemplateSuratGenerator`) dipakai langsung oleh pemanggilnya. `RekeningKoranGenerator`
@@ -76,6 +80,8 @@ Aplikasi tidak lagi memakai pustaka PDF pihak ketiga. Susunannya dua proyek:
   - `PdfFonts` (enkoding, CMap/ToUnicode), `PdfTrueType`, `PdfCff` — bentuk glif;
   - `PdfContent` — penafsir operator aliran isi (jalur, teks, XObject, warna);
   - `PdfRaster` — penggambar raster (jalur, gambar, gradien, pola, PNG);
+  - `PdfTeksGamma` — tabel gamma cakupan huruf, salinan persis milik pdfium
+    (lihat di bawah);
   - `PdfRenderer` — pintu masuk: `RenderPage` dan `ExtractText` (`IPdfSink`).
   - `PdfWriter*` (`PdfWriter`, `PdfWriterContent`, `PdfWriterFonts`, `PdfWriterImages`,
     `PdfWriterPage`) — **penulis** dokumen: katalog/halaman/xref, aliran isi, dan
@@ -98,6 +104,49 @@ Aplikasi tidak lagi memakai pustaka PDF pihak ketiga. Susunannya dua proyek:
   (`RenderAsync(..., dpi = 96 × skala tampilan Windows)`) lalu menampilkannya tanpa
   penskalaan. Menggambar lebih rapat lalu membiarkan WPF memperkecilnya justru
   mengaburkan huruf tebal, karena tepi glif melewati penyaringan bilinear.
+  Dua hal kecil yang mudah lolos dan tetap mengaburkan pratinjau:
+  lebar bitmap harus dihitung dari jumlah piksel layar (bukan DIP lalu dibulatkan),
+  dan bayangan kartu tidak boleh memakai `Effect` pada elemen yang memuat halaman —
+  effect WPF menggambar seluruh isi elemen ke bitmap antara sebelum dikomposisikan.
+  Bayangan karena itu ditaruh pada elemen kosong di belakang kartu.
+
+  Halaman **tidak** diraster sekaligus. `PdfPreviewView` lebih dulu membuat kartu
+  placeholder berukuran pasti untuk semua halaman, lalu menggambar hanya halaman
+  yang terlihat (ditambah cadangan setengah layar) satu per satu; sisanya menyusul
+  saat digulir. Dokumen panjang karena itu terbuka secepat dokumen satu halaman,
+  zoom tidak menunggu seluruh dokumen, dan penggulungan tidak melompat karena
+  ukuran kartu sudah ditetapkan. Bitmap yang jauh dari layar dilepas kembali
+  (maksimal 10 halaman tersimpan) agar memori tidak membengkak.
+
+### Ketajaman huruf
+
+Dua langkah menentukan apakah teks terbaca tajam, keduanya disamakan dengan cara
+pdfium membangun sebuah huruf menjadi piksel:
+
+1. **Cakupan luas eksak** (`Rasterizer.FillTepat`). Cakupan tiap piksel dihitung
+   sebagai luas bentuk yang benar-benar jatuh di piksel itu — bukan dari beberapa
+   sampel. Rasterizer FreeType memakai cara yang sama; dengan 8 sampel hanya ada
+   9 tingkat keabuan, sehingga tepi lengkung dan batang tebal tampak bergaris.
+2. **Tabel gamma cakupan** (`PdfTeksGamma`). Cakupan parsial dari tepi huruf
+   dilewatkan tabel 256 entri yang diambil persis dari `kTextGammaAdjust`
+   (`core/fxge/cfx_renderdevice.cpp`) sebelum di-blend. Nilai kecil dinaikkan
+   (10 → 13, 64 → 73), nilai penuh dibiarkan (255 → 255): batang yang sudah pekat
+   tidak melebar, sedangkan tepi yang tadinya abu-abu menjadi lebih gelap sehingga
+   baris terbaca utuh.
+
+Bentuk glif dipakai apa adanya — tanpa pembulatan lebar batang ke grid piksel.
+Versi sebelumnya melakukan pembulatan itu (meniru hinting), tetapi diukur terhadap
+render pdfium pada berkas surat yang sama: batang tebal 12pt yang lebar aslinya
+±2,6 piksel dipaksa menjadi 3 piksel penuh, sehingga baris tebal membawa ±7% tinta
+lebih banyak dan jarak antara dua batang menutup — huruf tebal justru terlihat
+tersumbat. Tanpa pembulatan itu, jumlah tinta berada dalam ±0,3% pdfium pada 1×
+dan di bawah 4% pada 0,7×–1,33× (pdfium masih memakai hinting FreeType, yang
+paling terasa pada huruf sangat kecil), sementara gamma menjaga ketajamannya.
+
+Satu-satunya penyesuaian posisi yang tersisa adalah garis dasar: satu baris digeser
+ke baris piksel utuh (kurang dari setengah piksel), supaya garis lintang huruf tidak
+terjepit di antara dua baris. Pergeseran ini berlaku sama untuk seluruh baris, jadi
+tata letak dan pemenggalan baris tidak berubah.
 
 Arah data saat **menulis**: generator (`SuDesApp.Core/GeneratorPdf/*`) →
 `SudesPdf.Layout` → `PdfWriter` → berkas PDF. Saat **membaca**: berkas →

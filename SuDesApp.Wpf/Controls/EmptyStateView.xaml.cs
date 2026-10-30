@@ -6,10 +6,11 @@ namespace SuDesApp.Wpf.Controls;
 
 /// <summary>
 /// Panel keadaan kosong seragam untuk semua halaman data. Susunan dan gaya
-/// (chip ikon bulat, judul, pesan, slot aksi) selalu sama; setiap halaman
-/// hanya mengisi <see cref="Ikon"/>, <see cref="Judul"/>, <see cref="Pesan"/>,
-/// dan opsional <see cref="Aksi"/> (mis. tombol "Tambah" atau "Bersihkan
-/// Filter"). Ikon berupa glyph <c>IkonMenu</c> yang tampil lewat AppIconFont.
+/// (chip ikon bulat, judul, pesan, slot aksi, petunjuk) selalu sama; setiap
+/// halaman hanya mengisi <see cref="Ikon"/>, <see cref="Judul"/>, <see cref="Pesan"/>,
+/// opsional <see cref="Aksi"/> (mis. tombol "Tambah", "Bersihkan Filter", atau
+/// "Coba lagi"), dan opsional <see cref="Petunjuk"/>. Ikon berupa glyph
+/// <c>IkonMenu</c> yang tampil lewat AppIconFont.
 /// </summary>
 public partial class EmptyStateView : UserControl
 {
@@ -37,6 +38,16 @@ public partial class EmptyStateView : UserControl
             nameof(Aksi), typeof(object), typeof(EmptyStateView),
             new PropertyMetadata(null));
 
+    /// <summary>
+    /// Petunjuk kecil di bawah aksi: apa yang perlu diperiksa atau dari mana data
+    /// halaman ini berasal. Dipisahkan dari <see cref="Pesan"/> supaya sebab
+    /// kegagalan dan kalimat bantuan tidak menumpuk dalam satu paragraf panjang.
+    /// </summary>
+    public static readonly DependencyProperty PetunjukProperty =
+        DependencyProperty.Register(
+            nameof(Petunjuk), typeof(string), typeof(EmptyStateView),
+            new PropertyMetadata(string.Empty));
+
     public EmptyStateView() => InitializeComponent();
 
     public string Ikon
@@ -61,5 +72,11 @@ public partial class EmptyStateView : UserControl
     {
         get => GetValue(AksiProperty);
         set => SetValue(AksiProperty, value);
+    }
+
+    public string Petunjuk
+    {
+        get => (string)GetValue(PetunjukProperty);
+        set => SetValue(PetunjukProperty, value);
     }
 }

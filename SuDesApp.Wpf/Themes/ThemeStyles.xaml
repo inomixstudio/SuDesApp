@@ -26,6 +26,8 @@
 
     <!-- ========== Shared UI tokens ========== -->
     <conv:NotNullConverter x:Key="IndukTombolAda"/>
+    <!-- Membatasi aturan warna teks tombol agar berhenti di batas ToolTip. -->
+    <conv:TeksMilikTombolConverter x:Key="TeksMilikTombol"/>
     <!-- Untuk ListViewItem: tahu apakah ListView sedang memakai View (GridView),
          supaya template baris bisa memilih penyaji kolom atau penyaji isi biasa. -->
     <conv:NotNullConverter x:Key="TampilanAda"/>
@@ -46,11 +48,21 @@
          tingkat sekunder agar hierarki informasi mudah dibaca. -->
     <sys:Double x:Key="TinggiKontrol">34</sys:Double>
     <sys:Double x:Key="UkuranTeksKontrol">12</sys:Double>
-    <!-- Ukuran teks item menu/navigasi: satu angka untuk MenuItem, TabItem,
-         sidebar, dan nav kiri — semua elemen menu pakai ukuran yang sama. -->
+    <!-- Ukuran teks menu ringkas: MenuItem, TabItem, dan ikon menu di dalam baris
+         nav. Label navigasi sidebar memakai UkuranTeksNavigasi di bawah. -->
     <sys:Double x:Key="UkuranTeksMenu">12</sys:Double>
-    <!-- Sidebar utama sedikit lebih besar agar label navigasi cepat dipindai. -->
-    <sys:Double x:Key="UkuranTeksNavigasi">14</sys:Double>
+    <!-- Satu ukuran untuk SEMUA label navigasi: label seksi, judul akordeon,
+         item menu, dan anak akordeon. Dulu label seksi 11, judul akordeon 14,
+         dan judul item 12 (gaya implisit TextBlock menimpa FontSize tombol),
+         sehingga daftar menu tampak tidak rata. -->
+    <sys:Double x:Key="UkuranTeksNavigasi">13</sys:Double>
+    <!-- Ukuran glyph ikon navigasi (ikon item, ikon akordeon, ikon mode ciut). -->
+    <sys:Double x:Key="UkuranIkonNavigasi">15</sys:Double>
+    <!-- Ukuran ikon penanda kecil di baris menu: chevron, gembok, centang tema. -->
+    <sys:Double x:Key="UkuranIkonPenanda">11</sys:Double>
+    <!-- Ukuran teks tooltip. Dipakai dua tempat: gaya ToolTip dan gaya teks di
+         dalam templatnya — keduanya harus memakai token ini agar tetap sama. -->
+    <sys:Double x:Key="UkuranTeksTooltip">13</sys:Double>
 
     <!-- Bayangan lembut dipakai lapisan mengambang (dropdown, toast, popup)
          supaya terasa terangkat di atas konten tanpa aturan bayangan per view. -->
@@ -81,10 +93,17 @@
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Style.Triggers>
+            <!-- Isi ToolTip juga berada di pohon logis tombol pemiliknya, jadi tanpa
+                 batas, aturan ini ikut mewarnai teks tooltip dengan Foreground tombol
+                 (putih di atas permukaan putih pada tema terang). TeksMilikTombol
+                 menghentikan penelusuran di ToolTip pertama: teks tooltip selalu
+                 memakai warna tema, teks isi tombol tetap memakai warna tombol. -->
             <DataTrigger Value="True">
                 <DataTrigger.Binding>
-                    <Binding RelativeSource="{RelativeSource AncestorType=Button}"
-                             Converter="{StaticResource IndukTombolAda}"/>
+                    <MultiBinding Converter="{StaticResource TeksMilikTombol}">
+                        <Binding RelativeSource="{RelativeSource AncestorType=Button}"/>
+                        <Binding RelativeSource="{RelativeSource Self}"/>
+                    </MultiBinding>
                 </DataTrigger.Binding>
                 <Setter Property="Foreground"
                         Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
@@ -222,7 +241,9 @@
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
         <Setter Property="FontSize" Value="{StaticResource UkuranTeksNavigasi}"/>
         <Setter Property="Margin" Value="0,1"/>
-        <Setter Property="Padding" Value="0"/>
+        <!-- Bantalan vertikal kecil supaya baris anak akordeon bernapas seperti
+             baris induknya; tanpa ini baris 17 px saling menempel. -->
+        <Setter Property="Padding" Value="0,5"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -263,7 +284,7 @@
                                         </Ellipse.Style>
                                     </Ellipse>
                                     <TextBlock Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Tag}"
-                                               FontSize="{StaticResource UkuranTeksMenu}" Width="18" Margin="10,0,8,0" VerticalAlignment="Center"
+                                               FontSize="{StaticResource UkuranIkonNavigasi}" Width="20" Margin="10,0,8,0" VerticalAlignment="Center"
                                                HorizontalAlignment="Center"
                                                FontFamily="{StaticResource AppIconFont}"
                                                Foreground="{DynamicResource SidebarAccentBrush}" Opacity="0.85">
@@ -289,7 +310,7 @@
                                             VerticalAlignment="Center" HorizontalAlignment="Right">
                                     <TextBlock Text="{x:Static u:IkonMenu.Gembok}"
                                                FontFamily="{StaticResource AppIconFont}"
-                                               FontSize="11" Margin="8,0,4,0"
+                                               FontSize="{StaticResource UkuranIkonPenanda}" Margin="8,0,4,0"
                                                Foreground="{DynamicResource SidebarAccentBrush}">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
@@ -304,8 +325,8 @@
                                     </TextBlock>
                                     <!-- Tanda centang tema aktif di ujung kanan baris — meniru
                                          pemilih tema visual yang menandai tema terpilih. -->
-                                    <TextBlock Text="&#xE73E;" FontFamily="{StaticResource AppIconFont}"
-                                               FontSize="11" Margin="8,0,10,0"
+                                    <TextBlock Text="{x:Static u:IkonMenu.Verifikasi}" FontFamily="{StaticResource AppIconFont}"
+                                               FontSize="{StaticResource UkuranIkonPenanda}" Margin="8,0,10,0"
                                                Foreground="{DynamicResource SidebarAccentBrush}"
                                                VerticalAlignment="Center" HorizontalAlignment="Right">
                                         <TextBlock.Style>
@@ -1918,7 +1939,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="9,5"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="{StaticResource UkuranTeksTooltip}"/>
         <Setter Property="Placement" Value="Mouse"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -1929,8 +1950,21 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="6" Padding="{TemplateBinding Padding}"
+                            TextElement.Foreground="{TemplateBinding Foreground}"
                             Effect="{StaticResource BayanganLembut}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <!-- Teks tooltip ditulis sebagai TextBlock bertema: ukuran
+                                 baku tooltip, membungkus baris panjang, dan warna teks
+                                 yang tidak bergantung pada kontrol pemiliknya. -->
+                            <ContentPresenter.Resources>
+                                <DataTemplate DataType="{x:Type sys:String}">
+                                    <TextBlock Text="{Binding}"
+                                               Foreground="{DynamicResource TextBrush}"
+                                               FontSize="{StaticResource UkuranTeksTooltip}"
+                                               TextWrapping="Wrap"/>
+                                </DataTemplate>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>

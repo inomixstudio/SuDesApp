@@ -35,10 +35,12 @@
          pustaka PDF pihak ketiga lainnya, dan tanpa berkas font yang
          disematkan ke berkas keluaran. -->
     <ProjectReference Include="..\SudesPdf.Core\SudesPdf.Core.csproj" />
+    <!-- Penulis/pembaca Excel (.xlsx) milik aplikasi sendiri, pengganti EPPlus:
+         tanpa paket pihak ketiga dan tanpa permintaan lisensi komersial. -->
+    <ProjectReference Include="..\SudesExPlus\SudesExPlus.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.89" />
-    <PackageReference Include="EPPlus" Version="8.7.2" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.77.0.4301" />
     <!-- Provider SQLite bawaan Microsoft.Data (bundle_e_sqlite3). Database desa
          disimpan sebagai SQLite biasa tanpa enkripsi dan tanpa berkas kunci,

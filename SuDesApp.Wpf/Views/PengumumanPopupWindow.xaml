@@ -1,4 +1,4 @@
-<Window x:Class="SuDesApp.Wpf.Views.PengumumanPopupWindow"
+﻿<Window xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.PengumumanPopupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Informasi Terbaru" Height="Auto" Width="360"
@@ -30,15 +30,15 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="🔔" FontSize="14" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.Lonceng}" FontSize="14" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                     <TextBlock Text="INFORMASI TERBARU" FontSize="13" FontWeight="Bold"
                                Margin="6,0,0,0" VerticalAlignment="Center"
                                Foreground="{DynamicResource PrimaryBrush}"/>
                 </StackPanel>
-                <Button Grid.Column="1" x:Name="TombolTutup" Content="✕"
+                <Button Grid.Column="1" x:Name="TombolTutup" Content="{x:Static u:IkonMenu.Keluar}"
                         Style="{StaticResource SecondaryButton}" Padding="10,2"
                         Click="Tutup_Click"
-                        ToolTip="Tutup popup (pengumuman tetap tersedia di lonceng notifikasi)"/>
+                        ToolTip="Tutup popup (pengumuman tetap tersedia di lonceng notifikasi)" FontFamily="{StaticResource AppIconFont}"/>
             </Grid>
 
             <!-- Daftar pengumuman yang ditampilkan putaran ini -->

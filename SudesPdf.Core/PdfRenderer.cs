@@ -235,17 +235,18 @@ internal sealed class RasterSink : IPdfSink
         _rasterizer.DrawShading(shading, in matrix, alpha, _clip.Mask, _clip.Bounds, PdfBlendMode.Normal);
     }
 
-    /// <summary>
-    /// Sampel vertikal tiap baris piksel khusus teks (lapisan isi memakai 4).
-    /// Sampel lebih rapat meratakan tepi bulat huruf tebal supaya huruf besar
-    /// tidak terlihat bertingkat pada pratinjau.
-    ///
-    /// Cakupan TIDAK dikoreksi gamma. Percobaan menunjukkan koreksi semacam itu
-    /// membuat huruf tebal melebar dan lawangnya menyempit — justru tulisan
-    /// yang dieluhkan pengguna. Ketajaman datang dari penyelarasan garis dasar
-    /// di bawah ini, bukan dari menebalkan semua tepi.
-    /// </summary>
-    private const int SubSamplesTeks = 8;
+    // Glif TIDAK diraster dengan pengambilan sampel. Cakupannya dihitung
+    // sebagai luas eksak per piksel (Rasterizer.FillTepat), cara yang sama
+    // dengan rasterizer FreeType di pdfium: tiap tepi lurus menyumbangkan luas
+    // trapesiumnya, lalu dijumlahkan sebagai cakupan.
+    //
+    // Bentuk glif dipakai APA ADANYA, persis perilaku pdfium: mereka tidak
+    // membulatkan lebar batang huruf ke piksel, karena pembulatan itu membuat
+    // batang tebal melebar dan jarak antara dua batang (lawang) menutup —
+    // huruf tebal justru terlihat tersumbat dan kacau. Yang membuat teks tetap
+    // pekat adalah langkah berikutnya: cakupan parsial dilewatkan tabel gamma
+    // pdfium (PdfTeksGamma) sebelum di-blend, sehingga tepi huruf lebih gelap
+    // tanpa memperlebar bagian yang sudah penuh.
 
     public void ShowText(PdfTextRun run)
     {
@@ -287,7 +288,7 @@ internal sealed class RasterSink : IPdfSink
                     run.Stroke.R, run.Stroke.G, run.Stroke.B, run.Stroke.Alpha, PdfBlendMode.Normal, _clip.Mask);
                 break;
             case 2:
-                _rasterizer.Fill(path, PdfFillRule.NonZero, run.Fill.R, run.Fill.G, run.Fill.B, run.Fill.Alpha, PdfBlendMode.Normal, _clip.Mask, subSamples: SubSamplesTeks);
+                _rasterizer.FillTepat(path, PdfFillRule.NonZero, run.Fill.R, run.Fill.G, run.Fill.B, run.Fill.Alpha, PdfBlendMode.Normal, _clip.Mask, coverageTable: PdfTeksGamma.Tabel);
                 _rasterizer.Stroke(
                     path, new PdfStrokeSpec { Width = Math.Max(run.StrokeWidth, 0.08) },
                     run.Stroke.R, run.Stroke.G, run.Stroke.B, run.Stroke.Alpha, PdfBlendMode.Normal, _clip.Mask);
@@ -299,7 +300,7 @@ internal sealed class RasterSink : IPdfSink
                 Clip(path, PdfFillRule.NonZero);
                 break;
             default:
-                _rasterizer.Fill(path, PdfFillRule.NonZero, run.Fill.R, run.Fill.G, run.Fill.B, run.Fill.Alpha, PdfBlendMode.Normal, _clip.Mask, subSamples: SubSamplesTeks);
+                _rasterizer.FillTepat(path, PdfFillRule.NonZero, run.Fill.R, run.Fill.G, run.Fill.B, run.Fill.Alpha, PdfBlendMode.Normal, _clip.Mask, coverageTable: PdfTeksGamma.Tabel);
                 break;
         }
     }

@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.KenalLahirInputView"
+<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.KenalLahirInputView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -68,7 +68,7 @@
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
                         <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}"
-                                 ToolTip="Format: DD-MM-YYYY"/>
+                                 ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Agama *" Style="{StaticResource FormLabel}"/>
                         <ComboBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormCombo}"
@@ -258,7 +258,7 @@
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
                         <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding TanggalLahirAnak, UpdateSourceTrigger=LostFocus}"
-                                 ToolTip="Format: DD-MM-YYYY"/>
+                                 ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Anak Ke *" Style="{StaticResource FormLabel}"/>
                         <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"

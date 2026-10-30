@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="SuDesApp.Wpf.Views.PdfPreviewView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.PdfPreviewView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True"
@@ -23,15 +23,19 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="📄" Foreground="{DynamicResource TextBrush}" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.Berkas}" Foreground="{DynamicResource TextBrush}" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" FontFamily="{StaticResource AppIconFont}"/>
                     <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextBrush}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="EditBtn" Content="✏️ Edit" Command="{Binding EditCommand}"
+                    <Button x:Name="EditBtn" Command="{Binding EditCommand}"
                             Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"
                             ToolTip="Perbaiki data surat ini — buka form edit (menu utama nonaktif sampai form ditutup)"
-                            Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
+                            Style="{StaticResource PrimaryButton}" Margin="0,0,8,0">
+                            <TextBlock>
+                            <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Ubah}"/><Run Text=" Edit"/>
+                            </TextBlock>
+                        </Button>
                     <Button x:Name="ZoomOutBtn" Content="−" Click="ZoomOut_Click" ToolTip="Perkecil"
                             Width="32" Height="30"/>
                     <TextBlock x:Name="ZoomText" Text="100%" FontSize="13" VerticalAlignment="Center" Margin="4,0"
@@ -40,9 +44,13 @@
                             Width="32" Height="30"/>
                     <Button x:Name="FitWidthBtn" Content="⤢" Click="FitWidth_Click" ToolTip="Sesuaikan lebar"
                             Width="32" Height="30" Margin="8,0,8,0"/>
-                    <Button x:Name="ExportBtn" Content="📤 Ekspor" Command="{Binding ExportCommand}"
+                    <Button x:Name="ExportBtn" Command="{Binding ExportCommand}"
                             ToolTip="Simpan salinan PDF ini ke lokasi pilihan Anda"
-                            Style="{StaticResource SuccessButton}" Margin="0,0,8,0"/>
+                            Style="{StaticResource SuccessButton}" Margin="0,0,8,0">
+                            <TextBlock>
+                            <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Ekspor}"/><Run Text=" Ekspor"/>
+                            </TextBlock>
+                        </Button>
                     <Button x:Name="PrintBtn" Content="Cetak" Click="Print_Click" ToolTip="Cetak dokumen ke printer"
                             Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                     <Button Content="Batal" Command="{Binding BatalCommand}" ToolTip="Kembali ke tampilan awal"
@@ -92,15 +100,18 @@
                 CornerRadius="8" ClipToBounds="True">
             <Grid>
                 <ScrollViewer x:Name="ScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                              Background="{DynamicResource PdfLatarBrush}">
+                              Background="{DynamicResource PdfLatarBrush}"
+                              ScrollChanged="ScrollViewer_ScrollChanged">
                     <StackPanel x:Name="PagesPanel" Margin="20,16,20,24" VerticalAlignment="Top">
                     </StackPanel>
                 </ScrollViewer>
 
                 <Grid x:Name="MissingPanel" Visibility="Collapsed" Background="{DynamicResource SurfaceBrush}">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="⚠️ Dokumen tidak ditemukan" Foreground="{DynamicResource TextBrush}" FontSize="20" FontWeight="SemiBold"
-                                   HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                        <TextBlock Foreground="{DynamicResource TextBrush}" FontSize="20"
+                                   HorizontalAlignment="Center" Margin="0,0,0,8">
+                            <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Peringatan}"/><Run Text=" Dokumen tidak ditemukan"/>
+                        </TextBlock>
                         <TextBlock Text="File PDF yang dituju tidak dapat dibuka."
                                    Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
                     </StackPanel>

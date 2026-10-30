@@ -44,6 +44,13 @@ namespace SuDesApp.GeneratorPdf
         /// </summary>
         public float UkuranFontLampiran { get; }
 
+        /// <summary>
+        /// Jarak antara garis ganda kop dan judul surat (point). Tanpa jarak ini
+        /// judul menempel di garis kop; angkanya menipis bersama kerapatan supaya
+        /// surat yang isinya panjang tetap muat satu halaman.
+        /// </summary>
+        public float JarakKopJudul { get; }
+
         /// <summary>Margin atas halaman (point) — menipis bersama kerapatan.</summary>
         public float MarginAtas { get; }
 
@@ -59,7 +66,8 @@ namespace SuDesApp.GeneratorPdf
             float faktorJarakBlok,
             float ukuranFontLampiran,
             float marginAtas,
-            float marginBawah)
+            float marginBawah,
+            float jarakKopJudul)
         {
             Nama = nama;
             FaktorLeadingTeks = faktorLeadingTeks;
@@ -70,26 +78,27 @@ namespace SuDesApp.GeneratorPdf
             UkuranFontLampiran = ukuranFontLampiran;
             MarginAtas = marginAtas;
             MarginBawah = marginBawah;
+            JarakKopJudul = jarakKopJudul;
         }
 
         /// <summary>Tampilan bawaan: seperti sebelum ada penyesuaian otomatis.</summary>
         public static readonly KerapatanSurat Normal =
-            new("Normal", 1.20f, 15f, 1f, 4f, 1.00f, 10f, 36f, 30f);
+            new("Normal", 1.20f, 15f, 1f, 4f, 1.00f, 10f, 36f, 30f, 14f);
 
         /// <summary>Dipilih bila surat masih melimpah ke halaman berikutnya.</summary>
         public static readonly KerapatanSurat Rapat =
-            new("Rapat", 1.12f, 13.8f, 0.5f, 3f, 0.70f, 8.5f, 32f, 24f);
+            new("Rapat", 1.12f, 13.8f, 0.5f, 3f, 0.70f, 8.5f, 32f, 24f, 12f);
 
         /// <summary>Rapat tetapi masih terbaca nyaman.</summary>
         public static readonly KerapatanSurat SangatRapat =
-            new("Sangat rapat", 1.07f, 13.2f, 0.35f, 2.75f, 0.55f, 7.5f, 28f, 20f);
+            new("Sangat rapat", 1.07f, 13.2f, 0.35f, 2.75f, 0.55f, 7.5f, 28f, 20f, 10f);
 
         /// <summary>
         /// Tingkat terakhir: jarak dan ukuran font blok kepala paling kecil, dipakai
         /// hanya bila blanko yang isinya panjang (mis. N5) belum muat juga.
         /// </summary>
         public static readonly KerapatanSurat PalingRapat =
-            new("Paling rapat", 1.03f, 12.6f, 0.2f, 2.5f, 0.40f, 6.5f, 24f, 18f);
+            new("Paling rapat", 1.03f, 12.6f, 0.2f, 2.5f, 0.40f, 6.5f, 24f, 18f, 8f);
 
         /// <summary>Urutan percobaan: dari lapang ke rapat.</summary>
         public static readonly KerapatanSurat[] Bertingkat = { Normal, Rapat, SangatRapat, PalingRapat };

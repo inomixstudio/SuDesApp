@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.About.BagianPerusahaanView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.About.BagianPerusahaanView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:views="clr-namespace:SuDesApp.Wpf.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
@@ -157,7 +157,7 @@
                                     MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
                                     ToolTip="{Binding UrlDutaPublik}">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#x1F310;" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{x:Static u:IkonMenu.Dunia}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0" FontFamily="{StaticResource AppIconFont}"/>
                                     <TextBlock FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"
                                                Foreground="{DynamicResource TextBrush}">
                                         <Run Text="Kunjungi"/><Run Text=" "/><Run Text="{Binding DutaPublikTampil, Mode=OneWay}"/>
@@ -201,7 +201,7 @@
                                         MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
                                         ToolTip="{Binding EmailPengembangTampil}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#x2709;" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{x:Static u:IkonMenu.Surel}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0" FontFamily="{StaticResource AppIconFont}"/>
                                         <TextBlock Text="{Binding EmailPengembangTampil}" FontSize="13" FontWeight="SemiBold"
                                                    VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
                                     </StackPanel>
@@ -211,7 +211,7 @@
                                         MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
                                         ToolTip="{Binding RepoUrl}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#x1F4A0;" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{x:Static u:IkonMenu.Kode}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0" FontFamily="{StaticResource AppIconFont}"/>
                                         <TextBlock Text="{Binding RepoTampil}" FontSize="13" FontWeight="SemiBold"
                                                    VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
                                     </StackPanel>

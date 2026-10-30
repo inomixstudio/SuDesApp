@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.NtcrInputView"
+<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.NtcrInputView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -64,7 +64,7 @@
                 <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Tgl. lahir"/>
                 <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormField}"
                          Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}"
-                         ToolTip="Format: DD-MM-YYYY"/>
+                         ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                 <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FormLabel}" Text="Kewarganegaraan"/>
                 <ComboBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormCombo}"
@@ -139,7 +139,7 @@
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
                         <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding TanggalLahir, UpdateSourceTrigger=LostFocus}"
-                                 ToolTip="Format: DD-MM-YYYY"/>
+                                 ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Jenis Kelamin *" Style="{StaticResource FormLabel}"/>
                         <ComboBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormCombo}"
@@ -271,7 +271,7 @@
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Tgl. Lahir *" Style="{StaticResource FormLabel}"/>
                         <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource FormField}"
                                  Text="{Binding TanggalLahirIstri, UpdateSourceTrigger=LostFocus}"
-                                 ToolTip="Format: DD-MM-YYYY"/>
+                                 ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
 
                         <TextBlock Grid.Row="5" Grid.Column="0" Text="Kewarganegaraan" Style="{StaticResource FormLabel}"/>
                         <ComboBox Grid.Row="5" Grid.Column="1" Style="{StaticResource FormCombo}"
@@ -393,7 +393,7 @@
                             <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2" Text="Tanggal penetapan isbat (opsional)"/>
                             <TextBox Style="{StaticResource FormField}"
                                      Text="{Binding TanggalPenetapanIsbat, UpdateSourceTrigger=LostFocus}"
-                                     ToolTip="Format: DD-MM-YYYY"/>
+                                     ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
                             <TextBlock Style="{StaticResource FormLabel}" Margin="0,8,0,2" Text="Pengadilan Agama (opsional)"/>
                             <TextBox Style="{StaticResource FormField}"
                                      Text="{Binding PengadilanAgama, UpdateSourceTrigger=PropertyChanged}"
@@ -409,7 +409,7 @@
                             <TextBlock Style="{StaticResource FormLabel}" Margin="0,0,0,2" Text="Diterima tanggal (diisi KUA, opsional)"/>
                             <TextBox Style="{StaticResource FormField}"
                                      Text="{Binding TanggalDiterima, UpdateSourceTrigger=LostFocus}"
-                                     ToolTip="Format: DD-MM-YYYY"/>
+                                     ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
                             <TextBlock Text="Daftar &#x201C;surat yang diperlukan untuk diperiksa&#x201D; sudah tercetak baku; butir 7 &amp; 8 pada N2 (dan sisa butir N3) dibiarkan titik-titik untuk diisi tangan."
                                        TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0"
                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -435,7 +435,7 @@
                             <TextBlock Style="{StaticResource FormLabel}" Margin="0,8,0,2" Text="Tanggal meninggal dunia *"/>
                             <TextBox Style="{StaticResource FormField}"
                                      Text="{Binding TanggalMeninggal, UpdateSourceTrigger=LostFocus}"
-                                     ToolTip="Format: DD-MM-YYYY"/>
+                                     ToolTip="Format: DD-MM-YYYY" u:TanggalIsianOtomatis.Aktif="True" />
                             <TextBlock Style="{StaticResource FormLabel}" Margin="0,8,0,2" Text="Tempat meninggal dunia *"/>
                             <TextBox Style="{StaticResource FormField}"
                                      Text="{Binding TempatMeninggal, UpdateSourceTrigger=PropertyChanged}"/>

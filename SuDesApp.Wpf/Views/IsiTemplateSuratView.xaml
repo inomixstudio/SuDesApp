@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="SuDesApp.Wpf.Views.IsiTemplateSuratView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.IsiTemplateSuratView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
@@ -63,7 +63,7 @@
                         <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormField}" Margin="0,0,8,0"
                                  Text="{Binding TanggalSurat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  AutomationProperties.Name="Tanggal Surat"
-                                 ToolTip="Tulis tanggal surat dengan format dd-mm-yyyy, mis. 17-08-2026"/>
+                                 ToolTip="Tulis tanggal surat dengan format dd-mm-yyyy, mis. 17-08-2026" u:TanggalIsianOtomatis.Aktif="True" />
                         <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource FormField}" Margin="0,0,0,0"
                                  Text="{Binding NamaPejabat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  AutomationProperties.Name="Nama Penandatangan"

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using OfficeOpenXml;
+using SudesExPlus;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Utilities;
@@ -200,7 +200,6 @@ namespace SuDesApp.Services
 
         private static List<string[]> BacaXlsx(string path)
         {
-            ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
 
             using var package = new ExcelPackage(new FileInfo(path));
             if (package.Workbook.Worksheets.Count == 0)

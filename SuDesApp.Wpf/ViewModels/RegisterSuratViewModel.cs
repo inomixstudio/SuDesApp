@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -10,8 +10,8 @@ using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
+using SudesExPlus;
+using SudesExPlus.Style;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
@@ -999,7 +999,6 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (extension == ".xlsx")
                 {
-                    ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
                     using var package = new ExcelPackage();
                     var ws = package.Workbook.Worksheets.Add(PageTitle);
 

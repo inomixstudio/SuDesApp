@@ -77,6 +77,7 @@ namespace SuDesApp.Wpf.ViewModels
         private bool _isBusy;
         private string _statusText = string.Empty;
         private string _periodeTampil = string.Empty;
+        private string _galatMuat = string.Empty;
         private LaporanPendudukData? _data;
 
         public LaporanViewModel(
@@ -121,6 +122,7 @@ namespace SuDesApp.Wpf.ViewModels
                 if (SetProperty(ref _isBusy, value))
                 {
                     PerbaruiStatusCommand();
+                    OnPropertyChanged(nameof(TampilkanKartuKeadaan));
                 }
             }
         }
@@ -145,6 +147,55 @@ namespace SuDesApp.Wpf.ViewModels
             get => _periodeTampil;
             private set => SetProperty(ref _periodeTampil, value);
         }
+
+        // ===================== Keadaan pemuatan =====================
+
+        /// <summary>
+        /// Sebab laporan terakhir gagal disusun; kosong bila berhasil. Disimpan
+        /// terpisah dari <see cref="StatusText"/> karena baris status ada di dalam
+        /// kartu pratinjau yang justru tidak tampil saat pemuatan gagal.
+        /// </summary>
+        public string GalatMuat
+        {
+            get => _galatMuat;
+            private set
+            {
+                if (SetProperty(ref _galatMuat, value))
+                {
+                    OnPropertyChanged(nameof(AdaGalatMuat));
+                    OnPropertyChanged(nameof(TampilkanKartuKeadaan));
+                    OnPropertyChanged(nameof(JudulKeadaan));
+                    OnPropertyChanged(nameof(SebabKeadaan));
+                }
+            }
+        }
+
+        public bool AdaGalatMuat => _galatMuat.Length > 0;
+
+        /// <summary>
+        /// Tidak ada angka yang bisa ditampilkan dan tidak sedang menghitung:
+        /// tempat kartu rekapitulasi dan pratinjau digantikan satu kartu keadaan.
+        /// Tanpa ini halaman terbuka kosong setelah dialog galat ditutup.
+        /// </summary>
+        public bool TampilkanKartuKeadaan => _data is null && !IsBusy;
+
+        /// <summary>Judul kartu keadaan — membedakan "belum tersusun" dan "gagal".</summary>
+        public string JudulKeadaan => AdaGalatMuat
+            ? "Laporan belum bisa disusun"
+            : "Laporan belum dimuat";
+
+        /// <summary>Sebab kegagalan dari layanan laporan, atau kalimat menunggu.</summary>
+        public string SebabKeadaan => AdaGalatMuat
+            ? _galatMuat
+            : "Angka laporan belum tersusun dari data warga yang tersimpan.";
+
+        /// <summary>
+        /// Petunjuk lanjutan: menegaskan bahwa penyusunan laporan hanya membaca data
+        /// (tidak mengubah catatan warga) dan menunjukkan tempat yang perlu diperiksa.
+        /// </summary>
+        public string PetunjukKeadaan =>
+            "Penyusunan laporan hanya membaca data — catatan warga tidak berubah. "
+            + "Bila gagal berulang, periksa berkas database di Pengaturan Aplikasi, lalu tekan Segarkan.";
 
         // ----- Kartu & tabel -----
         public ObservableCollection<WargaStatistikKartu> KartuStatistik { get; } = new();
@@ -264,8 +315,10 @@ namespace SuDesApp.Wpf.ViewModels
                 // harus berarti laporan tanpa tabel, bukan diam-diam mencetak semua.
                 _data = await _laporan.SusunAsync(KeteranganCakupan, TabelDipilih);
 
+                GalatMuat = string.Empty;
                 SusunTampilan(_data);
                 StatusText = BuildStatus(_data);
+                OnPropertyChanged(nameof(TampilkanKartuKeadaan));
             }
             catch (Exception ex)
             {
@@ -274,8 +327,12 @@ namespace SuDesApp.Wpf.ViewModels
                 KartuStatistik.Clear();
                 TabelPratinjau.Clear();
                 PeriodeTampil = string.Empty;
+                GalatMuat = ex.Message;
                 StatusText = "Laporan gagal disusun: " + ex.Message;
-                await _messageService.ShowErrorAsync("Gagal menyusun laporan penduduk.\n\n" + ex.Message);
+
+                // Tidak ada dialog galat di sini: kartu keadaan di halaman sudah
+                // menyebut sebab dan menyediakan tombol Segarkan. Dialog modal hanya
+                // menutupi layar kosong yang sama, lalu menghilang tanpa jejak.
             }
             finally
             {

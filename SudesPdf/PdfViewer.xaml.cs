@@ -69,47 +69,66 @@ public partial class PdfViewer : System.Windows.Controls.UserControl, IAsyncDisp
     private double LebarHalamanDip(int halaman) =>
         _document.PageSizes[halaman].Width * _scale * 96.0 / 72.0;
 
-    /// <summary>Piksel per titik PDF pada kerapatan layar saat ini.</summary>
-    private double SkalaPiksel() =>
-        Math.Min(8.0, VisualTreeHelper.GetDpi(this).DpiScaleX * 96.0 / 72.0);
-
-    /// <summary>DPI bitmap yang membuat satu pikselnya sama dengan satu piksel layar.</summary>
-    private double KerapatanLayar() => Math.Max(0.5, VisualTreeHelper.GetDpi(this).DpiScaleX) * 96.0;
+    /// <summary>Rasio piksel layar terhadap DIP (1,0 pada 96 dpi).</summary>
+    private double SkalaPerangkat() => Math.Max(0.5, VisualTreeHelper.GetDpi(this).DpiScaleX);
 
     private async Task RenderPagesAsync()
     {
         if (_disposed) return;
         Pages.Children.Clear();
         ZoomLabel.Text = $"{_scale * 100:0}%";
-        double pikselPerTitik = SkalaPiksel();
-        double kerapatan = KerapatanLayar();
+
+        double skalaPerangkat = SkalaPerangkat();
+        double kerapatan = skalaPerangkat * 96.0;
         for (int page = 0; page < _document.PageCount; page++)
         {
-            // Satu piksel bitmap untuk satu piksel layar. Menggambar lebih rapat
-            // lalu membiarkan WPF memperkecilnya justru mengaburkan huruf tebal.
-            var image = await _document.RenderAsync(page, Math.Min(8.0, _scale * pikselPerTitik), kerapatan);
             var size = _document.PageSizes[page];
+
+            // Lebar bitmap dibuat tepat sebanyak piksel layar yang akan dipakai
+            // tata letak, jadi WPF tidak menyaring ulang halaman (penyaringan
+            // itulah yang membuat huruf tampak kabur).
+            double lebarDip = LebarHalamanDip(page);
+            int lebarPiksel = Math.Max(1, (int)Math.Round(lebarDip * skalaPerangkat));
+            // Epsilon kecil supaya pembulatan ke atas di mesin render tidak
+            // menambah satu piksel (yang membuat WPF menyaring ulang).
+            double skalaGambar = Math.Min(16.0, lebarPiksel / Math.Max(1.0, size.Width) * (1 - 1e-9));
+            var image = await _document.RenderAsync(page, skalaGambar, kerapatan);
+
             var card = new Border
             {
                 Background = System.Windows.Media.Brushes.White,
                 BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xC9, 0xCD, 0xD4)),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(3),
-                Padding = new Thickness(7),
-                Margin = new Thickness(0, 0, 0, 16),
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 16, ShadowDepth = 2, Opacity = 0.3 }
+                Padding = new Thickness(7)
             };
             var tampil = new System.Windows.Controls.Image
             {
                 Source = image,
-                Width = LebarHalamanDip(page),
-                Height = size.Height * _scale * 96.0 / 72.0,
-                Stretch = Stretch.Uniform
+                Width = image.PixelWidth * 96.0 / image.DpiX,
+                Height = image.PixelHeight * 96.0 / image.DpiY,
+                Stretch = Stretch.Fill
             };
             RenderOptions.SetBitmapScalingMode(tampil, BitmapScalingMode.HighQuality);
             card.Child = tampil;
-            Pages.Children.Add(card);
+
+            // Bayangan pada elemen kosong di belakang kartu: Effect WPF
+            // menggambar seluruh isi elemen ke bitmap antara, jadi memasangnya
+            // pada kartu akan mengaburkan gambar halaman.
+            var bayangan = new Border
+            {
+                Background = System.Windows.Media.Brushes.White,
+                CornerRadius = new CornerRadius(3),
+                Effect = new DropShadowEffect { Color = Colors.Black, BlurRadius = 16, ShadowDepth = 2, Opacity = 0.3 }
+            };
+            var wadah = new Grid
+            {
+                Margin = new Thickness(0, 0, 0, 16),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+            };
+            wadah.Children.Add(bayangan);
+            wadah.Children.Add(card);
+            Pages.Children.Add(wadah);
         }
     }
 

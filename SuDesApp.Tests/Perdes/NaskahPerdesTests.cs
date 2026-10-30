@@ -107,6 +107,40 @@ public sealed class NaskahPerdesTests : IDisposable
     }
 
     /// <summary>
+    /// Halaman penutup memakai dua lajur tanda tangan: pengundangan (BPD) di kiri
+    /// dan penetapan (Kepala Desa) di kanan, dengan baris tempat dan baris tanggal
+    /// terpisah — bukan satu baris panjang yang terpotong acak di tengah tanggal.
+    /// </summary>
+    [Fact]
+    public void PenutupDuaLajurDenganTempatDanTanggalTerpisah()
+    {
+        var naskah = NaskahPerdesContoh.Muat("Contoh-Perdes-APBDes.json", DesaContoh());
+        var pdf = new NaskahPerdesGenerator(
+            DesaContoh(), naskah, "9", new DateTime(2026, 11, 2)).Buat();
+
+        string jalur = Path.Combine(_folderSampel, "penutup-dua-lajur.pdf");
+        File.WriteAllBytes(jalur, pdf);
+
+        // Kedua lajur berada pada garis yang sama, sehingga pembaca teks
+        // menggabungkannya menjadi satu baris: lajur kiri lalu lajur kanan.
+        string[] baris = BacaTeks(jalur)
+            .Split('\n')
+            .Select(b => b.Trim())
+            .Where(b => b.Length > 0)
+            .ToArray();
+
+        Assert.Contains(baris, b =>
+            b == "Diundangkan di Sukamaju Ditetapkan di Sukamaju");
+        Assert.Contains(baris, b =>
+            b == "pada tanggal 2 November 2026 pada tanggal 2 November 2026");
+        Assert.Contains(baris, b => b == "KETUA BPD, KEPALA DESA SUKAMAJU,");
+
+        // Ruang tanda tangan kedua lajur tetap ada (dua baris titik-titik).
+        Assert.Contains(baris, b =>
+            b.Count(c => c == '(') == 2 && b.Count(c => c == ')') == 2);
+    }
+
+    /// <summary>
     /// Tahun anggaran Perdes mengikuti tanggal formulir di bagian Menimbang,
     /// tetapi rujukan APBD pada bagian Mengingat tetap menyebut tahun dokumen
     /// aslinya.

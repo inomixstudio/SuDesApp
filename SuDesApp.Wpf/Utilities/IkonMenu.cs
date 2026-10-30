@@ -33,16 +33,20 @@ namespace SuDesApp.Wpf.Utilities
         public const string Folder = "\uE8B7";
 
         // ==== Kelompok surat ====
-        /// <summary>Produk hukum — Surat Peraturan, Catatan Rilis.</summary>
-        public const string Peraturan = "\uE7C3";
-        /// <summary>Arsip/agenda — akordeon Surat Masuk/Keluar.</summary>
-        public const string Agenda = "\uE896";
-        /// <summary>Panah masuk — agenda surat masuk &amp; Daftar Hadir.</summary>
-        public const string SuratMasuk = "\uE716";
-        /// <summary>Panah keluar — agenda surat keluar.</summary>
-        public const string SuratKeluar = "\uE717";
-        /// <summary>Alias Daftar Hadir (memakai glyph panah masuk).</summary>
-        public const string DaftarHadir = SuratMasuk;
+        /// <summary>Gedung pengadilan — produk hukum: Surat Peraturan, SK/Perdes/Perkades.</summary>
+        public const string Peraturan = "\uEC08";
+        /// <summary>Daftar berbutir — akordeon agenda Surat Masuk/Keluar.</summary>
+        public const string Agenda = "\uE8FD";
+        /// <summary>Amplop surat — surat masuk (glyph "Mail").</summary>
+        public const string SuratMasuk = "\uE715";
+        /// <summary>Pesawat kertas terkirim — surat keluar (glyph "Send").</summary>
+        public const string SuratKeluar = "\uE724";
+        /// <summary>Papan jalan dengan centang — Daftar Hadir (glyph "ClipboardList").</summary>
+        public const string DaftarHadir = "\uF0E3";
+        /// <summary>Kartu pembayaran — Permohonan Rekening Koran (dokumen rekening bank).</summary>
+        public const string Rekening = "\uE8C7";
+        /// <summary>Grup orang — struktur organisasi (SOTK Desa).</summary>
+        public const string Sotk = "\uE902";
 
         // ==== Layanan & akun ====
         /// <summary>Orang/kontak — akordeon NTCR &amp; Login dengan Google.</summary>
@@ -67,15 +71,17 @@ namespace SuDesApp.Wpf.Utilities
         public const string TemaDefault = "\uE735";
         /// <summary>Bintang isi — tema pilihan lain di daftar tema.</summary>
         public const string TemaLain = "\uE734";
-        /// <summary>Halaman Pembaruan (memakai glyph arsip/agenda).</summary>
-        public const string Pembaruan = Agenda;
-        /// <summary>Lapisan peta — Panduan Awal.</summary>
-        public const string Panduan = "\uE897";
+        /// <summary>Panah melingkar — halaman Pembaruan (sama dengan glyph Sinkron).</summary>
+        public const string Pembaruan = Sinkron;
+        /// <summary>Halaman berlembar — Catatan Rilis (glyph "Page").</summary>
+        public const string CatatanRilis = "\uE7C3";
+        /// <summary>Lapisan peta — Panduan Awal (glyph "MapLayers").</summary>
+        public const string Panduan = "\uE81E";
         /// <summary>Info — halaman Tentang.</summary>
         public const string Tentang = "\uE946";
         /// <summary>Kartu pembayaran — halaman Langganan (status &amp; perpanjangan lisensi).</summary>
         public const string Langganan = "\uE8C7";
-        /// <summary>Orang beroda gigi — pusat administrasi server lisensi (glyph "Admin").</summary>
+        /// <summary>Perisai berpelindung — pusat administrasi server lisensi (glyph "Admin").</summary>
         public const string PusatAdmin = "\uE7EF";
         /// <summary>Silang jendela — Keluar.</summary>
         public const string Keluar = "\uE711";
@@ -116,19 +122,78 @@ namespace SuDesApp.Wpf.Utilities
         /// <summary>Grup orang — bagian Karang Taruna (organisasi kepemudaan).</summary>
         public const string KarangTaruna = "\uE902";
 
+        // ==== Ikon halaman fitur ====
+        // Dipakai tombol/aksi di dalam halaman (bukan sidebar). Semua glyph di
+        // bawah ini sudah diperiksa ada di Segoe Fluent Icons maupun Segoe MDL2
+        // Assets, jadi tidak muncul sebagai kotak pada kedua font tersebut.
+        /// <summary>Unduh/tray dengan panah — ekspor atau simpan salinan berkas.</summary>
+        public const string Ekspor = "\uE896";
+        /// <summary>Grafik bidang — ringkasan statistik (glyph sama dengan Pembangunan).</summary>
+        public const string Statistik = "\uE9D2";
+        /// <summary>Halaman berlembar — surat berstatus draf.</summary>
+        public const string Draf = "\uE7C3";
+        /// <summary>Halaman polos — satu berkas dokumen (PDF/blanko).</summary>
+        public const string Berkas = Halaman;
+        /// <summary>Bilah pertama — halaman pertama daftar.</summary>
+        public const string HalamanAwal = "\uE892";
+        /// <summary>Bilah terakhir — halaman terakhir daftar.</summary>
+        public const string HalamanAkhir = "\uE893";
+        /// <summary>Chevron kiri — tombol “Sebelumnya”.</summary>
+        public const string ChevronKiri = "\uE76B";
+        /// <summary>Chevron atas — geser baris/bagian ke atas.</summary>
+        public const string PanahAtas = "\uE70E";
+        /// <summary>Chevron bawah — geser baris/bagian ke bawah.</summary>
+        public const string PanahBawah = "\uE70D";
+        /// <summary>Panah ke kiri — kembali ke langkah/halaman sebelumnya.</summary>
+        public const string Kembali = "\uE72B";
+        /// <summary>Rantai tautan — alamat web/tautan luar.</summary>
+        public const string Tautan = "\uE71B";
+        /// <summary>Bola dunia — situs web resmi.</summary>
+        public const string Dunia = "\uE774";
+        /// <summary>Amplop — surel/email (glyph sama dengan Surat Masuk).</summary>
+        public const string Surel = SuratMasuk;
+        /// <summary>Label harga — versi/penanda rilis.</summary>
+        public const string Label = "\uE8EC";
+        /// <summary>Kunci pas — alat build/teknologi.</summary>
+        public const string Alat = "\uE90F";
+        /// <summary>Tas kerja — perusahaan/instansi.</summary>
+        public const string Perusahaan = "\uE821";
+        /// <summary>Kotak arsip — cadangan, paket, isi arsip.</summary>
+        public const string Arsip = "\uE7B8";
+        /// <summary>Perisai — keamanan data.</summary>
+        public const string Perisai = "\uEA18";
+        /// <summary>Awan — penyimpanan daring (Google Drive).</summary>
+        public const string Awan = "\uE753";
+        /// <summary>Klip kertas — lampiran surat.</summary>
+        public const string Lampiran = "\uE723";
+        /// <summary>Balon percakapan — kritik, saran, masukan.</summary>
+        public const string Komentar = "\uE90A";
+        /// <summary>Paku peta — penanda/catatan penting.</summary>
+        public const string Penanda = "\uE718";
+        /// <summary>Stopwatch — kecepatan animasi.</summary>
+        public const string Kecepatan = "\uE916";
+        /// <summary>Bintang garis — dukungan untuk pengembang.</summary>
+        public const string Dukungan = TemaDefault;
+        /// <summary>Panah memutar — orientasi kertas.</summary>
+        public const string Putar = "\uE7AD";
+        /// <summary>Penggeser — preferensi aplikasi.</summary>
+        public const string Preferensi = "\uE9E9";
+        /// <summary>Kode program — repositori/kode sumber (glyph sama dengan API).</summary>
+        public const string Kode = Api;
+
         // ==== Keuangan & pembangunan desa ====
-        /// <summary>Keranjang belanja — halaman APBDES (anggaran & realisasi desa).</summary>
-        public const string Keuangan = "\uE7BF";
-        /// <summary>Bagan pertumbuhan — halaman Indeks Desa Membangun.</summary>
-        public const string Pembangunan = "\uE81D";
+        /// <summary>Gedung bank — halaman APBDES (anggaran &amp; realisasi desa, glyph "Bank").</summary>
+        public const string Keuangan = "\uE825";
+        /// <summary>Grafik bidang — halaman Indeks Desa Membangun (glyph "AreaChart").</summary>
+        public const string Pembangunan = "\uE9D2";
 
         // ==== Elemen jendela (status bar, header sidebar) ====
-        /// <summary>Tiga garis — tombol buka/tutup sidebar.</summary>
-        public const string GeserSidebar = "\uE00F";
+        /// <summary>Tiga garis — tombol buka/tutup sidebar (glyph "GlobalNavButton").</summary>
+        public const string GeserSidebar = "\uE700";
         /// <summary>Chevron kanan — penanda arah accordion &amp; hover item.</summary>
         public const string ChevronKanan = "\uE76C";
-        /// <summary>Lonceng notifikasi — status bar.</summary>
-        public const string Lonceng = "\uE7ED";
+        /// <summary>Lonceng notifikasi — status bar (glyph "Ringer").</summary>
+        public const string Lonceng = "\uEA8F";
         /// <summary>Sinkronisasi — animasi pemeriksaan pembaruan.</summary>
         public const string Sinkron = "\uE895";
         /// <summary>Segitiga peringatan — toast notifikasi.</summary>
@@ -168,8 +233,8 @@ namespace SuDesApp.Wpf.Utilities
         public const string Hapus = "\uE74D";
         /// <summary>Pencil — ubah data.</summary>
         public const string Ubah = "\uE70F";
-        /// <summary>Panah turun — muat daftar dari sumber lain (memakai glyph SuratMasuk).</summary>
-        public const string MuatDaftar = SuratMasuk;
+        /// <summary>Panah turun — muat daftar dari sumber lain (glyph "Download").</summary>
+        public const string MuatDaftar = "\uE896";
         /// <summary>Silang — kosongkan pencarian/saringan (memakai glyph Keluar).</summary>
         public const string Bersihkan = Keluar;
     }

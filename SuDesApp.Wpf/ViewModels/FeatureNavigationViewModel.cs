@@ -158,9 +158,11 @@ public sealed class FeatureNavigationViewModel
         TambahTombol("Register Surat", IkonMenu.Dokumen, "register-surat");
 
         var buatSurat = Accordion("Buat Surat Baru", IkonMenu.Tambah);
+        // Tiap jenis surat adalah blanko yang diisi — ikon lembar kosong, bukan
+        // ikon buku yang dipakai daftar register.
         foreach (var (label, template) in BuatSuratCatalog.MenuSurat)
-            buatSurat.Children.Add(Tombol(label, IkonMenu.Dokumen, "surat:" + template));
-        buatSurat.Children.Add(Tombol("Permohonan Rekening Koran", IkonMenu.Dokumen, "rekening-koran"));
+            buatSurat.Children.Add(Tombol(label, IkonMenu.Blanko, "surat:" + template));
+        buatSurat.Children.Add(Tombol("Permohonan Rekening Koran", IkonMenu.Rekening, "rekening-koran"));
         MenuItems.Add(buatSurat);
         var buatSendiri = TambahTombol("Buat Surat Sendiri", IkonMenu.Blanko, "template-surat");
         buatSendiri.Description = "Buat jenis surat sendiri dari nol atau dari berkas Word, lalu isi, pratinjau, dan cetak — tanpa mengubah menu surat bawaan.";
@@ -198,7 +200,7 @@ public sealed class FeatureNavigationViewModel
         Header("DATA DESA");
         PerangkatDesa = TambahTombol("Perangkat Desa", IkonMenu.Orang, "perangkat-desa");
         PerangkatDesa.Description = "Struktur pemerintahan desa per jabatan: identitas, masa jabatan, arsip SK, dan penyusun SK Bupati.";
-        var sotk = TambahTombol("SOTK Desa", IkonMenu.Halaman, "sotk-desa");
+        var sotk = TambahTombol("SOTK Desa", IkonMenu.Sotk, "sotk-desa");
         sotk.Description = "Susun SOTK dan rancangan Perdes SOTK yang tersambung ke Buku Perdes.";
         var apbdes = TambahTombol("APBDES", IkonMenu.Keuangan, "apbdes");
         apbdes.Description = "Arsip dokumen APBDes: Awal, Perubahan, dan Pertanggungjawaban — impor berkas Word, sunting rincian, simpan.";
@@ -250,7 +252,7 @@ public sealed class FeatureNavigationViewModel
         PanduanAwal.Description = "Langkah mengisi data desa, pejabat, dan nomor surat";
         TambahTombol("Dokumentasi", IkonMenu.Dokumentasi, "dokumentasi");
         TambahTombol("API Desa", IkonMenu.Api, "api-desa");
-        TambahTombol("Catatan Rilis", IkonMenu.Peraturan, "catatan-rilis");
+        TambahTombol("Catatan Rilis", IkonMenu.CatatanRilis, "catatan-rilis");
         TambahTombol("Tentang", IkonMenu.Tentang, "tentang");
         TambahTombol("Keluar", IkonMenu.Keluar, "keluar");
 

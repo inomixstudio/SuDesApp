@@ -1,4 +1,4 @@
-<UserControl x:Class="SuDesApp.Wpf.Views.RegisterSuratView"
+﻿<UserControl xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities" x:Class="SuDesApp.Wpf.Views.RegisterSuratView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
@@ -41,28 +41,28 @@
                         ToolTip="Buka Pratinjau PDF"
                         Width="28" Height="26" Margin="1"
                         Style="{StaticResource IconButton}">
-                    <TextBlock Text="👁️" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.Pratinjau}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                 </Button>
                 <Button Command="{Binding DataContext.EditSuratCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                         CommandParameter="{Binding}"
                         ToolTip="Edit Surat"
                         Width="28" Height="26" Margin="1"
                         Style="{StaticResource IconButton}">
-                    <TextBlock Text="✏️" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.Ubah}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                 </Button>
                 <Button Command="{Binding DataContext.ExportSuratPdfCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                         CommandParameter="{Binding}"
                         ToolTip="Ekspor ke PDF (Simpan Sebagai)"
                         Width="28" Height="26" Margin="1"
                         Style="{StaticResource IconButton}">
-                    <TextBlock Text="📤" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.Ekspor}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                 </Button>
                 <Button Command="{Binding DataContext.PrintSuratCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                         CommandParameter="{Binding}"
                         ToolTip="Cetak Dokumen"
                         Width="28" Height="26" Margin="1"
                         Style="{StaticResource IconButton}">
-                    <TextBlock Text="🖨️" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.Cetak}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                 </Button>
             </StackPanel>
         </DataTemplate>
@@ -75,28 +75,56 @@
              PlacementTarget.DataContext = model baris yang di-klik kanan. -->
         <ContextMenu x:Key="StatusContextMenu"
                      DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
-            <MenuItem Header="👁️ Pratinjau PDF" FontWeight="SemiBold"
+            <MenuItem FontWeight="SemiBold"
                       Command="{Binding PreviewSuratCommand}"
-                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-            <MenuItem Header="✏️ Edit Surat"
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Header="Pratinjau PDF">
+                <MenuItem.Icon>
+                    <TextBlock Text="{x:Static u:IkonMenu.Pratinjau}" FontFamily="{StaticResource AppIconFont}" VerticalAlignment="Center"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem
                       Command="{Binding EditSuratCommand}"
-                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-            <MenuItem Header="📤 Ekspor ke PDF..."
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Header="Edit Surat">
+                <MenuItem.Icon>
+                    <TextBlock Text="{x:Static u:IkonMenu.Ubah}" FontFamily="{StaticResource AppIconFont}" VerticalAlignment="Center"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem
                       Command="{Binding ExportSuratPdfCommand}"
-                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-            <MenuItem Header="🖨️ Cetak Dokumen"
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Header="Ekspor ke PDF...">
+                <MenuItem.Icon>
+                    <TextBlock Text="{x:Static u:IkonMenu.Ekspor}" FontFamily="{StaticResource AppIconFont}" VerticalAlignment="Center"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem
                       Command="{Binding PrintSuratCommand}"
-                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Header="Cetak Dokumen">
+                <MenuItem.Icon>
+                    <TextBlock Text="{x:Static u:IkonMenu.Cetak}" FontFamily="{StaticResource AppIconFont}" VerticalAlignment="Center"/>
+                </MenuItem.Icon>
+            </MenuItem>
             <Separator/>
-            <MenuItem Header="Ubah Status ke Aktif ✓" Tag="Active"
+            <MenuItem Tag="Active"
                       Command="{Binding ChangeStatusCommand}"
-                      CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}"/>
-            <MenuItem Header="Ubah Status ke Draft 📝" Tag="Draft"
+                      CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}" Header="Ubah Status ke Aktif">
+                <MenuItem.Icon>
+                    <TextBlock Text="{x:Static u:IkonMenu.Verifikasi}" FontFamily="{StaticResource AppIconFont}" VerticalAlignment="Center"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Tag="Draft"
                       Command="{Binding ChangeStatusCommand}"
-                      CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}"/>
-            <MenuItem Header="Batalkan Surat ✕" Tag="Cancelled"
+                      CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}" Header="Ubah Status ke Draft">
+                <MenuItem.Icon>
+                    <TextBlock Text="{x:Static u:IkonMenu.Draf}" FontFamily="{StaticResource AppIconFont}" VerticalAlignment="Center"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Tag="Cancelled"
                       Command="{Binding ChangeStatusCommand}"
-                      CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}"/>
+                      CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}" Header="Batalkan Surat">
+                <MenuItem.Icon>
+                    <TextBlock Text="{x:Static u:IkonMenu.Keluar}" FontFamily="{StaticResource AppIconFont}" VerticalAlignment="Center"/>
+                </MenuItem.Icon>
+            </MenuItem>
         </ContextMenu>
 
         <!-- Baris register: tinggi ikuti isi (bukan DataGrid).
@@ -163,8 +191,8 @@
         <Border Grid.Row="0" Style="{StaticResource PageHeader}">
             <StackPanel Orientation="Horizontal">
                 <Border Style="{StaticResource HeaderIconChip}">
-                    <TextBlock Text="&#x1F4CB;" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Static u:IkonMenu.Dokumen}" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                 </Border>
                 <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding PageTitle}" Style="{StaticResource HeaderTitle}"/>
@@ -195,7 +223,7 @@
                         <TextBlock Text="{Binding TotalSuratCount}" FontSize="20" FontWeight="Bold" Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}"/>
                     </StackPanel>
                     <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource AccentSubtleBrush}" VerticalAlignment="Center">
-                        <TextBlock Text="📋" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Dokumen}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                 </Grid>
             </Border>
@@ -212,7 +240,7 @@
                         <TextBlock Text="{Binding ActiveSuratCount}" FontSize="20" FontWeight="Bold" Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}"/>
                     </StackPanel>
                     <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource SuccessSubtleBrush}" VerticalAlignment="Center">
-                        <TextBlock Text="✓" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource SuccessTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Verifikasi}" FontSize="20" Foreground="{DynamicResource SuccessTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                 </Grid>
             </Border>
@@ -229,7 +257,7 @@
                         <TextBlock Text="{Binding DraftSuratCount}" FontSize="20" FontWeight="Bold" Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}"/>
                     </StackPanel>
                     <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource WarningSubtleBrush}" VerticalAlignment="Center">
-                        <TextBlock Text="📝" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Draf}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                 </Grid>
             </Border>
@@ -246,7 +274,7 @@
                         <TextBlock Text="{Binding CancelledSuratCount}" FontSize="20" FontWeight="Bold" Margin="0,2,0,0" Foreground="{DynamicResource TextBrush}"/>
                     </StackPanel>
                     <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource ErrorSubtleBrush}" VerticalAlignment="Center">
-                        <TextBlock Text="✕" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ErrorTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Keluar}" FontSize="20" Foreground="{DynamicResource ErrorTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
                 </Grid>
             </Border>
@@ -271,8 +299,8 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="28"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="🔍" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Grid.Column="0" Text="{x:Static u:IkonMenu.Cari}" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource AppIconFont}"/>
                         <TextBox x:Name="SearchBox" Grid.Column="1"
                                  Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  TextChanged="SearchBox_TextChanged"
@@ -295,9 +323,9 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
-                        <Button Grid.Column="2" Content="✕" Command="{Binding ClearSearchCommand}"
+                        <Button Grid.Column="2" Content="{x:Static u:IkonMenu.Keluar}" Command="{Binding ClearSearchCommand}"
                                 Width="20" Height="20"
-                                ToolTip="Hapus pencarian">
+                                ToolTip="Hapus pencarian" FontFamily="{StaticResource AppIconFont}">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
                                     <Setter Property="Visibility" Value="Visible"/>
@@ -328,7 +356,7 @@
                         </Style>
                     </Button.Style>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📝" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="{x:Static u:IkonMenu.Draf}" VerticalAlignment="Center" Margin="0,0,6,0" FontFamily="{StaticResource AppIconFont}"/>
                         <TextBlock Text="Draft" VerticalAlignment="Center"/>
                         <Border Background="{DynamicResource WarningBrush}"
                                 CornerRadius="9" MinWidth="18" Height="18" Margin="8,0,0,0">
@@ -350,22 +378,38 @@
                 </Button>
 
                 <!-- Right Action Buttons -->
-                <Button Content="🔄 Segarkan" Command="{Binding LoadCommand}"
+                <Button Command="{Binding LoadCommand}"
                         Style="{StaticResource SecondaryButton}" Margin="0,2,6,2"
                         VerticalAlignment="Center"
-                        ToolTip="Muat ulang data surat"/>
-                <Button Content="📊 Statistik" Command="{Binding StatisticsCommand}"
+                        ToolTip="Muat ulang data surat">
+                        <TextBlock>
+                        <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.MuatUlang}"/><Run Text=" Segarkan"/>
+                        </TextBlock>
+                    </Button>
+                <Button Command="{Binding StatisticsCommand}"
                         Style="{StaticResource SecondaryButton}" Margin="0,2,6,2"
                         VerticalAlignment="Center"
-                        ToolTip="Lihat ringkasan statistik database"/>
-                <Button Content="📤 Ekspor" Command="{Binding ExportCommand}"
+                        ToolTip="Lihat ringkasan statistik database">
+                        <TextBlock>
+                        <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Statistik}"/><Run Text=" Statistik"/>
+                        </TextBlock>
+                    </Button>
+                <Button Command="{Binding ExportCommand}"
                         Style="{StaticResource SecondaryButton}" Margin="0,2,6,2"
                         VerticalAlignment="Center"
-                        ToolTip="Ekspor data ke Excel (.xlsx), CSV, atau JSON"/>
-                <Button Content="🖨️ Cetak Register (PDF)" Command="{Binding PrintRegisterCommand}"
+                        ToolTip="Ekspor data ke Excel (.xlsx), CSV, atau JSON">
+                        <TextBlock>
+                        <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Ekspor}"/><Run Text=" Ekspor"/>
+                        </TextBlock>
+                    </Button>
+                <Button Command="{Binding PrintRegisterCommand}"
                         Style="{StaticResource PrimaryButton}" Margin="0,2,6,2"
                         VerticalAlignment="Center"
-                        ToolTip="Buat PDF buku register lalu buka di pratinjau — bisa disimpan (Ekspor PDF) atau dicetak dari sana"/>
+                        ToolTip="Buat PDF buku register lalu buka di pratinjau — bisa disimpan (Ekspor PDF) atau dicetak dari sana">
+                        <TextBlock>
+                        <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Cetak}"/><Run Text=" Cetak Register (PDF)"/>
+                        </TextBlock>
+                    </Button>
             </WrapPanel>
         </Border>
 
@@ -417,7 +461,7 @@
                              VerticalContentAlignment="Center"
                              LostFocus="TanggalFilter_LostFocus"
                              ToolTip="Tulis tanggal mulai filter dengan format dd-mm-yyyy, mis. 17-08-2026"
-                             AutomationProperties.Name="Tanggal Mulai Filter"/>
+                             AutomationProperties.Name="Tanggal Mulai Filter" u:TanggalIsianOtomatis.Aktif="True" />
                     <TextBlock Text="s/d" VerticalAlignment="Center" Margin="6,0"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <TextBox Text="{Binding TanggalSelesai, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -426,7 +470,7 @@
                              VerticalContentAlignment="Center"
                              LostFocus="TanggalFilter_LostFocus"
                              ToolTip="Tulis tanggal selesai filter dengan format dd-mm-yyyy, mis. 17-08-2026"
-                             AutomationProperties.Name="Tanggal Selesai Filter"/>
+                             AutomationProperties.Name="Tanggal Selesai Filter" u:TanggalIsianOtomatis.Aktif="True" />
                 </StackPanel>
             </WrapPanel>
         </Border>
@@ -734,25 +778,33 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="{Binding PageInfo}" VerticalAlignment="Center" Margin="0,0,14,0"
                                FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                    <Button Content="⏮" Command="{Binding FirstPageCommand}"
+                    <Button Content="{x:Static u:IkonMenu.HalamanAwal}" Command="{Binding FirstPageCommand}"
                             Width="36" Margin="0,0,3,0"
                             ToolTip="Halaman Pertama" Style="{StaticResource SecondaryButton}"
-                            IsEnabled="{Binding CanPreviousPage}"/>
+                            IsEnabled="{Binding CanPreviousPage}" FontFamily="{StaticResource AppIconFont}"/>
                     <!-- MinWidth, bukan Width: gaya SecondaryButton memberi Padding
-                         14,7 sehingga label "◀ Sebelumnya" tidak muat di 105 px dan
-                         terpotong — makin parah saat skala teks Windows/dpi dinaikkan. -->
-                    <Button Content="◀ Sebelumnya" Command="{Binding PreviousPageCommand}"
-                            MinWidth="105" Margin="0,0,3,0"
+                         14,7 dan ikon chevron menambah lebar, sehingga label
+                         "◀ Sebelumnya" terpotong bila dipatok 105 px. -->
+                    <Button Command="{Binding PreviousPageCommand}"
+                            MinWidth="120" Margin="0,0,3,0"
                             Style="{StaticResource SecondaryButton}"
-                            IsEnabled="{Binding CanPreviousPage}"/>
-                    <Button Content="Berikutnya ▶" Command="{Binding NextPageCommand}"
-                            MinWidth="105" Margin="0,0,3,0"
+                            IsEnabled="{Binding CanPreviousPage}">
+                            <TextBlock>
+                            <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.ChevronKiri}"/><Run Text=" Sebelumnya"/>
+                            </TextBlock>
+                        </Button>
+                    <Button Command="{Binding NextPageCommand}"
+                            MinWidth="120" Margin="0,0,3,0"
                             Style="{StaticResource SecondaryButton}"
-                            IsEnabled="{Binding CanNextPage}"/>
-                    <Button Content="⏭" Command="{Binding LastPageCommand}"
+                            IsEnabled="{Binding CanNextPage}">
+                            <TextBlock>
+                            <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.ChevronKanan}"/><Run Text=" Berikutnya"/>
+                            </TextBlock>
+                        </Button>
+                    <Button Content="{x:Static u:IkonMenu.HalamanAkhir}" Command="{Binding LastPageCommand}"
                             Width="36"
                             ToolTip="Halaman Terakhir" Style="{StaticResource SecondaryButton}"
-                            IsEnabled="{Binding CanNextPage}"/>
+                            IsEnabled="{Binding CanNextPage}" FontFamily="{StaticResource AppIconFont}"/>
                 </StackPanel>
             </Grid>
         </Border>

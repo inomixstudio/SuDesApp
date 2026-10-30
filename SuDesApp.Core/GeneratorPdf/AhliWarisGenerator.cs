@@ -52,7 +52,9 @@ namespace SuDesApp.GeneratorPdf
             var desa = suratData.Desa;
             string logoPath = CariLogoPath();
 
-            halaman.Blok(c => KopSurat.Gambar(c, desa, logoPath));
+            // Jarak napas kop → judul, sama seperti surat lain di menu Buat Surat.
+            float jarakJudul = KerapatanSurat.Aktif.JarakKopJudul;
+            halaman.Blok(c => KopSurat.Gambar(c.PaddingBottom(jarakJudul), desa, logoPath));
             ComposeJudul(halaman, suratData);
 
             // Halaman 1: Surat Keterangan Ahli Waris

@@ -129,10 +129,12 @@ namespace SuDesApp.GeneratorPdf
                 halaman.MarginRight(54);
                 halaman.MarginBottom(54);
                 halaman.MarginLeft(54);
+                // Jarak baris naskah peraturan: 1,08 terlalu rapat sehingga paragraf
+                // panjang terlihat padat dan sulit dibaca saat dicetak.
                 halaman.DefaultTextStyle(x => x
                     .FontFamily("Times New Roman")
                     .FontSize(NaskahDesa.UkuranTeks)
-                    .LineHeight(1.08f));
+                    .LineHeight(NaskahDesa.JarakBarisTeks));
 
                 halaman.Footer().AlignCenter().DefaultTextStyle(s => s.FontSize(9)).Text(t =>
                 {
@@ -152,8 +154,16 @@ namespace SuDesApp.GeneratorPdf
                     .Split('\n');
 
                 bool penutup = isi.Contains("Ditetapkan di", StringComparison.OrdinalIgnoreCase);
-                bool pembuka = !penutup &&
-                    !baris.Any(b => Bab.IsMatch(b.Trim()) || Pasal.IsMatch(b.Trim()));
+
+                // Halaman penutup punya susunan sendiri (dua lajur tanda tangan),
+                // bukan rentetan paragraf rata kiri.
+                if (penutup)
+                {
+                    TulisHalamanPenutup(kolom, baris);
+                    return;
+                }
+
+                bool pembuka = !baris.Any(b => Bab.IsMatch(b.Trim()) || Pasal.IsMatch(b.Trim()));
                 bool judulTentang = false;
                 bool setelahBab = false;
                 bool adaIsi = false;
@@ -233,6 +243,202 @@ namespace SuDesApp.GeneratorPdf
                 // Bagian yang berakhir dengan judul saja tetap dicetak.
                 foreach (var (jenis, teks) in tertunda) TulisJudul(kolom, jenis, teks);
             }
+
+            // ============================================== halaman penutup
+
+            /// <summary>
+            /// Satu blok tanda tangan pada halaman penutup: baris tempat/tanggal,
+            /// jabatan, lalu nama pejabat dengan ruang tanda tangan di antaranya.
+            /// </summary>
+            private sealed class BlokTandaTanganPenutup
+            {
+                public List<string> TempatTanggal { get; } = new();
+                public string? Jabatan { get; set; }
+                public string? Nama { get; set; }
+
+                public bool Kosong => TempatTanggal.Count == 0 && Jabatan is null && Nama is null;
+            }
+
+            /// <summary>
+            /// Halaman penutup Perdes: sisa isi pasal dicetak seperti biasa, lalu
+            /// blok penetapan (kanan) dan pengundangan (kiri) disusun berdampingan
+            /// dengan ruang tanda tangan. Sebelumnya seluruh baris penutup dicetak
+            /// rata kiri berurutan: nama pejabat menempel di bawah jabatannya tanpa
+            /// ruang tanda tangan, dan blok pengundangan tidak berada di kiri.
+            /// </summary>
+            private static void TulisHalamanPenutup(ColumnDescriptor kolom, string[] baris)
+            {
+                var kiri = new BlokTandaTanganPenutup();
+                var kanan = new BlokTandaTanganPenutup();
+                var lembaran = new List<string>();
+                var sebelumPenutup = new List<string>();
+
+                BlokTandaTanganPenutup? aktif = null;
+                bool menungguNama = false;
+
+                foreach (string mentah in baris)
+                {
+                    string b = mentah.Trim();
+                    if (b.Length == 0) continue;
+
+                    if (b.StartsWith("Ditetapkan", StringComparison.OrdinalIgnoreCase))
+                    {
+                        aktif = kanan;
+                        menungguNama = false;
+                        kanan.TempatTanggal.AddRange(PecahTempatTanggal(b));
+                        continue;
+                    }
+
+                    if (b.StartsWith("Diundangkan", StringComparison.OrdinalIgnoreCase))
+                    {
+                        aktif = kiri;
+                        menungguNama = false;
+                        kiri.TempatTanggal.AddRange(PecahTempatTanggal(b));
+                        continue;
+                    }
+
+                    if (b.StartsWith("LEMBARAN DESA", StringComparison.OrdinalIgnoreCase) ||
+                        b.StartsWith("TAHUN ", StringComparison.OrdinalIgnoreCase) && lembaran.Count > 0)
+                    {
+                        lembaran.Add(b);
+                        continue;
+                    }
+
+                    // Isi pasal yang masih tersisa di halaman penutup dicetak dulu.
+                    if (aktif is null)
+                    {
+                        sebelumPenutup.Add(b);
+                        continue;
+                    }
+
+                    if (b.StartsWith("Pada tanggal", StringComparison.OrdinalIgnoreCase))
+                    {
+                        aktif.TempatTanggal.Add(b);
+                        menungguNama = false;
+                        continue;
+                    }
+
+                    if (JabatanPenandaTangan(b))
+                    {
+                        bool kepala = b.Contains("KEPALA", StringComparison.OrdinalIgnoreCase) ||
+                                      b.Contains("LURAH", StringComparison.OrdinalIgnoreCase);
+                        aktif = kepala ? kanan : kiri;
+                        aktif.Jabatan = b;
+                        menungguNama = true;
+                        continue;
+                    }
+
+                    if (menungguNama)
+                    {
+                        aktif.Nama = b;
+                        menungguNama = false;
+                        continue;
+                    }
+
+                    aktif.TempatTanggal.Add(b);
+                }
+
+                foreach (string b in sebelumPenutup) TulisIsi(kolom, b, penutup: false);
+
+                if (!kiri.Kosong || !kanan.Kosong)
+                {
+                    // ShowEntire: kedua lajur tanda tangan tidak boleh terbelah
+                    // antar halaman.
+                    kolom.Item().PaddingTop(24).ShowEntire().Row(barisTandaTangan =>
+                    {
+                        barisTandaTangan.RelativeItem().Column(k => TulisBlokPenutup(k, kiri));
+                        barisTandaTangan.ConstantItem(28);
+                        barisTandaTangan.RelativeItem().Column(k => TulisBlokPenutup(k, kanan));
+                    });
+                }
+
+                // Lembaran Desa berada di bawah blok pengundangan (lajur kiri).
+                foreach (string b in lembaran)
+                {
+                    kolom.Item().PaddingTop(JarakLembaran).Text(b).FontSize(NaskahDesa.UkuranTeks - 2);
+                }
+            }
+
+            private const float JarakLembaran = 10f;
+
+            /// <summary>
+            /// Pisahkan baris penetapan/pengundangan yang ditulis satu baris menjadi
+            /// baris tempat dan baris tanggal, supaya tanggal tidak terpotong di tengah
+            /// (mis. tinggal “2026” atau “Sukamaju” sendirian di baris kedua). Dua gaya
+            /// naskah didukung:
+            ///   “Ditetapkan di Sukamaju pada tanggal 2 November 2026”
+            ///   “Diundangkan pada tanggal 2 November 2026 di Sukamaju”
+            /// Baris yang sudah terpisah — mis. “Ditetapkan di : Sukamaju” —
+            /// dikembalikan apa adanya.
+            /// </summary>
+            private static string[] PecahTempatTanggal(string baris)
+            {
+                const string Penanda = " pada tanggal";
+                int mulai = baris.IndexOf(Penanda, StringComparison.OrdinalIgnoreCase);
+                if (mulai <= 0) return new[] { baris };
+
+                string tempat = baris[..mulai].Trim();
+                string tanggal = ("pada tanggal" + baris[(mulai + Penanda.Length)..]).Trim();
+
+                // “Diundangkan pada tanggal … di Sukamaju” → tempatnya “Diundangkan di Sukamaju”.
+                int di = tanggal.LastIndexOf(" di ", StringComparison.OrdinalIgnoreCase);
+                if (di > 0)
+                {
+                    tempat = tempat + tanggal[di..];
+                    tanggal = tanggal[..di].TrimEnd();
+                }
+
+                return tempat.Length == 0 || tanggal.Length == 0
+                    ? new[] { baris }
+                    : new[] { tempat, tanggal };
+            }
+
+            /// <summary>Baris jabatan penanda tangan, mis. “KEPALA DESA SUKAMAJU,” atau “Ketua BPD,”.</summary>
+            private static bool JabatanPenandaTangan(string baris)
+            {
+                string atas = baris.ToUpperInvariant();
+                if (!atas.Contains("KEPALA", StringComparison.Ordinal) &&
+                    !atas.Contains("LURAH", StringComparison.Ordinal) &&
+                    !atas.Contains("SEKRETARIS", StringComparison.Ordinal) &&
+                    !atas.Contains("BPD", StringComparison.Ordinal) &&
+                    !atas.Contains("CAMAT", StringComparison.Ordinal))
+                {
+                    return false;
+                }
+
+                // Nama pejabat yang ditulis kapital juga mengandung nama desa, tetapi
+                // bukan jabatan: jabatan selalu diakhiri koma atau ditulis kapital
+                // penuh satu baris pendek tanpa tanda baca titik.
+                return baris.EndsWith(",", StringComparison.Ordinal) || atas == baris;
+            }
+
+            private static void TulisBlokPenutup(ColumnDescriptor kolom, BlokTandaTanganPenutup blok)
+            {
+                if (blok.Kosong) return;
+
+                foreach (string b in blok.TempatTanggal)
+                {
+                    kolom.Item().AlignCenter().Text(b).FontSize(NaskahDesa.UkuranTeks);
+                }
+
+                if (blok.Jabatan is { Length: > 0 } jabatan)
+                {
+                    var item = kolom.Item();
+                    if (blok.TempatTanggal.Count > 0) item = item.PaddingTop(NaskahDesa.JarakBagian);
+                    item.AlignCenter().Text(jabatan.ToUpperInvariant()).FontSize(NaskahDesa.UkuranTeks);
+                }
+
+                if (blok.Nama is { Length: > 0 } nama)
+                {
+                    // Ruang tanda tangan; nama pejabat ditebalkan, sedangkan
+                    // titik-titik kosong dibiarkan apa adanya.
+                    kolom.Item().Height(RuangTandaTanganPenutup);
+                    var item = kolom.Item().AlignCenter().Text(nama).FontSize(NaskahDesa.UkuranTeks);
+                    if (!nama.TrimStart().StartsWith('(')) item.Bold().Underline();
+                }
+            }
+
+            private const float RuangTandaTanganPenutup = 46f;
 
             /// <summary>Jenis baris judul yang menunggu isi pengikutnya.</summary>
             private enum JenisJudul
@@ -382,7 +588,9 @@ namespace SuDesApp.GeneratorPdf
 
             private static void TulisButir(ColumnDescriptor kolom, string label, string isi)
             {
-                kolom.Item().Row(baris =>
+                // Butir diberi jarak bawah tipis supaya daftar a., b., c. tidak
+                // menempel menjadi satu blok.
+                kolom.Item().PaddingBottom(NaskahDesa.JarakRapat).Row(baris =>
                 {
                     baris.ConstantItem(30).Text(label);
                     baris.RelativeItem().Text(t =>
@@ -395,7 +603,7 @@ namespace SuDesApp.GeneratorPdf
 
             private static void TulisParagraf(ColumnDescriptor kolom, string teks)
             {
-                kolom.Item().PaddingBottom(2).Text(t =>
+                kolom.Item().PaddingBottom(NaskahDesa.JarakParagraf).Text(t =>
                 {
                     t.Justify();
                     t.ParagraphFirstLineIndentation(24);

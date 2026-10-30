@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
+using SudesExPlus;
+using SudesExPlus.Style;
 using System.Drawing;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
@@ -1461,7 +1461,6 @@ namespace SuDesApp.Wpf.ViewModels
 
         private static async Task TulisExcelAsync(List<WargaData> data, Dictionary<int, int> jumlahSurat, string path)
         {
-            ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
             using var package = new ExcelPackage();
             var ws = package.Workbook.Worksheets.Add("Data Warga");
 

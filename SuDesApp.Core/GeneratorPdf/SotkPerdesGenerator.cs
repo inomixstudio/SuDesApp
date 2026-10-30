@@ -121,10 +121,16 @@ namespace SuDesApp.GeneratorPdf
         public const float UkuranTeks = 11f;
         public const float UkuranJudul = 13f;
 
+        /// <summary>
+        /// Jarak baris teks paragraf. 1,08× ukuran font membuat paragraf panjang
+        /// terlihat padat dan sulit dibaca; 1,15× tetap hemat ruang tetapi nyaman.
+        /// </summary>
+        public const float JarakBarisTeks = 1.15f;
+
         // Skala jarak tunggal untuk menjaga alur naskah rapat dan konsisten.
-        public const float JarakRapat = 2f;
-        public const float JarakParagraf = 4f;
-        public const float JarakBagian = 8f;
+        public const float JarakRapat = 4f;
+        public const float JarakParagraf = 8f;
+        public const float JarakBagian = 12f;
         public const float JarakTandaTangan = 14f;
 
         private static readonly string[] NamaBulan =
@@ -219,7 +225,7 @@ namespace SuDesApp.GeneratorPdf
             // Blok penanda tangan menempel di kolom KANAN halaman: tempat/tanggal,
             // jabatan, ruang tanda tangan, lalu nama Kepala Desa — ISI bloknya
             // rata tengah, sesuai bentuk baku tanda tangan surat dinas.
-            kolom.Item().PaddingTop(JarakTandaTangan).AlignRight().Width(280).Column(blok =>
+            kolom.Item().PaddingTop(JarakTandaTangan).ShowEntire().AlignRight().Width(280).Column(blok =>
             {
                 blok.Item().AlignCenter().Text($"Ditetapkan di {titik}").FontSize(UkuranTeks);
                 blok.Item().AlignCenter().Text($"pada tanggal {TanggalIndo(tanggal)}").FontSize(UkuranTeks);
@@ -239,7 +245,7 @@ namespace SuDesApp.GeneratorPdf
             string titik = string.IsNullOrWhiteSpace(tempat) ? wilayah : tempat.Trim();
             string sekretaris = string.IsNullOrWhiteSpace(desa.SekretarisDesa) ? "..........................." : desa.SekretarisDesa!.Trim();
 
-            kolom.Item().PaddingTop(JarakTandaTangan).AlignLeft().Column(blok =>
+            kolom.Item().PaddingTop(JarakTandaTangan).ShowEntire().AlignLeft().Column(blok =>
             {
                 blok.Item().AlignLeft().Text($"Diundangkan di {titik}").FontSize(UkuranTeks);
                 blok.Item().AlignLeft().Text("pada tanggal ....................").FontSize(UkuranTeks);

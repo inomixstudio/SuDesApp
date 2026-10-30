@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
+using SudesExPlus;
+using SudesExPlus.Style;
 using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
@@ -107,7 +107,6 @@ namespace SuDesApp.Services
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
 
-            ExcelPackage.License.SetNonCommercialPersonal("ARIE INO");
 
             using var package = new ExcelPackage();
 

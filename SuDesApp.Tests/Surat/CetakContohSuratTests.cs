@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging.Abstractions;
 using SudesPdf;
+using SudesPdf.Core;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
@@ -435,6 +436,111 @@ public sealed class CetakContohSuratTests : IDisposable
     }
 
     /// <summary>
+    /// Garis ganda kop harus benar-benar dua garis: satu tipis (0,8 pt), jarak
+    /// 1 pt, lalu satu tebal (1,5 pt). Padding pernah ikut tercat sebagai latar
+    /// sehingga garis tipis menjadi 3,8 pt dan kedua garis tampak menyatu.
+    /// </summary>
+    [Fact]
+    public async Task KopMemakaiDuaGarisTerpisah()
+    {
+        var config = BuatConfig();
+        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var pdf = await CetakAsync(gen, SuratContoh(SuratConstants.SKD_UMUM));
+        var dokumen = PdfDocument.Load(pdf);
+        var halaman = dokumen.Pages[0];
+        string isi = string.Join("\n", PdfContentInterpreter
+            .ReadContents(dokumen, halaman.ContentsRaw)
+            .Select(Encoding.Latin1.GetString));
+
+        // Balok selebar hampir seluruh isi halaman (garis kop), bukan sel tabel.
+        var balok = Regex.Matches(isi, @"(-?[\d.]+) (-?[\d.]+) ([\d.]+) ([\d.]+) re f")
+            .Select(m => new
+            {
+                Y = double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture),
+                Lebar = double.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture),
+                Tinggi = double.Parse(m.Groups[4].Value, CultureInfo.InvariantCulture)
+            })
+            .Where(b => b.Lebar > 300 && b.Tinggi < 5)
+            .OrderByDescending(b => b.Y)
+            .ToList();
+
+        Assert.Equal(2, balok.Count);
+        Assert.Equal(KopSurat.GarisTipis, balok[0].Tinggi, 3);
+        Assert.Equal(KopSurat.GarisTebal, balok[1].Tinggi, 3);
+
+        // Jarak 1 pt di antara kedua garis adalah ruang kosong, bukan latar.
+        double jarak = balok[0].Y - (balok[1].Y + balok[1].Tinggi);
+        Assert.Equal(1.0, jarak, 2);
+    }
+
+    /// <summary>
+    /// Pratinjau form Permohonan Rekening Koran harus jalan walau isian masih
+    /// kosong: dulu tombol Pratinjau ditolak "Semua kolom wajib diisi!" sehingga
+    /// menu itu satu-satunya yang tidak bisa dilihat sebelum diisi. Selama
+    /// pratinjau, kolom kosong dicetak sebagai titik-titik; di luar pratinjau,
+    /// kelengkapan tetap wajib supaya surat resmi tidak terbit setengah jadi.
+    /// </summary>
+    [Fact]
+    public async Task PratinjauRekeningKoranMencetakTitikWalauIsianKosong()
+    {
+        var config = BuatConfig();
+        var gen = new RekeningKoranGenerator(config,
+            new FileService(config, NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<RekeningKoranGenerator>.Instance, NullLoggerFactory.Instance);
+
+        // Kepala desa & alamat sengaja dikosongkan: itulah keadaan form yang baru
+        // dibuka. Data desa tetap ada supaya kop surat dapat dicetak.
+        static RekeningKoranData IsianKosong() => new()
+        {
+            NomorSurat = string.Empty,
+            Perihal = "Permohonan Print Out Rekening Koran",
+            TanggalSurat = new DateTime(2026, 10, 30),
+            NamaPejabat = string.Empty,
+            Jabatan = string.Empty,
+            AlamatDusun = string.Empty,
+            AlamatDesa = string.Empty,
+            AlamatKecamatan = string.Empty,
+            AlamatKabupaten = string.Empty,
+            NamaPemegangRekening = string.Empty,
+            NomorRekening = string.Empty,
+            PeriodeRekening = "30 Oktober 2026 s/d 30 Oktober 2026",
+            Bank = string.Empty,
+            KCP = string.Empty,
+            Desa = DesaContoh()
+        };
+
+        byte[] pdf;
+        using (PratinjauIsian.Pakai())
+        using (var penampung = new MemoryStream())
+        {
+            await gen.GeneratePdfAsync(penampung, IsianKosong());
+            pdf = penampung.ToArray();
+        }
+
+        Assert.Equal(1, HitungHalaman(pdf));
+        string teks = BacaTeks(pdf, "12-pratinjau-rekening-koran");
+        // Jarak antarkolom tercetak sebagai spasi saat teks dibaca kembali, jadi
+        // baris nomor diperiksa dengan pola, bukan tab persis.
+        Assert.Matches(@"Nomor\s*:\s*\.{10,}", teks);
+        PastikanTercetak(teks,
+            $"Bank {PratinjauIsian.TitikKosong}",
+            $"KCP {PratinjauIsian.TitikKosong}");
+
+        // Jalur terbit tetap menolak isian kosong — pratinjau tidak boleh
+        // melonggarkan pemeriksaan surat yang benar-benar akan dicetak.
+        using var terbit = new MemoryStream();
+        var galat = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => gen.GeneratePdfAsync(terbit, IsianKosong()));
+        Assert.Contains("Nomor Surat", galat.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Surat kelurahan harus mencetak kop "KELURAHAN …", jabatan Lurah, dan NIP
     /// pejabat ASN di bawah namanya — bedanya dari desa hanya dari data lembaganya.
     /// </summary>
@@ -455,6 +561,96 @@ public sealed class CetakContohSuratTests : IDisposable
 
         PastikanTercetak(teks, "KELURAHAN SUKAMAJU", "Jabatan : Lurah Sukamaju",
             "LURAH SUKAMAJU", $"NIP {surat.Desa.NipKepalaDesa}");
+    }
+
+    /// <summary>
+    /// Daftar Hadir dengan peserta banyak: tabel harus memecah ke halaman
+    /// berikutnya dengan baris kepala tercetak ulang di setiap halaman, dan blok
+    /// tanda tangan Kepala Desa tetap utuh (tidak terpotong tepi bawah kertas).
+    /// Dulu baris kepala hilang sama sekali dan sisa peserta yang tidak muat
+    /// dibuang tanpa pindah halaman.
+    /// </summary>
+    [Fact]
+    public async Task DaftarHadirBanyakPesertaMemecahHalamanDanBlokTandaTanganUtuh()
+    {
+        var config = BuatConfig();
+        var gen = new DaftarHadirGenerator(config,
+            new FileService(config, NullLogger<FileService>.Instance),
+            NullLogger<DaftarHadirGenerator>.Instance);
+
+        var data = new DaftarHadirData
+        {
+            Judul = "DAFTAR HADIR\nRAPAT MUSYAWARAH DESA",
+            HariTanggal = DaftarHadirData.HariTanggalIndo(new DateTime(2026, 10, 30)),
+            TanggalCetak = new DateTime(2026, 10, 30),
+            Pukul = "09.00 WIB s/d Selesai",
+            Tempat = "Aula Kantor Desa Sukamaju",
+            Desa = DesaContoh(),
+            Peserta = Enumerable.Range(1, 40).Select(i => new DaftarHadirPeserta
+            {
+                Nama = "PESERTA " + i,
+                Jabatan = "Anggota",
+            }).ToList(),
+        };
+
+        byte[] pdf;
+        using (var penampung = new MemoryStream())
+        {
+            gen.GeneratePdf(penampung, data);
+            pdf = penampung.ToArray();
+        }
+
+        int halaman = HitungHalaman(pdf);
+        Assert.True(halaman >= 2, $"40 peserta seharusnya tidak muat satu halaman, tetapi {halaman} halaman.");
+
+        await using var dokumen = await Document.LoadAsync(Penyimpanan(pdf, "13-daftar-hadir"));
+        {
+            var semua = new StringBuilder();
+            int halamanBlok = -1;
+            for (int p = 0; p < dokumen.PageCount; p++)
+            {
+                string teks = await dokumen.GetTextAsync(p);
+                semua.AppendLine(teks);
+
+                // Kop, judul, dan baris Hari/Pukul/Tempat hanya di halaman pertama.
+                if (p == 0)
+                {
+                    PastikanTercetak(teks, "PEMERINTAH DESA SUKAMAJU", "DAFTAR HADIR", "Hari/Tanggal");
+                }
+                else
+                {
+                    Assert.DoesNotContain("PEMERINTAH DESA SUKAMAJU", teks, StringComparison.Ordinal);
+                    Assert.DoesNotContain("RAPAT MUSYAWARAH DESA", teks, StringComparison.Ordinal);
+                }
+
+                // Halaman yang masih memuat baris tabel mengulang baris kepalanya;
+                // halaman berisi blok tanda tangan saja tidak perlu baris kepala.
+                if (teks.Contains("PESERTA", StringComparison.Ordinal))
+                {
+                    PastikanTercetak(teks, "No.", "Nama", "Jabatan");
+                }
+
+                if (!teks.Contains("KEPALA DESA", StringComparison.Ordinal)) continue;
+                Assert.Equal(-1, halamanBlok);
+                halamanBlok = p;
+                // Blok tanda tangan lengkap: baris kota, jabatan, dan nama pejabat.
+                PastikanTercetak(teks, "Sukamaju,", "KEPALA DESA SUKAMAJU", "H. AHMAD SURYANA");
+            }
+
+            Assert.True(halamanBlok == dokumen.PageCount - 1,
+                $"Blok tanda tangan seharusnya di halaman terakhir, bukan halaman {halamanBlok + 1} dari {dokumen.PageCount}.");
+
+            // Semua peserta tercetak: tidak ada baris yang hilang saat memecah halaman.
+            for (int i = 1; i <= 40; i++) PastikanTercetak(semua.ToString(), "PESERTA " + i);
+        }
+    }
+
+    /// <summary>Tulis PDF ke folder sampel lalu kembalikan jalurnya (untuk dibaca ulang).</summary>
+    private string Penyimpanan(byte[] pdf, string nama)
+    {
+        string jalur = Path.Combine(_folderSampel, nama + ".pdf");
+        File.WriteAllBytes(jalur, pdf);
+        return jalur;
     }
 
     private static string? CariRootRepo()

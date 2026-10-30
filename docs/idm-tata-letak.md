@@ -1,8 +1,8 @@
 # Tata letak halaman IDM
 
 Halaman **Indeks Desa & IDM** (`SuDesApp.Wpf/Views/IdmView.xaml`) disusun
-sebagai satu alur baca: tiga kartu ringkasan di atas, rincian indikator penuh
-selebar halaman di bawahnya.
+sebagai satu alur baca: tiga kartu ringkasan bernomor di atas, rincian
+indikator penuh selebar halaman di bawahnya.
 
 ```
 DataPageFrame
@@ -11,14 +11,30 @@ DataPageFrame
    ├─ ToolbarCard ....... muat ulang, situs pusat, dokumentasi, cetak/PDF
    └─ ScrollViewer ...... gulir vertikal seluruh isi halaman
       └─ StackPanel
+         ├─ (kartu keadaan) ...... HANYA saat belum ada data DAN tidak memuat:
+         │                         ikon, judul, sebab, tombol muat, petunjuk
+         │                         ke Pengaturan Surat
          ├─ PanelKartuResponsif
-         │  ├─ StatusDesaCard ....... identitas, skor IDM, status, IKS/IKE/IKL,
+         │  ├─ StatusDesaCard ..... 01 · identitas, skor IDM, status, IKS/IKE/IKL,
          │  │                         target, riwayat tahun, sumber
-         │  ├─ TrenCard ............ legenda + GrafikTrenIdm
-         │  └─ IndeksDesaCard ...... total/nilai/status 2025, enam dimensi,
+         │  ├─ TrenCard .......... 02 · legenda + GrafikTrenIdm
+         │  └─ IndeksDesaCard .... 03 · total/nilai/status 2025, enam dimensi,
          │                            sub-dimensi, kabar resmi, rujukan resmi
          └─ RincianCard ........... tabel indikator, lebar penuh
 ```
+
+## Kartu keadaan (kosong & galat)
+
+Satu kartu melayani dua sebab sekaligus — belum pernah dimuat dan gagal
+dimuat — supaya halaman tidak pernah berakhir sebagai layar kosong dengan
+satu baris merah di toolbar. Isinya: `TampilkanKartuKeadaan`
+(`!AdaData && !SedangMemuat`) untuk visibilitas, `JudulKeadaan` untuk
+membedakan kedua sebab, `IsiKeadaan` untuk kalimatnya, dan tombol
+**Muat data sekarang** yang menjalankan `MuatCommand`.
+
+Baris galat di toolbar (`AdaGalatDiToolbar`) hanya tampil bila halaman
+**sudah** berisi data — mis. muat ulang gagal sementara angka lama tetap
+tampil — sehingga pesan yang sama tidak muncul dua kali.
 
 ## Pemilik keadaan
 
