@@ -70,15 +70,6 @@ iterasi ikut disimpan per akun (agar bisa menaikkan biaya di masa depan tanpa
 membuat akun lama tidak terbaca), dan perbandingan memakai
 `CryptographicOperations.FixedTimeEquals`.
 
-Akun bawaan sengaja memakai kredensial tetap — `admin`/`admin` dan akun
-penyedia `adminpusat`/`adminpusat11` — dan tidak pernah dibuat acak atau
-dirotasi otomatis. Ini keputusan produk supaya operator selalu bisa masuk;
-risikonya diterima dan dikompensasi dengan: akun pusat tidak pernah masuk
-tabel `Pengguna`, sandi penyedia bisa ditimpa provisioning mesin
-(`SUDES_PUSAT_SANDI`/`Pusat.kunci`), dan sandi akun desa bisa diganti kapan
-saja lewat Kelola Pengguna. Ganti sandi bawaan sebelum instalasi dipakai
-banyak orang.
-
 ### Data desa
 
 Database desa (`desa.db`) berada di komputer desa dan **tidak pernah** dikirim ke server. Database ini SQLite biasa **tanpa enkripsi** — lindungi lewat izin folder dan akun Windows.
