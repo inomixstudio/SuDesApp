@@ -56,3 +56,33 @@ jalankan `SuDesApp.exe`. Kedua paket belum ditandatangani Authenticode dan
 konfigurasi server lisensinya masih menunjuk `localhost`; paket produksi dibuat
 lewat workflow Release dengan sertifikat dan secret lisensi. Aplikasi web/API
 dijalankan terpisah dari paket desktop ini.
+
+## Verifikasi unduhan
+
+Sidik jari SHA-256 berkas yang diterbitkan:
+
+```
+75e2b720d821467bdca70db4c8e889707fdc656740a5b1d451c956e4dff96925  SuDesApp_2.10.0_Setup.exe
+67fae6d4399770831ebdcb9289db25505e66f2586a3f19a6d2941133f4f745dd  SuDesApp_2.10.0_win-x64_portable.zip
+```
+
+Periksa di Windows dengan
+`Get-FileHash .\SuDesApp_2.10.0_Setup.exe -Algorithm SHA256`, atau di Linux/macOS
+dengan `sha256sum -c SuDesApp_2.10.0_Setup.exe.sha256`. Nilai tersebut juga
+tersedia sebagai berkas `.sha256` di setiap aset rilis.
+
+## Persyaratan sistem
+
+- Windows 10 versi 1607 atau lebih baru, atau Windows 11, arsitektur x64.
+- Tidak perlu memasang .NET: kedua paket membawa runtime .NET 10 sendiri.
+- Ruang disk sekitar 410 MB untuk berkas program, ditambah ruang untuk data desa.
+- Pemasangan memakai `%LocalAppData%\Programs\SuDesApp`, jadi tidak menuntut hak
+  administrator.
+
+## Tautan
+
+- Semua rilis: <https://github.com/inomixstudio/SuDesApp/releases>
+- Masalah dan permintaan fitur:
+  <https://github.com/inomixstudio/SuDesApp/issues>
+- Panduan pembaruan dan tambalan: `docs/PEMBARUAN-TAMBALAN.md`
+- Tanda tangan dan verifikasi rilis: `docs/TANDA-TANGAN-RILIS.md`
