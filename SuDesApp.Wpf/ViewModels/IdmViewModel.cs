@@ -141,6 +141,7 @@ namespace SuDesApp.Wpf.ViewModels
             BukaDokumentasiIndeksDesaCommand = new RelayCommand(BukaDokumentasiIndeksDesa);
             BukaTerbitanCommand = new RelayCommand(BukaTerbitan, () => AdaTerbitanBaru);
             BukaTautanCommand = new RelayCommand<SumberResmiIdmTampil>(BukaTautan);
+            PilihTahunCommand = new RelayCommand<int>(PilihTahun);
             CetakCommand = new AsyncRelayCommand(BuatPdfAsync, () => AdaDataIdm && !SedangMemuat);
         }
 
@@ -376,7 +377,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public string JudulSeriLamaTampil => _hasil == null
             ? "RIWAYAT IDM LAMA"
-            : "RIWAYAT IDM LAMA · S/D " + _hasil.Ringkasan.Tahun.ToString(CultureInfo.InvariantCulture);
+            : "RIWAYAT IDM LAMA · S/D " + TahunTerbitTerbaru.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>
         /// Catatan pada kartu tren: seri Indeks Desa 2025 tidak digabungkan ke
@@ -388,7 +389,7 @@ namespace SuDesApp.Wpf.ViewModels
             : "Penilaian 2025 memakai Indeks Desa (enam dimensi) dan ditampilkan pada ringkasan — seri IDM lama"
               + (_hasil == null
                   ? " tidak tersedia untuk desa ini."
-                  : " berakhir di tahun " + _hasil.Ringkasan.Tahun.ToString(CultureInfo.InvariantCulture) + ".");
+                  : " berakhir di tahun " + TahunTerbitTerbaru.ToString(CultureInfo.InvariantCulture) + ".");
 
         /// <summary>Tanggal perubahan dataset menurut header Last-Modified dari sumber.</summary>
         public string TanggalPembaruanSumberIndeksDesa2025 => _indeks2025?.TanggalPembaruanSumber is { } tanggal
@@ -440,17 +441,25 @@ namespace SuDesApp.Wpf.ViewModels
             : "Kode desa " + _kodeDesa;
 
         /// <summary>
-        /// Tahun penilaian yang disebut di kepala halaman. Bila dataset resmi
-        /// Indeks Desa 2025 memuat desa ini, tahun 2025 yang tampil — seri IDM
-        /// lama (IKS/IKE/IKL) memang berhenti di 2024 pada situs pusat, jadi
-        /// penilaian terbaru yang bisa dipertanggungjawabkan untuk tahun 2025
-        /// adalah Indeks Desa enam dimensi.
+        /// Tahun penilaian yang rinciannya sedang tampil. Mengikuti chip tahun yang
+        /// dipilih; setelah pemuatan, tahun terbaru yang terpilih. Bila desa ini
+        /// juga punya penilaian Indeks Desa 2025, tahun seri lama ditandai supaya
+        /// tidak terbaca sebagai penilaian 2025 (kartu Indeks Desa terpisah).
         /// </summary>
-        public string TahunTampil => _indeks2025 != null
-            ? "Penilaian tahun 2025 · Indeks Desa"
-            : _hasil == null
-                ? "—"
-                : "Penilaian tahun " + _hasil.Ringkasan.Tahun.ToString(CultureInfo.InvariantCulture);
+        public string TahunTampil
+        {
+            get
+            {
+                if (_hasil == null)
+                {
+                    return _indeks2025 != null ? "Penilaian tahun 2025 · Indeks Desa" : "—";
+                }
+
+                string teks = "Penilaian tahun "
+                              + _hasil.Ringkasan.Tahun.ToString(CultureInfo.InvariantCulture);
+                return _indeks2025 != null ? teks + " · seri IDM lama" : teks;
+            }
+        }
 
         /// <summary>Banyaknya tahun seri IDM yang berhasil dimuat pada sesi ini.</summary>
         public int JumlahTahunDimuat => _daftar?.Count ?? 0;
@@ -462,7 +471,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public string TahunTerakhirIdmTampil => _hasil == null
             ? IdmTeks.Kosong
-            : _hasil.Ringkasan.Tahun.ToString(CultureInfo.InvariantCulture);
+            : TahunTerbitTerbaru.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>
         /// Kalimat yang menyebut berapa tahun IDM yang dimuat, rentangnya, dan
@@ -501,7 +510,8 @@ namespace SuDesApp.Wpf.ViewModels
 
             string rentang = tahun[0].ToString(CultureInfo.InvariantCulture) + "–" + terakhir;
             return tahun.Count.ToString(CultureInfo.InvariantCulture) + " tahun dimuat (" + rentang
-                   + "). Rincian indikator di halaman ini dari tahun terakhir, " + terakhir + ".";
+                   + "). Tahun terakhir terbit " + terakhir
+                   + " — pilih tahun lain untuk melihat rinciannya.";
         }
 
         /// <summary>True bila ada daftar tahun untuk ditampilkan di bawah ringkasan.</summary>
@@ -569,7 +579,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// lewat seri baru sehingga tidak dihitung sebagai tahun yang kosong
         /// (lihat <see cref="PesanTahun"/>).
         /// </summary>
-        public bool AdaPesanTahun => _hasil != null && _hasil.Ringkasan.Tahun < _jam().Year;
+        public bool AdaPesanTahun => _hasil != null && TahunTerbitTerbaru < _jam().Year;
 
         public string PesanTahun
         {
@@ -577,7 +587,10 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 if (!AdaPesanTahun) return string.Empty;
 
-                int tampil = _hasil!.Ringkasan.Tahun;
+                // Patokannya tahun TERBIT terbaru, bukan tahun yang sedang dibuka:
+                // memilih tahun lama tidak boleh membuat tahun-tahun sesudahnya
+                // terbaca sebagai "belum diterbitkan".
+                int tampil = TahunTerbitTerbaru;
                 var belum = new List<string>();
                 for (int tahun = tampil + 1; tahun <= _jam().Year; tahun++)
                 {
@@ -692,6 +705,44 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>Buka halaman resmi terbitan pusat (JDIH Kemendesa PDT).</summary>
         public ICommand BukaTerbitanCommand { get; }
+
+        /// <summary>
+        /// Tampilkan rincian indikator untuk satu tahun yang sudah dimuat.
+        /// Parameter berisi tahun penilaian; tahun yang tidak ada pada daftar
+        /// diabaikan sehingga chip tahun lain tidak pernah menampilkan data kosong.
+        /// </summary>
+        public ICommand PilihTahunCommand { get; }
+
+        /// <summary>
+        /// Tahun penilaian yang rinciannya sedang tampil. Sama dengan tahun
+        /// terbaru setelah pemuatan, lalu berubah bila pengguna memilih chip
+        /// tahun lain.
+        /// </summary>
+        public int TahunDipilih => _hasil?.Ringkasan.Tahun ?? 0;
+
+        /// <summary>
+        /// Ganti tahun yang ditampilkan tanpa memuat ulang dari pusat: seluruh
+        /// tahun sudah ada di memori, jadi cukup pilih entri, isi ulang rincian
+        /// indikator, dan segarkan angka ringkasan. Rincian yang dicetak ke PDF
+        /// ikut mengikuti tahun yang sedang tampil.
+        /// </summary>
+        private void PilihTahun(int tahun)
+        {
+            if (_daftar is not { Count: > 0 } || _hasil == null) return;
+
+            var target = CariTahun(_daftar, tahun);
+            if (target == null || target.Ringkasan.Tahun == _hasil.Ringkasan.Tahun) return;
+
+            _hasil = target;
+
+            foreach (var chip in Riwayat)
+            {
+                chip.Ditampilkan = chip.Tahun == tahun;
+            }
+
+            IsiIndikator(target);
+            Segarkan();
+        }
 
         /// <summary>
         /// Buka tautan sumber resmi (dataset, peraturan, portal pusat) di peramban
@@ -950,6 +1001,14 @@ namespace SuDesApp.Wpf.ViewModels
         /// dipertahankan — urutan permintaan selalu dari tahun berjalan mundur,
         /// jadi itu salinan pertama yang diterima.
         /// </summary>
+        /// <summary>
+        /// Cari data satu tahun pada daftar yang sudah dimuat; null bila tahun itu
+        /// tidak termasuk. Chip tahun yang tidak ada di daftar tidak pernah dapat
+        /// dipilih, jadi rincian tidak mungkin berganti ke tahun kosong.
+        /// </summary>
+        internal static HasilIdm? CariTahun(IEnumerable<HasilIdm> semua, int tahun) =>
+            semua.FirstOrDefault(h => h.Ringkasan.Tahun == tahun);
+
         internal static List<HasilIdm> TahunUnik(IEnumerable<HasilIdm> semua) => semua
             .GroupBy(h => h.Ringkasan.Tahun)
             .Select(g => g.First())
@@ -1007,10 +1066,7 @@ namespace SuDesApp.Wpf.ViewModels
         {
             KosongkanKoleksi();
 
-            foreach (var baris in utama.Baris)
-            {
-                Indikator.Add(BarisTampil.Dari(baris));
-            }
+            IsiIndikator(utama);
 
             int tahunTerbaru = DeretTahunTerbaru(semua);
 
@@ -1036,6 +1092,30 @@ namespace SuDesApp.Wpf.ViewModels
                 .OrderBy(t => t.Tahun)
                 .ToList();
         }
+
+        /// <summary>
+        /// Ganti isi tabel indikator dengan baris milik satu tahun. Dipakai saat
+        /// data baru dipasang maupun saat pengguna memilih tahun lain pada daftar
+        /// chip — keduanya harus memperlihatkan indikator tahun yang sama dengan
+        /// angka ringkasan di atas tabel.
+        /// </summary>
+        private void IsiIndikator(HasilIdm utama)
+        {
+            Indikator.Clear();
+            foreach (var baris in utama.Baris)
+            {
+                Indikator.Add(BarisTampil.Dari(baris));
+            }
+        }
+
+        /// <summary>
+        /// Tahun terakhir yang datanya benar-benar terbit untuk desa ini. Dipakai
+        /// untuk semua keterangan tentang "tahun terbit" supaya kalimat itu tidak
+        /// ikut berubah ketika pengguna sedang membuka tahun yang lebih lama.
+        /// </summary>
+        private int TahunTerbitTerbaru => _daftar is { Count: > 0 }
+            ? DeretTahunTerbaru(_daftar)
+            : _hasil?.Ringkasan.Tahun ?? 0;
 
         /// <summary>Kalimat bawaan bila situs pusat tidak terjangkau tanpa pesan rinci.</summary>
         private const string AlasanJaringan =
@@ -1153,6 +1233,7 @@ namespace SuDesApp.Wpf.ViewModels
                          nameof(DimensiIndeksDesa2025), nameof(RincianSubDimensiIndeksDesa2025),
                          nameof(SumberIndeksDesa2025),
                          nameof(KodeDesaTampil), nameof(TahunTampil), nameof(SkorTampil),
+                         nameof(TahunDipilih),
                          nameof(JumlahTahunDimuat), nameof(TahunTerakhirIdmTampil),
                          nameof(RingkasanTahunDimuat), nameof(AdaRiwayatTahun),
                          nameof(StatusTampil), nameof(IksTampil), nameof(IkeTampil),
@@ -1373,18 +1454,51 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Satu tahun pada daftar kecil "tahun yang diterbitkan pusat".
-        /// <paramref name="Ditampilkan"/> menandai tahun yang rincian indikatornya
-        /// sedang terbuka (tahun terbaru), dan <paramref name="Terbaru"/> menandai
-        /// tahun terakhir yang datanya terbit — dua hal yang sama hari ini, tetapi
-        /// dipisah supaya tampilan tidak menebak.
+        /// Satu tahun pada daftar chip "tahun yang diterbitkan pusat". Chip ini
+        /// dapat diklik: memilih satu tahun mengganti rincian indikator yang
+        /// tampil tanpa memuat ulang dari pusat.
+        ///
+        /// <see cref="Ditampilkan"/> dapat berubah (tahun yang sedang dibuka) dan
+        /// memberi tahu tampilan lewat <see cref="ObservableObject"/>, sedangkan
+        /// <see cref="Terbaru"/> tetap menandai tahun terakhir yang terbit walau
+        /// pengguna sedang membuka tahun yang lebih lama.
         /// </summary>
-        public sealed record RiwayatTampil(
-            int Tahun,
-            string Skor,
-            string Status,
-            bool Ditampilkan = false,
-            bool Terbaru = false);
+        public sealed class RiwayatTampil : ObservableObject
+        {
+            private bool _ditampilkan;
+
+            // Parameter sengaja berhuruf besar di awal supaya pemanggil lama yang
+            // memakai argumen bernama (Ditampilkan:, Terbaru:) tetap sah.
+            public RiwayatTampil(
+                int Tahun,
+                string Skor,
+                string Status,
+                bool Ditampilkan = false,
+                bool Terbaru = false)
+            {
+                this.Tahun = Tahun;
+                this.Skor = Skor;
+                this.Status = Status;
+                _ditampilkan = Ditampilkan;
+                this.Terbaru = Terbaru;
+            }
+
+            public int Tahun { get; }
+
+            public string Skor { get; }
+
+            public string Status { get; }
+
+            /// <summary>Tahun terakhir yang datanya terbit — penanda "TERAKHIR".</summary>
+            public bool Terbaru { get; }
+
+            /// <summary>True bila rincian indikator tahun ini sedang tampil.</summary>
+            public bool Ditampilkan
+            {
+                get => _ditampilkan;
+                set => SetProperty(ref _ditampilkan, value);
+            }
+        }
 
         /// <summary>Tahun terbesar pada daftar hasil; 0 bila daftarnya kosong.</summary>
         private static int DeretTahunTerbaru(IEnumerable<HasilIdm> semua)
