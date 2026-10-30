@@ -20,6 +20,9 @@ public enum PdfImageEncoding
 public sealed class PdfImage
 {
     private byte[]? _rgba;
+    private byte[]? _alpha;
+    private int? _bits;
+    private double[]? _maskValues;
 
     public int Width { get; init; }
 
@@ -36,7 +39,21 @@ public sealed class PdfImage
 
     public bool Interpolate { get; init; }
 
-    public byte[]? Alpha { get; init; }
+    /// <summary>
+    /// Saluran alfa 8-bit (satu byte per piksel). Berasal dari /SMask dan baru
+    /// dihitung saat benar-benar diminta; pelukis membaca <see cref="SoftMask"/>.
+    /// </summary>
+    public byte[]? Alpha
+    {
+        get
+        {
+            if (_alpha is null && SoftMask is { } mask) _alpha = HitungAlfa(mask);
+            return _alpha;
+        }
+    }
+
+    /// <summary>Topeng lembut (/SMask) yang belum dijadikan larik alfa.</summary>
+    internal PdfImage? SoftMask { get; init; }
 
     public PdfColorSpace? ColorSpace { get; init; }
 
@@ -75,78 +92,146 @@ public sealed class PdfImage
         int width = Math.Max(1, Width);
         int height = Math.Max(1, Height);
         var rgba = new byte[width * height * 4];
-        int components = Math.Max(1, Components);
-        int bits = IsImageMask ? 1 : BitsPerComponent;
-        if (ExpectedBytes(width, height, components, bits) > Data.Length)
-        {
-            // Data lebih pendek dari yang seharusnya: pakai dugaan ukuran sampel.
-            bits = GuessBits(Data.Length, width, height, components);
-        }
 
+        // Larik nilai dipakai ulang tiap piksel; mengalokasikannya di dalam
+        // perulangan berarti tiga juta alokasi untuk satu pindaian A4.
+        var values = new double[Math.Max(1, Components)];
         for (int y = 0; y < height; y++)
         {
+            int baris = y * width;
             for (int x = 0; x < width; x++)
             {
-                int destination = (y * width + x) * 4;
-                if (IsImageMask)
-                {
-                    double sample = ReadSample(x, y, width, 1);
-                    bool paint = Decode is { Length: >= 2 } ? sample >= Decode[0] : sample >= 0.5;
-                    rgba[destination] = 255;
-                    rgba[destination + 1] = 255;
-                    rgba[destination + 2] = 255;
-                    rgba[destination + 3] = (byte)(paint ? 255 : 0);
-                    continue;
-                }
-
-                var values = new double[components];
-                for (int c = 0; c < components; c++)
-                {
-                    double sample = ReadSample(x * components + c, y, width * components, bits);
-                    if (Decode is { Length: >= 2 } && c * 2 + 1 < Decode.Length)
-                    {
-                        sample = Decode[c * 2] + sample * (Decode[c * 2 + 1] - Decode[c * 2]);
-                    }
-
-                    values[c] = sample;
-                }
-
-                var space = ColorSpace ?? (components switch
-                {
-                    1 => PdfColorSpace.DeviceGray,
-                    4 => PdfColorSpace.DeviceCmyk,
-                    _ => PdfColorSpace.DeviceRgb
-                });
-
-                space.ToRgb(values, out double red, out double green, out double blue);
+                int destination = (baris + x) * 4;
+                ReadPixel(x, y, values, out double red, out double green, out double blue, out byte alpha);
                 rgba[destination] = ToByte(red);
                 rgba[destination + 1] = ToByte(green);
                 rgba[destination + 2] = ToByte(blue);
-
-                byte alpha = 255;
-                if (Alpha is not null && y * width + x < Alpha.Length)
-                {
-                    alpha = Alpha[y * width + x];
-                }
-
-                if (ColorKeyMask is { Length: >= 2 } key)
-                {
-                    bool masked = true;
-                    for (int c = 0; c < components && c * 2 + 1 < key.Length; c++)
-                    {
-                        int value = (int)Math.Round(values[c] * 255);
-                        if (value < key[c * 2] || value > key[c * 2 + 1]) masked = false;
-                    }
-
-                    if (masked) alpha = 0;
-                }
-
                 rgba[destination + 3] = alpha;
             }
         }
 
         _rgba = rgba;
         return rgba;
+    }
+
+    /// <summary>Banyak bit tiap komponen, dengan dugaan bila data terpotong.</summary>
+    private int Bits => _bits ??= HitungBits();
+
+    private int HitungBits()
+    {
+        int width = Math.Max(1, Width);
+        int height = Math.Max(1, Height);
+        int components = Math.Max(1, Components);
+        int bits = IsImageMask ? 1 : BitsPerComponent;
+        if (ExpectedBytes(width, height, components, bits) > Data.Length)
+        {
+            // Data lebih pendek dari yang seharusnya: pakai dugaan ukuran sampel.
+            return GuessBits(Data.Length, width, height, components);
+        }
+
+        return bits;
+    }
+
+    /// <summary>
+    /// Warna satu piksel gambar (0..1, tidak pramultiplied). Satu-satunya tempat
+    /// kebijakan /Decode, ruang warna, topeng /Mask, dan alfa bertemu, dipakai
+    /// baik oleh konversi RGBA utuh maupun oleh pengambil sampel langsung.
+    /// </summary>
+    internal void ReadPixel(
+        int x, int y, double[] values, out double red, out double green, out double blue, out byte alpha)
+    {
+        int width = Math.Max(1, Width);
+        if (IsImageMask)
+        {
+            double coverage = ReadSample(x, y, width, 1);
+            bool paint = Decode is { Length: >= 2 } ? coverage >= Decode[0] : coverage >= 0.5;
+            red = green = blue = 1;
+            alpha = (byte)(paint ? 255 : 0);
+            return;
+        }
+
+        int components = Math.Max(1, Components);
+        int bits = Bits;
+        int rowWidth = width * components;
+        for (int c = 0; c < components; c++)
+        {
+            double sample = ReadSample(x * components + c, y, rowWidth, bits);
+            if (Decode is { Length: >= 2 } && c * 2 + 1 < Decode.Length)
+            {
+                sample = Decode[c * 2] + sample * (Decode[c * 2 + 1] - Decode[c * 2]);
+            }
+
+            values[c] = sample;
+        }
+
+        var space = ColorSpace ?? (components switch
+        {
+            1 => PdfColorSpace.DeviceGray,
+            4 => PdfColorSpace.DeviceCmyk,
+            _ => PdfColorSpace.DeviceRgb
+        });
+        space.ToRgb(values, out red, out green, out blue);
+
+        alpha = 255;
+        int index = y * width + x;
+        if (_alpha is { Length: > 0 } alfa)
+        {
+            if (index < alfa.Length) alpha = alfa[index];
+        }
+        else if (SoftMask is { } mask)
+        {
+            alpha = mask.GrayAt(x, y, width, Math.Max(1, Height));
+        }
+
+        if (ColorKeyMask is { Length: >= 2 } key)
+        {
+            bool masked = true;
+            for (int c = 0; c < components && c * 2 + 1 < key.Length; c++)
+            {
+                int value = (int)Math.Round(values[c] * 255);
+                if (value < key[c * 2] || value > key[c * 2 + 1]) masked = false;
+            }
+
+            if (masked) alpha = 0;
+        }
+    }
+
+    /// <summary>Kelegapan topeng lembut pada satu piksel gambar induk.</summary>
+    internal byte GrayAt(int x, int y, int parentWidth, int parentHeight)
+    {
+        int width = Math.Max(1, Width);
+        int height = Math.Max(1, Height);
+
+        // Topeng biasanya seukuran gambar induk; bila tidak, ambil piksel terdekat.
+        int mx = width == parentWidth ? x : (int)((long)x * width / Math.Max(1, parentWidth));
+        int my = height == parentHeight ? y : (int)((long)y * height / Math.Max(1, parentHeight));
+        _maskValues ??= new double[Math.Max(1, Components)];
+        ReadPixel(
+            Math.Clamp(mx, 0, width - 1),
+            Math.Clamp(my, 0, height - 1),
+            _maskValues,
+            out double red,
+            out double green,
+            out double blue,
+            out _);
+
+        return (byte)((ToByte(red) * 30 + ToByte(green) * 59 + ToByte(blue) * 11) / 100);
+    }
+
+    /// <summary>Larik alfa utuh dari topeng lembut, satu byte per piksel.</summary>
+    private static byte[] HitungAlfa(PdfImage mask)
+    {
+        byte[] rgba = mask.ToRgba();
+        var alpha = new byte[Math.Max(1, mask.Width) * Math.Max(1, mask.Height)];
+        for (int i = 0; i < alpha.Length; i++)
+        {
+            int source = i * 4;
+            alpha[i] = source + 3 < rgba.Length
+                ? (byte)((rgba[source] * 30 + rgba[source + 1] * 59 + rgba[source + 2] * 11) / 100)
+                : (byte)255;
+        }
+
+        return alpha;
     }
 
     private static int ExpectedBytes(int width, int height, int components, int bits) =>
@@ -209,6 +294,96 @@ public sealed class PdfImage
     }
 
     private static byte ToByte(double value) => (byte)Math.Clamp((int)Math.Round(value * 255), 0, 255);
+}
+
+/// <summary>
+/// Pengambil warna gambar pada satu titik pecahan dengan interpolasi bilinear.
+/// Membaca sampel mentah langsung bila larik RGBA belum tersedia, sehingga
+/// gambar besar yang tampil kecil (kop surat 1507×2050 px menjadi ±90 px) tidak
+/// perlu dikonversi utuh lebih dulu.
+/// </summary>
+internal sealed class PdfImageSampler
+{
+    private readonly PdfImage _image;
+    private readonly byte[]? _rgba;
+    private readonly double[] _values;
+
+    public PdfImageSampler(PdfImage image, byte[]? rgba)
+    {
+        _image = image;
+        _rgba = rgba;
+        _values = new double[Math.Max(1, image.Components)];
+    }
+
+    public void Sample(
+        double x, double y, out double red, out double green, out double blue, out double alpha)
+    {
+        // Ruang gambar PDF berawal di kiri-bawah, sedangkan baris byte PNG/JPEG
+        // berawal dari sisi atas. Pemanggil sudah membalik sumbu Y.
+        double fx = x - 0.5;
+        double fy = y - 0.5;
+        int x0 = (int)Math.Floor(fx);
+        int y0 = (int)Math.Floor(fy);
+        double tx = fx - x0;
+        double ty = fy - y0;
+
+        double sumR = 0, sumG = 0, sumB = 0, sumA = 0;
+        for (int dy = 0; dy <= 1; dy++)
+        {
+            double wy = dy == 0 ? 1.0 - ty : ty;
+            if (wy <= 0) continue;
+            int py = Math.Clamp(y0 + dy, 0, _image.Height - 1);
+            for (int dx = 0; dx <= 1; dx++)
+            {
+                double wx = dx == 0 ? 1.0 - tx : tx;
+                if (wx <= 0) continue;
+                int px = Math.Clamp(x0 + dx, 0, _image.Width - 1);
+                double w = wx * wy;
+
+                Read(px, py, out double r, out double g, out double b, out double a);
+
+                // Warna dijumlahkan dalam bentuk pramultiplied supaya piksel
+                // transparan tidak menarik warna ke arah hitam.
+                sumR += w * r * a;
+                sumG += w * g * a;
+                sumB += w * b * a;
+                sumA += w * a;
+            }
+        }
+
+        if (sumA <= 0.0001)
+        {
+            red = green = blue = alpha = 0;
+            return;
+        }
+
+        red = sumR / sumA;
+        green = sumG / sumA;
+        blue = sumB / sumA;
+        alpha = sumA;
+    }
+
+    private void Read(int x, int y, out double red, out double green, out double blue, out double alpha)
+    {
+        if (_rgba is { } rgba)
+        {
+            int index = (y * _image.Width + x) * 4;
+            if (index + 3 >= rgba.Length)
+            {
+                red = green = blue = alpha = 0;
+                return;
+            }
+
+            red = rgba[index] / 255.0;
+            green = rgba[index + 1] / 255.0;
+            blue = rgba[index + 2] / 255.0;
+            alpha = rgba[index + 3] / 255.0;
+            return;
+        }
+
+        _image.ReadPixel(x, y, _values, out red, out green, out blue, out byte kelegapan);
+        alpha = kelegapan / 255.0;
+    }
 }
 
 /// <summary>Kodek gambar terkompresi (JPEG/JPEG2000) yang dipasang lapisan luar.</summary>
@@ -301,15 +476,14 @@ public static class PdfImages
             components = dict.GetNameValue("ColorSpace") == "DeviceRGB" ? 3 : 1;
         }
 
-        byte[]? alpha = null;
+        // Topeng lembut hanya diurai; larik alfanya dibuat bila ada yang meminta
+        // (penulis PDF atau gambar yang tampil sebesar aslinya). Mengonversi
+        // seluruh topeng untuk kop surat yang tampil ±90 px adalah kerja sia-sia.
+        PdfImage? softMaskImage = null;
         var softMask = document.ResolveStream(dict.Raw("SMask"));
         if (softMask is not null)
         {
-            var maskImage = Decode(document, softMask);
-            if (maskImage is not null)
-            {
-                alpha = GrayAlpha(maskImage);
-            }
+            softMaskImage = Decode(document, softMask);
         }
 
         ushort[]? colorKey = null;
@@ -343,7 +517,7 @@ public static class PdfImages
             Encoding = encoding,
             IsImageMask = isMask,
             Interpolate = dict.GetBool("Interpolate") ?? false,
-            Alpha = alpha,
+            SoftMask = softMaskImage,
             ColorSpace = colorSpace,
             Decode = decode,
             BitsPerComponent = Math.Clamp(bitsPerComponent, 1, 16),
@@ -365,18 +539,4 @@ public static class PdfImages
         return null;
     }
 
-    private static byte[] GrayAlpha(PdfImage mask)
-    {
-        byte[] rgba = mask.ToRgba();
-        var alpha = new byte[mask.Width * mask.Height];
-        for (int i = 0; i < alpha.Length; i++)
-        {
-            int source = i * 4;
-            alpha[i] = source + 1 < rgba.Length
-                ? (byte)((rgba[source] * 30 + rgba[source + 1] * 59 + rgba[source + 2] * 11) / 100)
-                : (byte)255;
-        }
-
-        return alpha;
-    }
 }
