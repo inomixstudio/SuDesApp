@@ -19,9 +19,25 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Versi,
-    [Parameter(Mandatory = $true)][string]$VersiLama,
+
+    # Satu atau beberapa versi asal yang BENAR-BENAR dibandingkan. Setiap versi
+    # memerlukan folder publish-nya sendiri, dan patch berisi gabungan berkas yang
+    # berbeda dari versi mana pun. Karena aplikasi hanya mengganti berkas yang isinya
+    # berbeda dari patch.json (tidak pernah memeriksa isi berkas lama), memakai versi
+    # asal TERTUA sebagai pembanding sudah melayani semua versi sesudahnya: setiap
+    # berkas yang berubah di versi antara pasti ikut berbeda dari versi tertua itu.
+    [Parameter(Mandatory = $true)][string[]]$VersiLama,
+
     [Parameter(Mandatory = $true)][string]$PublishBaru,
-    [Parameter(Mandatory = $true)][string]$PublishLama,
+
+    # Folder publish untuk setiap versi asal, urutannya sama dengan -VersiLama.
+    [Parameter(Mandatory = $true)][string[]]$PublishLama,
+
+    # Versi tambahan yang boleh memakai tambalan ini meski paketnya tidak dibandingkan
+    # (mis. 2.8.0 dan 2.9.0 saat pembandingnya 2.7.2). Hanya diisi bila yakin seluruh
+    # berkas yang berubah pada versi itu tercakup pembanding yang lebih tua.
+    [string[]]$DariVersi = @(),
+
     [string]$Ringkasan,
     [string]$Keluaran = 'artifacts',
     [switch]$Besar,
@@ -32,11 +48,24 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $Versi = $Versi.Trim().TrimStart('v', 'V')
-$VersiLama = $VersiLama.Trim().TrimStart('v', 'V')
+# Dipisah juga per koma: argumen dari shell (termasuk `-File`) tidak dipecah
+# PowerShell seperti literal `-VersiLama a b`.
+$VersiLama = @($VersiLama | ForEach-Object { $_ -split ',' } |
+    ForEach-Object { $_.Trim().TrimStart('v', 'V') } | Where-Object { $_.Length -gt 0 })
+$DariVersi = @($DariVersi | ForEach-Object { $_ -split ',' } |
+    ForEach-Object { $_.Trim().TrimStart('v', 'V') } | Where-Object { $_.Length -gt 0 })
+$PublishLama = @($PublishLama | ForEach-Object { $_ -split ',' } |
+    ForEach-Object { $_.Trim().TrimEnd('\', '/') } | Where-Object { $_.Length -gt 0 })
 if ($Versi -notmatch '^\d+\.\d+\.\d+$') { throw "Versi tidak valid: '$Versi' (harus x.y.z)" }
+if ($VersiLama.Count -eq 0) { throw '-VersiLama wajib diisi minimal satu versi.' }
+if ($PublishLama.Count -ne $VersiLama.Count) {
+    throw ("Jumlah folder -PublishLama ({0}) harus sama dengan jumlah -VersiLama ({1})." -f $PublishLama.Count, $VersiLama.Count)
+}
 
 if (-not (Test-Path -LiteralPath $PublishBaru)) { throw "Folder publish baru tidak ada: $PublishBaru" }
-if (-not (Test-Path -LiteralPath $PublishLama)) { throw "Folder publish lama tidak ada: $PublishLama" }
+foreach ($folder in $PublishLama) {
+    if (-not (Test-Path -LiteralPath $folder)) { throw "Folder publish lama tidak ada: $folder" }
+}
 New-Item -ItemType Directory -Force -Path $Keluaran | Out-Null
 
 # Berkas data/pengaturan pengguna tidak pernah ikut diganti pembaruan. Daftar ini
@@ -73,25 +102,35 @@ function Peta-Berkas([string]$akar) {
 }
 
 Write-Host ''
-Write-Host "== Buat tambalan SuDesApp $VersiLama -> $Versi ==" -ForegroundColor Cyan
+Write-Host ("== Buat tambalan SuDesApp {0} -> {1} ==" -f ($VersiLama -join ', '), $Versi) -ForegroundColor Cyan
 
 $berkasBaru = Peta-Berkas $PublishBaru
-$berkasLama = Peta-Berkas $PublishLama
-
+$petaLama = [System.Collections.Generic.List[hashtable]]::new()
+for ($i = 0; $i -lt $VersiLama.Count; $i++) {
+    $peta = Peta-Berkas $PublishLama[$i]
+    $petaLama.Add($peta)
+    Write-Host ("Berkas publish {0}: {1} berkas" -f $VersiLama[$i], $peta.Count)
+}
 Write-Host ("Berkas publish baru: {0} berkas" -f $berkasBaru.Count)
-Write-Host ("Berkas publish lama: {0} berkas" -f $berkasLama.Count)
 
 $berubah = @()
 $dihapus = @()
 foreach ($rel in $berkasBaru.Keys) {
     $baru = $berkasBaru[$rel]
-    $adaLama = $berkasLama.ContainsKey($rel)
-    if (-not $adaLama -or $berkasLama[$rel].Sha256 -ne $baru.Sha256) {
+    # Berkas ikut tambalan bila isinya berbeda dari SALAH SATU versi asal. Gabungan
+    # itulah yang membuat satu patch bisa melayani beberapa versi terpasang sekaligus.
+    $berbeda = $false
+    foreach ($peta in $petaLama) {
+        if (-not $peta.ContainsKey($rel) -or $peta[$rel].Sha256 -ne $baru.Sha256) { $berbeda = $true; break }
+    }
+    if ($berbeda) {
         $berubah += [pscustomobject]@{ Path = $rel; Sha256 = $baru.Sha256; Ukuran = $baru.Ukuran }
     }
 }
-foreach ($rel in $berkasLama.Keys) {
-    if (-not $berkasBaru.ContainsKey($rel)) { $dihapus += $rel }
+foreach ($peta in $petaLama) {
+    foreach ($rel in $peta.Keys) {
+        if (-not $berkasBaru.ContainsKey($rel) -and $dihapus -notcontains $rel) { $dihapus += $rel }
+    }
 }
 
 $terlindungi = @($berubah | Where-Object { Dilindungi $_.Path })
@@ -173,9 +212,12 @@ if ($jenis -eq 'kecil') {
     $daftarHapusJson = @($dihapus | Sort-Object)
 }
 
+# Diurutkan menaik agar `dariVersi` dan catatan rilis mudah dibaca.
+$semuaDariVersi = @($VersiLama + $DariVersi | Select-Object -Unique |
+    Sort-Object { if ($_ -match '^\d+(\.\d+)*$') { [version]$_ } else { [version]'0.0.0' } })
 $manifest = [ordered]@{
     versi = $Versi
-    dariVersi = @($VersiLama)
+    dariVersi = $semuaDariVersi
     jenis = $jenis
     ringkasan = $daftarRingkasan
     berkasPatch = $(if ($jenis -eq 'kecil') { $namaPatch } else { '' })
@@ -183,7 +225,7 @@ $manifest = [ordered]@{
     berkas = $daftarBerkasJson
     berkasDihapus = $daftarHapusJson
     tanggal = (Get-Date).ToString('s')
-    catatan = $(if ($jenis -eq 'kecil') { "Tambalan $VersiLama -> $Versi ($($berubah.Count) berkas)" } else { "Pembaruan besar: $($alasanBesar -join ', ')" })
+    catatan = $(if ($jenis -eq 'kecil') { "Tambalan dari $($VersiLama -join ', ') -> $Versi ($($berubah.Count) berkas); berlaku juga untuk $($semuaDariVersi -join ', ')" } else { "Pembaruan besar: $($alasanBesar -join ', ')" })
 }
 
 $pathManifest = Join-Path $Keluaran 'patch.json'

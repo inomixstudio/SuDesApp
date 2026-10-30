@@ -11,7 +11,7 @@ menu **Pembaruan** dan halaman **Catatan Rilis** di dalam aplikasi.
 | Ukuran unduhan | ratusan KB – beberapa MB | ± 100 MB |
 | Cara pasang | berkas diganti otomatis, aplikasi dibuka ulang | installer Inno Setup dijalankan |
 | Yang bisa diubah | surat, teks, tampilan, logika aplikasi | apa pun (termasuk dependensi/runtime baru) |
-| Syarat | versi terpasang = versi asal tambalan (`dariVersi`) | selalu bisa |
+| Syarat | versi terpasang tercantum di `dariVersi` tambalan | selalu bisa |
 
 Aplikasi memilih sendiri: bila rilis menyertakan `patch.json`, versi terpasang cocok,
 dan folder aplikasi bisa ditulis → pembaruan kecil. Selain itu → installer penuh.
@@ -57,8 +57,9 @@ diunduh ulang bila rilis menyertakan SHA-256 untuk memverifikasinya.
    - membuat zip portable + installer Inno Setup;
    - menandatangani `SuDesApp.exe` dan installer dengan Authenticode
      (sertifikat dari secret — lihat [`TANDA-TANGAN-RILIS.md`](TANDA-TANGAN-RILIS.md));
-   - mengunduh zip portable rilis sebelumnya, mengekstraknya, lalu membandingkan
-     berkas (SHA-256) dengan hasil publish baru;
+   - memakai zip portable **tag tertua** yang lebih rendah dari versi ini sebagai
+     pembanding (dibangun dari tag bila rilisnya tidak menyertakan zip), lalu
+     membandingkan berkas (SHA-256) dengan hasil publish baru;
    - menulis `patch.json` + `patch-<versi>.zip` berisi **hanya berkas yang berubah**;
    - mengunggah `SuDesApp_<versi>_Setup.exe`, zip portable, `patch.json`, dan
      `patch-<versi>.zip` sebagai aset rilis, ditambah berkas `.sha256` untuk
@@ -86,6 +87,26 @@ dotnet publish SuDesApp.Wpf/SuDesApp.Wpf.csproj -c Release -r win-x64 --self-con
 
 # 3. Unggah ke halaman rilis GitHub bersama installer & zip portable
 ```
+
+### Satu tambalan untuk beberapa versi asal
+
+Isi tambalan tidak bergantung pada versi asal, hanya pada **isi berkas** yang
+berbeda dari pembandingnya. Karena itu pembanding tertua sekaligus melayani semua
+versi sesudahnya: berkas yang berubah di 2.8.0 atau 2.9.0 pasti juga berbeda dari
+2.7.2. Contoh satu tambalan untuk 2.7.2 dan seluruh versi sesudahnya:
+
+```powershell
+# Zip/pohon publish versi tertua; dibangun dari tag bila rilisnya tak punya zip
+./Tools/siapkan-pembanding.ps1 -Versi 2.7.2 -SimpanPublish
+
+./Tools/publish-release.ps1 -Version 2.10.1 -VersiLama 2.7.2 `
+    -DariVersi 2.8.0,2.9.0,2.10.0
+```
+
+`dariVersi` yang ditulis ke `patch.json` adalah gabungan `-VersiLama` dan
+`-DariVersi`. Aplikasi 2.8.0/2.9.0 mencocokkan versinya **persis** dengan daftar itu,
+jadi versi yang pernah terbit harus dicantumkan sendiri — tambalan tidak menebak
+nomor versi.
 
 `publish-release.ps1` bisa sekaligus membuat tambalan:
 
@@ -119,7 +140,7 @@ Ambang itu bisa disetel saat memanggil skrip. Untuk perubahan arsitektur
 ```json
 {
   "versi": "2.5.1",
-  "dariVersi": ["2.5.0"],
+  "dariVersi": ["2.5.0", "2.5.1"],
   "jenis": "kecil",
   "ringkasan": ["Perbaikan cetak surat template", "Rapikan menu utama"],
   "berkasPatch": "patch-2.5.1.zip",
@@ -127,21 +148,22 @@ Ambang itu bisa disetel saat memanggil skrip. Untuk perubahan arsitektur
   "berkas": [ { "path": "SuDesApp.Core.dll", "sha256": "…", "ukuran": 812345 } ],
   "berkasDihapus": ["berkas-lama.dll"],
   "tanggal": "2026-09-19T10:00:00",
-  "catatan": "Tambalan 2.5.0 -> 2.5.1 (3 berkas)"
+  "catatan": "Tambalan dari 2.4.3 -> 2.5.1 (3 berkas); berlaku juga untuk 2.4.3, 2.5.0, 2.5.1"
 }
 ```
 
-`dariVersi` memuat versi yang boleh memakai tambalan ini. Pengguna yang melompati versi
-(mis. dari 2.4.3 langsung ke 2.5.1) diarahkan ke installer penuh agar isi berkasnya
-pasti cocok. Bila ingin melayani lompatan versi, buat tambalan dengan
-`-VersiLama 2.4.3` (diff terhadap rilis yang lebih tua).
+`dariVersi` memuat versi yang boleh memakai tambalan ini, dicocokkan **persis** oleh
+`TambalanInfo.CocokDenganVersiTerpasang`. Isinya adalah pembanding yang benar-benar
+dibandingkan (`-VersiLama`) ditambah versi yang dinyatakan tercakup (`-DariVersi`).
+Aplikasi memilih pembaruan kecil hanya bila versi terpasang ada di daftar itu; versi
+lain memakai installer penuh, dan itu tetap jalan tanpa melewati versi perantara.
 
-Pembanding tambalan di CI adalah **tag tertinggi di bawah versi rilis** (untuk 2.10.1
-berarti `v2.10.0`), bukan versi yang kebetulan terpasang di komputer pengguna — jadi
-tag rilis sebelumnya harus sudah ada di origin sebelum workflow Release berjalan.
-Pengguna dengan versi di bawah baseline tidak perlu melewati versi perantara:
-installer rilis terbaru sudah memuat seluruh isi baseline beserta perbaikannya, dan
-itulah yang dipakai aplikasi ketika `dariVersi` tidak cocok.
+Pembanding tambalan di CI adalah **tag tertua di bawah versi rilis** (untuk 2.10.1
+berarti `v2.7.2`), bukan tag tepat sebelumnya, sehingga himpunan perubahannya mencakup
+seluruh versi sesudahnya — pengguna 2.8.x/2.9.x tidak perlu memasang 2.10.0 lebih
+dulu. Bila rilis lama tidak menyertakan zip portable, `release.yml` membangunnya dari
+tag lewat `Tools/siapkan-pembanding.ps1`. Tag rilis lama tetap harus ada di origin
+sebelum workflow Release berjalan.
 
 ## Pengamanan yang berlaku di aplikasi
 
