@@ -142,6 +142,15 @@ di clone penulis belum diaktifkan atau commit dibuat dengan `--no-verify`.
 | `docs/` | Dokumentasi kebijakan & API (tautan di bawah) |
 | `Bawaan/`, `Templates/`, `Resources/`, `installer/`, `Tools/` | Contoh bawaan aplikasi (JSON), template formulir, sumber daya, installer, alat bantu |
 
+## Lisensi
+
+Kode sumber SuDesApp dilisensikan **MIT** — lihat [`LICENSE`](LICENSE).
+Penggunaan aplikasi untuk pemerintahan desa mengikuti ketentuan langganan dan
+lisensi pada [`docs/langganan-dan-lisensi.md`](docs/langganan-dan-lisensi.md)
+serta [`docs/syarat-ketentuan.md`](docs/syarat-ketentuan.md). Nama, logo, dan
+identitas Sumberjaya Dev/PT Duta Publik tidak ikut dilisensikan untuk dipakai
+sebagai merek produk turunan.
+
 ## Dokumentasi
 
 - [`docs/api-desa.md`](docs/api-desa.md) — API desa untuk sistem luar

@@ -179,6 +179,40 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.10.0 (30 Oktober 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Fitur Baru — Excel Mandiri: SudesExPlus", new List<string>
+                        {
+                            "Seluruh ekspor dan impor Excel kini ditangani SudesExPlus, pustaka .xlsx milik aplikasi sendiri. EPPlus beserta permintaan lisensi komersialnya dihapus, dan register tahunan, laporan warga, arsip APBDes, serta ekspor riwayat aktivitas tetap berjalan seperti sebelumnya.",
+                            "Berkas Excel dari pihak lain bisa dibuka lalu disimpan ulang tanpa kehilangan tampilan: nama dan ukuran huruf, tebal/miring/garis bawah, warna huruf, isian latar, keempat sisi garis tepi, perataan, bungkus teks, format angka, lebar kolom, tinggi baris, sel gabungan, dan panel beku ikut dipertahankan — termasuk warna tema Excel yang diterjemahkan ke warna setara.",
+                            "Rumus sel kini didukung: sel dan rentang punya Formula, rumus ditulis bersama nilai terakhirnya, dan rumus bersama (shared) yang dipakai Excel saat satu rumus disalin ke banyak baris dibaca ulang dengan rujukan yang digeser sesuai barisnya."
+                        }),
+                        new CatatanRilisSubSection("Fitur Baru — Website Desa dan Backend API", new List<string>
+                        {
+                            "Backend SuDesApp.Api dan antarmuka Blazor (SuDesApp.Ui) kini tersedia untuk browser: Formulir Warga di /layanan-online dapat diisi tanpa akun, permintaannya masuk antrean operator yang sama dengan kiriman API desa, dan halaman Register Surat serta Data Warga membaca database desa yang sama dengan desktop.",
+                            "Menu web mengikuti sidebar desktop — BUAT SURAT, FORMULIR, DATA DESA, DATA WARGA, PENGATURAN, LANGGANAN, dan BANTUAN — dengan akordeon yang sama, sehingga operator yang berpindah antara aplikasi dan browser menemukan menu di tempat yang sama.",
+                            "Halaman Layanan Online pada desktop tetap menerima permintaan dari website dan API; kanal WhatsApp serta Google Form/Sheet tetap tidak dipakai lagi."
+                        }),
+                        new CatatanRilisSubSection("Fitur Baru — Tahun IDM Bisa Dibuka Satu per Satu", new List<string>
+                        {
+                            "Chip tahun pada halaman IDM kini bisa diklik: memilih satu tahun langsung menampilkan skor, status, dan rincian indikator tahun itu, tanpa memuat ulang dari situs pusat. Tahun terakhir tetap menjadi pilihan awal saat halaman dibuka, dan penanda TERBARU tidak ikut berpindah.",
+                            "Ringkasan dan PDF laporan mengikuti tahun yang sedang dibuka, sedangkan keterangan tahun terbit tetap menyebut tahun terbaru agar tidak tertukar dengan tahun lama."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Pratinjau dan Cetak PDF", new List<string>
+                        {
+                            "Pratinjau PDF memakai mesin SudesPdf sendiri: huruf tidak lagi pecah atau bertumpuk, halaman pindai CCITT tampil benar, dan hasil cetak sama dengan yang terlihat di layar. PDF hasil versi lama tetap bisa dibuka.",
+                            "Jarak antara garis kop dan judul surat dilonggarkan, gambar Garuda pada naskah Perdes kini benar-benar di tengah, dan paragraf Perdes memakai perataan rata kiri-kanan.",
+                            "Cetak Daftar Hadir menempatkan kop dan judul hanya di halaman pertama, sementara baris kepala tabel tetap berulang di setiap halaman. Pratinjau permohonan Rekening Koran juga bisa dibuka sebelum form disimpan."
+                        }),
+                        new CatatanRilisSubSection("Perbaikan — Antarmuka", new List<string>
+                        {
+                            "Teks tooltip kini mengikuti tema dan terbaca di tema terang maupun gelap, termasuk tooltip pada tombol berwarna.",
+                            "Ikon di dalam halaman fitur memakai set glyph yang sama dengan menu utama — tidak ada lagi glyph kotak atau ikon ganda — dan ukuran huruf navigasi diseragamkan.",
+                            "Kolom tanggal pada form isian menyisipkan tanda \"-\" sendiri saat mengetik, sehingga pengguna cukup mengetik angka dan hasilnya langsung berbentuk 01-01-1990."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.9.0 (29 Oktober 2026)",
                     new List<CatatanRilisSubSection>
                     {
