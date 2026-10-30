@@ -53,7 +53,10 @@ diunduh ulang bila rilis menyertakan SHA-256 untuk memverifikasinya.
      berkas (SHA-256) dengan hasil publish baru;
    - menulis `patch.json` + `patch-<versi>.zip` berisi **hanya berkas yang berubah**;
    - mengunggah `SuDesApp_<versi>_Setup.exe`, zip portable, `patch.json`, dan
-     `patch-<versi>.zip` sebagai aset rilis.
+     `patch-<versi>.zip` sebagai aset rilis, ditambah berkas `.sha256` untuk
+     installer dan zip portable agar unduhan bisa diperiksa;
+   - berhenti dengan galat bila Inno Setup tidak terpasang, bukan menerbitkan
+     rilis tanpa installer.
 
 Bila langkah tambalan dilewati (belum ada rilis sebelumnya, atau gagal), rilis tetap
 terbit dan aplikasi otomatis memakai installer penuh — tidak ada pengguna yang

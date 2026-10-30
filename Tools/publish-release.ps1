@@ -4,6 +4,12 @@ param(
     [string]$Version,
     [switch]$SkipInstaller,
 
+    # Tuntut installer benar-benar terbentuk. Tanpa saklar ini, ISCC.exe yang
+    # tidak ditemukan hanya memunculkan peringatan dan rilis tetap terbit tanpa
+    # installer (perilaku lama). Alur CI memakai saklar ini supaya rilis yang
+    # kehilangan installer menggagalkan job, bukan lolos diam-diam.
+    [switch]$WajibInstaller,
+
     # Paket yang memang tanpa kredensial Google (mis. uji internal) tetap boleh dibuat,
     # tetapi harus disebutkan terus terang di sini — gerbang kredensial Google di
     # bawah akan menolak publish yang tanpa kredensial tertanam.
@@ -145,6 +151,19 @@ function KirimApiGitHub {
         } catch { }
         throw ('GitHub API ' + $Metode + ' ' + $Uri + ' gagal (HTTP ' + $kode + '): ' + $galat.Exception.Message + ' ' + $rinci)
     }
+}
+
+# Tulis berkas sisi .sha256 berformat `sha256sum -c`: dua spasi antara digest dan
+# nama, akhir baris LF (bukan CRLF Windows). Berkas ini ikut diunggah sebagai
+# aset rilis supaya pengguna bisa memeriksa unduhan tanpa menyalin nilai dari
+# catatan rilis, dan `sha256sum -c` di Linux/macOS langsung berhasil.
+function TulisSidikJari {
+    param([string]$Berkas)
+    $hash = (Get-FileHash -LiteralPath $Berkas -Algorithm SHA256).Hash.ToLowerInvariant()
+    $jalur = $Berkas + '.sha256'
+    $baris = "{0}  {1}`n" -f $hash, (Split-Path -Leaf $Berkas)
+    [IO.File]::WriteAllText($jalur, $baris, [Text.Encoding]::ASCII)
+    return $jalur
 }
 
 # Unduh zip portable rilis lama dari GitHub sebagai pembanding tambalan - supaya
@@ -320,11 +339,18 @@ Write-Host ("Portable  : " + $zipPath) -ForegroundColor Green
 
 $setup = $null
 if (-not $SkipInstaller) {
-    $iscc = @(
-        "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-        "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
-        "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
-    ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    # Cari folder "Inno Setup <versi>" apa pun, bukan hanya 6: paket choco dan
+    # pemasang resmi bisa memakai folder bernomor lain, dan jalur tetap yang
+    # ditulis tangan membuat installer diam-diam tidak dibuat setelah pembaruan.
+    $iscc = $null
+    foreach ($akar in @("${env:ProgramFiles(x86)}", $env:ProgramFiles, (Join-Path $env:LOCALAPPDATA 'Programs'))) {
+        if (-not $akar) { continue }
+        $kandidat = @(Get-ChildItem -Path (Join-Path $akar 'Inno Setup*\ISCC.exe') -ErrorAction SilentlyContinue)
+        if ($kandidat.Count -gt 0) {
+            $iscc = ($kandidat | Sort-Object FullName -Descending | Select-Object -First 1).FullName
+            break
+        }
+    }
     if (-not $iscc) {
         $cmd = Get-Command ISCC.exe -ErrorAction SilentlyContinue
         if ($cmd) { $iscc = $cmd.Source }
@@ -345,6 +371,10 @@ if (-not $SkipInstaller) {
             if ($LASTEXITCODE -ne 0) { throw "Publish dibatalkan: tanda tangan installer gagal (exit $LASTEXITCODE)." }
             $ditandatangani += $setup.Name
         }
+    } elseif ($WajibInstaller) {
+        throw ('Installer wajib dibuat, tetapi ISCC.exe tidak ditemukan. Pasang Inno Setup 6 ' +
+               '(https://jrsoftware.org/isdl.php) atau, bila memang tidak ingin menerbitkan installer, ' +
+               'jalankan tanpa -WajibInstaller.')
     } else {
         Write-Host 'Inno Setup (ISCC.exe) tidak ditemukan.' -ForegroundColor Yellow
         Write-Host 'Install gratis dari https://jrsoftware.org/isdl.php lalu jalankan ulang skrip ini.' -ForegroundColor Yellow
@@ -368,7 +398,13 @@ if ($setup) {
 } else {
     Write-Host 'Installer : (tidak dibuat)'
 }
-$lines += ('Portable: `{0}`' -f (Split-Path -Leaf $zipPath))
+$zipName = Split-Path -Leaf $zipPath
+$lines += ('Portable: `{0}`' -f $zipName)
+if ($setup) {
+    $lines += ('Sidik jari: `{0}.sha256`, `{1}.sha256`' -f $setup.Name, $zipName)
+} else {
+    $lines += ('Sidik jari: `{0}.sha256`' -f $zipName)
+}
 $lines += ''
 $lines += $statusKredensial
 $lines += $statusTandaTangan
@@ -472,8 +508,12 @@ Write-Host ("Catatan   : " + $releaseNotes)
 
 # ---------- daftar aset untuk diunggah ----------
 $daftarAset = @()
-if ($setup) { $daftarAset += $setup.FullName }
+if ($setup) {
+    $daftarAset += $setup.FullName
+    $daftarAset += (TulisSidikJari -Berkas $setup.FullName)
+}
 $daftarAset += $zipPath
+$daftarAset += (TulisSidikJari -Berkas $zipPath)
 $daftarAset += $manifestPatch
 $patchZip = Join-Path $repoRoot ("artifacts/patch-{0}.zip" -f $Version)
 if (Test-Path -LiteralPath $patchZip) { $daftarAset += $patchZip }

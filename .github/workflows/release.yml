@@ -63,8 +63,28 @@ jobs:
         with:
           dotnet-version: 10.0.401
 
-      - name: Pasang Inno Setup
-        run: choco install innosetup --yes --no-progress
+      # Installer adalah aset utama bagi desa yang tidak mau mengekstrak ZIP,
+      # jadi pemasangan Inno Setup harus terbukti menghasilkan ISCC.exe. Sebelum
+      # ini jalurnya hanya memunculkan peringatan saat ISCC tidak ditemukan, dan
+      # rilis terbit tanpa installer tanpa ada yang gagal.
+      - name: Pasang Inno Setup 6
+        shell: pwsh
+        run: |
+          choco install innosetup --yes --no-progress
+          $iscc = $null
+          foreach ($akar in @("${env:ProgramFiles(x86)}", $env:ProgramFiles, (Join-Path $env:LOCALAPPDATA 'Programs'))) {
+            $kandidat = @(Get-ChildItem -Path (Join-Path $akar 'Inno Setup*\ISCC.exe') -ErrorAction SilentlyContinue)
+            if ($kandidat.Count -gt 0) {
+              $iscc = ($kandidat | Sort-Object FullName -Descending | Select-Object -First 1).FullName
+              break
+            }
+          }
+          if (-not $iscc) {
+            $perintah = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+            if ($perintah) { $iscc = $perintah.Source }
+          }
+          if (-not $iscc) { throw 'ISCC.exe tidak ditemukan setelah pemasangan Inno Setup 6 - instalasi gagal atau paket choco berubah jalur.' }
+          Write-Host ("ISCC: " + $iscc)
 
       - name: Tentukan versi dan pembanding tambalan
         id: versi
@@ -149,6 +169,7 @@ jobs:
             Version                = $env:VERSI
             Repo                   = $env:REPO
             Unggah                 = $true
+            WajibInstaller         = $true
             IzinkanTanpaKredensial = $true
           }
           if ($env:VERSI_LAMA) { $arg['VersiLama'] = $env:VERSI_LAMA }
