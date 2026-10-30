@@ -128,6 +128,53 @@
             <Setter Property="Margin" Value="0,0,6,5"/>
         </Style>
 
+        <!-- Chip tahun yang bisa diklik: memilih satu tahun mengganti rincian
+             indikator yang tampil tanpa memuat ulang dari pusat. Bentuknya sama
+             dengan chip lain; tahun yang sedang terbuka diberi latar aksen. -->
+        <Style x:Key="ChipTahun" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Padding" Value="9,3"/>
+            <Setter Property="Margin" Value="0,0,6,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Kotak"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="11"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Kotak" Property="Background"
+                                        Value="{DynamicResource AccentSubtleBrush}"/>
+                                <Setter TargetName="Kotak" Property="BorderBrush"
+                                        Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Kotak" Property="BorderThickness" Value="2"/>
+                                <Setter TargetName="Kotak" Property="BorderBrush"
+                                        Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Ditampilkan}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <!-- Teks kecil penjelas di dalam kartu. Satu tempat agar seluruh
              keterangan tambahan di halaman ini memakai ukuran yang sama. -->
         <Style x:Key="TeksBantu" TargetType="TextBlock">
@@ -426,9 +473,10 @@
                                            Visibility="{Binding AdaDataIdm, Converter={StaticResource BoolToVis}}"
                                            AutomationProperties.Name="Tahun IDM yang dimuat"/>
 
-                                <!-- Tahun lain + sumber data. -->
+                                <!-- Tahun yang dimuat: setiap chip bisa diklik untuk
+                                     menampilkan rincian indikator tahun itu. -->
                                 <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                    <TextBlock Text="Tahun lain:" Style="{StaticResource TeksBantu}"
+                                    <TextBlock Text="Tahun:" Style="{StaticResource TeksBantu}"
                                                Margin="0,0,6,4"/>
                                     <ItemsControl ItemsSource="{Binding Riwayat}" Margin="0,0,6,0"
                                                   AutomationProperties.Name="Tahun penilaian IDM">
@@ -439,19 +487,14 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <!-- Tahun yang rinciannya sedang tampil diberi latar aksen;
-                                                     tahun terakhir terbit membawa label kecil "TERAKHIR". -->
-                                                <Border>
-                                                    <Border.Style>
-                                                        <Style TargetType="Border" BasedOn="{StaticResource ChipPil}">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Ditampilkan}" Value="True">
-                                                                    <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
-                                                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
+                                                <!-- Chip = tombol: mengklik tahun mengganti rincian indikator.
+                                                     Tahun yang sedang tampil diberi latar aksen; tahun terakhir
+                                                     terbit membawa label kecil "TERAKHIR". -->
+                                                <Button Style="{StaticResource ChipTahun}"
+                                                        Command="{Binding DataContext.PilihTahunCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding Tahun}"
+                                                        ToolTip="{Binding Tahun, StringFormat=Tampilkan rincian indikator tahun {0}}"
+                                                        AutomationProperties.Name="{Binding Tahun, StringFormat=Rincian indikator tahun {0}}">
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock FontSize="11" Foreground="{DynamicResource TextBrush}">
                                                             <Run Text="{Binding Tahun, Mode=OneWay}" FontWeight="SemiBold"/>
@@ -465,7 +508,7 @@
                                                                    VerticalAlignment="Center"
                                                                    Visibility="{Binding Terbaru, Converter={StaticResource BoolToVis}}"/>
                                                     </StackPanel>
-                                                </Border>
+                                                </Button>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

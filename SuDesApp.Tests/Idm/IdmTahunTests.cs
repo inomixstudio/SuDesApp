@@ -42,7 +42,17 @@ public sealed class IdmTahunTests
 
         Assert.Contains("5 tahun dimuat", kalimat);
         Assert.Contains("2020–2024", kalimat);
-        Assert.Contains("tahun terakhir, 2024", kalimat);
+        Assert.Contains("Tahun terakhir terbit 2024", kalimat);
+        Assert.Contains("pilih tahun lain", kalimat);
+    }
+
+    [Fact]
+    public void CariTahun_mengambil_tahun_yang_diminta_dan_menolak_tahun_lain()
+    {
+        var daftar = new[] { Tahun(2024), Tahun(2023), Tahun(2022) };
+
+        Assert.Equal(2023, IdmViewModel.CariTahun(daftar, 2023)?.Ringkasan.Tahun);
+        Assert.Null(IdmViewModel.CariTahun(daftar, 2019));
     }
 
     [Fact]
