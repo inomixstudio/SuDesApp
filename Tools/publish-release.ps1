@@ -556,9 +556,12 @@ Write-Host ("Catatan   : " + $releaseNotes)
 
 # Badan rilis di GitHub: catatan rilis versi ini lalu daftar aset. Halaman rilis
 # yang hanya berisi daftar aset menyulitkan pengguna melihat apa yang berubah.
-$badanRilis = (Get-Content -LiteralPath $releaseNotes -Raw).Trim()
+$badanRilis = (Get-Content -LiteralPath $releaseNotes -Raw -Encoding UTF8).Trim()
 if (Test-Path -LiteralPath $berkasCatatan) {
-    $badanRilis = (Get-Content -LiteralPath $berkasCatatan -Raw).Trim() + "`n`n## Sidik jari aset`n`n" + $badanRilis
+    # -Encoding UTF8 wajib: catatan rilis ditulis tanpa BOM, dan PS 5.1 membaca
+    # berkas tanpa BOM sebagai cp1252 sehingga tanda pisah/tanda kutip Rusak
+    # menjadi mojibake di halaman rilis GitHub.
+    $badanRilis = (Get-Content -LiteralPath $berkasCatatan -Raw -Encoding UTF8).Trim() + "`n`n## Sidik jari aset`n`n" + $badanRilis
 }
 
 # ---------- daftar aset untuk diunggah ----------
