@@ -59,8 +59,8 @@ diunduh manual dari halaman rilis dan dijalankan seperti biasa.
 |---|---|
 | `SuDesApp_2.10.1_Setup.exe` | Installer Windows x64: memasang ke `%LocalAppData%\Programs\SuDesApp` tanpa UAC, membuat pintasan Start Menu, dan menyediakan pencopotan lewat *Apps & features* |
 | `SuDesApp_2.10.1_Setup.exe.sha256` | Sidik jari SHA-256 installer |
-| `SuDesApp_2.10.1_win-x64_portable.zip` | Aplikasi desktop Windows x64, self-contained .NET 10 (tanpa instalasi runtime) |
-| `SuDesApp_2.10.1_win-x64_portable.zip.sha256` | Sidik jari SHA-256 paket portable |
+| `SuDesApp_2.10.1_win-x64.zip` | Aplikasi desktop Windows x64, self-contained .NET 10 (tanpa instalasi runtime) |
+| `SuDesApp_2.10.1_win-x64.zip.sha256` | Sidik jari SHA-256 paket portable |
 | `patch.json` + `patch-2.10.1.zip` | Pembaruan kecil untuk aplikasi 2.7.2–2.10.0 yang sudah terpasang |
 
 Data desa (`desa.db`, `Templates`, hasil PDF) tidak ditimpa saat pemasangan versi
