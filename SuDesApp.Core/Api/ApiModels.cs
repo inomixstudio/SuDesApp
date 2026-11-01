@@ -31,7 +31,19 @@ namespace SuDesApp.Api
         /// Endpoint kategori ini boleh dipanggil tanpa kunci API karena pihak
         /// yang memegang surat (bank, instansi) tidak punya kunci tersebut.
         /// </summary>
-        Verifikasi
+        Verifikasi,
+
+        /// <summary>
+        /// Masuk/keluar aplikasi memakai akun desktop. Hanya kunci Penuh yang
+        /// membukanya — kunci Agregat tetap tidak bisa memakai akun operator.
+        /// </summary>
+        Sesi,
+
+        /// <summary>
+        /// Pengaturan surat desktop (kop dan pejabat penanda tangan) untuk
+        /// dibaca aplikasi pendamping. Baca-saja.
+        /// </summary>
+        Pengaturan
     }
 
     /// <summary>
@@ -60,6 +72,13 @@ namespace SuDesApp.Api
         /// </summary>
         public bool TanpaKunci { get; set; }
 
+        /// <summary>
+        /// True bila endpoint wajib membawa sesi login (header
+        /// <c>Authorization: Bearer &lt;token&gt;</c>) selain kunci API. Dipakai
+        /// endpoint yang memuat data akun atau pengaturan aplikasi.
+        /// </summary>
+        public bool ButuhSesi { get; set; }
+
         /// <summary>Jalur penuh yang dipanggil pemanggil, mis. "/sudes/api/v1/status".</summary>
         public string JalurPenuh => ApiRute.Prefix + Jalur;
 
@@ -71,6 +90,8 @@ namespace SuDesApp.Api
             ApiKategori.Agregat => "Agregat",
             ApiKategori.Perangkat => "Perangkat Desa",
             ApiKategori.Verifikasi => "Verifikasi Surat",
+            ApiKategori.Sesi => "Sesi Aplikasi",
+            ApiKategori.Pengaturan => "Pengaturan Surat",
             _ => "Permintaan Masuk"
         };
     }
@@ -126,6 +147,62 @@ namespace SuDesApp.Api
 
         /// <summary>Kode verifikasi surat tidak ada di arsip desa.</summary>
         public const string KodeTidakDikenal = "kode_tidak_dikenal";
+
+        /// <summary>Endpoint butuh sesi login yang sah (HTTP 401).</summary>
+        public const string SesiDiperlukan = "sesi_diperlukan";
+
+        /// <summary>Nama pengguna atau kata sandi tidak cocok (HTTP 401).</summary>
+        public const string SesiGagal = "sesi_gagal";
+    }
+
+    /// <summary>Badan <c>POST /sesi</c>: kredensial akun desktop.</summary>
+    public sealed class ApiSesiMasuk
+    {
+        [JsonPropertyName("username")]
+        public string? Username { get; set; }
+
+        [JsonPropertyName("kata_sandi")]
+        public string? KataSandi { get; set; }
+    }
+
+    /// <summary>
+    /// Jawaban <c>POST /sesi</c>. Token dipakai pada header
+    /// <c>Authorization: Bearer &lt;token&gt;</c> untuk endpoint bertanda sesi.
+    /// </summary>
+    public sealed class ApiSesiInfo
+    {
+        public string Token { get; set; } = string.Empty;
+        public DateTime BerlakuSampai { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Nama { get; set; } = string.Empty;
+        public string Peran { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Jawaban <c>GET /pengaturan</c>: pengaturan surat desktop yang dibutuhkan
+    /// aplikasi pendamping untuk mencetak dengan kop dan pejabat yang sama.
+    /// Sengaja baca-saja — sumber kebenarannya tetap aplikasi desktop.
+    /// </summary>
+    public sealed class ApiPengaturanSurat
+    {
+        public ApiDesaPengaturan Desa { get; set; } = new();
+
+        public DateTime DiambilPada { get; set; }
+    }
+
+    /// <summary>Isi kop dan pejabat penanda tangan dari tabel InfoDesa.</summary>
+    public sealed class ApiDesaPengaturan
+    {
+        public string NamaDesa { get; set; } = string.Empty;
+        public string Kecamatan { get; set; } = string.Empty;
+        public string Kabupaten { get; set; } = string.Empty;
+        public string? JenisKabupaten { get; set; }
+        public string Alamat { get; set; } = string.Empty;
+        public string Kodepos { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string KepalaDesa { get; set; } = string.Empty;
+        public string? NipKepalaDesa { get; set; }
+        public string? JenisLembaga { get; set; }
     }
 
     /// <summary>

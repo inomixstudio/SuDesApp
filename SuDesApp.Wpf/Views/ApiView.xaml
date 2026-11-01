@@ -79,7 +79,14 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
-                        <TextBlock Text="PENGATURAN" Style="{StaticResource FormSectionTitle}"/>
+                        <!-- Panduan singkat diletakkan paling atas supaya operator
+                             tidak perlu menebak urutan langkah: halaman ini memang
+                             satu-satunya tempat menyalakan API. -->
+                        <TextBlock Text="CARA MENJALANKAN" Style="{StaticResource FormSectionTitle}"/>
+                        <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Text="1. Centang Aktifkan API di bawah.&#10;2. Tekan Buat Kunci Baru, lalu Salin kuncinya.&#10;3. Tekan Simpan di kanan atas — API menyala dan kotak status di atas berubah.&#10;4. Tekan Uji Koneksi untuk memastikan listener menjawab.&#10;Untuk dipakai HP di jaringan yang sama: centang Izinkan akses dari jaringan, isi IP HP pada kolom IP yang diizinkan, lalu Simpan lagi."/>
+
+                        <TextBlock Text="PENGATURAN" Style="{StaticResource FormSectionTitle}" Margin="0,16,0,0"/>
 
                         <CheckBox Content="Aktifkan API" IsChecked="{Binding Aktif}" Margin="0,10,0,0"
                                   ToolTip="Bila tidak aktif, tidak ada port yang dibuka"/>
