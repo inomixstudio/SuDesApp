@@ -454,6 +454,7 @@ namespace SuDesApp.Wpf
                 previewFactory: sp.GetRequiredService<Func<string, string, PdfPreviewViewModel>>(),
                 appConfig: sp.GetRequiredService<AppConfig>(),
                 pemantauan: sp.GetRequiredService<SuDesApp.Services.IIdmPemantauanStore>(),
+                sertifikat: sp.GetRequiredService<SuDesApp.Services.IIdmSertifikatStore>(),
                 dokumenFactory: sp.GetRequiredService<Func<string, string, Action?, DokumenBacaViewModel>>()));
 
             // Akun & arsip tahunan: halaman area konten utama (bukan jendela modal).
@@ -471,6 +472,14 @@ namespace SuDesApp.Wpf
             // ditulis halaman IDM dan pemantau latar, dibaca halaman untuk indikator
             // "data terbaru yang terbit" — termasuk saat yang tampil data cadangan.
             services.AddSingleton<SuDesApp.Services.IIdmPemantauanStore, SuDesApp.Services.IdmPemantauanStore>();
+            // Pemantauan masa berlaku sertifikat TLS situs IDM: pemeriksa berdiri
+            // sendiri (bukan bagian klien data) supaya halaman dan pemantau latar
+            // membaca sumber yang sama, dan peringatan dini muncul jauh sebelum
+            // sertifikat kedaluwarsa membuat halaman IDM kosong (kejadian 2026).
+            services.AddSingleton<SuDesApp.Services.IIdmSertifikatKlien>(sp =>
+                new SuDesApp.Services.IdmSertifikatKlien(
+                    logger: sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SuDesApp.Services.IdmSertifikatKlien>>()));
+            services.AddSingleton<SuDesApp.Services.IIdmSertifikatStore, SuDesApp.Services.IdmSertifikatStore>();
             services.AddTransient<ApbdesViewModel>();
             // JANGAN mendaftarkan IdmViewModel lagi tanpa factory di sini:
             // pendaftaran terakhir yang dipakai DI, sehingga factory di atas

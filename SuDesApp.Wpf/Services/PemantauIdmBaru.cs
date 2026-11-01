@@ -25,17 +25,29 @@ namespace SuDesApp.Wpf.Services
     /// terakhir halaman IDM) dengan jawaban portal, dan mengirim notifikasi
     /// lonceng bila ada tahun yang lebih baru.
     ///
+    /// Tiap putaran juga memeriksa masa berlaku sertifikat TLS situs pusat
+    /// (<see cref="IdmSertifikatStatus"/>): sertifikat yang kedaluwarsa adalah
+    /// penyebab halaman IDM kosong (kejadian Agustus 2026), jadi pemeriksaan ini
+    /// memberi peringatan dini lewat notifikasi lonceng jauh sebelum titik itu,
+    /// lengkap dengan catatan yang dibaca halaman IDM.
+    ///
     /// Batas yang disengaja:
     /// <list type="bullet">
-    ///   <item>Hanya memantau bila sudah ada cadangan untuk desa aktif —
-    ///         tanpa tahun pembanding, "tahun baru" tidak bisa ditentukan.</item>
+    ///   <item>Pemeriksaan sertifikat berjalan SETIAP putaran tanpa syarat
+    ///         cadangan — masa berlaku sertifikat menyangkut situsnya, bukan
+    ///         desanya.</item>
+    ///   <item>Hanya memantau tahun baru bila sudah ada cadangan untuk desa
+    ///         aktif — tanpa tahun pembanding, "tahun baru" tidak bisa
+    ///         ditentukan.</item>
     ///   <item>Tidak menulis cadangan angka dan tidak mengubah halaman. Yang
     ///         dicatat hanya hasil pemeriksaannya (waktu + tahun terbit
-    ///         terbaru) supaya halaman bisa menampilkan indikator data
-    ///         terbaru; notifikasi mengarahkan pengguna membuka halaman IDM,
-    ///         yang memuat ulang seluruh tahun (termasuk riwayat tren).</item>
+    ///         terbaru, serta catatan sertifikat) supaya halaman bisa
+    ///         menampilkan indikator data terbaru; notifikasi mengarahkan
+    ///         pengguna membuka halaman IDM, yang memuat ulang seluruh tahun
+    ///         (termasuk riwayat tren).</item>
     ///   <item>Portal yang tidak terjangkau bukan kegagalan: putaran itu diam,
-    ///         dan pemeriksaan berikutnya mencoba lagi.</item>
+    ///         dan pemeriksaan berikutnya mencoba lagi — berlaku sama untuk
+    ///         pemeriksaan sertifikat.</item>
     /// </list>
     /// </summary>
     public class PemantauIdmBaru
@@ -58,6 +70,8 @@ namespace SuDesApp.Wpf.Services
             IntervalPemantauanIdmPrefs.JedaBerulang(IntervalPemantauanIdmPrefs.SaatIni);
 
         private readonly IIdmKemendesaKlien _klien;
+        private readonly IIdmSertifikatKlien _sertifikat;
+        private readonly IIdmSertifikatStore _sertifikatStore;
         private readonly IIdmSimpananStore _simpanan;
         private readonly IIdmPemantauanStore _pemantauan;
         private readonly SettingsManager _pengaturan;
@@ -67,7 +81,11 @@ namespace SuDesApp.Wpf.Services
         private readonly ILogger<PemantauIdmBaru> _logger;
         private readonly Func<DateTime> _jam;
 
-        /// <summary>Kunci "kodeDesa/tahun" yang sudah diumumkan pada sesi ini.</summary>
+        /// <summary>
+        /// Kunci "kodeDesa/tahun" yang sudah diumumkan pada sesi ini, plus
+        /// "sertifikat/&lt;ticksNotAfter&gt;" supaya peringatan sertifikat juga
+        /// hanya dikirim sekali per masa berlaku pada sesi berjalan.
+        /// </summary>
         private readonly HashSet<string> _sudahDiumumkan = new(StringComparer.Ordinal);
 
         private System.Windows.Threading.DispatcherTimer? _timer;
@@ -75,6 +93,8 @@ namespace SuDesApp.Wpf.Services
 
         public PemantauIdmBaru(
             IIdmKemendesaKlien klien,
+            IIdmSertifikatKlien sertifikat,
+            IIdmSertifikatStore sertifikatStore,
             IIdmSimpananStore simpanan,
             IIdmPemantauanStore pemantauan,
             SettingsManager pengaturan,
@@ -85,6 +105,8 @@ namespace SuDesApp.Wpf.Services
             Action<string, string, string?>? kirimNotifikasi = null)
         {
             _klien = klien ?? throw new ArgumentNullException(nameof(klien));
+            _sertifikat = sertifikat ?? throw new ArgumentNullException(nameof(sertifikat));
+            _sertifikatStore = sertifikatStore ?? throw new ArgumentNullException(nameof(sertifikatStore));
             _simpanan = simpanan ?? throw new ArgumentNullException(nameof(simpanan));
             _pemantauan = pemantauan ?? throw new ArgumentNullException(nameof(pemantauan));
             _pengaturan = pengaturan ?? throw new ArgumentNullException(nameof(pengaturan));
@@ -244,6 +266,11 @@ namespace SuDesApp.Wpf.Services
                     else _timer.Stop();
                 }
 
+                // Pemeriksaan sertifikat dulu dan tanpa syarat: catatan
+                // masa berlaku harus selalu segar, termasuk sebelum cadangan
+                // desa ada (belum pernah memuat halaman IDM).
+                await PeriksaSertifikatAsync().ConfigureAwait(false);
+
                 var cadangan = _simpanan.Muat();
                 if (cadangan?.Hasil is not { Count: > 0 }
                     || string.IsNullOrWhiteSpace(cadangan.KodeDesa))
@@ -312,6 +339,55 @@ namespace SuDesApp.Wpf.Services
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Satu putaran pemeriksaan sertifikat TLS situs pusat: bila berhasil
+        /// terbaca, catatannya diperbarui (dibaca halaman IDM untuk peringatan
+        /// toolbar), lalu kirim notifikasi lonceng sekali per masa berlaku bila
+        /// sertifikat tinggal 30 hari atau sudah lewat. Gagal/diam bila situs
+        /// tidak terjangkau — catatan lama tetap berlaku dan putaran berikutnya
+        /// mencoba lagi. Tidak pernah melempar.
+        /// </summary>
+        internal async Task PeriksaSertifikatAsync()
+        {
+            try
+            {
+                var info = await _sertifikat.PeriksaAsync().ConfigureAwait(false);
+                if (info == null) return; // tak terjangkau: catatan lama tetap dipakai
+
+                var kini = _jam();
+                _sertifikatStore.Simpan(new IdmSertifikatCatatan
+                {
+                    BerlakuDari = info.BerlakuDari,
+                    BerlakuSampai = info.BerlakuSampai,
+                    Subjek = info.Subjek,
+                    WaktuDiperiksa = kini,
+                });
+
+                var status = IdmSertifikatStatus.Nilai(info.BerlakuSampai, kini);
+                if (status is not (StatusSertifikatIdm.AkanKedaluwarsa or StatusSertifikatIdm.Kedaluwarsa))
+                {
+                    return;
+                }
+
+                // Sekali per masa berlaku pada sesi ini: interval enam jam tidak
+                // boleh mengulang lonceng yang sama berkali-kali.
+                if (!_sudahDiumumkan.Add("sertifikat/" + info.BerlakuSampai.Ticks)) return;
+
+                _kirimNotifikasi(
+                    IdmSertifikatStatus.Judul(status),
+                    IdmSertifikatStatus.Pesan(status, info.BerlakuSampai, kini),
+                    TujuanMenu);
+
+                _logger.LogWarning(
+                    "Sertifikat situs IDM {Status} (berlaku s.d. {Berlaku}) — peringatan dini dikirim.",
+                    status, info.BerlakuSampai);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Pemeriksaan sertifikat situs IDM gagal.");
+            }
         }
 
         /// <summary>Judul notifikasi lonceng untuk satu tahun baru.</summary>

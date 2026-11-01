@@ -270,6 +270,13 @@
                         <TextBlock Text="{Binding PeringatanSumber}" Foreground="{DynamicResource WarningTextBrush}"
                                    TextWrapping="Wrap" Margin="0,8,0,0"
                                    Visibility="{Binding AdaPeringatanSumber, Converter={StaticResource BoolToVis}}"/>
+
+                        <!-- Peringatan dini masa berlaku sertifikat situs pusat
+                             (dari catatan pemantau latar): tampil sebelum halaman
+                             menjadi kosong karena sertifikat kedaluwarsa. -->
+                        <TextBlock Text="{Binding PesanSertifikat}" Foreground="{DynamicResource WarningTextBrush}"
+                                   TextWrapping="Wrap" Margin="0,8,0,0"
+                                   Visibility="{Binding AdaPesanSertifikat, Converter={StaticResource BoolToVis}}"/>
                     </StackPanel>
                 </Border>
 
