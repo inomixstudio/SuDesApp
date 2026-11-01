@@ -1,0 +1,53 @@
+@inherits LayoutComponentBase
+
+<div class="aplikasi">
+    <header class="kepala">
+        @if (!HalamanBeranda)
+        {
+            <button class="tombol-kembali" type="button" @onclick="Kembali" aria-label="Kembali">&#8592;</button>
+        }
+        <div class="kepala-teks">
+            <span class="kepala-judul">SuDesApp</span>
+            <span class="kepala-sub">@SubJudul</span>
+        </div>
+        <a class="tautan-desa" href="desa" title="Pengaturan surat dari desktop">&#9881;</a>
+    </header>
+
+    <main class="isi">
+        @Body
+    </main>
+</div>
+
+@code {
+    private string _lokasi = "/";
+
+    protected override void OnInitialized()
+    {
+        Navigasi.LocationChanged += (_, _) => InvokeAsync(() =>
+        {
+            _lokasi = new Uri(Navigasi.Uri).AbsolutePath;
+            StateHasChanged();
+        });
+        _lokasi = new Uri(Navigasi.Uri).AbsolutePath;
+    }
+
+    private bool HalamanBeranda => _lokasi == "/" || _lokasi.Length <= 1;
+
+    private string SubJudul => _lokasi.TrimEnd('/') switch
+    {
+        "/buat-surat" => "Buat Surat Baru",
+        "/ntcr" => "NTCR",
+        "/paket-ntcr" => "Paket NTCR",
+        "/daftar-hadir" => "Daftar Hadir",
+        "/register-surat" => "Register Surat",
+        "/register-ntcr" => "Register NTCR",
+        "/formulir" => "Formulir",
+        "/sambung" => "Sambungkan ke Desktop",
+        "/desa" => "Pengaturan Surat",
+        _ => string.IsNullOrWhiteSpace(Layanan.Profil.NamaDesa) ? "Surat desa di ponsel" : Layanan.Profil.NamaDesa
+    };
+
+    // Tombol kembali pada kepala halaman selalu menuju beranda; langkah formulir
+    // punya tombol "Kembali ke daftar" sendiri di dalam halaman.
+    private void Kembali() => Navigasi.NavigateTo("/");
+}

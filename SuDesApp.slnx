@@ -3,6 +3,7 @@
   <Project Path="SuDesApp.Api/SuDesApp.Api.csproj" />
   <Project Path="SuDesApp.Core/SuDesApp.Core.csproj" />
   <Project Path="SuDesApp.Maui/SuDesApp.Maui.csproj" />
+  <Project Path="SuDesApp.Mobile/SuDesApp.Mobile.csproj" />
   <Project Path="SuDesApp.Server/SuDesApp.Server.csproj" />
   <Project Path="SudesPdf.Core/SudesPdf.Core.csproj" />
   <Project Path="SudesExPlus/SudesExPlus.csproj" />

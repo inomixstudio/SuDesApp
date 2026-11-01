@@ -1,0 +1,854 @@
+[
+  {
+    "kode": "skd-umum",
+    "nama": "SKD Belum Menikah",
+    "kategori": "Keterangan",
+    "ringkasan": "Surat keterangan desa untuk syarat perkawinan di KUA.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN BELUM MENIKAH (SKD)",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks" },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal" },
+      { "kunci": "pekerjaan", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true, "bawaan": "Melengkapi persyaratan administrasi perkawinan di KUA" }
+    ],
+    "penutup": [
+      "Sampai dengan diterbitkannya surat keterangan ini, yang bersangkutan berstatus belum pernah kawin dan berdomisili di wilayah desa ini.",
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "domisili-warga",
+    "nama": "Domisili Warga",
+    "kategori": "Keterangan",
+    "ringkasan": "Menerangkan tempat tinggal warga di wilayah desa.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN DOMISILI",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks" },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal" },
+      { "kunci": "pekerjaan", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "domisili-instansi",
+    "nama": "Domisili Instansi",
+    "kategori": "Keterangan",
+    "ringkasan": "Menerangkan domisili lembaga atau instansi di wilayah desa.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN DOMISILI INSTANSI/LEMBAGA",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa lembaga/instansi berikut berdomisili di wilayah desa kami:"
+    ],
+    "kolom": [
+      { "kunci": "nama-instansi", "label": "Nama Lembaga/Instansi", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat-instansi", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "penanggung-jawab", "label": "Penanggung Jawab", "tipe": "teks", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "sku",
+    "nama": "SKU",
+    "kategori": "Keterangan",
+    "ringkasan": "Surat Keterangan Usaha untuk keperluan administrasi warga.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN USAHA (SKU)",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "nama-usaha", "label": "Nama Usaha", "tipe": "teks", "wajib": true },
+      { "kunci": "jenis-usaha", "label": "Jenis Usaha", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat-usaha", "label": "Alamat Usaha", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "pengantar-skck",
+    "nama": "Pengantar SKCK",
+    "kategori": "Pengantar",
+    "ringkasan": "Pengantar desa untuk pengurusan SKCK di kepolisian.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT PENGANTAR SKCK",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks" },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal" },
+      { "kunci": "pekerjaan", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true, "bawaan": "Melengkapi persyaratan pengurusan SKCK di kepolisian" }
+    ],
+    "penutup": [
+      "Adalah benar warga desa tersebut di atas, berkelakuan baik, dan tidak pernah terlibat tindak pidana di wilayah kami.",
+      "Demikian surat pengantar ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "izin-ortu",
+    "nama": "Izin Suami / Orang Tua",
+    "kategori": "Izin",
+    "ringkasan": "Persetujuan suami atau orang tua untuk keperluan administrasi warga.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT IZIN SUAMI / ORANG TUA",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini memberikan izin kepada:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama Pemohon", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK Pemohon", "tipe": "teks", "wajib": true },
+      { "kunci": "nama-pemberi-izin", "label": "Nama Suami / Orang Tua", "tipe": "teks", "wajib": true },
+      { "kunci": "hubungan", "label": "Hubungan", "tipe": "pilihan", "pilihan": [ "Suami", "Istri", "Ayah", "Ibu", "Wali" ], "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Persetujuan ini diberikan untuk keperluan administrasi sebagaimana tersebut di atas.",
+      "Demikian surat izin ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "sktm",
+    "nama": "SKTM",
+    "kategori": "Keterangan",
+    "ringkasan": "Surat keterangan tidak mampu untuk syarat bantuan atau beasiswa.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN TIDAK MAMPU (SKTM)",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "pekerjaan", "label": "Pekerjaan/Usaha", "tipe": "teks" },
+      { "kunci": "penghasilan", "label": "Penghasilan per Bulan", "tipe": "angka" },
+      { "kunci": "tanggungan", "label": "Jumlah Tanggungan", "tipe": "angka" },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true, "bawaan": "Melengkapi persyaratan bantuan sosial atau beasiswa" }
+    ],
+    "penutup": [
+      "Berdasarkan pemeriksaan petugas desa, yang bersangkutan tergolong keluarga kurang mampu.",
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "belum-terbit",
+    "nama": "Belum Terbit",
+    "kategori": "Keterangan",
+    "ringkasan": "Keterangan status dokumen belum terbit atau sudah terbit.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN BELUM TERBIT / SUDAH TERBIT",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "dokumen", "label": "Jenis Dokumen", "tipe": "teks", "wajib": true, "bawaan": "Akta Kelahiran" },
+      { "kunci": "status", "label": "Status Dokumen", "tipe": "pilihan", "pilihan": [ "Belum Terbit", "Sudah Terbit" ], "wajib": true },
+      { "kunci": "keterangan", "label": "Keterangan", "tipe": "paragraf" }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "garapan-sawah",
+    "nama": "Garapan Sawah",
+    "kategori": "Keterangan",
+    "ringkasan": "Keterangan bahwa warga menggarap sebidang sawah tertentu.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN GARAPAN SAWAH",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "lokasi-sawah", "label": "Lokasi Sawah", "tipe": "teks", "wajib": true },
+      { "kunci": "luas", "label": "Luas (m²)", "tipe": "angka" },
+      { "kunci": "status-lahan", "label": "Status Lahan", "tipe": "pilihan", "pilihan": [ "Milik Sendiri", "Kontrak", "Bagi Hasil" ] },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "kematian",
+    "nama": "Kematian",
+    "kategori": "Keterangan",
+    "ringkasan": "Keterangan meninggalnya warga untuk pengurusan akta kematian.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN KEMATIAN",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan bahwa telah meninggal dunia seorang warga dengan data sebagai berikut:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks" },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "tanggal-meninggal", "label": "Tanggal Meninggal", "tipe": "tanggal", "wajib": true },
+      { "kunci": "sebab", "label": "Sebab", "tipe": "teks", "wajib": true },
+      { "kunci": "pemakaman", "label": "Tempat Pemakaman", "tipe": "teks" }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "beda-nama",
+    "nama": "Beda Nama",
+    "kategori": "Keterangan",
+    "ringkasan": "Keterangan perbedaan penulisan nama antar dokumen kependudukan.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN BEDA NAMA/DATA",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa terdapat perbedaan penulisan data pada dokumen kependudukan warga berikut:"
+    ],
+    "kolom": [
+      { "kunci": "nama-tercatat", "label": "Nama Sesuai Dokumen Lama", "tipe": "teks", "wajib": true },
+      { "kunci": "nama-sebenarnya", "label": "Nama Sesuai Dokumen Baru", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "dokumen", "label": "Dokumen Terkait", "tipe": "teks", "wajib": true, "bawaan": "Kartu Keluarga" },
+      { "kunci": "keterangan", "label": "Keterangan", "tipe": "paragraf" }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "kenal-lahir",
+    "nama": "Kenal Lahir",
+    "kategori": "Keterangan",
+    "ringkasan": "Keterangan kelahiran anak untuk pengurusan akta kelahiran.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN KENAL LAHIR",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan bahwa telah lahir seorang anak dengan data sebagai berikut:"
+    ],
+    "kolom": [
+      { "kunci": "nama-anak", "label": "Nama Anak", "tipe": "teks", "wajib": true },
+      { "kunci": "jenis-kelamin", "label": "Jenis Kelamin", "tipe": "pilihan", "pilihan": [ "Laki-laki", "Perempuan" ], "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks", "wajib": true },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal", "wajib": true },
+      { "kunci": "nama-ayah", "label": "Nama Ayah", "tipe": "teks", "wajib": true },
+      { "kunci": "nama-ibu", "label": "Nama Ibu", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "tinggal-sementara",
+    "nama": "Tinggal Sementara",
+    "kategori": "Keterangan",
+    "ringkasan": "Ijin tinggal sementara bagi warga dari luar desa.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN IJIN TINGGAL SEMENTARA",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa warga berikut tinggal sementara di wilayah desa kami:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat-asal", "label": "Alamat Asal", "tipe": "paragraf", "wajib": true },
+      { "kunci": "alamat-tinggal", "label": "Alamat Tinggal", "tipe": "paragraf", "wajib": true },
+      { "kunci": "lama-tinggal", "label": "Lama Tinggal", "tipe": "teks" },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "ahli-waris",
+    "nama": "Ahli Waris",
+    "kategori": "Keterangan",
+    "ringkasan": "Keterangan ahli waris untuk keperluan hukum atau perbankan.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN AHLI WARIS",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan bahwa telah meninggal dunia warga berikut dan meninggalkan ahli waris:"
+    ],
+    "kolom": [
+      { "kunci": "nama-almarhum", "label": "Nama Almarhum/Almarhumah", "tipe": "teks", "wajib": true },
+      { "kunci": "nik-almarhum", "label": "NIK Almarhum/Almarhumah", "tipe": "teks" },
+      { "kunci": "tanggal-meninggal", "label": "Tanggal Meninggal", "tipe": "tanggal", "wajib": true },
+      { "kunci": "nama-ahli-waris", "label": "Nama Ahli Waris", "tipe": "teks", "wajib": true },
+      { "kunci": "hubungan", "label": "Hubungan dengan Almarhum", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "pengantar-adminduk",
+    "nama": "Pengantar Adminduk",
+    "kategori": "Pengantar",
+    "ringkasan": "Pengantar resmi desa untuk mengurus dokumen kependudukan.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT PENGANTAR",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true, "bawaan": "Melengkapi persyaratan pengurusan dokumen kependudukan (KTP/KK/Akta)" }
+    ],
+    "penutup": [
+      "Adalah benar warga desa tersebut di atas dan surat ini dibuat untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "pindah",
+    "nama": "Surat Keterangan Pindah",
+    "kategori": "Keterangan",
+    "ringkasan": "Keterangan pindah domisili warga keluar dari desa.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN PINDAH",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan bahwa warga berikut akan pindah domisili:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat-asal", "label": "Alamat Asal", "tipe": "paragraf", "wajib": true },
+      { "kunci": "alamat-tujuan", "label": "Alamat Tujuan", "tipe": "paragraf", "wajib": true },
+      { "kunci": "jumlah-keluarga", "label": "Jumlah Anggota Keluarga", "tipe": "angka" },
+      { "kunci": "alasan", "label": "Alasan Pindah", "tipe": "teks", "wajib": true }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "tidak-punya-rumah",
+    "nama": "SK Tidak Punya Rumah",
+    "kategori": "Keterangan",
+    "ringkasan": "Keterangan bahwa warga tidak memiliki tempat tinggal tetap.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT KETERANGAN TIDAK PUNYA RUMAH",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat-menumpang", "label": "Menumpang di", "tipe": "paragraf", "wajib": true },
+      { "kunci": "keterangan", "label": "Keterangan", "tipe": "paragraf" }
+    ],
+    "penutup": [
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "izin-keramaian",
+    "nama": "Izin Keramaian",
+    "kategori": "Izin",
+    "ringkasan": "Pengantar dan pendataan kegiatan atau keramaian warga.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT PENGANTAR PERMOHONAN KERAMAIAN",
+    "awalanNomor": "470",
+    "pembuka": [
+      "Pemerintah desa menerima permohonan pencatatan kegiatan dari warga dengan data sebagai berikut:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama Pemohon", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "acara", "label": "Acara/Hiburan", "tipe": "teks", "wajib": true },
+      { "kunci": "hari-tanggal", "label": "Hari/Tanggal Acara", "tipe": "tanggal", "wajib": true },
+      { "kunci": "tempat", "label": "Tempat Acara", "tipe": "teks", "wajib": true },
+      { "kunci": "jumlah-undangan", "label": "Jumlah Undangan", "tipe": "angka" }
+    ],
+    "penutup": [
+      "Surat ini berfungsi sebagai pengantar dan pendataan dari desa, bukan izin instansi berwenang."
+    ]
+  },
+  {
+    "kode": "rekening-koran",
+    "nama": "Permohonan Rekening Koran",
+    "kategori": "Keuangan",
+    "ringkasan": "Surat permohonan cetak rekening koran ke bank atas nama warga.",
+    "kelompok": "suratBaru",
+    "judul": "SURAT PERMOHONAN REKENING KORAN",
+    "awalanNomor": "130",
+    "pembuka": [
+      "Dengan hormat, sehubungan dengan keperluan administrasi yang memerlukan bukti mutasi rekening, dengan ini kami mengajukan permohonan cetak rekening koran kepada Bapak/Ibu pimpinan bank:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama Pemilik Rekening", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "nama-bank", "label": "Nama Bank", "tipe": "teks", "wajib": true },
+      { "kunci": "nomor-rekening", "label": "Nomor Rekening", "tipe": "teks", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true, "bawaan": "Memohon cetak rekening koran 3 (tiga) bulan terakhir" }
+    ],
+    "penutup": [
+      "Demikian permohonan ini kami sampaikan. Atas perhatian dan kerja sama Bapak/Ibu pimpinan, kami ucapkan terima kasih."
+    ]
+  },
+  {
+    "kode": "n1",
+    "nama": "N1 — Surat Pengantar Nikah",
+    "kategori": "NTCR",
+    "ringkasan": "Diterbitkan & ditandatangani Kepala Desa/Lurah",
+    "kelompok": "ntcr",
+    "judul": "FORMULIR PENGANTAR NIKAH",
+    "awalanNomor": "474.3",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan bahwa calon pengantin berikut berdomisili di wilayah desa ini:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama Calon Pengantin", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks" },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal" },
+      { "kunci": "agama", "label": "Agama", "tipe": "teks" },
+      { "kunci": "pekerjaan", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Surat pengantar ini dibuat untuk melengkapi persyaratan pencatatan nikah di KUA setempat."
+    ]
+  },
+  {
+    "kode": "n2",
+    "nama": "N2 — Permohonan Kehendak Nikah",
+    "kategori": "NTCR",
+    "ringkasan": "Diajukan calon pengantin kepada KUA/PPN LN",
+    "kelompok": "ntcr",
+    "judul": "FORMULIR PERMOHONAN KEHENDAK NIKAH",
+    "awalanNomor": "474.3",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini mengajukan permohonan kehendak nikah dengan data calon pengantin sebagai berikut:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama Calon Pengantin", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks" },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "nomor-surat-rt", "label": "Nomor Surat RT/RW", "tipe": "teks" }
+    ],
+    "penutup": [
+      "Surat ini dipergunakan untuk melengkapi persyaratan pencatatan nikah di Kantor Urusan Agama setempat."
+    ]
+  },
+  {
+    "kode": "n3",
+    "nama": "N3 — Permohonan Pencatatan Isbat",
+    "kategori": "NTCR",
+    "ringkasan": "Diajukan kepada KUA untuk pencatatan isbat",
+    "kelompok": "ntcr",
+    "judul": "FORMULIR PERMOHONAN PENCATATAN ISBAT",
+    "awalanNomor": "474.3",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan data calon pengantin sebagai berikut:"
+    ],
+    "kolom": [
+      { "kunci": "nama-pria", "label": "Nama Calon Pria", "tipe": "teks", "wajib": true },
+      { "kunci": "nik-pria", "label": "NIK Calon Pria", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir-pria", "label": "Tempat/Tanggal Lahir Pria", "tipe": "teks" },
+      { "kunci": "alamat-pria", "label": "Alamat Calon Pria", "tipe": "paragraf", "wajib": true },
+      { "kunci": "nama-wanita", "label": "Nama Calon Wanita", "tipe": "teks", "wajib": true },
+      { "kunci": "nik-wanita", "label": "NIK Calon Wanita", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir-wanita", "label": "Tempat/Tanggal Lahir Wanita", "tipe": "teks" },
+      { "kunci": "alamat-wanita", "label": "Alamat Calon Wanita", "tipe": "paragraf", "wajib": true },
+      { "kunci": "tanggal-akad", "label": "Rencana Tanggal Akad", "tipe": "tanggal" }
+    ],
+    "penutup": [
+      "Demikian keterangan ini dibuat berdasarkan data yang tercatat di desa untuk keperluan pencatatan nikah."
+    ]
+  },
+  {
+    "kode": "n4",
+    "nama": "N4 — Persetujuan Calon Pengantin",
+    "kategori": "NTCR",
+    "ringkasan": "Ditandatangani kedua calon pengantin",
+    "kelompok": "ntcr",
+    "judul": "SURAT PERSETUJUAN PENGANTIN",
+    "awalanNomor": "474.3",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menyatakan dengan sadar dan tanpa paksaan menyetujui pernikahan:"
+    ],
+    "kolom": [
+      { "kunci": "nama-pria", "label": "Nama Calon Pria", "tipe": "teks", "wajib": true },
+      { "kunci": "nik-pria", "label": "NIK Calon Pria", "tipe": "teks", "wajib": true },
+      { "kunci": "nama-wanita", "label": "Nama Calon Wanita", "tipe": "teks", "wajib": true },
+      { "kunci": "nik-wanita", "label": "NIK Calon Wanita", "tipe": "teks", "wajib": true },
+      { "kunci": "tanggal-akad", "label": "Tanggal Akad Nikah", "tipe": "tanggal" }
+    ],
+    "penutup": [
+      "Pernyataan ini dibuat dengan sebenarnya untuk melengkapi berkas pencatatan nikah."
+    ]
+  },
+  {
+    "kode": "n5",
+    "nama": "N5 — Surat Izin Orang Tua",
+    "kategori": "NTCR",
+    "ringkasan": "Ditandatangani ayah & ibu/wali calon pengantin",
+    "kelompok": "ntcr",
+    "judul": "SURAT IZIN ORANG TUA",
+    "awalanNomor": "474.3",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini selaku orang tua/wali memberikan izin kepada:"
+    ],
+    "kolom": [
+      { "kunci": "nama-anak", "label": "Nama Anak", "tipe": "teks", "wajib": true },
+      { "kunci": "nik-anak", "label": "NIK Anak", "tipe": "teks", "wajib": true },
+      { "kunci": "nama-pasangan", "label": "Nama Calon Pasangan", "tipe": "teks", "wajib": true },
+      { "kunci": "nama-orang-tua", "label": "Nama Orang Tua/Wali", "tipe": "teks", "wajib": true },
+      { "kunci": "hubungan", "label": "Hubungan", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Izin ini diberikan untuk kelancaran proses pernikahan dan pencatatan di KUA setempat."
+    ]
+  },
+  {
+    "kode": "n6",
+    "nama": "N6 — Keterangan Kematian Suami/Istri",
+    "kategori": "NTCR",
+    "ringkasan": "Diterbitkan Kepala Desa/Lurah untuk pernikahan/rujuk",
+    "kelompok": "ntcr",
+    "judul": "SURAT KETERANGAN KEMATIAN SUAMI/ISTRI",
+    "awalanNomor": "474.3",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan bahwa telah meninggal dunia:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tanggal-meninggal", "label": "Tanggal Meninggal", "tipe": "tanggal", "wajib": true },
+      { "kunci": "sebab", "label": "Sebab", "tipe": "teks", "wajib": true },
+      { "kunci": "hubungan", "label": "Hubungan dengan Pemohon", "tipe": "teks", "wajib": true }
+    ],
+    "penutup": [
+      "Keterangan ini dibuat berdasarkan data kematian yang tercatat di desa."
+    ]
+  },
+  {
+    "kode": "n8",
+    "nama": "N8 — Surat Numpang Nikah (Numpang Kawin)",
+    "kategori": "NTCR",
+    "ringkasan": "Keterangan desa bahwa warga akan numpang nikah di wilayah lain",
+    "kelompok": "ntcr",
+    "judul": "SURAT KETERANGAN NUMPANG NIKAH",
+    "awalanNomor": "474.2",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan bahwa calon pengantin berikut berdomisili di wilayah desa ini:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama Calon Pengantin", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "tempat-akad", "label": "Tempat Akad Nikah", "tipe": "teks", "wajib": true },
+      { "kunci": "tanggal-akad", "label": "Tanggal Akad Nikah", "tipe": "tanggal" },
+      { "kunci": "alasan", "label": "Alasan Numpang Nikah", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Surat keterangan ini dibuat untuk melengkapi administrasi pernikahan di wilayah tempat akad dilaksanakan."
+    ]
+  },
+  {
+    "kode": "pengantar-rt-rw",
+    "nama": "Surat Pengantar RT/RW",
+    "kategori": "Pengantar",
+    "ringkasan": "Contoh pengantar desa bagi warga yang mengurus dokumen di instansi lain.",
+    "kelompok": "formulir",
+    "judul": "SURAT PENGANTAR",
+    "awalanNomor": "475",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks" },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal" },
+      { "kunci": "jenis-kelamin", "label": "Jenis Kelamin", "tipe": "pilihan", "pilihan": [ "Laki-laki", "Perempuan" ] },
+      { "kunci": "pekerjaan", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true, "bawaan": "Melengkapi persyaratan pengurusan dokumen di instansi terkait" }
+    ],
+    "penutup": [
+      "Adalah benar warga Desa tersebut di atas, berkelakuan baik, dan tidak pernah terlibat tindak pidana maupun pelanggaran ketertiban umum di wilayah kami.",
+      "Surat pengantar ini juga disampaikan kepada Ketua RT setempat dan disimpan sebagai arsip desa.",
+      "Demikian surat pengantar ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "keterangan-domisili-usaha",
+    "nama": "Surat Keterangan Domisili Usaha",
+    "kategori": "Keterangan",
+    "ringkasan": "Contoh keterangan lokasi usaha warga di wilayah desa.",
+    "kelompok": "formulir",
+    "judul": "SURAT KETERANGAN DOMISILI USAHA",
+    "awalanNomor": "471",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "pekerjaan", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "nama-usaha", "label": "Nama Usaha", "tipe": "teks", "wajib": true },
+      { "kunci": "bentuk-usaha", "label": "Bentuk Usaha", "tipe": "pilihan", "pilihan": [ "Perorangan", "Badan usaha" ], "wajib": true },
+      { "kunci": "jenis-usaha", "label": "Jenis Usaha", "tipe": "teks", "wajib": true, "bawaan": "Warung kelontong" },
+      { "kunci": "alamat-usaha", "label": "Alamat Usaha", "tipe": "paragraf", "wajib": true }
+    ],
+    "penutup": [
+      "Keterangan mengenai kondisi usaha diisi berdasarkan pemeriksaan yang benar-benar dilakukan dan dicatat oleh petugas.",
+      "Masa berlaku dan penggunaan surat, bila dipersyaratkan, mengikuti ketentuan instansi tujuan dan aturan lokal yang berlaku.",
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "pengantar-keramaian",
+    "nama": "Surat Pengantar Permohonan Keramaian",
+    "kategori": "Pengantar",
+    "ringkasan": "Contoh surat pengantar/pendataan kegiatan; bukan izin final instansi berwenang.",
+    "kelompok": "formulir",
+    "judul": "SURAT PENGANTAR PERMOHONAN KEGIATAN/KERAMAIAN",
+    "awalanNomor": "476",
+    "pembuka": [
+      "Pemerintah Desa menerima permohonan pencatatan/pengantar kegiatan dari warga dengan data sebagai berikut:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks" },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal" },
+      { "kunci": "pekerjaan", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "agama", "label": "Agama", "tipe": "pilihan", "pilihan": [ "Islam", "Kristen", "Katolik", "Hindu", "Buddha", "Konghucu" ] },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "hari-tanggal", "label": "Hari/Tanggal Acara", "tipe": "tanggal", "wajib": true },
+      { "kunci": "acara", "label": "Acara/Hiburan", "tipe": "pilihan", "pilihan": [ "Organ Tunggal", "Wayang Kulit", "Dangdut", "Musik Keyboard", "Panggung Hiburan", "Lainnya" ], "wajib": true, "bawaan": "Organ Tunggal" },
+      { "kunci": "perayaan", "label": "Perayaan/Acara", "tipe": "pilihan", "pilihan": [ "Resepsi Pernikahan", "Khitanan/Sunatan", "Tasyakuran", "Ulang Tahun", "Peringatan Hari Besar", "Lainnya" ], "wajib": true, "bawaan": "Resepsi Pernikahan" },
+      { "kunci": "tempat", "label": "Tempat Acara", "tipe": "teks", "wajib": true, "bawaan": "Kediaman pemohon, alamat tersebut di atas" },
+      { "kunci": "jumlah-undangan", "label": "Jumlah Undangan", "tipe": "angka", "bawaan": "150" },
+      { "kunci": "penanggung-jawab", "label": "Penanggung Jawab", "tipe": "teks", "wajib": true, "bawaan": "Pemohon (nama tersebut di atas)" }
+    ],
+    "penutup": [
+      "1. Pada waktu dilaksanakan rame-rame, ketentraman dan ketertiban lingkungan wajib dijaga, baik terhadap tetangga, menghargai waktu ibadah untuk menciptakan kerukunan umat beragama, maupun kebersihan lingkungan setelah rame-rame selesai.",
+      "2. Pada waktu dilaksanakan rame-rame, tidak dibenarkan melakukan hal-hal yang bertentangan dengan ketentuan yang berlaku dan adat istiadat setempat.",
+      "3. Pemohon mengurus izin/persetujuan lain yang diwajibkan sebelum kegiatan dilaksanakan.",
+      "Surat ini hanya berfungsi sebagai pengantar/pendataan dari desa dan tidak menggantikan izin atau persetujuan instansi yang berwenang.",
+      "Demikian surat pengantar permohonan kegiatan ini dibuat untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "keterangan-penghasilan",
+    "nama": "Surat Keterangan Penghasilan",
+    "kategori": "Keterangan",
+    "ringkasan": "Contoh pencatatan keterangan penghasilan untuk beasiswa atau bantuan sosial.",
+    "kelompok": "formulir",
+    "judul": "SURAT KETERANGAN PENGHASILAN",
+    "awalanNomor": "472",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "pekerjaan", "label": "Pekerjaan/Usaha", "tipe": "teks", "wajib": true },
+      { "kunci": "penghasilan", "label": "Penghasilan per Bulan", "tipe": "angka", "wajib": true },
+      { "kunci": "tanggungan", "label": "Jumlah Tanggungan", "tipe": "angka" }
+    ],
+    "penutup": [
+      "Keterangan penghasilan di atas dicatat berdasarkan keterangan pemohon dan/atau pemeriksaan yang benar-benar dilakukan.",
+      "Surat ini menerangkan data penghasilan; surat ini bukan penetapan kelayakan bantuan atau program tertentu.",
+      "Demikian surat keterangan ini dibuat dengan sebenarnya untuk keperluan pengajuan beasiswa/bantuan sosial dan dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "keterangan-belum-menikah",
+    "nama": "Surat Keterangan Belum Menikah",
+    "kategori": "Keterangan",
+    "ringkasan": "Keterangan status belum menikah warga untuk syarat administrasi perkawinan.",
+    "kelompok": "formulir",
+    "judul": "SURAT KETERANGAN BELUM MENIKAH",
+    "awalanNomor": "473",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks", "wajib": true },
+      { "kunci": "tempat-lahir", "label": "Tempat Lahir", "tipe": "teks" },
+      { "kunci": "tanggal-lahir", "label": "Tanggal Lahir", "tipe": "tanggal" },
+      { "kunci": "pekerjaan", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf", "wajib": true },
+      { "kunci": "keperluan", "label": "Keperluan", "tipe": "paragraf", "wajib": true, "bawaan": "Melengkapi persyaratan administrasi perkawinan di KUA" }
+    ],
+    "penutup": [
+      "Sampai dengan diterbitkannya surat keterangan ini, yang bersangkutan berstatus BELUM PERNAH KAWIN, tidak pernah menikah secara resmi maupun tidak resmi, dan tercatat sebagai warga yang berdomisili di wilayah kami.",
+      "Apabila di kemudian hari terdapat ketidaksesuaian data, yang bersangkutan bersedia bertanggung jawab menurut peraturan perundang-undangan yang berlaku.",
+      "Demikian surat keterangan ini dibuat dengan sebenarnya agar dapat dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "undangan-rapat",
+    "nama": "Surat Undangan Rapat",
+    "kategori": "Undangan",
+    "ringkasan": "Undangan kegiatan atau rapat desa untuk warga, perangkat, maupun lembaga desa.",
+    "kelompok": "formulir",
+    "judul": "SURAT UNDANGAN",
+    "awalanNomor": "503",
+    "pembuka": [
+      "Dengan hormat,",
+      "Sehubungan dengan akan dilaksanakannya kegiatan desa, dengan ini kami mengharap kehadiran Bapak/Ibu/Saudara pada:"
+    ],
+    "kolom": [
+      { "kunci": "acara", "label": "Acara", "tipe": "teks", "wajib": true, "bawaan": "Rapat koordinasi dengan perangkat desa" },
+      { "kunci": "hari-tanggal", "label": "Hari/Tanggal", "tipe": "tanggal", "wajib": true },
+      { "kunci": "waktu", "label": "Waktu", "tipe": "teks", "wajib": true, "bawaan": "09.00 WIB s.d. selesai" },
+      { "kunci": "tempat", "label": "Tempat", "tipe": "teks", "wajib": true, "bawaan": "Balai Desa" },
+      { "kunci": "agenda", "label": "Agenda", "tipe": "paragraf", "wajib": true, "bawaan": "1. Penyampaian program kerja; 2. Evaluasi kegiatan berjalan; 3. Persiapan kegiatan mendatang." },
+      { "kunci": "pakaian", "label": "Pakaian", "tipe": "pilihan", "pilihan": [ "Kemeja/ Batik", "Bebas rapi", "Seragam lapangan" ], "bawaan": "Kemeja/ Batik" }
+    ],
+    "penutup": [
+      "Mengingat pentingnya acara dimaksud, kami mengharapkan kehadiran Bapak/Ibu/Saudara tepat waktu dan tanpa diwakilkan.",
+      "Demikian undangan ini disampaikan untuk dilaksanakan sebagaimana mestinya. Atas perhatian dan kehadirannya kami ucapkan terima kasih."
+    ]
+  },
+  {
+    "kode": "surat-kuasa",
+    "nama": "Surat Kuasa",
+    "kategori": "Kuasa",
+    "ringkasan": "Pemberian kuasa dari warga kepada orang lain untuk mengurus suatu kepentingan.",
+    "kelompok": "formulir",
+    "judul": "SURAT KUASA",
+    "awalanNomor": "591",
+    "pakaiKop": false,
+    "jabatanPenandatangan": "Pemberi Kuasa",
+    "penandatanganDariKunci": "nama-pemberi",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini:"
+    ],
+    "kolom": [
+      { "kunci": "nama-pemberi", "label": "Nama Pemberi Kuasa", "tipe": "teks", "wajib": true },
+      { "kunci": "nik-pemberi", "label": "NIK Pemberi Kuasa", "tipe": "teks", "wajib": true },
+      { "kunci": "pekerjaan-pemberi", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "jabatan-pemberi", "label": "Jabatan", "tipe": "teks", "wajib": true, "bawaan": "Kepala Keluarga" },
+      { "kunci": "alamat-pemberi", "label": "Alamat Pemberi Kuasa", "tipe": "paragraf", "wajib": true },
+      { "kunci": "nama-penerima", "label": "Nama Penerima Kuasa", "tipe": "teks", "wajib": true },
+      { "kunci": "nik-penerima", "label": "NIK Penerima Kuasa", "tipe": "teks" },
+      { "kunci": "pekerjaan-penerima", "label": "Pekerjaan Penerima Kuasa", "tipe": "teks" },
+      { "kunci": "alamat-penerima", "label": "Alamat Penerima Kuasa", "tipe": "paragraf", "wajib": true },
+      { "kunci": "hal-kuasa", "label": "Hal yang Dikuasakan", "tipe": "paragraf", "wajib": true, "bawaan": "Mewakili pemberi kuasa mengurus penerimaan dan/atau penandatanganan dokumen di instansi terkait" },
+      { "kunci": "masa-berlaku", "label": "Masa Berlaku", "tipe": "teks", "bawaan": "6 (enam) bulan sejak surat kuasa ini diterbitkan" }
+    ],
+    "penutup": [
+      "Penerima kuasa tidak berhak melimpahkan (menguasakan kembali) kuasa ini kepada pihak lain, kecuali dengan persetujuan tertulis lebih dahulu dari pemberi kuasa.",
+      "Pemberi kuasa dapat mencabut surat kuasa ini sewaktu-waktu selama kepentingan yang dikuasakan belum selesai dilaksanakan.",
+      "Demikian surat kuasa ini dibuat dengan sebenarnya di atas materai secukupnya sesuai ketentuan peraturan perundang-undangan yang berlaku, untuk dipergunakan sebagaimana mestinya."
+    ]
+  },
+  {
+    "kode": "surat-tugas",
+    "nama": "Surat Tugas",
+    "kategori": "Tugas",
+    "ringkasan": "Penugasan resmi kepada perangkat desa atau warga untuk melaksanakan suatu tugas.",
+    "kelompok": "formulir",
+    "judul": "SURAT TUGAS",
+    "awalanNomor": "592",
+    "pembuka": [
+      "Yang bertanda tangan di bawah ini menerangkan bahwa berdasarkan keperluan dinas/kegiatan, dengan ini menugaskan:"
+    ],
+    "kolom": [
+      { "kunci": "nama", "label": "Nama", "tipe": "teks", "wajib": true },
+      { "kunci": "nik", "label": "NIK", "tipe": "teks" },
+      { "kunci": "pekerjaan", "label": "Pekerjaan", "tipe": "teks" },
+      { "kunci": "alamat", "label": "Alamat", "tipe": "paragraf" },
+      { "kunci": "uraian-tugas", "label": "Uraian Tugas", "tipe": "paragraf", "wajib": true, "bawaan": "Menghadiri rapat koordinasi perangkat desa se-kecamatan" },
+      { "kunci": "hari-tanggal", "label": "Hari/Tanggal Pelaksanaan", "tipe": "tanggal", "wajib": true },
+      { "kunci": "waktu", "label": "Waktu", "tipe": "teks", "bawaan": "08.00 WIB s.d. selesai" },
+      { "kunci": "tempat", "label": "Tempat", "tipe": "teks", "wajib": true, "bawaan": "Kantor Kecamatan" }
+    ],
+    "penutup": [
+      "Selesai melaksanakan tugas tersebut, yang bersangkutan wajib menyampaikan hasil dan laporan kegiatannya kepada pejabat yang menugaskan.",
+      "Demikian surat tugas ini diberikan untuk dilaksanakan dengan sebaik-baiknya dan penuh tanggung jawab."
+    ]
+  },
+  {
+    "kode": "pengumuman-warga",
+    "nama": "Surat Pengumuman Warga",
+    "kategori": "Pengumuman",
+    "ringkasan": "Pengumuman resmi desa kepada warga, mis. jadwal kegiatan atau kerja bakti.",
+    "kelompok": "formulir",
+    "judul": "PENGUMUMAN",
+    "awalanNomor": "504",
+    "pembuka": [
+      "Dengan ini disampaikan kepada seluruh warga Desa bahwa:"
+    ],
+    "kolom": [
+      { "kunci": "perihal", "label": "Perihal", "tipe": "teks", "wajib": true, "bawaan": "Kerja bakti pembersihan lingkungan" },
+      { "kunci": "hari-tanggal", "label": "Hari/Tanggal Pelaksanaan", "tipe": "tanggal", "wajib": true },
+      { "kunci": "waktu", "label": "Waktu Pelaksanaan", "tipe": "teks", "bawaan": "07.00 WIB s.d. selesai" },
+      { "kunci": "tempat", "label": "Tempat", "tipe": "teks", "bawaan": "Seluruh jalan lingkungan desa" },
+      { "kunci": "isi", "label": "Isi Pengumuman", "tipe": "paragraf", "wajib": true, "bawaan": "Seluruh warga dimohon hadir membawa peralatan kebersihan masing-masing dan mengikuti arahan koordinator lingkungan. Kegiatan berlangsung meskipun hujan ringan." }
+    ],
+    "penutup": [
+      "Demikian pengumuman ini disampaikan untuk diketahui dan dilaksanakan dengan penuh tanggung jawab. Atas perhatian dan kerja samanya, kami ucapkan terima kasih."
+    ]
+  }
+]
