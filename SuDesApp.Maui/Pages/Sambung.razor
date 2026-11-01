@@ -1,0 +1,208 @@
+@page "/sambung"
+
+@* Menyambungkan ponsel ke API Desa yang berjalan di aplikasi desktop. Setelah
+   tersambung, akun yang dipakai adalah akun desktop dan kop/penanda tangan
+   surat mengikuti Pengaturan Surat desktop (baca-saja di sini). *@
+<PageTitle>Sambungkan ke Desktop</PageTitle>
+
+<button class="tautan-kembali" type="button" @onclick="KeBeranda">&#8592; Beranda</button>
+<h1 class="judul-halaman">Sambungkan ke Desktop</h1>
+<p class="keterangan-halaman">
+    Ponsel memakai akun dan Pengaturan Surat dari aplikasi desktop. Isi alamat
+    komputer kantor, kunci API, lalu masuk dengan akun desktop Anda.
+</p>
+
+@if (!string.IsNullOrWhiteSpace(_galat))
+{
+    <p class="galat">@_galat</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(_pesan))
+{
+    <p class="berhasil">@_pesan</p>
+}
+
+@if (Layanan.TerhubungDesktop && _sambungan != null)
+{
+    <div class="kartu-formulir">
+        <dl class="ringkas">
+            <dt>Status</dt>
+            <dd>Terhubung ke @_sambungan.Alamat</dd>
+            <dt>Masuk sebagai</dt>
+            <dd>@_sambungan.Label</dd>
+            <dt>Sesi berakhir</dt>
+            <dd>@_sambungan.Berakhir.ToString("dd-MM-yyyy HH:mm")</dd>
+            <dt>Pengaturan ditarik</dt>
+            <dd>@_sambungan.PengaturanDiambil.ToString("dd-MM-yyyy HH:mm")</dd>
+            <dt>Desa</dt>
+            <dd>@Layanan.Profil.NamaDesa</dd>
+        </dl>
+    </div>
+
+    <div class="aksi">
+        <button class="tombol-utama" type="button" disabled="@_sibuk" @onclick="TarikUlang">
+            @(_sibuk ? "Menarik…" : "Tarik ulang pengaturan")
+        </button>
+        <button class="tombol-kedua" type="button" disabled="@_sibuk" @onclick="Putuskan">
+            Putuskan
+        </button>
+    </div>
+}
+else
+{
+    <div class="kartu-formulir">
+        <div class="isian">
+            <label for="alamat">Alamat desktop <span class="tanda-wajib">*</span></label>
+            <input id="alamat" type="text" inputmode="url" autocomplete="off"
+                   placeholder="http://192.168.1.10:8790"
+                   @bind="_alamat" @bind:event="oninput" />
+        </div>
+
+        <div class="isian">
+            <label for="kunci">Kunci API <span class="tanda-wajib">*</span></label>
+            <input id="kunci" type="text" autocomplete="off"
+                   placeholder="Salin dari halaman API Desa"
+                   @bind="_kunci" @bind:event="oninput" />
+        </div>
+
+        <div class="isian">
+            <label for="pengguna">Nama pengguna <span class="tanda-wajib">*</span></label>
+            <input id="pengguna" type="text" autocomplete="username"
+                   @bind="_pengguna" @bind:event="oninput" />
+        </div>
+
+        <div class="isian">
+            <label for="sandi">Kata sandi <span class="tanda-wajib">*</span></label>
+            <input id="sandi" type="password" autocomplete="current-password"
+                   @bind="_sandi" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="aksi">
+        <button class="tombol-utama" type="button" disabled="@_sibuk" @onclick="Sambungkan">
+            @(_sibuk ? "Menyambungkan…" : "Sambungkan")
+        </button>
+    </div>
+}
+
+<h2 class="judul-kelompok">Menyiapkan desktop</h2>
+<div class="kartu-formulir">
+    <ol class="langkah">
+        <li>Buka SuDesApp di komputer kantor, lalu menu <strong>API Desa</strong>.</li>
+        <li>Nyalakan API, aktifkan <em>Izinkan akses jaringan</em>, dan tambahkan alamat IP ponsel ke daftar yang diizinkan.</li>
+        <li>Salin <strong>kunci API</strong> (cakupan Penuh) dan alamat yang tampil, mis. <code>http://192.168.1.10:8790</code>.</li>
+        <li>Pastikan ponsel dan komputer berada di jaringan Wi-Fi yang sama, lalu sambungkan.</li>
+    </ol>
+</div>
+
+<p class="catatan-kaki">
+    Pengaturan surat hanya dibaca dari desktop. Untuk mengubah kop atau nama
+    Kepala Desa, ubah di desktop lalu tekan <em>Tarik ulang pengaturan</em>.
+</p>
+
+@code {
+    private void KeBeranda() => Navigasi.NavigateTo("/");
+
+    private string _alamat = string.Empty;
+    private string _kunci = string.Empty;
+    private string _pengguna = string.Empty;
+    private string _sandi = string.Empty;
+    private string? _galat;
+    private string? _pesan;
+    private bool _sibuk;
+    private SambunganDesktop? _sambungan;
+
+    protected override void OnInitialized()
+    {
+        _sambungan = Layanan.Sambungan;
+        if (_sambungan == null) return;
+
+        _alamat = _sambungan.Alamat;
+        _kunci = _sambungan.KunciApi;
+        _pengguna = _sambungan.Username;
+    }
+
+    private async Task Sambungkan()
+    {
+        _galat = null;
+        _pesan = null;
+
+        if (string.IsNullOrWhiteSpace(_alamat) || string.IsNullOrWhiteSpace(_kunci)
+            || string.IsNullOrWhiteSpace(_pengguna) || string.IsNullOrEmpty(_sandi))
+        {
+            _galat = "Alamat desktop, kunci API, nama pengguna, dan kata sandi wajib diisi.";
+            return;
+        }
+
+        _sibuk = true;
+        try
+        {
+            _sambungan = await Layanan.SambungkanAsync(_alamat, _kunci, _pengguna, _sandi);
+            _sandi = string.Empty;
+
+            // Menu surat baru tampil di beranda setelah tersambung, jadi pengguna
+            // langsung dibawa ke sana, bukan ditinggal di formulir sambungan.
+            Navigasi.NavigateTo("/");
+            return;
+        }
+        catch (ApiDesktopException ex)
+        {
+            _galat = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            _galat = "Gagal menyambung: " + ex.Message;
+        }
+        finally
+        {
+            _sibuk = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TarikUlang()
+    {
+        _galat = null;
+        _pesan = null;
+        _sibuk = true;
+
+        try
+        {
+            _sambungan = await Layanan.SegarkanPengaturanAsync();
+            _pesan = "Pengaturan surat ditarik ulang dari desktop.";
+        }
+        catch (Exception ex)
+        {
+            _galat = ex.Message;
+            _sambungan = Layanan.Sambungan;
+        }
+        finally
+        {
+            _sibuk = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Putuskan()
+    {
+        _galat = null;
+        _pesan = null;
+        _sibuk = true;
+
+        try
+        {
+            await Layanan.PutuskanAsync();
+            _sambungan = null;
+            _pesan = "Sambungan diputus. Data desa terakhir tetap dipakai sampai disambungkan lagi.";
+        }
+        catch (Exception ex)
+        {
+            _galat = ex.Message;
+        }
+        finally
+        {
+            _sibuk = false;
+            StateHasChanged();
+        }
+    }
+}

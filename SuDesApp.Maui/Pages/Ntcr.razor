@@ -1,0 +1,123 @@
+@page "/ntcr"
+
+<PageTitle>NTCR</PageTitle>
+
+@if (_terpilih == null)
+{
+    <button class="tautan-kembali" type="button" @onclick="KeBeranda">&#8592; Beranda</button>
+    <h1 class="judul-halaman">NTCR</h1>
+    <p class="keterangan-halaman">
+        Blanko nikah, talak, dan cerai (N1-N6 serta N8). Isi data satu calon
+        pengantin per surat, lalu cetak.
+    </p>
+
+    <div class="daftar-kartu">
+        @foreach (var surat in Layanan.SuratNtcr)
+        {
+            <button class="kartu-jenis" type="button" @onclick="() => Pilih(surat)">
+                <span class="kartu-judul">@surat.Nama</span>
+                <span class="kartu-ket">@surat.Ringkasan</span>
+            </button>
+        }
+    </div>
+}
+else
+{
+    <button class="tautan-kembali" type="button" @onclick="Tutup">&#8592; Daftar blanko</button>
+    <h1 class="judul-halaman">@_terpilih.Nama</h1>
+    <p class="keterangan-halaman">@_terpilih.Ringkasan</p>
+
+    <div class="kartu-formulir">
+        <dl class="ringkas">
+            <dt>Nomor</dt>
+            <dd>@Layanan.NomorBerikutnya(_terpilih, DateTime.Today)</dd>
+        </dl>
+
+        <FormIsian Surat="_terpilih" Nilai="_nilai" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_galat))
+    {
+        <p class="galat">@_galat</p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_pesan))
+    {
+        <p class="berhasil">@_pesan</p>
+    }
+
+    <div class="aksi">
+        <button class="tombol-utama" type="button" disabled="@_sibuk" @onclick="Cetak">
+            @(_sibuk ? "Menyiapkan…" : "Buat PDF & Cetak")
+        </button>
+    </div>
+}
+
+@code {
+    private void KeBeranda() => Navigasi.NavigateTo("/");
+
+    private DefinisiSurat? _terpilih;
+    private Dictionary<string, string> _nilai = new();
+    private string? _galat;
+    private string? _pesan;
+    private bool _sibuk;
+
+    protected override void OnParametersSet()
+    {
+        // Tautan dari halaman Formulir membuka blanko tertentu lewat ?kode=n1.
+        var alamat = new Uri(Navigasi.Uri);
+        string? kode = alamat.Query
+            .TrimStart('?')
+            .Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Select(bagian => bagian.Split('=', 2))
+            .Where(pasangan => pasangan.Length == 2 && pasangan[0] == "kode")
+            .Select(pasangan => Uri.UnescapeDataString(pasangan[1]))
+            .FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(kode) && _terpilih == null)
+        {
+            var surat = KatalogSurat.Cari(kode);
+            if (surat?.Kelompok == KelompokMenu.Ntcr) Pilih(surat);
+        }
+    }
+
+    private void Pilih(DefinisiSurat surat)
+    {
+        _terpilih = surat;
+        _nilai = surat.Kolom.ToDictionary(k => k.Kunci, k => k.Bawaan ?? string.Empty);
+        _galat = null;
+        _pesan = null;
+    }
+
+    private void Tutup()
+    {
+        _terpilih = null;
+        _nilai = new();
+        _galat = null;
+        _pesan = null;
+    }
+
+    private async Task Cetak()
+    {
+        if (_terpilih == null) return;
+
+        _sibuk = true;
+        _galat = null;
+        _pesan = null;
+
+        try
+        {
+            var hasil = Layanan.Buat(_terpilih, _nilai, DateTime.Today);
+            await PencetakAndroid.CetakAsync(FormatSurat.NamaBerkas(hasil.Surat.Nomor), hasil.Pdf);
+            _pesan = $"Blanko {hasil.Surat.Nomor} dibuat. Pilih pencetak pada layar cetak Android.";
+            _terpilih = null;
+        }
+        catch (Exception ex)
+        {
+            _galat = ex.Message;
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+}

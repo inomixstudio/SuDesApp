@@ -1,0 +1,61 @@
+@* Formulir yang dibangun dari definisi katalog: satu komponen untuk seluruh
+   jenis surat, sehingga menambah surat baru cukup lewat berkas JSON. *@
+@foreach (var kolom in Surat.Kolom)
+{
+    <div class="isian">
+        <label for="isian-@kolom.Kunci">
+            @kolom.Label
+            @if (kolom.Wajib)
+            {
+                <span class="tanda-wajib" title="Wajib diisi">*</span>
+            }
+        </label>
+
+        @if (kolom.Tipe == "paragraf")
+        {
+            <textarea id="isian-@kolom.Kunci"
+                      rows="3"
+                      placeholder="@kolom.Bawaan"
+                      value="@Ambil(kolom.Kunci)"
+                      @onchange="e => Ubah(kolom.Kunci, e)"></textarea>
+        }
+        else if (kolom.Tipe == "pilihan")
+        {
+            <select id="isian-@kolom.Kunci" value="@Ambil(kolom.Kunci)" @onchange="e => Ubah(kolom.Kunci, e)">
+                <option value="">— pilih —</option>
+                @foreach (var pilihan in kolom.Pilihan)
+                {
+                    <option value="@pilihan">@pilihan</option>
+                }
+            </select>
+        }
+        else
+        {
+            <input id="isian-@kolom.Kunci"
+                   type="@JenisInput(kolom.Tipe)"
+                   inputmode="@(kolom.Tipe == "angka" ? "numeric" : null)"
+                   placeholder="@kolom.Bawaan"
+                   value="@Ambil(kolom.Kunci)"
+                   @onchange="e => Ubah(kolom.Kunci, e)" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public DefinisiSurat Surat { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Dictionary<string, string> Nilai { get; set; } = default!;
+
+    private static string JenisInput(string tipe) => tipe switch
+    {
+        "tanggal" => "date",
+        "angka" => "number",
+        _ => "text"
+    };
+
+    private string Ambil(string kunci) => Nilai.TryGetValue(kunci, out var nilai) ? nilai : string.Empty;
+
+    private void Ubah(string kunci, ChangeEventArgs e) => Nilai[kunci] = e.Value?.ToString() ?? string.Empty;
+}

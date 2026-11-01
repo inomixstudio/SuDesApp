@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SuDesApp.Mobile</RootNamespace>
+    <AssemblyName>SuDesApp.Mobile</AssemblyName>
+    <!--
+      Lapisan bersama aplikasi Android: katalog surat, isian formulir,
+      penyimpanan arsip, dan pencetak PDF. Tidak ada API Windows di sini —
+      rendering memakai mesin SudesPdf.Core yang juga dipakai versi desktop.
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SudesPdf.Core\SudesPdf.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Katalog\katalog-surat.json" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,181 @@
+@page "/paket-ntcr"
+
+@* Padanan baris pertama submenu NTCR di desktop: satu data pasangan menjadi
+   seluruh blanko terpilih, dicetak sebagai satu PDF (satu blanko per halaman,
+   urut N1 -> N6) dan dicatat sekaligus ke Register NTCR. *@
+<PageTitle>Paket NTCR</PageTitle>
+
+<button class="tautan-kembali" type="button" @onclick="KeBeranda">&#8592; Beranda</button>
+<h1 class="judul-halaman">Paket N1–N6</h1>
+<p class="keterangan-halaman">
+    Isi data satu pasangan sekali. Seluruh blanko yang dicentang dibuat dengan
+    nomor berurutan lalu dicetak menjadi satu berkas PDF.
+</p>
+
+@if (!string.IsNullOrWhiteSpace(_galat))
+{
+    <p class="galat">@_galat</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(_pesan))
+{
+    <p class="berhasil">@_pesan</p>
+}
+
+<h2 class="judul-kelompok">Blanko yang dibuat</h2>
+<div class="kartu-formulir">
+    @foreach (var blanko in Blanko)
+    {
+        <label class="pilih-blanko">
+            <input type="checkbox"
+                   checked="@_terpilih.Contains(blanko.Kode)"
+                   @onchange="e => UbahPilih(blanko.Kode, e)" />
+            <span class="pilih-isi">
+                <span class="kartu-judul">@blanko.Nama</span>
+                <span class="kartu-ket">@blanko.Ringkasan</span>
+            </span>
+        </label>
+    }
+</div>
+
+<h2 class="judul-kelompok">Calon Pengantin Pria</h2>
+<div class="kartu-formulir">
+    <FormIsian Surat="_calonPria" Nilai="_nilai" />
+</div>
+
+<h2 class="judul-kelompok">Calon Pengantin Wanita</h2>
+<div class="kartu-formulir">
+    <FormIsian Surat="_calonWanita" Nilai="_nilai" />
+</div>
+
+<h2 class="judul-kelompok">Orang Tua Calon Pria</h2>
+<div class="kartu-formulir">
+    <FormIsian Surat="_orangTua" Nilai="_nilai" />
+</div>
+
+<h2 class="judul-kelompok">Rencana Akad Nikah</h2>
+<div class="kartu-formulir">
+    <FormIsian Surat="_akad" Nilai="_nilai" />
+</div>
+
+<h2 class="judul-kelompok">Kematian Suami/Istri</h2>
+<p class="keterangan-halaman">Hanya perlu diisi bila blanko N6 dicentang.</p>
+<div class="kartu-formulir">
+    <FormIsian Surat="_kematian" Nilai="_nilai" />
+</div>
+
+<div class="aksi">
+    <button class="tombol-utama" type="button" disabled="@_sibuk" @onclick="Cetak">
+        @(_sibuk ? "Menyiapkan…" : "Buat PDF & Cetak Paket")
+    </button>
+</div>
+
+@code {
+    private void KeBeranda() => Navigasi.NavigateTo("/");
+
+    private readonly Dictionary<string, string> _nilai = new(StringComparer.OrdinalIgnoreCase);
+
+    // Pilihan awal mengikuti paket standar desktop: N1-N5. N6 dicentang hanya
+    // bila salah satu calon berstatus duda/janda karena kematian.
+    private readonly HashSet<string> _terpilih = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "n1", "n2", "n3", "n4", "n5"
+    };
+
+    private string? _galat;
+    private string? _pesan;
+    private bool _sibuk;
+
+    private IReadOnlyList<DefinisiSurat> Blanko =>
+        Layanan.SuratNtcr.Where(b => LayananSuratPonsel.UrutanPaket.Contains(b.Kode, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+    private static readonly DefinisiSurat _calonPria = Bagian(
+        ("pria-nama", "Nama Calon Pria", true, null),
+        ("pria-nik", "NIK Calon Pria", true, null),
+        ("pria-tempat-lahir", "Tempat Lahir", false, null),
+        ("pria-tanggal-lahir", "Tanggal Lahir", false, "tanggal"),
+        ("pria-agama", "Agama", false, null),
+        ("pria-pekerjaan", "Pekerjaan", false, null),
+        ("pria-alamat", "Alamat", true, "paragraf"));
+
+    private static readonly DefinisiSurat _calonWanita = Bagian(
+        ("istri-nama", "Nama Calon Wanita", true, null),
+        ("istri-nik", "NIK Calon Wanita", true, null),
+        ("istri-tempat-lahir", "Tempat Lahir", false, null),
+        ("istri-tanggal-lahir", "Tanggal Lahir", false, "tanggal"),
+        ("istri-agama", "Agama", false, null),
+        ("istri-pekerjaan", "Pekerjaan", false, null),
+        ("istri-alamat", "Alamat", true, "paragraf"));
+
+    private static readonly DefinisiSurat _orangTua = Bagian(
+        ("ayah-pria", "Nama Ayah Calon Pria", false, null),
+        ("ibu-pria", "Nama Ibu Calon Pria", false, null));
+
+    private static readonly DefinisiSurat _akad = Bagian(
+        ("akad-tanggal", "Rencana Tanggal Akad Nikah", false, "tanggal"));
+
+    private static readonly DefinisiSurat _kematian = Bagian(
+        ("kematian-nama", "Nama Almarhum/Almarhumah", false, null),
+        ("kematian-nik", "NIK", false, null),
+        ("kematian-tanggal", "Tanggal Meninggal", false, "tanggal"),
+        ("kematian-sebab", "Sebab", false, null),
+        ("kematian-hubungan", "Hubungan dengan Calon Pengantin", false, null));
+
+    /// <summary>Definisi bantu agar isian paket memakai komponen FormIsian yang sama.</summary>
+    private static DefinisiSurat Bagian(params (string Kunci, string Label, bool Wajib, string? Tipe)[] kolom) => new()
+    {
+        Nama = "Paket NTCR",
+        Judul = "PAKET NTCR",
+        Kolom = kolom.Select(k => new KolomIsian
+        {
+            Kunci = k.Kunci,
+            Label = k.Label,
+            Wajib = k.Wajib,
+            Tipe = k.Tipe ?? "teks"
+        }).ToList()
+    };
+
+    private void UbahPilih(string kode, ChangeEventArgs e)
+    {
+        if (bool.TryParse(e.Value?.ToString(), out bool dicentang) && dicentang)
+        {
+            _terpilih.Add(kode);
+        }
+        else
+        {
+            _terpilih.Remove(kode);
+        }
+    }
+
+    private async Task Cetak()
+    {
+        _sibuk = true;
+        _galat = null;
+        _pesan = null;
+
+        try
+        {
+            var hasil = Layanan.BuatPaketNtcr(_nilai, _terpilih.ToList(), DateTime.Today);
+            await PencetakAndroid.CetakAsync("paket-ntcr", hasil.Pdf);
+
+            _pesan = $"Paket {string.Join(", ", hasil.DaftarKode)} dibuat dengan nomor " +
+                     $"{hasil.DaftarNomor}. Pilih pencetak pada layar cetak Android.";
+
+            _nilai.Clear();
+            _terpilih.Clear();
+            foreach (var kode in LayananSuratPonsel.UrutanPaket.Take(5))
+            {
+                _terpilih.Add(kode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _galat = ex.Message;
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+}
