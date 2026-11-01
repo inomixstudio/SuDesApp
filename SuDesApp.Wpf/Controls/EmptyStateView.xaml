@@ -26,18 +26,18 @@
 
         <!-- Chip ikon bulat: latar tint aksen supaya menonjol di atas kartu
              maupun di atas overlay gradien, di semua tema. -->
-        <Border Width="64" Height="64" CornerRadius="32"
+        <Border Width="48" Height="48" CornerRadius="24"
                 Background="{DynamicResource AccentSubtleBrush}"
                 HorizontalAlignment="Center">
             <TextBlock Text="{Binding Ikon, RelativeSource={RelativeSource AncestorType=UserControl}}"
                        FontFamily="{StaticResource AppIconFont}"
-                       FontSize="24" Foreground="{DynamicResource AccentBrush}"
+                       FontSize="18" Foreground="{DynamicResource AccentBrush}"
                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
 
-        <TextBlock FontSize="15" FontWeight="SemiBold"
+        <TextBlock FontSize="14" FontWeight="SemiBold"
                    TextAlignment="Center" TextWrapping="Wrap" MaxWidth="440"
-                   Margin="0,12,0,0" HorizontalAlignment="Center"
+                   Margin="0,10,0,0" HorizontalAlignment="Center"
                    Foreground="{DynamicResource TextBrush}"
                    Text="{Binding Judul, RelativeSource={RelativeSource AncestorType=UserControl}}">
             <TextBlock.Style>

@@ -13,6 +13,16 @@ apa adanya.
   kertas. Kini keduanya rata tengah di dalam kolom kanan, baik pada pratinjau
   maupun cetak ulang surat lama. Dijaga uji yang mengukur rentang tinta dua baris
   terakhir halaman.
+- **Menu Perdes lebih praktis.** Kartu contoh Perdes dibuat lebih ringkas, ikon
+  keadaan kosong pada tabel arsip Perdes/Keputusan diperbaiki agar tidak menutupi
+  isi tabel, serta formulir Perdes kini mendukung melampirkan berkas Word/PDF
+  seperti pada SK dan Perkades.
+- **Menu APBDes lebih ringkas.** Kartu ringkasan di halaman APBDes diperkecil dan
+  disusun dalam satu baris agar tampilan lebih padat dan menu bawah tidak terasa
+  sempit.
+- **Menu Aktivasi Lisensi disederhanakan.** Tombol "Bayar/Berlangganan (Full
+  Service)" disembunyikan pada kartu status langganan karena aktivasi kini
+  dijalankan secara manual.
 
 ## Peningkatan
 

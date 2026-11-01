@@ -172,32 +172,55 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Lampiran Word/PDF (SK/Perkades) -->
-                <Border Style="{StaticResource FormCard}"
-                        Visibility="{Binding IsBukanPerdes, Converter={StaticResource BoolToVis}}">
+                <!-- Lampiran Word/PDF (SK/Perkades/Perdes) -->
+                <Border Style="{StaticResource FormCard}">
                     <StackPanel>
                         <StackPanel Style="{StaticResource FormSectionHeaderPanel}">
                             <Border Style="{StaticResource AccentSectionBar}"/>
-                            <TextBlock Text="LAMPIRAN (OPSIONAL)" Style="{StaticResource FormSectionTitle}"/>
+                            <TextBlock Text="LAMPIRAN BERKAS (OPSIONAL)" Style="{StaticResource FormSectionTitle}"/>
                         </StackPanel>
+
+                        <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,0,0,10"
+                                   Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run Text="Tambahkan berkas " />
+                            <Run Text=".DOC/.DOCX/.PDF" FontWeight="SemiBold" />
+                            <Run Text=" sebagai lampiran arsip. Untuk " />
+                            <Run Text="SK" FontWeight="SemiBold" />
+                            <Run Text=" dan " />
+                            <Run Text="Perkades" FontWeight="SemiBold" />
+                            <Run Text=", berkas Word dapat dibaca otomatis untuk mengisi kolom formulir. Untuk " />
+                            <Run Text="Perdes" FontWeight="SemiBold" />
+                            <Run Text=", Anda bisa melampirkan berkas jadi (Word/PDF) sebagai pengganti atau pelengkap naskah halaman di atas." />
+                        </TextBlock>
 
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="Pilih File Word / PDF" Width="168" Margin="0,0,8,0"
+                            <Button Content="Pilih File Word / PDF" Width="190" Margin="0,0,8,0"
                                     Command="{Binding PickWordFileCommand}" Style="{StaticResource SecondaryButton}"
-                                    ToolTip="Word (.docx/.doc) akan dibaca otomatis untuk mengisi formulir — berkas .doc lama dikonversi otomatis; PDF hanya dilampirkan"/>
-                            <Button Content="Lihat" Width="70"
+                                    ToolTip="Pilih berkas .DOC, .DOCX, atau .PDF untuk dilampirkan ke arsip"/>
+                            <Button Content="Lihat Berkas" Width="110"
                                     Command="{Binding OpenWordFileCommand}"
                                     IsEnabled="{Binding HasStoredOrPickedFile, FallbackValue=False}"
-                                    Style="{StaticResource SecondaryButton}"
-                                    ToolTip="Buka berkas lampiran"/>
+                                    Style="{StaticResource OutlineButton}"
+                                    ToolTip="Buka berkas lampiran yang dipilih atau tersimpan"/>
                             <TextBlock Text="{Binding WordFileDisplay, Mode=OneWay}" VerticalAlignment="Center" FontSize="13"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,0,0,0"
-                                       TextTrimming="CharacterEllipsis" MaxWidth="240"/>
+                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="10,0,0,0"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="320"/>
                         </StackPanel>
 
-                        <TextBlock Text="Word dibaca otomatis untuk mengisi Nomor/Tanggal/Tentang/Keterangan; berkas .doc lama dikonversi otomatis lebih dulu. PDF hanya disimpan sebagai lampiran."
-                                   FontSize="11" Margin="0,6,0,0" TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run Text="&#8226; " />
+                            <Run Text="Word (.DOCX/.DOC):" FontWeight="SemiBold" />
+                            <Run Text=" bisa dibaca otomatis untuk mengisi Nomor/Tanggal/Tentang/Keterangan (kecuali pada alur Perdes khusus). Berkas .DOC lama dikonversi otomatis bila Microsoft Word terpasang." />
+                            <LineBreak/>
+                            <Run Text="&#8226; " />
+                            <Run Text="PDF:" FontWeight="SemiBold" />
+                            <Run Text=" hanya dilampirkan sebagai berkas arsip. Isi formulir tetap diisi manual." />
+                            <LineBreak/>
+                            <Run Text="&#8226; " />
+                            <Run Text="Perdes:" FontWeight="SemiBold" />
+                            <Run Text=" jika ada naskah halaman di atas, PDF hasil generator akan diprioritaskan. Jika tidak ada naskah, berkas lampiran (Word/PDF) yang dipilih akan disimpan sebagai lampiran arsip." />
+                        </TextBlock>
                     </StackPanel>
                 </Border>
             </StackPanel>

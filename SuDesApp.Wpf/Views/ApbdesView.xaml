@@ -50,82 +50,152 @@
 
         <!-- Alat halaman: tahun anggaran, tombol aksi (membungkus bila sempit),
              ringkasan angka, lalu pesan keadaan. -->
-        <Border Grid.Row="1" Style="{StaticResource ToolbarCard}" Margin="0,12,0,0" Padding="16">
+        <Border Grid.Row="1" Style="{StaticResource FormCard}" Margin="0,12,0,0" Padding="18,16">
             <StackPanel>
-                <Grid>
+                <Grid Margin="0,0,0,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0">
-                        <TextBlock Text="Ringkasan APBDes" FontSize="17" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
-                        <TextBlock Text="Pilih tahun dan kelola dokumen anggaran desa."
-                                   FontSize="13" Margin="0,2,0,0" TextWrapping="Wrap"
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="RINGKASAN APBDES" Style="{StaticResource FormSectionTitle}"/>
+                        <TextBlock Text="Kelola dokumen anggaran desa per tahun anggaran dengan mudah dan terstruktur."
+                                   FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
-                    <WrapPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
-                        <StackPanel Margin="0,0,8,0">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Margin="0,0,10,0">
                             <TextBlock Text="TAHUN ANGGARAN" FontSize="11" FontWeight="SemiBold"
-                                       Margin="2,0,0,3" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <ComboBox Width="150" Style="{StaticResource FormCombo}" Margin="0"
+                                       Margin="2,0,0,4" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <ComboBox Width="140" Style="{StaticResource FormCombo}" Margin="0"
                                       ItemsSource="{Binding TahunPilihan}" DisplayMemberPath="Label"
                                       SelectedValuePath="Nilai" SelectedValue="{Binding Tahun, Mode=TwoWay}"
                                       AutomationProperties.Name="Tahun anggaran"/>
                         </StackPanel>
-                        <Button Content="Tambah Dokumen" Command="{Binding TambahCommand}"
-                                Style="{StaticResource PrimaryButton}" Margin="0,18,0,0"/>
-                        <Button Content="Impor dari Word" Command="{Binding ImporWordCommand}"
-                                Style="{StaticResource OutlineButton}" Margin="8,18,0,0"/>
-                        <Button Content="Impor Publikasi" Command="{Binding ImporPublikasiCommand}"
-                                Style="{StaticResource OutlineButton}" Margin="8,18,0,0"
-                                ToolTip="Masukkan angka publikasi APBDes dari data pemerintah pusat (Excel/CSV hasil unduhan PELITA/SIKD/PPID) sebagai pembanding riwayat tahun sebelumnya"/>
-                        <Button Content="Simpan" Command="{Binding SimpanCommand}"
-                                Style="{StaticResource PrimaryButton}" Margin="8,18,0,0"/>
-                        <Button Content="Muat Ulang" Command="{Binding MuatUlangCommand}"
-                                Style="{StaticResource OutlineButton}" Margin="8,18,0,0"/>
-                    </WrapPanel>
+                    </StackPanel>
                 </Grid>
+                <WrapPanel>
+                    <Button Content="Tambah Dokumen" Command="{Binding TambahCommand}"
+                            Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/>
+                    <Button Content="Impor dari Word" Command="{Binding ImporWordCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/>
+                    <Button Content="Impor Publikasi" Command="{Binding ImporPublikasiCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                            ToolTip="Masukkan angka publikasi APBDes dari data pemerintah pusat (Excel/CSV hasil unduhan PELITA/SIKD/PPID) sebagai pembanding riwayat tahun sebelumnya"/>
+                    <Button Content="Muat dari Pusat" Command="{Binding MuatDariPusatCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"
+                            ToolTip="Tarik anggaran dan realisasi yang sudah dipublikasikan pemerintah pusat (Prodeskel Kemendagri) otomatis per desa per tahun"/>
+                    <Button Content="Muat Ulang" Command="{Binding MuatUlangCommand}"
+                            Style="{StaticResource OutlineButton}" Margin="0,0,8,8"/>
+                    <Button Content="Simpan Semua Perubahan" Command="{Binding SimpanCommand}"
+                            Style="{StaticResource SuccessButton}" Margin="0,0,0,8"/>
+                </WrapPanel>
 
                 <TextBlock Text="{Binding StatusMemuat}" TextWrapping="Wrap" Margin="0,8,0,0"
                            Foreground="{DynamicResource TextSecondaryBrush}"/>
 
-                <UniformGrid Columns="3" Rows="2" Margin="-4,12,-4,0">
+                <UniformGrid Columns="6" Rows="1" Margin="-2,12,-2,0">
                     <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
-                        <StackPanel><TextBlock Text="Pendapatan" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding PendapatanTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
-                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                            BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource SuccessSubtleBrush}" Margin="0,0,8,0">
+                                <TextBlock Text="&#128176;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="PENDAPATAN" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding PendapatanTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
+                                           Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                     <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
-                        <StackPanel><TextBlock Text="Belanja" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding BelanjaTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
-                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                            BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource WarningSubtleBrush}" Margin="0,0,8,0">
+                                <TextBlock Text="&#128179;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="BELANJA" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding BelanjaTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
+                                           Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                     <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
-                        <StackPanel><TextBlock Text="Pembiayaan" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding PembiayaanTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
-                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                            BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource AccentSubtleBrush}" Margin="0,0,8,0">
+                                <TextBlock Text="&#128200;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="PEMBIAYAAN" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding PembiayaanTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
+                                           Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                     <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
-                        <StackPanel><TextBlock Text="Total anggaran" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding TotalAnggaranTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
-                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                            BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource PrimarySubtleBrush}" Margin="0,0,8,0">
+                                <TextBlock Text="&#128202;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="TOTAL ANGGARAN" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding TotalAnggaranTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
+                                           Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                     <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
-                        <StackPanel><TextBlock Text="Realisasi" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding TotalRealisasiTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
-                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                            BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource InfoSubtleBrush}" Margin="0,0,8,0">
+                                <TextBlock Text="&#9989;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="REALISASI" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding TotalRealisasiTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
+                                           Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                     <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4">
-                        <StackPanel><TextBlock Text="Sisa anggaran" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding SisaTampil, Mode=OneWay}" FontSize="16" FontWeight="SemiBold"
-                                       Margin="0,4,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+                            BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="28" Height="28" CornerRadius="6" Background="{DynamicResource PanelBrush}" Margin="0,0,8,0">
+                                <TextBlock Text="&#128202;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="SISA ANGGARAN" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding SisaTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
+                                           Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                 </UniformGrid>
 
