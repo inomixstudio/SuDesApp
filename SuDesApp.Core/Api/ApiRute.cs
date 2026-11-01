@@ -92,6 +92,41 @@ namespace SuDesApp.Api
             },
             new ApiEndpoint
             {
+                Metode = "POST",
+                Jalur = "/sesi",
+                Nama = "Masuk aplikasi",
+                Keterangan = "Masuk memakai akun desktop (tabel Pengguna) dan menerima token sesi. Kirim {\"username\":\"...\",\"kata_sandi\":\"...\"}; token dipakai sebagai header Authorization: Bearer pada endpoint lain yang memerlukannya. Sesi berlaku 12 jam dan hilang saat aplikasi desktop ditutup.",
+                Kategori = ApiKategori.Sesi
+            },
+            new ApiEndpoint
+            {
+                Metode = "GET",
+                Jalur = "/sesi/siapa",
+                Nama = "Identitas sesi",
+                Keterangan = "Membalas nama pengguna, nama tampilan, peran, dan waktu berakhir sesi yang tokennya dikirim. Dipakai aplikasi pendamping untuk memulihkan keadaan setelah aplikasi dibuka ulang.",
+                Kategori = ApiKategori.Sesi,
+                ButuhSesi = true
+            },
+            new ApiEndpoint
+            {
+                Metode = "DELETE",
+                Jalur = "/sesi",
+                Nama = "Keluar aplikasi",
+                Keterangan = "Mengakhiri token sesi yang dikirim, sehingga token itu tidak bisa dipakai lagi.",
+                Kategori = ApiKategori.Sesi,
+                ButuhSesi = true
+            },
+            new ApiEndpoint
+            {
+                Metode = "GET",
+                Jalur = "/pengaturan",
+                Nama = "Pengaturan surat",
+                Keterangan = "Kop dan pejabat penanda tangan dari Pengaturan Surat desktop (nama desa, kecamatan, kabupaten, alamat, kode pos, surel, Kepala Desa, NIP). Baca-saja: aplikasi pendamping mencetak dengan pengaturan yang sama tanpa bisa mengubahnya.",
+                Kategori = ApiKategori.Pengaturan,
+                ButuhSesi = true
+            },
+            new ApiEndpoint
+            {
                 Metode = "GET",
                 Jalur = "/rekap-bulanan",
                 Nama = "Rekap laporan bulanan",

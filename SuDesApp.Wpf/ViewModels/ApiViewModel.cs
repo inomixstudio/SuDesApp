@@ -545,7 +545,8 @@ namespace SuDesApp.Wpf.ViewModels
                 + "cakupan_tidak_cukup (403), terlalu_banyak_permintaan (429, lihat header Retry-After), "
                 + "endpoint_tidak_ada (404), metode_tidak_diizinkan (405, lihat header Allow), "
                 + "permintaan_tidak_sah (400), badan_terlalu_besar (413), gagal_di_server (500), "
-                + "kode_tidak_dikenal (404, endpoint verifikasi).",
+                + "kode_tidak_dikenal (404, endpoint verifikasi), sesi_diperlukan (401), "
+                + "sesi_gagal (401, nama pengguna / kata sandi salah).",
                 berhunci,
                 "{\n  \"sukses\": false,\n  \"kode\": \"api_key_salah\",\n  \"pesan\": \"Kunci API salah atau tidak dikirim. Kirim header X-Api-Key.\"\n}");
 
@@ -554,6 +555,25 @@ namespace SuDesApp.Wpf.ViewModels
                 "Cek paling ringan: versi API dan waktu server — dipakai untuk uji koneksi.",
                 $"curl {alamat}/status -H \"X-Api-Key: <KUNCI_API>\"",
                 "{\n  \"sukses\": true,\n  \"data\": {\n    \"aplikasi\": \"SuDesApp\",\n    \"versi\": \"10.2.0\",\n    \"waktu\": \"2026-10-15 09:34:12\"\n  }\n}");
+
+            yield return new BarisContohPanggilan(
+                "Masuk aplikasi (klien HP / aplikasi pendamping)",
+                "Tukar nama pengguna & kata sandi akun desktop dengan token sesi 12 jam. "
+                + "Token lalu dikirim sebagai Authorization: Bearer <TOKEN> pada endpoint "
+                + "bertanda sesi. Sesi hilang saat aplikasi desktop ditutup.",
+                $"curl -X POST {alamat}/sesi -H \"X-Api-Key: <KUNCI_API>\" "
+                + "-H \"Content-Type: application/json\" "
+                + "-d '{\"username\":\"operator\",\"kata_sandi\":\"***\"}'",
+                "{\n  \"sukses\": true,\n  \"data\": {\n    \"token\": \"…\",\n    \"berlakuSampai\": \"2026-11-01T21:00:00\",\n    \"username\": \"operator\",\n    \"nama\": \"Nama Tampilan\",\n    \"peran\": \"Operator\"\n  }\n}");
+
+            yield return new BarisContohPanggilan(
+                "Pengaturan surat (butuh sesi)",
+                "Kop & pejabat penanda tangan dari Pengaturan Surat desktop — dipakai aplikasi "
+                + "pendamping (HP) supaya hasil cetak sama persis. Baca-saja; sumber "
+                + "kebenarannya tetap desktop. Butuh kunci API + token sesi.",
+                $"curl {alamat}/pengaturan -H \"X-Api-Key: <KUNCI_API>\" "
+                + "-H \"Authorization: Bearer <TOKEN_SESI>\"",
+                "{\n  \"sukses\": true,\n  \"data\": {\n    \"desa\": {\n      \"namaDesa\": \"…\", \"kecamatan\": \"…\", \"kepalaDesa\": \"…\", \"nipKepalaDesa\": \"…\"\n    },\n    \"diambilPada\": \"2026-11-01T08:00:00\"\n  }\n}");
 
             yield return new BarisContohPanggilan(
                 "Statistik desa",
@@ -604,11 +624,21 @@ namespace SuDesApp.Wpf.ViewModels
 
             try
             {
-                using var permintaan = new HttpRequestMessage(HttpMethod.Get, AlamatStatus);
+                // AlamatStatus adalah alamat dasar + prefix (/sudes/api/v1);
+                // endpoint yang diuji adalah /status — endpoint paling ringan
+                // yang memverifikasi kunci API benar-benar diterima listener.
+                // Tanpa segmen /status, listener membalas 404 endpoint_tidak_ada.
+                using var permintaan = new HttpRequestMessage(
+                    HttpMethod.Get, AlamatStatus + "/status");
                 permintaan.Headers.Add("X-Api-Key", KunciApi);
 
-                using var balasan = await HttpUji.SendAsync(permintaan).ConfigureAwait(false);
-                var isi = await balasan.Content.ReadAsStringAsync().ConfigureAwait(false);
+                // ConfigureAwait(false) sengaja TIDAK dipakai di sini: kelanjutan
+                // harus kembali ke thread UI karena finally di bawah mengubah
+                // SedangUji yang dispar RaiseCanExecuteChanged hingga menyentuh
+                // tombol WPF (DependencyProperty) — dari thread latar melempar
+                // galat lintas-thread "The calling thread cannot access this object".
+                using var balasan = await HttpUji.SendAsync(permintaan);
+                var isi = await balasan.Content.ReadAsStringAsync();
 
                 HasilTes = balasan.IsSuccessStatusCode
                     ? $"Berhasil. Server menjawab {(int)balasan.StatusCode} {balasan.ReasonPhrase}."
@@ -628,6 +658,14 @@ namespace SuDesApp.Wpf.ViewModels
 
         private void SegarkanStatus()
         {
+            // Kotak status dulu selalu kosong karena teksnya tidak pernah diisi.
+            // Kini diisi dari keadaan listener yang sebenarnya supaya operator
+            // langsung tahu API sedang menyala atau belum; alasan kegagalan
+            // tetap tampil di GalatText tepat di bawahnya.
+            StatusText = _listener.Berjalan
+                ? "API aktif dan melayani permintaan."
+                : "API tidak berjalan. Centang Aktifkan API, buat kunci, lalu tekan Simpan.";
+
             OnPropertyChanged(nameof(ListenerBerjalan));
             OnPropertyChanged(nameof(AlamatDasar));
             OnPropertyChanged(nameof(AlamatStatus));
