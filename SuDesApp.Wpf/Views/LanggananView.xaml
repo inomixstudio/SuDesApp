@@ -331,15 +331,12 @@
                                         Margin="0,16,8,0"
                                         HorizontalAlignment="Left" Style="{StaticResource SecondaryButton}"
                                         ToolTip="Periksa status langganan ke server lisensi"/>
-                                <!-- Selama trial: jalan keluar langsung ke Full Service,
-                                     tanpa mencari tombol bayar di kartu paket di bawah.
-                                     Perintahnya BayarLanggananCommand yang sama, jadi
-                                     penjagaan kode aktivasi & tagihan tetap satu salinan. -->
+                                <!-- Disembunyikan - aktivasi dijalankan secara manual -->
                                 <Button Content="Bayar / Berlangganan (Full Service)" Command="{Binding BayarLanggananCommand}"
                                         MinWidth="240" Margin="0,16,0,0"
                                         HorizontalAlignment="Left" Style="{StaticResource PrimaryButton}"
                                         ToolTip="Pilih paket lalu buat tagihan pembayaran — bila kode aktivasi belum diisi, isi dulu kode itu sebelum membayar"
-                                        Visibility="{Binding SedangTrial, Converter={StaticResource BoolToVis}}"/>
+                                        Visibility="Collapsed"/>
                             </WrapPanel>
                         </StackPanel>
                     </StackPanel>
@@ -354,7 +351,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Pilihan paket -->
-                    <Border Grid.Column="0" Style="{StaticResource LanggananCard}" Margin="0,0,0,14">
+                    <Border Grid.Column="0" Style="{StaticResource LanggananCard}" Margin="0,0,0,14" Visibility="Collapsed">
                         <StackPanel>
                             <Border Style="{StaticResource LanggananCardHeader}">
                                 <DockPanel>
@@ -613,7 +610,7 @@
                     </Border>
 
                     <!-- Panduan memperpanjang -->
-                    <Border Grid.Column="2" Style="{StaticResource LanggananCard}" Margin="0,0,0,14">
+                    <Border Grid.Column="2" Style="{StaticResource LanggananCard}" Margin="0,0,0,14" Visibility="Collapsed">
                         <StackPanel>
                             <Border Style="{StaticResource LanggananCardHeader}">
                                 <DockPanel>
