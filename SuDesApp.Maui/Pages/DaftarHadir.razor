@@ -1,0 +1,113 @@
+@page "/daftar-hadir"
+
+<PageTitle>Daftar Hadir</PageTitle>
+
+<button class="tautan-kembali" type="button" @onclick="KeBeranda">&#8592; Beranda</button>
+<h1 class="judul-halaman">Daftar Hadir</h1>
+<p class="keterangan-halaman">Isi keterangan kegiatan dan nama peserta, lalu cetak.</p>
+
+<div class="kartu-formulir">
+    <div class="isian">
+        <label for="judul">Judul Daftar Hadir</label>
+        <input id="judul" type="text" placeholder="DAFTAR HADIR RAPAT MUSYAWARAH DESA" @bind="_judul" @bind:event="oninput" />
+    </div>
+
+    <div class="isian">
+        <label for="tanggal">Hari/Tanggal</label>
+        <input id="tanggal" type="text" placeholder="Senin, 31 Oktober 2026" @bind="_hariTanggal" @bind:event="oninput" />
+    </div>
+
+    <div class="isian">
+        <label for="pukul">Pukul</label>
+        <input id="pukul" type="text" placeholder="09.00 WIB s.d. selesai" @bind="_pukul" @bind:event="oninput" />
+    </div>
+
+    <div class="isian">
+        <label for="tempat">Tempat</label>
+        <input id="tempat" type="text" placeholder="Balai Desa" @bind="_tempat" @bind:event="oninput" />
+    </div>
+</div>
+
+<h2 class="judul-kelompok">Peserta</h2>
+
+@foreach (var (peserta, indeks) in _peserta.Select((p, i) => (p, i)).ToList())
+{
+    <div class="kartu-peserta">
+        <div class="isian-peserta">
+            <input type="text" placeholder="Nama" value="@peserta.Nama"
+                   @onchange="e => peserta.Nama = e.Value?.ToString() ?? string.Empty" />
+            <input type="text" placeholder="Jabatan" value="@peserta.Jabatan"
+                   @onchange="e => peserta.Jabatan = e.Value?.ToString() ?? string.Empty" />
+            <input type="text" placeholder="Keterangan" value="@peserta.Keterangan"
+                   @onchange="e => peserta.Keterangan = e.Value?.ToString() ?? string.Empty" />
+        </div>
+        <button class="tombol-hapus" type="button" @onclick="() => Hapus(indeks)" title="Hapus peserta">&#10005;</button>
+    </div>
+}
+
+<button class="tombol-kedua" type="button" @onclick="Tambah">+ Tambah peserta</button>
+
+@if (!string.IsNullOrWhiteSpace(_galat))
+{
+    <p class="galat">@_galat</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(_pesan))
+{
+    <p class="berhasil">@_pesan</p>
+}
+
+<div class="aksi">
+    <button class="tombol-utama" type="button" disabled="@_sibuk" @onclick="Cetak">
+        @(_sibuk ? "Menyiapkan…" : "Buat PDF & Cetak")
+    </button>
+</div>
+
+@code {
+    private void KeBeranda() => Navigasi.NavigateTo("/");
+
+    private string _judul = "DAFTAR HADIR";
+    private string _hariTanggal = string.Empty;
+    private string _pukul = string.Empty;
+    private string _tempat = string.Empty;
+    private string? _galat;
+    private string? _pesan;
+    private bool _sibuk;
+
+    private readonly List<PesertaHadir> _peserta = new()
+    {
+        new PesertaHadir(), new PesertaHadir(), new PesertaHadir()
+    };
+
+    private void Tambah() => _peserta.Add(new PesertaHadir());
+
+    private void Hapus(int indeks)
+    {
+        if (indeks < 0 || indeks >= _peserta.Count) return;
+
+        _peserta.RemoveAt(indeks);
+        if (_peserta.Count == 0) _peserta.Add(new PesertaHadir());
+    }
+
+    private async Task Cetak()
+    {
+        _sibuk = true;
+        _galat = null;
+        _pesan = null;
+
+        try
+        {
+            var hasil = Layanan.BuatDaftarHadir(_judul, _hariTanggal, _pukul, _tempat, _peserta, DateTime.Today);
+            await PencetakAndroid.CetakAsync(FormatSurat.NamaBerkas(hasil.Surat.Nomor), hasil.Pdf);
+            _pesan = "Daftar hadir dibuat. Pilih pencetak pada layar cetak Android.";
+        }
+        catch (Exception ex)
+        {
+            _galat = ex.Message;
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+}

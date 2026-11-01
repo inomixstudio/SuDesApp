@@ -1,0 +1,162 @@
+@page "/"
+
+@* Beranda mengikuti susunan menu desktop: judul kelompok ("BUAT SURAT",
+   "FORMULIR") dengan urutan yang sama, termasuk submenu yang bisa dibuka.
+   Sebelum tersambung ke desktop tidak ada menu sama sekali — pengaturan surat
+   hanya berasal dari desktop, jadi membuat surat tanpa sambungan akan
+   mencetak kop kosong. *@
+<PageTitle>SuDesApp</PageTitle>
+
+@if (!Layanan.Terpasang)
+{
+    <h1 class="judul-halaman">Sambungkan ke Desktop</h1>
+    <p class="keterangan-halaman">
+        Ponsel memakai akun dan Pengaturan Surat dari aplikasi desktop. Sambungkan
+        dulu — daftar menu surat muncul setelah tersambung.
+    </p>
+
+    <a class="kartu-menu kartu-sambung" href="sambung">
+        <span class="kartu-ikon" aria-hidden="true">&#128279;</span>
+        <span class="kartu-isi">
+            <span class="kartu-judul">Sambungkan ke Desktop</span>
+            <span class="kartu-ket">Isi alamat komputer kantor dan kunci API, lalu masuk dengan akun desktop</span>
+        </span>
+        <span class="kartu-panah" aria-hidden="true">&#8250;</span>
+    </a>
+
+    <h2 class="judul-kelompok">Menyiapkan desktop</h2>
+    <div class="kartu-formulir">
+        <ol class="langkah">
+            <li>Buka SuDesApp di komputer kantor, lalu menu <strong>API Desa</strong>.</li>
+            <li>Nyalakan API, aktifkan <em>Izinkan akses jaringan</em>, dan tambahkan alamat IP ponsel ke daftar yang diizinkan.</li>
+            <li>Salin <strong>kunci API</strong> (cakupan Penuh) dan alamat yang tampil, mis. <code>http://192.168.1.10:8790</code>.</li>
+            <li>Pastikan ponsel dan komputer berada di jaringan Wi-Fi yang sama, lalu sambungkan.</li>
+        </ol>
+    </div>
+
+    <p class="catatan-kaki">
+        Kop surat dan nama Kepala Desa dibaca dari desktop, jadi tidak ada isian
+        data desa di ponsel.
+    </p>
+}
+else
+{
+    @* Baris status selalu di atas menu: operator perlu tahu akun dan desa mana
+       yang sedang dipakai sebelum mulai mengisi surat. *@
+    <a class="kartu-menu kartu-sambung" href="sambung">
+        <span class="kartu-ikon" aria-hidden="true">&#128279;</span>
+        <span class="kartu-isi">
+            <span class="kartu-judul">Terhubung ke desktop</span>
+            <span class="kartu-ket">
+                @Layanan.Profil.NamaDesa
+                @if (Layanan.Sambungan is { } sambungan)
+                {
+                    <text> · @sambungan.Label · @sambungan.Alamat</text>
+                }
+            </span>
+        </span>
+        <span class="kartu-panah" aria-hidden="true">&#8250;</span>
+    </a>
+
+    @if (Layanan.Sambungan is { Aktif: false })
+    {
+        <a class="peringatan" href="sambung">
+            <strong>Sesi desktop sudah berakhir.</strong>
+            <span>Sambungkan ulang agar pengaturan surat bisa ditarik lagi.</span>
+        </a>
+    }
+
+    @if (!Layanan.Profil.Lengkap)
+    {
+        <a class="peringatan" href="sambung">
+            <strong>Pengaturan Surat di desktop belum lengkap.</strong>
+            <span>Lengkapi nama desa, kecamatan, kabupaten, dan Kepala Desa di desktop, lalu tarik ulang.</span>
+        </a>
+    }
+
+    <h2 class="judul-kelompok">Buat Surat</h2>
+    <nav class="menu-desktop" aria-label="Menu surat">
+        <a class="baris-menu" href="register-surat">
+            <span>Register Surat</span>
+            <span class="kartu-panah" aria-hidden="true">&#8250;</span>
+        </a>
+
+        <button class="baris-menu @(_bukaSuratBaru ? "terbuka" : "")" type="button"
+                aria-expanded="@_bukaSuratBaru.ToString().ToLowerInvariant()"
+                @onclick="() => _bukaSuratBaru = !_bukaSuratBaru">
+            <span>Buat Surat Baru</span>
+            <span class="kartu-panah" aria-hidden="true">@(_bukaSuratBaru ? "\u2304" : "\u203A")</span>
+        </button>
+
+        @if (_bukaSuratBaru)
+        {
+            <div class="anak-menu">
+                @foreach (var surat in Layanan.SuratBaru)
+                {
+                    <a href="@($"buat-surat?kode={surat.Kode}")">@surat.Nama</a>
+                }
+            </div>
+        }
+
+        <a class="baris-menu" href="daftar-hadir">
+            <span>Daftar Hadir</span>
+            <span class="kartu-panah" aria-hidden="true">&#8250;</span>
+        </a>
+
+        <button class="baris-menu @(_bukaNtcr ? "terbuka" : "")" type="button"
+                aria-expanded="@_bukaNtcr.ToString().ToLowerInvariant()"
+                @onclick="() => _bukaNtcr = !_bukaNtcr">
+            <span>NTCR</span>
+            <span class="kartu-panah" aria-hidden="true">@(_bukaNtcr ? "\u2304" : "\u203A")</span>
+        </button>
+
+        @if (_bukaNtcr)
+        {
+            <div class="anak-menu">
+                @* Baris pertama submenu NTCR di desktop: "Paket N1-N6 (satu pasangan)". *@
+                <a href="paket-ntcr">Paket N1–N6 (satu pasangan)</a>
+                @foreach (var blanko in Layanan.SuratNtcr)
+                {
+                    <a href="@($"ntcr?kode={blanko.Kode}")">@blanko.Nama</a>
+                }
+            </div>
+        }
+
+        <a class="baris-menu" href="register-ntcr">
+            <span>Register NTCR</span>
+            <span class="kartu-panah" aria-hidden="true">&#8250;</span>
+        </a>
+    </nav>
+
+    <h2 class="judul-kelompok">Formulir</h2>
+    <nav class="menu-desktop" aria-label="Menu formulir">
+        <button class="baris-menu @(_bukaFormulir ? "terbuka" : "")" type="button"
+                aria-expanded="@_bukaFormulir.ToString().ToLowerInvariant()"
+                @onclick="() => _bukaFormulir = !_bukaFormulir">
+            <span>Formulir</span>
+            <span class="kartu-panah" aria-hidden="true">@(_bukaFormulir ? "\u2304" : "\u203A")</span>
+        </button>
+
+        @if (_bukaFormulir)
+        {
+            <div class="anak-menu">
+                @foreach (var formulir in Layanan.SuratFormulir)
+                {
+                    <a href="@($"formulir?kode={formulir.Kode}")">@formulir.Nama</a>
+                }
+            </div>
+        }
+    </nav>
+
+    <p class="catatan-kaki">
+        Menu lain — Buat Surat Sendiri (template PDF), Surat Peraturan, Surat
+        Masuk/Keluar, data desa, laporan, dan pengaturan — tetap tersedia di
+        aplikasi desktop SuDesApp.
+    </p>
+}
+
+@code {
+    private bool _bukaSuratBaru;
+    private bool _bukaNtcr;
+    private bool _bukaFormulir;
+}

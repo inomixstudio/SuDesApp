@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SuDesApp.Core\SuDesApp.Core.csproj" />
+    <ProjectReference Include="..\SuDesApp.Mobile\SuDesApp.Mobile.csproj" />
     <ProjectReference Include="..\SuDesApp.Server\SuDesApp.Server.csproj" />
     <ProjectReference Include="..\SuDesApp.Wpf\SuDesApp.Wpf.csproj" />
     <ProjectReference Include="..\SudesPdf\SudesPdf.csproj" />

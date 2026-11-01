@@ -1,0 +1,105 @@
+@page "/desa"
+
+@* Pengaturan surat hanya berasal dari desktop. Halaman ini menampilkan hasil
+   tarikan terakhir tanpa isian, supaya tidak ada nilai yang bisa disunting di
+   ponsel lalu tertimpa pada tarikan berikutnya. *@
+<PageTitle>Pengaturan Surat</PageTitle>
+
+<button class="tautan-kembali" type="button" @onclick="KeBeranda">&#8592; Beranda</button>
+<h1 class="judul-halaman">Pengaturan Surat</h1>
+
+@if (!Layanan.Terpasang)
+{
+    <p class="keterangan-halaman">
+        Kop surat dan Kepala Desa dibaca dari aplikasi desktop SuDesApp.
+        Sambungkan ponsel dulu untuk menarik pengaturannya.
+    </p>
+
+    <a class="kartu-menu kartu-sambung" href="sambung">
+        <span class="kartu-ikon" aria-hidden="true">&#128279;</span>
+        <span class="kartu-isi">
+            <span class="kartu-judul">Sambungkan ke Desktop</span>
+            <span class="kartu-ket">Pakai akun dan Pengaturan Surat desktop</span>
+        </span>
+        <span class="kartu-panah" aria-hidden="true">&#8250;</span>
+    </a>
+}
+else
+{
+    <p class="keterangan-halaman">
+        Hasil tarikan terakhir dari desktop
+        @if (Layanan.Sambungan is { } sambungan)
+        {
+            <text>(@sambungan.Alamat, @sambungan.PengaturanDiambil.ToString("dd-MM-yyyy HH:mm"))</text>
+        }.
+        Untuk mengubahnya, ubah di desktop lalu tarik ulang.
+    </p>
+
+    @if (!string.IsNullOrWhiteSpace(_galat))
+    {
+        <p class="galat">@_galat</p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_pesan))
+    {
+        <p class="berhasil">@_pesan</p>
+    }
+
+    <div class="kartu-formulir">
+        <dl class="ringkas">
+            <dt>Kabupaten/Kota</dt>
+            <dd>@Tampil(Layanan.Profil.Kabupaten)</dd>
+            <dt>Kecamatan</dt>
+            <dd>@Tampil(Layanan.Profil.Kecamatan)</dd>
+            <dt>Nama Desa</dt>
+            <dd>@Tampil(Layanan.Profil.NamaDesa)</dd>
+            <dt>Alamat</dt>
+            <dd>@Tampil(Layanan.Profil.Alamat)</dd>
+            <dt>Kode Pos</dt>
+            <dd>@Tampil(Layanan.Profil.Kodepos)</dd>
+            <dt>Email Desa</dt>
+            <dd>@Tampil(Layanan.Profil.Email)</dd>
+            <dt>Kepala Desa</dt>
+            <dd>@Tampil(Layanan.Profil.NamaKepalaDesa)</dd>
+        </dl>
+    </div>
+
+    <div class="aksi">
+        <button class="tombol-utama" type="button" disabled="@_sibuk" @onclick="TarikUlang">
+            @(_sibuk ? "Menarik…" : "Tarik ulang pengaturan")
+        </button>
+    </div>
+}
+
+@code {
+    private void KeBeranda() => Navigasi.NavigateTo("/");
+
+    private string? _pesan;
+    private string? _galat;
+    private bool _sibuk;
+
+    private static string Tampil(string? nilai) =>
+        string.IsNullOrWhiteSpace(nilai) ? "—" : nilai!;
+
+    private async Task TarikUlang()
+    {
+        _galat = null;
+        _pesan = null;
+        _sibuk = true;
+
+        try
+        {
+            await Layanan.SegarkanPengaturanAsync();
+            _pesan = "Pengaturan surat ditarik ulang dari desktop.";
+        }
+        catch (Exception ex)
+        {
+            _galat = ex.Message;
+        }
+        finally
+        {
+            _sibuk = false;
+            StateHasChanged();
+        }
+    }
+}

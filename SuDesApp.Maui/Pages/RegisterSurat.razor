@@ -1,0 +1,108 @@
+@page "/register-surat"
+
+<PageTitle>Register Surat</PageTitle>
+
+<button class="tautan-kembali" type="button" @onclick="KeBeranda">&#8592; Beranda</button>
+<h1 class="judul-halaman">Register Surat</h1>
+<p class="keterangan-halaman">Surat yang pernah dibuat di ponsel ini. Ketuk untuk mencetak ulang.</p>
+
+@if (!string.IsNullOrWhiteSpace(_galat))
+{
+    <p class="galat">@_galat</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(_pesan))
+{
+    <p class="berhasil">@_pesan</p>
+}
+
+@if (!Daftar.Any())
+{
+    <p class="kosong">Belum ada surat. Mulai dari menu <a href="buat-surat">Buat Surat Baru</a>.</p>
+}
+else
+{
+    <div class="aksi-nonaktif">
+        <button class="tombol-kedua" type="button" disabled="@_sibuk" @onclick="() => CetakRegister(false)">
+            Cetak register
+        </button>
+    </div>
+
+    @foreach (var surat in Daftar)
+    {
+        <div class="kartu-arsip">
+            <div class="arsip-isi">
+                <span class="arsip-judul">@surat.NamaJenis</span>
+                <span class="arsip-ket">@surat.Nomor · @surat.Waktu.ToString("dd-MM-yyyy")</span>
+                @if (!string.IsNullOrWhiteSpace(surat.RingkasanPemohon))
+                {
+                    <span class="arsip-pemohon">@surat.RingkasanPemohon</span>
+                }
+            </div>
+            <div class="arsip-aksi">
+                <button class="tombol-kecil" type="button" disabled="@_sibuk" @onclick="() => CetakUlang(surat)">Cetak</button>
+                <button class="tombol-hapus" type="button" @onclick="() => Hapus(surat)" title="Hapus dari register">&#10005;</button>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private void KeBeranda() => Navigasi.NavigateTo("/");
+
+    private string? _galat;
+    private string? _pesan;
+    private bool _sibuk;
+
+    private IReadOnlyList<SuratTersimpan> Daftar => Layanan.ArsipRegister;
+
+    private async Task CetakUlang(SuratTersimpan surat)
+    {
+        _sibuk = true;
+        _galat = null;
+        _pesan = null;
+
+        try
+        {
+            var pdf = Layanan.CetakUlang(surat);
+            await PencetakAndroid.CetakAsync(FormatSurat.NamaBerkas(surat.Nomor), pdf);
+            _pesan = "Surat dicetak ulang.";
+        }
+        catch (Exception ex)
+        {
+            _galat = ex.Message;
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private async Task CetakRegister(bool ntcr)
+    {
+        _sibuk = true;
+        _galat = null;
+        _pesan = null;
+
+        try
+        {
+            var pdf = Layanan.CetakRegister(ntcr, DateTime.Today);
+            await PencetakAndroid.CetakAsync("register-surat", pdf);
+            _pesan = "Register siap dicetak.";
+        }
+        catch (Exception ex)
+        {
+            _galat = ex.Message;
+        }
+        finally
+        {
+            _sibuk = false;
+        }
+    }
+
+    private void Hapus(SuratTersimpan surat)
+    {
+        Layanan.Simpanan.Hapus(surat.Id);
+        _pesan = "Catatan dihapus dari register.";
+    }
+}
