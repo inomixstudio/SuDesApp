@@ -74,6 +74,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly Func<DateTime> _jam;
         private readonly IIdmSimpananStore? _simpanan;
         private readonly IIdmPemantauanStore? _pemantauanStore;
+        private readonly IIdmSertifikatStore? _sertifikatStore;
         private readonly NavigationService? _navigasi;
         private readonly Func<string, string, PdfPreviewViewModel>? _previewFactory;
         private readonly Func<string, string, Action?, DokumenBacaViewModel>? _dokumenFactory;
@@ -93,6 +94,7 @@ namespace SuDesApp.Wpf.ViewModels
         private DataIdm? _data;
         private int _tahunDipilih;
         private IdmPemantauan? _pemantauan;
+        private IdmSertifikatCatatan? _sertifikatCatatan;
         private IndeksDesa2025? _indeks2025;
         private bool _indeks2025BerhasilDiperiksa;
 
@@ -115,6 +117,7 @@ namespace SuDesApp.Wpf.ViewModels
             AppConfig? appConfig = null,
             IMessageService? pesan = null,
             IIdmPemantauanStore? pemantauan = null,
+            IIdmSertifikatStore? sertifikat = null,
             IIndeksDesa2025Klien? indeksDesa2025 = null,
             Func<string, string, Action?, DokumenBacaViewModel>? dokumenFactory = null)
         {
@@ -126,6 +129,7 @@ namespace SuDesApp.Wpf.ViewModels
             _jam = jam ?? (() => DateTime.Now);
             _simpanan = simpanan; // null = tanpa cadangan berkas (dipakai uji)
             _pemantauanStore = pemantauan; // null = tanpa catatan pemeriksaan (dipakai uji)
+            _sertifikatStore = sertifikat; // null = tanpa catatan sertifikat (dipakai uji)
             _navigasi = navigasi;
             _previewFactory = previewFactory;
             _dokumenFactory = dokumenFactory;
@@ -134,6 +138,11 @@ namespace SuDesApp.Wpf.ViewModels
 
             Indikator = new ObservableCollection<BarisTampil>();
             Riwayat = new ObservableCollection<RiwayatTampil>();
+
+            // Catatan sertifikat dibaca sekali di awal: peringatan dini harus
+            // terlihat begitu halaman dibuka, bahkan sebelum tombol Muat ulang
+            // disentuh (pemantau latar sudah menulisnya tiap interval).
+            _sertifikatCatatan = _sertifikatStore?.Muat();
 
             MuatCommand = new AsyncRelayCommand(MuatAsync, () => !SedangMemuat);
             BukaSitusCommand = new RelayCommand(BukaSitus);
@@ -352,6 +361,27 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         public bool AdaPeringatanSumber => _peringatanSumber.Length > 0;
+
+        /// <summary>
+        /// Peringatan dini masa berlaku sertifikat situs pusat, dihitung dari
+        /// catatan pemeriksaan terakhir (ditulis pemantau latar dan pemeriksa
+        /// sertifikat) — tampil bahkan sebelum halaman memuat data, supaya
+        /// pengguna tahu sertifikat mau habis jauh sebelum halaman menjadi
+        /// kosong. Kosong bila sertifikat sehat atau belum pernah diperiksa.
+        /// </summary>
+        public string PesanSertifikat
+        {
+            get
+            {
+                var catatan = _sertifikatCatatan;
+                if (catatan?.BerlakuSampai is not { } berlaku) return string.Empty;
+
+                var status = IdmSertifikatStatus.Nilai(berlaku, _jam());
+                return IdmSertifikatStatus.Pesan(status, berlaku, _jam());
+            }
+        }
+
+        public bool AdaPesanSertifikat => PesanSertifikat.Length > 0;
 
         // ===================== Data pusat =====================
 
@@ -1195,6 +1225,10 @@ namespace SuDesApp.Wpf.ViewModels
             // menulisnya (mis. menemukan tahun yang lebih baru dari data tampil).
             _pemantauan = _pemantauanStore?.Muat();
 
+            // Catatan sertifikat juga dibaca ulang — pemantau latar memeriksanya
+            // tiap interval tanpa membuka halaman ini.
+            _sertifikatCatatan = _sertifikatStore?.Muat();
+
             foreach (var nama in new[]
                      {
                          nameof(AdaData), nameof(NamaDesaTampil), nameof(WilayahTampil),
@@ -1211,7 +1245,7 @@ namespace SuDesApp.Wpf.ViewModels
                          nameof(StatusTampil), nameof(IksTampil), nameof(IkeTampil),
                          nameof(IklTampil), nameof(TargetTampil), nameof(SkorMinimalTampil),
                          nameof(PesanTarget), nameof(SumberTampil),
-                         nameof(TooltipCetak),
+                         nameof(TooltipCetak), nameof(PesanSertifikat), nameof(AdaPesanSertifikat),
                          nameof(TampilkanKartuKeadaan), nameof(JudulKeadaan), nameof(IsiKeadaan),
                          nameof(AdaGalatDiToolbar), nameof(PesanMenunggu),
                          nameof(AdaPesanTahun), nameof(PesanTahun), nameof(DeretTren),

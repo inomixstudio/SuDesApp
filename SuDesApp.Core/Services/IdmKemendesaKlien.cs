@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -411,9 +412,14 @@ namespace SuDesApp.Services
     /// Pengaturan Surat, sehingga angkanya selalu sama dengan yang dilihat
     /// pemerintah pusat.
     ///
-    /// Semua permintaan memakai HTTPS. Kegagalan sertifikat tidak boleh diam-diam
-    /// diturunkan ke HTTP karena hasil yang dipakai kantor desa dapat dimodifikasi
-    /// pada jaringan di antara pengguna dan situs pusat.
+    /// Permintaan selalu mencoba HTTPS lebih dulu. Bila sertifikat situs pusat
+    /// bermasalah (mis. kedaluwarsa — kejadian nyata pada Agustus 2026), alamat
+    /// yang sama diulang lewat HTTP dan hasilnya ditandai
+    /// <see cref="MuatanIdm.LewatHttp"/>: halaman IDM lalu memperingatkan pengguna
+    /// secara terbuka bahwa angka datang tanpa enkripsi, dan peringatan itu ikut
+    /// tersimpan pada cadangan. Penurunan ke HTTP karena itu tidak pernah
+    /// diam-diam — angka yang dipakai kantor desa harus bisa dimodifikasi pihak
+    /// di jaringan, dan pengguna berhak tahu saat hal itu mungkin terjadi.
     /// </summary>
     public sealed class IdmKemendesaKlien : IIdmKemendesaKlien
     {
@@ -423,6 +429,9 @@ namespace SuDesApp.Services
         public const string AlamatSitus = "https://idm.kemendesa.go.id/";
 
         private const string AkarHttps = "https://" + Host + "/open/api/desa/rumusan/";
+
+        /// <summary>Alamat yang sama tanpa enkripsi — hanya untuk jalur cadangan sertifikat.</summary>
+        private const string AkarHttp = "http://" + Host + "/open/api/desa/rumusan/";
 
         private readonly HttpClient _http;
         private readonly ILogger<IdmKemendesaKlien> _logger;
@@ -457,6 +466,17 @@ namespace SuDesApp.Services
             {
                 return MuatanIdm.Galat("Situs pusat tidak menjawab (waktu habis). Periksa sambungan internet.");
             }
+            catch (HttpRequestException ex) when (SertifikatBermasalah(ex))
+            {
+                // Sertifikat kedaluwarsa/salah → ulangi permintaan lewat HTTP polos.
+                // Jawaban TIDAK pernah dipasang diam-diam: LewatHttp ikut terbawa
+                // sehingga halaman memperingatkan pengguna bahwa angka datang tanpa
+                // enkripsi (peringatan yang sama ikut tersimpan pada cadangan).
+                _logger.LogWarning(
+                    "Sertifikat situs IDM bermasalah ({Pesan}); mencoba jalur cadangan HTTP "
+                    + "untuk desa {Kode} tahun {Tahun}.", ex.Message, kode, tahun);
+                return await MuatLewatHttpAsync(kode, tahun, ct).ConfigureAwait(false);
+            }
             catch (HttpRequestException ex)
             {
                 _logger.LogInformation("IDM pusat tidak terjangkau: {Pesan}", ex.Message);
@@ -467,6 +487,55 @@ namespace SuDesApp.Services
                 _logger.LogWarning(ex, "Gagal membaca data IDM desa {Kode} tahun {Tahun}", kode, tahun);
                 return MuatanIdm.Galat("Gagal membaca data IDM: " + ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Jalur cadangan saat sertifikat HTTPS bermasalah: alamat yang sama lewat
+        /// HTTP polos, ditandai <c>LewatHttp</c> supaya halaman tidak pernah
+        /// menampilkan angka tanpa enkripsi tanpa peringatan. Kegagalan di jalur
+        /// ini pun tidak dilempar — halaman IDM menerima galat seperti biasa.
+        /// </summary>
+        private async Task<MuatanIdm> MuatLewatHttpAsync(string kode, int tahun, CancellationToken ct)
+        {
+            try
+            {
+                var isi = await BacaAsync(AkarHttp + kode + "/" + tahun, ct).ConfigureAwait(false);
+                var muatan = IdmKemendesaBaca.Urai(isi, tahun);
+                return muatan with { LewatHttp = true };
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (TaskCanceledException)
+            {
+                return MuatanIdm.Galat(
+                    "Sertifikat situs pusat bermasalah; jalur cadangan HTTP tidak menjawab (waktu habis).");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Jalur cadangan HTTP IDM juga gagal untuk desa {Kode} tahun {Tahun}.",
+                    kode, tahun);
+                return MuatanIdm.Galat(
+                    "Sertifikat situs pusat bermasalah dan jalur cadangan HTTP juga gagal. "
+                    + "Periksa sambungan internet lalu muat ulang.");
+            }
+        }
+
+        /// <summary>
+        /// Benar bila rantai galat memuat kegagalan validasi sertifikat TLS
+        /// (kedaluwarsa, nama tidak cocok, dsb.) — satu-satunya alasan klien ini
+        /// turun ke HTTP. Kegagalan jaringan biasa tidak memicu cadangan: HTTP
+        /// akan ikut gagal, hanya lebih lambat.
+        /// </summary>
+        private static bool SertifikatBermasalah(Exception ex)
+        {
+            for (var e = ex; e != null; e = e.InnerException)
+            {
+                if (e is AuthenticationException) return true;
+            }
+
+            return false;
         }
 
         private async Task<string> BacaAsync(string alamat, CancellationToken ct)
