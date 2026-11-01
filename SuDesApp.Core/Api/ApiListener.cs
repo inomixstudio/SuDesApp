@@ -47,6 +47,12 @@ namespace SuDesApp.Api
         private readonly ApiPembatas _pembatas;
         private readonly object _gapu = new();
 
+        /// <summary>
+        /// Sesi login pemanggil API (mis. HP kantor). Satu toko per listener:
+        /// listener mati bersama aplikasi desktop, jadi semua token ikut gugur.
+        /// </summary>
+        public ApiSesi Sesi { get; } = new();
+
         private HttpListener? _listener;
         private CancellationTokenSource? _cts;
         private bool _dibuang;
@@ -281,6 +287,17 @@ namespace SuDesApp.Api
                     return;
                 }
 
+                // 4) Endpoint bertanda sesi wajib membawa token login. Kunci API
+                //    saja tidak cukup: token menunjukkan SIAPA yang memakai data.
+                if (cocok.Endpoint!.ButuhSesi && Sesi.Ambil(TokenSesi(ctx.Request)) == null)
+                {
+                    Tulis(ctx, 401, ApiAmplop.Gagal(
+                        ApiKodeGalat.SesiDiperlukan,
+                        "Endpoint ini memerlukan sesi. Masuk lewat POST /sesi lalu kirim header Authorization: Bearer <token>."));
+                    CatatAktivitas(metode, jalur, asal, 401);
+                    return;
+                }
+
                 var hasil = await JalankanAsync(cocok, ctx, ct).ConfigureAwait(false);
                 CatatAktivitas(metode, jalur, asal, hasil.KodeHttp);
             }
@@ -313,9 +330,11 @@ namespace SuDesApp.Api
             // Endpoint dibatasi oleh tabel cakupannya sendiri (ApiRute).
             using var _sesiSistemApi = SessionContext.SesiSistem();
 
-            switch (endpoint.Jalur)
+            // Jalur yang sama bisa melayani beberapa metode (POST dan DELETE
+            // /sesi), jadi kunci switch memuat metodenya juga.
+            switch ($"{endpoint.Metode} {endpoint.Jalur}")
             {
-                case "/status":
+                case "GET /status":
                 {
                     Tulis(ctx, 200, ApiAmplop.Berhasil(new
                     {
@@ -326,7 +345,7 @@ namespace SuDesApp.Api
                     return new HasilJalankan { KodeHttp = 200 };
                 }
 
-                case "/statistik":
+                case "GET /statistik":
                 {
                     using var scope = _provider().CreateScope();
                     var ringkasan = scope.ServiceProvider.GetRequiredService<IApiRingkasanService>();
@@ -335,7 +354,7 @@ namespace SuDesApp.Api
                     return new HasilJalankan { KodeHttp = 200 };
                 }
 
-                case "/perangkat-desa":
+                case "GET /perangkat-desa":
                 {
                     using var scope = _provider().CreateScope();
                     var ringkasan = scope.ServiceProvider.GetRequiredService<IApiRingkasanService>();
@@ -345,7 +364,7 @@ namespace SuDesApp.Api
                     return new HasilJalankan { KodeHttp = 200 };
                 }
 
-                case "/verifikasi/{kode}":
+                case "GET /verifikasi/{kode}":
                 {
                     using var scope = _provider().CreateScope();
                     var layanan = scope.ServiceProvider.GetRequiredService<SuDesApp.Services.IVerifikasiSuratService>();
@@ -374,7 +393,7 @@ namespace SuDesApp.Api
                     return new HasilJalankan { KodeHttp = 200 };
                 }
 
-                case "/rekap-bulanan":
+                case "GET /rekap-bulanan":
                 {
                     // Parameter tahun lewat query string (jalur rute tidak
                     // memuat parameter): ?tahun=2026. Tanpa parameter, memakai
@@ -400,6 +419,135 @@ namespace SuDesApp.Api
                         .AmbilRekapBulananAsync(tahun, ct).ConfigureAwait(false);
 
                     Tulis(ctx, 200, ApiAmplop.Berhasil(rekap));
+                    return new HasilJalankan { KodeHttp = 200 };
+                }
+
+                case "POST /sesi":
+                {
+                    var (isi, galatBadan) = BacaBadan(ctx.Request);
+                    if (galatBadan != null)
+                    {
+                        Tulis(ctx, 400, ApiAmplop.Gagal(ApiKodeGalat.PermintaanTidakSah, galatBadan));
+                        return new HasilJalankan { KodeHttp = 400 };
+                    }
+
+                    ApiSesiMasuk? masuk;
+                    try
+                    {
+                        masuk = JsonSerializer.Deserialize<ApiSesiMasuk>(isi ?? string.Empty, OpsiJson);
+                    }
+                    catch (JsonException)
+                    {
+                        Tulis(ctx, 400, ApiAmplop.Gagal(
+                            ApiKodeGalat.PermintaanTidakSah,
+                            "Badan permintaan harus JSON: {\"username\":\"...\",\"kata_sandi\":\"...\"}."));
+                        return new HasilJalankan { KodeHttp = 400 };
+                    }
+
+                    if (masuk == null
+                        || string.IsNullOrWhiteSpace(masuk.Username)
+                        || string.IsNullOrEmpty(masuk.KataSandi))
+                    {
+                        Tulis(ctx, 400, ApiAmplop.Gagal(
+                            ApiKodeGalat.PermintaanTidakSah,
+                            "Nama pengguna dan kata sandi wajib diisi."));
+                        return new HasilJalankan { KodeHttp = 400 };
+                    }
+
+                    using var scope = _provider().CreateScope();
+                    var pengguna = scope.ServiceProvider
+                        .GetRequiredService<SuDesApp.Services.IPenggunaService>();
+
+                    // Pesan khusus untuk database tanpa akun: operator perlu
+                    // tahu harus membuat akun di desktop dulu, bukan menebak sandi.
+                    if (!await pengguna.AdaPenggunaAsync(ct).ConfigureAwait(false))
+                    {
+                        Tulis(ctx, 401, ApiAmplop.Gagal(
+                            ApiKodeGalat.SesiGagal,
+                            "Belum ada akun di komputer ini. Buat akun dari aplikasi desktop lebih dulu."));
+                        return new HasilJalankan { KodeHttp = 401 };
+                    }
+
+                    var hasilMasuk = await pengguna
+                        .MasukAsync(masuk.Username!.Trim().ToLowerInvariant(), masuk.KataSandi!, ct)
+                        .ConfigureAwait(false);
+
+                    if (!hasilMasuk.Berhasil || hasilMasuk.Pengguna == null)
+                    {
+                        Tulis(ctx, 401, ApiAmplop.Gagal(
+                            ApiKodeGalat.SesiGagal, hasilMasuk.Pesan));
+                        return new HasilJalankan { KodeHttp = 401 };
+                    }
+
+                    var sesiBaru = Sesi.Buat(
+                        hasilMasuk.Pengguna.Username,
+                        hasilMasuk.Pengguna.NamaTampilan,
+                        hasilMasuk.Pengguna.Peran);
+
+                    Tulis(ctx, 200, ApiAmplop.Berhasil(new ApiSesiInfo
+                    {
+                        Token = sesiBaru.Token,
+                        BerlakuSampai = sesiBaru.BerlakuSampai,
+                        Username = sesiBaru.Username,
+                        Nama = sesiBaru.Nama,
+                        // Sesi menyimpan kode peran (mis. ADMINISTRATOR); aplikasi
+                        // pendamping menampilkan peran apa adanya, jadi yang dikirim
+                        // adalah labelnya, sama dengan yang tampil di desktop.
+                        Peran = SuDesApp.Data.Models.PeranPengguna.Tampilan(sesiBaru.Peran)
+                    }));
+                    return new HasilJalankan { KodeHttp = 200 };
+                }
+
+                case "GET /sesi/siapa":
+                {
+                    // Pemeriksaan sesi sudah dilakukan sebelum handler ini, jadi
+                    // token yang sampai di sini pasti masih berlaku.
+                    var sesi = Sesi.Ambil(TokenSesi(ctx.Request))!;
+                    Tulis(ctx, 200, ApiAmplop.Berhasil(new ApiSesiInfo
+                    {
+                        Token = sesi.Token,
+                        BerlakuSampai = sesi.BerlakuSampai,
+                        Username = sesi.Username,
+                        Nama = sesi.Nama,
+                        Peran = SuDesApp.Data.Models.PeranPengguna.Tampilan(sesi.Peran)
+                    }));
+                    return new HasilJalankan { KodeHttp = 200 };
+                }
+
+                case "DELETE /sesi":
+                {
+                    var diakhiri = Sesi.Akhiri(TokenSesi(ctx.Request));
+                    Tulis(ctx, 200, ApiAmplop.Berhasil(new { diakhiri }));
+                    return new HasilJalankan { KodeHttp = 200 };
+                }
+
+                case "GET /pengaturan":
+                {
+                    using var scope = _provider().CreateScope();
+                    var desa = await scope.ServiceProvider
+                        .GetRequiredService<SuDesApp.Data.Repositories.IDesaRepository>()
+                        .GetInfoDesaAsync(ct).ConfigureAwait(false);
+
+                    // Kop surat butuh keempat nilai ini; database yang belum
+                    // diisi tetap dijawab, tetapi aplikasi pendamping melihat
+                    // penanda kurung siku seperti pratinjau desktop.
+                    Tulis(ctx, 200, ApiAmplop.Berhasil(new ApiPengaturanSurat
+                    {
+                        DiambilPada = DateTime.Now,
+                        Desa = new ApiDesaPengaturan
+                        {
+                            NamaDesa = desa?.NamaDesa ?? string.Empty,
+                            Kecamatan = desa?.Kecamatan ?? string.Empty,
+                            Kabupaten = desa?.Kabupaten ?? string.Empty,
+                            JenisKabupaten = desa?.JenisKabupaten,
+                            Alamat = desa?.Alamat ?? string.Empty,
+                            Kodepos = desa?.Kodepos ?? string.Empty,
+                            Email = desa?.Email,
+                            KepalaDesa = desa?.KepalaDesa ?? string.Empty,
+                            NipKepalaDesa = desa?.NipKepalaDesa,
+                            JenisLembaga = desa?.JenisLembaga
+                        }
+                    }));
                     return new HasilJalankan { KodeHttp = 200 };
                 }
 
@@ -438,6 +586,24 @@ namespace SuDesApp.Api
             }
 
             return (new string(buffer, 0, jumlah), null);
+        }
+
+        /// <summary>
+        /// Ambil token sesi dari header <c>Authorization: Bearer &lt;token&gt;</c>.
+        /// Header kunci API tidak dipakai di sini supaya kunci bersama tidak
+        /// pernah dianggap sebagai identitas pengguna.
+        /// </summary>
+        private static string? TokenSesi(HttpListenerRequest request)
+        {
+            var nilai = request.Headers[ApiAutentikasi.HeaderOtorisasi];
+            if (string.IsNullOrWhiteSpace(nilai)) return null;
+
+            const string awalan = "Bearer ";
+            var bersih = nilai.Trim();
+            if (!bersih.StartsWith(awalan, StringComparison.OrdinalIgnoreCase)) return null;
+
+            var token = bersih[awalan.Length..].Trim();
+            return token.Length == 0 ? null : token;
         }
 
         private static string AlamatAsal(HttpListenerContext ctx)

@@ -1,8 +1,9 @@
 # API Desa — SuDesApp
 
-Dokumen ini menjelaskan **API Desa**: endpoint HTTP lokal yang membuka data
-keluaran (angka agregat, perangkat desa) dan **menerima permintaan surat** dari
-sistem luar ke antrean operator.
+Dokumen ini menjelaskan **API Desa**: endpoint HTTP lokal di komputer kantor
+desa yang membuka data keluaran (angka agregat, perangkat desa), memeriksa
+keaslian surat, serta melayani **aplikasi pendamping HP** (masuk sesi akun
+desktop dan membaca pengaturan surat supaya hasil cetak sama persis).
 
 > Status dokumen: **berlaku sebagai default implementasi** (sesuai kode saat
 > ini). API mati secara bawaan dan hanya melayani `localhost` sampai operator
@@ -19,7 +20,8 @@ sistem luar ke antrean operator.
 | Alamat bawaan | `http://localhost:8790/sudes/api/v1` | Aktif |
 | Versioning | Prefix memuat versi (`/v1`) | Aktif |
 | Autentikasi | Kunci API pada header `X-Api-Key` atau `Authorization: Bearer` | Aktif |
-| Cakupan kunci | Kunci utama `Penuh`; kunci tambahan `Agregat` (baca statistik & perangkat) atau `Permintaan` (surat online) — dikelola di kotak **KUNCI CAKUPAN** halaman API | Aktif |
+| Sesi aplikasi | `POST /sesi` menukar akun desktop dengan token 12 jam; endpoint sesi/pengaturan mewajibkan token di header `Authorization: Bearer` | Aktif |
+| Cakupan kunci | Kunci utama `Penuh`; kunci tambahan `Agregat` (baca statistik & perangkat). Kategori `Sesi` dan `Pengaturan` hanya dibuka kunci `Penuh` | Aktif |
 | Verifikasi surat | `GET /verifikasi/{kode}` — satu-satunya endpoint tanpa kunci API | Aktif |
 | Penyimpanan kunci | DPAPI CurrentUser di `%LOCALAPPDATA%\SuDesApp\ApiKunci.bin` | Aktif |
 | HTTPS | Tidak ada (localhost); jaringan lokal biasanya perlu tambahan | **[TENTUKAN]** |
@@ -27,34 +29,65 @@ sistem luar ke antrean operator.
 | Pembatasan laju | 60 permintaan/menit per alamat pengirim (bawaan) | Aktif |
 | Batas badan | 64 KB | Aktif |
 | Pencatatan | Log aplikasi + Riwayat Aktivitas (tanpa isi badan) | Aktif |
-| Peran pengguna | Berlaku di aplikasi (lihat `policy-peran-pengguna.md`); kunci API terikat **cakupan**, bukan peran pengguna | **[TENTUKAN]** (P3-11; cakupan per kunci sudah Aktif) |
 
 ---
 
-## 2. Mengaktifkan API
+## 2. Mengaktifkan API (langkah demi langkah)
 
-1. Buka menu **API Desa** (seksi **BANTUAN** di sidebar, di atas Catatan Rilis).
+Halaman **API Desa** menampilkan panduan yang sama di bagian CARA MENJALANKAN.
+Ringkasnya:
+
+1. Buka menu **API Desa** (seksi **BANTUAN** di sidebar).
 2. Centang **Aktifkan API**.
 3. Tekan **Buat Kunci Baru**, lalu **Salin** kuncinya. Kunci hanya bisa dibaca
    oleh akun Windows yang sedang memakai aplikasi.
-4. Simpan port bila perlu (1025–65535; bawaan `8790`).
-5. Tekan **Uji Koneksi** untuk memastikan listener menjawab.
+4. Tekan **Simpan** (pojok kanan atas). Listener menyala; kotak status di atas
+   berubah menjadi **"API aktif dan melayani permintaan"** dan alamat portnya
+   tampil di bawahnya. Bila gagal, kotak itu menampilkan alasan lengkapnya
+   (mis. port terpakai, atau kunci belum dibuat).
+5. Tekan **Uji Koneksi** untuk memastikan listener menjawab dengan kunci itu.
+
+Kalau langkah 4 gagal karena port terpakai, ganti port (1025–65535; bawaan
+`8790`) lalu Simpan lagi. Listener membaca ulang port, mode jaringan, dan
+daftar IP setiap kali pengaturan disimpan.
+
+### Dipakai dari HP (aplikasi pendamping)
+
+Aplikasi HP (SuDesApp Android) terhubung lewat API ini. Di komputer kantor:
+
+1. Centang **Izinkan akses dari jaringan**.
+2. Isi **IP yang diizinkan** dengan alamat IP HP di jaringan lokal (mis.
+   `192.168.1.20`). Tanpa minimal satu IP, API tidak mau menyala dalam mode
+   jaringan.
+3. Tekan **Simpan**. Windows biasanya menuntut aplikasi dijalankan sebagai
+   administrator untuk membuka `http://+:port/`; bila muncul galat port,
+   jalankan aplikasi sebagai administrator atau minta IT kantor menambahkan
+   izin URL (`netsh http add urlacl`).
+4. Di HP: buka aplikasi, tekan **Sambungkan**, isi alamat komputer kantor
+   (mis. `http://192.168.1.5:8790`) dan **kunci API** dari halaman ini, lalu
+   masuk memakai akun desktop (nama pengguna & kata sandi yang sama).
+
+Setelah tersambung, HP menarik **pengaturan surat** (kop & pejabat penanda
+tangan) dari desktop lewat `GET /pengaturan`, jadi hasil cetak dari HP
+mengikuti Pengaturan Surat yang sudah diisi di desktop — tidak perlu diisi
+ulang di HP.
 
 ### Kunci cakupan untuk sistem luar
 
 Kunci utama berwenang penuh. Untuk pihak luar (dashboard kecamatan, website
 desa) buat **kunci cakupan** di kotak **KUNCI CAKUPAN** halaman API:
 
-1. Pilih cakupan: **Agregat** (baca statistik, status, perangkat desa) atau
-   **Permintaan** (kirim & pantau permintaan surat online).
+1. Pilih cakupan: **Agregat** (baca statistik, status, perangkat desa).
 2. Isi nama pemegang (opsional) lalu tekan **Buat Kunci Cakupan**.
 3. **Salin** nilainya dari daftar, lalu serahkan ke sistem luar.
 4. Tekan **Hapus** pada barisnya bila kunci sudah tidak dipakai — pemegang
    langsung ditolak pada permintaan berikutnya (listener membaca daftar kunci
    di setiap permintaan, tanpa perlu restart).
 
-Kunci cakupan tidak bisa membuka endpoint di luar cakupannya, dan
-meregenerasi kunci utama tidak mematikan kunci cakupan (dan sebaliknya).
+Kategori `Sesi` dan `Pengaturan` sengaja hanya dibuka untuk kunci utama
+(`Penuh`): kunci Agregat tidak bisa memakai akun operator. Kunci lama
+bercakupan `Permintaan` (alur surat online yang sudah dihentikan) tetap
+terbaca, tetapi tidak membuka endpoint mana pun.
 
 Listener dinyalakan otomatis setiap aplikasi dibuka selama pengaturannya masih
 aktif. Mengganti kunci, mengganti port, atau mematikan API akan menyalakan ulang
@@ -63,10 +96,9 @@ listener.
 ### Bila dibuka ke jaringan
 
 Centang **Izinkan akses dari jaringan** hanya bila API harus dipakai dari
-komputer lain di jaringan lokal yang sama. Windows biasanya menuntut aplikasi dijalankan
-sebagai administrator untuk membuka `http://+:port/`, dan HTTP tidak
-mengenkripsi isi maupun kunci — untuk jaringan yang tidak dipercaya, gunakan
-SSH tunnel atau reverse proxy HTTPS di depan aplikasi.
+komputer lain di jaringan lokal yang sama. HTTP tidak mengenkripsi isi maupun
+kunci — untuk jaringan yang tidak dipercaya, gunakan SSH tunnel atau reverse
+proxy HTTPS di depan aplikasi.
 
 ---
 
@@ -94,13 +126,14 @@ Semua jalur diawali `/sudes/api/v1`.
 
 | Metode | Jalur | Keterangan |
 |---|---|---|
-| GET | `/status` | Cek versi API dan antrean menunggu operator. Endpoint paling ringan. |
-| GET | `/statistik` | Angka agregat: warga, kartu keluarga, perangkat desa, surat per status, permintaan per status. |
+| GET | `/status` | Cek versi API dan waktu server. Endpoint paling ringan. |
+| GET | `/statistik` | Angka agregat: warga, kartu keluarga, perangkat desa, surat per status. |
 | GET | `/perangkat-desa` | Nama jabatan, pejabat, wilayah, dan masa jabatan (hanya yang aktif). |
-| GET | `/jenis-surat` | Nama jenis surat yang bisa diminta lewat API. |
-| POST | `/permintaan` | Mengirim permintaan surat ke antrean operator dengan status `BARU`. |
-| GET | `/permintaan/{kode}` | Status satu permintaan, mis. `PMT-2026-0001`. |
 | GET | `/verifikasi/{kode}` | Periksa keaslian surat dari kode/kaki QR yang tercetak di surat. **Tanpa kunci API.** |
+| POST | `/sesi` | Masuk memakai akun desktop; menerima token sesi 12 jam. |
+| GET | `/sesi/siapa` | Identitas sesi yang tokennya dikirim (nama, peran, waktu berakhir). |
+| DELETE | `/sesi` | Akhiri sesi yang sedang berjalan. |
+| GET | `/pengaturan` | Pengaturan surat desktop (kop & pejabat penanda tangan) untuk aplikasi pendamping. |
 | GET | `/rekap-bulanan` | Rekap surat per bulan per status persetujuan untuk satu tahun (`?tahun=YYYY`). |
 
 ### 4.1 `GET /status`
@@ -110,10 +143,8 @@ Semua jalur diawali `/sudes/api/v1`.
   "sukses": true,
   "data": {
     "aplikasi": "SuDesApp",
-    "versi": "2.7.0.0",
-    "waktu": "2026-09-27 10:30:00",
-    "antrean": { "BARU": 2, "DIPROSES": 0, "SELESAI": 12, "DITOLAK": 1 },
-    "belumDibaca": 2
+    "versi": "2.10.1.0",
+    "waktu": "2026-11-01 09:34:12"
   }
 }
 ```
@@ -124,9 +155,8 @@ Berisi `totalWarga`, `wargaAktif`, `wargaLakiLaki`, `wargaPerempuan`,
 `jumlahKartuKeluarga`, `wargaPerRt`, angka perangkat desa
 (`perangkatTotal`, `perangkatAktif`, `perangkatSelesai`,
 `jabatanIntiKosong`), `suratTotal` + `suratPerStatus` +
-`suratPerStatusPersetujuan`, serta `permintaanTotal` +
-`permintaanPerStatus` + `permintaanBelumDibaca`. Tidak ada kolom yang bisa
-mengidentifikasi warga.
+`suratPerStatusPersetujuan`, serta `permintaanTotal` + `permintaanPerStatus` +
+`permintaanBelumDibaca`. Tidak ada kolom yang bisa mengidentifikasi warga.
 
 `suratPerStatusPersetujuan` menghitung surat per status alur persetujuan:
 kunci `DIAJUKAN`, `DIVERIFIKASI`, `TERBIT`, `DITOLAK`, dan `TANPA_ALUR`
@@ -135,65 +165,60 @@ walau nilainya nol, supaya dashboard sistem luar cukup membaca nilai tanpa
 menangani kunci yang muncul-hilang. Angka `DIAJUKAN`/`DIVERIFIKASI` adalah
 antrean yang menunggu tindakan pejabat desa.
 
-### 4.3 `POST /permintaan`
+### 4.3 `POST /sesi`
+
+Menukar kredensial akun desktop dengan token sesi. Dipakai aplikasi pendamping
+(HP) supaya tidak menyimpan kata sandi.
 
 ```json
 {
-  "referensi": "WEB-2026-0001",
-  "nama_warga": "Budi Santoso",
-  "nik": "3204010101800001",
-  "no_hp": "081234567890",
-  "jenis_surat": "SKTM",
-  "pesan": "SKTM\nNama: Budi Santoso",
-  "data": { "keperluan": "Beasiswa" }
+  "username": "operator",
+  "kata_sandi": "rahasia"
 }
 ```
-
-- `referensi` — opsional. Kalau diisi, pengiriman ulang memakai referensi sama
-  **tidak** menghasilkan permintaan kedua; responsnya `200` dengan
-  `sudahAda: true`. Ini yang membuat integrasi boleh mencoba ulang dengan aman.
-- `jenis_surat` — boleh diisi dengan nama dari `GET /jenis-surat`, atau dikosongkan
-  bila jenis surat ditulis pada baris pertama `pesan` (format yang sama dengan
-  isian pesan di website).
-- Jenis surat yang hanya bisa dibuat offline (`Katalog Offline`) **ditolak**.
-- NIK hanya boleh angka; karakter selain angka dibuang.
-- Respons berhasil: `201` untuk permintaan baru, `200` untuk permintaan yang
-  sudah ada, dengan `data.kode` berisi kode permintaan.
-
-> **Kanal formulir warga.** Backend `SuDesApp.Api` (bukan listener desktop)
-> menyajikan jalur publik `POST /sudes/api/v1/permintaan-publik` untuk formulir
-> **Formulir Warga** di website desa. Jalur itu sengaja tidak meminta kunci
-> API karena dipakai warga tanpa akun; penahannya adalah batas kirim 5
-> permintaan / 10 menit per alamat IP (`429` bila lewat). Isi badan dan
-> hasilnya sama dengan `/permintaan`, dan permintaannya masuk antrean operator
-> yang sama. Jalur berkey di atas tetap dipakai sistem desa yang memegang kunci.
-
-### 4.4 `GET /permintaan/{kode}`
 
 ```json
 {
   "sukses": true,
   "data": {
-    "kode": "PMT-2026-0001",
-    "status": "BARU",
-    "sumber": "API",
-    "jenisSurat": "SKTM",
-    "tanggal": "2026-09-27T10:30:00",
-    "adaSurat": false
+    "token": "…",
+    "berlakuSampai": "2026-11-01T21:00:00",
+    "username": "operator",
+    "nama": "Nama Tampilan",
+    "peran": "Operator"
   }
 }
 ```
 
-Status yang mungkin: `BARU`, `DIPROSES`, `SELESAI`, `DITOLAK`,
-`PERLU_PERBAIKAN`. `adaSurat` bernilai `true` setelah permintaan disetujui
-operator dan suratnya sudah terbit.
+- Kunci API tetap wajib dikirim (header `X-Api-Key`) — sesi adalah lapis
+  kedua, bukan pengganti kunci.
+- Sesi berlaku **12 jam** dan hilang saat aplikasi desktop ditutup; tidak
+  disimpan ke mana pun, jadi restart aplikasi menggugurkan semua token.
+- Belum ada akun di komputer dibalas `401` `sesi_gagal` dengan pesan
+  "Belum ada akun di komputer ini. Buat akun dari aplikasi desktop lebih dulu."
+- Kata sandi salah juga `401` `sesi_gagal`.
 
-Field pada `data` memakai gaya camelCase (`jenisSurat`, bukan
-`jenis_surat`). Field opsional yang isinya kosong (`catatan`, `nomorSurat`)
-sengaja **tidak dikirim** pada JSON — pemanggil cukup memeriksa
-ketersediaannya, bukan membandingkan dengan null.
+### 4.4 `GET /sesi/siapa`
 
-### 4.5 `GET /verifikasi/{kode}`
+Mem-balas identitas pemegang token: `username`, `nama`, `peran`,
+`berlakuSampai`, dan token yang sama. Dipakai aplikasi pendamping untuk
+memulihkan keadaan setelah dibuka ulang selama token masih berlaku.
+
+### 4.5 `DELETE /sesi`
+
+Mengakhiri sesi pemegang token (balasan `{ "diakhiri": true }`). Token lalu
+tidak bisa dipakai lagi.
+
+### 4.6 `GET /pengaturan`
+
+Mengambil Pengaturan Surat desktop untuk aplikasi pendamping: `namaDesa`,
+`kecamatan`, `kabupaten`, `jenisKabupaten`, `alamat`, `kodepos`, `email`,
+`kepalaDesa`, `nipKepalaDesa`, `jenisLembaga`, beserta `diambilPada`.
+Baca-saja — sumber kebenarannya tetap desktop. Database yang belum diisi tetap
+dijawab (dengan string kosong), jadi aplikasi pendamping bisa menampilkan
+peringatan seperti pratinjau desktop.
+
+### 4.7 `GET /verifikasi/{kode}`
 
 Setiap surat yang terbit membawa kode verifikasi dan kode QR di kakinya
 (bentuk kodenya seperti `SD-7K3M-9QX2`). Endpoint ini memeriksa kode tersebut —
@@ -233,13 +258,13 @@ nomor HP.
   tercetak di kertas surat; field ini selalu terisi sehingga sistem luar cukup
   membaca satu nilai tanpa null-check.
 
-### 4.6 `GET /rekap-bulanan`
+### 4.8 `GET /rekap-bulanan`
 
 Rekap laporan bulanan: jumlah surat per bulan untuk satu tahun, dirinci per
 status persetujuan. Dipakai dashboard sistem luar memantau tren arsip surat
 sepanjang tahun tanpa perlu memanggil satu per satu.
 
-Query string (keduanya opsional):
+Query string (opsional):
 
 | Parameter | Bawaan | Keterangan |
 |---|---|---|
@@ -250,7 +275,7 @@ Query string (keduanya opsional):
   "sukses": true,
   "data": {
     "tahun": 2026,
-    "dibuatPada": "2026-09-27T10:30:00",
+    "dibuatPada": "2026-11-01T09:30:00",
     "jumlahSuratTotal": 148,
     "suratPerStatusPersetujuan": {
       "DIAJUKAN": 2,
@@ -295,11 +320,22 @@ permintaan ditolak dan jawabannya `401`.
 
 Kunci punya **cakupan** (lihat bagian 2): kunci `Penuh` (kunci utama) boleh ke
 semua endpoint berkunci, kunci `Agregat` hanya ke `/status`, `/statistik`,
-`/perangkat-desa`, `/jenis-surat`, `/rekap-bulanan`, dan kunci `Permintaan`
-hanya ke `POST /permintaan` serta `GET /permintaan/{kode}`. Kunci sah di luar
-cakupannya menjawab `403` `cakupan_tidak_cukup`.
+`/perangkat-desa`, dan `/rekap-bulanan`. Kategori `Sesi` (`POST /sesi`,
+`GET /sesi/siapa`, `DELETE /sesi`) dan `Pengaturan` (`GET /pengaturan`)
+hanya dibuka kunci `Penuh`. Kunci sah di luar cakupannya menjawab `403`
+`cakupan_tidak_cukup`.
 
-Pengecualian: `GET /verifikasi/{kode}` boleh dipanggil tanpa kunci (lihat 4.5).
+Endpoint sesi/pengaturan mewajibkan **dua** lapis: kunci API pada
+`X-Api-Key`, lalu token sesi pada header terpisah:
+
+```
+Authorization: Bearer <token sesi>
+```
+
+Header `Authorization` dipakai untuk token sesi; header `X-Api-Key` dipakai
+untuk kunci. Bila keduanya diperlukan, kirim keduanya di header yang berbeda.
+
+Pengecualian: `GET /verifikasi/{kode}` boleh dipanggil tanpa kunci (lihat 4.7).
 Pembatas laju tetap berlaku untuk endpoint ini.
 
 ---
@@ -308,8 +344,10 @@ Pembatas laju tetap berlaku untuk endpoint ini.
 
 | HTTP | Kode | Arti |
 |---|---|---|
-| 400 | `permintaan_tidak_sah` | Badan permintaan tidak terbaca, jenis surat tidak dikenali, atau parameter tidak sah (mis. `?tahun=abc`) |
+| 400 | `permintaan_tidak_sah` | Badan permintaan tidak terbaca atau parameter tidak sah (mis. `?tahun=abc`) |
 | 401 | `api_key_salah` | Kunci API tidak dikirim atau tidak cocok |
+| 401 | `sesi_diperlukan` | Endpoint bertanda sesi dipanggil tanpa token yang sah |
+| 401 | `sesi_gagal` | Nama pengguna/kata sandi salah, atau belum ada akun di komputer ini |
 | 403 | `cakupan_tidak_cukup` | Kunci sah, tetapi cakupannya tidak mencakup endpoint ini |
 | 404 | `endpoint_tidak_ada` | Jalur atau kode permintaan tidak dikenal |
 | 404 | `kode_tidak_dikenal` | Kode verifikasi surat tidak ada di arsip desa |
@@ -333,23 +371,22 @@ curl -H "X-Api-Key: <kunci>" http://localhost:8790/sudes/api/v1/statistik
 # Daftar perangkat desa aktif
 curl -H "X-Api-Key: <kunci>" http://localhost:8790/sudes/api/v1/perangkat-desa
 
-# Daftar jenis surat yang bisa diminta
-curl -H "X-Api-Key: <kunci>" http://localhost:8790/sudes/api/v1/jenis-surat
-
-# Kirim permintaan surat
-curl -X POST http://localhost:8790/sudes/api/v1/permintaan \
-  -H "X-Api-Key: <kunci>" \
-  -H "Content-Type: application/json" \
-  -d '{"referensi":"WEB-2026-0001","nama_warga":"Budi Santoso","nik":"3204010101800001","jenis_surat":"SKTM"}'
-
-# Periksa status permintaan
-curl -H "X-Api-Key: <kunci>" http://localhost:8790/sudes/api/v1/permintaan/PMT-2026-0001
-
 # Rekap laporan bulanan setahun (bawaan: tahun berjalan)
 curl -H "X-Api-Key: <kunci>" "http://localhost:8790/sudes/api/v1/rekap-bulanan?tahun=2026"
 
 # Verifikasi keaslian surat (tanpa kunci API)
 curl http://localhost:8790/sudes/api/v1/verifikasi/SD-7K3M-9QX2
+
+# Masuk sesi (aplikasi pendamping)
+curl -X POST http://localhost:8790/sudes/api/v1/sesi \
+  -H "X-Api-Key: <kunci>" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"operator","kata_sandi":"rahasia"}'
+
+# Pengaturan surat (butuh kunci + token sesi)
+curl http://localhost:8790/sudes/api/v1/pengaturan \
+  -H "X-Api-Key: <kunci>" \
+  -H "Authorization: Bearer <token sesi>"
 ```
 
 ---
@@ -357,9 +394,6 @@ curl http://localhost:8790/sudes/api/v1/verifikasi/SD-7K3M-9QX2
 ## 8. Batas yang Belum Ditentukan
 
 - **[TENTUKAN]** HTTPS dan Reverse proxy untuk akses dari luar jaringan desa.
-- **[TENTUKAN]** Cakupan kunci API per peran (P3-11): kunci bercakupan
-  (`Penuh`/`Agregat`/`Permintaan`) sudah aktif dan bisa dibuat/dihapus di
-  halaman API, tetapi belum terikat ke peran pengguna aplikasi. Langkah
-  berikutnya bila diperlukan: mencocokkan peran pengguna dengan cakupan kunci
-  tanpa mengubah endpoint lama.
+- **[TENTUKAN]** Cakupan kunci API per peran pengguna aplikasi (P3-11): cakupan
+  per kunci sudah aktif, tetapi belum terikat ke peran pengguna aplikasi.
 - **[TENTUKAN]** Retensi dan penghapusan data (P3-15).
