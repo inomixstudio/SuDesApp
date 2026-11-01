@@ -221,9 +221,9 @@ public sealed class FeatureNavigationViewModel
         TambahTombol("Kelola Pengguna", IkonMenu.Pengguna, "kelola-pengguna");
         TambahTombol("Cadangkan & Pulihkan", IkonMenu.Cadangkan, "cadangkan-pulihkan");
 
-        Header("LANGGANAN");
-        Langganan = TambahTombol("Langganan", IkonMenu.Langganan, "langganan");
-        Langganan.Description = "Status masa aktif lisensi desa, kode aktivasi, dan perpanjangan (bulanan/tahunan).";
+        Header("AKTIVASI LISENSI");
+        Langganan = TambahTombol("Aktivasi Lisensi", IkonMenu.Langganan, "langganan");
+        Langganan.Description = "Aktivasi lisensi desa melalui kode aktivasi manual.";
         if (AkunPusat.SesiIniPusat)
         {
             PusatAdministrasi = TambahTombol("Pusat Administrasi", IkonMenu.PusatAdmin, "pusat-administrasi");
