@@ -140,12 +140,12 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>Judul halaman pada header.</summary>
-        public string HeaderTitle => "LANGGANAN";
+        public string HeaderTitle => "AKTIVASI LISENSI";
 
         /// <summary>Penjelasan singkat di bawah judul header.</summary>
         public string HeaderSubtitle =>
-            "Status masa aktif lisensi desa dan perpanjangannya. Data desa tetap tersimpan di komputer ini — " +
-            "yang diurus di halaman ini hanya masa aktif aplikasinya.";
+            "Aktivasi lisensi desa melalui kode aktivasi manual. Data desa tetap tersimpan di komputer ini — " +
+            "yang diurus di halaman ini hanya aktivasi lisensinya.";
 
         // =======================================================================
         // Kode aktivasi & status langganan.
