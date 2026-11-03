@@ -367,9 +367,22 @@ namespace SuDesApp
             // Pastikan path database absolut agar konsisten terlepas dari working directory
             DatabasePath = dbPath;
             Configuration.PenomoranOverrideStore.GunakanDatabase(dbPath);
-            DatabaseConnectionString = $"Data Source={dbPath}";
+
+            // Bentuk database ditentukan oleh BERKASNYA, bukan versi aplikasi:
+            // database baru berupa SQLite biasa, sedangkan database dari versi
+            // lama bisa terenkripsi SQLCipher. Connection string final disusun di
+            // sini supaya setiap layanan yang menerima string ini — termasuk yang
+            // dibuat sebelum pemeriksaan startup selesai — memakai bentuk yang
+            // benar. Berkas yang tidak bisa dibuka dibiarkan apa adanya di sini;
+            // App.Startup yang menghentikan aplikasi dengan pesan yang jelas.
+            DatabaseConnectionString = Configuration.BerkasDatabase.DeteksiKoneksi(dbPath)
+                ?? $"Data Source={dbPath}";
+
             ReloadSuratKindsFromConfig();
-            _logger.LogInformation($"Database path valid: {dbPath}");
+            _logger.LogInformation(
+                "Database path valid: {dbPath} ({Bentuk})",
+                dbPath,
+                Configuration.BerkasDatabase.Terkunci(DatabaseConnectionString) ? "terenkripsi" : "tanpa enkripsi");
         }
 
         /// <summary>

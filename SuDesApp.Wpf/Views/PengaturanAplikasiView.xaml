@@ -877,9 +877,9 @@
                         </Border>
                         <StackPanel Style="{StaticResource SettingBody}">
                             <TextBlock Style="{StaticResource SettingDesc}"
-                                       Text="1. Berkas database disimpan sebagai SQLite biasa — tanpa enkripsi dan tanpa berkas kunci, sehingga tidak ada yang perlu ikut dipindahkan bersamanya."/>
+                                       Text="1. Berkas database baru disimpan sebagai SQLite biasa — tanpa enkripsi dan tanpa berkas kunci. Database dari versi lama yang masih terenkripsi tetap bisa dibuka aplikasi ini asalkan berkas kuncinya (DesaKunciDb.bin, di folder %LOCALAPPDATA%\SuDesApp) ikut tersedia di komputer ini."/>
                             <TextBlock Style="{StaticResource SettingDesc}"
-                                       Text="2. Karena tidak dienkripsi, batasi akses folder lewat izin Windows: siapa pun yang bisa membuka berkas itu bisa membaca isinya. Jangan taruh di folder yang bisa diakses sembarang pengguna."/>
+                                       Text="2. Database yang tidak dienkripsi bisa dibaca siapa pun yang dapat membuka berkasnya, jadi batasi akses folder lewat izin Windows. Jangan taruh di folder yang bisa diakses sembarang pengguna."/>
                             <TextBlock Style="{StaticResource SettingDesc}"
                                        Text="3. Aplikasi memakai berkas itu langsung — berkas tidak disalin ke folder aplikasi, jadi simpan di folder yang selalu tersedia (bukan folder sementara atau lampiran e-mail)."/>
                             <TextBlock Style="{StaticResource SettingDesc}" Margin="0,0,0,0"

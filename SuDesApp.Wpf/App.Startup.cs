@@ -174,19 +174,19 @@ namespace SuDesApp.Wpf
             catch (Exception ex)
             {
                 _serviceProvider.GetRequiredService<ILogger<App>>()
-                    .LogError(ex, "Gagal memeriksa database");                try
+                    .LogError(ex, "Gagal memeriksa database");
+
+                // Database yang tidak bisa dibuka bukan jalan buntu. Pengguna boleh
+                // menunjuk berkas lain (hasil pemulihan cadangan, database dari
+                // komputer asal beserta kuncinya, atau database desa lain yang masih
+                // sehat) sebelum aplikasi ditutup. Pilihan disimpan di preferensi lalu
+                // aplikasi dibuka ulang — sama seperti Pengaturan Aplikasi → Database
+                // Desa, tetapi tetap bisa dicapai walaupun aplikasi belum berjalan.
+                if (!TawarkanPemulihanDatabase(ex))
                 {
-                    SuDesApp.Wpf.Views.MessageDialogWindow.Show(
-                        "Database", ex.Message,
-                        SuDesApp.Utilities.AppMessageButton.Ok, SuDesApp.Utilities.AppMessageIcon.Error);
+                    splash.Close();
+                    Shutdown();
                 }
-                catch
-                {
-                    MessageBox.Show(ex.Message, "Database",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-                splash.Close();
-                Shutdown();
                 return;
             }
 
