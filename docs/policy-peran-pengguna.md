@@ -21,7 +21,7 @@
 | Login Google | **Dihapus dari layar login (2026-10-13)** — akun Google bukan jalan masuk aplikasi. Koneksi akun Google hanya untuk pencadangan Drive dan disambungkan SETELAH masuk, dari halaman "Login dengan Google" | Dihapus |
 | Pemeriksaan izin | Ditegakkan di halaman + lapis data (bukan lewat penyembunyian menu): `SessionContext.Wajib` di layanan simpan surat, impor warga, verifikasi/tanda tangan, dan kelola pengguna (aktif setelah login; jalur sistem — API desa — membuka blok lewat `SesiSistem()` per-aliran) | Aktif |
 | Sesi kedaluwarsa otomatis | Layar kunci idle: setelah diam (bawaan 15 menit, bisa diatur 1–120 menit di Pengaturan Aplikasi), jendela ditutup layar kunci; dibuka lewat isi ulang kata sandi akun aktif. Percobaan salah memakai aturan kunci 3× gagal yang sama | Aktif |
-| Enkripsi database | **Dihapus** — `desa.db` kini SQLite biasa tanpa enkripsi dan tanpa berkas kunci (`DesaKunciDb.bin` tidak lagi dibuat maupun dibaca). Berkas dari versi lama yang terenkripsi terdeteksi saat start dengan pesan yang bisa ditindaklanjuti: pulihkan dari cadangan, atau pilih berkas database lain | Dihapus |
+| Enkripsi database | **Tidak lagi dibuat baru** — `desa.db` baru berupa SQLite biasa tanpa enkripsi, tetapi database terenkripsi dari versi lama **tetap dibuka** memakai `DesaKunciDb.bin` (DPAPI akun Windows) bila berkas kunci itu ada. Tanpa kunci, aplikasi berhenti dengan pesan yang menyebut cara memulihkannya (salin berkas kunci, pulihkan cadangan, atau pilih berkas lain) | Kompatibilitas |
 
 ---
 

@@ -639,14 +639,19 @@ namespace SuDesApp.Wpf.ViewModels
                 // Periksa lebih dahulu agar berkas yang startup pasti tolak tidak
                 // tersimpan sebagai pilihan: kondisi itu bisa mengunci pengguna
                 // keluar dari aplikasi sebelum ia sempat memilih database lain.
-                switch (BerkasDatabase.Periksa(jalur))
+                // Database terenkripsi versi lama BOLEH dipilih selama kuncinya
+                // tersedia — aplikasi membukanya memakai kunci itu.
+                var status = BerkasDatabase.Periksa(jalur);
+
+                switch (status)
                 {
                     case StatusBerkasDatabase.BerkasLamaTerkunci:
                         InfoDatabase =
-                            "Berkas ini bukan database SQLite biasa dan tidak didukung " +
-                            "(kemungkinan database terenkripsi dari versi SuDesApp lama). " +
-                            "Pilihan tidak disimpan. Pilih database lain atau pulihkan dari " +
-                            "cadangan .db yang lebih baru.";
+                            "Berkas ini database terenkripsi dari versi SuDesApp lama, tetapi " +
+                            "berkas kuncinya tidak ada atau tidak cocok di komputer ini. Pilihan " +
+                            "tidak disimpan. Salin DesaKunciDb.bin dari komputer asal ke " +
+                            $"{BerkasDatabase.LokasiBerkasKunci}, atau pulihkan cadangan .db yang " +
+                            "tidak terenkripsi.";
                         return Task.CompletedTask;
 
                     case StatusBerkasDatabase.TidakTerbaca:
@@ -659,7 +664,9 @@ namespace SuDesApp.Wpf.ViewModels
 
                 AppPreferenceStore.SetJalurDatabase(jalur);
                 SegarkanInfoDatabase();
-                _statusSesaat.Tampilkan("Lokasi database disimpan — berlaku setelah aplikasi dibuka ulang.");
+                _statusSesaat.Tampilkan(status == StatusBerkasDatabase.Terenkripsi
+                    ? "Lokasi database disimpan (database terenkripsi — kuncinya tersedia di komputer ini) — berlaku setelah aplikasi dibuka ulang."
+                    : "Lokasi database disimpan — berlaku setelah aplikasi dibuka ulang.");
             }
             catch (Exception ex)
             {

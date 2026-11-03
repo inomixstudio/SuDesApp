@@ -72,6 +72,6 @@ membuat akun lama tidak terbaca), dan perbandingan memakai
 
 ### Data desa
 
-Database desa (`desa.db`) berada di komputer desa dan **tidak pernah** dikirim ke server. Database ini SQLite biasa **tanpa enkripsi** — lindungi lewat izin folder dan akun Windows.
+Database desa (`desa.db`) berada di komputer desa dan **tidak pernah** dikirim ke server. Database yang dibuat versi ini berupa SQLite biasa **tanpa enkripsi** — lindungi lewat izin folder dan akun Windows. Database terenkripsi SQLCipher dari versi lama tetap dibuka memakai berkas kuncinya (`DesaKunciDb.bin`, DPAPI akun Windows); aplikasi tidak membuat database terenkripsi baru.
 Server lisensi hanya menyimpan masa aktif, nama desa, dan kontak — cukup untuk
 menagih langganan. Lihat `docs/langganan-dan-lisensi.md`.

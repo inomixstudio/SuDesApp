@@ -204,7 +204,7 @@ namespace SuDesApp.Configuration
                     cadangan);
             }
 
-            // 3. Salin isi lewat backup API SQLite, BUKAN File.Copy.
+            // 3. Salin isi, BUKAN File.Copy.
             //
             //    Mengganti berkas utama di level OS meninggalkan -wal/-shm lama
             //    di sebelahnya; SQLite lalu memakai WAL itu pada database hasil
@@ -212,13 +212,62 @@ namespace SuDesApp.Configuration
             //    Backup API menulis melalui koneksi SQLite sendiri, jadi WAL,
             //    koneksi yang masih terbuka, dan halaman yang sedang dipakai ikut
             //    ditangani.
-            await using (var sumber = new SqliteConnection(koneksiSumber))
-            await using (var tujuan = new SqliteConnection(_config.DatabaseConnectionString))
+            //
+            //    Database terenkripsi (dari versi lama) tidak bisa memakai API itu:
+            //    SQLCipher menjawab "backup is not supported with encrypted
+            //    databases". Untuk bentuk itu isinya disalin lewat sqlcipher_export
+            //    ke berkas baru dalam bentuk database aktif, lalu berkasnya diganti.
+            var koneksiAktif = _config.DatabaseConnectionString;
+
+            if (!BerkasDatabase.Terkunci(koneksiSumber) && !BerkasDatabase.Terkunci(koneksiAktif))
             {
+                await using var sumber = new SqliteConnection(koneksiSumber);
+                await using var tujuan = new SqliteConnection(koneksiAktif);
                 await sumber.OpenAsync();
                 await tujuan.OpenAsync();
 
                 sumber.BackupDatabase(tujuan);
+            }
+            else
+            {
+                var kunciAktif = new SqliteConnectionStringBuilder(koneksiAktif).Password;
+                var berkasBaru = string.Concat(
+                    dbPath, ".restore-", DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
+
+                try
+                {
+                    BerkasDatabase.SalinIsi(
+                        koneksiSumber,
+                        berkasBaru,
+                        string.IsNullOrWhiteSpace(kunciAktif) ? null : kunciAktif);
+
+                    // Ganti berkas utama hanya setelah salinan baru terbukti bisa
+                    // dibuka (diperiksa di dalam SalinIsi). Sidecar lama dibuang
+                    // supaya WAL database sebelumnya tidak terpakai.
+                    SqliteConnection.ClearAllPools();
+                    HapusSidecar(dbPath);
+
+                    try
+                    {
+                        File.Move(berkasBaru, dbPath, overwrite: true);
+                    }
+                    catch (IOException ex)
+                    {
+                        throw new InvalidOperationException(
+                            "Database hasil pemulihan tidak bisa menggantikan database aktif karena " +
+                            "berkasnya sedang dipakai. Tutup aplikasi lain yang membuka berkas database, " +
+                            "lalu ulangi pemulihan — database aktif tidak diubah.\n\n" +
+                            $"Rincian: {ex.Message}", ex);
+                    }
+
+                    SqliteConnection.ClearAllPools();
+                }
+                finally
+                {
+                    CobaHapus(berkasBaru);
+                    CobaHapus(berkasBaru + "-wal");
+                    CobaHapus(berkasBaru + "-shm");
+                }
             }
 
             _logger.LogInformation(
@@ -253,6 +302,20 @@ namespace SuDesApp.Configuration
                 // hanyalah "bersih-bersih".
                 _logger.LogWarning(ex, "Cadangan pra-restore GAGAL dibuang; dibiarkan di {Cadangan}", cadanganPath);
             }
+        }
+
+        private static void HapusSidecar(string dbPath)
+        {
+            CobaHapus(dbPath + "-wal");
+            CobaHapus(dbPath + "-shm");
+            CobaHapus(dbPath + "-journal");
+        }
+
+        private static void CobaHapus(string jalur)
+        {
+            try { if (File.Exists(jalur)) File.Delete(jalur); }
+            catch (IOException) { /* masih dipegang proses lain — dibiarkan, bukan kegagalan restore */ }
+            catch (UnauthorizedAccessException) { /* tanpa izin hapus — sama seperti di atas */ }
         }
     }
 }

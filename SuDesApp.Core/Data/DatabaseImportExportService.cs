@@ -69,6 +69,7 @@ public class DatabaseImportExportService
             // Migrasi dilakukan pada file sementara terlebih dahulu agar database aktif
             // tidak ditimpa saat masih dibuka oleh koneksi lain (mencegah file korup).
             string tempPath = Path.Combine(dbDir!, $"desa_import_{DateTime.Now:yyyyMMddHHmmss}.db");
+            string? berkasSalin = null;
             try
             {
                 File.Copy(sourceDbPath, tempPath, true);
@@ -79,7 +80,7 @@ public class DatabaseImportExportService
                 var tempConnectionString = BerkasDatabase.DeteksiKoneksi(tempPath)
                     ?? throw new InvalidOperationException(
                         "Berkas impor tidak bisa dibuka: bukan database SQLite yang valid " +
-                        "(rusak, atau berasal dari versi lama yang terenkripsi).");
+                        "(rusak, terenkripsi tanpa kunci di komputer ini, atau bukan database SuDesApp).");
 
                 using (var conn = new SqliteConnection(tempConnectionString))
                 {
@@ -89,6 +90,24 @@ public class DatabaseImportExportService
 
                 if (!await IsValidSQLiteDatabaseAsync(tempPath))
                     throw new InvalidOperationException("Database hasil migrasi tidak valid (integrity check gagal).");
+
+                // Impor menyalin BERKAS, jadi bentuk berkas hasil impor harus sama
+                // dengan database yang dipakai. Cadangan terenkripsi yang diimpor ke
+                // instalasi tanpa enkripsi (atau sebaliknya) baru akan ditolak pada
+                // sesi berikutnya, padahal aplikasi ini harus menerima kedua bentuk.
+                // Isinya disalin ulang mengikuti bentuk database aktif.
+                if (BerkasDatabase.Terkunci(tempConnectionString) !=
+                    BerkasDatabase.Terkunci(_config.DatabaseConnectionString))
+                {
+                    berkasSalin = tempPath + ".sesuai-bentuk.db";
+                    var kunciAktif = new SqliteConnectionStringBuilder(
+                        _config.DatabaseConnectionString).Password;
+
+                    BerkasDatabase.SalinIsi(
+                        tempConnectionString,
+                        berkasSalin,
+                        string.IsNullOrWhiteSpace(kunciAktif) ? null : kunciAktif);
+                }
 
                 if (File.Exists(currentDbPath))
                 {
@@ -111,7 +130,7 @@ public class DatabaseImportExportService
                 }
 
                 DeleteSidecarFiles(currentDbPath);
-                File.Copy(tempPath, currentDbPath, true);
+                File.Copy(berkasSalin ?? tempPath, currentDbPath, true);
                 SqliteConnection.ClearAllPools(); // buang handle lama yang menunjuk berkas bekas
                 _logger.LogInformation("Database berhasil disalin ke: {Path}", currentDbPath);
             }
@@ -119,6 +138,12 @@ public class DatabaseImportExportService
             {
                 DeleteSidecarFiles(tempPath);
                 TryDeleteFile(tempPath);
+
+                if (berkasSalin != null)
+                {
+                    DeleteSidecarFiles(berkasSalin);
+                    TryDeleteFile(berkasSalin);
+                }
             }
 
             // Berkas hasil impor sudah berbentuk database SQLite biasa sehingga
@@ -571,11 +596,12 @@ public class DatabaseImportExportService
 
         try
         {
-            // Berkas kandidat harus berupa database SQLite biasa.
+            // Berkas kandidat harus bisa dibuka: SQLite biasa, atau database
+            // terenkripsi versi lama yang kuncinya tersedia di komputer ini.
             var connectionString = BerkasDatabase.DeteksiKoneksi(dbPath)
-                ?? throw new InvalidOperationException(
-                    "Database tidak bisa dibuka: berkasnya rusak atau berasal dari " +
-                    "versi lama yang terenkripsi.");
+                    ?? throw new InvalidOperationException(
+                        "Database tidak bisa dibuka: berkasnya rusak, atau terenkripsi " +
+                        "tanpa kunci yang cocok di komputer ini.");
 
             using var conn = new SqliteConnection(connectionString);
             await conn.OpenAsync();

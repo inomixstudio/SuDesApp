@@ -10,18 +10,26 @@ namespace SuDesApp.Tests.Configuration;
 /// di level OS: database berjalan dalam mode WAL, dan berkas -wal/-shm lama
 /// tidak boleh ikut terpakai pada database hasil restore.
 /// </summary>
+[Collection("BerkasDatabase")]
 public sealed class PemulihanDatabaseTests : IDisposable
 {
+    private const string KunciUji = "kunci-restore-uji";
+
     private readonly string _folder =
         Path.Combine(Path.GetTempPath(), "sudes-restore-" + Guid.NewGuid().ToString("N"));
 
     private readonly AppConfig _config;
     private readonly DatabaseBackupService _layanan;
     private readonly string _aktif;
+    private string? _kunci;
 
     public PemulihanDatabaseTests()
     {
         Directory.CreateDirectory(_folder);
+
+        // Kunci database versi lama disuntikkan supaya uji tidak bergantung pada
+        // DPAPI/berkas kunci milik akun Windows yang menjalankan tes.
+        BerkasDatabase.MuatKunci = () => _kunci;
         _aktif = Path.Combine(_folder, "desa.db");
 
         string berkasConfig = Path.Combine(_folder, "appsettings.json");
@@ -41,6 +49,7 @@ public sealed class PemulihanDatabaseTests : IDisposable
 
     public void Dispose()
     {
+        BerkasDatabase.MuatKunci = KunciDatabase.Muat;
         SqliteConnection.ClearAllPools();
         try
         {
@@ -81,6 +90,53 @@ public sealed class PemulihanDatabaseTests : IDisposable
     }
 
     [Fact]
+    public async Task Pulihkan_CadanganTerenkripsi_KeDatabaseBiasa_MenyalinIsinyaTanpaEnkripsi()
+    {
+        _kunci = KunciUji;
+        await BuatDatabaseAsync(_aktif, "aktif");
+
+        string cadangan = Path.Combine(_folder, "cadangan-terenkripsi.db");
+        await BuatDatabaseDenganKunciAsync(cadangan, KunciUji, "dari-cadangan-terenkripsi");
+
+        string? praRestore = await _layanan.PulihkanBackupAsync(cadangan);
+
+        Assert.NotNull(praRestore);
+        Assert.Equal(new[] { "dari-cadangan-terenkripsi" }, await IsiAsync(_aktif));
+        Assert.Equal("ok", await IntegritasAsync(_aktif));
+
+        // Database aktif tetap SQLite biasa: kunci hanya dipakai membaca cadangan,
+        // dan sesi yang sedang berjalan tetap bisa membukanya tanpa kunci.
+        var headerPolos = System.Text.Encoding.ASCII.GetBytes("SQLite format 3\0");
+        Assert.True(File.ReadAllBytes(_aktif).AsSpan(0, headerPolos.Length).SequenceEqual(headerPolos));
+        Assert.False(BerkasDatabase.Terkunci(_config.DatabaseConnectionString));
+    }
+
+    [Fact]
+    public async Task Pulihkan_CadanganBiasa_KeDatabaseTerenkripsi_TetapTerenkripsi()
+    {
+        _kunci = KunciUji;
+        await BuatDatabaseDenganKunciAsync(_aktif, KunciUji, "aktif");
+
+        // Database aktif terenkripsi seperti instalasi yang diperbarui dari versi
+        // lama: AppConfig menyusun connection string ber-kunci untuk berkas ini.
+        _config.DatabaseConnectionString = Koneksi(_aktif, KunciUji);
+
+        string cadangan = Path.Combine(_folder, "cadangan.db");
+        await BuatDatabaseAsync(cadangan, "dari-cadangan");
+
+        string? praRestore = await _layanan.PulihkanBackupAsync(cadangan);
+
+        Assert.NotNull(praRestore);
+        Assert.Equal(new[] { "dari-cadangan" }, await IsiAsync(_aktif, KunciUji));
+        Assert.Equal("ok", await IntegritasAsync(_aktif, KunciUji));
+
+        // Kadar enkripsi database aktif tidak berubah, dan cadangan pra-restore
+        // tetap memuat data lama yang bisa dibuka dengan kunci yang sama.
+        Assert.True(BerkasDatabase.Terkunci(Koneksi(_aktif, KunciUji)));
+        Assert.Contains("aktif", await IsiAsync(praRestore!, KunciUji));
+    }
+
+    [Fact]
     public async Task Pulihkan_CadanganRusak_DitolakTanpaMengubahDatabaseAktif()
     {
         await BuatDatabaseAsync(_aktif, "aktif");
@@ -116,9 +172,28 @@ public sealed class PemulihanDatabaseTests : IDisposable
             () => _layanan.PulihkanBackupAsync(hilang));
     }
 
-    private static async Task BuatDatabaseAsync(string jalur, params string[] isi)
+    /// <summary>
+    /// Connection string uji. Tanpa kunci, Password TIDAK ditulis sama sekali —
+    /// "Password=" kosong adalah kunci kosong bagi SQLCipher, bukan plaintext.
+    /// </summary>
+    private static string Koneksi(string jalur, string? kunci = null)
     {
-        await using var koneksi = new SqliteConnection($"Data Source={jalur}");
+        var builder = new SqliteConnectionStringBuilder { DataSource = jalur };
+        if (!string.IsNullOrWhiteSpace(kunci)) builder.Password = kunci;
+        return builder.ToString();
+    }
+
+    private static Task BuatDatabaseAsync(string jalur, params string[] isi) =>
+        BuatDatabaseDenganKunciAsync(jalur, null, isi);
+
+    /// <summary>
+    /// Sengaja nama berbeda dari overload tanpa kunci: parameter <c>params</c>
+    /// membuat panggilan <c>BuatDatabaseAsync(jalur, "isi")</c> diam-diam cocok
+    /// dengan bentuk ber-kunci dan membuat database terenkripsi.
+    /// </summary>
+    private static async Task BuatDatabaseDenganKunciAsync(string jalur, string? kunci, params string[] isi)
+    {
+        await using var koneksi = new SqliteConnection(Koneksi(jalur, kunci));
         await koneksi.OpenAsync();
 
         await JalankanAsync(koneksi, "PRAGMA journal_mode=WAL;");
@@ -140,9 +215,9 @@ public sealed class PemulihanDatabaseTests : IDisposable
         await cmd.ExecuteNonQueryAsync();
     }
 
-    private static async Task<List<string>> IsiAsync(string jalur)
+    private static async Task<List<string>> IsiAsync(string jalur, string? kunci = null)
     {
-        await using var koneksi = new SqliteConnection($"Data Source={jalur}");
+        await using var koneksi = new SqliteConnection(Koneksi(jalur, kunci));
         await koneksi.OpenAsync();
 
         using var cmd = koneksi.CreateCommand();
@@ -158,9 +233,9 @@ public sealed class PemulihanDatabaseTests : IDisposable
         return hasil;
     }
 
-    private static async Task<string> IntegritasAsync(string jalur)
+    private static async Task<string> IntegritasAsync(string jalur, string? kunci = null)
     {
-        await using var koneksi = new SqliteConnection($"Data Source={jalur}");
+        await using var koneksi = new SqliteConnection(Koneksi(jalur, kunci));
         await koneksi.OpenAsync();
 
         using var cmd = koneksi.CreateCommand();

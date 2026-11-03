@@ -54,11 +54,15 @@ Kami membantu desa memenuhi permintaan itu sejauh data yang kami simpan
 ## 3. Data yang tersimpan di komputer desa
 
 Seluruh data pada bagian ini berada di **komputer/PC kantor desa**, di dalam
-database `desa.db` berformat SQLite biasa. Database **tidak dienkripsi** dan
-tidak memakai berkas kunci, sehingga siapa pun yang bisa membuka berkas itu
-di komputer desa bisa membaca isinya. Yang membatasi aksesnya adalah izin
-folder dan akun Windows komputer desa itu sendiri — karena itu jangan
-diberikan akses bebas ke folder penyimpanan database.
+database `desa.db` berformat SQLite. Database yang dibuat aplikasi versi ini
+**tidak dienkripsi** dan tidak memakai berkas kunci, sehingga siapa pun yang
+bisa membuka berkas itu di komputer desa bisa membaca isinya. Yang membatasi
+aksesnya adalah izin folder dan akun Windows komputer desa itu sendiri —
+karena itu jangan diberikan akses bebas ke folder penyimpanan database.
+Instalasi yang diperbarui dari versi lama dapat tetap memakai database
+terenkripsi SQLCipher beserta berkas kunci `DesaKunciDb.bin` (dienkripsi DPAPI,
+terikat akun Windows yang sama); aplikasi membukanya otomatis dan tidak membuat
+database terenkripsi baru.
 
 | Kategori | Contoh isi | Keterangan |
 |---|---|---|
@@ -268,7 +272,7 @@ penanganannya.
 
 | Lapis | Pengamanan |
 |---|---|
-| Database desa | SQLite tanpa enkripsi; akses dibatasi izin folder dan akun Windows komputer desa |
+| Database desa | SQLite; database baru tanpa enkripsi, database terenkripsi dari versi lama dibuka dengan kunci DPAPI-nya. Akses dibatasi izin folder dan akun Windows komputer desa |
 | Kata sandi akun | PBKDF2-HMAC-SHA256, 120.000 iterasi, salt acak 16 byte; kunci 3× gagal selama 5 menit |
 | Sesi | layar kunci otomatis setelah diam (bawaan 15 menit, dapat diatur) |
 | Berkas akun lama | `Login.dat` dienkripsi DPAPI |

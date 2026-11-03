@@ -439,7 +439,7 @@ namespace SuDesApp.Wpf.ViewModels
                 ("Keamanan & pencadangan", "Pencadangan database dan formulir otomatis ke Google Drive"),
                 ("Keamanan & pencadangan", "Kredensial Google disimpan terenkripsi DPAPI untuk akun Windows ini, bukan sebagai teks biasa di appsettings.json"),
                 ("Keamanan & pencadangan", "Kata sandi pengguna disimpan sebagai PBKDF2 bersalt, percobaan masuk dibatasi, dan akun pusat dipisahkan dari akun desa"),
-                ("Keamanan & pencadangan", "Basis data desa.db tersimpan sebagai SQLite lokal tanpa enkripsi; lokasi berkas database dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa"),
+                ("Keamanan & pencadangan", "Basis data desa.db tersimpan sebagai SQLite lokal tanpa enkripsi; database dari versi lama yang masih terenkripsi tetap dibuka bila berkas kuncinya tersedia di komputer ini; lokasi berkas database dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa"),
                 ("Layanan digital", "API Desa: layanan HTTP lokal dengan kunci API ber-cakupan (Agregat/Penuh) untuk membaca statistik & data perangkat, dan memverifikasi surat lewat kode verifikasinya"),
                 ("Pembaruan & antarmuka", "Pembaruan otomatis: rilis diperiksa dan diunduh di latar belakang, lalu lonceng menawarkan Instal Sekarang atau Instal Saat Keluar. Perbaikan kecil dipasang sebagai tambalan (hanya berkas yang berubah), perubahan besar memakai installer penuh; keduanya diverifikasi SHA-256 bila rilis menyertakan sidik jarinya, dan installer/executable rilis resmi ditandatangani Authenticode"),
                 ("Data & arsip", "Ekspor data ke Excel, CSV, dan JSON"),

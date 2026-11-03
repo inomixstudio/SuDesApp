@@ -42,10 +42,14 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.89" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.77.0.4301" />
-    <!-- Provider SQLite bawaan Microsoft.Data (bundle_e_sqlite3). Database desa
-         disimpan sebagai SQLite biasa tanpa enkripsi dan tanpa berkas kunci,
-         jadi tidak ada bundel SQLCipher yang perlu dikelola. -->
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <!-- Provider SQLite MILIK SENDIRI: Microsoft.Data.Sqlite.Core + bundle
+         e_sqlcipher. Database desa baru tetap SQLite biasa (SQLCipher hanya
+         mengaktifkan enkripsi bila Password diisi), tetapi bundle ini membuat
+         database terenkripsi dari versi lama tetap bisa dibuka setelah update.
+         Paket "Microsoft.Data.Sqlite" biasa menarik bundle_e_sqlite3 dan tidak
+         bisa membuka database SQLCipher, jadi jangan diganti kembali. -->
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.13" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.13" />
