@@ -179,6 +179,23 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.10.3 (3 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Perbaikan — Database Terenkripsi Versi Lama Kembali Bisa Dibuka", new List<string>
+                        {
+                            "Pembaruan ini mengembalikan dukungan membaca database SQLCipher yang dipakai versi lama, tanpa mengubah database baru: desa.db tanpa enkripsi tetap dipakai apa adanya, sedangkan database terenkripsi dibuka memakai berkas kunci DesaKunciDb.bin yang sudah ada di komputer desa. Keduanya bisa dibaca dan ditulis setelah pembaruan, sehingga aplikasi tidak lagi berhenti di layar splash karena bentuk database berbeda.",
+                            "Bentuk database ditentukan dari berkasnya sendiri setiap kali aplikasi dibuka, bukan dari nomor versi: database SQLite biasa tidak pernah dienkripsi ulang, dan database terenkripsi tidak pernah didekripsi diam-diam. Berkas kunci hanya dibaca, tidak pernah dibuat atau ditimpa.",
+                            "Pencadangan, pemulihan, dan impor database menangani kedua bentuk itu. Memulihkan cadangan terenkripsi ke aplikasi tanpa enkripsi menghasilkan database tanpa enkripsi, dan sebaliknya; impor menyelaraskan bentuk berkas dengan database yang sedang dipakai.",
+                            "Bila database terenkripsi tidak bisa dibuka karena berkas kuncinya tidak ada atau berasal dari akun Windows lain, pesannya menyebut lokasi berkas kunci yang dicari beserta cara memulihkannya — bukan galat teknis yang membingungkan di setiap halaman."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Pemulihan Saat Database Tidak Bisa Dibuka", new List<string>
+                        {
+                            "Aplikasi tidak lagi langsung menutup diri ketika database aktif tidak bisa dibuka. Pengguna ditawari memilih berkas database lain (mis. hasil pemulihan cadangan) dari layar pembuka; berkas diperiksa lebih dahulu, lokasi disimpan, lalu aplikasi dibuka ulang dengan berkas itu. Berkas yang gagal dibuka tidak pernah diubah atau ditimpa.",
+                            "Halaman Pengaturan Aplikasi → Database Desa dan halaman Tentang Aplikasi menjelaskan keadaan ini apa adanya, termasuk bahwa database terenkripsi dari versi lama tetap didukung selama berkas kuncinya tersedia."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.10.1 (31 Oktober 2026)",
                     new List<CatatanRilisSubSection>
                     {
