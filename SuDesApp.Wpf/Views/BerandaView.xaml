@@ -132,7 +132,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Button Style="{StaticResource PintasanCard}" Margin="0,0,10,10"
-                                            Command="{Binding Buka}" CommandParameter="{Binding Nama}"
+                                            Command="{Binding Buka}" CommandParameter="{Binding Jenis}"
                                             AutomationProperties.Name="{Binding Nama}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>

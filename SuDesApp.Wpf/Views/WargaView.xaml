@@ -49,6 +49,12 @@
                     <Button Content="Ekspor" Command="{Binding EksporCommand}"
                             Style="{StaticResource HeaderGhostButton}" Margin="0,0,8,4"
                             ToolTip="Ekspor data warga yang sedang difilter ke Excel, CSV, atau JSON"/>
+                    <Button Content="Cetak PDF" Command="{Binding CetakPdfCommand}"
+                            Style="{StaticResource HeaderGhostButton}" Margin="0,0,8,4"
+                            ToolTip="Cetak daftar warga yang sedang difilter ke PDF berkop desa, lalu buka di pratinjau"/>
+                    <Button Content="Buat Template" Command="{Binding BuatTemplateCommand}"
+                            Style="{StaticResource HeaderGhostButton}" Margin="0,0,8,4"
+                            ToolTip="Buat template Excel kosong untuk diisi manual, lalu diimpor sebagai data warga"/>
                     <Button Content="Impor" Command="{Binding BukaImporCommand}"
                             Style="{StaticResource HeaderGhostButton}" Margin="0,0,8,4"
                             ToolTip="Impor warga massal dari berkas Excel atau CSV. Berkas diperiksa dulu sebelum disimpan."/>
@@ -686,7 +692,7 @@
                         <TextBlock Text="IMPOR WARGA DARI BERKAS" Style="{StaticResource FormSectionTitle}"
                                    FontSize="15"/>
                         <TextBlock Style="{StaticResource FormLabel}" Margin="0,4,0,0"
-                                   Text="Format .xlsx atau .csv. Judul kolom boleh urutan bebas; kolom yang tidak dikenal diabaikan."/>
+                                   Text="Format .xlsx atau .csv. Judul kolom boleh urutan bebas; kolom yang tidak dikenal diabaikan. Belum punya berkas? Buat dulu lewat tombol Buat Template."/>
                     </StackPanel>
 
                     <!-- Berkas + mode perbarui -->

@@ -11,7 +11,7 @@
   },
   {
    "judul": "Penutup dan Tanda Tangan",
-   "isi": "Ditetapkan di : Sumberjaya\nPada tanggal : 10 Agustus 2025\nKEPALA DESA SUMBERJAYA\nA. SOPANDI\nDiundangkan di : Sumberjaya\nPada tanggal : 10 Agustus 2025\nSEKRETARIS DESA SUMBERJAYA\nKASIM MULYANA\nLEMBARAN DESA SUMBERJAYA TAHUN 2025 NOMOR 002"
+   "isi": "Ditetapkan di : Sumberjaya\nPada tanggal : 10 Agustus 2025\nKEPALA DESA SUMBERJAYA\n{{KEPALA_DESA}}\nDiundangkan di : Sumberjaya\nPada tanggal : 10 Agustus 2025\nSEKRETARIS DESA SUMBERJAYA\n{{SEKRETARIS_DESA}}\nLEMBARAN DESA SUMBERJAYA TAHUN 2025 NOMOR 002"
   }
  ]
 }

@@ -14,32 +14,9 @@ using System.Threading.Tasks;
 
 namespace SuDesApp.Data.Repositories
 {
-    /// <summary>
-    /// Ringkasan buku agenda surat untuk halaman Beranda: seluruh angkanya
-    /// dihitung di database, jadi tidak perlu memuat seluruh tabel ke memori.
-    /// </summary>
-    public sealed class RingkasanArsipSurat
-    {
-        public int Total { get; init; }
-        public int HariIni { get; init; }
-        public int BulanIni { get; init; }
-
-        /// <summary>Jumlah surat per jenis (kunci uppercase, dibandingkan longgar).</summary>
-        public Dictionary<string, int> PerJenis { get; init; } = new(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary>Beberapa surat terbaru (urut Id menurun) untuk daftar aktivitas.</summary>
-        public List<SuratKeluarMasukData> Terbaru { get; init; } = new();
-    }
-
     public interface IArsipSuratRepository
     {
         Task<List<SuratKeluarMasukData>> GetAllAsync();
-
-        /// <summary>
-        /// Ringkasan statistik + beberapa surat terbaru tanpa memuat seluruh tabel
-        /// (COUNT/GROUP BY + satu query LIMIT di database).
-        /// </summary>
-        Task<RingkasanArsipSurat> GetRingkasanAsync(int jumlahTerbaru = 5, CancellationToken cancellationToken = default);
         Task<SuratKeluarMasukData> AddAsync(SuratKeluarMasukData item);
         Task UpdateAsync(SuratKeluarMasukData item);
         Task DeleteAsync(int idBarisExcel);
@@ -212,69 +189,6 @@ namespace SuDesApp.Data.Repositories
                                  ORDER BY Id";
             var rows = await _connection.QueryAsync<Row>(sql).ConfigureAwait(false);
             return rows.Select(MapRow).ToList();
-        }
-
-        public async Task<RingkasanArsipSurat> GetRingkasanAsync(int jumlahTerbaru = 5, CancellationToken cancellationToken = default)
-        {
-            await EnsureInitializedAsync().ConfigureAwait(false);
-
-            var hariIni = DateTime.Today;
-            var besok = hariIni.AddDays(1);
-            var awalBulan = new DateTime(hariIni.Year, hariIni.Month, 1);
-            var awalBulanDepan = awalBulan.AddMonths(1);
-
-            // TanggalSurat disimpan sebagai "yyyy-MM-dd" (ISO). Dipakai perbandingan
-            // RENTANG (>= / <), bukan LIKE: hanya rentang yang bisa memakai indeks
-            // idx_arsipsurat_tanggal, sedangkan LIKE dengan karakter awal tetap
-            // memindai seluruh tabel.
-            int total = await _connection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM ArsipSurat").ConfigureAwait(false);
-
-            int hariIniCount = await _connection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM ArsipSurat WHERE TanggalSurat >= @Awal AND TanggalSurat < @Akhir",
-                new { Awal = ToIso(hariIni), Akhir = ToIso(besok) }).ConfigureAwait(false);
-
-            int bulanIniCount = await _connection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM ArsipSurat WHERE TanggalSurat >= @Awal AND TanggalSurat < @Akhir",
-                new { Awal = ToIso(awalBulan), Akhir = ToIso(awalBulanDepan) }).ConfigureAwait(false);
-
-            var perJenisRows = await _connection.QueryAsync<JenisCountRow>(
-                @"SELECT UPPER(TRIM(JenisSurat)) AS Jenis, COUNT(*) AS Jumlah
-                  FROM ArsipSurat
-                  WHERE TRIM(JenisSurat) <> ''
-                  GROUP BY UPPER(TRIM(JenisSurat))").ConfigureAwait(false);
-
-            List<SuratKeluarMasukData> terbaru = new();
-            if (jumlahTerbaru > 0)
-            {
-                var rows = await _connection.QueryAsync<Row>(
-                    @"SELECT Id AS IdBarisExcel, JenisSurat, NomorSurat, TanggalSurat,
-                             TanggalDiterimaDikirim, AsalTujuan, Perihal, IsiRingkas, Keterangan,
-                             FileLampiran
-                      FROM ArsipSurat
-                      ORDER BY Id DESC
-                      LIMIT @Take",
-                    new { Take = jumlahTerbaru }).ConfigureAwait(false);
-                terbaru = rows.Select(MapRow).ToList();
-            }
-
-            return new RingkasanArsipSurat
-            {
-                Total = total,
-                HariIni = hariIniCount,
-                BulanIni = bulanIniCount,
-                PerJenis = perJenisRows
-                    .Where(r => !string.IsNullOrWhiteSpace(r.Jenis))
-                    .GroupBy(r => r.Jenis!, StringComparer.OrdinalIgnoreCase)
-                    .ToDictionary(g => g.Key, g => g.Sum(r => r.Jumlah), StringComparer.OrdinalIgnoreCase),
-                Terbaru = terbaru
-            };
-        }
-
-        private sealed class JenisCountRow
-        {
-            public string? Jenis { get; set; }
-            public int Jumlah { get; set; }
         }
 
         private static SuratKeluarMasukData MapRow(Row r) => new()

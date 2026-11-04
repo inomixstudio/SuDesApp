@@ -59,6 +59,8 @@ namespace SuDesApp.Wpf.ViewModels
         private string _pdfFilePath = string.Empty;
         /// <summary>Nama file Word/PDF yang sudah tersimpan (dari kolom FileWord), untuk keperluan Lihat/Ubah.</summary>
         private string? _storedFileName;
+        /// <summary>Nama PDF sumber saat formulir dibuka lewat Salin — naskahnya ikut tersalin.</summary>
+        private string? _naskahSalinan;
 
         /// <summary>Halaman naskah PERDES yang sedang disunting.</summary>
         public ObservableCollection<NaskahHalamanViewModel> HalamanNaskah { get; } = new();
@@ -193,6 +195,7 @@ namespace SuDesApp.Wpf.ViewModels
             _jenisKeputusan = (jenisKeputusan ?? "SK").ToUpperInvariant();
             _jenisKeputusanAwal = _jenisKeputusan;
             _editData = editData;
+            _naskahSalinan = null;
             bool isEdit = _editData != null;
             Title = (isEdit ? "Edit " : "Input ") + LabelJenis(_jenisKeputusan);
 
@@ -211,6 +214,9 @@ namespace SuDesApp.Wpf.ViewModels
                 Tentang = prefill.Tentang;
                 Keterangan = prefill.Keterangan;
                 _storedFileName = null;
+                // Salin membawa PDF sumber agar naskah Perdes ikut tersalin;
+                // berkas sumber tidak disentuh — PDF baru ditulis saat simpan.
+                _naskahSalinan = prefill.FileWord;
             }
             else
             {
@@ -257,9 +263,11 @@ namespace SuDesApp.Wpf.ViewModels
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(_storedFileName))
+            // Edit memakai PDF arsip sendiri; Salin memakai PDF baris sumber.
+            string? sumberNaskah = _storedFileName ?? _naskahSalinan;
+            if (!string.IsNullOrWhiteSpace(sumberNaskah))
             {
-                string? pdfPath = _repository.ResolveWordFullPath(_storedFileName);
+                string? pdfPath = _repository.ResolveWordFullPath(sumberNaskah);
                 if (pdfPath != null)
                 {
                     try
@@ -268,13 +276,15 @@ namespace SuDesApp.Wpf.ViewModels
                         if (naskah != null)
                         {
                             IsiHalamanDariModel(naskah.Halaman);
-                            InfoNaskah = $"{naskah.Halaman.Count} halaman naskah tersimpan dimuat. Sunting lalu simpan untuk menerbitkan PDF baru.";
+                            InfoNaskah = _naskahSalinan != null
+                                ? $"{naskah.Halaman.Count} halaman naskah tersalin dari data sumber. Sunting lalu simpan untuk menerbitkan PDF baru."
+                                : $"{naskah.Halaman.Count} halaman naskah tersimpan dimuat. Sunting lalu simpan untuk menerbitkan PDF baru.";
                             return;
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Naskah sampingan tidak dapat dibaca untuk {Berkas}", _storedFileName);
+                        _logger.LogWarning(ex, "Naskah sampingan tidak dapat dibaca untuk {Berkas}", sumberNaskah);
                         InfoNaskah = "Naskah tersimpan tidak dapat dibaca. Isi halaman baru untuk menggantikan PDF lama.";
                         UpdateNaskahState();
                         return;
@@ -282,7 +292,7 @@ namespace SuDesApp.Wpf.ViewModels
                 }
             }
 
-            InfoNaskah = _storedFileName != null
+            InfoNaskah = sumberNaskah != null
                 ? "Naskah lama tidak tersedia untuk disunting; PDF lama tetap tersimpan sampai Anda mengisi halaman naskah."
                 : "Belum ada halaman. Tambahkan halaman atau pilih salah satu contoh Perdes di daftar.";
             UpdateNaskahState();
@@ -629,6 +639,17 @@ namespace SuDesApp.Wpf.ViewModels
                         $"Nomor '{nomorBaru}' sudah terdaftar untuk {LabelJenis(_jenisKeputusan)}.\n\n" +
                         "Gunakan nomor yang berbeda, atau ubah data lama melalui tombol Edit di daftar.");
                     return;
+                }
+
+                // PERDES adalah dokumen naskah: baris tanpa halaman menghasilkan
+                // arsip tanpa PDF yang tidak bisa dibuka/dicetak. Konfirmasikan
+                // bila pengguna memang ingin menyimpan metadata lebih dulu.
+                if (IsPerdes && !HasNaskah)
+                {
+                    bool lanjut = await _messageService.ShowConfirmationAsync(
+                        "Simpan Tanpa Naskah?",
+                        "PERDES belum memiliki halaman naskah, sehingga PDF tidak akan dibuat dan baris arsip tampil tanpa berkas.\n\nTetap simpan datanya?");
+                    if (!lanjut) return;
                 }
 
                 // PERDES: PDF diterbitkan dari naskah halaman SEBELUM data disimpan.

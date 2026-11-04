@@ -48,6 +48,24 @@ namespace SuDesApp.GeneratorPdf
             ArgumentNullException.ThrowIfNull(naskah);
 
             var hasil = naskah.Salin();
+
+            // Token nama pejabat diisi dari Pengaturan Surat supaya naskah contoh
+            // tidak pernah membawa nama pejabat desa lain (dulu "A. SOPANDI" dkk.
+            // ikut tercetak di PDF desa pengguna). Kosong → titik-titik agar
+            // diisi manual. Dijalankan sebelum pengecekan desa null supaya token
+            // tidak pernah tercetak mentah.
+            var pejabat = new (string Lama, string Baru)[]
+            {
+                ("{{KEPALA_DESA}}", NamaPejabat(desa?.KepalaDesa)),
+                ("{{SEKRETARIS_DESA}}", NamaPejabat(desa?.SekretarisDesa))
+            };
+            hasil.Judul = Ganti(hasil.Judul, pejabat);
+            foreach (var halaman in hasil.Halaman)
+            {
+                halaman.Judul = Ganti(halaman.Judul, pejabat);
+                halaman.Isi = Ganti(halaman.Isi, pejabat);
+            }
+
             if (desa == null) return hasil;
 
             var bersih = KopSurat.DesaBersih(desa);
@@ -92,6 +110,12 @@ namespace SuDesApp.GeneratorPdf
 
             return teks;
         }
+
+        /// <summary>Nama pejabat untuk token: kosong diisi titik-titik (isian manual).</summary>
+        private static string NamaPejabat(string? nama) =>
+            string.IsNullOrWhiteSpace(nama)
+                ? "(.............................................)"
+                : nama.Trim();
     }
 
     /// <summary>

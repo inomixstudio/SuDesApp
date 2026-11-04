@@ -410,6 +410,8 @@ namespace SuDesApp.Wpf.ViewModels
                     }
                 }
 
+                bool oauthAktif = drive.IsOAuthEnabled;
+
                 var dispatcher = System.Windows.Application.Current?.Dispatcher;
                 Action update = () =>
                 {
@@ -418,6 +420,10 @@ namespace SuDesApp.Wpf.ViewModels
                     google.Title = string.IsNullOrWhiteSpace(email)
                         ? "Login dengan Google"
                         : ShortSidebarAccount(email);
+                    // Baris status kecil: hanya untuk kasus yang perlu tindakan
+                    // (paket tanpa kredensial OAuth). Saat terhubung, email sudah
+                    // tercetak di judul sehingga tidak perlu diulang.
+                    google.StatusText = oauthAktif ? string.Empty : "Belum dikonfigurasi";
                 };
                 if (dispatcher == null || dispatcher.CheckAccess())
                 {
