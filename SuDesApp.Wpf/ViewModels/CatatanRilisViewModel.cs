@@ -179,7 +179,7 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
-                    "Versi 2.10.1 (31 Oktober 2026)",
+                    "Versi 2.10.2 (2 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
                         new CatatanRilisSubSection("Perbaikan — Tanda Tangan Rekening Koran di Kolom Kanan", new List<string>
