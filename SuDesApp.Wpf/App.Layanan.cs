@@ -561,6 +561,8 @@ namespace SuDesApp.Wpf
             services.AddTransient<DaftarHadirGenerator>();
             // Daftar struktur perangkat desa (tombol Cetak PDF halaman Data Perangkat Desa).
             services.AddTransient<StrukturPerangkatGenerator>();
+            // Daftar data warga (tombol Cetak PDF halaman Data Warga).
+            services.AddTransient<DaftarWargaGenerator>();
             // Formulir pendataan perangkat desa: blanko 18 kolom DATA PERANGKAT
             // untuk mengumpulkan data perangkat baru (tombol Formulir Pendataan).
             services.AddTransient<FormulirPerangkatGenerator>();

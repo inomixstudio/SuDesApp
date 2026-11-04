@@ -558,8 +558,15 @@ aplikasi tidak menganggap satu Perbup berlaku untuk seluruh Indonesia.
   daftar; teks yang tercetak ada di kotak Isi halaman.
 - Nomor, tahun, dan tanggal pada kepala surat serta penutup diambil dari kolom
   formulir saat pratinjau/simpan, termasuk tahun pada baris Lembaran Desa.
-  Halaman lampiran (mis. Keputusan BPD pada contoh PADes) tidak ikut diubah
-  karena nomor dan tanggalnya milik dokumen lampiran.
+  Halaman lampiran (mis. Keputusan BPD pada contoh PADes) mempertahankan nomor
+  dan tanggalnya sendiri sebagai milik dokumen lampiran; hanya rujukan
+  `TAHUN ANGGARAN` yang mengikuti Perdes induk, supaya persetujuan anggaran
+  tahun lama tidak ikut tercetak pada Perdes baru.
+- Contoh naskah memakai blok diktum resmi (`Dengan Persetujuan Bersama` —
+  `MEMUTUSKAN` — `Menetapkan`) dan penutup dua lajur: pengundangan oleh
+  Sekretaris Desa di kiri, penetapan oleh Kepala Desa di kanan. Nama pejabat
+  dicetak dari token `{{KEPALA_DESA}}`/`{{SEKRETARIS_DESA}}` yang diisi dari
+  identitas desa, sehingga nama pada berkas contoh tidak pernah bocor ke PDF.
 - Saat Simpan, `NaskahPerdesGenerator` (SudesPdf) menulis PDF ke arsip dan
   menyimpan sumber halaman di berkas `<nama-pdf>.naskah.json` di sampingnya.
   Saat data dibuka kembali, sumber itu dimuat sehingga halaman dapat disunting

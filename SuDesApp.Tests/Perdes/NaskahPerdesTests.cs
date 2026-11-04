@@ -41,7 +41,8 @@ public sealed class NaskahPerdesTests : IDisposable
         Kecamatan = "Cikarang",
         Kabupaten = "Bekasi",
         JenisKabupaten = "Kabupaten",
-        KepalaDesa = "H. Ahmad Suryana"
+        KepalaDesa = "H. Ahmad Suryana",
+        SekretarisDesa = "Dedi Suryadi"
     };
 
     [Theory]
@@ -107,8 +108,9 @@ public sealed class NaskahPerdesTests : IDisposable
     }
 
     /// <summary>
-    /// Halaman penutup memakai dua lajur tanda tangan: pengundangan (BPD) di kiri
-    /// dan penetapan (Kepala Desa) di kanan, dengan baris tempat dan baris tanggal
+    /// Halaman penutup Perdes memakai satu lajur tanda tangan: Sekretaris Desa
+    /// di atas, Kepala Desa di bawah — tanpa urutan jabatan asing (Ketua BPD,
+    /// Sekretaris Desa di sebelah kanan) — dengan baris tempat dan baris tanggal
     /// terpisah — bukan satu baris panjang yang terpotong acak di tengah tanggal.
     /// </summary>
     [Fact]
@@ -133,11 +135,86 @@ public sealed class NaskahPerdesTests : IDisposable
             b == "Diundangkan di Sukamaju Ditetapkan di Sukamaju");
         Assert.Contains(baris, b =>
             b == "pada tanggal 2 November 2026 pada tanggal 2 November 2026");
-        Assert.Contains(baris, b => b == "KETUA BPD, KEPALA DESA SUKAMAJU,");
+        Assert.Contains(baris, b => b == "SEKRETARIS DESA SUKAMAJU, KEPALA DESA SUKAMAJU,");
 
-        // Ruang tanda tangan kedua lajur tetap ada (dua baris titik-titik).
+        // Ruang tanda tangan satu lajur tetap ada (dua baris titik-titik).
         Assert.Contains(baris, b =>
             b.Count(c => c == '(') == 2 && b.Count(c => c == ')') == 2);
+    }
+
+    /// <summary>
+    /// Nama pejabat yang tertulis di berkas contoh (SOPANDI, KASIM MULYANA,
+    /// TATA LEO SURYANA) tidak boleh bercetak di PDF; token {{KEPALA_DESA}}/
+    /// {{SEKRETARIS_DESA}} harus terisi dari identitas desa formulir.
+    /// </summary>
+    [Theory]
+    [InlineData("Contoh-Perdes-Kewenangan-Asal-Usul.json")]
+    [InlineData("Contoh-Perdes-Kewenangan-Ditugaskan.json")]
+    [InlineData("Contoh-Perdes-Kewenangan-Lokal-Skala-Desa.json")]
+    [InlineData("Contoh-Perdes-PADes-2023.json")]
+    public void NamaPejabatContohTidakTercetakDanTokenTerisi(string namaBerkas)
+    {
+        var naskah = NaskahPerdesContoh.Muat(namaBerkas, DesaContoh());
+        var pdf = new NaskahPerdesGenerator(
+            DesaContoh(), naskah, "9", new DateTime(2026, 11, 2)).Buat();
+
+        string jalur = Path.Combine(_folderSampel,
+            Path.GetFileNameWithoutExtension(namaBerkas) + "-pejabat.pdf");
+        File.WriteAllBytes(jalur, pdf);
+
+        string teks = BacaTeks(jalur);
+        Assert.DoesNotContain("SOPANDI", teks, StringComparison.Ordinal);
+        Assert.DoesNotContain("KASIM MULYANA", teks, StringComparison.Ordinal);
+        Assert.DoesNotContain("TATA LEO", teks, StringComparison.Ordinal);
+        Assert.DoesNotContain("{{", teks, StringComparison.Ordinal);
+        Assert.Contains("H. Ahmad Suryana", teks, StringComparison.Ordinal);
+        Assert.Contains("Dedi Suryadi", teks, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Contoh BPD memakai blok diktum resmi (Persetujuan Bersama — MEMUTUSKAN —
+    /// Menetapkan) dan penutup Sekretaris Desa plus Lembaran Desa, bukan
+    /// "Dengan tegas menetapkan".
+    /// </summary>
+    [Fact]
+    public void BpdMemakaiFormatDiktumResmiDanPenutupSekretarisDesa()
+    {
+        var naskah = NaskahPerdesContoh.Muat("Contoh-Perdes-BPD.json", DesaContoh());
+        var pdf = new NaskahPerdesGenerator(
+            DesaContoh(), naskah, "9", new DateTime(2026, 11, 2)).Buat();
+
+        string jalur = Path.Combine(_folderSampel, "bpd-diktum-resmi.pdf");
+        File.WriteAllBytes(jalur, pdf);
+
+        string teks = BacaTeks(jalur);
+        Assert.DoesNotContain("Dengan tegas menetapkan", teks, StringComparison.Ordinal);
+        Assert.Contains("Dengan Persetujuan Bersama", teks, StringComparison.Ordinal);
+        Assert.Contains("MEMUTUSKAN", teks, StringComparison.Ordinal);
+        Assert.Contains("Menetapkan :", teks, StringComparison.Ordinal);
+        Assert.Contains("SEKRETARIS DESA SUKAMAJU", teks, StringComparison.Ordinal);
+        Assert.Contains("LEMBARAN DESA SUKAMAJU TAHUN 2026 NOMOR", teks, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Rujukan TAHUN ANGGARAN di halaman lampiran (Keputusan BPD) harus ikut
+    /// tahun anggaran Perdes induk — bukan tetap menampilkan tahun contoh
+    /// lama, sehingga persetujuan anggaran tahun sebelumnya tidak ikut
+    /// tercetak. Nomor dan tanggal keputusan lampiran tetap milik dokumen
+    /// lampiran itu sendiri.
+    /// </summary>
+    [Fact]
+    public void LampiranMengikutiTahunAnggaranInduk()
+    {
+        var naskah = NaskahPerdesContoh.Muat("Contoh-Perdes-PADes-2023.json", DesaContoh());
+        var pdf = new NaskahPerdesGenerator(
+            DesaContoh(), naskah, "9", new DateTime(2026, 11, 2)).Buat();
+
+        string jalur = Path.Combine(_folderSampel, "lampiran-tahun-anggaran.pdf");
+        File.WriteAllBytes(jalur, pdf);
+
+        string teks = BacaTeks(jalur);
+        Assert.DoesNotContain("TAHUN ANGGARAN 2023", teks, StringComparison.Ordinal);
+        Assert.Contains("TAHUN ANGGARAN 2026", teks, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -212,4 +289,5 @@ public sealed class NaskahPerdesTests : IDisposable
             dokumen.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
     }
+
 }

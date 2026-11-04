@@ -221,7 +221,7 @@
                         ToolTip="Input data baru"/>
                 <Button Content="Salin" Command="{Binding SalinCommand}" Style="{StaticResource SecondaryButton}" Margin="0,2,6,2"
                         VerticalAlignment="Center"
-                        ToolTip="Buat data baru dari baris terpilih (nomor/tentang/keterangan ikut tersalin)"/>
+                        ToolTip="Buat data baru dari baris terpilih (nomor/tentang/keterangan ikut tersalin; halaman naskah Perdes ikut disalin)"/>
                 <Button Content="Edit" Command="{Binding EditCommand}" Style="{StaticResource SecondaryButton}" Margin="0,2,6,2"
                         VerticalAlignment="Center"
                         ToolTip="Ubah data terpilih"/>

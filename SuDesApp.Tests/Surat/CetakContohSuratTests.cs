@@ -89,6 +89,7 @@ public sealed class CetakContohSuratTests : IDisposable
         public Task<SuratData?> GetByKodeVerifikasiAsync(string kode, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<Dictionary<string, int>> CountPerStatusPersetujuanAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<List<BarisRekapPersetujuan>> GetRekapPersetujuanPerBulanAsync(int tahun, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public Task<RingkasanRegisterSurat> GetRingkasanRegisterAsync(int jumlahTerbaru = 5, CancellationToken cancellationToken = default) => throw new NotImplementedException();
     }
 
     // ===== Data contoh =====

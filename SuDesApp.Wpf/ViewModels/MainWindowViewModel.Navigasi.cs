@@ -908,6 +908,9 @@ namespace SuDesApp.Wpf.ViewModels
                 var sp = BuatScopeHalaman();
                 var vm = sp.GetRequiredService<GoogleLoginViewModel>();
                 vm.OnLoggedIn = email => { _ = RefreshGoogleBadgeAsync(); };
+                // Tombol "Buka Pengaturan Kredensial" (state belum dikonfigurasi)
+                // memakai rute yang sama dengan menu sidebar, bukan jalur paralel.
+                vm.BukaHalamanDiminta += route => ResolveFeatureRoute(route)();
 
                 // Bagian sinkron InitializeAsync (set state awal: belum dikonfigurasi /
                 // belum login / "Menghubungkan…") berjalan seketika, tapi navigasi TIDAK
