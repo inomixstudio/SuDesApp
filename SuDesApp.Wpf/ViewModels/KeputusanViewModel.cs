@@ -420,7 +420,10 @@ namespace SuDesApp.Wpf.ViewModels
                     Tanggal = SelectedRow.Data.Tanggal,
                     Tentang = SelectedRow.Data.Tentang,
                     Keterangan = SelectedRow.Data.Keterangan,
-                    FileWord = null
+                    // PERDES: PDF sumber dipakai untuk menyalin halaman naskah ke
+                    // formulir; SK/PERKADES mengabaikan nilai ini (MuatNaskahAwal
+                    // hanya membacanya untuk PERDES) dan berkas tidak ikut tersalin.
+                    FileWord = SelectedRow.Data.FileWord
                 };
                 await BukaFormulirAsync(null, salinan);
             }

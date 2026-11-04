@@ -18,6 +18,41 @@ using System.Threading.Tasks;
 
 namespace SuDesApp.Data.Repositories
 {
+    /// <summary>
+    /// Ringkasan register untuk halaman Beranda: total, hari ini, bulan ini,
+    /// jumlah per jenis, dan surat terbaru — seluruh angka dihitung di database
+    /// (COUNT/GROUP BY + LIMIT), bukan dari buku agenda surat masuk/keluar.
+    /// NTCR dikecualikan karena memakai register sendiri, persis seperti
+    /// halaman Register Surat, sehingga angka Beranda cocok dengan yang dilihat
+    /// operator di halaman itu.
+    /// </summary>
+    public sealed class RingkasanRegisterSurat
+    {
+        public int Total { get; init; }
+        public int HariIni { get; init; }
+        public int BulanIni { get; init; }
+
+        /// <summary>Jumlah surat per jenis (kunci = NamaJenis uppercase, mis. SKD_UMUM).</summary>
+        public Dictionary<string, int> PerJenis { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Beberapa surat terbaru (urut Id menurun) untuk daftar aktivitas.</summary>
+        public List<BarisAktivitasRegister> Terbaru { get; init; } = new();
+    }
+
+    /// <summary>Satu baris "Aktivitas terbaru" pada halaman Beranda.</summary>
+    public sealed class BarisAktivitasRegister
+    {
+        public DateTime TanggalSurat { get; init; }
+
+        /// <summary>Nama jenis surat apa adanya dari register (konstanta, mis. SKD_UMUM).</summary>
+        public string JenisSurat { get; init; } = string.Empty;
+
+        public string NomorSurat { get; init; } = string.Empty;
+
+        /// <summary>Keperluan surat; jatuh ke Keterangan bila keperluan kosong.</summary>
+        public string Perihal { get; init; } = string.Empty;
+    }
+
     public interface ISuratRepository
     {
         Task<int> InsertAsync(SuratData entity, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
@@ -73,6 +108,12 @@ namespace SuDesApp.Data.Repositories
 
         /// <summary>Rekap jumlah surat per bulan + status persetujuan untuk satu tahun.</summary>
         Task<List<BarisRekapPersetujuan>> GetRekapPersetujuanPerBulanAsync(int tahun, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Ringkasan register untuk halaman Beranda (lihat <see cref="RingkasanRegisterSurat"/>):
+        /// total, hari ini, bulan ini, jumlah per jenis, dan surat terbaru.
+        /// </summary>
+        Task<RingkasanRegisterSurat> GetRingkasanRegisterAsync(int jumlahTerbaru = 5, CancellationToken cancellationToken = default);
     }
 
     // ISuratInsertion: kemampuan sisip mentah internal — satu-satunya pemakai
@@ -133,6 +174,75 @@ namespace SuDesApp.Data.Repositories
                     throw;
                 }
             }
+        }
+
+        /// <summary>
+        /// Ringkasan register untuk halaman Beranda (lihat <see cref="RingkasanRegisterSurat"/>):
+        /// seluruh angka dihitung di database; NTCR dikecualikan agar cocok
+        /// dengan halaman Register Surat.
+        /// </summary>
+        public async Task<RingkasanRegisterSurat> GetRingkasanRegisterAsync(int jumlahTerbaru = 5, CancellationToken cancellationToken = default)
+        {
+            await EnsureConnectionOpenAsync(cancellationToken);
+
+            var hariIni = DateTime.Today;
+            var awalBulan = new DateTime(hariIni.Year, hariIni.Month, 1);
+
+            var kecualiNtcr = SuratConstants.NtcrSemua.Select(n => n.ToUpperInvariant()).ToArray();
+            string dasar = "FROM Surat s INNER JOIN JenisSurat js ON s.ID_Jenis = js.ID_Jenis "
+                         + "WHERE UPPER(js.NamaJenis) NOT IN @Kecuali";
+
+            int total = await _connection.ExecuteScalarAsync<int>(
+                $"SELECT COUNT(*) {dasar}", new { Kecuali = kecualiNtcr });
+
+            int hariIniCount = await _connection.ExecuteScalarAsync<int>(
+                $"SELECT COUNT(*) {dasar} AND s.TanggalSurat >= @Awal AND s.TanggalSurat < @Akhir",
+                new { Kecuali = kecualiNtcr, Awal = hariIni.ToString("yyyy-MM-dd"), Akhir = hariIni.AddDays(1).ToString("yyyy-MM-dd") });
+
+            int bulanIniCount = await _connection.ExecuteScalarAsync<int>(
+                $"SELECT COUNT(*) {dasar} AND s.TanggalSurat >= @Awal AND s.TanggalSurat < @Akhir",
+                new { Kecuali = kecualiNtcr, Awal = awalBulan.ToString("yyyy-MM-dd"), Akhir = awalBulan.AddMonths(1).ToString("yyyy-MM-dd") });
+
+            var perJenis = (await _connection.QueryAsync<(string Jenis, int Jumlah)>(
+                $"SELECT UPPER(js.NamaJenis) AS Jenis, COUNT(*) AS Jumlah {dasar} GROUP BY UPPER(js.NamaJenis)",
+                new { Kecuali = kecualiNtcr }))
+                .ToDictionary(r => r.Jenis, r => r.Jumlah, StringComparer.OrdinalIgnoreCase);
+
+            var terbaru = new List<BarisAktivitasRegister>();
+            if (jumlahTerbaru > 0)
+            {
+                var baris = await _connection.QueryAsync<BarisRegisterRow>(
+                    $@"SELECT s.TanggalSurat, UPPER(js.NamaJenis) AS NamaJenis, s.NomorSurat,
+                              COALESCE(NULLIF(s.Keperluan, ''), s.Keterangan) AS Perihal
+                       {dasar}
+                       ORDER BY s.ID_Surat DESC LIMIT @Take",
+                    new { Kecuali = kecualiNtcr, Take = jumlahTerbaru });
+
+                terbaru.AddRange(baris.Select(r => new BarisAktivitasRegister
+                {
+                    TanggalSurat = SafeGetDateTime(r.TanggalSurat!),
+                    JenisSurat = r.NamaJenis ?? string.Empty,
+                    NomorSurat = r.NomorSurat ?? string.Empty,
+                    Perihal = r.Perihal ?? string.Empty
+                }));
+            }
+
+            return new RingkasanRegisterSurat
+            {
+                Total = total,
+                HariIni = hariIniCount,
+                BulanIni = bulanIniCount,
+                PerJenis = perJenis,
+                Terbaru = terbaru
+            };
+        }
+
+        private sealed class BarisRegisterRow
+        {
+            public string? TanggalSurat { get; set; }
+            public string? NamaJenis { get; set; }
+            public string? NomorSurat { get; set; }
+            public string? Perihal { get; set; }
         }
 
         public async Task InitializeSuratIndexesAsync()

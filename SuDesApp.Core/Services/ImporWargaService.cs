@@ -221,6 +221,12 @@ namespace SuDesApp.Services
                 hasil.Add(baris);
             }
 
+            // Baris yang seluruh selnya kosong (sering tersisa dari sel berformat
+            // pada berkas template) dibuang seperti jalur CSV — tanpa ini, satu
+            // template dengan ratusan baris berformat menampilkan ratusan
+            // "NIK kosong" sebagai baris ditolak di pratinjau impor.
+            hasil.RemoveAll(b => b.All(v => string.IsNullOrWhiteSpace(v)));
+
             return hasil;
         }
 
