@@ -12,12 +12,12 @@
         <Border Grid.Row="0" Style="{StaticResource PageHeader}">
             <StackPanel Orientation="Horizontal">
                 <Border Style="{StaticResource HeaderIconChip}">
-                    <TextBlock Text="{x:Static u:IkonMenu.Cari}" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
+                    <TextBlock Text="{x:Static u:IkonMenu.AkunGoogle}" FontSize="20" Foreground="{DynamicResource PrimaryBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{StaticResource AppIconFont}"/>
                 </Border>
                 <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="LOGIN GOOGLE" Style="{StaticResource HeaderTitle}"/>
-                    <TextBlock Text="Hubungkan akun Google untuk mengarsipkan surat di Google Drive"
+                    <TextBlock Text="Sambungkan akun Google untuk pencadangan database ke Google Drive"
                                Style="{StaticResource HeaderSubtitle}"/>
                 </StackPanel>
             </StackPanel>
@@ -68,8 +68,8 @@
                     <Button Content="Ganti Akun" Command="{Binding GantiAkunCommand}"
                             Width="110" Margin="0,0,8,0"
                             Style="{StaticResource SecondaryButton}"/>
-                    <Button Content="Batal" Command="{Binding BatalCommand}"
-                            Width="80" Style="{StaticResource OutlineButton}"/>
+                    <Button Content="{Binding BatalLabel}" Command="{Binding BatalCommand}"
+                            MinWidth="80" Style="{StaticResource OutlineButton}"/>
                 </StackPanel>
 
                 <TextBlock Text="SuDesApp • Google Drive • Arsip Surat Desa"

@@ -129,6 +129,9 @@ namespace SuDesApp.Tests.Licensing
         [InlineData("langganan")]
         [InlineData("cadangkan-pulihkan")]
         [InlineData("pengaturan-aplikasi")]
+        // Koneksi akun Google untuk pencadangan tidak boleh ikut terkunci:
+        // pelengkap cadangan, sama seperti halaman Cadangkan & Pulihkan.
+        [InlineData("google-login")]
         [InlineData("")]
         [InlineData(null)]
         public void RuteBacaDanPenyelamatanData_TetapTerbuka(string? route)

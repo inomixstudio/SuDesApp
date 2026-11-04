@@ -15,6 +15,10 @@ namespace SuDesApp.Wpf.ViewModels
     /// <summary>Satu pintasan jenis surat pada halaman Beranda.</summary>
     public class PintasanSurat
     {
+        /// <summary>Konstanta jenis (SuratConstants) — nilai yang diterima BukaSurat.</summary>
+        public string Jenis { get; init; } = string.Empty;
+
+        /// <summary>Nama tampilan dari MenuSuratKatalog.</summary>
         public string Nama { get; init; } = string.Empty;
         public string Ikon { get; init; } = "\uD83D\uDCC4";
         public int Jumlah { get; init; }
@@ -23,15 +27,15 @@ namespace SuDesApp.Wpf.ViewModels
     }
 
     /// <summary>
-    /// Halaman pembuka (Beranda): ringkasan pekerjaan surat desa — statistik surat
-    /// dari register keluar/masuk, jumlah warga terdata, pintasan jenis surat yang
+    /// Halaman pembuka (Beranda): ringkasan pekerjaan surat desa — statistik dari
+    /// register surat (tabel Surat), jumlah warga terdata, pintasan jenis surat yang
     /// paling sering dipakai, aktivitas terbaru, dan aksi cepat ke halaman lain.
     /// Halaman ini selalu tampil pertama setelah login sehingga area konten tidak
     /// kosong.
     /// </summary>
     public class BerandaViewModel : ObservableObject
     {
-        private readonly IArsipSuratRepository _arsipSurat;
+        private readonly ISuratRepository _surat;
         private readonly IWargaRepository _warga;
         private readonly ILogger<BerandaViewModel> _logger;
 
@@ -42,11 +46,11 @@ namespace SuDesApp.Wpf.ViewModels
         public event Action<string>? BukaHalamanDiminta;
 
         public BerandaViewModel(
-            IArsipSuratRepository arsipSurat,
+            ISuratRepository surat,
             IWargaRepository warga,
             ILogger<BerandaViewModel> logger)
         {
-            _arsipSurat = arsipSurat ?? throw new ArgumentNullException(nameof(arsipSurat));
+            _surat = surat ?? throw new ArgumentNullException(nameof(surat));
             _warga = warga ?? throw new ArgumentNullException(nameof(warga));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -100,21 +104,63 @@ namespace SuDesApp.Wpf.ViewModels
 
         // ----- Daftar -----
         public ObservableCollection<PintasanSurat> Pintasan { get; } = new();
-        public ObservableCollection<SuratKeluarMasukData> Terbaru { get; } = new();
+        public ObservableCollection<BarisAktivitasRegister> Terbaru { get; } = new();
 
         public ICommand MuatUlangCommand { get; }
         public ICommand BuatSuratCommand { get; }
         public ICommand BukaHalamanCommand { get; }
 
-        /// <summary>Jenis surat yang ditawarkan sebagai pintasan (kunci sama dengan menu).</summary>
-        private static readonly (string Nama, string Ikon)[] JenisPopuler =
+        /// <summary>Jumlah pintasan yang ditampilkan pada kartu Beranda.</summary>
+        private const int JumlahPintasan = 6;
+
+        /// <summary>
+        /// Set bawaan bila register masih kosong: enam jenis yang paling lazim
+        /// dipakai desa, agar menu stabil sebelum ada data.
+        /// </summary>
+        private static readonly string[] PintasanBawaan =
         {
-            ("SKD UMUM", "\uD83D\uDCC4"),
-            ("SKTM", "\uD83D\uDCB0"),
-            ("SKU", "\uD83C\uDFEA"),
-            ("DOMISILI WARGA", "\uD83C\uDFE0"),
-            ("PENGANTAR SKCK", "\uD83D\uDD0E"),
-            ("KEMATIAN", "\uD83D\uDD4A")
+            SuratConstants.SKD_UMUM,
+            SuratConstants.SKTM,
+            SuratConstants.SKU,
+            SuratConstants.DOMISILI_WARGA,
+            SuratConstants.PENGANTAR_SKCK,
+            SuratConstants.KEMATIAN
+        };
+
+        /// <summary>
+        /// Susun pintasan cepat dari katalog menu (satu sumber dengan sidebar)
+        /// dan hitungan register: jenis paling sering dipakai di depan, seri
+        /// diurut menurut urut katalog. Register kosong → set bawaan.
+        /// Label diambil dari katalog sehingga tidak bisa kedaluwarsa seperti
+        /// "SKD UMUM" dulu.
+        /// </summary>
+        internal static List<(string Jenis, string Nama, string Ikon, int Jumlah)> SusunPintasan(
+            IReadOnlyDictionary<string, int> jumlahPerJenis)
+        {
+            int Hitung(string jenis) =>
+                jumlahPerJenis.TryGetValue(jenis, out var n) ? n : 0;
+
+            IEnumerable<PilihanSurat> kandidat =
+                jumlahPerJenis.Values.All(n => n <= 0)
+                    ? PintasanBawaan.Select(jenis => MenuSuratKatalog.Semua.First(p => p.Jenis == jenis))
+                    : MenuSuratKatalog.Semua.OrderByDescending(p => Hitung(p.Jenis));
+
+            return kandidat
+                .Take(JumlahPintasan)
+                .Select(p => (p.Jenis, p.Label, IkonJenis(p.Jenis), Hitung(p.Jenis)))
+                .ToList();
+        }
+
+        /// <summary>Emoji pintasan; jenis tanpa ikon khusus memakai ikon surat.</summary>
+        private static string IkonJenis(string jenis) => jenis switch
+        {
+            SuratConstants.SKD_UMUM => "\uD83D\uDCC4",
+            SuratConstants.SKTM => "\uD83D\uDCB0",
+            SuratConstants.SKU => "\uD83C\uDFEA",
+            SuratConstants.DOMISILI_WARGA => "\uD83C\uDFE0",
+            SuratConstants.PENGANTAR_SKCK => "\uD83D\uDD0E",
+            SuratConstants.KEMATIAN => "\uD83D\uDD4A",
+            _ => "\uD83D\uDCC4"
         };
 
         /// <summary>Muat statistik, pintasan, dan aktivitas terbaru dari register & data warga.</summary>
@@ -126,11 +172,10 @@ namespace SuDesApp.Wpf.ViewModels
 
             try
             {
-                // Ringkasan dihitung di database (COUNT/GROUP BY + 5 baris terbaru).
-                // Sebelumnya seluruh tabel arsip surat DAN seluruh data warga dimuat
-                // ke memori hanya untuk mengambil angka & daftar terbaru — halaman
-                // pembuka ini jadi berat seiring bertambahnya data.
-                var ringkasan = await _arsipSurat.GetRingkasanAsync(5);
+                // Ringkasan register dihitung di database (COUNT/GROUP BY + 5 baris
+                // terbaru). Sumbernya tabel Surat — bukan buku agenda masuk/keluar —
+                // supaya surat yang dibuat lewat Buat Surat benar-benar muncul di sini.
+                var ringkasan = await _surat.GetRingkasanRegisterAsync(5);
 
                 TotalSurat = ringkasan.Total;
                 SuratHariIni = ringkasan.HariIni;
@@ -156,30 +201,46 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        private void IsiTerbaru(List<SuratKeluarMasukData> surat)
+        private void IsiTerbaru(List<BarisAktivitasRegister> surat)
         {
             // Baris terbaru sudah diurutkan oleh database (Id menurun).
             Terbaru.Clear();
             foreach (var item in surat)
             {
-                Terbaru.Add(item);
+                Terbaru.Add(new BarisAktivitasRegister
+                {
+                    TanggalSurat = item.TanggalSurat,
+                    JenisSurat = LabelJenis(item.JenisSurat),
+                    NomorSurat = item.NomorSurat,
+                    Perihal = item.Perihal
+                });
             }
+        }
+
+        /// <summary>Nama tampilan jenis surat untuk daftar aktivitas Beranda.</summary>
+        private static string LabelJenis(string namaJenis)
+        {
+            if (string.IsNullOrWhiteSpace(namaJenis)) return "-";
+
+            var pilihan = MenuSuratKatalog.Semua.FirstOrDefault(p => p.Jenis == namaJenis);
+            if (pilihan != null) return pilihan.Label;
+
+            return namaJenis switch
+            {
+                SuratConstants.REKENING_KORAN => "Permohonan Rekening Koran",
+                SuratConstants.TEMPLATE_SURAT => "Template Surat",
+                _ => namaJenis.Replace('_', ' ')
+            };
         }
 
         private void IsiPintasan(IReadOnlyDictionary<string, int> jumlahPerJenis)
         {
             Pintasan.Clear();
-            foreach (var (nama, ikon) in JenisPopuler)
+            foreach (var (jenis, nama, ikon, jumlah) in SusunPintasan(jumlahPerJenis))
             {
-                // Cocokkan longgar: jenis di register bisa berbentuk "SKD" / "Surat
-                // Keterangan Domisili", jadi dibandingkan pada kata kunci pertamanya.
-                var kunci = nama.Split(' ')[0];
-                int jumlah = jumlahPerJenis
-                    .Where(kvp => kvp.Key.Contains(kunci, StringComparison.OrdinalIgnoreCase))
-                    .Sum(kvp => kvp.Value);
-
                 Pintasan.Add(new PintasanSurat
                 {
+                    Jenis = jenis,
                     Nama = nama,
                     Ikon = ikon,
                     Jumlah = jumlah,

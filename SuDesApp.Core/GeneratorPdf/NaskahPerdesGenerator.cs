@@ -167,6 +167,8 @@ namespace SuDesApp.GeneratorPdf
                 bool judulTentang = false;
                 bool setelahBab = false;
                 bool adaIsi = false;
+                // Baris setelah label "Menetapkan:" yang berdiri sendiri = diktum.
+                bool diktumMenyusul = false;
 
                 // Judul menunggu isi pertamanya supaya tidak tertinggal sendirian
                 // di dasar halaman. Penempatan utuh hanya dipakai bila isi
@@ -188,12 +190,33 @@ namespace SuDesApp.GeneratorPdf
                     {
                         pembuka = false;
                         kolom.Item().PaddingTop(6).Text(b).Bold();
+                        diktumMenyusul = LabelMenetapkanSaja(b);
                         continue;
                     }
 
                     if (pembuka)
                     {
                         TulisBarisPembuka(kolom, b, ref judulTentang);
+                        continue;
+                    }
+
+                    // Label bagian setelah fase pembuka (Mengingat, Memperhatikan,
+                    // Menetapkan) tetap tebal rata kiri seperti Menimbang. Sebelumnya
+                    // baris ini jatuh ke paragraf biasa: tidak tebal dan terindentasi
+                    // 24 pt — jelas berbeda dengan naskah peraturan asli.
+                    if (LabelBagian.IsMatch(b))
+                    {
+                        kolom.Item().PaddingTop(6).Text(b).Bold();
+                        diktumMenyusul = LabelMenetapkanSaja(b);
+                        continue;
+                    }
+
+                    // Diktum penetapan mengikuti label "Menetapkan:" di barisnya
+                    // sendiri: tebal rata kiri, bukan paragraf rata kiri berindak.
+                    if (diktumMenyusul)
+                    {
+                        diktumMenyusul = false;
+                        kolom.Item().Text(b).Bold();
                         continue;
                     }
 
@@ -275,6 +298,8 @@ namespace SuDesApp.GeneratorPdf
 
                 BlokTandaTanganPenutup? aktif = null;
                 bool menungguNama = false;
+                // Blok pengundangan sudah ditemui — penanda perpindahan lajur.
+                bool adaDiundangkan = false;
 
                 foreach (string mentah in baris)
                 {
@@ -293,6 +318,7 @@ namespace SuDesApp.GeneratorPdf
                     {
                         aktif = kiri;
                         menungguNama = false;
+                        adaDiundangkan = true;
                         kiri.TempatTanggal.AddRange(PecahTempatTanggal(b));
                         continue;
                     }
@@ -322,7 +348,11 @@ namespace SuDesApp.GeneratorPdf
                     {
                         bool kepala = b.Contains("KEPALA", StringComparison.OrdinalIgnoreCase) ||
                                       b.Contains("LURAH", StringComparison.OrdinalIgnoreCase);
-                        aktif = kepala ? kanan : kiri;
+                        // Penetapan selalu di lajur kanan; pengundangan di kiri.
+                        // Blok satu-lajur (lampiran tanpa baris "Diundangkan") tidak
+                        // bergeser lajur — jabatannya tetap di blok yang sedang terbuka.
+                        if (kepala) aktif = kanan;
+                        else if (adaDiundangkan) aktif = kiri;
                         aktif.Jabatan = b;
                         menungguNama = true;
                         continue;
@@ -401,7 +431,9 @@ namespace SuDesApp.GeneratorPdf
                     !atas.Contains("LURAH", StringComparison.Ordinal) &&
                     !atas.Contains("SEKRETARIS", StringComparison.Ordinal) &&
                     !atas.Contains("BPD", StringComparison.Ordinal) &&
-                    !atas.Contains("CAMAT", StringComparison.Ordinal))
+                    !atas.Contains("CAMAT", StringComparison.Ordinal) &&
+                    // “Ketua,” pada blok tanda tangan lampiran BPD (tanpa kata BPD).
+                    !atas.Contains("KETUA", StringComparison.Ordinal))
                 {
                     return false;
                 }
@@ -526,6 +558,14 @@ namespace SuDesApp.GeneratorPdf
                 TulisParagraf(kolom, b);
             }
 
+            /// <summary>
+            /// Label "Menetapkan" yang berdiri sendiri ("Menetapkan:" / "Menetapkan :"
+            /// tanpa diktum di barisnya) — baris berikutnya adalah diktum penetapan.
+            /// </summary>
+            private static bool LabelMenetapkanSaja(string baris) =>
+                baris.StartsWith("Menetapkan", StringComparison.OrdinalIgnoreCase) &&
+                baris["Menetapkan".Length..].Trim().TrimEnd(':').Length == 0;
+
             /// <summary>Baris penutup bagian pembuka yang tetap rata tengah.</summary>
             private static bool BarisPenutupPembuka(string baris)
             {
@@ -619,9 +659,16 @@ namespace SuDesApp.GeneratorPdf
             private string IsiDenganIsian(NaskahPerdesHalaman halaman, bool halamanPertama)
             {
                 string teks = halaman.Isi ?? string.Empty;
-                if (halaman.Judul.Contains("lampiran", StringComparison.OrdinalIgnoreCase)) return teks;
-
                 string tahun = _tanggal.Year.ToString(CultureInfo.InvariantCulture);
+
+                if (halaman.Judul.Contains("lampiran", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Nomor dan tanggal lampiran milik dokumen lampiran itu sendiri,
+                    // tetapi TAHUN ANGGARAN mengikuti Perdes induk — kalau tidak,
+                    // Perdes baru tetap melampirkan persetujuan anggaran tahun lama.
+                    return GantiTahunAnggaran(teks, tahun);
+                }
+
                 string nomor = string.IsNullOrWhiteSpace(_nomor) ? "........." : _nomor.Trim();
 
                 // Hanya kepala surat berhuruf kapital yang diubah; rujukan hukum

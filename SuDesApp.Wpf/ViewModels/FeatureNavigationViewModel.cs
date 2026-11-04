@@ -152,7 +152,6 @@ public sealed class FeatureNavigationViewModel
         Beranda = Tombol("Beranda", IkonMenu.Beranda, "beranda");
         Beranda.Description = "Ringkasan surat, pintasan cepat, dan aktivitas terbaru";
         MenuItems.Add(Beranda);
-        Google = TambahTombol("Login dengan Google", IkonMenu.AkunGoogle, "google-login");
 
         Header("BUAT SURAT");
         TambahTombol("Register Surat", IkonMenu.Dokumen, "register-surat");
@@ -220,6 +219,11 @@ public sealed class FeatureNavigationViewModel
         TambahTombol("Pengaturan Formulir", IkonMenu.Pengaturan, "pengaturan-formulir");
         TambahTombol("Kelola Pengguna", IkonMenu.Pengguna, "kelola-pengguna");
         TambahTombol("Cadangkan & Pulihkan", IkonMenu.Cadangkan, "cadangkan-pulihkan");
+        // Koneksi akun Google adalah pelengkap cadangan (pencadangan database ke
+        // Drive), jadi menempel di seksi ini — bukan menyelingi antara Beranda
+        // dan seksi BUAT SURAT tanpa judul seperti sebelumnya.
+        Google = TambahTombol("Login dengan Google", IkonMenu.AkunGoogle, "google-login");
+        Google.Description = "Sambungkan akun Google untuk pencadangan database ke Google Drive.";
 
         Header("AKTIVASI LISENSI");
         Langganan = TambahTombol("Aktivasi Lisensi", IkonMenu.Langganan, "langganan");

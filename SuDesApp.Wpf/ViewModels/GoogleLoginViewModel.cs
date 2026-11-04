@@ -27,6 +27,7 @@ namespace SuDesApp.Wpf.ViewModels
 
         private string _infoText = string.Empty;
         private string _actionLabel = "Masuk dengan Google";
+        private string _batalLabel = "Kembali";
         private string? _loggedInEmail;
         private bool _isNotConfigured;
         private bool _isConnected;
@@ -53,11 +54,17 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Dipanggil setelah berhasil login agar sidebar diperbarui.</summary>
         public Action<string>? OnLoggedIn { get; set; }
 
+        /// <summary>Diminta membuka halaman lain (mis. Pengaturan Aplikasi saat kredensial belum diisi).</summary>
+        public event Action<string>? BukaHalamanDiminta;
+
         public string InfoText { get => _infoText; private set => SetProperty(ref _infoText, value); }
         public string ActionLabel { get => _actionLabel; private set => SetProperty(ref _actionLabel, value); }
+
+        /// <summary>Label tombol bawah: "Batalkan" saat login berjalan, "Kembali" saat diam.</summary>
+        public string BatalLabel { get => _batalLabel; private set => SetProperty(ref _batalLabel, value); }
         public bool IsNotConfigured { get => _isNotConfigured; private set { if (SetProperty(ref _isNotConfigured, value)) ((AsyncRelayCommand)MasukCommand).RaiseCanExecuteChanged(); } }
         public bool IsConnected { get => _isConnected; private set { if (SetProperty(ref _isConnected, value)) ((AsyncRelayCommand)GantiAkunCommand).RaiseCanExecuteChanged(); } }
-        public bool IsBusy { get => _isBusy; private set { if (SetProperty(ref _isBusy, value)) { ((AsyncRelayCommand)MasukCommand).RaiseCanExecuteChanged(); ((AsyncRelayCommand)GantiAkunCommand).RaiseCanExecuteChanged(); } } }
+        public bool IsBusy { get => _isBusy; private set { if (SetProperty(ref _isBusy, value)) { BatalLabel = value ? "Batalkan" : "Kembali"; ((AsyncRelayCommand)MasukCommand).RaiseCanExecuteChanged(); ((AsyncRelayCommand)GantiAkunCommand).RaiseCanExecuteChanged(); } } }
 
         public ICommand MasukCommand { get; }
         public ICommand GantiAkunCommand { get; }
@@ -84,6 +91,13 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task MasukAsync()
         {
+            if (IsNotConfigured)
+            {
+                // Kredensial belum ada: klik utama membuka tempat mengisinya,
+                // bukan melempar galat yang mengulang InfoText yang sama.
+                BukaPengaturanKredensial();
+                return;
+            }
             if (IsConnected)
             {
                 OpenDrive();
@@ -195,6 +209,9 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
+        /// <summary>Buka Pengaturan Aplikasi (bagian Kredensial Google) dari tombol utama.</summary>
+        private void BukaPengaturanKredensial() => BukaHalamanDiminta?.Invoke("pengaturan-aplikasi");
+
         /// <summary>
         /// Kembalikan CTS aktif. CTS yang sudah dibatalkan (mis. lewat tombol Batal)
         /// diganti baru agar percobaan login berikutnya tidak langsung gagal.
@@ -235,9 +252,10 @@ namespace SuDesApp.Wpf.ViewModels
             IsBusy = false;
             InfoText = "Koneksi akun Google belum diaktifkan.\n\n" +
                        "Kredensial klien OAuth (Client ID & Client Secret) belum tersimpan di komputer ini. " +
-                       "Buka Pengaturan Aplikasi → Kredensial Google, isi Client ID & Client Secret, lalu klik " +
-                       "Simpan Kredensial dan Uji Koneksi (tersimpan terenkripsi di " + GoogleDriveService.CredentialsStorePath + ").";
-            ActionLabel = "Masuk dengan Google";
+                       "Klik tombol di bawah untuk membuka Pengaturan Aplikasi → Kredensial Google, isi Client ID " +
+                       "& Client Secret, lalu klik Simpan Kredensial dan Uji Koneksi (tersimpan terenkripsi di " +
+                       GoogleDriveService.CredentialsStorePath + ").";
+            ActionLabel = "Buka Pengaturan Kredensial";
         }
 
         private void SetLoggedOut()
@@ -246,7 +264,7 @@ namespace SuDesApp.Wpf.ViewModels
             IsConnected = false;
             IsNotConfigured = false;
             IsBusy = false;
-            InfoText = "Masuk dengan akun Google untuk mencadangkan arsip surat ke Google Drive.\n" +
+            InfoText = "Masuk dengan akun Google untuk mengaktifkan pencadangan database ke Google Drive.\n" +
                        "Browser Google akan terbuka untuk menyelesaikan izin.";
             ActionLabel = "Masuk dengan Google";
         }
