@@ -2,7 +2,7 @@
 
 Aplikasi desktop Windows (WPF) untuk administrasi surat-menyurat desa: pembuatan
 surat resmi dengan penomoran sesuai perbup, register & agenda digital, data
-penduduk lengkap dengan mutasi, layanan permintaan surat lewat website/API desa, sampai
+penduduk lengkap dengan mutasi, layanan permintaan surat lewat API desa, sampai
 alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per surat.
 
 ## Fitur utama
@@ -31,18 +31,12 @@ alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per sura
 - **API desa** — endpoint HTTP lokal untuk sistem luar membaca statistik, data
   perangkat desa, status persetujuan, rekap laporan bulanan, dan memeriksa
   keaslian surat (`docs/api-desa.md`).
-- **Layanan online** — warga mengisi sendiri **Formulir Warga** di website
-  (`/layanan-online`, tanpa akun); permintaan langsung masuk antrean operator,
-  sama dengan kiriman sistem desa lewat API desa. Kanal WhatsApp dan Google
-  Form/Sheet sudah dihapus; login Google kini hanya untuk pencadangan ke
-  Google Drive.
-- **Data warga & register surat di browser** — halaman `/modul/warga` dan
-  `/modul/register-surat` membaca database desa yang sama lewat backend:
-  pencarian, penyaring status/tahun/jenis, dan paginasi memakai kueri Core yang
-  juga dipakai desktop, jadi jumlah dan urutannya tidak bisa berbeda. Keduanya
-  masih baca-saja sampai formulir tulisnya diporting.
+- **Layanan online** — warga mengisi sendiri **Formulir Warga** lewat API desa
+  (tanpa akun); permintaan langsung masuk antrean operator, sama dengan kiriman
+  sistem desa lewat API desa. Kanal WhatsApp dan Google Form/Sheet sudah dihapus;
+  login Google kini hanya untuk pencadangan ke Google Drive.
 - **Multi-pengguna** — akun dengan peran & izin, kunci akun setelah percobaan
-  login gagal, dan halaman **Pengguna & Peran** di web untuk membuat akun,
+  login gagal, dan halaman **Pengguna & Peran** untuk membuat akun,
   mengganti peran/status, mereset kata sandi, dan menghapus akun
   (`docs/policy-peran-pengguna.md`).
 - **Kuitansi lisensi** — setiap pembayaran bisa dicetak sebagai kuitansi dari
