@@ -74,18 +74,14 @@ dotnet build SuDesApp.Wpf/SuDesApp.Wpf.csproj --nologo -v q
 # Uji otomatis (termasuk integritas token lisensi)
 dotnet test SuDesApp.Tests/SuDesApp.Tests.csproj --nologo -v q
 
-# Proyek lintas platform (desktop + Android + browser)
+# Backend web (ASP.NET Core)
 dotnet build SuDesApp.Api/SuDesApp.Api.csproj --nologo -v q
-dotnet build SuDesApp.Web/SuDesApp.Web.csproj --nologo -v q
-dotnet build SuDesApp.Maui/SuDesApp.Maui.csproj -f net10.0-windows10.0.19041.0 --nologo -v q
-dotnet build SuDesApp.Maui/SuDesApp.Maui.csproj -f net10.0-android --nologo -v q
 ```
 
-Jalankan backend dan web lalu buka `http://127.0.0.1:5189`:
+Jalankan backend lalu buka `http://127.0.0.1:5188`:
 
 ```bash
 dotnet run --project SuDesApp.Api --urls http://127.0.0.1:5188
-dotnet run --project SuDesApp.Web --urls http://127.0.0.1:5189
 ```
 
 GitHub Actions menjalankan restore, build Release, dan uji otomatis pada Windows
@@ -130,10 +126,7 @@ di clone penulis belum diaktifkan atau commit dibuat dengan `--no-verify`.
 |---|---|
 | `SuDesApp.Core/` | Logika bisnis: data (SQLite/Dapper), layanan, generator surat di atas mesin PDF sendiri (SudesPdf), API desa, integrasi Google Drive |
 | `SuDesApp.Wpf/` | Aplikasi WPF: ViewModel, View, tema, navigasi |
-| `SuDesApp.Api/` | Backend web (ASP.NET Core) di atas `Core` — sumber data tunggal untuk desktop, Android, dan browser |
-| `SuDesApp.Ui/` | Komponen Blazor bersama (net10.0): layout, menu utama, halaman modul — dipakai ketiga platform |
-| `SuDesApp.Maui/` | Host MAUI Blazor Hybrid: desktop Windows dan Android |
-| `SuDesApp.Web/` | Host Blazor Web untuk browser (render server) |
+| `SuDesApp.Api/` | Backend web (ASP.NET Core) di atas `Core` — sumber data tunggal untuk desktop |
 | `SudesPdf.Core/` | Mesin PDF aplikasi sendiri: penulis dokumen, penata letak surat, pembaca, dan penggambar halaman — tanpa pustaka PDF pihak ketiga |
 | `SudesPdf/` | Lapisan WPF untuk mesin tadi: pratinjau halaman, pembungkus dokumen, dan cetak |
 | `SudesExPlus/` | Pustaka .xlsx milik aplikasi sendiri (baca/tulis, gaya, rumus) pengganti EPPlus |
