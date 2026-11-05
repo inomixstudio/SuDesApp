@@ -19,7 +19,7 @@ using SuDesApp.Wpf.Views;
 
 namespace SuDesApp.Wpf.ViewModels
 {
-    public partial class MainWindowViewModel : ObservableObject
+    public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         private readonly NavigationService _navigation;
         private readonly IMessageService _messageService;
@@ -61,8 +61,8 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public void Dispose()
         {
-            // Tidak ada sumber daya milik VM ini yang perlu dibersihkan: scope
-            // halaman dan scope bertahan dimiliki NavigationService.
+            _notifications.Dispose();
+            _pembaruanLatar.Dispose();
         }
 
         private SuDesApp.Services.PenjagaLisensi? _penjaga;

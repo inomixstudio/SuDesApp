@@ -136,11 +136,12 @@ namespace SuDesApp.Wpf.Services
     /// modul lain cukup memanggil Add/Info/Success/Warning/Error untuk mengirim
     /// pemberitahuan; badge angka pada lonceng = jumlah notifikasi belum dibaca.
     /// </summary>
-    public class NotificationService : ObservableObject
+    public class NotificationService : ObservableObject, IDisposable
     {
         private const int MaxItems = 50;
 
         private readonly ILogger<NotificationService> _logger;
+        private bool _disposed;
 
         public NotificationService(ILogger<NotificationService> logger)
         {
@@ -370,6 +371,14 @@ namespace SuDesApp.Wpf.Services
                 UnreadCount = 0;
                 _timerWaktu?.Stop();
             });
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _timerWaktu?.Stop();
+            _timerWaktu = null;
         }
     }
 }

@@ -209,8 +209,7 @@ namespace SuDesApp.Wpf
                 // pengguna mencari berkas sendiri. Berkas yang rusak dipindahkan,
                 // bukan dihapus, dan database baru dibuat bila tidak ada kandidat.
                 splash.Tahap("Memulihkan database...");
-                HasilPemulihanDatabase hasil = new(
-                    false, false, null, null, null, null);
+                HasilPemulihanDatabase hasil;
                 try
                 {
                     hasil = await Task.Run(() => PemulihanDatabaseOtomatis.Pulihkan(
@@ -221,33 +220,51 @@ namespace SuDesApp.Wpf
                 catch (Exception galatPemulihan)
                 {
                     loggerStartup.LogError(galatPemulihan, "Pemulihan database otomatis gagal");
+                    if (!TawarkanPemulihanDatabase(new InvalidOperationException("Pemulihan gagal: " + galatPemulihan.Message)))
+                    {
+                        splash.Close();
+                        Shutdown();
+                        return;
+                    }
+                    return;
                 }
 
-                if (hasil.Berhasil)
+                var tindakan = PemulihanDatabaseOtomatis.TentukanLanjutPemulihan(hasil);
+
+                if (tindakan == PemulihanDatabaseOtomatis.LanjutPemulihan.DariKandidat)
                 {
                     appConfig.DatabaseConnectionString = hasil.ConnectionString!;
                     loggerStartup.LogInformation(
-                        "Database siap dipakai setelah pemulihan otomatis: {Pesan}", hasil.Pesan);
+                        "Database siap dipakai setelah pemulihan otomatis dari kandidat: {Pesan}", hasil.Pesan);
 
                     if (!string.IsNullOrWhiteSpace(hasil.Pesan))
                     {
                         TampilkanPesanDatabase(
                             hasil.Pesan!,
-                            hasil.DatabaseBaru ? AppMessageIcon.Warning : AppMessageIcon.Info);
+                            AppMessageIcon.Info);
                     }
                 }
-                else if (!TawarkanPemulihanDatabase(new InvalidOperationException(hasil.Pesan)))
+                else if (tindakan == PemulihanDatabaseOtomatis.LanjutPemulihan.TertundaDatabaseBaru)
                 {
-                    // Database yang tidak bisa dibuka dan tidak bisa dipulihkan bukan
-                    // jalan buntu: pengguna boleh menunjuk berkas lain (hasil pemulihan
-                    // cadangan, database dari komputer asal beserta kuncinya, atau
-                    // database desa lain yang masih sehat) sebelum aplikasi ditutup.
-                    splash.Close();
-                    Shutdown();
-                    return;
+                    appConfig.DatabaseConnectionString = hasil.ConnectionString!;
+                    loggerStartup.LogInformation(
+                        "Database siap dipakai setelah pemulihan otomatis (database baru): {Pesan}", hasil.Pesan);
+
+                    if (!string.IsNullOrWhiteSpace(hasil.Pesan))
+                    {
+                        TampilkanPesanDatabase(
+                            hasil.Pesan!,
+                            AppMessageIcon.Warning);
+                    }
                 }
                 else
                 {
+                    if (!TawarkanPemulihanDatabase(new InvalidOperationException(hasil.Pesan ?? "Database tidak bisa dibuka.")))
+                    {
+                        splash.Close();
+                        Shutdown();
+                        return;
+                    }
                     return;
                 }
             }
