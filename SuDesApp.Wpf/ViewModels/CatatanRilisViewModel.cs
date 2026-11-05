@@ -179,6 +179,29 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.10.4 (5 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Perbaikan — Database Terenkripsi dan Biasa Lebih Tahan", new List<string>
+                        {
+                            "Lokasi database dibaca dengan parser connection string SQLite, bukan pemotongan teks, lalu dinormalkan menjadi jalur absolut. Opsi seperti Password tidak lagi ikut dianggap bagian dari nama folder, dan database yang sama tidak terlihat sebagai lokasi berbeda hanya karena campuran / dan \\.",
+                            "Setelah pemulihan cadangan, koneksi yang sudah selesai dilepas dari pool. Sebelumnya handle itu masih menahan desa.db sehingga pemeriksaan berikutnya, pencadangan lanjutan, atau penggantian berkas gagal dengan pesan “used by another process” justru setelah pemulihan berhasil.",
+                            "Pemeriksaan header database memakai mode berbagi baca/tulis/hapus, jadi database sehat tidak lagi dilaporkan sebagai berkas lama terkunci hanya karena ada koneksi lain yang sedang aktif. Berkas yang benar-benar terkunci kini dilaporkan sebagai terkunci, bukan disebut database terenkripsi yang kehilangan kunci. Sumber :memory: juga tidak lagi berubah menjadi berkas bernama :memory:."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Startup, Penutupan, dan Pekerjaan Latar", new List<string>
+                        {
+                            "Startup yang gagal sebelum jendela utama tampil kini menutup layar splash dan berhenti dengan pesan yang menyebut langkah berikutnya, bukan meninggalkan proses tanpa jendela. Backup harian ke Google Drive saat aplikasi ditutup berjalan asinkron dengan batas 20 detik sehingga penutupan tidak membeku.",
+                            "Galat dari handler tombol asinkron dan tugas latar yang tidak ditunggu kini tercatat di error.log dan diberitahukan dengan pesan yang sesuai. Pemuatan pilihan pada Register Surat dijalankan berurutan karena seluruh permintaan awal memakai satu koneksi database yang sama.",
+                            "Nama pengguna tidak lagi disimpan di properti statis terpisah dari SessionContext: sapaan beranda, judul jendela, dan notifikasi sambutan membaca identitas sesi yang sama dengan penegakan izin."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Tampilan dan Verifikasi", new List<string>
+                        {
+                            "Tabel dan daftar panjang memakai virtualisasi baris dan kolom, sehingga halaman register, riwayat, dan data warga tetap responsif pada data besar. Build kembali bersih tanpa peringatan nullable, dan setiap catch yang sengaja melanjutkan operasi menyebut alasan konkretnya.",
+                            "Sesi sistem API tidak lagi menulis peran global: peran Administrator untuk pekerjaan API disimpan per-aliran, sehingga tidak bocor ke sesi operator atau permintaan lain. Permintaan API yang membawa token login memakai peran pengguna itu, bukan peran sistem.",
+                            "Uji asap XAML memuat kamus resource aplikasi dan seluruh view ber-konstruktor tanpa parameter di thread STA pada setiap build. Kunci resource yang hilang atau XAML rusak kini tertangkap sebelum aplikasi dijalankan manual."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.10.3 (5 November 2026)",
                     new List<CatatanRilisSubSection>
                     {

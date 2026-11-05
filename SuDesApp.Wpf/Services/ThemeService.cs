@@ -119,9 +119,11 @@ namespace SuDesApp.Wpf.Services
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // abaikan — jatuh ke tema default
+                // Berkas preferensi rusak/tidak terbaca bukan kegagalan aplikasi:
+                // jatuh ke tema default, tetapi tetap tinggalkan jejak diagnosis.
+                System.Diagnostics.Debug.WriteLine("Tema tersimpan tidak terbaca: " + ex.Message);
             }
             return DefaultTheme;
         }
@@ -146,9 +148,10 @@ namespace SuDesApp.Wpf.Services
                     return value == 0;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // abaikan — fallback ke tema terang
+                // Registri tidak terbaca: fallback ke tema terang, catat untuk diagnosis.
+                System.Diagnostics.Debug.WriteLine("Mode gelap Windows tidak terbaca: " + ex.Message);
             }
             return false;
         }

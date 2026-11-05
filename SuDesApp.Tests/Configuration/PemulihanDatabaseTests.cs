@@ -107,7 +107,13 @@ public sealed class PemulihanDatabaseTests : IDisposable
         // Database aktif tetap SQLite biasa: kunci hanya dipakai membaca cadangan,
         // dan sesi yang sedang berjalan tetap bisa membukanya tanpa kunci.
         var headerPolos = System.Text.Encoding.ASCII.GetBytes("SQLite format 3\0");
-        Assert.True(File.ReadAllBytes(_aktif).AsSpan(0, headerPolos.Length).SequenceEqual(headerPolos));
+        using (var fs = new FileStream(
+            _aktif, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+        {
+            var isi = new byte[fs.Length];
+            fs.ReadExactly(isi);
+            Assert.True(isi.AsSpan(0, headerPolos.Length).SequenceEqual(headerPolos));
+        }
         Assert.False(BerkasDatabase.Terkunci(_config.DatabaseConnectionString));
     }
 

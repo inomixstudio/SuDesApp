@@ -227,7 +227,8 @@ namespace SuDesApp.Wpf.ViewModels
 
             // Notifikasi sambutan cukup SEKALI seumur pemasangan — sekaligus menandakan
             // lonceng notifikasi aktif di status bar.
-            KirimPemberitahuanSambutan(_sambutanStore, _notifications, LoginViewModel.CurrentUserName);
+            KirimPemberitahuanSambutan(
+                _sambutanStore, _notifications, SuDesApp.Utilities.SessionContext.CurrentUser);
         }
 
         /// <summary>Pengatur tema aktif — dipakai jendela untuk menggambar ulang ikonnya

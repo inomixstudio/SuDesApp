@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
+using SuDesApp.Wpf.Mvvm;
 
 namespace SuDesApp.Wpf.Views;
 
@@ -105,7 +106,7 @@ public partial class PusatAdministrasiView : UserControl
         }
     }
 
-    private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+    private void RefreshButton_Click(object sender, RoutedEventArgs e)
     {
         if (_alamat is null)
         {
@@ -114,7 +115,8 @@ public partial class PusatAdministrasiView : UserControl
             return;
         }
 
-        await MuatAsync(_alamat.AbsoluteUri);
+        PenangananGalatUi.Jalankan(
+            () => MuatAsync(_alamat.AbsoluteUri), "Muat ulang Pusat Administrasi");
     }
 
     /// <summary>
@@ -145,9 +147,9 @@ public partial class PusatAdministrasiView : UserControl
         }
     }
 
-    private async void SaatHalamanDitutup(object sender, RoutedEventArgs e)
+    private void SaatHalamanDitutup(object sender, RoutedEventArgs e)
     {
-        await BersihkanSesiAsync();
+        PenangananGalatUi.Jalankan(BersihkanSesiAsync, "Bersihkan sesi Pusat Administrasi");
     }
 
     /// <summary>

@@ -33,7 +33,14 @@ namespace SuDesApp.Configuration
         BerkasLamaTerkunci,
 
         /// <summary>Header SQLite benar tetapi isinya tidak bisa dibaca (rusak/tidak lengkap).</summary>
-        TidakTerbaca
+        TidakTerbaca,
+
+        /// <summary>
+        /// Berkas ada tetapi tidak bisa dibuka untuk diperiksa — sedang dipakai
+        /// proses lain, terkunci, atau aksesnya ditolak. Berbeda dari database
+        /// terenkripsi: jangan menyarankan berkas kunci untuk keadaan ini.
+        /// </summary>
+        Terkunci
     }
 
     /// <summary>
@@ -79,9 +86,15 @@ namespace SuDesApp.Configuration
 
             var polos = KoneksiAbsolut(absolut);
 
+            // Header yang tidak bisa dibaca bukan berarti berkas terenkripsi:
+            // bisa jadi berkas sehat sedang dipakai proses lain. Bedakan supaya
+            // pesan "kunci tidak ditemukan" tidak menyesatkan.
+            var header = BacaHeaderSqlite(absolut);
+            if (header == null) return StatusBerkasDatabase.Terkunci;
+
             // Masih plaintext: cukup pastikan bisa dibaca. Berkas kosong dianggap
             // siap karena inisialisasi database yang akan mengisi skemanya.
-            if (HeaderMasihSqlite(absolut))
+            if (header == true)
                 return Terbaca(polos) ? StatusBerkasDatabase.Siap : StatusBerkasDatabase.TidakTerbaca;
 
             // Bukan header SQLite → database terenkripsi versi lama (atau rusak).
@@ -144,7 +157,16 @@ namespace SuDesApp.Configuration
 
             if (!File.Exists(absolut)) return polos; // database baru — dibuat saat inisialisasi
 
-            if (HeaderMasihSqlite(absolut))
+            var header = BacaHeaderSqlite(absolut);
+            if (header == null)
+                throw new IOException(
+                    "Database tidak bisa diperiksa karena berkasnya sedang dipakai proses lain atau " +
+                    "aksesnya ditolak.\n" +
+                    $"Database: {absolut}\n\n" +
+                    "Tutup aplikasi lain yang memakai database ini, lalu coba lagi. Jika masalah " +
+                    "berlanjut, periksa izin berkas atau pulihkan dari cadangan.");
+
+            if (header == true)
             {
                 if (Terbaca(polos)) return polos;
 
@@ -207,7 +229,10 @@ namespace SuDesApp.Configuration
                 PastikanSqlcipherAktif();
 
             // sqlcipher_export hanya bisa menulis ke database tujuan yang masih
-            // kosong: hapus berkas lama beserta sidecar-nya lebih dahulu.
+            // kosong: hapus berkas lama beserta sidecar-nya lebih dahulu. Handle
+            // idle dari pool bisa menahan berkas tujuan, sehingga penghapusan
+            // diam-diam gagal dan isi lama ikut tercampur ke hasil salinan.
+            SqliteConnection.ClearAllPools();
             CobaHapus(tujuan + "-wal");
             CobaHapus(tujuan + "-shm");
             CobaHapus(tujuan + "-journal");
@@ -244,7 +269,11 @@ namespace SuDesApp.Configuration
             // Hasil wajib benar-benar berbentuk seperti yang diminta. Provider tanpa
             // SQLCipher mengabaikan KEY, sehingga tanpa pemeriksaan ini salinan bisa
             // "merasa" terenkripsi padahal berkasnya terbuka (atau sebaliknya).
-            bool hasilPolos = HeaderMasihSqlite(tujuan);
+            bool? hasilPolos = BacaHeaderSqlite(tujuan);
+            if (hasilPolos == null)
+                throw new InvalidOperationException(
+                    $"Hasil penyalinan database tidak bisa diperiksa karena berkasnya terkunci: {tujuan}\n\n" +
+                    "Berkas tujuan dibuang; database sumber tidak diubah.");
             bool dimintaPolos = string.IsNullOrWhiteSpace(kunci);
 
             if (hasilPolos != dimintaPolos)
@@ -343,12 +372,21 @@ namespace SuDesApp.Configuration
             }
         }
 
-        /// <summary>True bila berkas kosong atau header awalnya adalah magic SQLite.</summary>
-        private static bool HeaderMasihSqlite(string path)
+        /// <summary>
+        /// True bila berkas kosong atau header awalnya adalah magic SQLite;
+        /// false bila header jelas bukan SQLite; null bila berkas tidak bisa
+        /// dibaca (terkunci/akses ditolak) sehingga bentuknya belum diketahui.
+        /// </summary>
+        private static bool? BacaHeaderSqlite(string path)
         {
             try
             {
-                using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                // FileShare.Delete: pemulihan/upgrade boleh mengganti berkas saat
+                // header sedang diperiksa; tanpa ini pemeriksaan bisa gagal dan
+                // database sehat dilaporkan sebagai berkas lama terkunci.
+                using var fs = new FileStream(
+                    path, FileMode.Open, FileAccess.Read,
+                    FileShare.ReadWrite | FileShare.Delete);
                 // SQLite treats an existing zero-byte file as a valid empty
                 // database; DatabaseInitializer can create its schema in it.
                 if (fs.Length == 0) return true;
@@ -361,11 +399,11 @@ namespace SuDesApp.Configuration
             }
             catch (IOException)
             {
-                return false; // biar pemeriksaan SQL berikutnya yang menilai
+                return null;
             }
             catch (UnauthorizedAccessException)
             {
-                return false;
+                return null;
             }
         }
 

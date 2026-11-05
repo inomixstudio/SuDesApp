@@ -400,11 +400,13 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 _logger.LogDebug("Loading RegisterSurat data...");
-                await Task.WhenAll(
-                    LoadJenisSuratKeComboBoxAsync(),
-                    LoadStatusKeComboBoxAsync(),
-                    LoadTahunKeComboBoxAsync()
-                );
+                // Berurutan, bukan Task.WhenAll: seluruh repositori dalam satu
+                // scope memakai instance SqliteConnection yang sama, dan
+                // Microsoft.Data.Sqlite tidak mendukung pemakaian satu koneksi
+                // secara bersamaan.
+                await LoadJenisSuratKeComboBoxAsync();
+                await LoadStatusKeComboBoxAsync();
+                await LoadTahunKeComboBoxAsync();
                 _isComboBoxInitialized = true;
                 await LoadDataSafeAsync();
                 await LoadStatusSummaryAsync();

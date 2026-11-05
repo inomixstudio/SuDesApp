@@ -53,6 +53,22 @@ namespace SuDesApp.Tests.Configuration
 
         private string Berkas(string nama) => Path.Combine(_folder, nama);
 
+        [Fact]
+        public void Berkas_yang_dipakai_eksklusif_dilaporkan_terkunci_bukan_terenkripsi()
+        {
+            var jalur = BuatDatabaseValid("terkunci.db");
+            SqliteConnection.ClearAllPools();
+
+            using var kunci = new FileStream(
+                jalur, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+            Assert.Equal(StatusBerkasDatabase.Terkunci, BerkasDatabase.Periksa(jalur));
+
+            var galat = Assert.Throws<IOException>(() =>
+                BerkasDatabase.PastikanTerbaca($"Data Source={jalur}"));
+            Assert.Contains("sedang dipakai", galat.Message);
+        }
+
         /// <summary>Buat database SQLite yang benar-benar valid dan bisa dibuka.</summary>
         private string BuatDatabaseValid(string nama)
         {
@@ -114,7 +130,12 @@ namespace SuDesApp.Tests.Configuration
         private static bool HeaderPolos(string jalur)
         {
             var header = Encoding.ASCII.GetBytes("SQLite format 3\0");
-            var isi = File.ReadAllBytes(jalur);
+            // Koneksi yang masih terbuka/pool adalah keadaan normal saat header
+            // diperiksa; mode berbagi membuat pemeriksaan tidak gagal karena itu.
+            using var fs = new FileStream(
+                jalur, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            var isi = new byte[fs.Length];
+            fs.ReadExactly(isi);
             return isi.Length >= header.Length && isi.AsSpan(0, header.Length).SequenceEqual(header);
         }
 

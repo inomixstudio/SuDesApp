@@ -290,26 +290,46 @@ namespace SuDesApp
         // Validasi dan buat path database jika belum ada
         private void ValidateDatabasePath()
         {
-            var sumber = DatabaseConnectionString.Replace("Data Source=", "").Trim();
-            var dbPath = Path.IsPathRooted(sumber)
-                ? sumber
-                : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, sumber); // Jadikan absolut
+            // Data Source dibaca lewat builder, bukan Replace("Data Source=", "").
+            // Connection string boleh memuat opsi lain (mis. Password pada database
+            // terenkripsi); Replace akan menyisipkan opsi itu ke dalam jalur dan
+            // menghasilkan folder/berkas yang salah.
+            var sumber = new SqliteConnectionStringBuilder(DatabaseConnectionString).DataSource;
+            bool sumberBerkas = ApakahSumberBerkas(sumber);
 
-            var dir = Path.GetDirectoryName(dbPath);
-            if (!string.IsNullOrEmpty(dir))
+            string dbPath;
+            if (sumberBerkas)
             {
-                if (!Directory.Exists(dir))
+                // Kanonik sejak awal: perbandingan dengan lokasi pilihan pengguna
+                // dan pemakaian Path.GetDirectoryName tidak boleh bergantung pada
+                // campuran '/' dan '\\' di appsettings.
+                dbPath = Path.GetFullPath(Path.IsPathRooted(sumber)
+                    ? sumber
+                    : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, sumber));
+
+                var dir = Path.GetDirectoryName(dbPath);
+                if (!string.IsNullOrEmpty(dir))
                 {
-                    Directory.CreateDirectory(dir); // Buat direktori
-                    _logger.LogInformation($"Direktori database dibuat: {dir}");
+                    if (!Directory.Exists(dir))
+                    {
+                        Directory.CreateDirectory(dir); // Buat direktori
+                        _logger.LogInformation($"Direktori database dibuat: {dir}");
+                    }
+                }
+                else
+                {
+                    // Jika direktori kosong, gunakan base directory
+                    dir = AppDomain.CurrentDomain.BaseDirectory;
+                    dbPath = Path.Combine(dir, Path.GetFileName(dbPath));
+                    _logger.LogInformation($"Database path di-set ke base directory: {dbPath}");
                 }
             }
             else
             {
-                // Jika direktori kosong, gunakan base directory
-                dir = AppDomain.CurrentDomain.BaseDirectory;
-                dbPath = Path.Combine(dir, Path.GetFileName(dbPath));
-                _logger.LogInformation($"Database path di-set ke base directory: {dbPath}");
+                // :memory:, file:, atau kosong — BUKAN berkas di folder aplikasi.
+                // Jangan pernah menempelkannya ke base directory: "Data Source=:memory:"
+                // akan berubah menjadi berkas bernama ":memory:".
+                dbPath = sumber;
             }
 
             DatabasePathBawaan = dbPath;
@@ -321,7 +341,7 @@ namespace SuDesApp
             // preferensi (bukan appsettings) supaya tidak hilang saat aplikasi
             // diperbarui. Sumber non-berkas (:memory:, file:) tidak pernah ditimpa
             // karena tidak punya "lokasi berkas" untuk dipindahkan.
-            if (ApakahSumberBerkas(sumber))
+            if (sumberBerkas)
             {
                 var pilihan = AppPreferenceStore.GetJalurDatabase();
                 if (pilihan != null)

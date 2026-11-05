@@ -120,5 +120,43 @@ namespace SuDesApp.Tests.Security
             Assert.Equal(penggunaAwal, SessionContext.CurrentUser);
             Assert.Equal(tegakAwal, SessionContext.PenegakanAktif);
         }
+
+        [Fact]
+        public async Task SesiSistem_Tidak_Menimpa_Peran_Global()
+        {
+            var penggunaAwal = SessionContext.CurrentUser;
+            var peranAwal = SessionContext.Peran;
+            var tegakAwal = SessionContext.PenegakanAktif;
+
+            try
+            {
+                SessionContext.SetPenegakanAktif(true);
+                SessionContext.SetIdentitas(
+                    "admin-global", "manual", "Admin Global", PeranPengguna.Administrator);
+
+                await Task.Run(() =>
+                {
+                    using var _ = SessionContext.MulaiSesiPermintaan(
+                        "operator", "Operator Desa", PeranPengguna.Operator);
+                    using var __ = SessionContext.SesiSistem();
+
+                    // Di dalam aliran, sesi sistem memang Administrator dan
+                    // boleh melakukan aksi yang butuh wewenang penuh.
+                    Assert.Equal(PeranPengguna.Administrator, SessionContext.Peran);
+                    SessionContext.Wajib(IzinAplikasi.KelolaPengguna);
+                });
+
+                // Peran global milik desktop tidak boleh ikut berubah hanya
+                // karena satu permintaan API berjalan sebagai sesi sistem.
+                Assert.Equal("admin-global", SessionContext.CurrentUser);
+                Assert.Equal(PeranPengguna.Administrator, SessionContext.Peran);
+                Assert.True(SessionContext.PenegakanAktif);
+            }
+            finally
+            {
+                SessionContext.SetIdentitas(penggunaAwal, "manual", null, peranAwal);
+                SessionContext.SetPenegakanAktif(tegakAwal);
+            }
+        }
     }
 }

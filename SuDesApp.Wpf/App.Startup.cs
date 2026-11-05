@@ -25,6 +25,12 @@ namespace SuDesApp.Wpf
 {
     public partial class App
     {
+        /// <summary>True setelah jendela utama berhasil ditampilkan.</summary>
+        private bool _startupSelesai;
+
+        /// <summary>Splash aktif, dipakai menutupnya bila startup gagal.</summary>
+        private Window? _splashStartup;
+
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -94,7 +100,27 @@ namespace SuDesApp.Wpf
                     }
                 }
                 catch { /* pencatatan/dialog galat gagal — penanganan tetap dianggap selesai */ }
+
                 args.Handled = true;
+
+                // Kegagalan sebelum jendela utama tampil bukan keadaan aman untuk
+                // dilanjutkan: splash bisa tertinggal tanpa form login/jendela utama,
+                // dan pengguna tidak punya jalan keluar selain Task Manager.
+                if (!_startupSelesai)
+                {
+                    try { _splashStartup?.Close(); }
+                    catch { /* splash mungkin belum pernah dibuat */ }
+                    Shutdown(1);
+                }
+            };
+
+            // Tugas latar yang tidak ditunggu pemanggil tidak sampai ke
+            // DispatcherUnhandledException. Tanpa penanganan ini, kegagalannya
+            // hilang tanpa jejak di error.log.
+            TaskScheduler.UnobservedTaskException += (_, args) =>
+            {
+                SuDesApp.Wpf.Services.LogGalat.Tulis("TUGAS LATAR TAK TERAMATI", args.Exception);
+                args.SetObserved();
             };
 
             // Galat dari perintah (AsyncRelayCommand) ditangani terpisah dari
@@ -135,6 +161,7 @@ namespace SuDesApp.Wpf
             var splash = new SplashStartupWindow();
             splash.Tahap("Menyiapkan aplikasi...");
             splash.Show();
+            _splashStartup = splash;
             // Beri kesempatan splash digambar lebih dulu sebelum pekerjaan berat.
             await System.Windows.Threading.Dispatcher.Yield(DispatcherPriority.Background);
 
@@ -161,9 +188,9 @@ namespace SuDesApp.Wpf
             // penjelasan yang bisa ditindaklanjuti.
             splash.Tahap("Memeriksa database...");
             fasa.Restart();
+            var appConfig = _serviceProvider.GetRequiredService<AppConfig>();
             try
             {
-                var appConfig = _serviceProvider.GetRequiredService<AppConfig>();
                 // PastikanTerbaca membuka dan membaca seluruh berkas database —
                 // CPU + I/O berat, dijalankan di thread latar supaya jendela splash
                 // tetap bergeming dan tombol minimize tidak membeku.
@@ -173,21 +200,56 @@ namespace SuDesApp.Wpf
             }
             catch (Exception ex)
             {
-                _serviceProvider.GetRequiredService<ILogger<App>>()
-                    .LogError(ex, "Gagal memeriksa database");
+                loggerStartup.LogError(ex, "Gagal memeriksa database");
 
-                // Database yang tidak bisa dibuka bukan jalan buntu. Pengguna boleh
-                // menunjuk berkas lain (hasil pemulihan cadangan, database dari
-                // komputer asal beserta kuncinya, atau database desa lain yang masih
-                // sehat) sebelum aplikasi ditutup. Pilihan disimpan di preferensi lalu
-                // aplikasi dibuka ulang — sama seperti Pengaturan Aplikasi → Database
-                // Desa, tetapi tetap bisa dicapai walaupun aplikasi belum berjalan.
-                if (!TawarkanPemulihanDatabase(ex))
+                // Setelah upgrade/pemasangan ulang, database lama bisa berada di
+                // folder instalasi lama atau berbentuk cadangan di samping database
+                // aktif. Pemulihan otomatis mencoba menyalin isinya SEBELUM dialog
+                // manual, sehingga aplikasi bisa langsung berjalan tanpa meminta
+                // pengguna mencari berkas sendiri. Berkas yang rusak dipindahkan,
+                // bukan dihapus, dan database baru dibuat bila tidak ada kandidat.
+                splash.Tahap("Memulihkan database...");
+                HasilPemulihanDatabase hasil = new(
+                    false, false, null, null, null, null);
+                try
                 {
+                    hasil = await Task.Run(() => PemulihanDatabaseOtomatis.Pulihkan(
+                        appConfig.DatabasePath,
+                        appConfig.DatabaseConnectionString,
+                        logger: loggerStartup));
+                }
+                catch (Exception galatPemulihan)
+                {
+                    loggerStartup.LogError(galatPemulihan, "Pemulihan database otomatis gagal");
+                }
+
+                if (hasil.Berhasil)
+                {
+                    appConfig.DatabaseConnectionString = hasil.ConnectionString!;
+                    loggerStartup.LogInformation(
+                        "Database siap dipakai setelah pemulihan otomatis: {Pesan}", hasil.Pesan);
+
+                    if (!string.IsNullOrWhiteSpace(hasil.Pesan))
+                    {
+                        TampilkanPesanDatabase(
+                            hasil.Pesan!,
+                            hasil.DatabaseBaru ? AppMessageIcon.Warning : AppMessageIcon.Info);
+                    }
+                }
+                else if (!TawarkanPemulihanDatabase(new InvalidOperationException(hasil.Pesan)))
+                {
+                    // Database yang tidak bisa dibuka dan tidak bisa dipulihkan bukan
+                    // jalan buntu: pengguna boleh menunjuk berkas lain (hasil pemulihan
+                    // cadangan, database dari komputer asal beserta kuncinya, atau
+                    // database desa lain yang masih sehat) sebelum aplikasi ditutup.
                     splash.Close();
                     Shutdown();
+                    return;
                 }
-                return;
+                else
+                {
+                    return;
+                }
             }
 
             // ==== Inisialisasi & migrasi database ====
@@ -287,33 +349,50 @@ namespace SuDesApp.Wpf
                     "Pemeriksaan persetujuan dokumen gagal; aplikasi dilanjutkan tanpa dialog.");
             }
 
-            var loginWindow = _serviceProvider.GetRequiredService<LoginWindow>();
+            // Seluruh jalur jendela dibungkus: bila resolusi layanan, pembacaan
+            // akun, atau pembuatan jendela gagal, aplikasi harus ditutup dengan
+            // pesan yang jelas — bukan meninggalkan splash tanpa jalan keluar.
+            MainWindow mainWindow;
+            try
+            {
+                var loginWindow = _serviceProvider.GetRequiredService<LoginWindow>();
 
-            // Pastikan akun administrator default sudah tersisipkan ke tabel
-            // Pengguna SEBELUM jendela login ditampilkan — bila belum selesai
-            // saat pengguna mengklik Login, MasukAsync tidak akan menemukannya.
-            var loginVm = _serviceProvider.GetRequiredService<LoginViewModel>();
-            await loginVm.InisialisasiAsync();
+                // Pastikan akun administrator default sudah tersisipkan ke tabel
+                // Pengguna SEBELUM jendela login ditampilkan — bila belum selesai
+                // saat pengguna mengklik Login, MasukAsync tidak akan menemukannya.
+                var loginVm = _serviceProvider.GetRequiredService<LoginViewModel>();
+                await loginVm.InisialisasiAsync();
 
-            loggerStartup.LogInformation(
-                "Startup — siap menampilkan login ({Total} ms sejak aplikasi dimulai).",
-                totalStartup.ElapsedMilliseconds);
-            splash.Close();
-            var loginResult = loginWindow.ShowDialog();
-            if (loginResult != true) { Shutdown(); return; }
+                loggerStartup.LogInformation(
+                    "Startup — siap menampilkan login ({Total} ms sejak aplikasi dimulai).",
+                    totalStartup.ElapsedMilliseconds);
+                splash.Close();
+                var loginResult = loginWindow.ShowDialog();
+                if (loginResult != true) { Shutdown(); return; }
 
-            // Izin lapisan data baru ditegakkan setelah login berhasil, saat
-            // LoginViewModel sudah menetapkan identitas dan peran sesi. Ini
-            // menjaga jalur autentikasi/startup tetap dapat bekerja, sekaligus
-            // mencegah halaman yang dibuka langsung melewati pembatasan menu.
-            SuDesApp.Utilities.SessionContext.SetPenegakanAktif(true);
+                // Izin lapisan data baru ditegakkan setelah login berhasil, saat
+                // LoginViewModel sudah menetapkan identitas dan peran sesi. Ini
+                // menjaga jalur autentikasi/startup tetap dapat bekerja, sekaligus
+                // mencegah halaman yang dibuka langsung melewati pembatasan menu.
+                SuDesApp.Utilities.SessionContext.SetPenegakanAktif(true);
 
-            fasa.Restart();
-            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-            mainWindow.Closed += (_, _) => Shutdown();
-            mainWindow.Show();
-            loggerStartup.LogInformation("Startup — jendela utama tampil ({Ms} ms setelah login).",
-                fasa.ElapsedMilliseconds);
+                fasa.Restart();
+                mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                mainWindow.Closed += (_, _) => Shutdown();
+                mainWindow.Show();
+                _startupSelesai = true;
+                loggerStartup.LogInformation("Startup — jendela utama tampil ({Ms} ms setelah login).",
+                    fasa.ElapsedMilliseconds);
+            }
+            catch (Exception ex)
+            {
+                loggerStartup.LogError(ex, "Startup gagal menampilkan login atau jendela utama");
+                try { splash.Close(); }
+                catch { /* splash mungkin sudah ditutup */ }
+                TampilkanGagalStartup(ex);
+                Shutdown(1);
+                return;
+            }
 
             // Proses ini lahir dari tombol "Simpan & Mulai Ulang Sekarang" (Database
             // Desa): penandanya sudah selesai dipakai — hapus supaya keluar-buka
@@ -531,60 +610,58 @@ namespace SuDesApp.Wpf
             // Dijalankan latar belakang dengan batas waktu; tidak pernah
             // menunda atau menggagalkan penutupan aplikasi.
             // Dapat dimatikan lewat Pengaturan Aplikasi.
-            if (AppPreferenceStore.IsBackupDriveOnExitEnabled())
-            {
-                TryBackupToDriveOnExit();
-            }
+            // Backup harian sudah dijalankan (atau dilewati) lebih awal di
+            // MainWindow_Closing, tempat UI thread bisa menunggunya secara
+            // asinkron. OnExit tidak boleh menunggu tugas apa pun: ia berjalan
+            // setelah jendela tertutup, termasuk saat Windows sedang dimatikan.
 
             if (_serviceProvider is IDisposable disposable) disposable.Dispose();
             base.OnExit(e);
         }
 
-        private void TryBackupToDriveOnExit()
+        /// <summary>
+        /// Backup harian database ke Google Drive saat aplikasi ditutup.
+        /// Dipanggil dari MainWindow_Closing dan ditunggu secara asinkron, jadi
+        /// UI thread tidak pernah memblokir menunggu unggahan selesai.
+        /// Mengembalikan true bila ada berkas yang benar-benar diunggah.
+        /// </summary>
+        public async Task<bool> JalankanBackupHarianSaatKeluarAsync(Action? saatMulai = null)
         {
             try
             {
                 var loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger("GoogleBackup");
 
+                if (!AppPreferenceStore.IsBackupDriveOnExitEnabled())
+                {
+                    logger.LogInformation("Backup Drive dilewati: pilihan backup saat keluar tidak aktif.");
+                    return false;
+                }
                 if (!ServiceProvider.GetRequiredService<GoogleDriveService>().IsOAuthEnabled)
                 {
                     logger.LogInformation("Backup Drive dilewati: OAuth belum dikonfigurasi.");
-                    return;
+                    return false;
                 }
                 if (!ServiceProvider.GetRequiredService<GoogleDriveService>().HasStoredToken())
                 {
                     logger.LogInformation("Backup Drive dilewati: belum ada akun Google yang terhubung.");
-                    return;
+                    return false;
                 }
                 if (ServiceProvider.GetRequiredService<GoogleBackupService>().IsBackupDoneToday())
                 {
                     logger.LogInformation("Backup Drive dilewati: sudah dilakukan hari ini.");
-                    return;
+                    return false;
                 }
 
+                saatMulai?.Invoke();
                 logger.LogInformation("Memulai backup harian database ke Google Drive...");
                 var backup = ServiceProvider.GetRequiredService<GoogleBackupService>();
-                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
-                // Jalankan di THREAD POOL (bukan UI thread) agar tidak ada
-                // penangkapan DispatcherSynchronizationContext — menghindari
-                // deadlock penutupan aplikasi (sinkron .GetResult() di UI thread
-                // + awaite tanpa ConfigureAwait(false) = proses hang selamanya).
-                var backupTask = Task.Run(
-                    () => ServiceProvider.GetRequiredService<GoogleBackupService>().BackupNowAsync(cts.Token),
-                    cts.Token);
-
-                // Tunggu berbatas waktu. Selama jeda ini snapshot & upload berjalan
-                // di latar belakang tanpa memblokir UI; bila melebihi batas, aplikasi
-                // TETAP menutup (tugas latar belakang dihentikan saat proses keluar).
-                if (!backupTask.Wait(TimeSpan.FromMinutes(2)))
-                {
-                    logger.LogWarning("Backup Google Drive tidak selesai dalam 2 menit — aplikasi tetap keluar.");
-                    return;
-                }
-
-                var uploaded = backupTask.GetAwaiter().GetResult();
+                // Batas 20 detik: penutupan tetap terasa cepat, tetapi unggahan
+                // yang wajar masih punya waktu. Tidak ada Wait/GetResult di UI
+                // thread — pemanggil menunggu secara asinkron.
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                var uploaded = await backup.BackupNowAsync(cts.Token).ConfigureAwait(false);
                 if (uploaded.Count > 0)
                 {
                     backup.MarkBackupDoneToday();
@@ -598,12 +675,15 @@ namespace SuDesApp.Wpf
                 {
                     logger.LogWarning("Backup harian Google Drive tidak menghasilkan berkas — penanda harian tidak diisi agar dicoba lagi.");
                 }
+
+                return true;
             }
             catch (OperationCanceledException)
             {
                 (ServiceProvider.GetRequiredService<ILoggerFactory>()
                     .CreateLogger("GoogleBackup"))
-                    .LogWarning("Backup Google Drive dibatalkan (melebihi 2 menit).");
+                    .LogWarning("Backup Google Drive dibatalkan (melebihi 20 detik).");
+                return false;
             }
             catch (Exception ex)
             {
@@ -618,6 +698,35 @@ namespace SuDesApp.Wpf
                         "Backup Otomatis Drive", "Backup harian gagal: " + ex.Message));
                 }
                 catch { /* logger pun tidak tersedia */ }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Dialog kegagalan startup dengan fallback MessageBox biasa, dipakai
+        /// ketika aplikasi harus berhenti sebelum jendela utamanya ada.
+        /// </summary>
+        private static void TampilkanGagalStartup(Exception ex)
+        {
+            const string judul = "Aplikasi tidak bisa dimulai";
+            string pesan = "Aplikasi tidak dapat menyiapkan jendela utamanya, jadi akan ditutup.\n\n" +
+                $"Rincian: {ex.Message}\n\n" +
+                "Jalankan aplikasi lagi; bila kejadian ini berulang, periksa error.log di folder aplikasi.";
+
+            try
+            {
+                SuDesApp.Wpf.Views.MessageDialogWindow.Show(
+                    judul, pesan,
+                    SuDesApp.Utilities.AppMessageButton.Ok,
+                    SuDesApp.Utilities.AppMessageIcon.Error);
+            }
+            catch
+            {
+                try
+                {
+                    MessageBox.Show(pesan, judul, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch { /* dialog darurat pun gagal — aplikasi tetap ditutup */ }
             }
         }
 

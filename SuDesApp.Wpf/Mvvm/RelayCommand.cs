@@ -55,9 +55,11 @@ namespace SuDesApp.Wpf.Mvvm
         /// <see cref="PenangkapGagal"/> bila ada. Kegagalan menulis log maupun
         /// pemanggilan penangkap tidak boleh menjadi galat baru.
         /// </summary>
-        internal static void LaporkanGagal(Exception ex)
+        internal static void LaporkanGagal(Exception ex, string? konteks = null)
         {
-            SuDesApp.Wpf.Services.LogGalat.Tulis("PERINTAH GAGAL", ex);
+            SuDesApp.Wpf.Services.LogGalat.Tulis(
+                string.IsNullOrWhiteSpace(konteks) ? "PERINTAH GAGAL" : "PERINTAH GAGAL: " + konteks,
+                ex);
 
             try
             {

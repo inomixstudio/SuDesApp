@@ -12,22 +12,22 @@ namespace SuDesApp.Wpf.Views
             InitializeComponent();
         }
 
-        private async void DataGrid_MouseDoubleClick(object? sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void DataGrid_MouseDoubleClick(object? sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (DataContext is GoogleDriveViewModel vm && vm.SelectedRow != null)
+            if (DataContext is GoogleDriveViewModel vm && vm.SelectedRow is { } baris)
             {
-                await vm.OpenItemAsync(vm.SelectedRow);
+                PenangananGalatUi.Jalankan(() => vm.OpenItemAsync(baris), "Buka item Drive");
             }
         }
 
-        private async void DataGrid_KeyDown(object sender, KeyEventArgs e)
+        private void DataGrid_KeyDown(object sender, KeyEventArgs e)
         {
-            if (DataContext is not GoogleDriveViewModel vm || vm.SelectedRow == null) return;
+            if (DataContext is not GoogleDriveViewModel vm || vm.SelectedRow is not { } baris) return;
 
             if (e.Key == Key.Enter)
             {
                 e.Handled = true;
-                await vm.OpenItemAsync(vm.SelectedRow);
+                PenangananGalatUi.Jalankan(() => vm.OpenItemAsync(baris), "Buka item Drive");
             }
             else if (e.Key == Key.Delete)
             {

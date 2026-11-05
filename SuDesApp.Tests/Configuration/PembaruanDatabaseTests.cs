@@ -93,7 +93,13 @@ public sealed class PembaruanDatabaseTests : IDisposable
     private static bool HeaderPolos(string jalur)
     {
         var header = System.Text.Encoding.ASCII.GetBytes("SQLite format 3\0");
-        var isi = File.ReadAllBytes(jalur);
+        // Baca dengan mode berbagi seperti aplikasi: koneksi SQLite yang masih
+        // hidup (atau handle idle di pool) adalah keadaan normal saat header
+        // diperiksa, bukan alasan untuk menolak membaca berkas.
+        using var fs = new FileStream(
+            jalur, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        var isi = new byte[fs.Length];
+        fs.ReadExactly(isi);
         return isi.Length >= header.Length && isi.AsSpan(0, header.Length).SequenceEqual(header);
     }
 

@@ -92,7 +92,7 @@ public sealed class LayananWebhook
         }
 
         JsonElement notif;
-        try { notif = JsonDocument.Parse(body).RootElement; }
+        try { notif = JsonElement.Parse(body); }
         catch { return Catat(400, false, false, null, "Body bukan JSON valid."); }
 
         if (!notif.TryGetProperty("order_id", out var oi) ||
