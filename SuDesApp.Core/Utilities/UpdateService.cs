@@ -175,7 +175,11 @@ namespace SuDesApp.Utilities
             if (string.IsNullOrWhiteSpace(tag)) return string.Empty;
             var trimmed = tag.Trim().TrimStart('v', 'V');
             var match = Regex.Match(trimmed, @"\d+(\.\d+)+");
-            return match.Success ? match.Value : trimmed;
+            if (!match.Success) return trimmed;
+
+            // Validasi bahwa hasil regex adalah versi yang bisa di-parse,
+            // supaya string acak seperti "1.2.3.4.5" tidak lolos sebagai versi.
+            return Version.TryParse(match.Value, out _) ? match.Value : trimmed;
         }
 
         private static string? ExtractSha256(string? digest)

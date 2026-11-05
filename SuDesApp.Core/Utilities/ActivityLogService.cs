@@ -306,7 +306,7 @@ namespace SuDesApp.Utilities
     /// tidak pernah memperlambat atau menggagalkan operasi utama — kegagalan
     /// pencatatan hanya dicatat di log, tidak pernah di-lempar ke pemanggil.
     /// </summary>
-    public class ActivityLogService
+    public class ActivityLogService : IDisposable
     {
         private const int MaxRows = 20000; // batas penyimpanan; terpangkas saat melebihi
         private readonly string _connectionString;
@@ -314,6 +314,7 @@ namespace SuDesApp.Utilities
         private readonly BlockingCollection<ActivityEntry> _queue = new(boundedCapacity: 5000);
         private readonly CancellationTokenSource _cts = new();
         private Task? _writerTask;
+        private bool _disposed;
 
         public ActivityLogService(AppConfig appConfig, ILogger<ActivityLogService> logger)
         {
@@ -327,6 +328,7 @@ namespace SuDesApp.Utilities
         /// ini no-op sehingga tidak ada penulisan ke database.</summary>
         public void Log(string jenisDokumen, string dokumen, string aksi, string? detail = null)
         {
+            if (_disposed) return;
             if (!AppPreferenceStore.IsActivityLoggingEnabled()) return;
 
             var entry = new ActivityEntry
@@ -440,6 +442,18 @@ DELETE FROM ActivityLog WHERE Id IN (
     Aksi TEXT NOT NULL,
     Detail TEXT NOT NULL)");
             await conn.ExecuteAsync("CREATE INDEX IF NOT EXISTS idx_activitylog_waktu ON ActivityLog(Waktu)");
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _queue.CompleteAdding();
+            _cts.Cancel();
+            try { _writerTask?.Wait(TimeSpan.FromSeconds(5)); }
+            catch (AggregateException) { /* pembatalan — diharapkan */ }
+            _cts.Dispose();
+            _queue.Dispose();
         }
     }
 }

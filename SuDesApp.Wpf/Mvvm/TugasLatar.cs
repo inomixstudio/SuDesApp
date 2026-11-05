@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using SuDesApp.Wpf.Services;
 
@@ -11,10 +13,23 @@ namespace SuDesApp.Wpf.Mvvm
     /// </summary>
     public static class TugasLatar
     {
+        private static readonly ConcurrentBag<Task> _tugasAktif = new();
+        private static readonly CancellationTokenSource _cts = new();
+
+        /// <summary>Token pembatalan yang dibatalkan saat aplikasi keluar.</summary>
+        public static CancellationToken Token => _cts.Token;
+
+        /// <summary>Batalkan semua tugas latar yang masih berjalan.</summary>
+        public static void BatalkanSemua()
+        {
+            _cts.Cancel();
+        }
+
         /// <summary>Jalankan tugas tanpa ditunggu; galat dicatat ke error.log.</summary>
         public static void Jalankan(Func<Task> tugas, string konteks)
         {
-            _ = JalankanAsync(tugas, konteks);
+            var task = JalankanAsync(tugas, konteks);
+            _tugasAktif.Add(task);
         }
 
         /// <summary>Versi yang bisa ditunggu — dipakai uji.</summary>

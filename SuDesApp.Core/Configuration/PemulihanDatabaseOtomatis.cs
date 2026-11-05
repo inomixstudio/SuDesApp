@@ -142,6 +142,34 @@ namespace SuDesApp.Configuration
             }
         }
 
+        /// <summary>
+        /// Tentukan tindakan lanjutan setelah pemulihan database.
+        /// </summary>
+        /// <param name="hasil">Hasil dari <see cref="Pulihkan"/>.</param>
+        /// <returns>Tindakan yang disarankan: <c>DariKandidat</c>, <c>TertundaDatabaseBaru</c>, atau <c>Gagal</c>.</returns>
+        public static LanjutPemulihan TentukanLanjutPemulihan(HasilPemulihanDatabase hasil) =>
+            hasil.Berhasil switch
+            {
+                true when hasil.DatabaseBaru => LanjutPemulihan.TertundaDatabaseBaru,
+                true => LanjutPemulihan.DariKandidat,
+                false => LanjutPemulihan.Gagal
+            };
+
+        /// <summary>
+        /// Opsi tindakan lanjutan setelah pemulihan database.
+        /// </summary>
+        public enum LanjutPemulihan
+        {
+            /// <summary>Database berhasil dipulihkan dari kandidat, siap dipakai.</summary>
+            DariKandidat,
+
+            /// <summary>Database lama dipindahkan, database baru dibuat. Perlu pesan info ke pengguna.</summary>
+            TertundaDatabaseBaru,
+
+            /// <summary>Pemulihan gagal. Butuh tangan manual atau penutupan.</summary>
+            Gagal
+        }
+
         private static HasilPemulihanDatabase PulihkanDariKandidat(
             string jalurAktif,
             string koneksiKandidat,
