@@ -595,7 +595,8 @@ namespace SuDesApp.Services
                     return KunciPublik;
                 }
             }
-            catch { /* diam — kunci opsional */ }
+            catch (IOException) { /* kunci publik opsional: berkas tidak terbaca, lanjut tanpa pin lokal */ }
+            catch (UnauthorizedAccessException) { /* kunci publik opsional: akses ditolak, lanjut tanpa pin lokal */ }
             return null;
         }
 

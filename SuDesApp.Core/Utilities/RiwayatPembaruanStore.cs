@@ -119,7 +119,9 @@ namespace SuDesApp.Utilities
         {
             lock (_kunci)
             {
-                try { if (File.Exists(Path)) File.Delete(Path); } catch { /* terbaik saja */ }
+                try { if (File.Exists(Path)) File.Delete(Path); }
+                catch (IOException) { /* riwayat bersifat informatif; berkas terkunci dibiarkan untuk percobaan berikutnya */ }
+                catch (UnauthorizedAccessException) { /* riwayat bersifat informatif; berkas tanpa izin dibiarkan */ }
             }
         }
     }

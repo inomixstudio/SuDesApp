@@ -241,7 +241,7 @@ namespace SuDesApp.Tests.UI
 
                 Assert.True(await berhasil.Task.WaitAsync(TimeSpan.FromSeconds(5)));
                 Assert.True(AkunPusat.SesiIniPusat);
-                Assert.Equal("adminpusat", LoginViewModel.CurrentUserName);
+                Assert.Equal("adminpusat", SessionContext.CurrentUser);
             }
             finally
             {

@@ -394,6 +394,9 @@ curl http://localhost:8790/sudes/api/v1/pengaturan \
 ## 8. Batas yang Belum Ditentukan
 
 - **[TENTUKAN]** HTTPS dan Reverse proxy untuk akses dari luar jaringan desa.
-- **[TENTUKAN]** Cakupan kunci API per peran pengguna aplikasi (P3-11): cakupan
-  per kunci sudah aktif, tetapi belum terikat ke peran pengguna aplikasi.
+- **[SEBAGIAN]** Cakupan kunci API per peran pengguna aplikasi (P3-11):
+  cakupan per kunci sudah aktif. Permintaan yang membawa token sesi kini
+  memakai peran pengguna dan melewati `SessionContext.Wajib`; kunci API tanpa
+  sesi tetap berjalan sebagai sesi sistem karena merupakan kanal otomatis,
+  bukan pengguna aplikasi. Pemetaan kunci ke peran pengguna belum dibuat.
 - **[TENTUKAN]** Retensi dan penghapusan data (P3-15).

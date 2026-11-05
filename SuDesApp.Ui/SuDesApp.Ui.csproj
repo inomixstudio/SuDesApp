@@ -23,11 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.14" />
     <!-- AuthenticationStateProvider, AuthorizeRouteView, [Authorize] — sesi
          login lintas platform. Paket, bukan FrameworkReference, supaya tetap
          bisa dikonsumsi proyek MAUI Android/iOS. -->
-    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.14" />
   </ItemGroup>
 
 </Project>

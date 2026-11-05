@@ -139,19 +139,23 @@ PowerShell di dalam string `PatchUpdateService`.
    lewat `publish-release.ps1`, dan `.github/workflows/release.yml` mengambil
    sertifikat dari secret. Rincian di [`TANDA-TANGAN-RILIS.md`](TANDA-TANGAN-RILIS.md).
 2. **Naikkan pemeriksaan izin ke lapis layanan sebelum API dibuka ke jaringan.**
-   Saat ini izin ditegakkan di lapis tampilan; `docs/api-desa.md` sudah mencatat
-   kebutuhan ini sebagai `[TENTUKAN]`. Aman selama API hanya mendengarkan di
-   localhost, tetapi harus diselesaikan sebelum server lisensi/administrasi
-   dipakai lintas mesin.
+   **Selesai 5 November 2026.** `SessionContext.Peran` kini menulis ke identitas
+   per-aliran, dan `SesiSistem()` tidak lagi mengubah peran global. Listener API
+   memakai identitas pengguna saat permintaan membawa token sesi; endpoint tulis
+   backend memanggil `Wajib`. API tetap mendengarkan di localhost secara bawaan,
+   dan opsi jaringan tetap memerlukan keputusan operator.
 3. **Rapikan `MainWindowViewModel` (≈1.850 baris).** **Selesai 29 Oktober 2026.**
    Kelas kini `partial`: berkas utama menyimpan state bersama dan konstruktor,
    sedangkan navigasi, perintah, dan status masing-masing punya berkas
    `MainWindowViewModel.Navigasi.cs`, `.Perintah.cs`, dan `.Status.cs`.
    Strukturnya dicatat di `SuDesApp.Wpf/ViewModels/ARCHITECTURE.md`.
-4. **Uji asap UI otomatis.** 261 uji menjangkau Core, PDF, dan ViewModel, tetapi
-   tidak ada uji yang membuka jendela WPF sungguhan. Satu uji asap (startup →
-   login → buka satu halaman → tutup) akan menangkap regresi XAML/resource yang
-   sekarang hanya terlihat saat aplikasi dijalankan manual.
+4. **Uji asap UI otomatis.** **Selesai 5 November 2026.**
+   `SuDesApp.Tests/UI/XamlAsapTests.cs` memuat kamus resource dari `App.xaml`
+   lalu membuat seluruh view ber-konstruktor tanpa parameter di thread STA. Uji
+   ini menangkap kunci resource yang hilang dan BAML yang rusak pada setiap
+   build. Alur startup → login → tutup tetap diuji terpisah lewat harness UIA
+   (`artifacts/uji-api-halaman/uji.ps1`) karena membutuhkan database, DI, dan
+   interaksi login.
 
 ## 5. Verifikasi pass ini
 
@@ -161,3 +165,32 @@ PowerShell di dalam string `PatchUpdateService`.
 - Aplikasi WPF dijalankan sungguhan: startup, layar login, sesi, dan halaman
   dokumentasi, lalu ditutup. Log menunjukkan `API desa dimatikan` saat keluar
   dan proses benar-benar berhenti — server lokal tidak tertinggal.
+
+### Verifikasi tindak lanjut 5 November 2026
+
+- `dotnet build SuDesApp.Wpf/SuDesApp.Wpf.csproj -c Debug` — berhasil,
+  0 peringatan, 0 galat.
+- 29 tes database lulus: database terenkripsi dan SQLite biasa, pembuatan
+  database baru, pemulihan lintas bentuk, serta pelepasan handle setelah
+  pemulihan.
+- 39 tes UI lulus, termasuk `XamlAsapTests` dan uji sesi/login.
+- Catatan rilis 2.10.4 memuat perubahan yang terlihat pengguna
+  (`docs/catatan-rilis-2.10.4.md`).
+
+### Penutupan temuan audit ulang 5 November 2026
+
+- `SessionContext.SesiSistem()` tidak lagi menulis `Peran` global; peran
+  Administrator sesi sistem disimpan per-aliran. Uji
+  `SesiSistem_Tidak_Menimpa_Peran_Global` menjaga sifat ini.
+- Listener API memakai `MulaiSesiPermintaan` untuk permintaan bertoken, sehingga
+  peran pengguna yang membawa token tidak berubah menjadi Administrator.
+- Berkas database yang terkunci dilaporkan sebagai `Terkunci`, bukan
+  `BerkasLamaTerkunci`; uji `Berkas_yang_dipakai_eksklusif_dilaporkan_terkunci_bukan_terenkripsi`
+  menutup diagnosa yang menyesatkan itu.
+- Uji asap XAML memuat seluruh view tanpa parameter, bukan tiga halaman saja.
+- Dua komentar catch yang masih samar (`LisensiManager`, `RiwayatPembaruanStore`)
+  diganti dengan alasan konkret.
+- `artifacts/patch.json` sudah menyebut versi 2.10.4 dan menandai bahwa artefak
+  belum dibangun; catatan rilis juga tidak lagi mengklaim aset yang belum ada.
+- Seluruh suite: **390 lulus, 0 gagal**. Build WPF dan API: **0 peringatan,
+  0 galat**.

@@ -171,6 +171,9 @@ jobs:
           $json = Get-Content -LiteralPath $jalur -Raw | ConvertFrom-Json
           $json.Lisensi.UrlServer = $env:LISENSI_URL_SERVER.Trim()
           $json.Lisensi.KunciPublik = $env:LISENSI_KUNCI_PUBLIK.Trim()
+          if ($json.Lisensi.KunciPublik -eq 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2kdidibN5Pi-EtFqaBDtKL2Jcei754ceNmKxIuE933ipLRxScBuLWgpt0WGjdzlhdZQe-CVBUwEbaT0ToCqKqg') {
+            throw 'Kunci publik lisensi masih kunci server lokal bawaan; secret LISENSI_KUNCI_PUBLIK tidak terpakai. Rilis dibatalkan.'
+          }
           ($json | ConvertTo-Json -Depth 10) | Set-Content -LiteralPath $jalur -Encoding UTF8
           Write-Host ('Lisensi:UrlServer = ' + $json.Lisensi.UrlServer)
 

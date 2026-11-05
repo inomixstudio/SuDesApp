@@ -72,7 +72,7 @@ namespace SuDesApp.Wpf.ViewModels
                     < 18 => "Selamat sore",
                     _ => "Selamat malam"
                 };
-                var nama = LoginViewModel.CurrentUserName;
+                var nama = SuDesApp.Utilities.SessionContext.CurrentUser;
                 return string.IsNullOrWhiteSpace(nama) ? waktu : $"{waktu}, {nama}";
             }
         }

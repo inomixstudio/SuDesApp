@@ -270,6 +270,12 @@ namespace SuDesApp.Configuration
                 }
             }
 
+            // Koneksi restore sudah selesai, tetapi handle idle-nya masih di pool.
+            // Handle itu menahan berkas database sehingga pemeriksaan header,
+            // pencadangan berikutnya, atau penggantian berkas gagal dengan
+            // "used by another process" — persis setelah pemulihan berhasil.
+            SqliteConnection.ClearAllPools();
+
             _logger.LogInformation(
                 "Database dipulihkan dari backup: {BackupPath}. Cadangan pra-restore: {Cadangan}",
                 backupPath, cadangan);

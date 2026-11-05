@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using SuDesApp.Data.Models;
+using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Wpf.ViewModels;
 
 namespace SuDesApp.Wpf.Views
@@ -28,32 +29,33 @@ namespace SuDesApp.Wpf.Views
         private static TemplateSuratKustom? BarisDari(object sender) =>
             (sender as FrameworkElement)?.DataContext as TemplateSuratKustom;
 
-        private async void IsiBaris_Click(object sender, RoutedEventArgs e)
+        private void IsiBaris_Click(object sender, RoutedEventArgs e)
         {
             if (Halaman is { } vm)
             {
-                await vm.BukaIsiAsync(BarisDari(sender));
+                PenangananGalatUi.Jalankan(() => vm.BukaIsiAsync(BarisDari(sender)), "Isi template");
             }
         }
 
-        private async void PratinjauBaris_Click(object sender, RoutedEventArgs e)
+        private void PratinjauBaris_Click(object sender, RoutedEventArgs e)
         {
             if (Halaman is { } vm)
             {
-                await vm.BukaPratinjauAsync(BarisDari(sender));
+                PenangananGalatUi.Jalankan(
+                    () => vm.BukaPratinjauAsync(BarisDari(sender)), "Pratinjau template");
             }
         }
 
-        private async void UbahBaris_Click(object sender, RoutedEventArgs e)
+        private void UbahBaris_Click(object sender, RoutedEventArgs e)
         {
             if (Halaman is { } vm)
             {
-                await vm.BukaUbahAsync(BarisDari(sender));
+                PenangananGalatUi.Jalankan(() => vm.BukaUbahAsync(BarisDari(sender)), "Ubah template");
             }
         }
 
         /// <summary>Klik ganda pada baris langsung membuka formulir pengisian.</summary>
-        private async void DaftarTemplate_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void DaftarTemplate_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             // Klik ganda pada tombol cepat tidak boleh ikut mengisi surat: tombol
             // sudah menangani aksinya sendiri.
@@ -61,12 +63,12 @@ namespace SuDesApp.Wpf.Views
 
             if (Halaman is { } vm)
             {
-                await vm.IsiTerpilihAsync();
+                PenangananGalatUi.Jalankan(vm.IsiTerpilihAsync, "Isi template terpilih");
             }
         }
 
         /// <summary>Enter = isi surat, F2 = ubah template, dari baris terpilih.</summary>
-        private async void DaftarTemplate_KeyDown(object sender, KeyEventArgs e)
+        private void DaftarTemplate_KeyDown(object sender, KeyEventArgs e)
         {
             if (Halaman is not { } vm) return;
 
@@ -77,12 +79,12 @@ namespace SuDesApp.Wpf.Views
                 if (CariInduk<ButtonBase>(e.OriginalSource as DependencyObject) != null) return;
 
                 e.Handled = true;
-                await vm.IsiTerpilihAsync();
+                PenangananGalatUi.Jalankan(vm.IsiTerpilihAsync, "Isi template terpilih");
             }
             else if (e.Key == Key.F2)
             {
                 e.Handled = true;
-                await vm.BukaUbahAsync(vm.Terpilih);
+                PenangananGalatUi.Jalankan(() => vm.BukaUbahAsync(vm.Terpilih), "Ubah template");
             }
         }
 

@@ -11,8 +11,8 @@
     <AssemblyName>SuDesApp</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-    <AssemblyVersion>2.10.3.0</AssemblyVersion>
-    <FileVersion>2.10.3.0</FileVersion>
+    <AssemblyVersion>2.10.4.0</AssemblyVersion>
+    <FileVersion>2.10.4.0</FileVersion>
     <!-- Identitas aplikasi: tampil di halaman Tentang (detail aplikasi) -->
     <Product>SuDesApp</Product>
     <Company>Sumberjaya Dev.</Company>
@@ -20,9 +20,12 @@
     <!-- Ikon aplikasi: file .ico multi-ukuran hasil Tools\generate-app-icon.ps1
          (vector art WPF: tile emerald + amplop + segel lilin "SD"). -->
     <ApplicationIcon>..\Resources\AppIcon.ico</ApplicationIcon>
-    <!-- TreatWarningsAsErrors untuk mencegah kode mati; nullability + legacy warnings tetap warning -->
+    <!-- TreatWarningsAsErrors untuk mencegah kode mati; hanya warning legacy yang tetap warning -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsNotAsErrors>CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8625;CS8629;CS0108;CS0618;CS0168;CS8765</WarningsNotAsErrors>
+    <!-- Peringatan nullable TIDAK dikecualikan: Nullable enable hanya berarti bila
+         CS86xx juga gagal-build. Pengecualian lama menyembunyikan dereference
+         null justru di kode UI yang paling rawan NullReference saat runtime. -->
+    <WarningsNotAsErrors>CS0108;CS0618;CS0168;CS8765</WarningsNotAsErrors>
   </PropertyGroup>
 
   <!-- Store di Wpf (ApbdesStore) punya FolderOverride internal yang
@@ -43,14 +46,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.13" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.13" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.14" />
     <!-- WebView2 hanya untuk PusatAdministrasiView (halaman langganan tertanam).
          Tidak dipakai lagi untuk PDF: pratinjau, ekstraksi teks, dan cetak PDF
          memakai library SudesPdf di atas mesin SudesPdf.Core sendiri. -->
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
   </ItemGroup>
 
   <ItemGroup>

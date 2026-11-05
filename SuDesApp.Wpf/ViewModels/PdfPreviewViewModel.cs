@@ -69,7 +69,7 @@ namespace SuDesApp.Wpf.ViewModels
             _penjaga = penjaga;
             BatalCommand = new RelayCommand(batalKembali ?? (() => _navigation.ShowDefault()));
             ExportCommand = new RelayCommand(ExportAs);
-            EditCommand = new RelayCommand(EditSurat, () => CanEdit);
+            EditCommand = new AsyncRelayCommand(EditSuratAsync, () => CanEdit);
             BukaPengaturanSuratCommand = new RelayCommand(
                 () => _navigation.ShowSetelanBagianSurat(0));
 
@@ -179,7 +179,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// Buka form edit untuk surat yang sedang dipratinjau (hanya alur Buat Surat)
         /// di content host utama (bukan modal).
         /// </summary>
-        private async void EditSurat()
+        private async Task EditSuratAsync()
         {
             if (!CanEdit || _editViewModelFactory == null || _suratId == null) return;
             try

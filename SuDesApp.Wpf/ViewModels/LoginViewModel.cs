@@ -231,8 +231,7 @@ namespace SuDesApp.Wpf.ViewModels
                     if (hasil.Berhasil && hasil.Pengguna != null)
                     {
                         var akun = hasil.Pengguna;
-                        CurrentUserName = akun.Username;
-                        SessionContext.SetIdentitas(
+                                                SessionContext.SetIdentitas(
                             akun.Username, "manual", akun.NamaTampilan, akun.Peran);
                         SessionContext.TandaiSesiPusat(false);
 
@@ -436,7 +435,6 @@ namespace SuDesApp.Wpf.ViewModels
                 return false;
             }
 
-            CurrentUserName = AkunPusat.Username;
             SessionContext.SetIdentitas(
                 AkunPusat.Username, "manual", AkunPusat.NamaTampilan, PeranPengguna.Administrator);
             SessionContext.TandaiSesiPusat(true);
@@ -473,8 +471,7 @@ namespace SuDesApp.Wpf.ViewModels
                     PeranPengguna.Administrator, password,
                     oleh: "migrasi-login.dat", dariMigrasi: true);
 
-                CurrentUserName = akun.Username;
-                SessionContext.SetIdentitas(
+                                SessionContext.SetIdentitas(
                     akun.Username, "manual", akun.NamaTampilan, akun.Peran);
                 SessionContext.TandaiSesiPusat(false);
 
@@ -507,14 +504,12 @@ namespace SuDesApp.Wpf.ViewModels
             bool pusat = akun.Pusat && AkunPusat.Namanya(akun.Username);
             if (pusat)
             {
-                CurrentUserName = akun.Username;
-                SessionContext.SetIdentitas(
+                                SessionContext.SetIdentitas(
                     akun.Username, "manual", AkunPusat.NamaTampilan, PeranPengguna.Administrator);
             }
             else
             {
-                CurrentUserName = akun.Username;
-                SessionContext.Set(akun.Username, "manual");
+                                SessionContext.Set(akun.Username, "manual");
             }
 
             SessionContext.TandaiSesiPusat(pusat);
@@ -536,7 +531,5 @@ namespace SuDesApp.Wpf.ViewModels
         private static string PesanTunggu(PembatasPercobaanLogin pembatas) =>
             $"Terlalu banyak percobaan gagal. Coba lagi dalam " +
             $"{(int)Math.Ceiling(pembatas.SisaTunggu.TotalMinutes)} menit.";
-
-        public static string CurrentUserName { get; private set; } = "Operator";
     }
 }

@@ -652,10 +652,11 @@ app.MapGet("/sudes/api/v1/permintaan", async (HttpContext ctx, string? status, C
 // hanya pembungkus HTTP berupa token sesi — tanpa Bearer token, endpoint
 // internal menjawab 401.
 //
-// Catat jujur: SessionContext (static global milik Core) TIDAK diset dari sini.
-// Audit Core selalu menerima nama pengguna eksplisit, jadi jalur ini aman
-// tanpa berbagi identitas antar-permintaan. Menegakkan izin per-permintaan
-// (SessionContext.Wajib untuk simpan surat) adalah pekerjaan tahap berikutnya.
+// Identitas per-permintaan dipasang middleware sesi di bawah (AsyncLocal),
+// sehingga SessionContext.Wajib memakai peran pengguna yang membawa token —
+// bukan peran global proses. Endpoint tulis yang mengubah data pengguna
+// memanggil Wajib(KelolaPengguna); /permintaan dan /permintaan-publik memang
+// publik (yang pertama dijaga kunci API) dan tidak mengubah data desa.
 
 // Badan POST /sesi: nama field snake_case mengikuti kontrak API desa,
 // dibaca manual (bukan inferensi minimal API) seperti endpoint permintaan.

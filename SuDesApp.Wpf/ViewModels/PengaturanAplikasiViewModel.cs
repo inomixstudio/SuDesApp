@@ -660,6 +660,13 @@ namespace SuDesApp.Wpf.ViewModels
                             "tidak lengkap. Pilihan tidak disimpan. Pilih berkas lain atau " +
                             "pulihkan dari cadangan.";
                         return Task.CompletedTask;
+
+                    case StatusBerkasDatabase.Terkunci:
+                        InfoDatabase =
+                            "Berkas database sedang dipakai proses lain atau aksesnya ditolak, " +
+                            "sehingga bentuknya belum bisa diperiksa. Pilihan tidak disimpan. " +
+                            "Tutup aplikasi lain yang memakai berkas itu lalu pilih kembali.";
+                        return Task.CompletedTask;
                 }
 
                 AppPreferenceStore.SetJalurDatabase(jalur);

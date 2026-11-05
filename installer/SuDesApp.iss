@@ -86,7 +86,7 @@ Name: "desktopicon"; Description: "Buat ikon Desktop"; GroupDescription: "Ikon:"
 ; contoh bawaan.
 Source: "..\artifacts\publish\*"; DestDir: "{app}"; \
   Flags: ignoreversion recursesubdirs createallsubdirs; \
-  Excludes: "*.pdb,Templates\*,Templates\*\*"
+  Excludes: "*.pdb,Templates\*,Templates\*\*,desa.db*,desa_backup*.db"
 
 ; Template formulir awal. Dulu berkas ini disalin lewat [Code] dari
 ; {src}\..\artifacts\publish\Templates — jalur folder BUILD yang tidak pernah
@@ -134,4 +134,121 @@ Name: "{autodesktop}\SuDesApp"; Filename: "{app}\SuDesApp.exe"; Tasks: desktopic
 
 [Run]
 Filename: "{app}\SuDesApp.exe"; Description: "Jalankan SuDesApp"; Flags: nowait postinstall skipifsilent
+
+[Code]
+var
+  FolderCadanganDatabase: String;
+  AdaDatabaseLama: Boolean;
+
+function CadangkanDatabase(Nama: String): Boolean;
+var
+  Sumber, Tujuan: String;
+begin
+  Result := True;
+  Sumber := ExpandConstant('{app}\') + Nama;
+  if not FileExists(Sumber) then Exit;
+
+  Tujuan := FolderCadanganDatabase + '\' + Nama;
+  if not CopyFile(Sumber, Tujuan, False) then
+  begin
+    Result := False;
+    MsgBox('Database desa tidak bisa dicadangkan sebelum upgrade:' + #13#10 +
+           Sumber + #13#10#13#10 +
+           'Instalasi dibatalkan agar data desa tidak hilang. Tutup aplikasi dan ' +
+           'pastikan folder aplikasi bisa ditulis, lalu jalankan installer lagi.',
+           mbError, MB_OK);
+  end;
+end;
+
+procedure PulihkanDatabase(Nama: String);
+var
+  Sumber, Tujuan: String;
+begin
+  Sumber := FolderCadanganDatabase + '\' + Nama;
+  Tujuan := ExpandConstant('{app}\') + Nama;
+
+  // Jangan menimpa berkas yang masih ada: uninstaller versi lama memang tidak
+  // menghapus database, jadi berkas asli adalah sumber yang paling baru.
+  if FileExists(Sumber) and not FileExists(Tujuan) then
+  begin
+    if not CopyFile(Sumber, Tujuan, False) then
+      MsgBox('Cadangan database tidak bisa dipulihkan:' + #13#10 +
+             Tujuan + #13#10#13#10 +
+             'Cadangan masih ada di:' + #13#10 + Sumber + #13#10#13#10 +
+             'Salin berkas itu ke folder aplikasi sebelum membuka SuDesApp.',
+             mbError, MB_OK);
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  Uninstaller: String;
+  Hasil: Integer;
+  Percobaan: Integer;
+begin
+  if CurStep <> ssInstall then Exit;
+
+  FolderCadanganDatabase := ExpandConstant('{tmp}\SuDesApp-database-lama');
+  ForceDirectories(FolderCadanganDatabase);
+
+  AdaDatabaseLama := FileExists(ExpandConstant('{app}\desa.db'));
+  if AdaDatabaseLama then
+  begin
+    if not CadangkanDatabase('desa.db') then Abort;
+    if not CadangkanDatabase('desa.db-wal') then Abort;
+    if not CadangkanDatabase('desa.db-shm') then Abort;
+    if not CadangkanDatabase('desa.db-journal') then Abort;
+  end;
+
+  // Jalankan uninstaller versi lama secara senyap. Inno Setup tidak otomatis
+  // mencopot versi yang sudah ada dengan AppId yang sama; tanpa langkah ini
+  // berkas program lama yang sudah tidak dipakai tetap tertinggal. Uninstaller
+  // tidak menghapus desa.db, Templates, atau hasil PDF pengguna.
+  Uninstaller := ExpandConstant('{app}\unins000.exe');
+  if FileExists(Uninstaller) then
+  begin
+    if not Exec(Uninstaller, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '',
+                SW_HIDE, ewWaitUntilTerminated, Hasil) then
+    begin
+      MsgBox('Uninstaller versi lama tidak bisa dijalankan. Instalasi dibatalkan ' +
+             'agar berkas program tidak bercampur.', mbError, MB_OK);
+      Abort;
+    end;
+
+    // Uninstaller Inno menyalin dirinya ke folder sementara lalu keluar lebih
+    // dulu; proses salinan itu masih bekerja. Tunggu sampai berkas program lama
+    // benar-benar hilang (maksimal 60 detik) sebelum memasang berkas baru.
+    for Percobaan := 1 to 300 do
+    begin
+      if not FileExists(Uninstaller) and
+         not FileExists(ExpandConstant('{app}\SuDesApp.exe')) then Break;
+      Sleep(200);
+    end;
+
+    if FileExists(Uninstaller) or FileExists(ExpandConstant('{app}\SuDesApp.exe')) then
+    begin
+      MsgBox('Uninstaller versi lama belum selesai. Tutup jendela uninstaller yang ' +
+             'muncul, lalu jalankan installer ini lagi.', mbError, MB_OK);
+      Abort;
+    end;
+
+    if Hasil <> 0 then
+    begin
+      MsgBox('Uninstaller versi lama berhenti dengan kode ' + IntToStr(Hasil) + '.' +
+             Chr(13) + Chr(10) + Chr(13) + Chr(10) +
+             'Instalasi dibatalkan. Jalankan installer lagi; database desa sudah ' +
+             'dicadangkan dan akan dipulihkan otomatis.', mbError, MB_OK);
+      Abort;
+    end;
+  end;
+
+  ForceDirectories(ExpandConstant('{app}'));
+  if AdaDatabaseLama then
+  begin
+    PulihkanDatabase('desa.db');
+    PulihkanDatabase('desa.db-wal');
+    PulihkanDatabase('desa.db-shm');
+    PulihkanDatabase('desa.db-journal');
+  end;
+end;
 

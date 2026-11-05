@@ -1300,8 +1300,13 @@
         <Setter Property="SelectionUnit" Value="FullRow"/>
         <Setter Property="AutoGenerateColumns" Value="False"/>
         <Setter Property="IsReadOnly" Value="True"/>
-        <Setter Property="EnableRowVirtualization" Value="False"/>
-        <Setter Property="EnableColumnVirtualization" Value="False"/>
+        <!-- Virtualisasi aktif: tinggi baris sudah tetap 40 px sehingga daftar
+             besar (warga, register surat) tidak perlu membuat visual untuk semua
+             baris sekaligus. Mode Recycling membuang kontainer yang keluar layar
+             agar memori tetap datar saat menggulir. -->
+        <Setter Property="EnableRowVirtualization" Value="True"/>
+        <Setter Property="EnableColumnVirtualization" Value="True"/>
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling"/>
         <Setter Property="RowHeaderWidth" Value="0"/>
         <Setter Property="ColumnHeaderStyle" Value="{StaticResource SortableColumnHeader}"/>
         <Setter Property="RowStyle" Value="{StaticResource ModernDataGridRowStyle}"/>

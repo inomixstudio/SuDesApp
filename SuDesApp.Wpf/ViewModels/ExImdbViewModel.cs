@@ -698,9 +698,10 @@ namespace SuDesApp.Wpf.ViewModels
                 dir = Path.GetDirectoryName(_service.GetDatabasePath());
                 if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) return dir;
             }
-            catch
+            catch (Exception ex)
             {
-                // jatuh ke folder Dokumen
+                // Jatuh ke folder Dokumen; catat sebabnya agar tidak hilang.
+                _logger.LogDebug(ex, "Folder awal ekspor/impor tidak terbaca");
             }
 
             return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -852,9 +853,10 @@ namespace SuDesApp.Wpf.ViewModels
                     var berkas = new FileInfo(path);
                     if (berkas.Exists) ukuran = FormulirTemplateUkuran(berkas.Length);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ukuran hanya keterangan tambahan
+                    // Ukuran hanya keterangan tambahan; jangan gagalkan ekspor.
+                    _logger.LogDebug(ex, "Ukuran berkas cadangan tidak terbaca");
                 }
 
                 MuatCadanganTerbaru();

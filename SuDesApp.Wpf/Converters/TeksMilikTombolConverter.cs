@@ -29,7 +29,7 @@ namespace SuDesApp.Wpf.Converters
             if (values[0] is not Button) return false;
             if (values[1] is not DependencyObject asal) return false;
 
-            for (DependencyObject d = asal; d is not null; d = IndukBerikut(d))
+            for (DependencyObject? d = asal; d is not null; d = IndukBerikut(d))
             {
                 if (d is ToolTip) return false;
                 if (d is Button) return true;

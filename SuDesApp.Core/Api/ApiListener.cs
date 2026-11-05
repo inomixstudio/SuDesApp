@@ -324,11 +324,29 @@ namespace SuDesApp.Api
         {
             var endpoint = cocok.Endpoint!;
 
-            // Seluruh handler API berjalan sebagai SESI SISTEM: kunci API bukan
-            // sesi pengguna aplikasi, jadi guard izin lapisan data tidak boleh
-            // mewarisi peran operator yang sedang masuk (atau peran bawaan).
-            // Endpoint dibatasi oleh tabel cakupannya sendiri (ApiRute).
-            using var _sesiSistemApi = SessionContext.SesiSistem();
+            // Permintaan yang membawa sesi login harus berjalan sebagai pengguna
+            // itu, bukan sebagai sesi sistem: peran Operator tidak boleh otomatis
+            // mendapat wewenang Administrator hanya karena lewat API. Hanya
+            // permintaan murni kunci API (tanpa sesi) yang memakai sesi sistem.
+            var sesiPemanggil = endpoint.ButuhSesi
+                ? Sesi.Ambil(TokenSesi(ctx.Request))
+                : null;
+
+            // Token bisa kedaluwarsa di antara pemeriksaan awal dan handler.
+            // Jangan pernah jatuh kembali ke sesi sistem untuk endpoint yang
+            // menuntut sesi: itu akan memberi wewenang Administrator secara diam-diam.
+            if (endpoint.ButuhSesi && sesiPemanggil is null)
+            {
+                Tulis(ctx, 401, ApiAmplop.Gagal(
+                    ApiKodeGalat.SesiDiperlukan,
+                    "Sesi sudah berakhir. Masuk ulang lewat POST /sesi lalu kirim token baru."));
+                return new HasilJalankan { KodeHttp = 401 };
+            }
+
+            using var _identitasApi = sesiPemanggil is null
+                ? SessionContext.SesiSistem()
+                : SessionContext.MulaiSesiPermintaan(
+                    sesiPemanggil.Username, sesiPemanggil.Nama, sesiPemanggil.Peran);
 
             // Jalur yang sama bisa melayani beberapa metode (POST dan DELETE
             // /sesi), jadi kunci switch memuat metodenya juga.

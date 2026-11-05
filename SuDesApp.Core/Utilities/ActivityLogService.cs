@@ -48,7 +48,17 @@ namespace SuDesApp.Utilities
         public static string Peran
         {
             get => _aliran.Value?.Peran ?? _peran;
-            set => _peran = value;
+            set
+            {
+                // Di dalam permintaan HTTP, peran adalah milik aliran itu.
+                // Menulis _peran global dari sini membuat peran Administrator
+                // sesi sistem bocor ke UI atau permintaan lain yang berjalan
+                // bersamaan.
+                if (_aliran.Value is { } aliran)
+                    aliran.Peran = value;
+                else
+                    _peran = value;
+            }
         }
 
         private static string _peran = SuDesApp.Data.Models.PeranPengguna.Operator;
@@ -166,27 +176,39 @@ namespace SuDesApp.Utilities
         public static IDisposable SesiSistem()
         {
             var flagSebelumnya = _sesiSistem.Value;
-            var peranSebelumnya = Peran;
+            var aliranSebelumnya = _aliran.Value;
             _sesiSistem.Value = true;
-            Peran = SuDesApp.Data.Models.PeranPengguna.Administrator;
-            return new KembalikanSesiSistem(flagSebelumnya, peranSebelumnya);
+
+            // Jangan menyentuh _peran global: sesi sistem adalah identitas
+            // per-aliran, sama seperti sesi permintaan HTTP. Nilai global hanya
+            // dipakai di luar aliran (desktop WPF/MAUI).
+            _aliran.Value = new IdentitasAliran
+            {
+                User = aliranSebelumnya?.User ?? _currentUser,
+                Method = aliranSebelumnya?.Method ?? _loginMethod,
+                Nama = aliranSebelumnya?.Nama ?? _namaTampilan,
+                Peran = SuDesApp.Data.Models.PeranPengguna.Administrator,
+                Tegakkan = aliranSebelumnya?.Tegakkan ?? _penegakanAktif
+            };
+
+            return new KembalikanSesiSistem(flagSebelumnya, aliranSebelumnya);
         }
 
         private sealed class KembalikanSesiSistem : IDisposable
         {
             private readonly bool? _flagSebelumnya;
-            private readonly string _peranSebelumnya;
+            private readonly IdentitasAliran? _aliranSebelumnya;
 
-            public KembalikanSesiSistem(bool? flagSebelumnya, string peranSebelumnya)
+            public KembalikanSesiSistem(bool? flagSebelumnya, IdentitasAliran? aliranSebelumnya)
             {
                 _flagSebelumnya = flagSebelumnya;
-                _peranSebelumnya = peranSebelumnya;
+                _aliranSebelumnya = aliranSebelumnya;
             }
 
             public void Dispose()
             {
                 _sesiSistem.Value = _flagSebelumnya;
-                Peran = _peranSebelumnya;
+                _aliran.Value = _aliranSebelumnya;
             }
         }
 
@@ -203,7 +225,7 @@ namespace SuDesApp.Utilities
             public string User { get; init; } = "api";
             public string Method { get; init; } = "api";
             public string? Nama { get; init; }
-            public string Peran { get; init; } = SuDesApp.Data.Models.PeranPengguna.Operator;
+            public string Peran { get; set; } = SuDesApp.Data.Models.PeranPengguna.Operator;
             public bool Tegakkan { get; init; }
         }
 

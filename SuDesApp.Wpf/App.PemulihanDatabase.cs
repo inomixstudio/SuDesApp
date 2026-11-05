@@ -106,6 +106,13 @@ namespace SuDesApp.Wpf
                     $"Database: {jalur}\n\n" +
                     "Pilih berkas lain atau hasil pemulihan cadangan.",
 
+                StatusBerkasDatabase.Terkunci =>
+                    "Berkas database itu sedang dipakai proses lain atau aksesnya ditolak, " +
+                    "sehingga belum bisa diperiksa.\n\n" +
+                    $"Database: {jalur}\n\n" +
+                    "Tutup aplikasi lain yang memakai berkas itu, lalu pilih kembali. " +
+                    "Berkas ini bukan database terenkripsi yang kehilangan kunci.",
+
                 _ =>
                     "Berkas database itu belum ada atau bukan berkas database yang sah.\n\n" +
                     $"Database: {jalur}"

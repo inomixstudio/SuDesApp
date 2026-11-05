@@ -210,9 +210,11 @@ namespace SuDesApp.Wpf.Services
             using var paket = new SudesExPlus.ExcelPackage(new FileInfo(jalur));
             var lembar = paket.Workbook.Worksheets.FirstOrDefault(w => w.Dimension != null)
                          ?? throw new InvalidDataException("Lembar kerja Excel kosong.");
+            var dimensi = lembar.Dimension
+                         ?? throw new InvalidDataException("Lembar kerja Excel kosong.");
 
-            int barisAkhir = lembar.Dimension.End.Row;
-            int kolomAkhir = lembar.Dimension.End.Column;
+            int barisAkhir = dimensi.End.Row;
+            int kolomAkhir = dimensi.End.Column;
             if (barisAkhir > 10_000) barisAkhir = 10_000;
             if (kolomAkhir > 40) kolomAkhir = 40;
 
