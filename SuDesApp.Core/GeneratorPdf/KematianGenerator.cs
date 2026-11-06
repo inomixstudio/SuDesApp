@@ -36,11 +36,11 @@ namespace SuDesApp.GeneratorPdf
             var wargaAlmarhum = suratData.Warga ?? new WargaData();
             var kematianDetail = suratData.Kematian ?? new KematianData();
 
-            // --- Kotak kode formulir di kanan atas ---
-            halaman.Blok(container => container.PaddingBottom(10f).AlignRight().Width(80f)
+            // --- Kotak kode formulir di kanan atas (text box ala formulir F-2.17) ---
+            halaman.Blok(container => container.PaddingBottom(10f).AlignRight().Width(LebarKotakKode)
                 .Border(0.75f).BorderColor(Colors.Black).Padding(3f)
                 .AlignMiddle()
-                .Text(KODE_FORMULIR_KEMATIAN).FontSize(9f).AlignCenter());
+                .Text(KODE_FORMULIR_KEMATIAN).FontSize(DEFAULT_FONT_SIZE_KEMATIAN).Bold().AlignCenter());
 
             // --- Identitas desa berlabel ---
             halaman.Blok(container => container.Column(baris =>
@@ -59,9 +59,8 @@ namespace SuDesApp.GeneratorPdf
             {
                 judul.Item().AlignCenter()
                     .Text(JudulSurat)
-                    .FontSize(TITLE_FONT_SIZE + 1)
-                    .Bold()
-                    .Underline();
+                    .FontSize(TITLE_FONT_SIZE)
+                    .Bold();
                 judul.Item().PaddingTop(1f).PaddingBottom(15f).AlignCenter()
                     .Text(nomorTampil)
                     .FontSize(DEFAULT_FONT_SIZE)
@@ -80,7 +79,7 @@ namespace SuDesApp.GeneratorPdf
                 ("Agama", wargaAlmarhum.Agama),
                 ("Umur", umurAlmarhumDisplay),
                 ("Pekerjaan", wargaAlmarhum.Pekerjaan),
-                ("Alamat", AlamatFormatter.Format(wargaAlmarhum))
+                ("Alamat", AlamatFormulir(wargaAlmarhum.Dusun, wargaAlmarhum.Desa, wargaAlmarhum.Kecamatan, wargaAlmarhum.RT, wargaAlmarhum.RW))
             }));
 
             halaman.Paragraf("Telah meninggal dunia pada :", jarakAtas: 8, jarakBawah: 3);
@@ -94,7 +93,7 @@ namespace SuDesApp.GeneratorPdf
 
             halaman.Paragraf("Surat keterangan ini dibuat berdasarkan Keterangan Pelapor :", jarakAtas: 12, jarakBawah: 3);
 
-            halaman.Paragraf("PELAPOR", tebal: true, indentKiri: 20, jarakBawah: 2);
+            halaman.Paragraf("PELAPOR", tebal: true, jarakBawah: 2);
 
             string umurPelaporDisplay = HitungUmurPadaTanggal(kematianDetail.UmurPelapor!, suratData.TanggalSurat.ToString(DateFormatDb), "Tanggal Lahir Pelapor", "Tanggal Surat");
 
@@ -104,15 +103,13 @@ namespace SuDesApp.GeneratorPdf
                 ("Agama", kematianDetail.AgamaPelapor),
                 ("Umur", umurPelaporDisplay),
                 ("Pekerjaan", kematianDetail.PekerjaanPelapor),
-                ("Alamat", string.IsNullOrWhiteSpace(kematianDetail.AlamatPelapor) ? "[Alamat Pelapor]" : kematianDetail.AlamatPelapor)
+                ("Alamat", AlamatPelaporFormulir(kematianDetail.AlamatPelapor))
             }));
 
             if (!string.IsNullOrWhiteSpace(kematianDetail.HubunganPelapor))
             {
-                halaman.Blok(container => container.Column(baris =>
-                {
-                    BarisLabelNilai(baris, "Hubungan Pelapor dengan yang Meninggal Dunia", kematianDetail.HubunganPelapor!);
-                }));
+                halaman.Paragraf($"Hubungan Pelapor dengan yang Meninggal Dunia : {kematianDetail.HubunganPelapor}",
+                    jarakAtas: 8, jarakBawah: 3);
             }
 
             // --- Kaki surat gaya formulir: hanya blok pejabat desa/kelurahan ---
@@ -131,8 +128,8 @@ namespace SuDesApp.GeneratorPdf
             {
                 table.ColumnsDefinition(cols =>
                 {
-                    cols.RelativeColumn(60);
-                    cols.RelativeColumn(40);
+                    cols.RelativeColumn(50);
+                    cols.RelativeColumn(50);
                 });
 
                 table.Cell().Text(string.Empty);
@@ -143,7 +140,7 @@ namespace SuDesApp.GeneratorPdf
                     // sesuai bentuk tanda tangan surat dinas.
                     kolom.Item().Element(c => SuratRenderer.Teks(c, $"{namaDesa}, {tanggalTerformat}", rata: Rata.Tengah));
                     kolom.Item().Element(c => SuratRenderer.Teks(c, jabatanKades, rata: Rata.Tengah));
-                    kolom.Item().Height(60);
+                    kolom.Item().Height(45);
                     kolom.Item().Element(c => SuratRenderer.Teks(c, namaKades, tebal: true, rata: Rata.Tengah));
                     if (!string.IsNullOrWhiteSpace(nipKades))
                     {
@@ -170,12 +167,18 @@ namespace SuDesApp.GeneratorPdf
 
         private const float DEFAULT_FONT_SIZE_KEMATIAN = 12f;
 
-        /// <summary>Blok data berlabel: label 35%, titik dua 3%, nilai 62%, menjorok 20pt.</summary>
+        /// <summary>Lebar kotak "Kode : F-2.17" mengikuti formulir (sekitar 3,15 cm).</summary>
+        private const float LebarKotakKode = 89f;
+
+        /// <summary>Pengisi bila suatu isian kosong, seperti titik-titik pada formulir.</summary>
+        private const string TitikIsian = "...............................";
+
+        /// <summary>Blok data berlabel: label 35%, titik dua 3%, nilai 62% — mulai di margin.</summary>
         private static void TabelData(IContainer container, List<(string Label, string? Value)> items)
         {
             if (!items.Any()) return;
 
-            container.PaddingLeft(20f).Table(table =>
+            container.Table(table =>
             {
                 table.ColumnsDefinition(cols =>
                 {
@@ -188,7 +191,7 @@ namespace SuDesApp.GeneratorPdf
                 {
                     SelData(table.Cell(), item.Label ?? string.Empty);
                     SelData(table.Cell(), ":");
-                    SelData(table.Cell(), string.IsNullOrWhiteSpace(item.Value) ? "..............................." : item.Value);
+                    SelData(table.Cell(), string.IsNullOrWhiteSpace(item.Value) ? TitikIsian : item.Value);
                 }
             });
         }
@@ -196,12 +199,66 @@ namespace SuDesApp.GeneratorPdf
         private static void SelData(IContainer cell, string teks)
             => cell.Text(teks ?? string.Empty).FontSize(DEFAULT_FONT_SIZE_KEMATIAN).LineHeight(LeadingData / DEFAULT_FONT_SIZE_KEMATIAN);
 
-        private static void SelHubungan(IContainer cell, string teks)
-            => cell.Text(teks ?? string.Empty).FontSize(DEFAULT_FONT_SIZE_KEMATIAN).LineHeight(LeadingData / DEFAULT_FONT_SIZE_KEMATIAN);
+        /// <summary>
+        /// Baris "Alamat" tiga baris mengikuti formulir F-2.17: Dusun (beserta
+        /// RT/RW), lalu Desa dan Kecamatan — ketiganya menjorok ke kolom nilai
+        /// yang sama seperti pada formulir.
+        /// </summary>
+        private static string? AlamatFormulir(string? dusun, string? desa, string? kecamatan, string? rt, string? rw)
+        {
+            bool kosong = string.IsNullOrWhiteSpace(dusun) && string.IsNullOrWhiteSpace(desa) &&
+                          string.IsNullOrWhiteSpace(kecamatan) && string.IsNullOrWhiteSpace(rt) &&
+                          string.IsNullOrWhiteSpace(rw);
+            if (kosong) return null;
+
+            return $"Dusun : {GabungDusunRtRw(dusun, rt, rw)}\n" +
+                   $"Desa : {AtauTitik(desa)}\n" +
+                   $"Kecamatan : {AtauTitik(kecamatan)}";
+        }
+
+        /// <summary>
+        /// Alamat pelapor di basis data tersimpan sebagai satu rangkaian
+        /// "{dusun} Desa {desa} Kec. {kec} Kab. {kab}" (lih. KematianInputViewModel).
+        /// Dipisah kembali supaya tata letaknya sama dengan blok alamat almarhum.
+        /// </summary>
+        private static string? AlamatPelaporFormulir(string? alamatLengkap)
+        {
+            if (string.IsNullOrWhiteSpace(alamatLengkap)) return null;
+
+            string[] bagian = alamatLengkap
+                .Split(new[] { "Desa", "Kec.", "Kab." }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(b => b.Trim())
+                .Where(b => b.Length > 0)
+                .ToArray();
+
+            if (bagian.Length < 3)
+            {
+                // Format tak dikenal: tampilkan apa adanya, jangan buang data.
+                return alamatLengkap;
+            }
+
+            return $"Dusun : {AtauTitik(bagian[0])}\n" +
+                   $"Desa : {AtauTitik(bagian[1])}\n" +
+                   $"Kecamatan : {AtauTitik(bagian[2])}";
+        }
+
+        /// <summary>Baris Dusun pada formulir: nilai dusun diikuti RT/RW bila ada.</summary>
+        private static string GabungDusunRtRw(string? dusun, string? rt, string? rw)
+        {
+            var bagian = new List<string>();
+            if (!string.IsNullOrWhiteSpace(dusun)) bagian.Add(dusun.Trim());
+
+            string rtRw = AlamatFormatter.FormatRtRw(rt, rw);
+            if (rtRw.Length > 0) bagian.Add(rtRw);
+
+            return bagian.Count == 0 ? TitikIsian : string.Join(" ", bagian);
+        }
+
+        private static string AtauTitik(string? nilai) => string.IsNullOrWhiteSpace(nilai) ? TitikIsian : nilai;
 
         private string FormatTanggalUntukTampilan(string? tanggalInput)
         {
-            if (string.IsNullOrWhiteSpace(tanggalInput)) return "...............................";
+            if (string.IsNullOrWhiteSpace(tanggalInput)) return TitikIsian;
             if (DateTime.TryParseExact(tanggalInput, DateFormatDb, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDb))
                 return parsedDb.ToString("dd MMMM yyyy", new CultureInfo("id-ID"));
             if (DateTime.TryParseExact(tanggalInput, DateFormatUi, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedUi))
