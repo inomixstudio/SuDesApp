@@ -174,7 +174,6 @@ namespace SuDesApp.Utilities
         public const string KeyCleanupOldExports = "cleanupOldExports";
         public const string KeyPeriksaPembaruan = "periksaPembaruan";
         public const string KeyUnduhPembaruanOtomatis = "unduhPembaruanOtomatis";
-        public const string KeyPasangOtomatisSaatKeluar = "pasangOtomatisSaatKeluar";
         public const string KeyBatasUkuranTambalanMb = "batasUkuranTambalanMb";
         public const string KeyBatasUkuranUnduhanMb = "batasUkuranUnduhanMb";
         public const string KeyStartupDiamDiam = "startupDiamDiam";
@@ -319,15 +318,6 @@ namespace SuDesApp.Utilities
         public static void SetBatasUkuranUnduhanMb(int v) => SetInt(KeyBatasUkuranUnduhanMb, v);
 
         /// <summary>
-        /// Pasang pembaruan yang sudah terunduh secara OTOMATIS saat aplikasi ditutup,
-        /// tanpa menanya pengguna (default: aktif — batal centang bila tidak diinginkan).
-        /// Pemasangan hanya terjadi bila paketnya memang sudah siap; pemilihan
-        /// "Instal saat keluar" pada notifikasi tetap diprioritaskan.
-        /// </summary>
-        public static bool IsPasangOtomatisSaatKeluar() => GetBool(KeyPasangOtomatisSaatKeluar, true);
-        public static void SetPasangOtomatisSaatKeluar(bool v) => SetBool(KeyPasangOtomatisSaatKeluar, v);
-
-        /// <summary>
         /// Batas ukuran paket pembaruan kecil yang masih boleh dipasang otomatis
         /// saat ditutup (dalam MB, default 25). Rilis dengan paket lebih besar
         /// tetap ditawarkan lewat notifikasi, tidak pernah diunduh senyap-senyap.
@@ -429,7 +419,7 @@ namespace SuDesApp.Utilities
         /// yang mematikannya saat keluar, sehingga tidak ada proses server yang
         /// tertinggal.
         /// </summary>
-        public static bool IsServerLisensiLokalAktif() => GetBool(KeyServerLisensiLokal, false);
+        public static bool IsServerLisensiLokalAktif() => GetBool(KeyServerLisensiLokal, true);
 
         public static void SetServerLisensiLokalAktif(bool v) => SetBool(KeyServerLisensiLokal, v);
 

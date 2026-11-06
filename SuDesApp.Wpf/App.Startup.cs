@@ -623,14 +623,52 @@ namespace SuDesApp.Wpf
             // Timer deteksi data IDM tahun baru juga cukup sampai di sini.
             try { _serviceProvider?.GetService<Wpf.Services.PemantauIdmBaru>()?.Berhenti(); }
             catch { /* layanan mungkin belum dibuat */ }
+            // Pemasangan pembaruan yang dipilih pengguna ("Instal Saat Keluar")
+            // dijadwalkan di sini, setelah jendela utama tertutup. Proses pemasang
+            // (tambalan atau installer) berjalan sebagai proses terpisah, jadi
+            // tetap hidup setelah aplikasi keluar.
+            IServiceProvider penyedia = _serviceProvider!;
+            SuDesApp.Wpf.Services.PembaruanLatarService? pembaruan = null;
+            try
+            {
+                pembaruan = penyedia.GetService<SuDesApp.Wpf.Services.PembaruanLatarService>();
+                pembaruan?.SiapkanPemasanganSaatKeluar();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    penyedia.GetRequiredService<ILogger<App>>()
+                        .LogWarning(ex, "Gagal menjadwalkan pemasangan pembaruan saat aplikasi keluar.");
+                }
+                catch { /* proses tetap harus ditutup */ }
+            }
+
             // Backup harian database ke Google Drive saat aplikasi ditutup.
-            // Dijalankan latar belakang dengan batas waktu; tidak pernah
-            // menunda atau menggagalkan penutupan aplikasi.
-            // Dapat dimatikan lewat Pengaturan Aplikasi.
-            // Backup harian sudah dijalankan (atau dilewati) lebih awal di
-            // MainWindow_Closing, tempat UI thread bisa menunggunya secara
-            // asinkron. OnExit tidak boleh menunggu tugas apa pun: ia berjalan
-            // setelah jendela tertutup, termasuk saat Windows sedang dimatikan.
+            // Dapat dimatikan lewat Pengaturan Aplikasi. Dijalankan di sini, setelah
+            // jendela tertutup, dengan batas 20 detik (CTS di dalam metode) supaya
+            // unggahan sempat selesai sebelum proses berakhir. Bila aplikasi sedang
+            // menutup untuk memasang pembaruan, backup dilewati agar pemasangan
+            // tidak tertunda.
+            if (pembaruan?.PemasanganDijadwalkan != true)
+            {
+                try
+                {
+                    JalankanBackupHarianSaatKeluarAsync()
+                        .WaitAsync(TimeSpan.FromSeconds(20))
+                        .GetAwaiter()
+                        .GetResult();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        penyedia.GetRequiredService<ILogger<App>>()
+                            .LogWarning(ex, "Backup harian Google Drive saat aplikasi keluar tidak selesai.");
+                    }
+                    catch { /* proses tetap harus ditutup */ }
+                }
+            }
 
             if (_serviceProvider is IDisposable disposable) disposable.Dispose();
             base.OnExit(e);
@@ -638,9 +676,9 @@ namespace SuDesApp.Wpf
 
         /// <summary>
         /// Backup harian database ke Google Drive saat aplikasi ditutup.
-        /// Dipanggil dari MainWindow_Closing dan ditunggu secara asinkron, jadi
-        /// UI thread tidak pernah memblokir menunggu unggahan selesai.
-        /// Mengembalikan true bila ada berkas yang benar-benar diunggah.
+        /// Dipanggil dari <c>App.OnExit</c> dan ditunggu dengan batas 20 detik,
+        /// jadi unggahan sempat selesai sebelum proses berakhir. Mengembalikan
+        /// true bila ada berkas yang benar-benar diunggah.
         /// </summary>
         public async Task<bool> JalankanBackupHarianSaatKeluarAsync(Action? saatMulai = null)
         {

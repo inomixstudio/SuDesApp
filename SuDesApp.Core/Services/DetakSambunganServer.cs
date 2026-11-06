@@ -70,7 +70,7 @@ namespace SuDesApp.Services
             {
                 if (_berhenti == null) return;
                 try { _berhenti.Cancel(); } catch { /* loop sudah selesai dan membuang CTS */ }
-                _berhenti.Dispose();
+                try { _berhenti.Dispose(); } catch { /* sudah dibuang */ }
                 _berhenti = null;
                 _tugas = null;
             }
@@ -122,25 +122,37 @@ namespace SuDesApp.Services
 
         private async Task JalankanAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                try
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    await CekSekaliAsync(cancellationToken).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
+                    try
+                    {
+                        await CekSekaliAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
 
-                try
-                {
-                    await Task.Delay(Jeda(_sambungan.Sekarang), cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        await Task.Delay(Jeda(_sambungan.Sekarang), cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
                 }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // CTS dibuang oleh pemanggil (Berhenti) — keluar tanpa error.
+                return;
             }
         }
     }

@@ -297,9 +297,6 @@ namespace SuDesApp.Wpf
         /// <summary>Benar bila penutupan final sedang berlangsung (alur penundaan tidak boleh jalan lagi).</summary>
         private bool _keluarFinal;
 
-        /// <summary>Benar bila backup harian saat keluar sudah dicoba pada penutupan ini.</summary>
-        private bool _cadanganKeluarDicoba;
-
         /// <summary>
         /// Penutupan yang DISengaja oleh tombol "Simpan &amp; Mulai Ulang Sekarang"
         /// (Pengaturan Aplikasi → Database Desa): lewati dialog "Yakin ingin keluar?"
@@ -342,81 +339,11 @@ namespace SuDesApp.Wpf
                 return;
             }
 
-            // Pembaruan yang SUDAH terunduh di latar belakang: bila pengguna
-            // memilih "Instal Saat Keluar" (atau setelan pasang otomatis pembaruan
-            // kecil aktif), pemasangan dijadwalkan lebih dulu, lalu penutupan
-            // dilanjutkan segera — tidak ada pemeriksaan/unduhan baru yang menunda
-            // keluar.
-            if (_viewModel.PembaruanLatar.SiapkanPemasanganSaatKeluar())
-            {
-                e.Cancel = true;
-                _ = TutupSetelahPemasanganAsync();
-                return;
-            }
-
-            // Backup harian ditunggu secara asinkron SEBELUM jendela benar-benar
-            // ditutup. Dulu penantian ini terjadi di OnExit dan memblokir UI thread
-            // sampai dua menit — jendela tampak hang saat pengguna keluar.
-            if (!_cadanganKeluarDicoba)
-            {
-                _cadanganKeluarDicoba = true;
-                e.Cancel = true;
-                TugasLatar.Jalankan(TutupSetelahCadanganAsync, "Cadangan saat keluar");
-                return;
-            }
-
             // Tutup semua scope DI yang dipegang MainWindowViewModel (terutama
             // scope "bertahan" untuk ViewModel berumur sesi). Tanpa ini handle
             // SQLite native tetap tertahan sampai proses mati, dan timer terus
             // berdetak pada ViewModel yang sudah tidak terlihat.
             (DataContext as ViewModels.MainWindowViewModel)?.Dispose();
-        }
-
-        /// <summary>
-        /// Penutupan setelah pemasangan dijadwalkan: tunjukkan fase terakhir di chip
-        /// status bar sebentar, lalu tutup tanpa dialog. Skrip pemasang menunggu proses
-        /// ini benar-benar berakhir sebelum mengganti berkas.
-        /// </summary>
-        private async Task TutupSetelahPemasanganAsync()
-        {
-            try
-            {
-                TampilkanIndikatorPembaruan("Memasang pembaruan — menutup aplikasi…");
-                await Task.Delay(800);
-            }
-            catch
-            {
-                // Apa pun yang terjadi, penutupan tetap dilanjutkan.
-            }
-            finally
-            {
-                TutupFinal();
-            }
-        }
-
-        /// <summary>
-        /// Jalankan backup harian (bila diaktifkan dan belum dikerjakan hari ini),
-        /// lalu tutup jendela. Berjalan asinkron: UI thread tetap responsif dan
-        /// penantian unggahan tidak lagi terjadi di OnExit.
-        /// </summary>
-        private async Task TutupSetelahCadanganAsync()
-        {
-            try
-            {
-                if (Application.Current is App app)
-                {
-                    await app.JalankanBackupHarianSaatKeluarAsync(
-                        () => TampilkanIndikatorPembaruan("Mencadangkan database…"));
-                }
-            }
-            catch (Exception ex)
-            {
-                LogGalat.Tulis("BACKUP SAAT KELUAR", ex);
-            }
-            finally
-            {
-                TutupFinal();
-            }
         }
 
         /// <summary>Tampilkan chip indikator status bar pada fase yang diberikan.</summary>

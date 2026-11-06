@@ -155,7 +155,7 @@ namespace SuDesApp.Wpf
                 var layanan = _serviceProvider?.GetService<NotificationService>();
                 if (layanan is null) return;
 
-                App.Current?.Dispatcher.Invoke(() => kirim(layanan));
+                App.Current?.Dispatcher.InvokeAsync(() => kirim(layanan));
             }
             catch { /* aplikasi sedang menutup */ }
         }

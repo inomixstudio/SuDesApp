@@ -88,6 +88,16 @@ namespace SuDesApp.Wpf.Services
         }
 
         /// <summary>
+        /// Benar bila pemasangan pembaruan sudah dijadwalkan pada sesi ini —
+        /// aplikasi akan menutup untuk memasang, jadi pekerjaan lain saat keluar
+        /// (mis. backup harian) tidak perlu dijalankan.
+        /// </summary>
+        public bool PemasanganDijadwalkan
+        {
+            get { lock (_kunci) return _pemasanganDijadwalkan; }
+        }
+
+        /// <summary>
         /// Jalankan pemeriksaan + unduhan latar satu kali. Aman dipanggil berkali-kali:
         /// panggilan berikutnya tidak memulai pekerjaan kedua.
         /// </summary>
@@ -282,30 +292,17 @@ namespace SuDesApp.Wpf.Services
         }
 
         /// <summary>
-        /// Dipanggil saat jendela utama hendak ditutup. Mengembalikan <c>true</c> bila
-        /// pemasangan sudah dijadwalkan (pemanggil harus menutup aplikasi), atau
-        /// <c>false</c> bila keluar boleh langsung berjalan seperti biasa.
+        /// Dipanggil dari <c>App.OnExit</c> setelah jendela utama tertutup.
+        /// Mengembalikan <c>true</c> bila pemasangan baru dijadwalkan (proses
+        /// pemasang eksternal yang menjalankannya), atau <c>false</c> bila tak ada
+        /// pilihan "Instal Saat Keluar" yang perlu ditindaklanjuti.
         /// </summary>
         public bool SiapkanPemasanganSaatKeluar()
         {
-            bool siap;
-            bool adaTambalan;
-            bool dipilih;
             lock (_kunci)
             {
-                adaTambalan = _tambalanSiap != null;
-                siap = adaTambalan || !string.IsNullOrWhiteSpace(_jalurInstaller);
-                dipilih = _pasangSaatKeluar;
-            }
-
-            if (!siap) return false;
-
-            if (!dipilih)
-            {
-                // Setelan lama ("pasang otomatis saat ditutup") hanya berlaku untuk
-                // pembaruan kecil — itulah janjinya sejak awal. Installer penuh hanya
-                // berjalan saat pengguna benar-benar memilih "Instal Saat Keluar".
-                if (!adaTambalan || !AppPreferenceStore.IsPasangOtomatisSaatKeluar()) return false;
+                if (!_pasangSaatKeluar) return false;
+                if (_tambalanSiap == null && string.IsNullOrWhiteSpace(_jalurInstaller)) return false;
             }
 
             return JadwalkanPemasangan();
@@ -574,8 +571,8 @@ namespace SuDesApp.Wpf.Services
 
         public void Dispose()
         {
-            _cts.Cancel();
-            _cts.Dispose();
+            try { _cts.Cancel(); } catch { /* sudah dibatalkan/dibuang */ }
+            try { _cts.Dispose(); } catch { /* sudah dibuang */ }
         }
     }
 }
