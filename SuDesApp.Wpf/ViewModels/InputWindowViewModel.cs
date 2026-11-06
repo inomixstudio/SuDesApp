@@ -404,6 +404,7 @@ namespace SuDesApp.Wpf.ViewModels
                 // tidak meninggalkan bekas pada data. Cakupannya AsyncLocal, jadi
                 // jalur simpan/cetak tidak terpengaruh.
                 string? path;
+                string? penyebabPratinjau = null;
                 using (PratinjauIsian.Pakai())
                 {
                     // Mode Draft: isian yang belum lengkap dibiarkan apa adanya — justru
@@ -415,8 +416,10 @@ namespace SuDesApp.Wpf.ViewModels
                     {
                         // Selama pembuatan PDF, kolom kosong tercetak sebagai
                         // titik-titik sehingga kerangka surat tetap tampil utuh.
-                        path = await SuratPdfHelper.GeneratePdfAsync(
+                        var hasilPdf = await SuratPdfHelper.GeneratePdfAsync(
                             _serviceProvider, _appConfig, suratData, _logger, _templateName);
+                        path = hasilPdf.Jalur;
+                        penyebabPratinjau = hasilPdf.PesanGalat;
                     }
                     catch (Exception ex)
                     {
@@ -430,12 +433,10 @@ namespace SuDesApp.Wpf.ViewModels
 
                 if (path == null)
                 {
-                    // SuratPdfHelper menelan galat dan mengembalikan null — bisa karena
-                    // jenis ini belum punya generator, bisa karena pembuatannya gagal.
                     Pesan.Peringatan("Pratinjau belum tersedia",
-                        $"Dokumen contoh untuk jenis {_templateName} belum bisa dibuat "
-                        + "(pembuat dokumennya belum ada atau terjadi galat saat membuatnya). "
-                        + "Detailnya ada di error.log; isian tetap bisa disimpan seperti biasa.",
+                        $"Dokumen contoh untuk jenis {_templateName} belum bisa dibuat. "
+                        + $"Penyebabnya: {penyebabPratinjau} "
+                        + "Isian tetap bisa disimpan seperti biasa.",
                         "pratinjau-surat");
                     return;
                 }
@@ -710,16 +711,16 @@ namespace SuDesApp.Wpf.ViewModels
         {
             try
             {
-                var path = await SuratPdfHelper.GeneratePdfAsync(
+                var hasilPdf = await SuratPdfHelper.GeneratePdfAsync(
                     _serviceProvider, _appConfig, suratData, _logger, _templateName);
-                if (path == null)
+                if (!hasilPdf.Berhasil)
                 {
                     Pesan.Peringatan("Surat tersimpan, PDF gagal dibuat",
                         $"Jenis {_templateName} belum berhasil dibuatkan dokumennya. " +
-                        "Detail penyebab ada di log aplikasi (error.log).",
+                        $"Penyebabnya: {hasilPdf.PesanGalat}",
                         "pdf-surat");
                 }
-                return path;
+                return hasilPdf.Jalur;
             }
             catch (Exception ex)
             {

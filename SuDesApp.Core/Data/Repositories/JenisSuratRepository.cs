@@ -510,11 +510,16 @@ namespace SuDesApp.Data.Repositories
                     INNER JOIN JenisSurat js ON s.ID_Jenis = js.ID_Jenis
                     WHERE js.NamaJenis IN ({inClause})
                       AND s.NomorSurat LIKE @Prefix || '/%'
+                      AND SUBSTR(TRIM(s.NomorSurat), 1, LENGTH(@Awalan)) = @Awalan
                       AND LENGTH(TRIM(s.NomorSurat)) > 0";
 
                 var dynamicParams = new DynamicParameters();
                 var prefix = SuDesApp.Services.PenomoranSuratService.AmbilAwalan(config.NomorFormat);
                 dynamicParams.Add("@Prefix", prefix);
+                // LIKE menganggap "_" sebagai "sembarang satu karakter"; awalan
+                // nomor boleh memuat "_" (lihat PenomoranSuratService.AwalanValid),
+                // jadi kecocokan awalan dibatasi lagi dengan SUBSTR yang eksak.
+                dynamicParams.Add("@Awalan", prefix);
 
                 for (int i = 0; i < filterList.Count; i++)
                 {

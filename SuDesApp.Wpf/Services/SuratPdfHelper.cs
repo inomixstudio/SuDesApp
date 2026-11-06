@@ -10,6 +10,19 @@ using SuDesApp.GeneratorPdf;
 namespace SuDesApp.Wpf.Services
 {
     /// <summary>
+    /// Hasil pembuatan PDF surat: jalur berkas bila berhasil, atau penyebab
+    /// kegagalan yang bisa ditampilkan ke operator. Memisahkan keduanya
+    /// supaya kegagalan tidak hanya terlihat di log aplikasi.
+    /// </summary>
+    public sealed record HasilPdf(string? Jalur, string? PesanGalat)
+    {
+        public bool Berhasil => !string.IsNullOrWhiteSpace(Jalur);
+
+        public static HasilPdf Sukses(string jalur) => new(jalur, null);
+        public static HasilPdf Gagal(string pesan) => new(null, pesan);
+    }
+
+    /// <summary>
     /// Helper pembuatan PDF surat — resolver generator per jenis + penulisan file
     /// sementara. Dipakai alur input surat dan pembukaan surat dari register
     /// (setara SuratManager.HasilkanSuratAsync pada WinForms).
@@ -64,7 +77,7 @@ namespace SuDesApp.Wpf.Services
             };
         }
 
-        public static async Task<string?> GeneratePdfAsync(
+        public static async Task<HasilPdf> GeneratePdfAsync(
             IServiceProvider services,
             AppConfig appConfig,
             SuratData suratData,
@@ -74,7 +87,7 @@ namespace SuDesApp.Wpf.Services
             try
             {
                 if (suratData == null || string.IsNullOrWhiteSpace(templateName))
-                    return null;
+                    return HasilPdf.Gagal("Data surat atau nama template kosong.");
 
                 // Permohonan rekening koran memakai generator sendiri (bukan
                 // SuratGeneratorBase) dan isinya dibaca kembali dari payload surat.
@@ -97,7 +110,7 @@ namespace SuDesApp.Wpf.Services
                 if (generator == null)
                 {
                     logger.LogWarning("Generator untuk {Template} belum didaftarkan; PDF dilewati.", templateName);
-                    return null;
+                    return HasilPdf.Gagal($"Generator untuk jenis surat '{templateName}' belum terdaftar.");
                 }
 
                 var safeNomor = new string((suratData.NomorSurat ?? "NO")
@@ -105,15 +118,16 @@ namespace SuDesApp.Wpf.Services
                     .ToArray());
                 string path = Path.Combine(appConfig.TempPdfFolder,
                     $"{suratData.NamaJenis}_{safeNomor}_{suratData.ID_Surat}.pdf");
-                return await SimpanAsync(
+                string dipakai = await SimpanAsync(
                     path,
                     stream => generator.GeneratePdfAsync(stream, suratData, suratData.Keterangan!),
                     logger);
+                return HasilPdf.Sukses(dipakai);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Gagal membuat PDF untuk surat #{Id}", suratData?.ID_Surat);
-                return null;
+                return HasilPdf.Gagal(ex.Message);
             }
         }
 
@@ -122,7 +136,7 @@ namespace SuDesApp.Wpf.Services
         /// isi surat (bank, KCP, nomor rekening, periode, pejabat) dibaca dari payload
         /// JSON di kolom AdditionalData, sehingga hasil cetak ulang sama dengan aslinya.
         /// </summary>
-        private static async Task<string?> GenerateRekeningKoranPdfAsync(
+        private static async Task<HasilPdf> GenerateRekeningKoranPdfAsync(
             IServiceProvider services,
             AppConfig appConfig,
             SuratData suratData,
@@ -134,7 +148,7 @@ namespace SuDesApp.Wpf.Services
                 if (generator == null)
                 {
                     logger.LogWarning("Generator rekening koran belum terdaftar; PDF dilewati.");
-                    return null;
+                    return HasilPdf.Gagal("Generator rekening koran belum terdaftar.");
                 }
 
                 var data = RekeningKoranData.FromJson(suratData.AdditionalData);
@@ -142,7 +156,7 @@ namespace SuDesApp.Wpf.Services
                 {
                     logger.LogWarning(
                         "Payload rekening koran surat #{Id} tidak terbaca; PDF dilewati.", suratData.ID_Surat);
-                    return null;
+                    return HasilPdf.Gagal("Payload rekening koran pada surat ini tidak terbaca.");
                 }
 
                 // Nomor & tanggal surat adalah sumber kebenaran baris register.
@@ -153,15 +167,16 @@ namespace SuDesApp.Wpf.Services
 
                 string path = Path.Combine(appConfig.TempPdfFolder,
                     $"{SuratConstants.REKENING_KORAN}_{safeNomor}_{suratData.ID_Surat}.pdf");
-                return await SimpanAsync(
+                string dipakai = await SimpanAsync(
                     path,
                     stream => generator.GeneratePdfAsync(stream, data),
                     logger);
+                return HasilPdf.Sukses(dipakai);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Gagal membuat ulang PDF rekening koran surat #{Id}", suratData?.ID_Surat);
-                return null;
+                return HasilPdf.Gagal(ex.Message);
             }
         }
 
@@ -170,7 +185,7 @@ namespace SuDesApp.Wpf.Services
         /// seluruh isiannya dibaca dari payload JSON pada kolom AdditionalData, jadi
         /// hasil cetak ulang sama dengan surat aslinya walaupun templatenya berubah.
         /// </summary>
-        private static async Task<string?> GenerateTemplateSuratPdfAsync(
+        private static async Task<HasilPdf> GenerateTemplateSuratPdfAsync(
             IServiceProvider services,
             AppConfig appConfig,
             SuratData suratData,
@@ -182,7 +197,7 @@ namespace SuDesApp.Wpf.Services
                 if (generator == null)
                 {
                     logger.LogWarning("Generator Template Surat belum terdaftar; PDF dilewati.");
-                    return null;
+                    return HasilPdf.Gagal("Generator Template Surat belum terdaftar.");
                 }
 
                 var data = TemplateSuratTercatat.FromJson(suratData.AdditionalData);
@@ -191,7 +206,7 @@ namespace SuDesApp.Wpf.Services
                     logger.LogWarning(
                         "Payload surat template #{Id} tidak terbaca atau tidak memuat definisi surat; PDF dilewati.",
                         suratData.ID_Surat);
-                    return null;
+                    return HasilPdf.Gagal("Payload surat template tidak terbaca atau tidak memuat definisi surat.");
                 }
 
                 // Nomor & tanggal surat adalah sumber kebenaran baris register.
@@ -206,22 +221,23 @@ namespace SuDesApp.Wpf.Services
                 if (pdf.Length == 0)
                 {
                     logger.LogWarning("PDF surat template #{Id} kosong.", suratData.ID_Surat);
-                    return null;
+                    return HasilPdf.Gagal("PDF surat template yang dihasilkan kosong.");
                 }
 
                 var safeNomor = new string((data.NomorSurat ?? "NO").Where(char.IsLetterOrDigit).ToArray());
 
                 string path = Path.Combine(appConfig.TempPdfFolder,
                     $"{SuratConstants.TEMPLATE_SURAT}_{safeNomor}_{suratData.ID_Surat}.pdf");
-                return await SimpanAsync(
+                string dipakai = await SimpanAsync(
                     path,
                     stream => stream.WriteAsync(pdf, 0, pdf.Length),
                     logger);
+                return HasilPdf.Sukses(dipakai);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Gagal membuat ulang PDF surat template #{Id}", suratData?.ID_Surat);
-                return null;
+                return HasilPdf.Gagal(ex.Message);
             }
         }
 
