@@ -310,25 +310,7 @@ namespace SuDesApp.Services
                 return;
             }
 
-            try
-            {
-                if (!proses.HasExited)
-                {
-                    proses.Kill(entireProcessTree: true);
-                    if (!proses.WaitForExit(10_000))
-                    {
-                        _logger.LogWarning("Server lisensi lokal tidak berhenti dalam 10 detik.");
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Server lisensi lokal dimatikan.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal mematikan server lisensi lokal");
-            }
+            try { proses.Kill(entireProcessTree: true); } catch { /* proses sudah mati */ }
             finally
             {
                 try { proses.Dispose(); } catch { /* proses sudah tidak dipakai */ }
@@ -398,7 +380,6 @@ namespace SuDesApp.Services
                     else
                     {
                         proses.Kill(entireProcessTree: true);
-                        proses.WaitForExit(10_000);
                         logger?.LogWarning(
                             "Server lisensi lokal dari sesi sebelumnya (pid {Pid}{Port}) dimatikan saat aplikasi dibuka kembali.",
                             penanda.Pid,
