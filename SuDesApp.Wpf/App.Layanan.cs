@@ -292,14 +292,10 @@ namespace SuDesApp.Wpf
             services.AddScoped<SuDesApp.Services.IArsipRegisterTahunanService, SuDesApp.Services.ArsipRegisterTahunanService>();
 
             // ==== API Desa (HTTP lokal) ====
-            // Layanan per permintaan dibuat lewat scope dari provider, jadi tidak
-            // ada layanan scoped yang ikut tertahan hidup selama listener berdiri.
-            services.AddScoped<SuDesApp.Api.IApiRingkasanService, SuDesApp.Api.ApiRingkasanService>();
-            services.AddScoped<SuDesApp.Services.IVerifikasiSuratService, SuDesApp.Services.VerifikasiSuratService>();
-            // Listener singleton: halaman API menyalakannya, dan pengaturannya
-            // dibaca dari preferensi (bukan database) agar bisa dibuka sebelum login.
-            services.AddSingleton(sp => new SuDesApp.Api.ApiListener(
-                () => sp, sp.GetRequiredService<ILogger<SuDesApp.Api.ApiListener>>()));
+            // Registrasinya dipisah ke PendaftaranApi supaya komposisinya bisa diuji:
+            // endpoint /statistik, /perangkat-desa, dan /rekap-bulanan menjawab 500
+            // bila IApiRingkasanService tidak bisa dibangun dari kontainer.
+            PendaftaranApi.Daftar(services);
 
             // ==== Server lisensi lokal (pusat administrasi di komputer ini) ====
             // Aplikasi PEMILIK siklus hidupnya: dinyalakan saat aplikasi dibuka

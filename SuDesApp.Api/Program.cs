@@ -1,10 +1,13 @@
-﻿// SuDesApp.Api — backend tunggal untuk ketiga platform (desktop, Android, browser).
-// Seluruh logika bisnis tetap di SuDesApp.Core; proyek ini hanya membungkusnya
-// sebagai HTTP supaya WPF/MAUI/Web membaca dan menulis data yang sama.
+// SuDesApp.Api — backend HTTP untuk aplikasi klien di luar desktop (mis. aplikasi
+// mobile/Android). Seluruh logika bisnis tetap di SuDesApp.Core; proyek ini hanya
+// membungkusnya sebagai HTTP supaya klien membaca data desa yang sama lewat sesi
+// login akun desktop.
 //
-// Komposisi DI di bawah ini disalin dari registrasi di SuDesApp.Wpf/App.xaml.cs —
-// hanya bagian yang dibutuhkan baca-statistik. Saat endpoint lain ditambahkan,
-// ikuti registrasi yang sama di sana supaya perilakunya identik dengan desktop.
+// Komposisi DI di bawah ini mengikuti registrasi di SuDesApp.Wpf/App.Layanan.cs
+// untuk lapisan yang dipakai. Saat endpoint lain ditambahkan, ikuti registrasi
+// yang sama di sana supaya perilakunya identik dengan desktop.
+//
+// Dokumentasi endpoint: docs/backend-web.md.
 
 using SuDesApp;
 using SuDesApp.Api;
@@ -91,7 +94,6 @@ builder.Services.AddScoped<IJenisSuratRepository, JenisSuratRepository>();
 builder.Services.AddScoped<ISuratRepository, SuratRepository>();
 builder.Services.AddScoped<IIzinOrtuRepository, IzinOrtuRepository>();
 builder.Services.AddScoped<IArsipSuratRepository, ArsipSuratRepository>();
-builder.Services.AddScoped<IPermintaanWaRepository, PermintaanWaRepository>();
 builder.Services.AddScoped<IPerangkatDesaRepository, PerangkatDesaRepository>();
 
 // ==== Login & sesi (tahap autentikasi) ====
@@ -113,23 +115,14 @@ builder.Services.AddScoped<IApiRingkasanService>(sp => new ApiRingkasanService(
     sp.GetRequiredService<IWargaRepository>(),
     sp.GetRequiredService<IPerangkatDesaService>(),
     sp.GetRequiredService<ISuratRepository>(),
-    sp.GetRequiredService<IPermintaanWaRepository>(),
     sp.GetRequiredService<ILogger<ApiRingkasanService>>()));
-
-// ==== Permintaan surat online (alur tulis pertama) ====
-// WaEngine sengaja null: permintaan dari API langsung masuk antrean tanpa
-// melewati kanal pesan mana pun: permintaan langsung masuk antrean.
-builder.Services.AddScoped<IApiPermintaanService>(sp => new ApiPermintaanService(
-    sp.GetRequiredService<IPermintaanWaRepository>(),
-    audit: sp.GetService<ActivityLogService>(),
-    logger: sp.GetRequiredService<ILogger<ApiPermintaanService>>()));
 
 // Skema & migrasi database (idempoten) — tanpa ini database kosong baru tidak
 // punya tabel. WPF memanggil InitializeAsync() dari App.OnStartup lewat scope.
 builder.Services.AddSingleton<IDatabaseBackupService, DatabaseBackupService>();
 builder.Services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
 
-// CORS untuk WebView Android / browser saat pengembangan (dipakai di bawah).
+// CORS untuk klien mobile/browser saat pengembangan (dipakai di bawah).
 builder.Services.AddCors();
 
 var app = builder.Build();
@@ -143,25 +136,7 @@ using (var scope = app.Services.CreateScope())
     await scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>().InitializeAsync();
 }
 
-// ==== Pemeriksaan kunci API untuk endpoint eksternal ====
-// Mengikuti aturan listener Core (docs/api-desa.md): kunci diambil dari header
-// X-Api-Key atau Authorization: Bearer, disimpan lewat ApiKunci (DPAPI),
-// dibandingkan constant-time, dan cakupannya diperiksa per endpoint.
-// Kandidat kunci dari konfigurasi "Api:KunciTambahan" ditujukan untuk
-// pengembangan (kunci yang tidak berasal dari halaman Pengaturan API WPF).
-List<ApiKunciEntry> KandidatKunci()
-{
-    var daftar = ApiKunci.MuatSemua().ToList();
-    var tambahan = builder.Configuration["Api:KunciTambahan"];
-    if (!string.IsNullOrWhiteSpace(tambahan))
-    {
-        foreach (var k in tambahan.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            daftar.Add(new ApiKunciEntry { Nilai = k, Cakupan = ApiCakupan.Penuh, Nama = "Konfigurasi" });
-    }
-    return daftar;
-}
-
-/// <summary>Ambil token dari header Authorization: Bearer (null bila tidak ada).</summary>
+/// <summary>Ambil token dari header Authorization (Bearer), null bila tidak ada.</summary>
 string? TokenSesi(HttpContext ctx)
 {
     var h = ctx.Request.Headers.Authorization.FirstOrDefault();
@@ -175,61 +150,11 @@ string? TokenSesi(HttpContext ctx)
 SesiService.SesiAktif? SesiDari(HttpContext ctx)
     => ctx.RequestServices.GetRequiredService<SesiService>().Ambil(TokenSesi(ctx));
 
-/// Kembalikan hasil tolak (401/403) bila jalur ini terlindungi kunci dan
-/// permintaan tidak lolos; null berarti lanjutkan menjalankan endpoint.
-IResult? TolakBilaTanpaKunci(HttpContext ctx, string metode, string jalur)
-{
-    // Pemetaan ke tabel rute Core hanya untuk endpoint yang memang berkey di sana.
-    ApiEndpoint? endpoint = metode switch
-    {
-        "POST" when jalur == "/sudes/api/v1/permintaan" =>
-            ApiRute.Semua.FirstOrDefault(e => e.Metode == "POST" && e.Jalur == "/permintaan"),
-        "GET" when System.Text.RegularExpressions.Regex.IsMatch(jalur, "^/sudes/api/v1/permintaan/[^/]+$") =>
-            ApiRute.Semua.FirstOrDefault(e => e.Jalur == "/permintaan/{kode}"),
-        _ => null
-    };
-    if (endpoint == null) return null;
-
-    var diberikan = ApiAutentikasi.AmbilKunci(h => ctx.Request.Headers[h].FirstOrDefault());
-    var cocok = ApiAutentikasi.CariCocok(diberikan, KandidatKunci());
-    if (cocok == null) return Results.Unauthorized();
-    if (!ApiAutentikasi.CakupanCukup(cocok.Cakupan, endpoint))
-        return Results.Json(
-            new { sukses = false, pesan = "Kunci tidak mencakup endpoint ini." },
-            statusCode: StatusCodes.Status403Forbidden);
-    return null;
-}
-
-// Penahan kiriman formulir publik: 5 permintaan per 10 menit per alamat IP.
-// Negara desa jarang punya IP publik berbeda-beda (satu kantor desa = satu IP),
-// jadi batasnya sengaja longgar untuk pemakaian wajar tetapi cukup menahan
-// kiriman berulang dari satu peramban.
-var catatanKiriman = new System.Collections.Concurrent.ConcurrentDictionary<string, Queue<DateTime>>();
-bool TerlaluSering(string kunci, int maks = 5, int menit = 10)
-{
-    var antre = catatanKiriman.GetOrAdd(kunci, _ => new Queue<DateTime>());
-    lock (antre)
-    {
-        var batas = DateTime.UtcNow.AddMinutes(-menit);
-        while (antre.Count > 0 && antre.Peek() < batas) antre.Dequeue();
-        if (antre.Count >= maks) return true;
-        antre.Enqueue(DateTime.UtcNow);
-    }
-
-    // Jaga ukuran peta: kunci lama yang tidak dipakai lagi dibuang.
-    if (catatanKiriman.Count > 2000)
-    {
-        foreach (var usang in catatanKiriman.Where(p => p.Value.Count == 0 || p.Value.Peek() < DateTime.UtcNow.AddMinutes(-menit)).Take(500))
-            catatanKiriman.TryRemove(usang.Key, out _);
-    }
-    return false;
-}
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    // WebView Android (MAUI) dan browser memanggil backend lintas origin saat
-    // pengembangan. Produksi di belakangi origin yang sama / reverse proxy.
+    // Klien mobile/browser memanggil backend lintas origin saat pengembangan.
+    // Produksi di belakangi origin yang sama / reverse proxy.
     app.UseCors(p => p.SetIsOriginAllowed(_ => true).AllowAnyHeader().AllowAnyMethod());
 }
 
@@ -310,7 +235,7 @@ app.MapGet("/sudes/api/v1/jenis-surat", (HttpContext ctx) =>
 
 // ==== Menu aplikasi (daftar pilihan surat untuk sidebar) ====
 // Isinya katalog yang sama dengan menu desktop: "Buat Surat Baru" dan blanko
-// NTCR. Ditaruh di API supaya menu web tidak menyalin daftar sendiri dan bisa
+// NTCR. Ditaruh di API supaya klien tidak menyalin daftar sendiri dan bisa
 // ketinggalan saat Core menambah jenis surat. Tidak memuat data pribadi, jadi
 // boleh dibaca tanpa sesi (dipakai juga sebelum login selesai dimuat).
 app.MapGet("/sudes/api/v1/menu", () => Results.Ok(new
@@ -531,121 +456,6 @@ app.MapGet("/sudes/api/v1/surat", async (
     });
 }).WithName("DaftarSurat");
 
-// ==== Permintaan surat online (alur tulis) ====
-// POST — muka publik untuk sistem luar/warga; berkey seperti listener Core.
-// Badan dibaca manual lewat ReadFromJsonAsync: dengan ada parameter HttpContext
-// di lambda, inferensi binding minimal API bisa tidak mengikat badan JSON.
-app.MapPost("/sudes/api/v1/permintaan", async (HttpContext ctx, CancellationToken ct) =>
-{
-    var tolak = TolakBilaTanpaKunci(ctx, "POST", "/sudes/api/v1/permintaan");
-    if (tolak != null) return tolak;
-
-    ApiPermintaanMasuk? masuk;
-    try
-    {
-        masuk = await ctx.Request.ReadFromJsonAsync<ApiPermintaanMasuk>(cancellationToken: ct);
-    }
-    catch (System.Text.Json.JsonException)
-    {
-        return Results.BadRequest(new { sukses = false, pesan = "Badan permintaan tidak terbaca." });
-    }
-    if (masuk == null)
-        return Results.BadRequest(new { sukses = false, pesan = "Badan permintaan kosong." });
-
-    // Log tanpa data pribadi (ikut aturan Core: badan permintaan tidak dicatat).
-    ctx.RequestServices.GetRequiredService<ILoggerFactory>()
-        .CreateLogger("SuDesApp.Api.Permintaan")
-        .LogInformation("Permintaan masuk: jenis={Jenis}, sumber=api", masuk.JenisSurat);
-
-    var hasil = await ctx.RequestServices
-        .GetRequiredService<IApiPermintaanService>().BuatAsync(masuk, ct);
-    if (!hasil.Berhasil)
-        return Results.BadRequest(new { sukses = false, pesan = hasil.Pesan });
-    return Results.Ok(new
-    {
-        sukses = true,
-        data = new { kode = hasil.Kode, sudahAda = hasil.SudahAda, pesan = hasil.Pesan }
-    });
-}).WithName("KirimPermintaan");
-
-// POST publik — dipakai formulir "Layanan Online" di website desa.
-// Warga mengirim tanpa akun dan tanpa kunci API, jadi jalur ini sengaja tidak
-// memeriksa kunci; penahannya adalah batas kirim per alamat IP. Kanal berkey
-// (POST /permintaan di atas) tetap ada untuk sistem desa yang memegang kunci.
-app.MapPost("/sudes/api/v1/permintaan-publik", async (HttpContext ctx, CancellationToken ct) =>
-{
-    var ip = ctx.Connection.RemoteIpAddress?.ToString() ?? "tidak-dikenal";
-    if (TerlaluSering($"permintaan-publik:{ip}"))
-    {
-        return Results.Json(
-            new { sukses = false, pesan = "Terlalu banyak permintaan dari perangkat ini. Coba lagi dalam beberapa menit." },
-            statusCode: StatusCodes.Status429TooManyRequests);
-    }
-
-    ApiPermintaanMasuk? masuk;
-    try
-    {
-        masuk = await ctx.Request.ReadFromJsonAsync<ApiPermintaanMasuk>(cancellationToken: ct);
-    }
-    catch (System.Text.Json.JsonException)
-    {
-        return Results.BadRequest(new { sukses = false, pesan = "Badan permintaan tidak terbaca." });
-    }
-    if (masuk == null)
-        return Results.BadRequest(new { sukses = false, pesan = "Badan permintaan kosong." });
-
-    // Log tanpa data pribadi (ikut aturan Core: badan permintaan tidak dicatat).
-    ctx.RequestServices.GetRequiredService<ILoggerFactory>()
-        .CreateLogger("SuDesApp.Api.Permintaan")
-        .LogInformation("Permintaan masuk: jenis={Jenis}, sumber=website", masuk.JenisSurat);
-
-    var hasil = await ctx.RequestServices
-        .GetRequiredService<IApiPermintaanService>().BuatAsync(masuk, ct);
-    if (!hasil.Berhasil)
-        return Results.BadRequest(new { sukses = false, pesan = hasil.Pesan });
-    return Results.Ok(new
-    {
-        sukses = true,
-        data = new { kode = hasil.Kode, sudahAda = hasil.SudahAda, pesan = hasil.Pesan }
-    });
-}).WithName("KirimPermintaanPublik");
-
-// GET status satu permintaan (kontrak eksternal, juga berkey).
-app.MapGet("/sudes/api/v1/permintaan/{kode}", async (HttpContext ctx, string kode, CancellationToken ct) =>
-{
-    var tolak = TolakBilaTanpaKunci(ctx, "GET", $"/sudes/api/v1/permintaan/{kode}");
-    if (tolak != null) return tolak;
-
-    var status = await ctx.RequestServices
-        .GetRequiredService<IApiPermintaanService>().AmbilStatusAsync(kode, ct);
-    return status == null
-        ? Results.NotFound(new { sukses = false, pesan = "Kode permintaan tidak dikenal." })
-        : Results.Ok(new { sukses = true, data = status });
-}).WithName("StatusPermintaan");
-
-// GET antrean — muka INTERNAL untuk UI aplikasi (Layanan Online), berisi data
-// pribadi (nama, NIK, no. HP) yang oleh Core hanya ditampilkan ke operator.
-// Pelindungnya: sesi login aplikasi (Bearer token) — tanpa sesi, 401.
-app.MapGet("/sudes/api/v1/permintaan", async (HttpContext ctx, string? status, CancellationToken ct) =>
-{
-    if (SesiDari(ctx) == null) return Results.Unauthorized();
-
-    var daftar = await ctx.RequestServices
-        .GetRequiredService<IPermintaanWaRepository>().GetAllAsync(status, ct);
-    return Results.Ok(daftar.Select(p => new
-    {
-        kode = p.KodePermintaan,
-        tanggal = p.TanggalPermintaan,
-        jenis = p.NamaJenis,
-        nama = p.NamaWarga,
-        nomorHp = p.NomorWA,
-        nik = p.NIK,
-        status = p.Status,
-        sumber = p.Sumber,
-        dibaca = p.IsRead
-    }));
-}).WithName("AntreanPermintaan");
-
 // ==== Sesi login aplikasi (masuk / siapa / keluar / pemasangan) ====
 // Aturannya identik dengan layar login desktop: PenggunaService (PBKDF2,
 // kunci 3x gagal 5 menit, pesan gagal yang disamarkan). Yang ditambah di sini
@@ -655,11 +465,11 @@ app.MapGet("/sudes/api/v1/permintaan", async (HttpContext ctx, string? status, C
 // Identitas per-permintaan dipasang middleware sesi di bawah (AsyncLocal),
 // sehingga SessionContext.Wajib memakai peran pengguna yang membawa token —
 // bukan peran global proses. Endpoint tulis yang mengubah data pengguna
-// memanggil Wajib(KelolaPengguna); /permintaan dan /permintaan-publik memang
-// publik (yang pertama dijaga kunci API) dan tidak mengubah data desa.
+// memanggil Wajib(KelolaPengguna).
 
 // Badan POST /sesi: nama field snake_case mengikuti kontrak API desa,
-// dibaca manual (bukan inferensi minimal API) seperti endpoint permintaan.
+// dibaca manual (bukan inferensi minimal API) agar bentuk badan sama dengan
+// endpoint lain.
 app.MapPost("/sudes/api/v1/sesi", async (HttpContext ctx, CancellationToken ct) =>
 {
     BadanMasuk? badan;
