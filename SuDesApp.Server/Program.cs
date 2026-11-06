@@ -30,7 +30,17 @@ var builder = WebApplication.CreateBuilder(args);
 //
 // Para pembaca kode di bawah memakai pola env-first secara eksplisit, jadi
 // berkas ini sengaja dimuat paling akhir DAN selalu dibaca lewat Ambil().
-builder.Configuration.AddJsonFile("appsettings.lokal.json", optional: true, reloadOnChange: false);
+if (File.Exists("appsettings.lokal.json"))
+{
+    try
+    {
+        builder.Configuration.AddJsonFile("appsettings.lokal.json", optional: true, reloadOnChange: false);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        // Berkas lokal tidak bisa dibaca (izin) — lanjutkan tanpa kredensial lokal.
+    }
+}
 
 // Petakan environment variable operator admin yang didokumentasikan
 // (SUDES_ADMIN_OPERATORS__<indeks>__*) ke bagian konfigurasi yang dibaca

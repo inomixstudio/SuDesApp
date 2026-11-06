@@ -39,8 +39,8 @@ namespace SuDesApp.GeneratorPdf
             // --- Kotak kode formulir di kanan atas ---
             halaman.Blok(container => container.PaddingBottom(10f).AlignRight().Width(80f)
                 .Border(0.75f).BorderColor(Colors.Black).Padding(3f)
-                .AlignCenter().AlignMiddle()
-                .Text(KODE_FORMULIR_KEMATIAN).FontSize(9f));
+                .AlignMiddle()
+                .Text(KODE_FORMULIR_KEMATIAN).FontSize(9f).AlignCenter());
 
             // --- Identitas desa berlabel ---
             halaman.Blok(container => container.Column(baris =>
@@ -78,7 +78,7 @@ namespace SuDesApp.GeneratorPdf
                 ("Nama Lengkap Jenazah", wargaAlmarhum.Nama == null ? null : NamaFormatter.ToUpperNama(wargaAlmarhum.Nama)),
                 ("Jenis Kelamin", wargaAlmarhum.JenisKelamin),
                 ("Agama", wargaAlmarhum.Agama),
-                ("Umur pada saat Meninggal", umurAlmarhumDisplay),
+                ("Umur", umurAlmarhumDisplay),
                 ("Pekerjaan", wargaAlmarhum.Pekerjaan),
                 ("Alamat", AlamatFormatter.Format(wargaAlmarhum))
             }));
@@ -107,22 +107,11 @@ namespace SuDesApp.GeneratorPdf
                 ("Alamat", string.IsNullOrWhiteSpace(kematianDetail.AlamatPelapor) ? "[Alamat Pelapor]" : kematianDetail.AlamatPelapor)
             }));
 
-            // Hubungan pelapor dicetak sebagai baris tersendiri di bawah blok data pelapor.
             if (!string.IsNullOrWhiteSpace(kematianDetail.HubunganPelapor))
             {
-                string hubungan = kematianDetail.HubunganPelapor;
-                halaman.Blok(container => container.PaddingTop(15f).Table(table =>
+                halaman.Blok(container => container.Column(baris =>
                 {
-                    table.ColumnsDefinition(cols =>
-                    {
-                        cols.RelativeColumn(55);
-                        cols.RelativeColumn(3);
-                        cols.RelativeColumn(43);
-                    });
-
-                    SelHubungan(table.Cell(), "Hubungan Pelapor dengan yang Meninggal Dunia");
-                    SelHubungan(table.Cell(), ":");
-                    SelHubungan(table.Cell(), hubungan);
+                    BarisLabelNilai(baris, "Hubungan Pelapor dengan yang Meninggal Dunia", kematianDetail.HubunganPelapor!);
                 }));
             }
 
