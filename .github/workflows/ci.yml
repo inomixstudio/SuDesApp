@@ -46,7 +46,7 @@ jobs:
       - name: Install pinned .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.401
+          dotnet-version: 11.0.100-rc.3
 
       - name: Restore solution
         run: dotnet restore SuDesApp.slnx
