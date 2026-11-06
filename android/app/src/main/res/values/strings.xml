@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SuDesApp Android</string>
+
+    <string name="menu_buat_surat">Buat Surat Baru</string>
+    <string name="menu_register_surat">Register Surat</string>
+    <string name="menu_daftar_hadir">Daftar Hadir</string>
+    <string name="keluar">Keluar</string>
+
+    <string name="status_belum_terhubung">Belum terhubung ke Supabase.</string>
+    <string name="status_terhubung">%1$s · antrean: %2$s surat</string>
+
+    <string name="label_pasang_perangkat">Pasang Perangkat</string>
+    <string name="petunjuk_pasang">Pindai QR dari halaman Sinkron Android di aplikasi desktop. QR berisi URL Supabase, kunci publik, surel, dan kata sandi perangkat.</string>
+    <string name="pindai_qr">Pindai QR</string>
+    <string name="atau_manual">Atau ketik manual</string>
+    <string name="hint_url">URL Supabase (https://…supabase.co)</string>
+    <string name="hint_kunci">Kunci publik Supabase</string>
+    <string name="hint_email">Surel perangkat</string>
+    <string name="hint_sandi">Kata sandi perangkat</string>
+    <string name="masuk">Masuk</string>
+
+    <string name="label_buat_surat">Buat Surat Baru</string>
+    <string name="label_jenis_surat">Jenis Surat</string>
+    <string name="kirim_ke_antrean">Kirim ke Antrean</string>
+
+    <string name="label_register_surat">Register Surat</string>
+    <string name="petunjuk_register">Surat yang dibuat di perangkat ini. Saat aplikasi desktop disinkronkan, surat masuk register desktop dan antrean di sini dikosongkan.</string>
+    <string name="segarkan">Segarkan</string>
+
+    <string name="label_daftar_hadir">Daftar Hadir</string>
+    <string name="hint_acara">Kegiatan</string>
+    <string name="hint_tanggal">Tanggal (yyyy-MM-dd)</string>
+    <string name="hint_tempat">Tempat</string>
+    <string name="hint_pembuat">Nama pembuat daftar</string>
+    <string name="label_peserta">Peserta (satu nama per baris)</string>
+    <string name="hint_peserta">Nama peserta 1&#10;Nama peserta 2</string>
+    <string name="cetak_pdf">Cetak PDF</string>
+</resources>
