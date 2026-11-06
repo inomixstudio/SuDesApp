@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
-# Jalankan hook commit-msg pada SETIAP pesan commit dalam sebuah rentang rev.
+# Tolak atribusi agen pada pesan commit dalam sebuah rentang rev.
 #
-# Dipakai job CI "Audit atribusi commit" supaya aturan yang sama dengan hook
-# lokal juga menggerbang pull request. Pola yang dicek tidak diduplikasi di
-# sini: skrip ini hanya memanggil .githooks/commit-msg, jadi hook lokal dan
-# gerbang CI tidak bisa berbeda diam-diam.
+# Dipanggil manual untuk memeriksa sejarah commit (mis. sebelum membagikan
+# branch). Pola yang dicek: baris "Co-Authored-By" bernama Codebuff, teks
+# "Generated with Codebuff", dan alamat "noreply@codebuff.com".
 #
 # Pemakaian:
 #   Tools/check-atribusi-commit.sh <rentang-rev>
 # Contoh:
-#   Tools/check-atribusi-commit.sh "origin/main..HEAD"
+#   Tools/check-atribusi-commit.sh "origin/master..HEAD"
 
 set -uo pipefail
 
 rentang="${1:-}"
 if [ -z "$rentang" ]; then
-    echo "pemakaian: $0 <rentang-rev> (mis. origin/main..HEAD)" >&2
+    echo "pemakaian: $0 <rentang-rev> (mis. origin/master..HEAD)" >&2
     exit 2
 fi
 
@@ -24,12 +23,7 @@ if ! git rev-list --count "$rentang" >/dev/null 2>&1; then
     exit 2
 fi
 
-akar=$(git rev-parse --show-toplevel)
-hook="$akar/.githooks/commit-msg"
-if [ ! -f "$hook" ]; then
-    echo "hook tidak ditemukan: $hook" >&2
-    exit 2
-fi
+pola='Co-Authored-By:.*Codebuff|Generated with Codebuff|noreply@codebuff.com'
 
 sementara=$(mktemp -d)
 trap 'rm -rf "$sementara"' EXIT
@@ -40,9 +34,9 @@ while read -r sha; do
     [ -n "$sha" ] || continue
     jumlah=$((jumlah + 1))
     git log -1 --format=%B "$sha" > "$sementara/pesan"
-    if ! sh "$hook" "$sementara/pesan" >/dev/null 2> "$sementara/galat"; then
+    if grep -Ein "$pola" "$sementara/pesan" >/dev/null; then
         printf '::error::%s %s\n' "$(git rev-parse --short "$sha")" "$(git log -1 --format=%s "$sha")"
-        sed 's/^/    /' "$sementara/galat"
+        grep -Ein "$pola" "$sementara/pesan" | sed 's/^/    /'
         gagal=$((gagal + 1))
     fi
 done < <(git rev-list "$rentang")
