@@ -7,7 +7,7 @@ namespace SudesPdf.Core.Layout;
 /// <summary>Hasil tata letak halaman-halaman dokumen menjadi satu berkas PDF.</summary>
 internal static class LayoutFlow
 {
-    internal static byte[] Build(List<PageDescriptor> pages, DocumentMetadata? metadata = null)
+    internal static byte[] Build(List<PageDescriptor> pages, out int pageCount, DocumentMetadata? metadata = null)
     {
         bool perluNomorHalaman = false;
         foreach (var page in pages)
@@ -41,6 +41,7 @@ internal static class LayoutFlow
             jumlahHalaman = writer.PageCount;
         }
 
+        pageCount = writer.PageCount;
         return writer.Finish();
     }
 

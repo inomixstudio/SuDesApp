@@ -131,10 +131,9 @@ namespace SuDesApp.GeneratorPdf
                             });
                         });
                     }
-                }).GeneratePdf(penampung);
+                }).GeneratePdf(penampung, out jumlahHalaman);
 
                 ukuranPdf = penampung.ToArray();
-                jumlahHalaman = HitungJumlahHalaman(ukuranPdf);
 
                 if (jumlahHalaman <= halamanBlanko.Count)
                 {

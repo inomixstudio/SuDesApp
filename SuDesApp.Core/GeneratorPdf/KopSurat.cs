@@ -176,9 +176,9 @@ namespace SuDesApp.GeneratorPdf
         }
 
         /// <summary>
-        /// Bagian surel yang dicetak biru di ujung baris alamat kop — kosong bila kolom
-        /// surel desa tidak diisi (kolomnya opsional). Bentuknya “Email nama@desa.id”,
-        /// menyatu dengan gaya baris alamat yang sudah memakai “Kodepos …”.
+        /// Teks surel yang dicetak biru pada baris tersendiri di bawah nama
+        /// kabupaten — kosong bila kolom surel desa tidak diisi (kolomnya opsional).
+        /// Bentuknya “Email nama@desa.id”.
         /// </summary>
         public static string SurelKop(DesaData? desa)
         {
@@ -263,6 +263,21 @@ namespace SuDesApp.GeneratorPdf
             }
 
             return pejabat;
+        }
+
+        /// <summary>
+        /// Baris jabatan pada blok tanda tangan, huruf besar: “KEPALA DESA X” atau
+        /// “A/N KEPALA DESA X\nSEKRETARIS DESA”. Dipakai bersama oleh generator PDF
+        /// (<c>SuratGeneratorBase.DataKakiSurat</c>) dan pratinjau kop di Pengaturan
+        /// Surat supaya keduanya tidak pernah berbeda.
+        /// </summary>
+        public static string JabatanPejabat(DesaData? desa, string namaDesa, string? pejabatQ = null)
+        {
+            var pejabat = KataPejabat(desa, pejabatQ);
+
+            return pejabat.Equals("Sekretaris Desa", StringComparison.OrdinalIgnoreCase)
+                ? $"A/N Kepala Desa {namaDesa}\nSekretaris Desa".ToUpperInvariant()
+                : $"{pejabat} {namaDesa}".ToUpperInvariant();
         }
 
         /// <summary>

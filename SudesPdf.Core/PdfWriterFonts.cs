@@ -14,18 +14,18 @@ public enum PdfTimesFace
 }
 
 /// <summary>
-/// Font standar PDF (base-14 Times) untuk dokumen yang DITULIS SudesPdf.
+/// Metrik font Times untuk dokumen yang DITULIS SudesPdf.
 ///
-/// Surat tidak lagi menyematkan berkas font: teks memakai font standar yang wajib
-/// ada pada setiap pembaca PDF, dengan pengkodean WinAnsiEncoding. Cara ini
-/// menghapus dua masalah sekaligus — berkas font pihak lain tidak ikut
-/// didistribusikan, dan teks surat dapat dicari/dipilih langsung dari berkasnya.
+/// PdfWriter menyematkan subset Times New Roman dari font sistem (times.ttf,
+/// timesbd.ttf, …) sebagai /FontFile2, dan memakai tabel lebar di bawah untuk
+/// /Widths supaya pemenggalan baris tidak berubah. Bila font sistem tidak ada
+/// atau tidak terbaca, penulis jatuh kembali ke font standar base-14
+/// (Times-Roman dan ketiga mukanya) yang wajib ada pada setiap pembaca PDF.
 ///
 /// Tabel lebar di bawah adalah metrik Times (satuan 1/1000 em) untuk kode
-/// WinAnsi 32..255, yaitu data yang sama dengan yang dipakai penyemat dokumen
-/// sebelumnya, sehingga pemenggalan baris surat tidak berubah. Lebar muka
-/// BoldItalic memakai metrik Bold karena berkas acuannya tidak disertakan —
-/// hanya berpengaruh pada teks yang sekaligus tebal dan miring.
+/// WinAnsi 32..255. Lebar muka BoldItalic memakai metrik Bold karena berkas
+/// acuannya tidak disertakan — hanya berpengaruh pada teks yang sekaligus
+/// tebal dan miring.
 /// </summary>
 public static class PdfStandardTimes
 {
