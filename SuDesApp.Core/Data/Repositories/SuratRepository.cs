@@ -393,9 +393,20 @@ namespace SuDesApp.Data.Repositories
                     suratData.Status = "Draft";
 
                 if (string.IsNullOrWhiteSpace(suratData.NomorSurat))
+                {
                     suratData.NomorSurat = await _jenisSuratRepository.GenerateNomorSuratAsync(suratData.KodeJenis!);
+                }
                 else if (await CheckNomorSuratExistsAsync(suratData.NomorSurat, null, cancellationToken))
-                    throw new ValidationException($"Nomor surat '{suratData.NomorSurat}' already used.");
+                {
+                    // Nomor pada form diisi otomatis saat form dibuka, bukan dipesan:
+                    // bisa tertabrak operator lain yang menyimpan lebih dulu. Bangkitkan
+                    // nomor segar alih-alih menolak, supaya penulisan surat tidak mentok.
+                    _logger.LogWarning(
+                        "Nomor surat {NomorSurat} sudah dipakai; membangkitkan nomor segar untuk {NamaJenis}.",
+                        suratData.NomorSurat, suratData.NamaJenis);
+
+                    suratData.NomorSurat = await _jenisSuratRepository.GenerateNomorSuratAsync(suratData.KodeJenis!);
+                }
 
                 await ValidateSuratDataAsync(suratData, cancellationToken);
 

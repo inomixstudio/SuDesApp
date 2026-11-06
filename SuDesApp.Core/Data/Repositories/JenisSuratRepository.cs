@@ -50,7 +50,7 @@ namespace SuDesApp.Data.Repositories
         private readonly IJenisSuratConfigLoader _configLoader;
         private readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(2);
 
-        // PERBAIKAN: Hapus hard-coded grup, gunakan konfigurasi dinamis
+        // Hapus hard-coded grup, gunakan konfigurasi dinamis
         private HashSet<string>? _cachedSharedNumberingGroup;
         private readonly SemaphoreSlim _configSemaphore = new(1, 1);
 
@@ -185,7 +185,7 @@ namespace SuDesApp.Data.Repositories
                 if (config == null)
                     throw new ArgumentException($"Kode jenis '{kodeJenis}' tidak valid", nameof(kodeJenis));
 
-                // PERBAIKAN: Gunakan konfigurasi dinamis untuk menentukan shared numbering
+                // Gunakan konfigurasi dinamis untuk menentukan shared numbering
                 bool isInGroup = config.IsSharedNumbering;
                 string currentYear = DateTime.Now.Year.ToString();
 
@@ -212,7 +212,7 @@ namespace SuDesApp.Data.Repositories
             if (string.IsNullOrWhiteSpace(nomorSurat))
                 throw new ArgumentException("Nomor surat tidak boleh kosong.", nameof(nomorSurat));
 
-            // DIPERBAIKI: tidak lagi memakai GetWithCacheAsync. Sebelumnya hasil negatif
+            // Tidak memakai GetWithCacheAsync: hasil negatif
             // ("nomor belum dipakai") disimpan 10 menit di cache dan tidak pernah
             // divalidasi ulang saat surat disimpan, sehingga nomor yang baru tersimpan
             // masih dianggap kosong -> deret unik menghasilkan nomor ganda, lalu batu
@@ -259,7 +259,7 @@ namespace SuDesApp.Data.Repositories
             });
         }
 
-        // PERBAIKAN: Gunakan konfigurasi dinamis untuk keterangan desa
+        // Gunakan konfigurasi dinamis untuk keterangan desa
         public async Task<List<string>> GetJenisSuratKeteranganDesa()
         {
             const string cacheKey = "JenisSurat_KeteranganDesa";
@@ -273,7 +273,7 @@ namespace SuDesApp.Data.Repositories
             });
         }
 
-        // PERBAIKAN: Method baru untuk mendapatkan grup shared numbering dari konfigurasi
+        // Method baru untuk mendapatkan grup shared numbering dari konfigurasi
         public async Task<HashSet<string>> GetSharedNumberingGroupAsync()
         {
             if (_cachedSharedNumberingGroup != null)
@@ -423,7 +423,7 @@ namespace SuDesApp.Data.Repositories
             }, TimeSpan.FromMinutes(10));
         }
 
-        // PERBAIKAN: Method untuk refresh konfigurasi
+        // Method untuk refresh konfigurasi
         public async Task RefreshConfigurationAsync()
         {
             await _configLoader.RefreshConfigAsync();
@@ -482,7 +482,7 @@ namespace SuDesApp.Data.Repositories
             }
         }
 
-        // PERBAIKAN: Gunakan konfigurasi dinamis untuk menentukan grup shared numbering.
+        // Gunakan konfigurasi dinamis untuk menentukan grup shared numbering.
         // Deret bersama (IsSharedNumbering) dihitung dari seluruh jenis dalam grup tanpa
         // melihat awalan, sehingga mengganti awalan grup tidak memutus urutannya; deret
         // sendiri (else) dihitung per awalan seperti dijelaskan pada cabang tersebut.
@@ -493,7 +493,7 @@ namespace SuDesApp.Data.Repositories
 
             if (isInGroup)
             {
-                // PERBAIKAN: Dapatkan grup dari konfigurasi, bukan hard-coded
+                // Dapatkan grup dari konfigurasi, bukan hard-coded
                 var sharedGroup = await GetSharedNumberingGroupAsync();
                 var filterList = sharedGroup.ToList();
                 var inClause = string.Join(", ", filterList.Select((_, i) => $"@Filter{i}"));
@@ -538,7 +538,7 @@ namespace SuDesApp.Data.Repositories
                 // meneruskan hitungan deret awalan lama.
                 var awalan = SuDesApp.Services.PenomoranSuratService.AmbilAwalan(config.NomorFormat);
 
-                // DIPERBAIKI: blanko NTCR Kepdirjen N1–N6 memakai satu deret bersama
+                // Blanko NTCR Kepdirjen N1–N6 memakai satu deret bersama
                 // (awalan 474.3). Sebelumnya setiap blanko dihitung per KodeJenis sendiri
                 // sehingga N1–N6 semuanya mulai dari 001 -> nomor ganda & gagal simpan.
                 bool deretBersamaNtcr = SuratConstants.IsNtcrBlankoKepdirjen(config.NamaJenis);
@@ -590,8 +590,8 @@ namespace SuDesApp.Data.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get next document number");
-                return 1;
+                _logger.LogError(ex, "Gagal menghitung nomor surat berikutnya untuk {NamaJenis}", config.NamaJenis);
+                throw new DataRetrievalException($"Gagal menghitung nomor surat untuk {config.NamaJenis}", ex);
             }
         }
 
@@ -620,8 +620,8 @@ namespace SuDesApp.Data.Repositories
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error in GenerateUniqueDocumentNumberAsync");
-                    retryCount++;
+                    _logger.LogError(ex, "Gagal membangkitkan nomor surat unik untuk {NamaJenis}", config.NamaJenis);
+                    throw new DataRetrievalException($"Gagal membangkitkan nomor surat untuk {config.NamaJenis}", ex);
                 }
             }
 
