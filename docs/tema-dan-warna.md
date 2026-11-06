@@ -90,6 +90,10 @@ tema.
 
 ## Gerbang CI wajib (setiap pull request)
 
+> **Status:** job **Audit kontras tema** dan `Tools/check-kontras-wcag.ps1`
+> **belum ada** di repo ini, jadi gerbang di bawah belum berjalan. Yang sudah
+> berjalan ada di "Penjaga otomatis". Teks di bawah adalah rancangan.
+
 `.github/workflows/ci.yml` punya job **Audit kontras tema** yang berjalan pada
 setiap `pull_request` (dan push) di `windows-latest`. Dua langkahnya sengaja
 dipisah karena menangkap kelas kesalahan yang berbeda:
@@ -113,7 +117,16 @@ dengan `continue-on-error`, atau pemeriksa palet berhenti keluar dengan kode 1.
 
 ## Penjaga otomatis
 
-`SuDesApp.Tests/TemaKonsistenTests.cs` dijalankan pada setiap `dotnet test`:
+Yang **sudah ada** dan dijalankan pada setiap `dotnet test`:
+
+| Berkas | Uji |
+|---|---|
+| `SuDesApp.Tests/UI/TemaKonsistenTests.cs` | `SemuaTema_MendefinisikanKunciYangSama`, `Tampilan_TidakMemakaiWarnaLiteral`, `KunciMilikTema_TidakDirujukDenganStaticResource` |
+| `SuDesApp.Tests/UI/UkuranHurufStandarTests.cs` | `Literal_FontSize_seluruhnya_di_skala_baku` |
+
+Tabel di bawah adalah **rancangan cakupan**, bukan catatan berkas yang ada:
+`JelajahRenderTemaTests`, `FontAntarmukaTests`, `GayaKpiDanJudulTerpusatTests`,
+`PemilihTemaTests`, dan baris `TemaKonsistenTests` lainnya belum diimplementasikan.
 
 | Uji | Mencegah |
 |---|---|
