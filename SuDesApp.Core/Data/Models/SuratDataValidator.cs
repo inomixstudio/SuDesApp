@@ -39,7 +39,7 @@ namespace SuDesApp.Data.Models
             }
 
             ValidateBasicFields(errors);
-            ValidateStatus(errors); // ? VALIDASI STATUS BARU
+            ValidateStatus(errors); // VALIDASI STATUS BARU
             await ValidateDesaAsync(errors);
 
             if (_suratData.NamaJenis == SuratConstants.INSTANSI)
@@ -92,7 +92,7 @@ namespace SuDesApp.Data.Models
                 errors.Add("Tanggal surat tidak boleh di masa depan.");
         }
 
-        // ? VALIDASI STATUS BARU
+        // VALIDASI STATUS BARU
         private void ValidateStatus(List<string> errors)
         {
             if (!string.IsNullOrEmpty(_suratData.Status) &&
@@ -129,7 +129,7 @@ namespace SuDesApp.Data.Models
                 return;
             }
 
-            // ? VALIDASI NIK KHUSUS
+            // VALIDASI NIK KHUSUS
             if (_suratData.NamaJenis?.ToUpperInvariant() == SuratConstants.INSTANSI)
             {
                 if (_suratData.Warga.NIK != SuratConstants.NIK_INSTANSI)
@@ -152,11 +152,11 @@ namespace SuDesApp.Data.Models
                 errors.Add("Data warga tidak valid.");
             }
 
-            // ? VALIDASI BERDASARKAN JENIS SURAT
+            // VALIDASI BERDASARKAN JENIS SURAT
             switch (_suratData.NamaJenis?.ToUpperInvariant())
             {
                 case SuratConstants.IJIN_TINGGAL:
-                    ValidateIjinTinggalAsync(errors);
+                    ValidateIjinTinggal(errors);
                     break;
                 case SuratConstants.NTCR_N1:
                 case SuratConstants.NTCR_N2:
@@ -170,8 +170,8 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        // ? VALIDASI IJIN TINGGAL BARU
-        private void ValidateIjinTinggalAsync(List<string> errors)
+        // VALIDASI IJIN TINGGAL BARU
+        private void ValidateIjinTinggal(List<string> errors)
         {
             // UI menyimpan alamat tujuan di properti top-level SuratData (DusunTujuan/DesaTujuan/
             // KecTujuan/KabTujuan), bukan di sub-model IjinTinggal. Validasi mengikuti form.
@@ -191,7 +191,7 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        // ? VALIDASI NTCR (blanko N1-N6 + surat numpang nikah N8)
+        // VALIDASI NTCR (blanko N1-N6 + surat numpang nikah N8)
         private void ValidateNtcr(List<string> errors)
         {
             var ntcr = _suratData.Ntcr;
@@ -376,7 +376,7 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        // ? VALIDASI KEMATIAN DENGAN KOLOM BARU
+        // VALIDASI KEMATIAN DENGAN KOLOM BARU
         private void ValidateKematian(List<string> errors)
         {
             if (_suratData.Kematian == null || !_suratData.Kematian.IsValid())
@@ -393,7 +393,7 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        // ? VALIDASI SKU DENGAN KOLOM BARU
+        // VALIDASI SKU DENGAN KOLOM BARU
         private void ValidateSKU(List<string> errors)
         {
             if (_suratData.SKU == null || !_suratData.SKU.IsValid())
@@ -403,7 +403,7 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        // ? VALIDASI SKTM BARU
+        // VALIDASI SKTM BARU
         private void ValidateSKTM(List<string> errors)
         {
             // Data utama SKTM tersimpan di Surat.Keterangan (tidak ada tabel tambahan).
@@ -425,7 +425,7 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        // ? VALIDASI IJIN TINGGAL MODEL
+        // VALIDASI IJIN TINGGAL MODEL
         private void ValidateIjinTinggalModel(List<string> errors)
         {
             // UI menyimpan data tujuan di properti top-level SuratData (DusunTujuan..KabTujuan),
@@ -458,7 +458,7 @@ namespace SuDesApp.Data.Models
                 errors.Add("Data instansi tidak valid atau kosong.");
         }
 
-        // ? VALIDASI KENAL LAHIR DENGAN KOLOM BARU
+        // VALIDASI KENAL LAHIR DENGAN KOLOM BARU
         private void ValidateKenalLahir(List<string> errors)
         {
             if (_suratData.KenalLahir == null || !_suratData.KenalLahir.IsValid())
@@ -469,7 +469,7 @@ namespace SuDesApp.Data.Models
 
         }
 
-        // ? VALIDASI AHLI WARIS DENGAN KOLOM BARU
+        // VALIDASI AHLI WARIS DENGAN KOLOM BARU
         private void ValidateAhliWaris(List<string> errors)
         {
             if (_suratData.AhliWaris == null || _suratData.AhliWaris.Waris == null || !_suratData.AhliWaris.Waris.Any())
@@ -494,7 +494,7 @@ namespace SuDesApp.Data.Models
             }
         }
 
-        // ? VALIDASI BEDA NAMA DENGAN KOLOM BARU
+        // VALIDASI BEDA NAMA DENGAN KOLOM BARU
         private void ValidateBedaNama(List<string> errors)
         {
             if (_suratData.BedaNama == null)

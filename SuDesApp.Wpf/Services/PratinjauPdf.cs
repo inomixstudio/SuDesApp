@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using SuDesApp.Configuration;
+using SuDesApp.GeneratorPdf;
 
 namespace SuDesApp.Wpf.Services
 {
@@ -24,26 +25,22 @@ namespace SuDesApp.Wpf.Services
             SimpanAsync(Folder(config), pdf, namaBerkas);
 
         /// <summary>Varian untuk pemanggil yang sudah memegang folder pratinjau sendiri.</summary>
-        public static async Task<string> SimpanAsync(string? folder, byte[] pdf, string namaBerkas)
+        public static Task<string> SimpanAsync(string? folder, byte[] pdf, string namaBerkas)
         {
             ArgumentNullException.ThrowIfNull(pdf);
 
             folder = string.IsNullOrWhiteSpace(folder)
                 ? Path.Combine(Path.GetTempPath(), "SuDesApp")
                 : folder!;
-            Directory.CreateDirectory(folder);
 
             string dasar = NamaAman(namaBerkas);
             if (dasar.Length == 0) dasar = "Pratinjau";
 
-            string jalur = Path.Combine(folder, dasar + ".pdf");
-            if (File.Exists(jalur))
-            {
-                jalur = Path.Combine(folder, $"{dasar}_{DateTime.Now:yyyyMMddHHmmssfff}.pdf");
-            }
-
-            await File.WriteAllBytesAsync(jalur, pdf).ConfigureAwait(false);
-            return jalur;
+            // Penulisan lewat pemilik siklus hidup berkas yang sama dengan surat:
+            // berkas sementara -> nama akhir, dengan fallback bila tujuan terkunci.
+            return SuratPdfSave.SimpanAsync(
+                Path.Combine(folder, dasar + ".pdf"),
+                async stream => await stream.WriteAsync(pdf, 0, pdf.Length).ConfigureAwait(false));
         }
 
         /// <summary>Folder pratinjau: TempPDF aplikasi, atau folder data sementara bila belum disetel.</summary>

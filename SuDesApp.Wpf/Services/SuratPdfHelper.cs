@@ -225,36 +225,5 @@ namespace SuDesApp.Wpf.Services
             }
         }
 
-        /// <summary>
-        /// Regenerasi PDF surat berdasarkan ID: muat ulang data lengkap (beserta relasi)
-        /// dari DB lalu generate. Dipakai pratinjau untuk menyegarkan diri setelah
-        /// form edit ditutup dengan menyimpan.
-        /// </summary>
-        public static async Task<string?> RegeneratePdfAsync(
-            IServiceProvider services,
-            AppConfig appConfig,
-            ILogger logger,
-            string templateName,
-            int idSurat)
-        {
-            try
-            {
-                var unitOfWork = services.GetRequiredService<IUnitOfWork>();
-                var suratData = await unitOfWork.SuratRepository.GetByIdAsync(idSurat);
-                if (suratData == null)
-                {
-                    logger.LogWarning("RegeneratePdfAsync: surat #{Id} tidak ditemukan.", idSurat);
-                    return null;
-                }
-
-                return await GeneratePdfAsync(services, appConfig, suratData, logger,
-                    suratData.NamaJenis ?? templateName);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Gagal meregenerasi PDF surat #{Id}", idSurat);
-                return null;
-            }
-        }
     }
 }
