@@ -35,8 +35,8 @@ namespace SuDesApp.Tests.UI
         /// <summary>TextBox hanya bisa dibuat di thread STA.</summary>
         private static string Ketik(string masukan)
         {
-            string hasil = null;
-            Exception galat = null;
+            string? hasil = null;
+            Exception? galat = null;
 
             var utas = new Thread(() =>
             {
@@ -58,7 +58,7 @@ namespace SuDesApp.Tests.UI
             utas.Join();
 
             if (galat is not null) throw galat;
-            return hasil;
+            return hasil!;
         }
 
         private static int BatasPanjang()

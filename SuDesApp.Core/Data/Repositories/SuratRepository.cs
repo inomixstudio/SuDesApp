@@ -754,7 +754,7 @@ namespace SuDesApp.Data.Repositories
 
             try
             {
-                // ? GUNAKAN PEMETAAN MANUAL DENGAN KONVERSI YANG AMAN
+                // GUNAKAN PEMETAAN MANUAL DENGAN KONVERSI YANG AMAN
                 var dynamicResults = await _connection.QueryAsync(query, parameters);
                 var results = new List<SuratData>();
                 var gagalDipetakan = 0;
@@ -778,7 +778,7 @@ namespace SuDesApp.Data.Repositories
                             NamaJenis = SafeGetString(row.NamaJenis)
                         };
 
-                        // ? MAP WARGA DATA DENGAN KONVERSI AMAN
+                        // MAP WARGA DATA DENGAN KONVERSI AMAN
                         if (HasProperty(row, "ID_Warga") && SafeGetInt(row.ID_Warga) > 0)
                         {
                             surat.Warga = new WargaData
@@ -805,7 +805,7 @@ namespace SuDesApp.Data.Repositories
                             };
                         }
 
-                        // ? MAP INSTANSI JIKA ADA
+                        // MAP INSTANSI JIKA ADA
                         if (HasProperty(row, "NamaInstansi") && !string.IsNullOrEmpty(SafeGetString(row.NamaInstansi)))
                         {
                             surat.Instansi = new Instansi
@@ -818,7 +818,7 @@ namespace SuDesApp.Data.Repositories
                             };
                         }
 
-                        // ? MAP NTCR DATA (N1-N4) bila jenis surat termasuk NTCR
+                        // MAP NTCR DATA (N1-N4) bila jenis surat termasuk NTCR
                         if (IsNtcrJenis(surat.NamaJenis))
                         {
                             await AttachNtcrDataAsync(surat, cancellationToken);
@@ -863,7 +863,7 @@ namespace SuDesApp.Data.Repositories
             }
         }
 
-        // ? HELPER METHODS UNTUK KONVERSI AMAN
+        // HELPER METHODS UNTUK KONVERSI AMAN
         private static int SafeGetInt(object? value, int defaultValue = 0)
         {
             if (value == null || value == DBNull.Value)
@@ -1392,7 +1392,7 @@ namespace SuDesApp.Data.Repositories
                 var orderBy = GetValidSortColumn(sortBy);
                 var direction = ascending ? "ASC" : "DESC";
 
-                // ? GUNAKAN QUERY YANG LEBIH SEDERHANA DENGAN PEMETAAN MANUAL
+                // GUNAKAN QUERY YANG LEBIH SEDERHANA DENGAN PEMETAAN MANUAL
                 var query = $@"
             SELECT 
                 s.ID_Surat, s.ID_Jenis, s.NomorSurat, s.TanggalSurat, 
@@ -1500,7 +1500,7 @@ namespace SuDesApp.Data.Repositories
             }
         }
 
-        // ? MAIN METHOD IMPLEMENTATION
+        // MAIN METHOD IMPLEMENTATION
         public async Task<Dictionary<string, object>> GetDatabaseStatsAsync()
         {
             try
@@ -1509,23 +1509,23 @@ namespace SuDesApp.Data.Repositories
                 await EnsureConnectionOpenAsync();
                 var stats = new Dictionary<string, object>();
 
-                // ? 1. TOTAL SURAT
+                // 1. TOTAL SURAT
                 var totalSurat = await _connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Surat");
                 stats["Total Surat"] = totalSurat;
                 _logger.LogDebug("Total Surat: {Count}", totalSurat);
 
-                // ? 2. TOTAL WARGA
+                // 2. TOTAL WARGA
                 var totalWarga = await _connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Warga");
                 stats["Total Warga"] = totalWarga;
                 _logger.LogDebug("Total Warga: {Count}", totalWarga);
 
-                // ? 3. TOTAL JENIS SURAT
+                // 3. TOTAL JENIS SURAT
                 // NOTE: tanpa filter IsActive agar backward-compatible
                 // dengan database lama yang belum punya kolom tersebut.
                 var totalJenis = await _connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM JenisSurat");
                 stats["Total Jenis Surat"] = totalJenis;
 
-                // ? 4. SURAT BY STATUS
+                // 4. SURAT BY STATUS
                 try
                 {
                     var statusQuery = "SELECT Status, COUNT(*) as Count FROM Surat GROUP BY Status";
@@ -1545,7 +1545,7 @@ namespace SuDesApp.Data.Repositories
                     stats["Surat Status"] = "Status surat tidak terbaca";
                 }
 
-                // ? 5. SURAT BY JENIS (TOP 10)
+                // 5. SURAT BY JENIS (TOP 10)
                 try
                 {
                     var jenisQuery = @"
@@ -1572,7 +1572,7 @@ namespace SuDesApp.Data.Repositories
                     stats["Surat by Jenis"] = "Data jenis surat tidak terbaca";
                 }
 
-                // ? 6. SURAT TAHUN INI
+                // 6. SURAT TAHUN INI
                 try
                 {
                     var currentYear = DateTime.Now.Year.ToString();
@@ -1587,7 +1587,7 @@ namespace SuDesApp.Data.Repositories
                     stats["Surat Tahun Ini"] = "Data tahun berjalan tidak terbaca";
                 }
 
-                // ? 7. SURAT BULAN INI
+                // 7. SURAT BULAN INI
                 try
                 {
                     var currentMonth = DateTime.Now.ToString("yyyy-MM");
@@ -1602,7 +1602,7 @@ namespace SuDesApp.Data.Repositories
                     stats["Surat Bulan Ini"] = "Data bulan berjalan tidak terbaca";
                 }
 
-                // ? 8. DATABASE FILE SIZE (jika perlu)
+                // 8. DATABASE FILE SIZE (jika perlu)
                 try
                 {
                     var dbSizeQuery = "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()";
@@ -1617,7 +1617,7 @@ namespace SuDesApp.Data.Repositories
                     stats["Database Size"] = "Unknown";
                 }
 
-                // ? 9. LAST SURAT CREATED
+                // 9. LAST SURAT CREATED
                 try
                 {
                     var lastSuratQuery = @"

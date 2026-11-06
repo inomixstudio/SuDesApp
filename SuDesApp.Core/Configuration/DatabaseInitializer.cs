@@ -33,7 +33,7 @@ namespace SuDesApp.Configuration
         // diubah; logikanya tinggal di kelas itu.
         private readonly IDatabaseBackupService _backupService;
 
-        // ? SCHEMA VERSION TRACKING
+        // SCHEMA VERSION TRACKING
         private const string CURRENT_SCHEMA_VERSION = "2.0.0";
 
         public DatabaseInitializer(
@@ -63,21 +63,21 @@ namespace SuDesApp.Configuration
                 using var connection = new SqliteConnection(_config.DatabaseConnectionString);
                 await connection.OpenAsync();
 
-                // ? 1. Buat tabel versi schema jika belum ada
+                // 1. Buat tabel versi schema jika belum ada
                 await CreateSchemaVersionTableAsync(connection);
 
-                // ? 2. Get current version before any schema operations
+                // 2. Get current version before any schema operations
                 var currentVersion = await GetCurrentSchemaVersionAsync(connection);
                 _logger.LogInformation("Current schema version: {CurrentVersion}, Target: {TargetVersion}",
                     currentVersion, CURRENT_SCHEMA_VERSION);
 
-                // ? 3. ALWAYS execute base schema first to ensure tables exist
+                // 3. ALWAYS execute base schema first to ensure tables exist
                 await ExecuteDatabaseSchemaAsync(connection);
 
-                // ? 4. Check if this is a fresh install (no previous version records or default version)
+                // 4. Check if this is a fresh install (no previous version records or default version)
                 var isFirstRun = await IsFirstRunAsync(connection, currentVersion);
 
-                // ? 5. Perform migration only if needed and not a fresh install
+                // 5. Perform migration only if needed and not a fresh install
                 if (!isFirstRun && await ShouldMigrateSchema(currentVersion))
                 {
                     await MigrateSchemaAsync(connection, currentVersion);
@@ -87,26 +87,26 @@ namespace SuDesApp.Configuration
                     _logger.LogInformation("Fresh installation detected, skipping migrations");
                 }
 
-                // ? 6. Verify required columns exist (non-blocking)
+                // 6. Verify required columns exist (non-blocking)
                 await EnsureRequiredColumnsAsync(connection);
 
-                // ? 7. Inisialisasi tabel-tabel utama
+                // 7. Inisialisasi tabel-tabel utama
                 await _desaRepository.InitializeAsync();
                 await _jenisSuratRepository.InitializeJenisSuratDataAsync();
                 await _wargaRepository.InitializeWargaTableAsync();
                 await _suratRepository.InitializeSuratIndexesAsync();
 
-                // ? 8. Inisialisasi komponen baru
+                // 8. Inisialisasi komponen baru
                 await InitializeNewFeaturesAsync(connection);
 
-                // ? 9. Validasi schema final - dengan retry jika gagal
+                // 9. Validasi schema final - dengan retry jika gagal
                 bool isValid = await ValidateSchemaWithRetryAsync(connection);
                 if (!isValid)
                 {
                     throw new InvalidOperationException("Schema validation failed after initialization and retry attempts");
                 }
 
-                // ? 10. Update versi schema hanya jika berhasil
+                // 10. Update versi schema hanya jika berhasil
                 await UpdateSchemaVersionAsync(connection, CURRENT_SCHEMA_VERSION);
 
                 _logger.LogInformation("Inisialisasi database berhasil v{Version}", CURRENT_SCHEMA_VERSION);
@@ -118,7 +118,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? ENSURE REQUIRED COLUMNS EXIST - SIMPLIFIED
+        // ENSURE REQUIRED COLUMNS EXIST - SIMPLIFIED
         private async Task EnsureRequiredColumnsAsync(SqliteConnection connection)
         {
             _logger.LogInformation("Verifying required columns exist...");
@@ -176,7 +176,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? NEW: Check if table exists
+        // NEW: Check if table exists
         private async Task<bool> TableExistsAsync(SqliteConnection connection, string tableName)
         {
             try
@@ -225,7 +225,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? VALIDATE SCHEMA WITH RETRY
+        // VALIDATE SCHEMA WITH RETRY
         private async Task<bool> ValidateSchemaWithRetryAsync(SqliteConnection connection, int maxRetries = 3)
         {
             for (int attempt = 1; attempt <= maxRetries; attempt++)
@@ -264,7 +264,7 @@ namespace SuDesApp.Configuration
             return false;
         }
 
-        // ? CREATE SCHEMA VERSION TABLE
+        // CREATE SCHEMA VERSION TABLE
         private async Task CreateSchemaVersionTableAsync(SqliteConnection connection)
         {
             var sql = @"
@@ -278,7 +278,7 @@ namespace SuDesApp.Configuration
             await connection.ExecuteAsync(sql);
         }
 
-        // ? GET CURRENT SCHEMA VERSION
+        // GET CURRENT SCHEMA VERSION
         private async Task<string> GetCurrentSchemaVersionAsync(SqliteConnection connection)
         {
             try
@@ -293,7 +293,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? CHECK IF MIGRATION IS NEEDED - IMPROVED
+        // CHECK IF MIGRATION IS NEEDED - IMPROVED
         private async Task<bool> ShouldMigrateSchema(string currentVersion)
         {
             var current = Version.Parse(currentVersion);
@@ -318,7 +318,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? MIGRATE SCHEMA - IMPROVED SAFETY
+        // MIGRATE SCHEMA - IMPROVED SAFETY
         private async Task MigrateSchemaAsync(SqliteConnection connection, string fromVersion)
         {
             _logger.LogInformation("Migrating schema from {FromVersion} to {ToVersion}", fromVersion, CURRENT_SCHEMA_VERSION);
@@ -353,7 +353,7 @@ namespace SuDesApp.Configuration
             _logger.LogInformation("Schema migration completed");
         }
 
-        // ? CHECK IF THIS IS FIRST RUN
+        // CHECK IF THIS IS FIRST RUN
         private async Task<bool> IsFirstRunAsync(SqliteConnection connection, string currentVersion)
         {
             try
@@ -411,7 +411,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? APPLY OPTIONAL MIGRATIONS
+        // APPLY OPTIONAL MIGRATIONS
         private async Task ApplyOptionalMigrationsAsync(SqliteConnection connection)
         {
             _logger.LogInformation("Applying optional migrations...");
@@ -466,7 +466,7 @@ namespace SuDesApp.Configuration
                 }
             }
         }
-        // ? MIGRATION FROM v1 TO v2 - CRITICAL ONLY
+        // MIGRATION FROM v1 TO v2 - CRITICAL ONLY
         private async Task MigrateFrom1To2Async(SqliteConnection connection)
         {
             _logger.LogInformation("Applying critical migration from v1.x to v2.x...");
@@ -524,7 +524,7 @@ namespace SuDesApp.Configuration
             _logger.LogInformation("Critical migration completed");
         }
 
-        // ? EXECUTE COMPLETE DATABASE SCHEMA
+        // EXECUTE COMPLETE DATABASE SCHEMA
         private async Task ExecuteDatabaseSchemaAsync(SqliteConnection connection)
         {
             var dbFile = Path.Combine(AppContext.BaseDirectory, "desa.db.sql");
@@ -598,39 +598,39 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? INITIALIZE NEW FEATURES
+        // INITIALIZE NEW FEATURES
         private async Task InitializeNewFeaturesAsync(SqliteConnection connection)
         {
             _logger.LogInformation("Initializing new features...");
 
-            // ? 1. Create audit log table jika belum ada
+            // 1. Create audit log table jika belum ada
             await CreateAuditLogTableAsync(connection);
 
-            // ? 1a. Tabel Perangkat Desa (dibuat + migrasi nama jabatan lama)
+            // 1a. Tabel Perangkat Desa (dibuat + migrasi nama jabatan lama)
             await EnsurePerangkatDesaTableAsync(connection);
 
-            // ? 1b. Tabel status tutup buku tahunan (fitur baru; tidak ada di desa.db.sql versi awal)
+            // 1b. Tabel status tutup buku tahunan (fitur baru; tidak ada di desa.db.sql versi awal)
             await EnsureTutupBukuTahunTableAsync(connection);
 
-            // ? 1c. Tabel bukti langganan (kode aktivasi terhubung ke database desa)
+            // 1c. Tabel bukti langganan (kode aktivasi terhubung ke database desa)
             await EnsureLisensiAktivasiTableAsync(connection);
 
-            // ? 2. Create views jika belum ada
+            // 2. Create views jika belum ada
             await CreateViewsAsync(connection);
 
-            // ? 3. Create triggers jika belum ada
+            // 3. Create triggers jika belum ada
             await CreateTriggersAsync(connection);
 
-            // ? 4. Create additional indexes
+            // 4. Create additional indexes
             await CreateAdditionalIndexesAsync(connection);
 
-            // ? 5. Insert default data for new features
+            // 5. Insert default data for new features
             await InsertDefaultDataAsync(connection);
 
-            // ? 6. Buang sisa data Model N7 (sudah tidak dipakai aplikasi)
+            // 6. Buang sisa data Model N7 (sudah tidak dipakai aplikasi)
             await HapusSisaDataN7Async(connection);
 
-            // ? 7. Kosongkan Pejabat Kecamatan yang masih berisi contoh bawaan
+            // 7. Kosongkan Pejabat Kecamatan yang masih berisi contoh bawaan
             await BersihkanPejabatKecamatanContohAsync(connection);
 
             // 🧹 8. Buang contoh warga bawaan (desa.db.sql tak lagi menyuntiknya)
@@ -639,7 +639,7 @@ namespace SuDesApp.Configuration
             _logger.LogInformation("New features initialized successfully");
         }
 
-        // ? BERSIHKAN PEJABAT KECAMATAN CONTOH
+        // BERSIHKAN PEJABAT KECAMATAN CONTOH
         /// <summary>
         /// Kolom Pejabat Kecamatan (Nama Camat, NIP Camat, Golongan) tidak lagi diisi
         /// contoh bawaan karena tidak semua surat memakainya. Database lama yang masih
@@ -718,7 +718,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? BUANG SISA DATA MODEL N7
+        // BUANG SISA DATA MODEL N7
         /// <summary>
         /// Model N7 (penolakan kehendak nikah/rujuk) sudah tidak ada di aplikasi:
         /// blanko itu diterbitkan KUA, bukan kantor desa. Migrasi ini membuang sisa
@@ -823,7 +823,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? CREATE AUDIT LOG TABLE
+        // CREATE AUDIT LOG TABLE
         private async Task CreateAuditLogTableAsync(SqliteConnection connection)
         {
             var sql = @"
@@ -907,7 +907,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? CREATE VIEWS
+        // CREATE VIEWS
         private async Task CreateViewsAsync(SqliteConnection connection)
         {
             var views = new[]
@@ -951,7 +951,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? CREATE TRIGGERS
+        // CREATE TRIGGERS
         private async Task CreateTriggersAsync(SqliteConnection connection)
         {
             var triggers = new[]
@@ -984,7 +984,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? CREATE ADDITIONAL INDEXES
+        // CREATE ADDITIONAL INDEXES
         private async Task CreateAdditionalIndexesAsync(SqliteConnection connection)
         {
             var indexes = new[]
@@ -1010,7 +1010,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? INSERT DEFAULT DATA
+        // INSERT DEFAULT DATA
         private async Task InsertDefaultDataAsync(SqliteConnection connection)
         {
             // Insert IJIN_TINGGAL jenis surat jika belum ada
@@ -1119,7 +1119,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? UPDATE SCHEMA VERSION
+        // UPDATE SCHEMA VERSION
         private async Task UpdateSchemaVersionAsync(SqliteConnection connection, string version)
         {
             // Idempoten. Sebelumnya setiap kali aplikasi dibuka satu baris baru
@@ -1142,7 +1142,7 @@ namespace SuDesApp.Configuration
             });
         }
 
-        // ? VALIDATE SCHEMA - IMPROVED
+        // VALIDATE SCHEMA - IMPROVED
         public async Task<bool> ValidateSchemaAsync()
         {
             try
@@ -1242,7 +1242,7 @@ namespace SuDesApp.Configuration
             return true;
         }
 
-        // ? DATABASE STATISTICS / BACKUP / RESTORE
+        // DATABASE STATISTICS / BACKUP / RESTORE
         //
         // Ketiganya kini tinggal di DatabaseBackupService. Yang tersisa di sini
         // hanyalah penerus supaya pemakil IDatabaseInitializer tidak perlu
@@ -1280,7 +1280,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // ? IMPROVED SQL COMMAND SPLITTING
+        // IMPROVED SQL COMMAND SPLITTING
         private IEnumerable<string> SplitSqlCommands(string sql)
         {
             var commands = new List<string>();

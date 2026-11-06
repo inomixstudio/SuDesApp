@@ -5,9 +5,9 @@ namespace SuDesApp.Wpf.ViewModels;
 /// <summary>Defines the built-in letter choices and resolves names used by quick links.</summary>
 internal static class BuatSuratCatalog
 {
-    // Daftar pilihannya tinggal di Core (MenuSuratKatalog) supaya menu desktop
-    // dan menu web membaca satu sumber yang sama — menambah jenis surat baru
-    // cukup sekali, dan kedua platform langsung ikut.
+    // Daftar pilihannya tinggal di Core (MenuSuratKatalog) supaya desktop dan
+    // backend HTTP membaca satu sumber yang sama — menambah jenis surat baru
+    // cukup sekali, dan keduanya langsung ikut.
     public static IReadOnlyList<(string Label, string Template)> MenuSurat { get; } =
         MenuSuratKatalog.Semua.Select(p => (p.Label, p.Jenis)).ToList();
 
