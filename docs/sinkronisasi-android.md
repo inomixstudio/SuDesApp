@@ -85,3 +85,24 @@ Antrean Supabase memuat data penduduk (NIK, nama, alamat). Ini mengubah
 pernyataan "data tetap di desktop" pada `docs/kebijakan-privasi.md` dan
 `docs/syarat-ketentuan.md` — keduanya **harus diperbarui** sebelum fitur ini
 dipakai.
+
+## Modul desktop (WPF/Core)
+
+| Berkas | Peran |
+|---|---|
+| `SuDesApp.Core/Supabase/SupabasePengaturan.cs` | Koneksi Supabase; kata sandi lewat DPAPI |
+| `SuDesApp.Core/Sinkron/SkemaFormulir.cs` | Skema formulir + pemetaan isian → `SuratData` |
+| `SuDesApp.Core/Sinkron/ImporAntreanSurat.cs` | Satu baris antrean → register (nomor & NIK dinormalkan) |
+| `SuDesApp.Core/Sinkron/SinkronSuratService.cs` | Satu putaran: tarik → `.xlsx` → impor → ack |
+| `SuDesApp.Core/Sinkron/PerangkaianPerangkat.cs` | Buat/cabut perangkat + kata sandi acak |
+| `SuDesApp.Wpf/Views/SinkronView.xaml` | Halaman Sinkron Android (menu PENGATURAN) |
+
+Alur terverifikasi end-to-end: dua surat Android dengan placeholder nomor
+yang sama diimpor; nomor pertama dipertahankan, nomor kedua dibangkitkan ulang
+(`470/001/Ds/2026`), NIK berbeda menjadi dua warga, status **Active**, antrean
+kosong, jejak `sinkron_log` terisi.
+
+Catatan: `AddSuratAsync` menulis status lewat query `InsertSurat` yang tidak
+memuat kolom `Status`, jadi surat baru mendarat sebagai `Draft`. Impor
+menaikkan statusnya ke `Active` lewat `UpdateStatusAsync` — surat Android
+dianggap sudah terbit.

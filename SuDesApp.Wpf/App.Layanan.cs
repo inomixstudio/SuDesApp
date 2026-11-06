@@ -426,6 +426,22 @@ namespace SuDesApp.Wpf
             services.AddTransient<LaporanViewModel>();
             services.AddTransient<ApiViewModel>();
 
+            // Sinkron Android: antrean Supabase -> register desktop, plus
+            // perangkaian perangkat (QR). Konfigurasi Supabase dibaca ulang dari
+            // preferensi tiap di-resolve supaya perubahan yang baru disimpan
+            // langsung dipakai tanpa mulai ulang.
+            services.AddTransient(_ => SuDesApp.Supabase.SupabasePengaturan.Muat());
+            services.AddTransient(_ => SuDesApp.Sinkron.SkemaFormulir.Muat());
+            services.AddTransient<SuDesApp.Sinkron.ImporAntreanSurat>();
+            services.AddTransient<SuDesApp.Sinkron.SinkronSuratService>(sp =>
+                new SuDesApp.Sinkron.SinkronSuratService(
+                    sp.GetRequiredService<SuDesApp.Supabase.SupabasePengaturan>(),
+                    sp.GetRequiredService<SuDesApp.Sinkron.ImporAntreanSurat>(),
+                    sp.GetRequiredService<ILogger<SuDesApp.Sinkron.SinkronSuratService>>(),
+                    SuDesApp.Sinkron.SinkronSuratService.FolderBawaan));
+            services.AddTransient<SuDesApp.Sinkron.PerangkaianPerangkat>();
+            services.AddTransient<SinkronViewModel>();
+
             // Pusat dokumen (Dokumentasi) + pembaca dokumen. Pembaca selalu dibuka
             // untuk satu dokumen tertentu, jadi ia dibuat lewat factory yang menerima
             // judul, jalur berkas, dan aksi Kembali ke daftar dokumen.

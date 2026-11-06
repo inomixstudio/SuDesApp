@@ -41,6 +41,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.89" />
+    <!-- Koneksi Supabase (sinkronisasi surat Android). Role yang dipakai sama
+         dengan server lisensi; RLS tetap berlaku untuk role non-pemilik. -->
+    <PackageReference Include="Npgsql" Version="10.0.3" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.78.0.4313" />
     <!-- Provider SQLite MILIK SENDIRI: Microsoft.Data.Sqlite.Core + bundle
          e_sqlcipher. Database desa baru tetap SQLite biasa (SQLCipher hanya
@@ -72,6 +75,13 @@
          pada berkas di folder instalasi. -->
     <EmbeddedResource Include="Resources\GarudaPancasila.png" />
     <None Remove="Resources\GarudaPancasila.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Skema formulir yang dibagikan desktop -> Android. Ikut terpasang di
+         folder keluaran (dibaca SkemaFormulir.Muat) dan diterbitkan desktop ke
+         tabel skema_formulir di Supabase untuk dibaca Android. -->
+    <None Include="Configuration\SkemaFormulir.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

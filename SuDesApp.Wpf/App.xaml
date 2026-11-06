@@ -171,6 +171,10 @@
             <DataTemplate DataType="{x:Type vm:ApiViewModel}">
                 <views:ApiView/>
             </DataTemplate>
+            <!-- Sinkron Android: antrean Supabase -> register + perangkat -->
+            <DataTemplate DataType="{x:Type vm:SinkronViewModel}">
+                <views:SinkronView/>
+            </DataTemplate>
             <!-- Pusat dokumen bawaan aplikasi + pembaca dokumennya. Halaman baca
                  dipanggil lewat factory dari daftar dokumen, bukan dari sidebar. -->
             <DataTemplate DataType="{x:Type vm:DokumentasiViewModel}">
