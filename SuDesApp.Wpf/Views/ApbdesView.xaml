@@ -60,7 +60,7 @@
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
                         <TextBlock Text="RINGKASAN APBDES" Style="{StaticResource FormSectionTitle}"/>
                         <TextBlock Text="Kelola dokumen anggaran desa per tahun anggaran dengan mudah dan terstruktur."
-                                   FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"
+                                   FontSize="13" Margin="0,4,0,0" TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -106,7 +106,7 @@
                                 <TextBlock Text="&#128176;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="PENDAPATAN" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="PENDAPATAN" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="{Binding PendapatanTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
                                            Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
                             </StackPanel>
@@ -123,7 +123,7 @@
                                 <TextBlock Text="&#128179;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="BELANJA" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="BELANJA" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="{Binding BelanjaTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
                                            Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
                             </StackPanel>
@@ -140,7 +140,7 @@
                                 <TextBlock Text="&#128200;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="PEMBIAYAAN" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="PEMBIAYAAN" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="{Binding PembiayaanTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
                                            Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
                             </StackPanel>
@@ -157,7 +157,7 @@
                                 <TextBlock Text="&#128202;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="TOTAL ANGGARAN" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="TOTAL ANGGARAN" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="{Binding TotalAnggaranTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
                                            Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
                             </StackPanel>
@@ -174,7 +174,7 @@
                                 <TextBlock Text="&#9989;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="REALISASI" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="REALISASI" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="{Binding TotalRealisasiTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
                                            Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
                             </StackPanel>
@@ -191,7 +191,7 @@
                                 <TextBlock Text="&#128202;" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="SISA ANGGARAN" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="SISA ANGGARAN" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="{Binding SisaTampil, Mode=OneWay}" FontSize="13" FontWeight="Bold"
                                            Margin="0,2,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
                             </StackPanel>
@@ -224,7 +224,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
                         <TextBlock Text="RIWAYAT ANGGARAN TAHUN SEBELUMNYA" Style="{StaticResource FormSectionTitle}"/>
-                        <TextBlock Text="{Binding RiwayatRingkas}" TextWrapping="Wrap" FontSize="12" Margin="0,3,0,0"
+                        <TextBlock Text="{Binding RiwayatRingkas}" TextWrapping="Wrap" FontSize="13" Margin="0,3,0,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
                     <WrapPanel Grid.Column="1" VerticalAlignment="Center">
@@ -239,10 +239,10 @@
 
                 <!-- Keadaan penarikan pusat: sumber & tahun yang berhasil dimuat,
                      atau alasan kegagalannya (format halaman berubah, offline, …). -->
-                <TextBlock Text="{Binding StatusPusat}" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"
+                <TextBlock Text="{Binding StatusPusat}" TextWrapping="Wrap" FontSize="13" Margin="0,8,0,0"
                            Foreground="{DynamicResource TextSecondaryBrush}"/>
 
-                <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"
+                <TextBlock TextWrapping="Wrap" FontSize="13" Margin="0,8,0,0"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            Visibility="{Binding AdaRiwayat, Converter={StaticResource BoolToVis}}">
                     <Run Text="Angka asal arsip dokumen aplikasi; angka publikasi asal situs pusat (Prodeskel) yang ditarik otomatis — Impor Publikasi tetap tersedia sebagai cadangan."/>
@@ -298,7 +298,7 @@
                     <StackPanel Grid.Row="0">
                         <TextBlock Text="{Binding JudulDaftarDokumen}" Style="{StaticResource FormSectionTitle}"/>
                         <TextBlock Text="Pilih dokumen untuk dibaca atau disunting." TextWrapping="Wrap"
-                                   FontSize="12" Margin="0,3,0,0"
+                                   FontSize="13" Margin="0,3,0,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
 
@@ -320,7 +320,7 @@
                                             <TextBlock Text="{Binding Label}" FontWeight="SemiBold"
                                                        TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                                                        ToolTip="{Binding Label}"/>
-                                            <TextBlock Text="{Binding Judul}" FontSize="12" Margin="0,3,0,0"
+                                            <TextBlock Text="{Binding Judul}" FontSize="13" Margin="0,3,0,0"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                                        TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                                                        ToolTip="{Binding Judul}"/>
@@ -393,7 +393,7 @@
                                      menyisakan terlalu sedikit ruang di jendela sempit. -->
                                 <TextBlock Text="Tahapan" Style="{StaticResource FormLabel}" Margin="0,10,0,0"/>
                                 <ComboBox Style="{StaticResource FormCombo}" Margin="0"
-                                          FontSize="12" MaxDropDownHeight="220"
+                                          FontSize="13" MaxDropDownHeight="220"
                                           ScrollViewer.VerticalScrollBarVisibility="Visible"
                                           ItemsSource="{x:Static vm:ApbdesViewModel.JenisDaftar}"
                                           SelectedItem="{Binding DokumenTerpilih.Jenis, Mode=TwoWay}"

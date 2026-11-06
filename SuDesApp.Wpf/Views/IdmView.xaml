@@ -20,7 +20,7 @@
              gelap teks rincian indikator tampak hitam di atas latar gelap. -->
         <Style x:Key="SelIdm" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="VerticalAlignment" Value="Top"/>
             <Setter Property="Margin" Value="0,2,10,2"/>
@@ -46,7 +46,7 @@
              mengikuti lebar jendela, jadi tidak ada kolom yang terdorong keluar
              layar. -->
         <Style x:Key="KepalaSel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="VerticalAlignment" Value="Bottom"/>
@@ -300,13 +300,13 @@
                                 HorizontalAlignment="Center"
                                 Background="{DynamicResource PanelBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                            <TextBlock Text="{x:Static u:IkonMenu.Pembangunan}" FontSize="22"
+                            <TextBlock Text="{x:Static u:IkonMenu.Pembangunan}" FontSize="20"
                                        FontFamily="{StaticResource AppIconFont}"
                                        Foreground="{DynamicResource PrimaryBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
 
-                        <TextBlock Text="{Binding JudulKeadaan}" FontSize="16" FontWeight="SemiBold"
+                        <TextBlock Text="{Binding JudulKeadaan}" FontSize="15" FontWeight="SemiBold"
                                    TextAlignment="Center" TextWrapping="Wrap" Margin="0,14,0,0"
                                    AutomationProperties.Name="Judul keadaan halaman"/>
 
@@ -510,7 +510,7 @@
                                                             <Run Text=" · "/>
                                                             <Run Text="{Binding Status, Mode=OneWay}"/>
                                                         </TextBlock>
-                                                        <TextBlock Text="TERAKHIR" FontSize="9" FontWeight="Bold" Margin="6,1,0,0"
+                                                        <TextBlock Text="TERAKHIR" FontSize="10" FontWeight="Bold" Margin="6,1,0,0"
                                                                    Foreground="{DynamicResource AccentTextBrush}"
                                                                    VerticalAlignment="Center"
                                                                    Visibility="{Binding Terbaru, Converter={StaticResource BoolToVis}}"/>

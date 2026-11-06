@@ -259,7 +259,7 @@
                     <StackPanel Grid.Column="1" Margin="10,0,0,0">
                         <TextBlock Text="CONTOH PERATURAN DESA (PERDES)" FontWeight="Bold" FontSize="13"/>
                         <TextBlock Text="Pilih salah satu contoh di bawah untuk langsung membuka formulir PERDES dengan naskah siap disunting"
-                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                   FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Grid>
                 <TextBlock Text="Identitas desa akan diambil otomatis dari Pengaturan Surat. Naskah contoh bisa Anda ubah, tambah halaman, atau ganti isi sesuai kebutuhan desa, lalu simpan sebagai PDF ke arsip PERDES."
@@ -295,11 +295,11 @@
                                         <Border Grid.Column="0" Width="32" Height="32" CornerRadius="4" Margin="10,8"
                                                 Background="{DynamicResource PrimaryBrush}"
                                                 VerticalAlignment="Center">
-                                            <TextBlock Text="&#128196;" FontSize="14" Foreground="White"
+                                            <TextBlock Text="&#128196;" FontSize="14" Foreground="{DynamicResource OnPrimaryTextBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="0,8,8,8" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Judul}" FontWeight="SemiBold" FontSize="12"
+                                            <TextBlock Text="{Binding Judul}" FontWeight="SemiBold" FontSize="13"
                                                        TextWrapping="Wrap" LineHeight="16"/>
                                             <TextBlock Text="Klik untuk membuka &amp; menyunting" FontSize="10" Margin="0,1,0,0"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"/>

@@ -18,7 +18,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Style="{StaticResource HeaderIconChip}" Margin="0,0,14,0">
-                    <TextBlock Text="{x:Static u:IkonMenu.Halaman}" FontSize="19"
+                    <TextBlock Text="{x:Static u:IkonMenu.Halaman}" FontSize="20"
                                FontFamily="{StaticResource AppIconFont}"
                                Foreground="{DynamicResource PrimaryBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>

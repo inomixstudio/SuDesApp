@@ -277,7 +277,7 @@
                             VerticalAlignment="Top" Margin="0,1,12,0">
                         <TextBlock Text="{Binding IkonBagianAktif}"
                                    FontFamily="{StaticResource AppIconFont}"
-                                   FontSize="19" Foreground="{DynamicResource AccentBrush}"
+                                   FontSize="20" Foreground="{DynamicResource AccentBrush}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
 
