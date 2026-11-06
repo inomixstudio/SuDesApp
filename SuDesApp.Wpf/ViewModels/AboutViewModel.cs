@@ -249,7 +249,7 @@ namespace SuDesApp.Wpf.ViewModels
             "Surat & cetak" =>
                 "Pembuatan surat resmi, blanko NTCR, dan template surat sendiri — dari isian sampai PDF siap cetak.",
             "Data & arsip" =>
-                "Formulir, data kependudukan, agenda, dan buku SK/Perdes — tercatat sekali, terbaca kapan saja.",
+                "Formulir, data kependudukan, agenda, buku SK/Perdes, serta arsip IDM dan APBDes — tercatat sekali, terbaca kapan saja.",
             "Perangkat desa & verifikasi" =>
                 "Struktur perangkat desa, SK untuk banyak nama sekaligus, dan pemeriksaan keaslian surat.",
             "Layanan digital" =>
@@ -432,10 +432,14 @@ namespace SuDesApp.Wpf.ViewModels
                 ("Surat & cetak", "Template Surat: menyusun sendiri jenis surat baru lewat wizard (kop, judul, nomor, teks bebas, kolom isian dengan grid, tanda tangan, dan teks kaki), lengkap dengan pratinjau dan penomoran otomatis per template"),
                 ("Surat & cetak", "Surat dari Template Surat tercatat otomatis di Register Surat — dapat dicari (nomor, nama penerima, NIK, atau isi surat), dibuka lagi untuk diperbaiki, dan dicetak ulang kapan saja"),
                 ("Surat & cetak", "Contoh Template Surat siap pakai (pengantar RT/RW, domisili usaha, izin keramaian, keterangan penghasilan, belum menikah, undangan rapat, surat kuasa, surat tugas, dan pengumuman warga) yang dapat dipasang sekali klik, dijadikan dasar template baru, atau dicetak sebagai contoh"),
+                ("Surat & cetak", "Daftar hadir rapat/kegiatan dicetak lengkap dengan kop surat desa, dan isian terakhir tetap terbuka selama aplikasi berjalan"),
                 ("Data & arsip", "Manajemen formulir administrasi kependudukan (\u2265 20 formulir resmi desa)"),
                 ("Data & arsip", "Manajemen data kependudukan dan arsip digital register surat"),
                 ("Data & arsip", "Buku agenda surat masuk dan keluar dengan lampiran berkas PDF atau gambar pada tiap surat"),
                 ("Data & arsip", "Buku SK, Perdes, dan Perkades beserta lampiran Word/PDF"),
+                ("Data & arsip", "Halaman Indeks Desa & IDM: skor IDM, status desa, IKS/IKE/IKL, tren antar tahun, dan tabel indikator lengkap per dimensi — bisa dicetak atau disimpan sebagai PDF"),
+                ("Data & arsip", "Arsip dokumen APBDes per tahun anggaran dan per tahapan (Rancangan, Awal, Perubahan, Pertanggungjawaban/LPJ, DPA/DPPA/DPAL, Laporan Realisasi, dan Lainnya): isi dokumen dibaca, disunting, dan disimpan kembali, sementara angka resmi tetap dibuat di Siskeudes"),
+                ("Data & arsip", "Tutup Buku Tahunan: periksa keutuhan penomoran satu tahun, tutup atau buka bukunya, lalu cetak arsip register"),
                 ("Keamanan & pencadangan", "Pencadangan database dan formulir otomatis ke Google Drive"),
                 ("Keamanan & pencadangan", "Kredensial Google disimpan terenkripsi DPAPI untuk akun Windows ini, bukan sebagai teks biasa di appsettings.json"),
                 ("Keamanan & pencadangan", "Kata sandi pengguna disimpan sebagai PBKDF2 bersalt, percobaan masuk dibatasi, dan akun pusat dipisahkan dari akun desa"),
@@ -454,6 +458,7 @@ namespace SuDesApp.Wpf.ViewModels
                 ("Langganan", "Pusat Administrasi untuk akun pusat: masa aktif, tagihan, pengumuman, dan audit desa dikelola lewat halaman server lisensi yang dibuka dari menu Langganan. Pada mode lokal, server lisensi menyala bersama aplikasi dan berhenti saat aplikasi ditutup"),
                 ("Langganan", "Bila langganan benar-benar berakhir, aplikasi menjadi baca-saja — data tetap bisa dibaca, dicari, diekspor, dan dicadangkan; membuat surat baru dan mencetak ditolak sampai langganan diperpanjang"),
                 ("Pembaruan & antarmuka", "Dokumentasi bawaan aplikasi dapat dibuka tanpa koneksi internet"),
+                ("Pembaruan & antarmuka", "Panduan awal interaktif dengan pelacakan kemajuan dan kiat pemakaian aplikasi"),
                 ("Data & arsip", "Form Tambah Warga mengikuti tema aplikasi: kolom Alamat (Jalan/Kampung) tidak diisi terpisah karena sudah diwakili Dusun/RT/RW, sedangkan desa, kecamatan, dan kabupaten terisi otomatis dari Pengaturan Desa")
             };
 

@@ -179,6 +179,36 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.10.5 (6 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Perbaikan — Penutupan Aplikasi dan Pemasangan Pembaruan", new List<string>
+                        {
+                            "Backup harian ke Google Drive dan pemasangan pembaruan yang dijadwalkan kini berjalan saat aplikasi ditutup, setelah jendela utama hilang, dengan batas 20 detik. Penutupan tidak lagi membeku menunggu pekerjaan latar, dan pemasangan diproses proses terpisah yang tetap hidup setelah aplikasi keluar.",
+                            "Proses server lisensi lokal dipatikan tanpa menunggu. Sebelumnya aplikasi menunggu proses dotnet run benar-benar berakhir sebelum keluar, yang membuat aplikasi beku saat diklik Keluar.",
+                            "Pilihan 'pasang pembaruan kecil otomatis saat aplikasi ditutup' dihapus dari halaman Pengaturan karena sudah tidak dipakai — pemasangan diatur lewat notifikasi Instal Sekarang atau Instal Saat Keluar."
+                        }),
+                        new CatatanRilisSubSection("Perbaikan — Surat dan PDF", new List<string>
+                        {
+                            "Jumlah halaman pada pratinjau dan cetak kini dihitung oleh mesin PDF yang sama dengan yang menyusun surat, bukan dibaca dari berkas PDF dengan tebakan pola. Hasilnya tidak lagi bergeser bila format penulis berubah, dan helper pola yang tadinya diduplikasi di dua tempat sudah dihapus.",
+                            "Baris jabatan pada blok tanda tangan (mis. 'A/N Kepala Desa …') kini disusun oleh satu aturan yang dipakai bersama oleh PDF surat dan pratinjau kop di Pengaturan Surat, jadi keduanya tidak mungkin berbeda.",
+                            "Nomor surat yang kebetulan sudah dipakai operator lain tidak lagi membuat penyimpanan gagal keras: aplikasi membangkitkan nomor segar lalu menyimpan, dan kejadiannya tercatat di log. Galat basis data saat menghitung nomor tidak lagi ditutupi dengan mengembalikan nomor 1.",
+                            "Form surat menunggu pemuatan awalnya selesai sebelum tombol Simpan diproses, jadi nomor otomatis pasti terisi dan kegagalannya terlihat di log alih-alih hilang diam-diam.",
+                            "Berkas pratinjau PDF ditulis lewat penulis berkas yang sama dengan surat: berkas sementara lalu diganti namanya, dengan cadangan bila berkas tujuan sedang terkunci."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Tampilan", new List<string>
+                        {
+                            "Ukuran huruf diseragamkan ke skala baku di seluruh halaman: 35 angka di luar skala (12, 9, 16, 19, 22) diganti nilai baku terdekat, jadi hierarki teks antar halaman seimbang dan tidak ada lagi ukuran yang hanya cocok di satu halaman.",
+                            "Warna literal pada ikon di halaman Keputusan diganti kunci tema, jadi ikon ikut berganti saat tema diganti — sebelumnya putih yang membeku di semua tema."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan — Ketahanan", new List<string>
+                        {
+                            "Batasan CancellationTokenSource dibuang dengan aman saat aplikasi menutup, dan loop denyut sambungan menangkap ObjectDisposedException, jadi tidak ada lagi pengecualian yang muncul saat CTS dibuang dari thread lain.",
+                            "Server lisensi lokal tetap menyala bila appsettings.lokal.json tidak dapat dibaca karena izin berkas, dan kini aktif secara bawaan.",
+                            "Baris hubungan pelapor pada surat keterangan kematian tidak lagi tercetak kosong bila hubungannya tidak diisi."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.10.4 (5 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
