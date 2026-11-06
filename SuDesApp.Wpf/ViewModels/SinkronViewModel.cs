@@ -26,6 +26,7 @@ public class SinkronViewModel : ObservableObject
 {
     private readonly SinkronSuratService _sinkron;
     private readonly PerangkaianPerangkat _perangkaian;
+    private readonly PenerbitSkemaFormulir _penerbitSkema;
     private readonly IMessageService _pesan;
     private readonly ILogger<SinkronViewModel> _logger;
     private readonly string _folderBerkas;
@@ -51,11 +52,13 @@ public class SinkronViewModel : ObservableObject
     public SinkronViewModel(
         SinkronSuratService sinkron,
         PerangkaianPerangkat perangkaian,
+        PenerbitSkemaFormulir penerbitSkema,
         IMessageService pesan,
         ILogger<SinkronViewModel>? logger = null)
     {
         _sinkron = sinkron ?? throw new System.ArgumentNullException(nameof(sinkron));
         _perangkaian = perangkaian ?? throw new System.ArgumentNullException(nameof(perangkaian));
+        _penerbitSkema = penerbitSkema ?? throw new System.ArgumentNullException(nameof(penerbitSkema));
         _pesan = pesan ?? throw new System.ArgumentNullException(nameof(pesan));
         _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SinkronViewModel>.Instance;
 
@@ -68,6 +71,7 @@ public class SinkronViewModel : ObservableObject
         SimpanKonfigurasiCommand = new AsyncRelayCommand(SimpanKonfigurasiAsync, () => !SedangSinkron);
         PasangCommand = new AsyncRelayCommand(PasangAsync, () => !SedangMemasang && !string.IsNullOrWhiteSpace(NamaPerangkat));
         CabutCommand = new AsyncRelayCommand(CabutAsync, () => PerangkatDipilih is not null && !SedangMemasang);
+        TerbitkanSkemaCommand = new AsyncRelayCommand(TerbitkanSkemaAsync, () => !SedangSinkron);
 
         MuatKonfigurasi();
         _ = MuatUlangAsync();
@@ -212,6 +216,7 @@ public class SinkronViewModel : ObservableObject
     public ICommand SimpanKonfigurasiCommand { get; }
     public ICommand PasangCommand { get; }
     public ICommand CabutCommand { get; }
+    public ICommand TerbitkanSkemaCommand { get; }
 
     private void SetKonfigurasi<T>(ref T field, T value)
     {
@@ -334,6 +339,26 @@ public class SinkronViewModel : ObservableObject
         finally
         {
             SedangMemasang = false;
+        }
+    }
+
+    private async Task TerbitkanSkemaAsync()
+    {
+        try
+        {
+            var jumlah = await _penerbitSkema.TerbitkanAsync().ConfigureAwait(false);
+            if (jumlah < 0)
+            {
+                await _pesan.ShowErrorAsync("Gagal menerbitkan skema formulir. Periksa koneksi Supabase.");
+                return;
+            }
+
+            await _pesan.ShowInfoAsync($"Skema formulir diterbitkan: {jumlah} jenis surat siap dipakai Android.");
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Gagal menerbitkan skema.");
+            await _pesan.ShowErrorAsync("Gagal menerbitkan skema: " + ex.Message);
         }
     }
 

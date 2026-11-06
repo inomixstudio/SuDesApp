@@ -100,10 +100,15 @@
                     <StackPanel Orientation="Horizontal">
                         <Button Content="Simpan koneksi" Command="{Binding SimpanKonfigurasiCommand}"
                                 Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
+                        <Button Content="Terbitkan skema formulir" Command="{Binding TerbitkanSkemaCommand}"
+                                Style="{StaticResource OutlineButton}" Margin="0,0,8,0"/>
                         <TextBlock Text="Belum tersimpan / tidak lengkap" VerticalAlignment="Center"
                                    Foreground="{DynamicResource ErrorTextBrush}"
                                    Visibility="{Binding KonfigurasiLengkap, Converter={StaticResource InverseBoolToVis}}"/>
                     </StackPanel>
+                    <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               Text="Terbitkan skema formulir mengunggah definisi formulir 27 jenis surat ke Supabase supaya aplikasi Android memakai definisi yang sama persis."/>
                 </StackPanel>
             </Border>
 

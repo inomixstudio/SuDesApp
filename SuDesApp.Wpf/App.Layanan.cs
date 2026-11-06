@@ -440,6 +440,7 @@ namespace SuDesApp.Wpf
                     sp.GetRequiredService<ILogger<SuDesApp.Sinkron.SinkronSuratService>>(),
                     SuDesApp.Sinkron.SinkronSuratService.FolderBawaan));
             services.AddTransient<SuDesApp.Sinkron.PerangkaianPerangkat>();
+            services.AddTransient<SuDesApp.Sinkron.PenerbitSkemaFormulir>();
             services.AddTransient<SinkronViewModel>();
 
             // Pusat dokumen (Dokumentasi) + pembaca dokumen. Pembaca selalu dibuka
