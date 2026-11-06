@@ -93,7 +93,7 @@
                         </StackPanel>
 
                         <TextBlock Text="Naskah disusun per halaman dan dirender oleh generator PDF aplikasi — bukan dari berkas Word. Setiap halaman dimulai di lembar baru; isi yang panjang mengalir ke lembar berikutnya. Nomor, tahun, dan tanggal pada kepala surat serta penutup mengikuti isian di atas saat pratinjau atau simpan."
-                                   TextWrapping="Wrap" FontSize="12" Margin="0,0,0,10"
+                                   TextWrapping="Wrap" FontSize="13" Margin="0,0,0,10"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                         <WrapPanel Orientation="Horizontal" Margin="0,0,0,8">
@@ -111,7 +111,7 @@
 
                         <Border Background="{DynamicResource ZebraBrush}" CornerRadius="6"
                                 Padding="10,7" Margin="0,0,0,10">
-                            <TextBlock Text="{Binding InfoNaskah}" TextWrapping="Wrap" FontSize="12"
+                            <TextBlock Text="{Binding InfoNaskah}" TextWrapping="Wrap" FontSize="13"
                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
                         </Border>
 
@@ -180,7 +180,7 @@
                             <TextBlock Text="LAMPIRAN BERKAS (OPSIONAL)" Style="{StaticResource FormSectionTitle}"/>
                         </StackPanel>
 
-                        <TextBlock TextWrapping="Wrap" FontSize="12" Margin="0,0,0,10"
+                        <TextBlock TextWrapping="Wrap" FontSize="13" Margin="0,0,0,10"
                                    Foreground="{DynamicResource TextSecondaryBrush}">
                             <Run Text="Tambahkan berkas " />
                             <Run Text=".DOC/.DOCX/.PDF" FontWeight="SemiBold" />

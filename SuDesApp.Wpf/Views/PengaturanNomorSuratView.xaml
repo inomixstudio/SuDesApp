@@ -222,7 +222,7 @@
                                                             <TextBlock Text="CONTOH NOMOR" FontSize="10" FontWeight="Bold"
                                                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                             <TextBlock Text="{Binding Contoh, Mode=OneWay}" FontFamily="Consolas"
-                                                                       FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"
+                                                                       FontSize="13" Margin="0,2,0,0" TextWrapping="Wrap"
                                                                        Foreground="{DynamicResource TextBrush}"/>
                                                         </StackPanel>
                                                     </Border>
@@ -281,7 +281,7 @@
                                 <StackPanel>
                                     <TextBlock Text="Wilayah aktif dan acuan regulasi" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextBrush}"/>
-                                    <TextBlock Text="{Binding PenomoranCakupanInfo, Mode=OneWay}" FontSize="12"
+                                    <TextBlock Text="{Binding PenomoranCakupanInfo, Mode=OneWay}" FontSize="13"
                                                Margin="0,4,0,0" TextWrapping="Wrap" LineHeight="18"
                                                Foreground="{DynamicResource WarningTextBrush}"/>
                                 </StackPanel>

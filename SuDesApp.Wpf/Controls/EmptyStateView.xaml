@@ -31,7 +31,7 @@
                 HorizontalAlignment="Center">
             <TextBlock Text="{Binding Ikon, RelativeSource={RelativeSource AncestorType=UserControl}}"
                        FontFamily="{StaticResource AppIconFont}"
-                       FontSize="18" Foreground="{DynamicResource AccentBrush}"
+                       FontSize="20" Foreground="{DynamicResource AccentBrush}"
                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
 
@@ -96,7 +96,7 @@
              Dipakai kartu keadaan saat pemuatan gagal (mis. "nama desa diambil
              dari Pengaturan Surat"), dipisah dari Pesan supaya kalimat sebab dan
              kalimat bantuan tidak menumpuk jadi satu paragraf panjang. -->
-        <TextBlock FontSize="11.5" TextAlignment="Center" TextWrapping="Wrap"
+        <TextBlock FontSize="11" TextAlignment="Center" TextWrapping="Wrap"
                    MaxWidth="420" Margin="0,12,0,0" HorizontalAlignment="Center"
                    Foreground="{DynamicResource TextSecondaryBrush}" Opacity="0.85"
                    Text="{Binding Petunjuk, RelativeSource={RelativeSource AncestorType=UserControl}}">

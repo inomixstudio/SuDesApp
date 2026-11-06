@@ -455,7 +455,7 @@
                                         Background="{DynamicResource PanelBrush}"
                                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                     <StackPanel>
-                                        <TextBlock Text="JALUR 1 — OTOMATIS" FontSize="12" FontWeight="Bold"
+                                        <TextBlock Text="JALUR 1 — OTOMATIS" FontSize="13" FontWeight="Bold"
                                                    Foreground="{DynamicResource AccentTextBrush}"/>
                                         <TextBlock Style="{StaticResource LanggananDesc}" Margin="0,4,0,10"
                                                    Text="Buat tagihan QRIS/VA lewat gateway pembayaran, selesaikan di peramban. Status berubah otomatis setelah pembayaran terkonfirmasi — tanpa perlu menghubungi admin."/>
@@ -490,7 +490,7 @@
                                         Background="{DynamicResource PanelBrush}"
                                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                     <StackPanel>
-                                        <TextBlock Text="JALUR 2 — MANUAL (SCAN QRIS + WHATSAPP)" FontSize="12" FontWeight="Bold"
+                                        <TextBlock Text="JALUR 2 — MANUAL (SCAN QRIS + WHATSAPP)" FontSize="13" FontWeight="Bold"
                                                    Foreground="{DynamicResource AccentTextBrush}"/>
                                         <TextBlock Style="{StaticResource LanggananDesc}" Margin="0,4,0,10"
                                                    TextWrapping="Wrap" LineHeight="19"
