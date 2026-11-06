@@ -7,13 +7,14 @@
 #     menerapkan schema.sql saat start; tanpa itu skema tidak diubah)
 #   MIDTRANS_SERVER_KEY, MIDTRANS_SANDBOX, SUDES_ADMIN_OPERATORS__0__TOKEN, LISENSI_KEY_PATH
 #   ASPNETCORE_ENVIRONMENT=Production, ASPNETCORE_URLS=http://+:8080
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 COPY SuDesApp.Server/SuDesApp.Server.csproj SuDesApp.Server/
 RUN dotnet restore SuDesApp.Server/SuDesApp.Server.csproj
 # Perhatikan: global.json ikut disalin agar SDK container PERSIS sama dengan
-# SDK yang dipakai CI dan mesin developer (version 10.0.401, rollForward disable).
-# Tanpa ini, tag mengambang sdk:10.0 diam-diam memakai patch terbaru yang berbeda.
+# SDK yang dipakai CI dan mesin developer (version 11.0.100-rc.3, rollForward
+# latestMajor). Tanpa ini, tag mengambang sdk:11.0 diam-diam memakai patch
+# terbaru yang berbeda.
 COPY global.json ./
 COPY SuDesApp.Server/SuDesApp.Server.csproj SuDesApp.Server/
 RUN dotnet restore SuDesApp.Server/SuDesApp.Server.csproj

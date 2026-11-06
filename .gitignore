@@ -37,7 +37,7 @@ hasil_test*.txt
 Thumbs.db
 desktop.ini
 
-# Lingkungan conda lokal (lihat environment.yml) — hasil kerja mesin, bukan sumber.
+# Lingkungan conda lokal — hasil kerja mesin, bukan sumber.
 .conda/
 
 # ===== Rahasia build lokal (TIDAK PERNAH ter-commit) =====
