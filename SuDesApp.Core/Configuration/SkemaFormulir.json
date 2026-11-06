@@ -2764,6 +2764,14 @@
         "otomatis": false
       },
       {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": false,
+        "otomatis": true
+      },
+      {
         "key": "nama",
         "label": "Nama Almarhum/ah",
         "type": "text",
@@ -4170,7 +4178,7 @@
         "key": "ayahCalonNama",
         "label": "Nama Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.nama",
+        "target": "ntcr.AyahCalonSuami.nama",
         "required": true,
         "otomatis": false
       },
@@ -4178,7 +4186,7 @@
         "key": "ayahCalonBinBinti",
         "label": "Bin/Binti Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.binBinti",
+        "target": "ntcr.AyahCalonSuami.binBinti",
         "required": false,
         "otomatis": false
       },
@@ -4186,7 +4194,7 @@
         "key": "ayahCalonNik",
         "label": "NIK Ayah Calon Suami",
         "type": "number",
-        "target": "ntcr.AyahCalon.nik",
+        "target": "ntcr.AyahCalonSuami.nik",
         "required": false,
         "otomatis": false
       },
@@ -4194,7 +4202,7 @@
         "key": "ayahCalonTempatLahir",
         "label": "Tempat Lahir Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.tempatLahir",
+        "target": "ntcr.AyahCalonSuami.tempatLahir",
         "required": false,
         "otomatis": false
       },
@@ -4202,7 +4210,7 @@
         "key": "ayahCalonTanggalLahir",
         "label": "Tgl. Lahir Ayah Calon Suami",
         "type": "date",
-        "target": "ntcr.AyahCalon.tanggalLahir",
+        "target": "ntcr.AyahCalonSuami.tanggalLahir",
         "required": false,
         "otomatis": false
       },
@@ -4210,7 +4218,7 @@
         "key": "ayahCalonKewarganegaraan",
         "label": "Kewarganegaraan Ayah Calon Suami",
         "type": "select",
-        "target": "ntcr.AyahCalon.kewarganegaraan",
+        "target": "ntcr.AyahCalonSuami.kewarganegaraan",
         "required": false,
         "otomatis": false,
         "options": [
@@ -4222,7 +4230,7 @@
         "key": "ayahCalonAgama",
         "label": "Agama Ayah Calon Suami",
         "type": "select",
-        "target": "ntcr.AyahCalon.agama",
+        "target": "ntcr.AyahCalonSuami.agama",
         "required": false,
         "otomatis": false,
         "options": [
@@ -4238,7 +4246,7 @@
         "key": "ayahCalonPekerjaan",
         "label": "Pekerjaan Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.pekerjaan",
+        "target": "ntcr.AyahCalonSuami.pekerjaan",
         "required": false,
         "otomatis": false
       },
@@ -4246,7 +4254,7 @@
         "key": "ayahCalonAlamat",
         "label": "Alamat Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.alamat",
+        "target": "ntcr.AyahCalonSuami.alamat",
         "required": false,
         "otomatis": false
       },
@@ -5590,7 +5598,7 @@
         "key": "ayahCalonNama",
         "label": "Nama Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.nama",
+        "target": "ntcr.AyahCalonSuami.nama",
         "required": true,
         "otomatis": false
       },
@@ -5598,7 +5606,7 @@
         "key": "ayahCalonBinBinti",
         "label": "Bin/Binti Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.binBinti",
+        "target": "ntcr.AyahCalonSuami.binBinti",
         "required": false,
         "otomatis": false
       },
@@ -5606,7 +5614,7 @@
         "key": "ayahCalonNik",
         "label": "NIK Ayah Calon Suami",
         "type": "number",
-        "target": "ntcr.AyahCalon.nik",
+        "target": "ntcr.AyahCalonSuami.nik",
         "required": false,
         "otomatis": false
       },
@@ -5614,7 +5622,7 @@
         "key": "ayahCalonTempatLahir",
         "label": "Tempat Lahir Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.tempatLahir",
+        "target": "ntcr.AyahCalonSuami.tempatLahir",
         "required": false,
         "otomatis": false
       },
@@ -5622,7 +5630,7 @@
         "key": "ayahCalonTanggalLahir",
         "label": "Tgl. Lahir Ayah Calon Suami",
         "type": "date",
-        "target": "ntcr.AyahCalon.tanggalLahir",
+        "target": "ntcr.AyahCalonSuami.tanggalLahir",
         "required": false,
         "otomatis": false
       },
@@ -5630,7 +5638,7 @@
         "key": "ayahCalonKewarganegaraan",
         "label": "Kewarganegaraan Ayah Calon Suami",
         "type": "select",
-        "target": "ntcr.AyahCalon.kewarganegaraan",
+        "target": "ntcr.AyahCalonSuami.kewarganegaraan",
         "required": false,
         "otomatis": false,
         "options": [
@@ -5642,7 +5650,7 @@
         "key": "ayahCalonAgama",
         "label": "Agama Ayah Calon Suami",
         "type": "select",
-        "target": "ntcr.AyahCalon.agama",
+        "target": "ntcr.AyahCalonSuami.agama",
         "required": false,
         "otomatis": false,
         "options": [
@@ -5658,7 +5666,7 @@
         "key": "ayahCalonPekerjaan",
         "label": "Pekerjaan Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.pekerjaan",
+        "target": "ntcr.AyahCalonSuami.pekerjaan",
         "required": false,
         "otomatis": false
       },
@@ -5666,7 +5674,7 @@
         "key": "ayahCalonAlamat",
         "label": "Alamat Ayah Calon Suami",
         "type": "text",
-        "target": "ntcr.AyahCalon.alamat",
+        "target": "ntcr.AyahCalonSuami.alamat",
         "required": false,
         "otomatis": false
       },

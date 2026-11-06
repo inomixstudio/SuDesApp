@@ -171,4 +171,26 @@ public sealed class SkemaFormulirTests
         Assert.Equal(2, surat.AhliWarisData?.Anak.Count);
         Assert.Equal("Ani", surat.AhliWarisData!.Anak[0].Nama);
     }
+
+    [Theory]
+    [InlineData("AHLI_WARIS", "0000000000000000")]
+    [InlineData("INSTANSI", "9999999999999999")]
+    [InlineData("REKENING_KORAN", "9999999999999999")]
+    [InlineData("SKTM", null)]
+    [InlineData(null, null)]
+    public void Nik_khusus_hanya_untuk_jenis_tanpa_kolom_nik(string? jenis, string? harapan)
+    {
+        Assert.Equal(harapan, ImporAntreanSurat.NikKhususUntuk(jenis));
+    }
+
+    [Fact]
+    public void Skema_ntcr_memakai_nama_properti_yang_ada()
+    {
+        var skema = Muat();
+        var n1 = skema.Cari("NTCR_N1");
+
+        Assert.NotNull(n1);
+        Assert.DoesNotContain(n1!.Fields, f => f.Target.StartsWith("ntcr.AyahCalon.", StringComparison.Ordinal));
+        Assert.Contains(n1.Fields, f => f.Target.StartsWith("ntcr.AyahCalonSuami.", StringComparison.Ordinal));
+    }
 }
