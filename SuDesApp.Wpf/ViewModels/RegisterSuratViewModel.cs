@@ -1343,17 +1343,18 @@ namespace SuDesApp.Wpf.ViewModels
                 var fullForPrint = await _unitOfWork.SuratRepository.GetByIdAsync(suratData.ID_Surat);
                 if (fullForPrint != null) suratData = fullForPrint;
 
-                var pdfPath = await SuratPdfHelper.GeneratePdfAsync(
+                var hasilPdf = await SuratPdfHelper.GeneratePdfAsync(
                     _serviceProvider, _appConfig, suratData, _logger, suratData.NamaJenis);
 
-                if (pdfPath == null || !File.Exists(pdfPath))
+                if (!hasilPdf.Berhasil || !File.Exists(hasilPdf.Jalur))
                 {
                     Pesan.Peringatan("PDF surat tidak dapat dibuat",
                         $"Jenis '{suratData.NamaJenis ?? "?"}' belum berhasil dibuatkan dokumennya. " +
-                        "Detail penyebab ada di log aplikasi (error.log).",
+                        $"Penyebabnya: {hasilPdf.PesanGalat ?? "berkas PDF tidak ada."}",
                         "cetak-surat");
                     return;
                 }
+                var pdfPath = hasilPdf.Jalur!;
 
                 var printed = await _pdfPrintService.PrintPdfFileAsync(
                     pdfPath, $"Surat {suratData.NamaJenis} — {suratData.NomorSurat}");
@@ -1415,17 +1416,18 @@ namespace SuDesApp.Wpf.ViewModels
                     return;
                 }
 
-                var pdfPath = await SuratPdfHelper.GeneratePdfAsync(
+                var hasilPdf = await SuratPdfHelper.GeneratePdfAsync(
                     _serviceProvider, _appConfig, suratData, _logger, suratData.NamaJenis);
 
-                if (pdfPath == null)
+                if (!hasilPdf.Berhasil)
                 {
                     Pesan.Peringatan("PDF surat tidak dapat dibuat",
                         $"Jenis '{suratData.NamaJenis ?? "?"}' belum berhasil dibuatkan dokumennya. " +
-                        "Detail penyebab ada di log aplikasi (error.log). Tutup pratinjau lain lalu ulangi.",
+                        $"Penyebabnya: {hasilPdf.PesanGalat}. Tutup pratinjau lain lalu ulangi.",
                         "pratinjau-surat");
                     return;
                 }
+                var pdfPath = hasilPdf.Jalur!;
 
                 var preview = _previewFactory(
                     $"Surat {suratData.NamaJenis} — {suratData.NomorSurat}", pdfPath, suratData.ID_Surat);
@@ -1536,17 +1538,18 @@ namespace SuDesApp.Wpf.ViewModels
                 var fullForExport = await _unitOfWork.SuratRepository.GetByIdAsync(suratData.ID_Surat);
                 if (fullForExport != null) suratData = fullForExport;
 
-                var pdfPath = await SuratPdfHelper.GeneratePdfAsync(
+                var hasilPdf = await SuratPdfHelper.GeneratePdfAsync(
                     _serviceProvider, _appConfig, suratData, _logger, suratData.NamaJenis);
 
-                if (pdfPath == null || !File.Exists(pdfPath))
+                if (!hasilPdf.Berhasil || !File.Exists(hasilPdf.Jalur))
                 {
                     Pesan.Peringatan("PDF tidak dapat dibuat",
                         $"Jenis '{suratData.NamaJenis ?? "?"}' belum berhasil dibuatkan dokumennya. " +
-                        "Detail penyebab ada di log aplikasi (error.log).",
+                        $"Penyebabnya: {hasilPdf.PesanGalat ?? "berkas PDF tidak ada."}",
                         "ekspor-pdf");
                     return;
                 }
+                var pdfPath = hasilPdf.Jalur!;
 
                 File.Copy(pdfPath, sfd.FileName, overwrite: true);
                 Pesan.Sukses("Surat diekspor ke PDF",
