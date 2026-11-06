@@ -2,8 +2,8 @@
 
 Aplikasi desktop Windows (WPF) untuk administrasi surat-menyurat desa: pembuatan
 surat resmi dengan penomoran sesuai perbup, register & agenda digital, data
-penduduk lengkap dengan mutasi, layanan permintaan surat lewat API desa, sampai
-alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per surat.
+penduduk lengkap dengan mutasi, sampai alur persetujuan (ajukan → verifikasi →
+tanda tangan) yang opsional per surat.
 
 ## Fitur utama
 
@@ -31,9 +31,10 @@ alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per sura
 - **API desa** — endpoint HTTP lokal untuk sistem luar membaca statistik, data
   perangkat desa, status persetujuan, rekap laporan bulanan, dan memeriksa
   keaslian surat (`docs/api-desa.md`).
-- **Layanan online** — warga mengisi sendiri **Formulir Warga** lewat API desa
-  (tanpa akun); permintaan langsung masuk antrean operator, sama dengan kiriman
-  sistem desa lewat API desa. Kanal WhatsApp dan Google Form/Sheet sudah dihapus;
+- **Backend untuk klien luar** — `SuDesApp.Api` (ASP.NET Core) membuka data desa
+  lewat HTTP untuk aplikasi mobile/browser: masuk memakai akun desktop, data
+  warga, register surat, statistik, dan kelola pengguna
+  (`docs/backend-web.md`). Kanal WhatsApp dan Google Form/Sheet sudah dihapus;
   login Google kini hanya untuk pencadangan ke Google Drive.
 - **Multi-pengguna** — akun dengan peran & izin, kunci akun setelah percobaan
   login gagal, dan halaman **Pengguna & Peran** untuk membuat akun,
@@ -78,11 +79,13 @@ dotnet test SuDesApp.Tests/SuDesApp.Tests.csproj --nologo -v q
 dotnet build SuDesApp.Api/SuDesApp.Api.csproj --nologo -v q
 ```
 
-Jalankan backend lalu buka `http://127.0.0.1:5188`:
+Jalankan backend untuk menguji klien mobile/browser:
 
 ```bash
 dotnet run --project SuDesApp.Api --urls http://127.0.0.1:5188
 ```
+
+Endpoint-nya didokumentasikan di [`docs/backend-web.md`](docs/backend-web.md).
 
 GitHub Actions menjalankan restore, build Release, dan uji otomatis pada Windows
 untuk setiap pull request dan push ke `master` (`.github/workflows/ci.yml`). Cakupan
@@ -122,7 +125,7 @@ Skrip itu hanya memeriksa pesan commit, bukan isi berkas.
 |---|---|
 | `SuDesApp.Core/` | Logika bisnis: data (SQLite/Dapper), layanan, generator surat di atas mesin PDF sendiri (SudesPdf), API desa, integrasi Google Drive |
 | `SuDesApp.Wpf/` | Aplikasi WPF: ViewModel, View, tema, navigasi |
-| `SuDesApp.Api/` | Backend web (ASP.NET Core) di atas `Core` — sumber data tunggal untuk desktop |
+| `SuDesApp.Api/` | Backend HTTP (ASP.NET Core) di atas `Core` untuk klien mobile/browser — akun, data warga, register surat (`docs/backend-web.md`) |
 | `SudesPdf.Core/` | Mesin PDF aplikasi sendiri: penulis dokumen, penata letak surat, pembaca, dan penggambar halaman — tanpa pustaka PDF pihak ketiga |
 | `SudesPdf/` | Lapisan WPF untuk mesin tadi: pratinjau halaman, pembungkus dokumen, dan cetak |
 | `SudesExPlus/` | Pustaka .xlsx milik aplikasi sendiri (baca/tulis, gaya, rumus) pengganti EPPlus |
@@ -140,7 +143,8 @@ sebagai merek produk turunan.
 
 ## Dokumentasi
 
-- [`docs/api-desa.md`](docs/api-desa.md) — API desa untuk sistem luar
+- [`docs/api-desa.md`](docs/api-desa.md) — API desa lokal di komputer kantor
+- [`docs/backend-web.md`](docs/backend-web.md) — backend `SuDesApp.Api` untuk klien mobile/browser
 - [`docs/alur-persetujuan-surat.md`](docs/alur-persetujuan-surat.md) — alur persetujuan opsional
 - [`docs/langganan-dan-lisensi.md`](docs/langganan-dan-lisensi.md) — langganan berbayar & lisensi bertanda tangan
 - [`docs/deploy-server.md`](docs/deploy-server.md) — deploy server lisensi (Railway/Render/VPS)

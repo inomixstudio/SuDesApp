@@ -1,14 +1,17 @@
 # API Desa — SuDesApp
 
 Dokumen ini menjelaskan **API Desa**: endpoint HTTP lokal di komputer kantor
-desa yang membuka data keluaran (angka agregat, perangkat desa), memeriksa
-keaslian surat, serta melayani **aplikasi pendamping HP** (masuk sesi akun
-desktop dan membaca pengaturan surat supaya hasil cetak sama persis).
+desa yang membuka data keluaran (angka agregat, data perangkat desa) dan
+memeriksa keaslian surat. API ini dijalankan oleh aplikasi desktop di
+komputer kantor desa.
 
 > Status dokumen: **berlaku sebagai default implementasi** (sesuai kode saat
 > ini). API mati secara bawaan dan hanya melayani `localhost` sampai operator
 > menyalakannya di halaman **API Desa** (seksi **BANTUAN** di sidebar, tepat
 > di atas Catatan Rilis).
+>
+> Backend HTTP terpisah untuk klien mobile/browser (akun, data warga, register
+> surat) didokumentasikan di [`backend-web.md`](backend-web.md).
 
 ---
 
@@ -51,26 +54,24 @@ Kalau langkah 4 gagal karena port terpakai, ganti port (1025–65535; bawaan
 `8790`) lalu Simpan lagi. Listener membaca ulang port, mode jaringan, dan
 daftar IP setiap kali pengaturan disimpan.
 
-### Dipakai dari HP (aplikasi pendamping)
+### Dipakai dari komputer lain di jaringan
 
-Aplikasi HP (SuDesApp Android) terhubung lewat API ini. Di komputer kantor:
+API bisa diakses dari komputer lain di jaringan lokal yang sama (mis. laptop
+operator di kantor). Di komputer kantor:
 
 1. Centang **Izinkan akses dari jaringan**.
-2. Isi **IP yang diizinkan** dengan alamat IP HP di jaringan lokal (mis.
+2. Isi **IP yang diizinkan** dengan alamat IP klien di jaringan lokal (mis.
    `192.168.1.20`). Tanpa minimal satu IP, API tidak mau menyala dalam mode
    jaringan.
 3. Tekan **Simpan**. Windows biasanya menuntut aplikasi dijalankan sebagai
    administrator untuk membuka `http://+:port/`; bila muncul galat port,
    jalankan aplikasi sebagai administrator atau minta IT kantor menambahkan
    izin URL (`netsh http add urlacl`).
-4. Di HP: buka aplikasi, tekan **Sambungkan**, isi alamat komputer kantor
-   (mis. `http://192.168.1.5:8790`) dan **kunci API** dari halaman ini, lalu
-   masuk memakai akun desktop (nama pengguna & kata sandi yang sama).
 
-Setelah tersambung, HP menarik **pengaturan surat** (kop & pejabat penanda
-tangan) dari desktop lewat `GET /pengaturan`, jadi hasil cetak dari HP
-mengikuti Pengaturan Surat yang sudah diisi di desktop — tidak perlu diisi
-ulang di HP.
+Klien lalu membaca `GET /status`, `GET /statistik`, `GET /perangkat-desa`, dan
+`GET /rekap-bulanan` dengan kunci API dari halaman ini. Untuk klien yang perlu
+akun, data warga, dan register surat, pakai backend
+[`backend-web.md`](backend-web.md).
 
 ### Kunci cakupan untuk sistem luar
 
@@ -109,7 +110,7 @@ Semua respons memakai amplop yang sama:
 ```json
 {
   "sukses": true,
-  "pesan": "Permintaan masuk antrean operator.",
+  "pesan": "Data desa berhasil dibaca.",
   "data": { }
 }
 ```
@@ -133,7 +134,7 @@ Semua jalur diawali `/sudes/api/v1`.
 | POST | `/sesi` | Masuk memakai akun desktop; menerima token sesi 12 jam. |
 | GET | `/sesi/siapa` | Identitas sesi yang tokennya dikirim (nama, peran, waktu berakhir). |
 | DELETE | `/sesi` | Akhiri sesi yang sedang berjalan. |
-| GET | `/pengaturan` | Pengaturan surat desktop (kop & pejabat penanda tangan) untuk aplikasi pendamping. |
+| GET | `/pengaturan` | Pengaturan surat desktop (kop & pejabat penanda tangan) untuk klien dengan akun. |
 | GET | `/rekap-bulanan` | Rekap surat per bulan per status persetujuan untuk satu tahun (`?tahun=YYYY`). |
 
 ### 4.1 `GET /status`
@@ -155,8 +156,7 @@ Berisi `totalWarga`, `wargaAktif`, `wargaLakiLaki`, `wargaPerempuan`,
 `jumlahKartuKeluarga`, `wargaPerRt`, angka perangkat desa
 (`perangkatTotal`, `perangkatAktif`, `perangkatSelesai`,
 `jabatanIntiKosong`), `suratTotal` + `suratPerStatus` +
-`suratPerStatusPersetujuan`, serta `permintaanTotal` + `permintaanPerStatus` +
-`permintaanBelumDibaca`. Tidak ada kolom yang bisa mengidentifikasi warga.
+`suratPerStatusPersetujuan`. Tidak ada kolom yang bisa mengidentifikasi warga.
 
 `suratPerStatusPersetujuan` menghitung surat per status alur persetujuan:
 kunci `DIAJUKAN`, `DIVERIFIKASI`, `TERBIT`, `DITOLAK`, dan `TANPA_ALUR`
@@ -167,8 +167,8 @@ antrean yang menunggu tindakan pejabat desa.
 
 ### 4.3 `POST /sesi`
 
-Menukar kredensial akun desktop dengan token sesi. Dipakai aplikasi pendamping
-(HP) supaya tidak menyimpan kata sandi.
+Menukar kredensial akun desktop dengan token sesi. Dipakai klien (mis.
+aplikasi mobile) supaya tidak menyimpan kata sandi.
 
 ```json
 {
@@ -201,7 +201,7 @@ Menukar kredensial akun desktop dengan token sesi. Dipakai aplikasi pendamping
 ### 4.4 `GET /sesi/siapa`
 
 Mem-balas identitas pemegang token: `username`, `nama`, `peran`,
-`berlakuSampai`, dan token yang sama. Dipakai aplikasi pendamping untuk
+`berlakuSampai`, dan token yang sama. Dipakai klien untuk
 memulihkan keadaan setelah dibuka ulang selama token masih berlaku.
 
 ### 4.5 `DELETE /sesi`
@@ -211,11 +211,11 @@ tidak bisa dipakai lagi.
 
 ### 4.6 `GET /pengaturan`
 
-Mengambil Pengaturan Surat desktop untuk aplikasi pendamping: `namaDesa`,
+Mengambil Pengaturan Surat desktop untuk klien: `namaDesa`,
 `kecamatan`, `kabupaten`, `jenisKabupaten`, `alamat`, `kodepos`, `email`,
 `kepalaDesa`, `nipKepalaDesa`, `jenisLembaga`, beserta `diambilPada`.
 Baca-saja — sumber kebenarannya tetap desktop. Database yang belum diisi tetap
-dijawab (dengan string kosong), jadi aplikasi pendamping bisa menampilkan
+dijawab (dengan string kosong), jadi klien bisa menampilkan
 peringatan seperti pratinjau desktop.
 
 ### 4.7 `GET /verifikasi/{kode}`
@@ -377,7 +377,7 @@ curl -H "X-Api-Key: <kunci>" "http://localhost:8790/sudes/api/v1/rekap-bulanan?t
 # Verifikasi keaslian surat (tanpa kunci API)
 curl http://localhost:8790/sudes/api/v1/verifikasi/SD-7K3M-9QX2
 
-# Masuk sesi (aplikasi pendamping)
+# Masuk sesi (klien dengan akun)
 curl -X POST http://localhost:8790/sudes/api/v1/sesi \
   -H "X-Api-Key: <kunci>" \
   -H "Content-Type: application/json" \

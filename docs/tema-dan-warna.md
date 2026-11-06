@@ -90,30 +90,22 @@ tema.
 
 ## Gerbang CI wajib (setiap pull request)
 
-> **Status:** job **Audit kontras tema** dan `Tools/check-kontras-wcag.ps1`
-> **belum ada** di repo ini, jadi gerbang di bawah belum berjalan. Yang sudah
-> berjalan ada di "Penjaga otomatis". Teks di bawah adalah rancangan.
+> **Status: belum ada.** Job **Audit kontras tema** dan
+> `Tools/check-kontras-wcag.ps1` tidak ada di repo ini, jadi belum ada gerbang
+> kontras yang berjalan. Yang berjalan sekarang hanya "Penjaga otomatis" di
+> bawah. Teks selebihnya adalah **rancangan**, bukan catatan berkas yang ada.
 
-`.github/workflows/ci.yml` punya job **Audit kontras tema** yang berjalan pada
-setiap `pull_request` (dan push) di `windows-latest`. Dua langkahnya sengaja
-dipisah karena menangkap kelas kesalahan yang berbeda:
+Rancangan yang **belum diimplementasikan**:
 
-| Langkah | Memeriksa | TIDAK menangkap |
+| Langkah rancangan | Memeriksa | TIDAK menangkap |
 |---|---|---|
 | `Tools/check-kontras-wcag.ps1` | pasangan token teks/latar di **berkas tema** (AA; AAA untuk HighContrast) + konsistensi kunci antar sebelas tema | teks yang kehilangan `Foreground` karena `Style` eksplisit, atau warna warisan yang tertimpa gaya implisit |
-| `dotnet test --filter JelajahRenderTemaTests` | teks yang **benar-benar dirender**: setiap `TextBlock` di semua halaman × sebelas tema diukur terhadap latar efektifnya | pasangan token yang belum dipakai halaman mana pun |
+| uji render-per-halaman (mulai dari `JelajahRenderTemaTests`) | teks yang **benar-benar dirender**: setiap `TextBlock` di semua halaman × sebelas tema diukur terhadap latar efektifnya | pasangan token yang belum dipakai halaman mana pun |
 
-Job ini adalah **job terpisah**, bukan langkah di dalam `build-test`, supaya punya
-nama status sendiri. Agar benar-benar mengikat, pemilik repo menandainya sebagai
-*required status check* di **Settings → Branches → Branch protection rules**
-(centang `Audit kontras tema`). Tanpa penandaan itu job tetap berjalan dan merah,
-tetapi GitHub belum menolak merge otomatis; workflow sendiri tidak bisa
+Bila nanti diimplementasikan, job itu sebaiknya **terpisah** dari `build-test`
+supaya punya nama status sendiri, dan ditandai sebagai *required status check*
+di **Settings → Branches → Branch protection rules**. Workflow tidak bisa
 memaksa branch protection karena itu pengaturan repo, bukan berkas.
-
-Penjaga di dalam repo memastikan gerbang ini tidak hilang diam-diam:
-`SuDesApp.Tests/AuditKontrasCiTests.cs` gagal bila job-nya dihapus/diganti nama,
-langkah palet atau render hilang, urutannya terbalik, langkahnya dilunakkan
-dengan `continue-on-error`, atau pemeriksa palet berhenti keluar dengan kode 1.
 
 ## Penjaga otomatis
 
@@ -160,9 +152,9 @@ yang menggambar warna sendiri. Dua di antaranya sudah ditangani di
 | `ListView` + `GridView` (tabel halaman IDM & APBDES) | kepala kolom bergradien perak dengan teks hitam, baris memakai `#042271` dan sorotan seleksi biru Windows | gaya `ListView`, `ListViewItem`, dan `GridViewColumnHeader` bergaya tema (termasuk `PART_HeaderGripper`) |
 | `DatePicker` / `DatePickerTextBox` | kotak tanggal bergradien putih berbingkai perak, tombol kalender berupa chip terang | template tema penuh; `PART_TextBox`, `PART_Button`, `PART_Popup`, `PART_ContentHost`, dan `PART_Watermark` dipertahankan |
 
-Dijaga uji `TabelListViewTemaTests` dan `PemilihTanggalTemaTests`: tabel dan
-kolom tanggal benar-benar dirender, warna diambil dari tema, dan ikut berganti
-saat tema ditukar di runtime.
+Keduanya memakai template tema penuh, jadi warna diambil dari tema dan ikut
+berganti saat tema ditukar di runtime. Belum ada uji render otomatis yang
+menjaganya (lihat rancangan di atas).
 
 **Kepala kolom `DataGrid`** juga memakai latar `PanelBrush` + `TextBrush`,
 seperti kepala kolom `GridView` — bukan `PrimaryBrush` + teks putih. Alasannya:
@@ -174,11 +166,10 @@ netral membuat warna kepala tidak lagi bergantung pada palet aksen dan aman di
 semua tema. Hover memakai `AccentSubtleBrush`, bukan `AccentBrush`, karena teks
 kepala tetap `TextBrush`.
 
-Uji jelajah `JelajahRenderTemaTests` menemukan dan memperbaiki beberapa kasus
-serupa: gaya lokal tanpa `BasedOn` (tombol kepala kolom `TabelKepala` di kedua
-halaman register, kotak cari `RiwayatView`, `ProgressBar` impor `WargaView`),
-kotak isian editable ComboBox yang `Style`-nya di-set nol, dan `Expander`
-tanpa template (tombol header chrome sistem di halaman Panel WA). Kendali
+Beberapa kasus serupa sudah diperbaiki: gaya lokal tanpa `BasedOn` (tombol
+kepala kolom `TabelKepala` di kedua halaman register, kotak cari `RiwayatView`,
+`ProgressBar` impor `WargaView`), kotak isian editable ComboBox yang `Style`-nya
+di-set nol, dan `Expander` tanpa template. Kendali
 wadah polos (`ScrollViewer`, `ListBox`, `ListView`, `TabControl`, `DataGrid`,
 `GridSplitter`, …) sengaja tidak ikut diperiksa: template bawaannya hanya
 Border/penyaji dengan `TemplateBinding`, jadi warna tema tetap tembus dan

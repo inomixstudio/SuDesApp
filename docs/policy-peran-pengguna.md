@@ -213,8 +213,6 @@ lewat 40 permintaan paralel dengan dua peran berbeda.
 | Tanpa Bearer token | **401** — endpoint memeriksa sesi lebih dulu |
 | Token sah, peran memegang izin | Aksi dijalankan (**200**) |
 | Token sah, peran tidak memegang izin | **403** + `izin` yang ditolak |
-| Tanpa token pada kanal kunci API (mis. `POST /permintaan`) | Penegakan dilewati, setara `SesiSistem` — kanal otomatis bukan pengguna |
-| Tanpa token pada formulir warga (`POST /permintaan-publik`) | Diterima sebagai kanal publik, dibatasi 5 kiriman / 10 menit per alamat IP |
 
 Endpoint yang memakai aturan ini: `GET/POST/PUT/DELETE /sudes/api/v1/pengguna`
 serta `POST /sudes/api/v1/pengguna/{id}/kata-sandi` (izin `KelolaPengguna`,
@@ -225,11 +223,8 @@ habis.
 
 ### 5.3 Yang Masih Terbuka
 
-Kanal otomatis di desktop (pekerja latar), kanal kunci API, dan formulir publik
-warga sengaja melewati pemeriksaan peran karena bukan pengguna aplikasi.
-Formulir publik tetap dibatasi laju per alamat IP dan tidak bisa membaca
-antrean: `GET /sudes/api/v1/permintaan` menuntut sesi operator, karena isinya
-nama, NIK, dan nomor HP warga. Endpoint tulis lain di `SuDesApp.Api` (surat,
-warga, perangkat) belum dibuat; saat dibuat, pola yang sama dipakai: periksa
-sesi → jalankan layanan Core → biarkan `Wajib` menilai, dan petakan
-`IzinDitolakException` menjadi 403.
+Kanal otomatis di desktop (pekerja latar) dan kanal kunci API sengaja melewati
+pemeriksaan peran karena bukan pengguna aplikasi. Endpoint tulis lain di
+`SuDesApp.Api` (surat, warga, perangkat) belum dibuat; saat dibuat, pola yang
+sama dipakai: periksa sesi → jalankan layanan Core → biarkan `Wajib` menilai,
+dan petakan `IzinDitolakException` menjadi 403.
