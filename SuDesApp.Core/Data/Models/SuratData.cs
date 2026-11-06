@@ -44,7 +44,7 @@ namespace SuDesApp.Data.Models
         public string? KodeJenis { get; set; }
         public string? AdditionalData { get; set; }
 
-        // ? KOLOM STATUS BARU
+        // KOLOM STATUS BARU
         public string? Status { get; set; } = "Draft"; // Draft, Active, Cancelled
 
         // =====================================================================
@@ -98,7 +98,7 @@ namespace SuDesApp.Data.Models
         /// <summary>Kalimat status persetujuan siap tampil (bentuk panjang, untuk register/detail).</summary>
         public string StatusPersetujuanTampil => StatusPersetujuanSurat.Tampilan(StatusPersetujuan);
 
-        // ? TIMESTAMP KOLOM BARU
+        // TIMESTAMP KOLOM BARU
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
@@ -115,13 +115,13 @@ namespace SuDesApp.Data.Models
         public string? PekerjaanPenanggungJawab { get; set; }
 
 
-        // ? MODEL PROPERTIES YANG DIUPDATE
+        // MODEL PROPERTIES YANG DIUPDATE
         public WargaData? Warga { get; set; }
         public KematianData? Kematian { get; set; }
         public SKUData? SKU { get; set; }
-        public SKTMData? SKTM { get; set; } // ? BARU: Model SKTM terpisah
+        public SKTMData? SKTM { get; set; } // BARU: Model SKTM terpisah
         public IzinOrtuData? IzinOrtu { get; set; }
-        public IjinTinggalData? IjinTinggal { get; set; } // ? BARU: Model IjinTinggal
+        public IjinTinggalData? IjinTinggal { get; set; } // BARU: Model IjinTinggal
 
         /// <summary>Surat Keterangan Pindah: alamat tujuan pindah (opsional per jenis surat).</summary>
         public string? AlamatTujuanPindah { get; set; }
@@ -137,7 +137,7 @@ namespace SuDesApp.Data.Models
 
         /// <summary>Izin Keramaian: lokasi/tempat pelaksanaan kegiatan.</summary>
         public string? LokasiKegiatan { get; set; }
-        public NtcrData? Ntcr { get; set; } // ? BARU: Model NTCR (persyaratan pernikahan N1-N4)
+        public NtcrData? Ntcr { get; set; } // BARU: Model NTCR (persyaratan pernikahan N1-N4)
         public GarapanData? Garapan { get; set; }
         public Instansi? Instansi { get; set; }
         public DesaData? Desa { get; set; }
@@ -168,10 +168,10 @@ namespace SuDesApp.Data.Models
             BedaNama,
             KenalLahir,
             AhliWaris,
-            IjinTinggal, // ? BARU
+            IjinTinggal, // BARU
             RekeningKoran, // surat keluar desa ke bank (bukan surat warga)
             TemplateSurat, // surat dari Template Surat buatan pengguna sendiri
-            Ntcr // ? BARU: NTCR (persyaratan pernikahan N1-N4)
+            Ntcr // BARU: NTCR (persyaratan pernikahan N1-N4)
         }
 
         public SuratData() : this(null, null, null, null) { }
@@ -242,10 +242,10 @@ namespace SuDesApp.Data.Models
                 WargaPelapor = new WargaData()
             };
             SKU = new SKUData();
-            SKTM = new SKTMData(); // ? BARU
+            SKTM = new SKTMData(); // BARU
             IzinOrtu = new IzinOrtuData();
-            IjinTinggal = new IjinTinggalData(); // ? BARU
-            Ntcr = new NtcrData(); // ? BARU
+            IjinTinggal = new IjinTinggalData(); // BARU
+            Ntcr = new NtcrData(); // BARU
             Garapan = new GarapanData();
             RincianGarapans = new List<GarapanData>();
             Instansi = new Instansi();
@@ -293,16 +293,16 @@ namespace SuDesApp.Data.Models
                 case SuratConstants.BEDANAMA: jenis = JenisSuratEnum.BedaNama; return true;
                 case SuratConstants.KENAL_LAHIR: jenis = JenisSuratEnum.KenalLahir; return true;
                 case SuratConstants.AHLI_WARIS: jenis = JenisSuratEnum.AhliWaris; return true;
-                case SuratConstants.IJIN_TINGGAL: jenis = JenisSuratEnum.IjinTinggal; return true; // ? BARU
+                case SuratConstants.IJIN_TINGGAL: jenis = JenisSuratEnum.IjinTinggal; return true; // BARU
                 case SuratConstants.REKENING_KORAN: jenis = JenisSuratEnum.RekeningKoran; return true;
                 case SuratConstants.TEMPLATE_SURAT: jenis = JenisSuratEnum.TemplateSurat; return true;
-                case SuratConstants.NTCR_N1: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
-                case SuratConstants.NTCR_N2: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
-                case SuratConstants.NTCR_N3: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
-                case SuratConstants.NTCR_N4: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
-                case SuratConstants.NTCR_N5: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
-                case SuratConstants.NTCR_N6: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
-                case SuratConstants.NTCR_N8: jenis = JenisSuratEnum.Ntcr; return true; // ? BARU
+                case SuratConstants.NTCR_N1: jenis = JenisSuratEnum.Ntcr; return true; // BARU
+                case SuratConstants.NTCR_N2: jenis = JenisSuratEnum.Ntcr; return true; // BARU
+                case SuratConstants.NTCR_N3: jenis = JenisSuratEnum.Ntcr; return true; // BARU
+                case SuratConstants.NTCR_N4: jenis = JenisSuratEnum.Ntcr; return true; // BARU
+                case SuratConstants.NTCR_N5: jenis = JenisSuratEnum.Ntcr; return true; // BARU
+                case SuratConstants.NTCR_N6: jenis = JenisSuratEnum.Ntcr; return true; // BARU
+                case SuratConstants.NTCR_N8: jenis = JenisSuratEnum.Ntcr; return true; // BARU
                 default: jenis = default; return false;
             }
         }
@@ -437,8 +437,8 @@ namespace SuDesApp.Data.Models
         public int ID_Jenis { get; set; }
         public string? KodeJenis { get; set; }
         public string? NamaJenis { get; set; }
-        public string? Deskripsi { get; set; } // ? KOLOM BARU
-        public bool IsActive { get; set; } = true; // ? KOLOM BARU
+        public string? Deskripsi { get; set; } // KOLOM BARU
+        public bool IsActive { get; set; } = true; // KOLOM BARU
     }
 
     /// <summary>
@@ -537,7 +537,7 @@ namespace SuDesApp.Data.Models
 
         public string? AlamatLengkap { get; set; }
 
-        // ? LEGACY COMPATIBILITY: Alamat property for legacy code
+        // LEGACY COMPATIBILITY: Alamat property for legacy code
         public string Alamat 
         { 
             get => AlamatLengkap!; 
@@ -593,14 +593,14 @@ namespace SuDesApp.Data.Models
         public string? Kewarganegaraan { get; set; }
         public string? NamaJenis { get; set; }
 
-        // ? TIMESTAMP KOLOM BARU
+        // TIMESTAMP KOLOM BARU
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         public bool IsWargaMeninggal { get; set; }
         public bool IsWargaPelapor { get; set; }
 
-        // ? LEGACY COMPATIBILITY: lowercase property names
+        // LEGACY COMPATIBILITY: lowercase property names
 public bool isForInstansi
         {
             get => IsForInstansi;
@@ -789,7 +789,7 @@ public bool isForInstansi
         [Required]
         public string? PenyebabKematian { get; set; }
 
-        // ? KOLOM BARU
+        // KOLOM BARU
         public string? TempatKematian { get; set; }
 
         [Required]
@@ -837,10 +837,10 @@ public bool isForInstansi
     {
         public string? KeteranganKemiskinan { get; set; }
 
-        // ? KOLOM BARU
+        // KOLOM BARU
         public decimal? PenghasilanPerBulan { get; set; }
 
-        // ? KOLOM BARU
+        // KOLOM BARU
         public int? JumlahTanggungan { get; set; }
 
         public bool IsValid()
@@ -1064,7 +1064,7 @@ public bool isForInstansi
         [Required]
         public int ID_Anak { get; set; }
 
-        // ? LEGACY COMPATIBILITY: ID_Warga_Anak property
+        // LEGACY COMPATIBILITY: ID_Warga_Anak property
         public int ID_Warga_Anak
         {
             get => ID_Anak;
@@ -1103,7 +1103,7 @@ public bool isForInstansi
         [StringLength(200)]
         public string? AlamatInstansi { get; set; }
 
-        // ? KOLOM BARU
+        // KOLOM BARU
         public string? PimpinanInstansi { get; set; }
 
         /// <summary>Nomor SK / izin usaha terbit (opsional).</summary>
@@ -1126,7 +1126,7 @@ public bool isForInstansi
     public class BedaNamaData
     {
         [Required]
-        public int ID_Warga { get; set; } // ? DIPERBAIKI: Hanya satu ID_Warga
+        public int ID_Warga { get; set; }
 
         [Required]
         public string? SumberDataKoreksi { get; set; }
@@ -1134,7 +1134,7 @@ public bool isForInstansi
         [Required]
         public string? SumberDataKeliru { get; set; }
 
-        // ? KOLOM BARU
+        // KOLOM BARU
         public string? AlasanPerbedaan { get; set; }
 
         // Data tambahan untuk tampilan

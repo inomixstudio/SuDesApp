@@ -14,7 +14,7 @@ namespace SuDesApp.Data.Models
 
     /// <summary>
     /// Katalog pilihan surat pada menu "Buat Surat Baru" — satu sumber untuk
-    /// aplikasi desktop dan halaman web, sehingga keduanya menampilkan daftar
+    /// aplikasi desktop dan backend HTTP, sehingga keduanya menampilkan daftar
     /// yang sama persis: label, jenis surat, dan urutannya.
     ///
     /// Urutan di sini adalah urutan yang dilihat pengguna di sidebar. Jenis

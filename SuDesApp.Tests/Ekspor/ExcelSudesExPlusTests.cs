@@ -248,7 +248,9 @@ public sealed class ExcelSudesExPlusTests
                 gaya, tema);
 
             using var paket = new ExcelPackage(new FileInfo(jalur));
-            var sel = paket.Workbook.Worksheets["Data"].Cells[1, 1];
+            var lembar = paket.Workbook.Worksheets["Data"]
+                ?? throw new InvalidOperationException("Lembar 'Data' tidak ditemukan di berkas uji.");
+            var sel = lembar.Cells[1, 1];
 
             Assert.Equal("Judul", sel.Value);
             Assert.Equal("#4472C4", WarnaHex(sel.Style.Fill.BackgroundColor.Value));

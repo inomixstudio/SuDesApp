@@ -181,7 +181,7 @@ namespace SuDesApp.Utilities
 
             // Jangan menyentuh _peran global: sesi sistem adalah identitas
             // per-aliran, sama seperti sesi permintaan HTTP. Nilai global hanya
-            // dipakai di luar aliran (desktop WPF/MAUI).
+            // dipakai di luar aliran (aplikasi desktop).
             _aliran.Value = new IdentitasAliran
             {
                 User = aliranSebelumnya?.User ?? _currentUser,
@@ -217,7 +217,7 @@ namespace SuDesApp.Utilities
         /// memakai AsyncLocal, bukan disimpan ke properti global: satu proses Api
         /// melayani banyak pengguna sekaligus, jadi peran Administrator milik satu
         /// permintaan tidak boleh terbaca oleh permintaan lain yang berjalan
-        /// bersamaan. Tanpa lingkup ini (desktop WPF/MAUI), nilai global tetap
+        /// bersamaan. Tanpa lingkup ini (aplikasi desktop), nilai global tetap
         /// dipakai seperti sebelumnya.
         /// </summary>
         private sealed class IdentitasAliran

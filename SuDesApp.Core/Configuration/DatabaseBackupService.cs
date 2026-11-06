@@ -47,7 +47,7 @@ namespace SuDesApp.Configuration
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        // ? DATABASE STATISTICS
+        // DATABASE STATISTICS
         public async Task<Dictionary<string, object>> GetStatsAsync()
         {
             var stats = new Dictionary<string, object>();
@@ -89,7 +89,7 @@ namespace SuDesApp.Configuration
             return stats;
         }
 
-        // ? CREATE BACKUP
+        // CREATE BACKUP
         public async Task BuatBackupAsync(string backupPath)
         {
             if (string.IsNullOrWhiteSpace(backupPath))
@@ -139,7 +139,7 @@ namespace SuDesApp.Configuration
             _logger.LogInformation("Backup database dibuat: {BackupPath}", backupPath);
         }
 
-        // ? RESTORE BACKUP
+        // RESTORE BACKUP
         /// <returns>Jalur cadangan pra-restore, atau null bila tidak ada database
         /// aktif untuk dicadangkan. Pemanggil wajib meneruskannya ke
         /// <see cref="BuangCadanganPraRestore"/> setelah memastikan database
