@@ -219,6 +219,8 @@ public sealed class FeatureNavigationViewModel
         TambahTombol("Pengaturan Formulir", IkonMenu.Pengaturan, "pengaturan-formulir");
         TambahTombol("Kelola Pengguna", IkonMenu.Pengguna, "kelola-pengguna");
         TambahTombol("Cadangkan & Pulihkan", IkonMenu.Cadangkan, "cadangkan-pulihkan");
+        var sinkronAndroid = TambahTombol("Sinkron Android", IkonMenu.Sinkron, "sinkron-android");
+        sinkronAndroid.Description = "Tarik surat dari antrean Supabase dan pasang perangkat Android (QR).";
         // Koneksi akun Google adalah pelengkap cadangan (pencadangan database ke
         // Drive), jadi menempel di seksi ini — bukan menyelingi antara Beranda
         // dan seksi BUAT SURAT tanpa judul seperti sebelumnya.

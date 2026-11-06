@@ -212,6 +212,7 @@ namespace SuDesApp.Wpf.ViewModels
                 "panduan-awal" => () => _ = ShowPanduanAwalAsync(),
                 "dokumentasi" => () => _ = ShowDokumentasiAsync(),
                 "api-desa" => ShowApi,
+                "sinkron-android" => () => _ = ShowSinkronAsync(),
                 "catatan-rilis" => () => _ = ShowCatatanRilisAsync(),
                 "tentang" => () => _ = ShowAboutAsync(),
                 "keluar" => () => ExitRequested?.Invoke(),
@@ -722,6 +723,25 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 _logger.LogError(ex, "Gagal membuka API Desa");
                 _ = _messageService.ShowErrorAsync("Gagal membuka API Desa: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Buka halaman Sinkron Android: antrean Supabase → register, dan
+        /// perangkaian perangkat lewat QR.
+        /// </summary>
+        private async Task ShowSinkronAsync()
+        {
+            try
+            {
+                var vm = BuatScopeHalaman().GetRequiredService<SinkronViewModel>();
+                _navigation.Navigate(vm);
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka Sinkron Android");
+                _ = _messageService.ShowErrorAsync("Gagal membuka Sinkron Android: " + ex.Message);
             }
         }
 
