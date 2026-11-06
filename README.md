@@ -49,10 +49,10 @@ alur persetujuan (ajukan → verifikasi → tanda tangan) yang opsional per sura
 
 ## Kebutuhan
 
-- Windows 10/11 dengan **.NET 10 SDK** (build) atau runtime .NET 10 (menjalankan).
-  Versi SDK dikunci lewat `global.json` ke **10.0.401** sehingga build developer dan
+- Windows 10/11 dengan **.NET 11 SDK** (build) atau runtime .NET 10 (menjalankan).
+  Versi SDK dikunci lewat `global.json` ke **11.0.100-rc.3** sehingga build developer dan
   CI (GitHub Actions) selalu memakai SDK yang sama; bila mesin Anda belum punya
-  10.0.401, pasang dulu lewat `winget install Microsoft.DotNet.SDK.10` atau https://dotnet.microsoft.com/download.
+  versi itu, pasang dulu dari https://dotnet.microsoft.com/download.
 - Microsoft Word opsional — hanya untuk konversi berkas `.doc` lama dan impor
   template.
 
@@ -100,25 +100,21 @@ terpisah (lihat [`docs/tema-dan-warna.md`](docs/tema-dan-warna.md)). Skrip
 rilis lokal; jalankan pemeriksaan rilis dan tinjau aset sebelum membagikan
 installer.
 
-## Hook commit
+## Atribusi commit
 
-Repo menyertakan `.githooks/commit-msg` yang menolak pesan commit berisi
-atribusi agen: baris `Co-Authored-By` bernama Codebuff, teks
-`Generated with Codebuff`, atau alamat `noreply@codebuff.com`. Aktifkan sekali
-per clone:
+Pesan commit jangan memuat atribusi agen: baris `Co-Authored-By` bernama
+Codebuff, teks `Generated with Codebuff`, atau alamat `noreply@codebuff.com`.
+Atribusi semacam itu pernah masuk ke 37 commit dan harus ditulis ulang dengan
+force-push agar tidak muncul di daftar kontributor GitHub.
+
+Untuk memeriksa sejarah commit sebelum membagikan branch, pakai
+`Tools/check-atribusi-commit.sh`:
 
 ```bash
-git config core.hooksPath .githooks
+bash Tools/check-atribusi-commit.sh "origin/master..HEAD"
 ```
 
-Hook hanya memeriksa pesan commit, bukan isi berkas. Bila benar-benar perlu
-dilewati, pakai `git commit --no-verify`. Alasannya ada di komentar berkas
-hook: atribusi semacam itu pernah masuk ke 37 commit dan harus ditulis ulang
-dengan force-push agar tidak muncul di daftar kontributor GitHub.
-
-Aturan yang sama diperiksa lagi di CI lewat job **Audit atribusi commit**
-(`Tools/check-atribusi-commit.sh`). Jadi pull request tetap gagal meski hook
-di clone penulis belum diaktifkan atau commit dibuat dengan `--no-verify`.
+Skrip itu hanya memeriksa pesan commit, bukan isi berkas.
 
 ## Struktur repositori
 
