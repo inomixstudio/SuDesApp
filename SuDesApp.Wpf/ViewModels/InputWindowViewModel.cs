@@ -44,6 +44,13 @@ namespace SuDesApp.Wpf.ViewModels
         private string _pesanPeringatanDataContoh = string.Empty;
         private PdfPreviewViewModel? _pratinjau;
 
+        /// <summary>
+        /// Tugas inisialisasi form (isi nomor otomatis) yang dijalankan di latar
+        /// saat form dibuka, supaya form tampil cepat. Disimpan agar bisa ditunggu
+        /// sebelum menyimpan.
+        /// </summary>
+        private Task? _tugasInisialisasi;
+
         public event Action? RequestClose;
 
         /// <summary>
@@ -130,11 +137,39 @@ namespace SuDesApp.Wpf.ViewModels
                 return;
             }
 
-            var keadaan = await _peringatan.PeriksaAsync();
-            TampilPeringatanDataContoh = keadaan.MasihContoh;
-            PesanPeringatanDataContoh = keadaan.MasihContoh
-                ? $"Data desa masih contoh: {keadaan.RingkasField}. Surat ini akan mencetak data contoh itu pada kop dan tanda tangan."
-                : string.Empty;
+            try
+            {
+                var keadaan = await _peringatan.PeriksaAsync();
+                TampilPeringatanDataContoh = keadaan.MasihContoh;
+                PesanPeringatanDataContoh = keadaan.MasihContoh
+                    ? $"Data desa masih contoh: {keadaan.RingkasField}. Surat ini akan mencetak data contoh itu pada kop dan tanda tangan."
+                    : string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal memeriksa peringatan data desa contoh");
+            }
+        }
+
+        /// <summary>
+        /// Jalankan pekerjaan latar yang kegagalannya tidak boleh menggagalkan alur
+        /// utama, tetapi tetap dicatat di log.
+        /// </summary>
+        private void JalankanLatar(Func<Task> kerja, string konteks)
+        {
+            _ = JalankanDanCatatAsync(kerja, konteks);
+        }
+
+        private async Task JalankanDanCatatAsync(Func<Task> kerja, string konteks)
+        {
+            try
+            {
+                await kerja();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal {Konteks}", konteks);
+            }
         }
 
         private void BukaPengaturanSurat()
@@ -242,12 +277,12 @@ namespace SuDesApp.Wpf.ViewModels
             if (_input is BaseSuratInputViewModel baseVm)
             {
                 baseVm.SetEditMode(false);
-                _ = InitializeAsync(baseVm);
+                _tugasInisialisasi = InitializeAsync(baseVm);
             }
 
             // Peringatan data desa contoh muncul sendiri saat form dibuka, supaya
             // pengguna tahu sebelum menekan Simpan (bukan hanya saat disimpan).
-            _ = PeriksaPeringatanDataContohAsync();
+            JalankanLatar(PeriksaPeringatanDataContohAsync, "memeriksa peringatan data contoh");
         }
 
         /// <summary>
@@ -494,6 +529,14 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private async Task SaveNewAsync(ModeSimpan mode)
         {
+            // Pastikan inisialisasi form (termasuk nomor otomatis) selesai lebih
+            // dulu: Configure menjalankannya di latar supaya form cepat tampil.
+            if (_tugasInisialisasi != null)
+            {
+                try { await _tugasInisialisasi; }
+                catch (Exception ex) { _logger.LogError(ex, "Inisialisasi form surat gagal"); }
+            }
+
             await EnsureNomorSuratAsync();
 
             var suratData = new SuratData(
@@ -529,7 +572,7 @@ namespace SuDesApp.Wpf.ViewModels
             else
             {
                 Pesan.Sukses("Surat berhasil disimpan",
-                    $"Surat bernomor {suratData.NomorSurat} sudah tersimpan, dan pratinjaunya dibuka.",
+                    $"Surat bernomor {suratData.NomorSurat} sudah tersimpan, dan pratinjauannya dibuka.",
                     "simpan-surat");
             }
             SuratSaved?.Invoke(hasil.ID_Surat);
@@ -576,7 +619,7 @@ namespace SuDesApp.Wpf.ViewModels
                 }
 
                 Pesan.Sukses("Perubahan surat tersimpan",
-                    $"Surat nomor {existing.NomorSurat} sudah diperbarui, dan pratinjaunya dibuka ulang.",
+                    $"Surat nomor {existing.NomorSurat} sudah diperbarui, dan pratinjauannya dibuka ulang.",
                     "simpan-surat");
                 SuratSaved?.Invoke(existing.ID_Surat);
             }
