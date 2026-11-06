@@ -478,12 +478,6 @@ namespace SuDesApp.Wpf.ViewModels
                 () => AppPreferenceStore.GetBatasUkuranUnduhanMb(),
                 min: 10, maks: 2048));
 
-            TambahBaris(new SettingRowVM(
-                "Pasang pembaruan kecil otomatis saat aplikasi ditutup",
-                "Saat aktif, pembaruan kecil (tambalan: hanya berkas yang berubah, data surat & pengaturan aman) yang sudah terunduh dipasang otomatis ketika aplikasi ditutup — tanpa menanya lagi; aplikasi dibuka kembali dengan versi terbaru. Installer penuh TIDAK ikut alur ini: installer dipasang hanya bila Anda memilih \"Instal Sekarang\" atau \"Instal Saat Keluar\" pada notifikasi. Bila paketnya belum siap, aplikasi keluar seperti biasa dan unduhan diteruskan pada pembukaan berikutnya.",
-                AppPreferenceStore.IsPasangOtomatisSaatKeluar(),
-                v => AppPreferenceStore.SetPasangOtomatisSaatKeluar(v)));
-
             TambahBarisAngka(new SettingRowAngkaVM(
                 "Batas ukuran pembaruan kecil otomatis (MB)",
                 "Ukuran maksimal perubahan yang boleh diunduh & dipasang sebagai pembaruan kecil di latar belakang (1-500 MB, bawaan 25 MB). Paket yang lebih besar tetap ditawarkan lewat notifikasi dan dipasang manual dari menu Pembaruan.",

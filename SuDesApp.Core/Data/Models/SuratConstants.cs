@@ -213,7 +213,9 @@ namespace SuDesApp.Data.Models
         /// </summary>
         public static readonly string[] ValidHubunganKeluarga =
         {
-            "Suami", "Istri", "Anak", "Ayah", "Ibu", "Saudara", "Lainnya"
+            "Suami", "Istri", "Ayah Kandung", "Ibu Kandung", "Anak Kandung",
+            "Kakak Kandung", "Adik Kandung", "Saudara", "Keponakan", "Cucu",
+            "Keluarga Lainnya", "Tetangga", "Lainnya"
         };
 
         /// <summary>
