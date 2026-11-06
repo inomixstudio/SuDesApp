@@ -51,6 +51,18 @@ public sealed class ImporAntreanSurat
     }
 
     /// <summary>
+    /// NIK khusus untuk jenis yang form desktopnya tidak punya kolom NIK.
+    /// Null bila jenis tersebut wajib meminta NIK dari operator.
+    /// </summary>
+    internal static string? NikKhususUntuk(string? idJenis) =>
+        (idJenis ?? string.Empty).ToUpperInvariant() switch
+        {
+            "AHLI_WARIS" => SuratConstants.NIK_KEMATIAN,
+            "INSTANSI" or "REKENING_KORAN" => SuratConstants.NIK_INSTANSI,
+            _ => null,
+        };
+
+    /// <summary>
     /// Keterangan bawaan SKTM — sama persis dengan yang dibentuk
     /// <c>SktmInputViewModel.GetDefaultKeteranganAsync</c> saat form dibuka.
     /// </summary>
@@ -97,6 +109,20 @@ public sealed class ImporAntreanSurat
             if (string.IsNullOrWhiteSpace(surat.Warga?.NIK) && !string.IsNullOrWhiteSpace(baris.Nik))
             {
                 surat.Warga!.NIK = baris.Nik!.Trim();
+            }
+
+            // Jenis yang form desktopnya tidak punya kolom NIK memakai NIK
+            // khusus (paritas AhliWarisInputViewModel / RekeningKoranViewModel):
+            // AHLI_WARIS = almarhum (NOL), INSTANSI/REKENING_KORAN = penanda
+            // instansi (SEMbilan). Tanpa ini GetOrCreateWargaAsync membuat warga
+            // ber-NIK kosong dan validator menolak surat INSTANSI.
+            if (string.IsNullOrWhiteSpace(surat.Warga?.NIK))
+            {
+                var nikKhusus = NikKhususUntuk(baris.IdJenis);
+                if (nikKhusus is not null)
+                {
+                    surat.Warga!.NIK = nikKhusus;
+                }
             }
 
             // Jenis yang skemanya menandai keterangan sebagai "otomatis"
