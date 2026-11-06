@@ -41,7 +41,7 @@ namespace SuDesApp.Configuration
         }
     }
 
-    // PERBAIKAN: Tambahkan event untuk notifikasi perubahan konfigurasi
+    // Tambahkan event untuk notifikasi perubahan konfigurasi
     public class ConfigurationChangedEventArgs : EventArgs
     {
         public List<JenisSuratConfig> NewConfigurations { get; }
@@ -58,7 +58,7 @@ namespace SuDesApp.Configuration
 
     public interface IJenisSuratConfigLoader : IDisposable
     {
-        // PERBAIKAN: Tambahkan event untuk notifikasi perubahan
+        // Tambahkan event untuk notifikasi perubahan
         event EventHandler<ConfigurationChangedEventArgs>? ConfigurationChanged;
 
         Task<List<JenisSuratConfig>> LoadConfigAsync(CancellationToken cancellationToken = default);
@@ -69,7 +69,7 @@ namespace SuDesApp.Configuration
         Task RefreshConfigAsync(CancellationToken cancellationToken = default);
         Task<List<JenisSuratConfig>> GetConfigsAsync(CancellationToken cancellationToken = default);
 
-        // PERBAIKAN: Method baru untuk mendapatkan grup berdasarkan property
+        // Method baru untuk mendapatkan grup berdasarkan property
         Task<List<JenisSuratConfig>> GetConfigsBySharedNumberingAsync(bool isSharedNumbering, CancellationToken cancellationToken = default);
         Task<List<JenisSuratConfig>> GetConfigsByKeteranganDesaAsync(bool isKeteranganDesa, CancellationToken cancellationToken = default);
         Task<Dictionary<string, List<JenisSuratConfig>>> GetConfigGroupsAsync(CancellationToken cancellationToken = default);
@@ -96,7 +96,7 @@ namespace SuDesApp.Configuration
         private readonly TimeSpan _fileChangeDebounceTime = TimeSpan.FromMilliseconds(500);
         private readonly object _fileWatcherLock = new object();
 
-        // PERBAIKAN: Event untuk notifikasi perubahan konfigurasi
+        // Event untuk notifikasi perubahan konfigurasi
         public event EventHandler<ConfigurationChangedEventArgs>? ConfigurationChanged;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
@@ -269,7 +269,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // PERBAIKAN: Method untuk membuat konfigurasi default yang lebih lengkap
+        // Method untuk membuat konfigurasi default yang lebih lengkap
         private async Task CreateDefaultConfigAsync(CancellationToken cancellationToken)
         {
             var defaultConfigs = new List<JenisSuratConfig>
@@ -381,7 +381,7 @@ namespace SuDesApp.Configuration
             LogConfigurationSummary(configs);
         }
 
-        // PERBAIKAN: Method untuk log summary konfigurasi
+        // Method untuk log summary konfigurasi
         private void LogConfigurationSummary(List<JenisSuratConfig> configs)
         {
             var sharedNumberingCount = configs.Count(c => c.IsSharedNumbering);
@@ -465,7 +465,7 @@ namespace SuDesApp.Configuration
             return config.IsSharedNumbering;
         }
 
-        // PERBAIKAN: Method baru untuk mendapatkan configs berdasarkan IsSharedNumbering
+        // Method baru untuk mendapatkan configs berdasarkan IsSharedNumbering
         public async Task<List<JenisSuratConfig>> GetConfigsBySharedNumberingAsync(bool isSharedNumbering, CancellationToken cancellationToken = default)
         {
             var cacheKey = $"{SharedNumberingCacheKey}_{isSharedNumbering}";
@@ -484,7 +484,7 @@ namespace SuDesApp.Configuration
                 cancellationToken);
         }
 
-        // PERBAIKAN: Method baru untuk mendapatkan configs berdasarkan IsKeteranganDesa  
+        // Method baru untuk mendapatkan configs berdasarkan IsKeteranganDesa  
         public async Task<List<JenisSuratConfig>> GetConfigsByKeteranganDesaAsync(bool isKeteranganDesa, CancellationToken cancellationToken = default)
         {
             var cacheKey = $"{KeteranganDesaCacheKey}_{isKeteranganDesa}";
@@ -503,7 +503,7 @@ namespace SuDesApp.Configuration
                 cancellationToken);
         }
 
-        // PERBAIKAN: Method baru untuk mendapatkan semua grup konfigurasi
+        // Method baru untuk mendapatkan semua grup konfigurasi
         public async Task<Dictionary<string, List<JenisSuratConfig>>> GetConfigGroupsAsync(CancellationToken cancellationToken = default)
         {
             return await _cacheService.GetOrCreateAsync(
@@ -540,7 +540,7 @@ namespace SuDesApp.Configuration
                 // Preload the config
                 var newConfigs = await LoadConfigAsync(cancellationToken);
 
-                // PERBAIKAN: Fire event untuk notifikasi perubahan
+                // Fire event untuk notifikasi perubahan
                 ConfigurationChanged?.Invoke(this, new ConfigurationChangedEventArgs(newConfigs, "Manual refresh"));
 
                 _logger.LogInformation("Configuration refreshed successfully with {Count} configs", newConfigs.Count);
@@ -552,7 +552,7 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // PERBAIKAN: Method untuk clear semua cache terkait
+        // Method untuk clear semua cache terkait
         private async Task ClearAllCachesAsync(CancellationToken cancellationToken = default)
         {
             await _cacheService.RemoveAsync<List<JenisSuratConfig>>(CacheKey, cancellationToken);

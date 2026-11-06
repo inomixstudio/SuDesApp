@@ -147,14 +147,6 @@ namespace SuDesApp.Wpf.Input
         protected virtual Task CollectSpecificDataAsync(SuratData? suratData) => Task.CompletedTask;
         protected virtual void ValidateSpecificFields(List<string> errors) { }
 
-        /// <summary>
-        /// [USANG] Flag ambient era pra-SuratSaveService. Selalu false; dipertahankan
-        /// sementara hanya agar tidak memutus pemanggil luar. Keputusan draft kini
-        /// lewat parameter ModeSimpan pada CollectDataAsync.
-        /// </summary>
-        [Obsolete("Gunakan ModeSimpan pada CollectDataAsync (lihat SuratSaveService)")]
-        public bool DraftToleran => false;
-
         /// <summary>Dipanggil saat form dibuka (surat baru).</summary>
         public virtual async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
