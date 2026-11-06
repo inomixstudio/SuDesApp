@@ -133,10 +133,9 @@ namespace SuDesApp.GeneratorPdf
                             halaman.Render(kolom);
                         });
                     });
-                }).GeneratePdf(penampung);
+                }).GeneratePdf(penampung, out jumlahHalaman);
 
                 pdf = penampung.ToArray();
-                jumlahHalaman = HitungJumlahHalaman(pdf);
 
                 if (jumlahHalaman <= HalamanMaksimal)
                 {

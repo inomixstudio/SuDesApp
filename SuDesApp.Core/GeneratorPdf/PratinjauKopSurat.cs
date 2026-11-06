@@ -34,8 +34,8 @@ namespace SuDesApp.GeneratorPdf
         public IReadOnlyList<KopSurat.Baris> Baris { get; init; } = Array.Empty<KopSurat.Baris>();
 
         /// <summary>
-        /// Surel desa yang akan dicetak biru di baris alamat kop; kosong bila kolomnya
-        /// dikosongkan (kolom ini opsional).
+        /// Surel desa yang dicetak biru pada baris tersendiri di bawah nama
+        /// kabupaten; kosong bila kolomnya dikosongkan (kolom ini opsional).
         /// </summary>
         public string Surel { get; init; } = string.Empty;
 
@@ -112,7 +112,7 @@ namespace SuDesApp.GeneratorPdf
                     // Judul & jabatan mengikuti lembaga: “Lurah …” + baris NIP
                     // untuk kelurahan — sama seperti hasil cetak PDF.
                     Judul = KopSurat.KataPejabat(bersih),
-                    Jabatan = $"{KopSurat.KataPejabat(bersih)} {jabatanDesa}".ToUpperInvariant(),
+                    Jabatan = KopSurat.JabatanPejabat(bersih, jabatanDesa, "Kepala Desa"),
                     Nama = kades.Length == 0 ? GarisNamaKosong : NamaFormatter.ToUpperNama(kades),
                     BarisTambahan = KopSurat.IsKelurahan(bersih) &&
                                     !string.IsNullOrWhiteSpace(bersih.NipKepalaDesa)
@@ -123,7 +123,7 @@ namespace SuDesApp.GeneratorPdf
                 SekretarisDesa = new BlokPejabatPratinjau
                 {
                     Judul = "Sekretaris Desa",
-                    Jabatan = $"A/N Kepala Desa {jabatanDesa}\nSekretaris Desa".ToUpperInvariant(),
+                    Jabatan = KopSurat.JabatanPejabat(bersih, jabatanDesa, "Sekretaris Desa"),
                     Nama = sekdes.Length == 0 ? GarisNamaKosong : NamaFormatter.ToUpperNama(sekdes),
                     Terisi = sekdes.Length > 0
                 },

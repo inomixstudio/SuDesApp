@@ -1,7 +1,8 @@
 // SuratGeneratorBase.cs
 // Kelas dasar seluruh generator surat. Seluruh dokumen — kop, judul, badan,
 // dan kaki surat — dirender dengan tata letak SudesPdf.Core (tanpa pustaka
-// pihak ketiga dan tanpa berkas font yang disematkan).
+// pihak ketiga). Font Times New Roman disematkan sebagai subset oleh mesin
+// PDF; bila font sistem tidak ada, dokumen memakai font standar PDF.
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.ControlSurat; // SettingsManager
@@ -43,7 +44,6 @@ namespace SuDesApp.GeneratorPdf
         protected virtual bool UseDefaultFooter => true;
         protected virtual bool ShowPemohonInFooter => true;
 
-        protected readonly ILoggerFactory _loggerFactory;
         protected readonly ISuratRepository _suratRepository;
 
         protected SuratGeneratorBase(
@@ -61,7 +61,6 @@ namespace SuDesApp.GeneratorPdf
             _suratRepository = suratRepository ?? throw new ArgumentNullException(nameof(suratRepository));
             _settingsManager = settingsManager ?? throw new ArgumentNullException(nameof(settingsManager));
             _logger = logger ?? NullLogger<SuratGeneratorBase>.Instance;
-            _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
         }
 
         public virtual async Task GeneratePdfAsync(Stream outputStream, int idSurat, string? keteranganTextBox = null)
@@ -170,10 +169,9 @@ namespace SuDesApp.GeneratorPdf
                             halaman.Render(kolom);
                         });
                     });
-                }).GeneratePdf(penampung);
+                }).GeneratePdf(penampung, out jumlahHalaman);
 
                 ukuranPdf = penampung.ToArray();
-                jumlahHalaman = HitungJumlahHalaman(ukuranPdf);
 
                 if (jumlahHalaman <= HalamanMaksimal)
                 {
@@ -204,17 +202,6 @@ namespace SuDesApp.GeneratorPdf
         /// </summary>
         protected static void SiapkanHalaman(PageDescriptor page, float lebarHalaman, float tinggiHalaman) =>
             TataLetakHalamanSurat.Siapkan(page, lebarHalaman, tinggiHalaman, DEFAULT_FONT_SIZE);
-
-        /// <summary>
-        /// Jumlah halaman dokumen, dibaca dari pohon halaman berkas PDF yang dihasilkan.
-        /// </summary>
-        protected static int HitungJumlahHalaman(byte[] pdf)
-        {
-            // Latin1: satu byte = satu karakter, sehingga pola dapat dicari langsung.
-            string isi = System.Text.Encoding.Latin1.GetString(pdf);
-            var cocok = System.Text.RegularExpressions.Regex.Match(isi, @"/Type\s*/Pages[\s\S]{0,256}?/Count\s+(\d+)");
-            return cocok.Success && int.TryParse(cocok.Groups[1].Value, out int jumlah) ? jumlah : 1;
-        }
 
         private async Task EnsureDesaDataLoadedAsync(SuratData suratData)
         {
@@ -352,14 +339,10 @@ namespace SuDesApp.GeneratorPdf
 
             string tanggalTerformat = suratData.TanggalSurat.ToString("dd MMMM yyyy", new CultureInfo("id-ID"));
 
-            // Pejabat penandatangan mengikuti jenis lembaga yang dipilih di
-            // Pengaturan Surat: “Kepala Desa …” pada desa, “Lurah …” pada kelurahan.
-            var pejabat = KopSurat.KataPejabat(desa, suratData.PejabatPenandatangan);
-
             // Jabatan ditulis KAPITAL sesuai template resmi desa ("KEPALA DESA SUMBERJAYA").
-            var jabatan = pejabat.Equals("Sekretaris Desa", StringComparison.OrdinalIgnoreCase)
-                ? $"A/N Kepala Desa {desa.NamaDesa}\nSekretaris Desa".ToUpperInvariant()
-                : $"{pejabat} {desa.NamaDesa}".ToUpperInvariant();
+            // Aturannya dipakai bersama pratinjau kop di Pengaturan Surat, dan jenis
+            // lembaga (Desa/Kelurahan) mengikuti pilihan di Pengaturan Surat.
+            var jabatan = KopSurat.JabatanPejabat(desa, desa.NamaDesa ?? string.Empty, suratData.PejabatPenandatangan);
 
             // NIP hanya untuk pejabat ASN kelurahan (Lurah); Kepala Desa tidak ASN.
             var nipPejabat = KopSurat.IsKelurahan(desa) ? (desa.NipKepalaDesa ?? string.Empty).Trim() : string.Empty;

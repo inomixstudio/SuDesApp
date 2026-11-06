@@ -806,6 +806,16 @@ public static class DocumentExtensions
     /// <summary>Tulis dokumen ke sebuah aliran (stream).</summary>
     public static void GeneratePdf(this IDocument document, Stream stream)
     {
+        GeneratePdf(document, stream, out _);
+    }
+
+    /// <summary>
+    /// Tulis dokumen ke sebuah aliran (stream) dan kembalikan jumlah halaman
+    /// hasil tata letak. Dipakai penyesuaian kerapatan supaya tidak menebak
+    /// jumlah halaman dari byte PDF.
+    /// </summary>
+    public static void GeneratePdf(this IDocument document, Stream stream, out int pageCount)
+    {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(stream);
 
@@ -813,7 +823,7 @@ public static class DocumentExtensions
         document.Compose(collector);
         if (collector.Pages.Count == 0) throw new PdfException("Dokumen harus memiliki paling sedikit satu halaman.");
 
-        byte[] bytes = LayoutFlow.Build(collector.Pages, document.GetMetadata());
+        byte[] bytes = LayoutFlow.Build(collector.Pages, out pageCount, document.GetMetadata());
         stream.Write(bytes, 0, bytes.Length);
     }
 

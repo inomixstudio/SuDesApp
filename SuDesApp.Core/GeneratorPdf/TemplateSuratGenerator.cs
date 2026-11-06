@@ -85,10 +85,9 @@ namespace SuDesApp.GeneratorPdf
                             badan.Render(kolom);
                         });
                     });
-                }).GeneratePdf(penampung);
+                }).GeneratePdf(penampung, out halaman);
 
                 hasil = penampung.ToArray();
-                halaman = HitungJumlahHalaman(hasil);
 
                 if (halaman <= 1)
                 {
@@ -403,17 +402,6 @@ namespace SuDesApp.GeneratorPdf
         // =====================================================================
         // Pemeriksaan
         // =====================================================================
-
-        /// <summary>
-        /// Jumlah halaman dokumen, dibaca dari pohon halaman PDF yang dihasilkan mesin SudesPdf.
-        /// </summary>
-        private static int HitungJumlahHalaman(byte[] pdf)
-        {
-            // Latin1: satu byte = satu karakter, sehingga pola dapat dicari langsung.
-            string isi = System.Text.Encoding.Latin1.GetString(pdf);
-            var cocok = System.Text.RegularExpressions.Regex.Match(isi, @"/Type\s*/Pages[\s\S]{0,256}?/Count\s+(\d+)");
-            return cocok.Success && int.TryParse(cocok.Groups[1].Value, out int jumlah) ? jumlah : 1;
-        }
 
         /// <summary>
         /// Definisi harus menghasilkan surat yang bisa dicetak: ada minimal satu
