@@ -168,6 +168,78 @@
           "Sekretaris Desa"
         ]
       }
+    ],
+    "judul": "SURAT KETERANGAN DESA",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Status Perkawinan",
+            "$warga.statusPerkawinan"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
+        "rata": "kiri",
+        "jarakBawah": 12
+      }
     ]
   },
   "DOMISILI_WARGA": {
@@ -339,6 +411,79 @@
           "Sekretaris Desa"
         ]
       }
+    ],
+    "judul": "SURAT KETERANGAN DOMISILI",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Status Perkawinan",
+            "$warga.statusPerkawinan"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12,
+        "opsional": true
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
+        "rata": "kiri",
+        "jarakBawah": 12
+      }
     ]
   },
   "INSTANSI": {
@@ -419,6 +564,69 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN DOMISILI",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama Instansi/Lembaga",
+            "$instansi.nama"
+          ],
+          [
+            "Alamat Instansi/Lembaga",
+            "$instansi.alamat Desa $desa.nama \nKecamatan $desa.kecamatan Kab. $desa.kabupaten\nKodepos $desa.kodepos"
+          ],
+          [
+            "Nomor SK/Izin Usaha",
+            "$instansi.nomorSk"
+          ],
+          [
+            "Ketua/Pimpinan",
+            "$instansi.pimpinan"
+          ],
+          [
+            "NIK",
+            "$instansi.nikPimpinan"
+          ]
+        ],
+        "labelTebal": [
+          "Nama Instansi/Lembaga"
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
+        "rata": "kiri",
+        "jarakBawah": 12
       }
     ]
   },
@@ -615,6 +823,91 @@
           "Sekretaris Desa"
         ]
       }
+    ],
+    "judul": "SURAT KETERANGAN USAHA",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": true,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat/Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Status Perkawinan",
+            "$warga.statusPerkawinan"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "tabel": [
+          [
+            "Bidang Usaha",
+            "$sku.bidangUsaha"
+          ],
+          [
+            "Sejak Tahun",
+            "$sku.sejakTahun"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana perlunya.",
+        "rata": "kiri",
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      }
     ]
   },
   "PENGANTAR_SKCK": {
@@ -805,6 +1098,97 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN PENGANTAR PEMBUATAN SURAT KETERANGAN CATATAN KEPOLISIAN (SKCK)",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": true,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakAtas": 5,
+        "jarakBawah": 5
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakAtas": 5,
+        "jarakBawah": 5
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "Nomor KTP",
+            "$warga.nik"
+          ],
+          [
+            "Tempat/Tgl Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Kewarganegaraan",
+            "$warga.kewarganegaraan"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Status Perkawinan",
+            "$warga.statusPerkawinan"
+          ],
+          [
+            "Pendidikan",
+            "$warga.pendidikan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Berdasarkan data / catatan kami selama menjabat, bahwa orang tersebut di atas adalah benar:",
+        "jarakAtas": 5,
+        "jarakBawah": 3
+      },
+      {
+        "daftar": [
+          "Penduduk $desa.lembaga $desa.nama Kecamatan $desa.kecamatan $desa.jenisKabupaten $desa.kabupaten",
+          "Tidak dalam perkara kriminalitas",
+          "Tidak dalam status tahanan yang berwajib",
+          "Tidak sedang terlibat dalam penggunaan NARKOBA",
+          "Berkelakuan baik dalam kehidupan bermasyarakat"
+        ],
+        "indentKiri": 30,
+        "jarakAtas": 3,
+        "jarakBawah": 3
+      },
+      {
+        "paragraf": "Maksud : yang bersangkutan akan membuat SKCK untuk keperluan: $keterangan",
+        "indentKiri": 15,
+        "jarakAtas": 3,
+        "jarakBawah": 5
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini kami buat untuk dipergunakan seperlunya.",
+        "jarakAtas": 5,
+        "jarakBawah": 10
       }
     ]
   },
@@ -1107,6 +1491,97 @@
           "Sekretaris Desa"
         ]
       }
+    ],
+    "judul": "SURAT IZIN SUAMI / ORANG TUA",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan dibawah ini :",
+        "jarakBawah": 5
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat/Tgl. Lahir",
+            "$warga.tempatLahir, $warga.tanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ],
+        "gaya": "tabelIzin"
+      },
+      {
+        "paragraf": "Dengan ini memberikan izin kepada :",
+        "jarakAtas": 8,
+        "jarakBawah": 5
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$izinortu.namaAnak"
+          ],
+          [
+            "NIK",
+            "$izinortu.nikAnak"
+          ],
+          [
+            "Tempat/Tgl. Lahir",
+            "$izinortu.tempatLahirAnak, $izinortu.tanggalLahirAnak"
+          ],
+          [
+            "Jenis Kelamin",
+            "$izinortu.jenisKelaminAnak"
+          ],
+          [
+            "Agama",
+            "$izinortu.agamaAnak"
+          ],
+          [
+            "Pekerjaan",
+            "$izinortu.pekerjaanAnak"
+          ],
+          [
+            "Alamat",
+            "$izinortu.alamatAnak"
+          ]
+        ],
+        "gaya": "tabelIzin"
+      },
+      {
+        "paragraf": "$keterangan",
+        "indentKiri": 30,
+        "jarakAtas": 15,
+        "jarakBawah": 5
+      },
+      {
+        "paragraf": "Demikian surat izin ini dibuat dengan sebenarnya tanpa ada unsur paksaan dari pihak manapun dan untuk dipergunakan sebagaimana mestinya.",
+        "jarakAtas": 5,
+        "jarakBawah": 15
+      }
     ]
   },
   "SKTM": {
@@ -1277,6 +1752,78 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN TIDAK MAMPU",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Status Perkawinan",
+            "$warga.statusPerkawinan"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat dengan sebenarnya untuk digunakan seperlunya.",
+        "rata": "kiri",
+        "jarakBawah": 12
       }
     ]
   },
@@ -1452,6 +1999,78 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN BELUM TERBIT",
+    "pakaiLogo": false,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Status Perkawinan",
+            "$warga.statusPerkawinan"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat dengan sebenarnya untuk digunakan seperlunya.",
+        "rata": "kiri",
+        "jarakBawah": 12
       }
     ]
   },
@@ -1668,6 +2287,64 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN GARAPAN",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan dibawah ini $pejabat.jabatan $desa.nama Kecamatan $desa.kecamatan $desa.jenisKabupaten $desa.kabupaten, menerangkan dengan sesungguhnya bahwa :",
+        "indentKiri": 30,
+        "jarakAtas": 10,
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tgl lahir",
+            "$warga.tempatLahir, $warga.tanggalLahir"
+          ],
+          [
+            "Jenis kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Nama tersebut diatas adalah Penggarap tanah sawah di Desa $desa.nama Kecamatan $desa.kecamatan $desa.jenisKabupaten $desa.kabupaten dengan rinci:",
+        "indentKiri": 30,
+        "jarakAtas": 10,
+        "jarakBawah": 10
+      },
+      {
+        "kustom": "Tabel rincian garapan (6 kolom, border 0,75pt, padding 3pt, font 11pt, jarak atas-bawah 10pt): header \"No\" (tengah), \"Nama Pemilik\" (tengah), \"Letak\" (tengah), \"No. Persil\" (tengah), \"Luas\" (tengah), \"Keterangan\" (tengah); satu baris per RincianGarapans (No urut, Nama Pemilik = PemilikTanah atau nama penggarap, Letak, No. Persil, Luas \"{n} M2\" rata kanan, Keterangan), ditambah dua baris kosong; baris terakhir \"Jumlah\" (menggabung 4 kolom pertama, rata tengah) + total luas \"{n} M2\" tebal rata kanan + sel kosong."
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini kami buat dengan sebenarnya dan dipergunakan sebagaimana perlunya.",
+        "indentKiri": 30,
+        "jarakAtas": 10,
+        "jarakBawah": 10
       }
     ]
   },
@@ -1986,6 +2663,146 @@
           "Kepala Desa"
         ]
       }
+    ],
+    "judul": "SURAT KETERANGAN KEMATIAN",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": true,
+    "badan": [
+      {
+        "kustom": "Kotak kode formulir di kanan atas: teks \"Kode : F-2.17\" (12pt, tebal, rata tengah, border 0,75pt hitam, lebar 89pt, padding 3pt)."
+      },
+      {
+        "tabel": [
+          [
+            "Pemerintah Desa",
+            "$desa.nama"
+          ],
+          [
+            "Kecamatan",
+            "$desa.kecamatan"
+          ],
+          [
+            "Kabupaten/Kota",
+            "$desa.kabupaten"
+          ]
+        ],
+        "gaya": "identitasFormulir"
+      },
+      {
+        "kustom": "Judul \"SURAT KETERANGAN KEMATIAN\" (14pt, tebal, rata tengah) dan bawahnya baris \"Nomor : 570 /                   / Ds. {tahun}\" (rata tengah, 12pt); bila NomorSurat sudah ada, baris nomor menjadi \"Nomor : {NomorSurat}\"."
+      },
+      {
+        "paragraf": "Yang bertanda tangan dibawah ini, menerangkan bahwa :",
+        "jarakAtas": 10,
+        "jarakBawah": 8
+      },
+      {
+        "tabel": [
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Nama Lengkap Jenazah",
+            "$warga.nama"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Umur",
+            "$warga.umur"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "Dusun : $warga.dusun $warga.rtRw\nDesa : $warga.desa\nKecamatan : $warga.kecamatan"
+          ]
+        ],
+        "gaya": "tabelFormulir"
+      },
+      {
+        "paragraf": "Telah meninggal dunia pada :",
+        "jarakAtas": 8,
+        "jarakBawah": 3
+      },
+      {
+        "tabel": [
+          [
+            "Hari",
+            "$kematian.hari"
+          ],
+          [
+            "Tanggal",
+            "$kematian.tanggal"
+          ],
+          [
+            "Pukul",
+            "$kematian.pukul WIB"
+          ],
+          [
+            "Penyebab Kematian",
+            "$kematian.penyebab"
+          ]
+        ],
+        "gaya": "tabelFormulir"
+      },
+      {
+        "paragraf": "Surat keterangan ini dibuat berdasarkan Keterangan Pelapor :",
+        "jarakAtas": 12,
+        "jarakBawah": 3
+      },
+      {
+        "paragraf": "PELAPOR",
+        "tebal": true,
+        "jarakBawah": 2
+      },
+      {
+        "tabel": [
+          [
+            "NIK",
+            "$kematian.nikPelapor"
+          ],
+          [
+            "Nama lengkap",
+            "$kematian.namaPelapor"
+          ],
+          [
+            "Agama",
+            "$kematian.agamaPelapor"
+          ],
+          [
+            "Umur",
+            "$kematian.umurPelapor"
+          ],
+          [
+            "Pekerjaan",
+            "$kematian.pekerjaanPelapor"
+          ],
+          [
+            "Alamat",
+            "Dusun : $kematian.dusunPelapor\nDesa : $kematian.desaPelapor\nKecamatan : $kematian.kecamatanPelapor"
+          ]
+        ],
+        "gaya": "tabelFormulir"
+      },
+      {
+        "paragraf": "Hubungan Pelapor dengan yang Meninggal Dunia : $kematian.hubunganPelapor",
+        "jarakAtas": 8,
+        "jarakBawah": 3,
+        "opsional": true
+      },
+      {
+        "kustom": "Blok tanda tangan formulir (2 kolom, padding atas 30pt): kolom kiri kosong; kolom kanan rata tengah berisi \"{namaDesa}, {tanggal}\", jabatan Kepala Desa/Lurah (huruf besar), ruang 45pt, nama Kepala Desa tebal, dan \"NIP {nip}\" bila kelurahan."
+      }
     ]
   },
   "BEDANAMA": {
@@ -2240,6 +3057,99 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN BEDA DATA",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini:",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa terdapat perbedaan data sebagai berikut:",
+        "jarakBawah": 10
+      },
+      {
+        "paragraf": "Data di: $surat.dataSource1",
+        "jarakBawah": 5
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Data di: $surat.dataSource2",
+        "jarakAtas": 10,
+        "jarakBawah": 5
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$wargaKk.nama"
+          ],
+          [
+            "NIK",
+            "$wargaKk.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$wargaKk.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$wargaKk.jenisKelamin"
+          ],
+          [
+            "Alamat",
+            "$wargaKk.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
+        "rata": "kiri",
+        "jarakBawah": 12
       }
     ]
   },
@@ -2559,6 +3469,131 @@
           "Kepala Desa"
         ]
       }
+    ],
+    "judul": "SURAT KETERANGAN KENAL LAHIR",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragrafCampur": [
+          [
+            "Yang bertanda tangan dibawah ini, $pejabat.jabatan ",
+            false
+          ],
+          [
+            "$desa.nama",
+            true
+          ],
+          [
+            " Kecamatan $desa.kecamatan $desa.jenisKabupaten $desa.kabupaten menerangkan berdasarkan keterangan dari :",
+            false
+          ]
+        ],
+        "jarakAtas": 15
+      },
+      {
+        "paragraf": "Ayah Kandung",
+        "tebal": true,
+        "jarakAtas": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$ayah.nama"
+          ],
+          [
+            "NIK",
+            "$ayah.nik"
+          ],
+          [
+            "Tempat/Tgl. Lahir",
+            "$ayah.tempatTanggalLahir"
+          ],
+          [
+            "Agama",
+            "$ayah.agama"
+          ],
+          [
+            "Pekerjaan",
+            "$ayah.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$ayah.alamat"
+          ]
+        ],
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "Ibu Kandung",
+        "tebal": true,
+        "jarakAtas": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$ibu.nama"
+          ],
+          [
+            "NIK",
+            "$ibu.nik"
+          ],
+          [
+            "Tempat/Tgl. Lahir",
+            "$ibu.tempatTanggalLahir"
+          ],
+          [
+            "Agama",
+            "$ibu.agama"
+          ],
+          [
+            "Pekerjaan",
+            "$ibu.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$ibu.alamat"
+          ]
+        ],
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "Telah Lahir seorang anak",
+        "tebal": true,
+        "jarakAtas": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$anak.nama"
+          ],
+          [
+            "Tempat/Tgl. Lahir",
+            "$anak.tempatTanggalLahir"
+          ],
+          [
+            "Anak Ke",
+            "$anak.ke ($anak.keTerbilang)"
+          ],
+          [
+            "Lahir di",
+            "$anak.lahirDi"
+          ],
+          [
+            "Alamat",
+            "$anak.alamat"
+          ]
+        ],
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.",
+        "rata": "kiri",
+        "jarakAtas": 10
+      }
     ]
   },
   "IJIN_TINGGAL": {
@@ -2793,6 +3828,106 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN IJIN TINGGAL SEMENTARA",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": true,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakAtas": 20
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ],
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakAtas": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Status Perkawinan",
+            "$warga.statusPerkawinan"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.dusun $warga.rtRw Desa $warga.desa\n Kecamatan $warga.kecamatan $warga.kabupaten"
+          ]
+        ],
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "Adapun yang menjadi penanggung jawab selama tinggal sementara :",
+        "jarakAtas": 10,
+        "opsional": true
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$penanggungjawab.nama"
+          ],
+          [
+            "NIK",
+            "$penanggungjawab.nik"
+          ],
+          [
+            "Tanggal Lahir",
+            "$penanggungjawab.tanggalLahir"
+          ],
+          [
+            "Pekerjaan",
+            "$penanggungjawab.pekerjaan"
+          ]
+        ],
+        "indentKiri": 20,
+        "opsional": true
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.",
+        "rata": "kiri",
+        "jarakAtas": 10
       }
     ]
   },
@@ -3129,6 +4264,358 @@
           "Sekretaris Desa"
         ]
       }
+    ],
+    "judul": "SURAT KETERANGAN AHLI WARIS",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": true,
+    "badan": [
+      {
+        "kustom": "Halaman 1 - kop surat desa + judul \"SURAT KETERANGAN AHLI WARIS\" + baris \"NOMOR : {nomor}\" (ComposeHalaman menimpa tata letak bawaan)."
+      },
+      {
+        "paragrafCampur": [
+          [
+            "Yang bertanda tangan di bawah ini, Kepala Desa ",
+            false
+          ],
+          [
+            "$desa.nama",
+            true
+          ],
+          [
+            " Kecamatan ",
+            false
+          ],
+          [
+            "$desa.kecamatan",
+            true
+          ],
+          [
+            " Kabupaten ",
+            false
+          ],
+          [
+            "$desa.kabupaten",
+            true
+          ],
+          [
+            ", menerangkan berdasarkan Surat Pernyataan Ahli Waris ",
+            false
+          ],
+          [
+            "$ahliwaris.almarhumNama",
+            true
+          ],
+          [
+            " tanggal ",
+            false
+          ],
+          [
+            "$surat.tanggal",
+            false
+          ],
+          [
+            " bahwa mendiang ",
+            false
+          ],
+          [
+            "$ahliwaris.almarhumNama",
+            true
+          ],
+          [
+            " telah meninggal dunia pada hari ",
+            false
+          ],
+          [
+            "$kematian.hari",
+            false
+          ],
+          [
+            ", tanggal ",
+            false
+          ],
+          [
+            "$kematian.tanggalTerbilang",
+            false
+          ],
+          [
+            ", di kediaman yang terakhir yang beralamat di ",
+            false
+          ],
+          [
+            "$ahliwaris.almarhumAlamat",
+            false
+          ]
+        ],
+        "jarakAtas": 15
+      },
+      {
+        "paragraf": "Semasa hidupnya, mendiang $ahliwaris.almarhumNama pernah menikah/berumah tangga dengan seorang $ahliwaris.jenisKelaminPasanganKata yakni:",
+        "jarakAtas": 10,
+        "opsional": true
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$ahliwaris.pasangan.nama"
+          ],
+          [
+            "Tempat/Tgl. Lahir",
+            "$ahliwaris.pasangan.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$ahliwaris.pasangan.jenisKelamin"
+          ],
+          [
+            "Alamat",
+            "$ahliwaris.pasangan.alamat"
+          ]
+        ],
+        "gaya": "tabelAhliWaris",
+        "opsional": true
+      },
+      {
+        "paragraf": "Dari pernikahan tersebut, dikaruniai anak/keturunan sebanyak $ahliwaris.jumlahAnak ($ahliwaris.jumlahAnakTerbilang) orang, yakni:",
+        "jarakAtas": 10,
+        "opsional": true
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama",
+            "$ahliwaris.anak[0].nama"
+          ],
+          [
+            "    Tempat/Tgl. Lahir",
+            "$ahliwaris.anak[0].tempatTanggalLahir"
+          ],
+          [
+            "    Jenis Kelamin",
+            "$ahliwaris.anak[0].jenisKelamin"
+          ],
+          [
+            "    Alamat",
+            "$ahliwaris.anak[0].alamat"
+          ]
+        ],
+        "gaya": "tabelAhliWaris",
+        "opsional": true
+      },
+      {
+        "paragraf": "Tidak ada anak/keturunan dari pernikahan tersebut.",
+        "jarakAtas": 10,
+        "opsional": true
+      },
+      {
+        "paragraf": "Surat keterangan ini dibuat untuk keperluan $keterangan atas nama $ahliwaris.almarhumNama.",
+        "jarakAtas": 10
+      },
+      {
+        "paragraf": "Demikian Surat Keterangan Ahli Waris ini dibuat dengan sebenarnya.",
+        "jarakAtas": 5
+      },
+      {
+        "kustom": "Blok kaki halaman 1 (2 kolom, padding atas 20pt): kolom kiri rata tengah \"Menguatkan;\", \"Nomor : ...................................\", \"Camat {kecamatan}\", ruang tanda tangan, nama Camat tebal, GolCamat, \"NIP. {NipCamat}\"; kolom kanan rata tengah \"{namaDesa}, {tanggal}\", jabatan Kepala Desa/Lurah, ruang tanda tangan, nama Kepala Desa tebal, \"NIP {nip}\" bila kelurahan."
+      },
+      {
+        "kustom": "--- HALAMAN 2 (page break): Surat Pernyataan Ahli Waris ---"
+      },
+      {
+        "kustom": "Judul halaman \"SURAT PERNYATAAN AHLI WARIS\" (14pt, tebal, rata tengah, bergaris bawah)."
+      },
+      {
+        "paragrafCampur": [
+          [
+            "Yang bertanda tangan/Cap Jempol di bawah ini, kami para Ahli Waris dari ",
+            false
+          ],
+          [
+            "$ahliwaris.almarhumNama",
+            true
+          ],
+          [
+            ", dan siap diangkat sumpah apabila memberikan keterangan yang tidak benar, bahwa:",
+            false
+          ]
+        ],
+        "jarakAtas": 15
+      },
+      {
+        "paragraf": "Semasa hidupnya, mendiang $ahliwaris.almarhumNama pernah menikah/berumah tangga dengan seorang $ahliwaris.jenisKelaminPasanganKata, yakni:",
+        "jarakAtas": 10,
+        "opsional": true
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$ahliwaris.pasangan.nama"
+          ],
+          [
+            "Tempat/Tgl. Lahir",
+            "$ahliwaris.pasangan.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$ahliwaris.pasangan.jenisKelamin"
+          ],
+          [
+            "Alamat",
+            "$ahliwaris.pasangan.alamat"
+          ]
+        ],
+        "gaya": "tabelAhliWaris",
+        "opsional": true
+      },
+      {
+        "paragraf": "Dari pernikahan tersebut, $ahliwaris.almarhumNama dikaruniai anak/keturunan sebanyak $ahliwaris.jumlahAnak ($ahliwaris.jumlahAnakTerbilang) orang, yaitu:",
+        "jarakAtas": 10,
+        "opsional": true
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama",
+            "$ahliwaris.anak[0].nama"
+          ],
+          [
+            "    Tempat/Tgl. Lahir",
+            "$ahliwaris.anak[0].tempatTanggalLahir"
+          ],
+          [
+            "    Jenis Kelamin",
+            "$ahliwaris.anak[0].jenisKelamin"
+          ],
+          [
+            "    Alamat",
+            "$ahliwaris.anak[0].alamat"
+          ]
+        ],
+        "gaya": "tabelAhliWaris",
+        "opsional": true
+      },
+      {
+        "paragraf": "Tidak ada anak/keturunan dari pernikahan tersebut.",
+        "jarakAtas": 10,
+        "opsional": true
+      },
+      {
+        "paragraf": "Demikian Surat Pernyataan Ahli Waris ini dibuat dan ditandatangani dengan sebenarnya, dalam keadaan sehat jasmani dan rohani, tanpa adanya unsur paksaan atau bujukan dari pihak manapun. Kami siap mempertanggungjawabkan kebenaran pernyataan ini apabila diperlukan, dan tidak ada ahli waris lain selain yang tersebut di atas.",
+        "jarakAtas": 10
+      },
+      {
+        "paragraf": "$desa.nama, $surat.tanggal",
+        "rata": "tengah",
+        "jarakAtas": 30
+      },
+      {
+        "paragraf": "Para Ahli Waris",
+        "rata": "tengah",
+        "tebal": true,
+        "jarakAtas": 10
+      },
+      {
+        "kustom": "Daftar nama penandatangan (pasangan dilanjut tiap anak), masing-masing satu paragraf rata tengah jarak atas 15pt dengan teks \"  {nama}  ...............................\"."
+      },
+      {
+        "kustom": "--- HALAMAN 3 (page break, hanya bila NamaPasangan terisi DAN JumlahAnak > 0 DAN daftar Anak ada): Surat Kuasa Ahli Waris ---"
+      },
+      {
+        "kustom": "Judul halaman \"SURAT KUASA AHLI WARIS\" (14pt, tebal, rata tengah, bergaris bawah)."
+      },
+      {
+        "paragraf": "Yang bertanda tangan/Cap Jempol di bawah ini, kami para Ahli Waris dari $ahliwaris.almarhumNama:",
+        "jarakAtas": 15
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama",
+            "$ahliwaris.pasangan.nama"
+          ],
+          [
+            "Tempat/Tgl. Lahir",
+            "$ahliwaris.pasangan.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$ahliwaris.pasangan.jenisKelamin"
+          ],
+          [
+            "Alamat",
+            "$ahliwaris.pasangan.alamat"
+          ]
+        ],
+        "gaya": "tabelAhliWaris",
+        "opsional": true
+      },
+      {
+        "tabel": [
+          [
+            "2. Nama",
+            "$ahliwaris.anak[0].nama"
+          ],
+          [
+            "    Tempat/Tgl. Lahir",
+            "$ahliwaris.anak[0].tempatTanggalLahir"
+          ],
+          [
+            "    Jenis Kelamin",
+            "$ahliwaris.anak[0].jenisKelamin"
+          ],
+          [
+            "    Alamat",
+            "$ahliwaris.anak[0].alamat"
+          ]
+        ],
+        "gaya": "tabelAhliWaris",
+        "opsional": true
+      },
+      {
+        "paragraf": "Dengan ini kami sepakat memberikan KUASA PENUH kepada:",
+        "jarakAtas": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$ahliwaris.anak[0].nama"
+          ],
+          [
+            "Tempat/Tgl. Lahir",
+            "$ahliwaris.anak[0].tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$ahliwaris.anak[0].jenisKelamin"
+          ],
+          [
+            "Alamat",
+            "$ahliwaris.anak[0].alamat"
+          ]
+        ],
+        "gaya": "tabelAhliWaris"
+      },
+      {
+        "paragraf": "Untuk bertindak atas nama kami dalam hal:",
+        "jarakAtas": 10
+      },
+      {
+        "paragraf": "  - $keterangan atas nama $ahliwaris.almarhumNama.",
+        "jarakAtas": 5
+      },
+      {
+        "paragraf": "Demikian Surat Kuasa ini kami buat dengan sebenarnya, dalam keadaan sehat jasmani dan rohani, tanpa adanya unsur paksaan atau bujukan dari pihak manapun.",
+        "jarakAtas": 5
+      },
+      {
+        "kustom": "Blok 2 kolom (padding atas 30pt): kolom kiri \"Yang Menerima Kuasa\" (tebal, tengah) + ruang + nama anak pertama (tebal, tengah); kolom kanan \"Yang Memberi Kuasa\" (tebal, tengah) lalu tiap nama pemberi kuasa (pasangan + anak) satu baris \"{nama}   ...............................\" rata tengah."
+      },
+      {
+        "kustom": "Blok 2 kolom (padding atas 20pt): kolom kiri \"Mengetahui;\" / jabatan Kepala Desa / ruang / nama Kepala Desa tebal / \"NIP {nip}\" bila kelurahan; kolom kanan \"Menguatkan;\" / \"Nomor : ...................................\" / \"Camat {kecamatan}\" / ruang / nama Camat tebal / GolCamat / \"NIP. {NipCamat}\"."
+      }
     ]
   },
   "PENGANTAR_ADMINDUK": {
@@ -3299,6 +4786,78 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT PENGANTAR ADMINISTRASI KEPENDUDUKAN",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Status Perkawinan",
+            "$warga.statusPerkawinan"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "paragraf": "Demikian surat pengantar ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
+        "rata": "kiri",
+        "jarakBawah": 12
       }
     ]
   },
@@ -3487,6 +5046,84 @@
           "Sekretaris Desa"
         ]
       }
+    ],
+    "judul": "SURAT KETERANGAN PINDAH",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat Asal",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "tabel": [
+          [
+            "Alamat Tujuan Pindah",
+            "$pindah.alamatTujuan"
+          ],
+          [
+            "Alasan Pindah",
+            "$pindah.alasan"
+          ]
+        ],
+        "jarakBawah": 8,
+        "opsional": true
+      },
+      {
+        "paragraf": "Demikian surat keterangan pindah ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
+        "rata": "kiri",
+        "jarakBawah": 12
+      }
     ]
   },
   "SK_TIDAK_PUNYA_RUMAH": {
@@ -3657,6 +5294,78 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN TIDAK PUNYA RUMAH",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Status Perkawinan",
+            "$warga.statusPerkawinan"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
+        "rata": "kiri",
+        "jarakBawah": 12
       }
     ]
   },
@@ -3853,6 +5562,93 @@
           "Sekretaris Desa"
         ]
       }
+    ],
+    "judul": "SURAT IZIN KERAMAIAN",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": true,
+    "badan": [
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ]
+      },
+      {
+        "paragraf": "Dengan ini memberikan izin kepada :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "NIK",
+            "$warga.nik"
+          ],
+          [
+            "Tempat Tanggal Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ]
+      },
+      {
+        "paragraf": "untuk menyelenggarakan kegiatan :",
+        "jarakBawah": 10
+      },
+      {
+        "tabel": [
+          [
+            "Jenis Kegiatan",
+            "$keramaian.jenisKegiatan"
+          ],
+          [
+            "Tanggal",
+            "$keramaian.tanggalKegiatan"
+          ],
+          [
+            "Tempat",
+            "$keramaian.lokasiKegiatan"
+          ]
+        ],
+        "labelTebal": [
+          "Jenis Kegiatan"
+        ]
+      },
+      {
+        "paragraf": "$keterangan",
+        "indent": 50,
+        "jarakAtas": 10,
+        "jarakBawah": 12
+      },
+      {
+        "paragraf": "Demikian izin ini diberikan untuk dipergunakan sebagaimana mestinya.",
+        "rata": "kiri",
+        "jarakBawah": 12
+      }
     ]
   },
   "REKENING_KORAN": {
@@ -4002,6 +5798,81 @@
         "required": false,
         "otomatis": true
       }
+    ],
+    "judul": "PERMOHONAN PRINT OUT REKENING KORAN",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "kustom": "Kop surat desa (KopSurat.Gambar). JudulSurat TIDAK dicetak pada PDF."
+      },
+      {
+        "paragraf": "$desa.nama, $surat.tanggal",
+        "rata": "kanan",
+        "jarakAtas": 14,
+        "jarakBawah": 12
+      },
+      {
+        "kustom": "Baris 2 kolom: kolom kiri \"Nomor\t\t: {nomor surat}\" dan \"Perihal\t\t: {perihal}\"; kolom kanan (padding kiri 40) \"Kepada Yth,\" (tebal), \"Customer Service\", \"Bank {bank}\", \"KCP {kcp}\", \"Di -\", \"Tempat\" (menjorok 20)."
+      },
+      {
+        "paragraf": "Dengan Hormat,",
+        "jarakAtas": 22
+      },
+      {
+        "paragraf": "Saya yang bertanda tangan di bawah ini:",
+        "jarakAtas": 12
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan"
+          ],
+          [
+            "Alamat",
+            "$pejabat.alamat"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 10,
+        "jarakBawah": 10
+      },
+      {
+        "paragraf": "Bermaksud mengajukan Permohonan Print Out Rekening Koran atas nama:",
+        "jarakAtas": 14
+      },
+      {
+        "tabel": [
+          [
+            "Nama Pemegang Rekening",
+            "$rekeningkoran.namaPemegang"
+          ],
+          [
+            "No. Rekening Giro",
+            "$rekeningkoran.nomorRekening"
+          ],
+          [
+            "Rekening Koran Periode",
+            "$rekeningkoran.periode"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 10,
+        "jarakBawah": 10,
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "Demikian permohonan ini kami sampaikan, atas perhatian dan kerjasamanya kami ucapkan terima kasih.",
+        "jarakAtas": 18
+      },
+      {
+        "kustom": "Blok tanda tangan di sisi kanan (kolom 250pt): jabatan tebal rata tengah, ruang tanda tangan, nama pejabat tebal rata tengah, \"NIP {nip}\" bila kelurahan."
+      }
     ]
   },
   "TEMPLATE_SURAT": {
@@ -4054,6 +5925,14 @@
         "target": "keperluan",
         "required": false,
         "otomatis": true
+      }
+    ],
+    "judul": "",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "kustom": "Badan surat sepenuhnya datang dari payload template tersimpan (TemplateSuratKustom + isian pada AdditionalData). Susunan dicetak sesuai urutan BagianEfektif: (1) kop surat bila template.PakaiKop, (2) judul + baris \"NOMOR : {nomor}\" bila template.PakaiNomor, dilanjut sub-judul tebal rata tengah bila ada, (3) \"{namaDesa}, {tanggal}\" rata kanan bila template.PakaiTempatTanggal, (4) tiap bagian template: paragraf teks bebas (rata kiri/tengah/kanan/justify, tebal/miring pilihan), blok Data Diri (TabelFormulir, indentKiri 20, jarakAtas 3, jarakBawah 6, nama ditebalkan), atau kelompok kolom isian (TabelFormulir tanpa menebalkan nama, atau tabel bergaris abu-abu 150pt bila Grid), (5) blok tanda tangan pejabat (tampilkanPemohon = false), (6) teks kaki (paragraf, jarakAtas 12) bila template.PakaiTeksKaki. Tidak ada tata letak tetap yang bisa dipindah ke sini."
       }
     ]
   },
@@ -4664,6 +6543,179 @@
           "Sekretaris Desa"
         ]
       }
+    ],
+    "judul": "FORMULIR PENGANTAR NIKAH",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "kustom": "Blok kepala blanko (tabel 2 kolom 70%/30%, jarak bawah 14pt): kolom kiri baris-baris \"LAMPIRAN IV\", \"KEPUTUSAN DIREKTUR JENDERAL BIMBINGAN MASYARAKAT ISLAM\", \"NOMOR 473 TAHUN 2020\", \"TENTANG\", \"PETUNJUK TEKNIS PELAKSANAAN PENCATATAN PERNIKAHAN\"; kolom kanan \"Model N1\" rata kanan."
+      },
+      {
+        "kustom": "Blok \"KANTOR DESA/KELURAHAN : {NAMA DESA}\", \"KECAMATAN : {KECAMATAN}\", \"KABUPATEN/KOTA : {KABUPATEN}\" (label kolom tetap 205pt, nilai huruf besar, jarak bawah 6pt)"
+      },
+      {
+        "kustom": "Judul \"FORMULIR PENGANTAR NIKAH\" (huruf besar, tebal, bergaris bawah, 14pt, rata tengah) dan bawahnya baris \"NOMOR : {nomor surat}\" (12pt, rata tengah)."
+      },
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini menjelaskan dengan sesungguhnya bahwa:",
+        "jarakBawah": 8
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama",
+            "$warga.nama"
+          ],
+          [
+            "2. Nomor Induk Kependudukan (NIK)",
+            "$warga.nik"
+          ],
+          [
+            "3. Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "4. Tempat dan tanggal lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "5. Kewarganegaraan",
+            "$warga.kewarganegaraan"
+          ],
+          [
+            "6. Agama",
+            "$warga.agama"
+          ],
+          [
+            "7. Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "8. Alamat",
+            "$warga.alamat"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "9. Status pernikahan :",
+        "indentKiri": 20,
+        "jarakAtas": 6
+      },
+      {
+        "tabel": [
+          [
+            "a. Laki-laki (Jejaka/Duda)",
+            "$warga.statusPerkawinanSebutan"
+          ],
+          [
+            "b. Perempuan (Perawan/Janda)",
+            "$ntcr.statusPerkawinanIstriSebutan"
+          ]
+        ],
+        "indentKiri": 40,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "Adalah benar anak dari pernikahan seorang pria :",
+        "jarakAtas": 8
+      },
+      {
+        "tabel": [
+          [
+            "Nama Lengkap dan alias",
+            "$ntcr.ayahCalonSuami.nama"
+          ],
+          [
+            "Nomor Induk Kependudukan (NIK)",
+            "$ntcr.ayahCalonSuami.nik"
+          ],
+          [
+            "Tempat dan tanggal lahir",
+            "$ntcr.ayahCalonSuami.tempatTanggalLahir"
+          ],
+          [
+            "Kewarganegaraan",
+            "$ntcr.ayahCalonSuami.kewarganegaraan"
+          ],
+          [
+            "Agama",
+            "$ntcr.ayahCalonSuami.agama"
+          ],
+          [
+            "Pekerjaan",
+            "$ntcr.ayahCalonSuami.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$ntcr.ayahCalonSuami.alamat"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "dengan seorang wanita :",
+        "jarakAtas": 8
+      },
+      {
+        "tabel": [
+          [
+            "Nama Lengkap dan alias",
+            "$ntcr.ibuCalonSuami.nama"
+          ],
+          [
+            "Nomor Induk Kependudukan (NIK)",
+            "$ntcr.ibuCalonSuami.nik"
+          ],
+          [
+            "Tempat dan tanggal lahir",
+            "$ntcr.ibuCalonSuami.tempatTanggalLahir"
+          ],
+          [
+            "Kewarganegaraan",
+            "$ntcr.ibuCalonSuami.kewarganegaraan"
+          ],
+          [
+            "Agama",
+            "$ntcr.ibuCalonSuami.agama"
+          ],
+          [
+            "Pekerjaan",
+            "$ntcr.ibuCalonSuami.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$ntcr.ibuCalonSuami.alamat"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "$keterangan",
+        "indentKiri": 20,
+        "jarakAtas": 12,
+        "opsional": true
+      },
+      {
+        "paragraf": "Demikian, Surat pengantar ini dibuat dengan mengingat sumpah jabatan dan untuk dipergunakan sebagaimana mestinya.",
+        "indentKiri": 20,
+        "jarakAtas": 12
+      },
+      {
+        "kustom": "Blok tanda tangan di kolom KANAN (tabel 2 kolom, kolom kiri kosong): baris \"{namaDesa}, {tanggal}\" rata tengah, jabatan rata tengah (\"Kepala Desa\"/\"Lurah\", atau \"A/N Kepala Desa {namaDesa}\\nSekretaris Desa\" bila PejabatPenandatangan = \"Sekretaris Desa\"), ruang tanda tangan, nama pejabat rata tengah tebal, dan \"NIP {nip}\" bila kelurahan."
+      }
     ]
   },
   "NTCR_N2": {
@@ -4944,6 +6996,97 @@
         "target": "keperluan",
         "required": false,
         "otomatis": true
+      }
+    ],
+    "judul": "FORMULIR PERMOHONAN KEHENDAK NIKAH",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "kustom": "Blok kepala blanko (tabel 2 kolom 70%/30%, jarak bawah 14pt): kolom kiri baris-baris \"LAMPIRAN VI\", \"KEPUTUSAN DIREKTUR JENDERAL BIMBINGAN MASYARAKAT ISLAM\", \"NOMOR 473 TAHUN 2020\", \"TENTANG\", \"PETUNJUK TEKNIS PELAKSANAAN PENCATATAN PERNIKAHAN\"; kolom kanan \"Model N2\" rata kanan."
+      },
+      {
+        "paragraf": "FORMULIR PERMOHONAN KEHENDAK NIKAH",
+        "rata": "tengah",
+        "tebal": true,
+        "jarakAtas": 12,
+        "ukuran": 14
+      },
+      {
+        "kustom": "Baris 2 kolom (60%/40%, padding atas 14pt): kolom kiri \"Nomor : {nomor surat}\" dan \"Perihal : Permohonan kehendak nikah\"; kolom kanan \"{namaDesa}, {tanggal}\" rata kanan."
+      },
+      {
+        "paragraf": "Kepada yth,",
+        "jarakAtas": 15
+      },
+      {
+        "paragraf": "Kepala KUA Kecamatan /PPN LN",
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "di $ntcr.tujuanKua",
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "Dengan hormat, kami mengajukan permohonan kehendak nikah untuk atas nama",
+        "jarakAtas": 10,
+        "jarakBawah": 4
+      },
+      {
+        "tabel": [
+          [
+            "Calon suami",
+            "$warga.nama"
+          ],
+          [
+            "Calon istri",
+            "$ntcr.namaIstri"
+          ],
+          [
+            "Hari/Tanggal/Jam",
+            "$ntcr.hariTanggalJamAkad"
+          ],
+          [
+            "Tempat akad nikah",
+            "$ntcr.tempatAkad"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "Bersama ini kami sampaikan surat-surat yang diperlukan untuk diperiksa sebagai berikut:",
+        "jarakAtas": 10,
+        "jarakBawah": 4
+      },
+      {
+        "daftar": [
+          "Surat pengantar nikah dari Desa/Kelurahan",
+          "Persetujuan calon mempelai",
+          "Fotokopi KTP",
+          "Fotokopi akte kelahiran",
+          "Fotokopi kartu keluarga",
+          "Paspoto 2x3 = 3 lembar berlatar belakang biru",
+          "..............................",
+          ".............................."
+        ],
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "$keterangan",
+        "indentKiri": 20,
+        "jarakAtas": 12,
+        "opsional": true
+      },
+      {
+        "paragraf": "Demikian permohonan ini kami sampaikan, kiranya dapat diperiksa, dihadiri, dan dicatat sesuai dengan ketentuan peraturan perundang-undangan.",
+        "indentKiri": 20,
+        "jarakAtas": 12
+      },
+      {
+        "kustom": "Blok 2 kolom (padding atas 20pt): kolom kiri \"Diterima Tanggal {tanggal diterima}\" (bila kosong \"Diterima Tanggal ...............\"), \"Yang menerima,\", \"Kepala KUA/PPN Luar Negeri\", ruang tanda tangan, \"...................................\"; kolom kanan 3 baris kosong lalu \"Wassalam,\", \"Pemohon\", ruang tanda tangan, nama pemohon (calon suami) tebal rata tengah."
       }
     ]
   },
@@ -5226,6 +7369,95 @@
         "required": false,
         "otomatis": true
       }
+    ],
+    "judul": "FORMULIR PERMOHONAN PENCATATAN ISBAT",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "kustom": "Blok kepala blanko (tabel 2 kolom 70%/30%, jarak bawah 14pt): kolom kiri baris-baris \"LAMPIRAN VII\", \"KEPUTUSAN DIREKTUR JENDERAL BIMBINGAN MASYARAKAT ISLAM\", \"NOMOR 473 TAHUN 2020\", \"TENTANG\", \"PETUNJUK TEKNIS PELAKSANAAN PENCATATAN PERNIKAHAN\"; kolom kanan \"Model N3\" rata kanan."
+      },
+      {
+        "paragraf": "FORMULIR PERMOHONAN PENCATATAN ISBAT",
+        "rata": "tengah",
+        "tebal": true,
+        "jarakAtas": 12,
+        "ukuran": 14
+      },
+      {
+        "kustom": "Baris 2 kolom (60%/40%, padding atas 14pt): kolom kiri \"Nomor : {nomor surat}\" dan \"Perihal : Permohonan pencatatan isbat\"; kolom kanan \"{namaDesa}, {tanggal}\" rata kanan."
+      },
+      {
+        "paragraf": "Kepada yth,",
+        "jarakAtas": 15
+      },
+      {
+        "paragraf": "Kepala KUA Kecamatan /PPN LN",
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "di $ntcr.tujuanKua",
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "Dengan hormat, kami mengajukan permohonan pencatatan isbat untuk atas nama",
+        "jarakAtas": 10,
+        "jarakBawah": 4
+      },
+      {
+        "tabel": [
+          [
+            "Suami",
+            "$warga.nama"
+          ],
+          [
+            "Istri",
+            "$ntcr.namaIstri"
+          ],
+          [
+            "Tanggal penetapan",
+            "$ntcr.tanggalPenetapanIsbat"
+          ],
+          [
+            "Pengadilan Agama",
+            "$ntcr.pengadilanAgama"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "Bersama ini kami sampaikan surat-surat yang diperlukan untuk diperiksa sebagai berikut:",
+        "jarakAtas": 10,
+        "jarakBawah": 4
+      },
+      {
+        "daftar": [
+          "Putusan Isbat",
+          "Fotokopi KTP",
+          "Fotokopi kartu keluarga",
+          "Pasfoto 2x3 = 3 lembar berlatar belakang biru",
+          "..............................",
+          ".............................."
+        ],
+        "indentKiri": 20
+      },
+      {
+        "paragraf": "$keterangan",
+        "indentKiri": 20,
+        "jarakAtas": 12,
+        "opsional": true
+      },
+      {
+        "paragraf": "Demikian permohonan ini kami sampaikan, kiranya dapat diperiksa, dihadiri, dan dicatat sesuai dengan ketentuan peraturan perundang-undangan.",
+        "indentKiri": 20,
+        "jarakAtas": 12
+      },
+      {
+        "kustom": "Blok 2 kolom (padding atas 20pt): kolom kiri \"Diterima Tanggal {tanggal diterima}\" (bila kosong \"Diterima Tanggal ...............\"), \"Yang menerima,\", \"Kepala KUA/PPN Luar Negeri\", ruang tanda tangan, \"...................................\"; kolom kanan 3 baris kosong lalu \"Wassalam,\", \"Pemohon\", ruang tanda tangan, nama pemohon (calon suami) tebal rata tengah."
+      }
     ]
   },
   "NTCR_N4": {
@@ -5474,6 +7706,132 @@
         "target": "keperluan",
         "required": false,
         "otomatis": true
+      }
+    ],
+    "judul": "SURAT PERSETUJUAN PENGANTIN",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "kustom": "Blok kepala blanko (tabel 2 kolom 70%/30%, jarak bawah 14pt): kolom kiri baris-baris \"LAMPIRAN VIII\", \"KEPUTUSAN DIREKTUR JENDERAL BIMBINGAN MASYARAKAT ISLAM\", \"NOMOR 473 TAHUN 2020\", \"TENTANG\", \"PETUNJUK TEKNIS PELAKSANAAN PENCATATAN PERNIKAHAN\"; kolom kanan \"Model N4\" rata kanan."
+      },
+      {
+        "kustom": "Judul halaman \"SURAT PERSETUJUAN PENGANTIN\" (JudulTengah: huruf besar, tebal, bergaris bawah, 14pt, rata tengah)."
+      },
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini:",
+        "jarakAtas": 15,
+        "jarakBawah": 4
+      },
+      {
+        "paragraf": "A. Calon suami:",
+        "tebal": true,
+        "jarakBawah": 2
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama lengkap dan alias",
+            "$warga.nama"
+          ],
+          [
+            "2. Bin",
+            "$ntcr.ayahCalonSuami.nama"
+          ],
+          [
+            "3. Nomor Induk Kependudukan",
+            "$warga.nik"
+          ],
+          [
+            "4. Tempat dan tanggal lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "5. Kewarganegaraan",
+            "$warga.kewarganegaraan"
+          ],
+          [
+            "6. Agama",
+            "$warga.agama"
+          ],
+          [
+            "7. Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "8. Alamat",
+            "$warga.alamat"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "B. Calon Istri:",
+        "tebal": true,
+        "jarakAtas": 10,
+        "jarakBawah": 2
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama lengkap dan alias",
+            "$ntcr.namaIstri"
+          ],
+          [
+            "2. Binti",
+            "$ntcr.ayahCalonIstri.nama"
+          ],
+          [
+            "3. Nomor Induk Kependudukan",
+            "$ntcr.nikIstri"
+          ],
+          [
+            "4. Tempat dan tanggal lahir",
+            "$ntcr.tempatTanggalLahirIstri"
+          ],
+          [
+            "5. Kewarganegaraan",
+            "$ntcr.kewarganegaraanIstri"
+          ],
+          [
+            "6. Agama",
+            "$ntcr.agamaIstri"
+          ],
+          [
+            "7. Pekerjaan",
+            "$ntcr.pekerjaanIstri"
+          ],
+          [
+            "8. Alamat",
+            "$ntcr.alamatIstri"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "$keterangan",
+        "indentKiri": 20,
+        "jarakAtas": 12,
+        "opsional": true
+      },
+      {
+        "paragraf": "Menyatakan dengan sesungguhnya bahwa atas dasar suka rela, dengan kesadaran sendiri, tanpa ada paksaan dari siapapun juga, setuju untuk melangsungkan pernikahan.",
+        "indentKiri": 20,
+        "jarakAtas": 12
+      },
+      {
+        "paragraf": "Demikian Surat persetujuan ini di buat untuk digunakan seperlunya.",
+        "indentKiri": 20,
+        "jarakAtas": 8
+      },
+      {
+        "kustom": "Blok 2 kolom (padding atas 10pt): kolom kiri 2 baris kosong lalu \"Calon Suami\" rata tengah, ruang tanda tangan, nama calon suami tebal rata tengah; kolom kanan \"{namaDesa}, {tanggal}\" rata tengah, \"Calon Istri\" rata tengah, ruang tanda tangan, nama calon istri tebal rata tengah."
       }
     ]
   },
@@ -6072,6 +8430,217 @@
         "required": false,
         "otomatis": true
       }
+    ],
+    "judul": "SURAT IZIN ORANG TUA",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "kustom": "Blok kepala blanko (tabel 2 kolom 70%/30%, jarak bawah 14pt): kolom kiri baris-baris \"LAMPIRAN IX\", \"KEPUTUSAN DIREKTUR JENDERAL BIMBINGAN MASYARAKAT ISLAM\", \"NOMOR 473 TAHUN 2020\", \"TENTANG\", \"PETUNJUK TEKNIS PELAKSANAAN PENCATATAN PERNIKAHAN\"; kolom kanan \"Model N5\" rata kanan."
+      },
+      {
+        "kustom": "Judul halaman \"SURAT IZIN ORANG TUA\" (JudulTengah: huruf besar, tebal, bergaris bawah, 14pt, rata tengah)."
+      },
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini:",
+        "jarakAtas": 15,
+        "jarakBawah": 4
+      },
+      {
+        "paragraf": "A. Ayah/wali/pengampu:",
+        "tebal": true,
+        "jarakBawah": 2
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama lengkap dan alias",
+            "$ntcr.ayah.nama"
+          ],
+          [
+            "2. Bin/Binti",
+            "$ntcr.ayah.binBinti"
+          ],
+          [
+            "3. Nomor Induk Kependudukan",
+            "$ntcr.ayah.nik"
+          ],
+          [
+            "4. Tempat dan tanggal lahir",
+            "$ntcr.ayah.tempatTanggalLahir"
+          ],
+          [
+            "5. Kewarganegaraan",
+            "$ntcr.ayah.kewarganegaraan"
+          ],
+          [
+            "6. Agama",
+            "$ntcr.ayah.agama"
+          ],
+          [
+            "7. Pekerjaan",
+            "$ntcr.ayah.pekerjaan"
+          ],
+          [
+            "8. Alamat",
+            "$ntcr.ayah.alamat"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "B. Ibu/wali/pengampu:",
+        "tebal": true,
+        "jarakAtas": 10,
+        "jarakBawah": 2
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama lengkap dan alias",
+            "$ntcr.ibu.nama"
+          ],
+          [
+            "2. Bin/Binti",
+            "$ntcr.ibu.binBinti"
+          ],
+          [
+            "3. Nomor Induk Kependudukan",
+            "$ntcr.ibu.nik"
+          ],
+          [
+            "4. Tempat dan tanggal lahir",
+            "$ntcr.ibu.tempatTanggalLahir"
+          ],
+          [
+            "5. Kewarganegaraan",
+            "$ntcr.ibu.kewarganegaraan"
+          ],
+          [
+            "6. Agama",
+            "$ntcr.ibu.agama"
+          ],
+          [
+            "7. Pekerjaan",
+            "$ntcr.ibu.pekerjaan"
+          ],
+          [
+            "8. Alamat",
+            "$ntcr.ibu.alamat"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "adalah ayah dan ibu kandung/wali/pengampu dari:",
+        "jarakAtas": 12,
+        "jarakBawah": 2
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama lengkap dan alias",
+            "$ntcr.namaAnak"
+          ],
+          [
+            "2. Bin",
+            "$ntcr.ayahCalonAnak.nama"
+          ],
+          [
+            "3. Nomor Induk Kependudukan",
+            "$ntcr.nikAnak"
+          ],
+          [
+            "4. Tempat dan tanggal lahir",
+            "$ntcr.tempatTanggalLahirAnak"
+          ],
+          [
+            "5. Kewarganegaraan",
+            "$ntcr.kewarganegaraanAnak"
+          ],
+          [
+            "6. Agama",
+            "$ntcr.agamaAnak"
+          ],
+          [
+            "7. Pekerjaan",
+            "$ntcr.pekerjaanAnak"
+          ],
+          [
+            "8. Alamat",
+            "$ntcr.alamatAnak"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "Memberikan izin kepada anak kami untuk melakukan pernikahan dengan:",
+        "jarakAtas": 12,
+        "jarakBawah": 2
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama lengkap dan alias",
+            "$ntcr.namaPasanganAnak"
+          ],
+          [
+            "2. Binti",
+            "$ntcr.ayahCalonPasangan.nama"
+          ],
+          [
+            "3. Nomor Induk Kependudukan",
+            "$ntcr.nikPasanganAnak"
+          ],
+          [
+            "4. Tempat dan tanggal lahir",
+            "$ntcr.tempatTanggalLahirPasanganAnak"
+          ],
+          [
+            "5. Kewarganegaraan",
+            "$ntcr.kewarganegaraanPasanganAnak"
+          ],
+          [
+            "6. Agama",
+            "$ntcr.agamaPasanganAnak"
+          ],
+          [
+            "7. Pekerjaan",
+            "$ntcr.pekerjaanPasanganAnak"
+          ],
+          [
+            "8. Alamat",
+            "$ntcr.alamatPasanganAnak"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "$keterangan",
+        "indentKiri": 20,
+        "jarakAtas": 12,
+        "opsional": true
+      },
+      {
+        "paragraf": "Demikian Surat izin ini di buat dengan kesadaran tanpa ada paksaan dari siapapun dan untuk digunakan seperlunya.",
+        "indentKiri": 20,
+        "jarakAtas": 12
+      },
+      {
+        "kustom": "Blok 2 kolom (padding atas 10pt): kolom kiri 2 baris kosong lalu \"Ayah/wali/pengampu\" rata tengah, ruang tanda tangan, nama ayah/wali tebal rata tengah; kolom kanan \"{namaDesa}, {tanggal}\" rata tengah, \"Ibu/wali/pengampu\" rata tengah, ruang tanda tangan, nama ibu/wali tebal rata tengah."
+      }
     ]
   },
   "NTCR_N6": {
@@ -6360,6 +8929,144 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN KEMATIAN SUAMI/ISTRI",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "kustom": "Blok kepala blanko (tabel 2 kolom 70%/30%, jarak bawah 14pt): kolom kiri baris-baris \"LAMPIRAN X\", \"KEPUTUSAN DIREKTUR JENDERAL BIMBINGAN MASYARAKAT ISLAM\", \"NOMOR 473 TAHUN 2020\", \"TENTANG\", \"PETUNJUK TEKNIS PELAKSANAAN PENCATATAN PERNIKAHAN\"; kolom kanan \"Model N6\" rata kanan."
+      },
+      {
+        "kustom": "Blok \"KANTOR DESA/KELURAHAN : {NAMA DESA}\", \"KECAMATAN : {KECAMATAN}\", \"KABUPATEN/KOTA : {KABUPATEN}\" (label kolom tetap 205pt, nilai huruf besar, jarak bawah 6pt)"
+      },
+      {
+        "kustom": "Judul \"SURAT KETERANGAN KEMATIAN SUAMI/ISTRI\" (huruf besar, tebal, bergaris bawah, 14pt, rata tengah) dan bawahnya baris \"NOMOR : {nomor surat}\" (12pt, rata tengah)."
+      },
+      {
+        "paragraf": "Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:",
+        "jarakBawah": 8
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama lengkap dan alias",
+            "$warga.nama"
+          ],
+          [
+            "2. Bin/Binti",
+            "$ntcr.ayahCalonSuami.nama"
+          ],
+          [
+            "3. Nomor Induk Kependudukan",
+            "$warga.nik"
+          ],
+          [
+            "4. Tempat dan tanggal lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "5. Kewarganegaraan",
+            "$warga.kewarganegaraan"
+          ],
+          [
+            "6. Agama",
+            "$warga.agama"
+          ],
+          [
+            "7. Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "8. Alamat",
+            "$warga.alamat"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "tabel": [
+          [
+            "Telah meninggal dunia pada tanggal",
+            "$ntcr.tanggalMeninggal"
+          ],
+          [
+            "Di",
+            "$ntcr.tempatMeninggal"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 8,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "Yang bersangkutan adalah suami/istri*) dari:",
+        "jarakAtas": 10,
+        "jarakBawah": 4
+      },
+      {
+        "tabel": [
+          [
+            "1. Nama lengkap dan alias",
+            "$ntcr.namaIstri"
+          ],
+          [
+            "2. Bin/Binti",
+            "$ntcr.ayahCalonIstri.nama"
+          ],
+          [
+            "3. Nomor Induk Kependudukan",
+            "$ntcr.nikIstri"
+          ],
+          [
+            "4. Tempat dan tanggal lahir",
+            "$ntcr.tempatTanggalLahirIstri"
+          ],
+          [
+            "5. Kewarganegaraan",
+            "$ntcr.kewarganegaraanIstri"
+          ],
+          [
+            "6. Agama",
+            "$ntcr.agamaIstri"
+          ],
+          [
+            "7. Pekerjaan",
+            "$ntcr.pekerjaanIstri"
+          ],
+          [
+            "8. Alamat",
+            "$ntcr.alamatIstri"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "$keterangan",
+        "indentKiri": 20,
+        "jarakAtas": 12,
+        "opsional": true
+      },
+      {
+        "paragraf": "Demikian surat keterangan ini dibuat dengan mengingat sumpah jabatan dan untuk digunakan seperlunya.",
+        "indentKiri": 20,
+        "jarakAtas": 12
+      },
+      {
+        "paragraf": "*) coret yang tidak perlu",
+        "jarakAtas": 6,
+        "ukuran": 9
+      },
+      {
+        "kustom": "Blok tanda tangan di kolom KANAN (tabel 2 kolom, kolom kiri kosong): baris \"{namaDesa}, {tanggal}\" rata tengah, jabatan rata tengah (\"Kepala Desa\"/\"Lurah\", atau \"A/N Kepala Desa {namaDesa}\\nSekretaris Desa\" bila PejabatPenandatangan = \"Sekretaris Desa\"), ruang tanda tangan, nama pejabat rata tengah tebal, dan \"NIP {nip}\" bila kelurahan."
       }
     ]
   },
@@ -6661,6 +9368,151 @@
           "Kepala Desa",
           "Sekretaris Desa"
         ]
+      }
+    ],
+    "judul": "SURAT KETERANGAN NUMPANG NIKAH",
+    "pakaiLogo": true,
+    "pemohonDiTandaTangan": false,
+    "badan": [
+      {
+        "kustom": "Kop surat desa (KopSurat.Gambar)."
+      },
+      {
+        "kustom": "Judul \"SURAT KETERANGAN NUMPANG NIKAH\" (huruf besar, tebal, bergaris bawah, 14pt, rata tengah) dan bawahnya baris \"NOMOR : {nomor surat}\" (12pt, rata tengah)."
+      },
+      {
+        "paragraf": "Yang bertandatangan di bawah ini :",
+        "jarakBawah": 8
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$pejabat.nama"
+          ],
+          [
+            "Jabatan",
+            "$pejabat.jabatan $desa.nama"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "Dengan ini menerangkan bahwa :",
+        "jarakAtas": 10,
+        "jarakBawah": 8
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$warga.nama"
+          ],
+          [
+            "Tempat, Tgl. Lahir",
+            "$warga.tempatTanggalLahir"
+          ],
+          [
+            "Jenis Kelamin",
+            "$warga.jenisKelamin"
+          ],
+          [
+            "Kewarganegaraan",
+            "$warga.kewarganegaraan"
+          ],
+          [
+            "Agama",
+            "$warga.agama"
+          ],
+          [
+            "Pekerjaan",
+            "$warga.pekerjaan"
+          ],
+          [
+            "Alamat",
+            "$warga.alamat"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "Yang bersangkutan adalah benar warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan maksud yang bersangkutan akan numpang nikah di :",
+        "indentKiri": 20,
+        "jarakAtas": 10,
+        "jarakBawah": 6
+      },
+      {
+        "tabel": [
+          [
+            "Desa/Kelurahan",
+            "$ntcr.desaNumpang"
+          ],
+          [
+            "Kecamatan",
+            "$ntcr.kecamatanNumpang"
+          ],
+          [
+            "Kabupaten/Kota",
+            "$ntcr.kabupatenNumpang"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "Dengan seorang perempuan :",
+        "jarakAtas": 10,
+        "jarakBawah": 6
+      },
+      {
+        "tabel": [
+          [
+            "Nama",
+            "$ntcr.namaIstri"
+          ],
+          [
+            "Tempat, Tgl. Lahir",
+            "$ntcr.tempatTanggalLahirIstri"
+          ],
+          [
+            "Alamat",
+            "$ntcr.alamatIstri"
+          ],
+          [
+            "Kecamatan",
+            "$ntcr.kecamatanIstri"
+          ],
+          [
+            "Kabupaten/Kota",
+            "$ntcr.kabupatenIstri"
+          ]
+        ],
+        "indentKiri": 20,
+        "jarakAtas": 4,
+        "gaya": "tabelBlanko",
+        "tebalkanNama": false
+      },
+      {
+        "paragraf": "$keterangan",
+        "indentKiri": 20,
+        "jarakAtas": 12,
+        "opsional": true
+      },
+      {
+        "paragraf": "Demikian Surat Keterangan ini kami buat, agar kepada yang berkepentingan menjadi tahu adanya.",
+        "indentKiri": 20,
+        "jarakAtas": 12
+      },
+      {
+        "kustom": "Blok tanda tangan di kolom KANAN (tabel 2 kolom, kolom kiri kosong): baris \"{namaDesa}, {tanggal}\" rata tengah, jabatan rata tengah (\"Kepala Desa\"/\"Lurah\", atau \"A/N Kepala Desa {namaDesa}\\nSekretaris Desa\" bila PejabatPenandatangan = \"Sekretaris Desa\"), ruang tanda tangan, nama pejabat rata tengah tebal, dan \"NIP {nip}\" bila kelurahan."
       }
     ]
   }

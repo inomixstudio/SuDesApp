@@ -27,6 +27,7 @@ public class SinkronViewModel : ObservableObject
     private readonly SinkronSuratService _sinkron;
     private readonly PerangkaianPerangkat _perangkaian;
     private readonly PenerbitSkemaFormulir _penerbitSkema;
+    private readonly PenerbitPengaturanDesa _penerbitPengaturan;
     private readonly IMessageService _pesan;
     private readonly ILogger<SinkronViewModel> _logger;
     private readonly string _folderBerkas;
@@ -53,12 +54,14 @@ public class SinkronViewModel : ObservableObject
         SinkronSuratService sinkron,
         PerangkaianPerangkat perangkaian,
         PenerbitSkemaFormulir penerbitSkema,
+        PenerbitPengaturanDesa penerbitPengaturan,
         IMessageService pesan,
         ILogger<SinkronViewModel>? logger = null)
     {
         _sinkron = sinkron ?? throw new System.ArgumentNullException(nameof(sinkron));
         _perangkaian = perangkaian ?? throw new System.ArgumentNullException(nameof(perangkaian));
         _penerbitSkema = penerbitSkema ?? throw new System.ArgumentNullException(nameof(penerbitSkema));
+        _penerbitPengaturan = penerbitPengaturan ?? throw new System.ArgumentNullException(nameof(penerbitPengaturan));
         _pesan = pesan ?? throw new System.ArgumentNullException(nameof(pesan));
         _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SinkronViewModel>.Instance;
 
@@ -72,6 +75,7 @@ public class SinkronViewModel : ObservableObject
         PasangCommand = new AsyncRelayCommand(PasangAsync, () => !SedangMemasang && !string.IsNullOrWhiteSpace(NamaPerangkat));
         CabutCommand = new AsyncRelayCommand(CabutAsync, () => PerangkatDipilih is not null && !SedangMemasang);
         TerbitkanSkemaCommand = new AsyncRelayCommand(TerbitkanSkemaAsync, () => !SedangSinkron);
+        TerbitkanPengaturanCommand = new AsyncRelayCommand(TerbitkanPengaturanAsync, () => !SedangSinkron);
 
         MuatKonfigurasi();
         _ = MuatUlangAsync();
@@ -217,6 +221,7 @@ public class SinkronViewModel : ObservableObject
     public ICommand PasangCommand { get; }
     public ICommand CabutCommand { get; }
     public ICommand TerbitkanSkemaCommand { get; }
+    public ICommand TerbitkanPengaturanCommand { get; }
 
     private void SetKonfigurasi<T>(ref T field, T value)
     {
@@ -371,12 +376,42 @@ public class SinkronViewModel : ObservableObject
                 return;
             }
 
-            await _pesan.ShowInfoAsync($"Skema formulir diterbitkan: {jumlah} jenis surat siap dipakai Android.");
+            // Kop surat dan pola nomor diterbitkan bersamaan: Android tidak
+            // menyimpan sendiri identitas desa, jadi keduanya harus selalu
+            // seversi. Menerbitkan skema saja akan membuat formulir baru
+            // memakai kop lama.
+            var kopOk = await _penerbitPengaturan.TerbitkanAsync().ConfigureAwait(true);
+
+            await _pesan.ShowInfoAsync(
+                kopOk
+                    ? $"Skema formulir ({jumlah} jenis) dan pengaturan kop surat diterbitkan. Android mengambilnya otomatis."
+                    : $"Skema formulir diterbitkan ({jumlah} jenis), tetapi pengaturan kop gagal. Ulangi lagi.");
         }
         catch (System.Exception ex)
         {
             _logger.LogError(ex, "Gagal menerbitkan skema.");
             await _pesan.ShowErrorAsync("Gagal menerbitkan skema: " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Terbitkan ulang kop surat dan pola nomor saja — dipakai saat pengaturan
+    /// desa berubah dan Android belum menerima pembaruan.
+    /// </summary>
+    private async Task TerbitkanPengaturanAsync()
+    {
+        try
+        {
+            var ok = await _penerbitPengaturan.TerbitkanAsync().ConfigureAwait(true);
+            await _pesan.ShowInfoAsync(
+                ok
+                    ? "Pengaturan kop surat dan pola nomor diterbitkan. Android mengambilnya otomatis."
+                    : "Gagal menerbitkan pengaturan kop. Periksa koneksi Supabase.");
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Gagal menerbitkan pengaturan desa.");
+            await _pesan.ShowErrorAsync("Gagal menerbitkan pengaturan kop: " + ex.Message);
         }
     }
 

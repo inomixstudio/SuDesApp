@@ -102,6 +102,9 @@
                                 Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
                         <Button Content="Terbitkan skema formulir" Command="{Binding TerbitkanSkemaCommand}"
                                 Style="{StaticResource OutlineButton}" Margin="0,0,8,0"/>
+                        <Button Content="Terbitkan kop &amp; nomor" Command="{Binding TerbitkanPengaturanCommand}"
+                                Style="{StaticResource OutlineButton}" Margin="0,0,8,0"
+                                ToolTip="Terbitkan ulang identitas kop surat dan pola nomor. Android mengambilnya otomatis."/>
                         <TextBlock Text="Belum tersimpan / tidak lengkap" VerticalAlignment="Center"
                                    Foreground="{DynamicResource ErrorTextBrush}"
                                    Visibility="{Binding KonfigurasiLengkap, Converter={StaticResource InverseBoolToVis}}"/>

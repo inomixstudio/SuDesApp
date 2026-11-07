@@ -1,4 +1,4 @@
-// Di dalam SKCKGenerator.cs
+﻿// Di dalam SKCKGenerator.cs
 // Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
 using SudesPdf.Core.Layout;
@@ -26,7 +26,7 @@ namespace SuDesApp.GeneratorPdf
         }
 
         protected override string JudulSurat => "SURAT KETERANGAN PENGANTAR PEMBUATAN SURAT KETERANGAN CATATAN KEPOLISIAN (SKCK)";
-        protected override bool UseDefaultLogo => false;
+        protected override bool UseDefaultLogo => true;
 
         /// SKCK mencetak keperluannya sendiri lewat baris "Maksud :".
         protected override bool ShowPemohonInFooter => true;

@@ -216,27 +216,68 @@ class BuatSuratActivity : AppCompatActivity() {
             }
         }
 
-        val isi = mutableListOf<Pair<String, String>>()
+        val p = PengaturanSurat.ambil(this)
+        val pejabat = teksBidang("pejabatPenandatangan")
+
+        // Kunci yang dipakai badan surat — bentuknya sama dengan yang ditulis
+        // generator desktop ($warga.*, $pejabat.*, $keterangan).
+        val fields = JSONObject()
         for (b in jenis.fieldsInput) {
             if (b.key.equals("nomorSurat", ignoreCase = true)) continue
-            isi.add(b.label to teksNilai(b))
+            fields.put(b.key, nilaiBidang(b.key))
         }
+
+        val nilai = mutableMapOf<String, String>()
+        for (kunci in fields.keys()) nilai["warga.$kunci"] = fields.optString(kunci, "")
+
+        nilai["keterangan"] = listOf("keperluan", "keterangan", "keteranganTambahan")
+            .firstNotNullOfOrNull { k -> teksBidang(k).ifBlank { null } }
+            ?: ""
+
+        nilai["warga.tempatTanggalLahir"] = listOf(
+            teksBidang("tempatLahir").ifBlank { "...." },
+            teksBidang("tanggalLahir").ifBlank { "...." },
+        ).joinToString(", ")
+
+        nilai["warga.alamat"] = AlamatSusun.susun(nilai)
+
+        nilai["pejabat.nama"] = listOf("namaPejabat", "namaPejabatPenandatangan")
+            .firstNotNullOfOrNull { k -> teksBidang(k).ifBlank { null } }
+            ?: if (pejabat.equals("Sekretaris Desa", ignoreCase = true)) p.sekretarisDesa else p.kepalaDesa
+        // Baris "Jabatan" di badan memakai huruf awal besar + nama desa (skema
+        // menambahkan "$desa.nama"), bukan kapital semua seperti blok tanda tangan.
+        nilai["pejabat.jabatan"] = Kop.jabatanBadan(p, pejabat)
+
+        // Data desa untuk templat badan ($desa.*).
+        nilai["desa.nama"] = p.namaDesa
+        nilai["desa.kecamatan"] = p.kecamatan
+        nilai["desa.kabupaten"] = p.kabupaten
+        nilai["desa.jenisKabupaten"] = p.jenisKabupaten
+        nilai["desa.lembaga"] = p.jenisLembaga
+        nilai["desa.kodepos"] = p.kodepos
+
+        // Tanggal surat (dipakai sebagian templat badan).
+        nilai["surat.tanggal"] = java.text.SimpleDateFormat(
+            "dd MMMM yyyy", java.util.Locale("id", "ID"),
+        ).format(java.util.Date())
 
         val tahun = Calendar.getInstance().get(Calendar.YEAR)
 
         progres.visibility = View.VISIBLE
         lifecycleScope.launch {
             try {
+                var nomor = ""
                 val berkas = withContext(Dispatchers.IO) {
-                    val p = PengaturanSurat.ambil(this@BuatSuratActivity)
-                    val nomor = p.nomorBerikutnya(tahun, getSharedPreferences("sudes_surat", MODE_PRIVATE))
+                    nomor = p.nomorBerikutnya(jenis.idJenis, tahun, getSharedPreferences("sudes_surat", MODE_PRIVATE))
+                    val logo = MuatLogo.muat(this@BuatSuratActivity, p.logoPath)
                     SuratPdf.buat(
                         this@BuatSuratActivity,
                         jenis,
                         nomor,
-                        isi,
+                        nilai,
                         p,
-                        teksBidang("pejabatPenandatangan"),
+                        pejabat,
+                        logo,
                     )
                 }
 
@@ -244,11 +285,17 @@ class BuatSuratActivity : AppCompatActivity() {
                     PdfAksi.simpanKeDownloads(this@BuatSuratActivity, berkas)
                 }
 
+                // Surat yang baru dibuat ikut antrean sinkron desktop.
+                val antre = withContext(Dispatchers.IO) {
+                    AntreanSurat.kirim(this@BuatSuratActivity, jenis, nomor, fields)
+                }
+
                 progres.visibility = View.GONE
+                val pesan = if (lokasi != null) getString(R.string.pdf_tersimpan, lokasi)
+                else getString(R.string.pdf_gagal, "penyimpanan")
                 Toast.makeText(
                     this@BuatSuratActivity,
-                    if (lokasi != null) getString(R.string.pdf_tersimpan, lokasi)
-                    else getString(R.string.pdf_gagal, "penyimpanan"),
+                    if (antre) "$pesan • antrean desktop" else pesan,
                     Toast.LENGTH_LONG,
                 ).show()
 

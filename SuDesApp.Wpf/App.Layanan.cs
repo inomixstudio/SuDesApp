@@ -441,6 +441,7 @@ namespace SuDesApp.Wpf
                     SuDesApp.Sinkron.SinkronSuratService.FolderBawaan));
             services.AddTransient<SuDesApp.Sinkron.PerangkaianPerangkat>();
             services.AddTransient<SuDesApp.Sinkron.PenerbitSkemaFormulir>();
+            services.AddTransient<SuDesApp.Sinkron.PenerbitPengaturanDesa>();
             services.AddTransient<SinkronViewModel>();
 
             // Pusat dokumen (Dokumentasi) + pembaca dokumen. Pembaca selalu dibuka

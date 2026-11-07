@@ -1,4 +1,4 @@
-// SKTMGenerator.cs
+﻿// SKTMGenerator.cs
 // Badan surat dibuat langsung dengan mesin SudesPdf (BadanSurat), tanpa lapisan kompat.
 using Microsoft.Extensions.Logging;
 using SuDesApp.ControlSurat;
@@ -20,7 +20,7 @@ namespace SuDesApp.GeneratorPdf
         public string? DefaultTanggalFormat = "dd MMMM yyyy";
 
         protected override string JudulSurat => "SURAT KETERANGAN TIDAK MAMPU";
-        protected override bool UseDefaultLogo => false;
+        protected override bool UseDefaultLogo => true;
         protected override bool UseDefaultHeader => true;
         protected override bool UseDefaultFooter => true;
         protected override bool ShowPemohonInFooter => false;

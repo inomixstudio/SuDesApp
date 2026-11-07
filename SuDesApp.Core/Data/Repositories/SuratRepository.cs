@@ -74,6 +74,13 @@ namespace SuDesApp.Data.Repositories
         Task<IEnumerable<SuratData>> GetAllSuratDataAsync(string sortBy = "ID_Surat", bool ascending = true, int skip = 0, int take = 100, CancellationToken cancellationToken = default);
         Task<int> AddSuratAsync(SuratData entity, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
         Task<int> CountSuratByJenisAndYearAsync(string namaJenis, string year, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Nomor urut terbesar pada tahun berjalan, diambil dari segmen kedua
+        /// nomor surat. Dipakai sinkron Android supaya nomor draf di perangkat
+        /// tidak mulai dari 1 bila register desktop sudah lebih jauh.
+        /// </summary>
+        Task<int> AmbilUrutTerakhirAsync(int tahun, CancellationToken cancellationToken = default);
         Task<IEnumerable<SuratData>> GetSuratByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
         Task<Dictionary<string, int>> GetSuratStatisticsByStatusAsync(CancellationToken cancellationToken = default);
         Task<bool> CheckNomorSuratExistsAsync(string nomorSurat, int? excludeId = null, CancellationToken cancellationToken = default);
@@ -1197,6 +1204,17 @@ namespace SuDesApp.Data.Repositories
             }, cancellationToken);
 
             return count;
+        }
+
+        public async Task<int> AmbilUrutTerakhirAsync(int tahun, CancellationToken cancellationToken = default)
+        {
+            if (tahun <= 0)
+                throw new ArgumentException("Tahun tidak valid.", nameof(tahun));
+
+            await EnsureConnectionOpenAsync(cancellationToken);
+            var query = _queryProvider.GetQuery("UrutTerakhirSurat");
+            var parameters = new { Year = tahun.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+            return await _connection.ExecuteScalarAsync<int>(query, parameters);
         }
 
         public async Task<IEnumerable<SuratData>> GetSuratByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)

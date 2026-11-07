@@ -367,6 +367,20 @@ INNER JOIN JenisSurat js ON s.ID_Jenis = js.ID_Jenis
 WHERE js.NamaJenis = @NamaJenis
   AND strftime('%Y', s.TanggalSurat) = @Year;
 
+-- UrutTerakhirSurat: nomor urut terbesar pada tahun berjalan, diambil dari
+-- segmen kedua nomor surat (470/001/Ds/2026 -> 001). Nomor yang bentuknya
+-- tidak mengikuti pola diabaikan (CAST bukan angka menghasilkan 0).
+SELECT COALESCE(MAX(CAST(
+         SUBSTR(s.NomorSurat,
+                INSTR(s.NomorSurat, '/') + 1,
+                INSTR(SUBSTR(s.NomorSurat, INSTR(s.NomorSurat, '/') + 1), '/') - 1)
+       AS INTEGER)), 0)
+FROM Surat s
+WHERE s.NomorSurat IS NOT NULL
+  AND TRIM(s.NomorSurat) <> ''
+  AND strftime('%Y', s.TanggalSurat) = @Year
+  AND INSTR(s.NomorSurat, '/') > 0;
+
 -- GetSuratStatisticsByMonth
 SELECT 
     strftime('%Y-%m', s.TanggalSurat) as Bulan,

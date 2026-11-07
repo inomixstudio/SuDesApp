@@ -2,8 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/page"
-    android:fillViewport="true">
+    android:background="@color/page">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,76 +21,38 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="@string/pengaturan_keterangan"
+            android:layout_marginTop="4dp"
+            android:text="@string/pengaturan_sumber"
             android:textColor="@color/teks_redup"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/isi_pengaturan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@color/surface"
+            android:fontFamily="monospace"
+            android:lineSpacingExtra="4dp"
+            android:padding="16dp"
+            android:textColor="@color/teks"
             android:textSize="13sp" />
 
-        <TextView
-            style="@style/MenuJudulGrup"
-            android:text="@string/grup_kop_surat" />
-
-        <EditText
-            android:id="@+id/input_desa"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/surface"
-            android:hint="@string/hint_nama_desa"
-            android:inputType="textCapWords"
-            android:padding="12dp" />
-
-        <EditText
-            android:id="@+id/input_kecamatan"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@color/surface"
-            android:hint="@string/hint_kecamatan"
-            android:inputType="textCapWords"
-            android:padding="12dp" />
-
-        <EditText
-            android:id="@+id/input_kabupaten"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@color/surface"
-            android:hint="@string/hint_kabupaten"
-            android:inputType="textCapWords"
-            android:padding="12dp" />
-
-        <TextView
-            style="@style/MenuJudulGrup"
-            android:text="@string/grup_penomoran" />
-
-        <EditText
-            android:id="@+id/input_awalan"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/surface"
-            android:hint="@string/hint_awalan"
-            android:inputType="text"
-            android:padding="12dp" />
-
-        <EditText
-            android:id="@+id/input_nomor"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@color/surface"
-            android:hint="@string/hint_nomor_terakhir"
-            android:inputType="number"
-            android:padding="12dp" />
-
         <Button
-            android:id="@+id/btn_simpan"
+            android:id="@+id/btn_sinkronkan"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:backgroundTint="@color/accent"
-            android:text="@string/simpan_pengaturan"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF" />
+            android:layout_marginTop="16dp"
+            android:text="@string/pengaturan_sinkronkan" />
+
+        <TextView
+            android:id="@+id/status_pengaturan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/pengaturan_sinkron_awal"
+            android:textColor="@color/teks_redup"
+            android:textSize="12sp" />
 
     </LinearLayout>
 </ScrollView>
