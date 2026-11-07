@@ -251,9 +251,18 @@ public class SinkronViewModel : ObservableObject
 
     private async Task MuatUlangAsync()
     {
-        JumlahAntrean = await _sinkron.HitungAntreanAsync().ConfigureAwait(false);
-        var daftar = await _perangkaian.AmbilDaftarAsync().ConfigureAwait(false);
-        Perangkat = new ObservableCollection<PerangkatTerpasang>(daftar);
+        try
+        {
+            JumlahAntrean = await _sinkron.HitungAntreanAsync().ConfigureAwait(true);
+            var daftar = await _perangkaian.AmbilDaftarAsync().ConfigureAwait(true);
+            Perangkat = new ObservableCollection<PerangkatTerpasang>(daftar);
+        }
+        catch (Exception ex)
+        {
+            // Dipanggil juga dari konstruktor (fire-and-forget), jadi galat
+            // jaringan/konfigurasi tidak boleh hilang tanpa jejak.
+            _logger.LogWarning(ex, "Gagal memuat ulang ringkasan antrean.");
+        }
     }
 
     private async Task SimpanKonfigurasiAsync()
@@ -286,7 +295,7 @@ public class SinkronViewModel : ObservableObject
         Hasil = null;
         try
         {
-            var hasil = await _sinkron.SinkronkanAsync().ConfigureAwait(false);
+            var hasil = await _sinkron.SinkronkanAsync().ConfigureAwait(true);
             Hasil = hasil;
 
             if (!string.IsNullOrWhiteSpace(hasil.PesanGalat))
@@ -295,12 +304,21 @@ public class SinkronViewModel : ObservableObject
             }
             else if (hasil.AdaYangDiproses)
             {
-                await _pesan.ShowInfoAsync(
-                    $"{hasil.Berhasil} surat berhasil diimpor ke register" +
-                    (hasil.Gagal > 0 ? $", {hasil.Gagal} gagal." : "."));
+                // Baris berstatus 'gagal' tidak dicoba lagi, jadi tanpanya pesan
+                // ini akan berbunyi "0 surat berhasil" tanpa penjelasan — operator
+                // tidak tahu ada antrean yang macet.
+                var pesan = $"{hasil.Berhasil} surat berhasil diimpor ke register.";
+                if (hasil.Gagal > 0) pesan += $" {hasil.Gagal} gagal.";
+                if (hasil.Dilewati > 0)
+                {
+                    pesan += $" {hasil.Dilewati} dilewati karena gagal pada percobaan sebelumnya " +
+                             "(perbaiki isian di Android, lalu kirim ulang).";
+                }
+
+                await _pesan.ShowInfoAsync(pesan);
             }
 
-            await MuatUlangAsync().ConfigureAwait(false);
+            await MuatUlangAsync().ConfigureAwait(true);
         }
         catch (System.Exception ex)
         {
@@ -319,7 +337,7 @@ public class SinkronViewModel : ObservableObject
         PerangkatBaru = null;
         try
         {
-            var hasil = await _perangkaian.PasangAsync(NamaPerangkat.Trim()).ConfigureAwait(false);
+            var hasil = await _perangkaian.PasangAsync(NamaPerangkat.Trim()).ConfigureAwait(true);
             PerangkatBaru = hasil;
 
             if (!hasil.Berhasil)
@@ -329,7 +347,7 @@ public class SinkronViewModel : ObservableObject
             }
 
             NamaPerangkat = string.Empty;
-            await MuatUlangAsync().ConfigureAwait(false);
+            await MuatUlangAsync().ConfigureAwait(true);
         }
         catch (System.Exception ex)
         {
@@ -346,7 +364,7 @@ public class SinkronViewModel : ObservableObject
     {
         try
         {
-            var jumlah = await _penerbitSkema.TerbitkanAsync().ConfigureAwait(false);
+            var jumlah = await _penerbitSkema.TerbitkanAsync().ConfigureAwait(true);
             if (jumlah < 0)
             {
                 await _pesan.ShowErrorAsync("Gagal menerbitkan skema formulir. Periksa koneksi Supabase.");
@@ -369,13 +387,13 @@ public class SinkronViewModel : ObservableObject
         var yakin = await _pesan.ShowConfirmationAsync(
             "Cabut perangkat",
             $"Cabut '{PerangkatDipilih!.Nama}'? Antrean yang belum tersinkron ikut terhapus.")
-            .ConfigureAwait(false);
+            .ConfigureAwait(true);
         if (!yakin) return;
 
         SedangMemasang = true;
         try
         {
-            var ok = await _perangkaian.CabutAsync(PerangkatDipilih!.Id).ConfigureAwait(false);
+            var ok = await _perangkaian.CabutAsync(PerangkatDipilih!.Id).ConfigureAwait(true);
             if (!ok)
             {
                 await _pesan.ShowErrorAsync("Gagal mencabut perangkat.");
@@ -383,7 +401,7 @@ public class SinkronViewModel : ObservableObject
             }
 
             PerangkatDipilih = null;
-            await MuatUlangAsync().ConfigureAwait(false);
+            await MuatUlangAsync().ConfigureAwait(true);
         }
         finally
         {
