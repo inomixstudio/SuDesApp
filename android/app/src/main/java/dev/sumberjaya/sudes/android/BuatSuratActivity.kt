@@ -44,7 +44,7 @@ class BuatSuratActivity : AppCompatActivity() {
         wadahForm = findViewById(R.id.wadah_form)
         progres = findViewById(R.id.progres)
 
-        klien = SupabaseKlien(SupabaseSesi.ambil(this))
+        klien = SupabaseSesi.klien(this)
 
         spinnerJenis.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: android.widget.AdapterView<*>?, v: View?, pos: Int, id: Long) {
