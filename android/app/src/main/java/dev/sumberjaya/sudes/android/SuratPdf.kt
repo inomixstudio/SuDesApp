@@ -166,8 +166,10 @@ object SuratPdf {
             val tanggal = SimpleDateFormat("d MMMM yyyy", Locale("id", "ID")).format(Date())
 
             kop(pengaturan, if (jenis.pakaiLogo) logo else null)
-            lewati(kerapatan.jarakKopJudul * kerapatan.faktorJarakBlok)
-            judul(jenis.judulCetak, nomor)
+            if (!jenis.halamanPenuh) {
+                lewati(kerapatan.jarakKopJudul * kerapatan.faktorJarakBlok)
+                judul(jenis.judulCetak, nomor)
+            }
 
             for (blok in jenis.badan) {
                 when (blok) {
@@ -188,8 +190,11 @@ object SuratPdf {
 
             // Blok tanda tangan: pemohon di kiri (bila template menghendaki),
             // pejabat di kanan — sama seperti SuratRenderer.TandaTangan.
-            lewati(10f * kerapatan.faktorJarakBlok)
-            tandaTangan(jenis, nilai, pengaturan, pejabat, tanggal)
+            // Jenis halaman-penuh sudah menyertakannya di 'badan'.
+            if (!jenis.halamanPenuh) {
+                lewati(10f * kerapatan.faktorJarakBlok)
+                tandaTangan(jenis, nilai, pengaturan, pejabat, tanggal)
+            }
         }
 
         // ---- kop ----

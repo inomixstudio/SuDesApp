@@ -76,6 +76,12 @@ data class SkemaJenis(
     val pemohonDiTandaTangan: Boolean = false,
     /** Teks bawaan bila kolom keterangan kosong (SKTM dan beberapa jenis lain). */
     val catatan: String = "",
+    /**
+     * True bila badan sudah mencakup seluruh halaman (kop/judul/tanda tangan)
+     * karena generator desktop menimpa ComposeHalaman. Android tidak boleh
+     * menambahkan judul lagi — itu akan terduplikasi.
+     */
+    val halamanPenuh: Boolean = false,
 ) {
     /** Field yang diisi operator, berurutan; field otomatis dilewati. */
     val fieldsInput: List<SkemaBidang> get() = fields.filter { !it.otomatis }
@@ -103,6 +109,7 @@ data class SkemaJenis(
                 pakaiLogo = json.optBoolean("pakaiLogo", false),
                 pemohonDiTandaTangan = json.optBoolean("pemohonDiTandaTangan", false),
                 catatan = json.optString("catatan", ""),
+                halamanPenuh = json.optBoolean("halamanPenuh", false),
             )
         }
 
