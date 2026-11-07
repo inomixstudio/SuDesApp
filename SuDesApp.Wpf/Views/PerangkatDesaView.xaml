@@ -554,7 +554,7 @@
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Nama}" FontWeight="SemiBold"/>
                                                 <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">
-                                                    <Run Text="{Binding NIK}"/><Run Text=" · "/><Run Text="{Binding AlamatLengkap}"/>
+                                                    <Run Text="{Binding NIK, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding AlamatLengkap, Mode=OneWay}"/>
                                                 </TextBlock>
                                             </StackPanel>
                                         </Button>

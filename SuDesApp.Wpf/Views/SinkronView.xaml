@@ -120,7 +120,7 @@
                     <TextBlock TextWrapping="Wrap" Margin="0,4,0,12"
                                Foreground="{DynamicResource TextSecondaryBrush}">
                         <Run Text="Surat menunggu di antrean: "/>
-                        <Run Text="{Binding JumlahAntrean}" FontWeight="Bold"/>
+                        <Run Text="{Binding JumlahAntrean, Mode=OneWay}" FontWeight="Bold"/>
                         <Run Text=" (maksimum 10)."/>
                     </TextBlock>
 
