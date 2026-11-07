@@ -32,6 +32,25 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
+    }
+
+    defaultConfig {
+        // URL + kunci publik Supabase dibaca dari android/supabase.properties
+        // (berkas per mesin, tidak di-commit). Kunci publik memang boleh
+        // tampil di dalam APK; kata sandi perangkat TIDAK pernah di sini.
+        val properti = mutableMapOf<String, String>()
+        val berkas = rootProject.file("supabase.properties")
+        if (berkas.exists()) {
+            berkas.readLines()
+                .filter { it.contains('=') && !it.trimStart().startsWith("#") }
+                .forEach { baris ->
+                    val kunci = baris.substringBefore('=').trim()
+                    properti[kunci] = baris.substringAfter('=').trim()
+                }
+        }
+        buildConfigField("String", "SUPABASE_URL", "\"${properti["SUPABASE_URL"] ?: ""}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${properti["SUPABASE_ANON_KEY"] ?: ""}\"")
     }
 }
 

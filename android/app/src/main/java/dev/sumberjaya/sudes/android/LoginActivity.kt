@@ -2,11 +2,9 @@ package dev.sumberjaya.sudes.android
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.journeyapps.barcodescanner.ScanContract
@@ -14,96 +12,79 @@ import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
 
 /**
- * Pasang perangkat: pindai QR dari halaman Sinkron Android aplikasi desktop,
- * atau ketik manual URL/kunci/surel/kata sandi.
+ * Layar sambung perangkat — satu-satunya yang membuka aplikasi.
  *
- * QR berisi URL Supabase, kunci publik, surel, dan kata sandi perangkat —
- * disusun desktop saat perangkat dipasang.
+ * Operator cukup memindai QR dari halaman Sinkron Android di desktop, atau
+ * mengetik kode verifikasi 4 angka yang tampil di sana. URL, kunci publik,
+ * surel, dan kata sandi perangkat tidak pernah diketik di sini.
  */
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var inputUrl: EditText
-    private lateinit var inputKunci: EditText
-    private lateinit var inputEmail: EditText
-    private lateinit var inputSandi: EditText
+    private lateinit var inputKode: EditText
     private lateinit var status: TextView
 
     private val pindai = registerForActivityResult(ScanContract()) { hasil ->
         val teks = hasil.contents ?: return@registerForActivityResult
-        masukDariQr(teks)
+        dariQr(teks)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Sudah terhubung? Langsung ke menu.
+        // Sudah tersambung? Langsung ke menu.
         if (SupabaseSesi.ambil(this).masuk) {
             bukaMenu()
             return
         }
 
         setContentView(R.layout.activity_login)
-        inputUrl = findViewById(R.id.input_url)
-        inputKunci = findViewById(R.id.input_kunci)
-        inputEmail = findViewById(R.id.input_email)
-        inputSandi = findViewById(R.id.input_sandi)
+        inputKode = findViewById(R.id.input_kode)
         status = findViewById(R.id.status_text)
 
         findViewById<Button>(R.id.btn_pindai).setOnClickListener { mulaiPindai() }
-        findViewById<Button>(R.id.btn_masuk).setOnClickListener { masukManual() }
+        findViewById<Button>(R.id.btn_hubungkan).setOnClickListener { hubungkan() }
     }
 
     private fun mulaiPindai() {
         pindai.launch(
             ScanOptions()
                 .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                .setPrompt("Arahkan ke QR perangkat di aplikasi desktop")
+                .setPrompt("Arahkan ke kode QR di aplikasi desktop")
                 .setBeepEnabled(false)
                 .setOrientationLocked(false)
         )
     }
 
-    private fun masukDariQr(payload: String) {
-        status.text = "Memasang perangkat…"
-        lifecycleScope.launch {
-            val sesi = SupabaseSesi.dariQr(this@LoginActivity, payload)
-            if (sesi == null || !sesi.masuk) {
-                status.text = "QR tidak terbaca atau login gagal. Periksa QR dan coba lagi."
-                return@launch
-            }
-
-            SupabaseSesi.simpan(this@LoginActivity, sesi)
-            tarikPengaturan()
-            bukaMenu()
+    /** Isi QR: URL Supabase di baris pertama, kode 4 angka di baris kedua. */
+    private fun dariQr(payload: String) {
+        val baris = payload.lines().map { it.trim() }.filter { it.isNotEmpty() }
+        val kode = baris.lastOrNull { it.length == 4 && it.all { c -> c.isDigit() } }
+        if (kode == null) {
+            status.text = "Kode QR tidak terbaca. Coba pindai ulang, atau ketik kode 4 angka."
+            return
         }
+        hubungkan(kode)
     }
 
-    private fun masukManual() {
-        val url = inputUrl.text.toString().trim().trimEnd('/')
-        val kunci = inputKunci.text.toString().trim()
-        val email = inputEmail.text.toString().trim()
-        val sandi = inputSandi.text.toString()
-
-        if (url.isEmpty() || kunci.isEmpty() || email.isEmpty() || sandi.isEmpty()) {
-            status.text = "Semua kolom wajib diisi."
+    private fun hubungkan(otomatis: String? = null) {
+        val kode = (otomatis ?: inputKode.text.toString()).trim()
+        if (kode.length != 4 || !kode.all { it.isDigit() }) {
+            status.text = "Kode harus 4 angka. Lihat kode di aplikasi desktop."
             return
         }
 
-        status.text = "Memasang perangkat…"
-        findViewById<Button>(R.id.btn_masuk).isEnabled = false
-
+        status.text = "Menghubungkan…"
+        findViewById<Button>(R.id.btn_hubungkan).isEnabled = false
         lifecycleScope.launch {
-            val saran = SupabaseSesi.ambil(this@LoginActivity).copy(
-                url = url,
-                kunciPublik = kunci,
-                email = email,
-                kataSandi = sandi,
-            )
-            val sesi = SupabaseKlien(saran).login(email, sandi)
+            val sesi = try {
+                SupabaseSesi.klien(this@LoginActivity).pakaiKode(kode)
+            } catch (e: Exception) {
+                null
+            }
 
             if (sesi == null || !sesi.masuk) {
-                status.text = "Login gagal. Periksa surel dan kata sandi perangkat."
-                findViewById<Button>(R.id.btn_masuk).isEnabled = true
+                status.text = "Kode tidak dikenal atau sudah kedaluwarsa. Minta kode baru di aplikasi desktop."
+                findViewById<Button>(R.id.btn_hubungkan).isEnabled = true
                 return@launch
             }
 

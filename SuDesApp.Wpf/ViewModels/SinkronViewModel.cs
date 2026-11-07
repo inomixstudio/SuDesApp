@@ -207,12 +207,17 @@ public class SinkronViewModel : ObservableObject
     public bool AdaPerangkatBaru => PerangkatBaru is { Berhasil: true };
 
     /// <summary>
-    /// Isi QR yang discan aplikasi Android: URL Supabase, surel, dan kata sandi.
-    /// Format sengaja sederhana (tiga baris) supaya mudah diurai Android tanpa
-    /// dependensi tambahan.
+    /// Isi QR yang discan aplikasi Android. Cukup URL dan kode 4 angka —
+    /// surel dan kata sandi tidak pernah tampil di layar, Android menukar
+    /// kodenya lewat <c>ambil_pasangan</c>.
     /// </summary>
-    public string QrPayload => PerangkatBaru is { Berhasil: true } baru
-        ? $"{UrlRest.TrimEnd('/')}\n{KunciPublik}\n{baru.Surel}\n{baru.KataSandi}"
+    public string QrPayload => PerangkatBaru is { Berhasil: true, Kode: { } kode }
+        ? $"{UrlRest.TrimEnd('/')}\n{kode}"
+        : string.Empty;
+
+    /// <summary>Kode verifikasi 4 angka yang harus dibaca operator Android.</summary>
+    public string KodePerangkat => PerangkatBaru is { Berhasil: true, Kode: { } kode }
+        ? kode
         : string.Empty;
 
     public ICommand SinkronCommand { get; }

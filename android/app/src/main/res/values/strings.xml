@@ -73,13 +73,12 @@
 
     <!-- Sinkron / pasang perangkat -->
     <string name="label_pasang_perangkat">Pasang Perangkat</string>
-    <string name="petunjuk_pasang">Pindai QR dari halaman Sinkron Android di aplikasi desktop, atau ketik URL, kunci publik, surel, dan kata sandi perangkat.</string>
-    <string name="pindai_qr">Pindai QR</string>
-    <string name="atau_manual">atau ketik manual</string>
-    <string name="hint_url">URL Supabase (https://….supabase.co)</string>
-    <string name="hint_kunci">Kunci publik (anon key)</string>
-    <string name="hint_sandi">Kata sandi perangkat</string>
-    <string name="masuk">Pasang</string>
+    <string name="petunjuk_pasang">Buka halaman Sinkron Android di komputer desa, lalu pindai kode QR di sana — atau ketik kode 4 angka yang tampil di halaman itu.</string>
+    <string name="pindai_qr">Pindai Kode QR</string>
+    <string name="atau_ketik_kode">atau ketik kode 4 angka dari aplikasi desktop</string>
+    <string name="hint_kode">••••</string>
+    <string name="hubungkan">Hubungkan</string>
+    <string name="status_pasang_awal">Pindai kode QR, atau ketik kode 4 angka yang tampil di halaman Sinkron Android pada komputer desa.</string>
 
     <!-- Status dan pesan -->
     <string name="sedang_membuat_pdf">Membuat PDF…</string>

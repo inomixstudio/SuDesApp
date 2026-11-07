@@ -181,6 +181,13 @@
                             <TextBlock Text="Pindai dari aplikasi Android" Margin="0,6,0,0"
                                        HorizontalAlignment="Center"
                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="atau ketik kode" Margin="0,12,0,2"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding KodePerangkat}"
+                                       FontSize="40" FontWeight="Bold"
+                                       HorizontalAlignment="Center" FontFamily="Consolas"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
                         </StackPanel>
                     </Grid>
 

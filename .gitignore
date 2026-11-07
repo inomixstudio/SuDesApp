@@ -115,3 +115,6 @@ android/build/
 android/local.properties
 
 .kotlin/
+
+# Kunci publik Supabase per mesin (bukan rahasia, tapi jangan di-commit)
+android/supabase.properties
