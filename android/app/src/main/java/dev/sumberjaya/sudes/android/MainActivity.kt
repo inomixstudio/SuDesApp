@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         status.text = getString(R.string.status_belum_terhubung)
 
         lifecycleScope.launch {
-            val jumlah = SupabaseKlien(sesi).hitungAntrean()
+            val jumlah = SupabaseSesi.klien(this@MainActivity).hitungAntrean()
             status.text = getString(
                 R.string.status_terhubung,
                 sesi.email,

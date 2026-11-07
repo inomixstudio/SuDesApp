@@ -17,7 +17,10 @@ import java.util.concurrent.TimeUnit
  * stabil, dan aplikasi Android ini tidak boleh bergantung pada pustaka yang
  * menyeret dependensi besar hanya untuk tiga endpoint.
  */
-class SupabaseKlien(private val sesi: SupabaseSesi) {
+class SupabaseKlien(
+    private var sesi: SupabaseSesi,
+    private val onSesiDiperbarui: ((SupabaseSesi) -> Unit)? = null,
+) {
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
@@ -67,6 +70,7 @@ class SupabaseKlien(private val sesi: SupabaseSesi) {
 
     /** Muat skema formulir desa ini dari Supabase. */
     suspend fun muatSkema(): Map<String, SkemaJenis> = withContext(Dispatchers.IO) {
+        pastikanTokenSegar()
         val hasil = get("${sesi.url}/rest/v1/skema_formulir?select=id_jenis,skema")
         val peta = mutableMapOf<String, SkemaJenis>()
         val array = JSONArray(hasil)
@@ -81,6 +85,7 @@ class SupabaseKlien(private val sesi: SupabaseSesi) {
 
     /** Daftar surat milik perangkat ini yang masih di antrean. */
     suspend fun daftarAntrean(): List<AntreanBaris> = withContext(Dispatchers.IO) {
+        pastikanTokenSegar()
         val hasil = get(
             "${sesi.url}/rest/v1/antrean_surat" +
                 "?select=id,id_jenis,nomor_sementara,nik,status,dibuat_pada,catatan" +
@@ -116,10 +121,17 @@ class SupabaseKlien(private val sesi: SupabaseSesi) {
         fields: JSONObject,
         tanggal: String,
     ): Hasil<String> = withContext(Dispatchers.IO) {
+        pastikanTokenSegar()
         val bodi = JSONObject()
             .put("id_jenis", idJenis)
             .put("nomor_sementara", nomorSementara ?: JSONObject.NULL)
             .put("nik", nik ?: JSONObject.NULL)
+            // RLS mencentang tenant_id dan id_perangkat terhadap klaim JWT,
+            // jadi klien wajib mengirim keduanya (RLS menolak yang tidak
+            // cocok). id_pengguna hanya metadata.
+            .put("tenant_id", sesi.tenant ?: JSONObject.NULL)
+            .put("id_pengguna", sesi.email)
+            .put("id_perangkat", sesi.idPerangkat ?: JSONObject.NULL)
             .put("data_json", JSONObject().put("tanggal", tanggal).put("fields", fields))
             .toString()
             .toRequestBody(jsonTipe)
@@ -145,6 +157,7 @@ class SupabaseKlien(private val sesi: SupabaseSesi) {
     }
 
     suspend fun hitungAntrean(): Int? = withContext(Dispatchers.IO) {
+        pastikanTokenSegar()
         try {
             val req = builder()
                 .url("${sesi.url}/rest/v1/antrean_surat?select=id")
@@ -162,6 +175,69 @@ class SupabaseKlien(private val sesi: SupabaseSesi) {
         Request.Builder()
             .header("apikey", sesi.kunciPublik)
             .header("Authorization", "Bearer ${sesi.accessToken}")
+
+    /**
+     * Token Supabase kedaluwarsa dalam ~1 jam. Tanpa penyegaran, aplikasi
+     * berhenti berfungsi setelah itu dan operator harus memasang ulang
+     * perangkat — tidak bisa dibiarkan pada aplikasi yang dipakai sehari-hari.
+     */
+    private suspend fun pastikanTokenSegar() {
+        if (!tokenKedaluwarsa()) return
+        muatUlangToken()
+    }
+
+    /** True bila token tidak terbaca atau sisa berlakunya kurang dari 5 menit. */
+    private fun tokenKedaluwarsa(): Boolean {
+        if (sesi.accessToken.isBlank()) return true
+        val bagian = sesi.accessToken.split(".")
+        if (bagian.size != 3) return true
+        return try {
+            val payload = String(
+                android.util.Base64.decode(
+                    bagian[1],
+                    android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP,
+                )
+            )
+            val exp = JSONObject(payload).optLong("exp", 0)
+            exp <= System.currentTimeMillis() / 1000 + 300
+        } catch (e: Exception) {
+            true
+        }
+    }
+
+    /** Tukar refresh token dengan access token baru. False bila gagal. */
+    private suspend fun muatUlangToken(): Boolean {
+        if (sesi.refreshToken.isBlank()) return false
+        val bodi = JSONObject()
+            .put("refresh_token", sesi.refreshToken)
+            .toString()
+            .toRequestBody(jsonTipe)
+
+        val req = Request.Builder()
+            .url("${sesi.url}/auth/v1/token?grant_type=refresh_token")
+            .header("apikey", sesi.kunciPublik)
+            .post(bodi)
+            .build()
+
+        return try {
+            http.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return false
+                val json = JSONObject(resp.body?.string().orEmpty())
+                val akses = json.optString("access_token")
+                val segarkan = json.optString("refresh_token")
+                if (akses.isBlank()) return false
+
+                sesi = sesi.copy(
+                    accessToken = akses,
+                    refreshToken = if (segarkan.isBlank()) sesi.refreshToken else segarkan,
+                )
+                onSesiDiperbarui?.invoke(sesi)
+                true
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     private fun get(url: String): String {
         val req = builder().url(url).build()

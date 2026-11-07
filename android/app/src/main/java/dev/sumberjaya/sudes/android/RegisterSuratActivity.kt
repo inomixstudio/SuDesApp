@@ -45,7 +45,7 @@ class RegisterSuratActivity : AppCompatActivity() {
         wadah.removeAllViews()
 
         lifecycleScope.launch {
-            val daftar = SupabaseKlien(sesi).daftarAntrean()
+            val daftar = SupabaseSesi.klien(this@RegisterSuratActivity).daftarAntrean()
             progres.visibility = View.GONE
 
             if (daftar.isEmpty()) {

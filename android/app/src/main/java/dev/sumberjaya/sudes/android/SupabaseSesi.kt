@@ -67,6 +67,13 @@ data class SupabaseSesi(
         }
 
         /**
+         * Klien siap pakai untuk aktivitas: sesi dibaca dari penyimpanan, dan
+         * bila klien menyegarkan token, sesi baru langsung disimpan kembali.
+         */
+        fun klien(ctx: Context): SupabaseKlien =
+            SupabaseKlien(ambil(ctx)) { sesiBaru -> simpan(ctx, sesiBaru) }
+
+        /**
          * Susun sesi dari isi QR pairing: URL, kunci publik, surel, kata sandi.
          * QR sengaja memakai empat baris teks biasa supaya Android tidak butuh
          * parser khusus. Fungsi ini suspending karena di dalamnya ada login
