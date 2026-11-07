@@ -63,6 +63,57 @@ public sealed class ImporAntreanSurat
         };
 
     /// <summary>
+    /// Susun daftar waris dari pasangan, anak, dan penerima kuasa — sama
+    /// persis dengan <c>AhliWarisInputViewModel</c>. NIK waris memakai
+    /// <see cref="SuratConstants.NIK_KEMATIAN"/> karena surat ahli waris tidak
+    /// memuat NIK tiap waris di form desktop.
+    /// </summary>
+    private static void BangunWaris(SuratData surat)
+    {
+        var data = surat.AhliWarisData;
+        if (data is null) return;
+
+        var waris = new AhliWaris { Waris = new List<Waris>() };
+
+        if (!string.IsNullOrWhiteSpace(data.NamaPasangan))
+        {
+            waris.Waris.Add(new Waris
+            {
+                NamaWaris = data.NamaPasangan.Trim(),
+                NIKWaris = SuratConstants.NIK_KEMATIAN,
+                HubunganWaris = data.JenisKelaminPasangan == "Perempuan" ? "Istri" : "Suami",
+            });
+        }
+
+        foreach (var anak in data.Anak)
+        {
+            if (string.IsNullOrWhiteSpace(anak.Nama)) continue;
+
+            waris.Waris.Add(new Waris
+            {
+                NamaWaris = anak.Nama.Trim(),
+                NIKWaris = string.IsNullOrWhiteSpace(anak.NIK) ? SuratConstants.NIK_KEMATIAN : anak.NIK.Trim(),
+                HubunganWaris = "Anak",
+            });
+        }
+
+        if (!string.IsNullOrWhiteSpace(data.NamaPenerimaKuasa))
+        {
+            waris.Waris.Add(new Waris
+            {
+                NamaWaris = data.NamaPenerimaKuasa.Trim(),
+                NIKWaris = SuratConstants.NIK_KEMATIAN,
+                HubunganWaris = "Kuasa",
+            });
+        }
+
+        if (waris.Waris.Count > 0)
+        {
+            surat.AhliWaris = waris;
+        }
+    }
+
+    /// <summary>
     /// Keterangan bawaan SKTM — sama persis dengan yang dibentuk
     /// <c>SktmInputViewModel.GetDefaultKeteranganAsync</c> saat form dibuka.
     /// </summary>
@@ -123,6 +174,15 @@ public sealed class ImporAntreanSurat
                 {
                     surat.Warga!.NIK = nikKhusus;
                 }
+            }
+
+            // AhliWaris.Waris dibangkitkan desktop dari pasangan + anak + penerima
+            // kuasa (lihat AhliWarisInputViewModel.BuildSuratData). Android tidak
+            // mengirim daftar waris tersendiri, jadi impor menirukan aturan yang
+            // sama — kalau daftar ini kosong, AhliWarisDataHandler menolak surat.
+            if (string.Equals(baris.IdJenis, SuratConstants.AHLI_WARIS, StringComparison.OrdinalIgnoreCase))
+            {
+                BangunWaris(surat);
             }
 
             // Jenis yang skemanya menandai keterangan sebagai "otomatis"
