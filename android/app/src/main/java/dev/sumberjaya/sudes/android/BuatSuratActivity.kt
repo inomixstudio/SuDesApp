@@ -245,13 +245,8 @@ class BuatSuratActivity : AppCompatActivity() {
 
         // Keterangan: isian operator bila ada, kalau kosong pakai keterangan
         // bawaan jenis surat — sama seperti desktop saat form dibuka.
-        nilai["keterangan"] = listOf("keperluan", "keterangan", "keteranganTambahan")
+        val isianKeterangan = listOf("keperluan", "keterangan", "keteranganTambahan")
             .firstNotNullOfOrNull { k -> teksBidang(k).ifBlank { null } }
-            ?: if (jenis.keteranganBawaan.isNotBlank()) {
-                SuratPdf.urai(jenis.keteranganBawaan, nilai)
-            } else {
-                ""
-            }
 
         nilai["warga.tempatTanggalLahir"] = listOf(
             teksBidang("tempatLahir").ifBlank { "...." },
@@ -279,6 +274,15 @@ class BuatSuratActivity : AppCompatActivity() {
         nilai["surat.tanggal"] = java.text.SimpleDateFormat(
             "dd MMMM yyyy", java.util.Locale("id", "ID"),
         ).format(java.util.Date())
+
+        // Baru sekarang keterangan disusun: isian operator menang, kalau kosong
+        // pakai bawaan jenis surat. Harus SETELAH $desa.* terisi.
+        nilai["keterangan"] = isianKeterangan
+            ?: if (jenis.keteranganBawaan.isNotBlank()) {
+                SuratPdf.urai(jenis.keteranganBawaan, nilai)
+            } else {
+                ""
+            }
 
         val tahun = Calendar.getInstance().get(Calendar.YEAR)
 
