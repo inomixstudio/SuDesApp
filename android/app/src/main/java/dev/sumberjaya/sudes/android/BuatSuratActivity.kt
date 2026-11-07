@@ -243,9 +243,15 @@ class BuatSuratActivity : AppCompatActivity() {
             }
         }
 
+        // Keterangan: isian operator bila ada, kalau kosong pakai keterangan
+        // bawaan jenis surat — sama seperti desktop saat form dibuka.
         nilai["keterangan"] = listOf("keperluan", "keterangan", "keteranganTambahan")
             .firstNotNullOfOrNull { k -> teksBidang(k).ifBlank { null } }
-            ?: ""
+            ?: if (jenis.keteranganBawaan.isNotBlank()) {
+                SuratPdf.urai(jenis.keteranganBawaan, nilai)
+            } else {
+                ""
+            }
 
         nilai["warga.tempatTanggalLahir"] = listOf(
             teksBidang("tempatLahir").ifBlank { "...." },
