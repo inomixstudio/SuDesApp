@@ -1,51 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="20dp">
+    android:background="@color/page"
+    android:fillViewport="true">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textSize="22sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/status_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textSize="13sp" />
-
-    <Button
-        android:id="@+id/btn_buat_surat"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
-        android:text="@string/menu_buat_surat" />
+        android:orientation="vertical"
+        android:padding="20dp">
 
-    <Button
-        android:id="@+id/btn_register_surat"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/menu_register_surat" />
+        <!-- Kepala: identitas aplikasi -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textColor="@color/teks"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/btn_daftar_hadir"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/menu_daftar_hadir" />
+        <TextView
+            android:id="@+id/nama_desa"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/teks_redup"
+            android:textSize="14sp" />
 
-    <Button
-        android:id="@+id/btn_keluar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
-        style="?attr/borderlessButtonStyle"
-        android:text="@string/keluar" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/kerangka_menu"
+            android:textColor="@color/teks_redup"
+            android:textSize="13sp" />
 
-</LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="@color/garis" />
+
+        <!-- ================= BUAT SURAT ================= -->
+        <TextView
+            style="@style/MenuJudulGrup"
+            android:text="@string/grup_buat_surat" />
+
+        <Button
+            android:id="@+id/btn_buat_surat"
+            style="@style/MenuTombolUtama"
+            android:text="@string/menu_buat_surat" />
+
+        <Button
+            android:id="@+id/btn_register_surat"
+            style="@style/MenuTombol"
+            android:layout_marginTop="10dp"
+            android:text="@string/menu_register_surat" />
+
+        <!-- ================= NTCR ================= -->
+        <TextView
+            style="@style/MenuJudulGrup"
+            android:text="@string/grup_ntcr" />
+
+        <Button
+            android:id="@+id/btn_buat_ntcr"
+            style="@style/MenuTombolUtama"
+            android:text="@string/menu_buat_ntcr" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/keterangan_ntcr"
+            android:textColor="@color/teks_redup"
+            android:textSize="12sp" />
+
+        <!-- ================= LAINNYA ================= -->
+        <TextView
+            style="@style/MenuJudulGrup"
+            android:text="@string/grup_lainnya" />
+
+        <Button
+            android:id="@+id/btn_daftar_hadir"
+            style="@style/MenuTombol"
+            android:text="@string/menu_daftar_hadir" />
+
+        <Button
+            android:id="@+id/btn_pengaturan"
+            style="@style/MenuTombol"
+            android:layout_marginTop="10dp"
+            android:text="@string/menu_pengaturan" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="@string/catatan_privasi"
+            android:textColor="@color/teks_redup"
+            android:textSize="11sp" />
+
+    </LinearLayout>
+</ScrollView>

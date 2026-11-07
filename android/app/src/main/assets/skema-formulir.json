@@ -1,0 +1,6667 @@
+{
+  "SKD_UMUM": {
+    "label": "SKD Belum Menikah",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "DOMISILI_WARGA": {
+    "label": "Domisili Warga",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "INSTANSI": {
+    "label": "Domisili Instansi",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "namaInstansi",
+        "label": "Nama Instansi",
+        "type": "text",
+        "target": "instansi.namaInstansi",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "alamatInstansi",
+        "label": "Alamat Instansi",
+        "type": "text",
+        "target": "instansi.alamatInstansi",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nomorSkIzinUsaha",
+        "label": "Nomor SK/Izin Usaha",
+        "type": "text",
+        "target": "instansi.nomorSkIzinUsaha",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "pimpinanInstansi",
+        "label": "Nama Ketua/Pimpinan",
+        "type": "text",
+        "target": "instansi.pimpinanInstansi",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nikPimpinan",
+        "label": "NIK Ketua/Pimpinan",
+        "type": "number",
+        "target": "instansi.nikPimpinan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "SKU": {
+    "label": "SKU",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "bidangUsaha",
+        "label": "Bidang Usaha",
+        "type": "text",
+        "target": "sku.bidangUsaha",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "sejakTahun",
+        "label": "Mulai Sejak",
+        "type": "number",
+        "target": "sku.sejakTahun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "lokasiUsaha",
+        "label": "Lokasi Usaha",
+        "type": "text",
+        "target": "sku.lokasiUsaha",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "PENGANTAR_SKCK": {
+    "label": "Pengantar SKCK",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "pendidikan",
+        "label": "Pendidikan",
+        "type": "text",
+        "target": "warga.pendidikan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kewarganegaraan",
+        "label": "Kewarganegaraan",
+        "type": "select",
+        "target": "warga.kewarganegaraan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Maksud",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "IZIN_ORTU": {
+    "label": "Izin Suami / Orang Tua",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nikAnak",
+        "label": "NIK Anak",
+        "type": "number",
+        "target": "izinortu.nikAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaAnak",
+        "label": "Nama Anak",
+        "type": "text",
+        "target": "izinortu.namaAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirAnak",
+        "label": "Tempat Lahir Anak",
+        "type": "text",
+        "target": "izinortu.tempatLahirAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirAnak",
+        "label": "Tgl. Lahir Anak",
+        "type": "date",
+        "target": "izinortu.tanggalLahirAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelaminAnak",
+        "label": "Jenis Kelamin Anak",
+        "type": "select",
+        "target": "izinortu.jenisKelaminAnak",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agamaAnak",
+        "label": "Agama Anak",
+        "type": "select",
+        "target": "izinortu.agamaAnak",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinanAnak",
+        "label": "Status Perkawinan Anak",
+        "type": "select",
+        "target": "izinortu.statusPerkawinanAnak",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaanAnak",
+        "label": "Pekerjaan Anak",
+        "type": "text",
+        "target": "izinortu.pekerjaanAnak",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "dusunAnak",
+        "label": "Dusun/Jalan Anak",
+        "type": "text",
+        "target": "izinortu.alamatAnak",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desaAnak",
+        "label": "Desa Anak",
+        "type": "text",
+        "target": "izinortu.alamatAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatanAnak",
+        "label": "Kecamatan Anak",
+        "type": "text",
+        "target": "izinortu.alamatAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupatenAnak",
+        "label": "Kabupaten Anak",
+        "type": "text",
+        "target": "izinortu.alamatAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "negaraTujuan",
+        "label": "Negara Tujuan",
+        "type": "text",
+        "target": "izinortu.negaraTujuan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaPT",
+        "label": "Nama PT",
+        "type": "text",
+        "target": "izinortu.namaPT",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "SKTM": {
+    "label": "SKTM",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "SK_BELUM_TERBIT": {
+    "label": "Belum Terbit",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKeterangan",
+        "label": "Varian",
+        "type": "select",
+        "target": "keperluan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "BELUM TERBIT",
+          "SUDAH TERBIT"
+        ]
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "GARAPAN_SAWAH": {
+    "label": "Garapan Sawah",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "lokasi",
+        "label": "Lokasi Tanah",
+        "type": "text",
+        "target": "rincianGarapans[0].lokasi",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nomorPersil",
+        "label": "No. Persil",
+        "type": "text",
+        "target": "rincianGarapans[0].nomorPersil",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "luas",
+        "label": "Luas (M2)",
+        "type": "number",
+        "target": "rincianGarapans[0].luas",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keteranganGarapan",
+        "label": "Keterangan",
+        "type": "select",
+        "target": "rincianGarapans[0].keteranganGarapan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Garap",
+          "Sewa",
+          "Hak Milik"
+        ]
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rincianTambahan",
+        "label": "Tanah Garapan Tambahan (Bidang ke-2 dst.)",
+        "type": "text",
+        "target": "rincianGarapans[1..]",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "KEMATIAN": {
+    "label": "Kematian",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalKematian",
+        "label": "Tanggal Kematian",
+        "type": "date",
+        "target": "kematian.tanggalKematian",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "hariKematian",
+        "label": "Hari Kematian",
+        "type": "text",
+        "target": "kematian.hariKematian",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pukulKematian",
+        "label": "Pukul",
+        "type": "text",
+        "target": "kematian.pukulKematian",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "penyebabKematian",
+        "label": "Penyebab Kematian",
+        "type": "select",
+        "target": "kematian.penyebabKematian",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Sakit",
+          "Usia Lanjut",
+          "Kecelakaan",
+          "Kecelakaan Lalu Lintas",
+          "Meninggal Mendadak",
+          "Jatuh",
+          "Tenggelam",
+          "Kebakaran",
+          "Akibat Bencana Alam",
+          "Lainnya"
+        ]
+      },
+      {
+        "key": "nikPelapor",
+        "label": "NIK Pelapor",
+        "type": "number",
+        "target": "kematian.nikPelapor",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "namaPelapor",
+        "label": "Nama Pelapor",
+        "type": "text",
+        "target": "kematian.namaPelapor",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "umurPelapor",
+        "label": "Tgl. Lahir Pelapor",
+        "type": "date",
+        "target": "kematian.umurPelapor",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "agamaPelapor",
+        "label": "Agama Pelapor",
+        "type": "select",
+        "target": "kematian.agamaPelapor",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "pekerjaanPelapor",
+        "label": "Pekerjaan Pelapor",
+        "type": "text",
+        "target": "kematian.pekerjaanPelapor",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "hubunganPelapor",
+        "label": "Hubungan Pelapor",
+        "type": "select",
+        "target": "kematian.hubunganPelapor",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Suami",
+          "Istri",
+          "Ayah Kandung",
+          "Ibu Kandung",
+          "Anak Kandung",
+          "Kakak Kandung",
+          "Adik Kandung",
+          "Saudara",
+          "Keponakan",
+          "Cucu",
+          "Keluarga Lainnya",
+          "Tetangga",
+          "Lainnya"
+        ]
+      },
+      {
+        "key": "dusunPelapor",
+        "label": "Dusun/Jalan Pelapor",
+        "type": "text",
+        "target": "kematian.alamatPelapor",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "desaPelapor",
+        "label": "Desa Pelapor",
+        "type": "text",
+        "target": "kematian.alamatPelapor",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecPelapor",
+        "label": "Kecamatan Pelapor",
+        "type": "text",
+        "target": "kematian.alamatPelapor",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabPelapor",
+        "label": "Kabupaten Pelapor",
+        "type": "text",
+        "target": "kematian.alamatPelapor",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": false,
+        "otomatis": true,
+        "options": [
+          "Kepala Desa"
+        ]
+      }
+    ]
+  },
+  "BEDANAMA": {
+    "label": "Beda Nama",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "data1",
+        "label": "Data Di (Warga Pertama)",
+        "type": "text",
+        "target": "dataSource1",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "data2",
+        "label": "Data Di (Warga Kedua)",
+        "type": "text",
+        "target": "dataSource2",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nik2",
+        "label": "NIK Warga Kedua",
+        "type": "number",
+        "target": "wargaKK.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama2",
+        "label": "Nama Warga Kedua",
+        "type": "text",
+        "target": "wargaKK.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir2",
+        "label": "Tempat Lahir Warga Kedua",
+        "type": "text",
+        "target": "wargaKK.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir2",
+        "label": "Tgl. Lahir Warga Kedua",
+        "type": "date",
+        "target": "wargaKK.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin2",
+        "label": "Jenis Kelamin Warga Kedua",
+        "type": "select",
+        "target": "wargaKK.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "dusun2",
+        "label": "Dusun/Jalan Warga Kedua",
+        "type": "text",
+        "target": "wargaKK.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "desa2",
+        "label": "Desa Warga Kedua",
+        "type": "text",
+        "target": "wargaKK.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan2",
+        "label": "Kecamatan Warga Kedua",
+        "type": "text",
+        "target": "wargaKK.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten2",
+        "label": "Kabupaten Warga Kedua",
+        "type": "text",
+        "target": "wargaKK.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "KENAL_LAHIR": {
+    "label": "Kenal Lahir",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuNik",
+        "label": "NIK Ibu",
+        "type": "number",
+        "target": "kenallahir.ibu.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuNama",
+        "label": "Nama Ibu",
+        "type": "text",
+        "target": "kenallahir.ibu.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuTempatLahir",
+        "label": "Tempat Lahir Ibu",
+        "type": "text",
+        "target": "kenallahir.ibu.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuTanggalLahir",
+        "label": "Tgl. Lahir Ibu",
+        "type": "date",
+        "target": "kenallahir.ibu.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuAgama",
+        "label": "Agama Ibu",
+        "type": "select",
+        "target": "kenallahir.ibu.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "ibuPekerjaan",
+        "label": "Pekerjaan Ibu",
+        "type": "text",
+        "target": "kenallahir.ibu.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuDusun",
+        "label": "Alamat (Dusun) Ibu",
+        "type": "text",
+        "target": "kenallahir.ibu.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuDesa",
+        "label": "Desa Ibu",
+        "type": "text",
+        "target": "kenallahir.ibu.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuKecamatan",
+        "label": "Kecamatan Ibu",
+        "type": "text",
+        "target": "kenallahir.ibu.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuKabupaten",
+        "label": "Kabupaten Ibu",
+        "type": "text",
+        "target": "kenallahir.ibu.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaAnak",
+        "label": "Nama Anak",
+        "type": "text",
+        "target": "kenallahir.namaAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirAnak",
+        "label": "Tempat Lahir Anak",
+        "type": "text",
+        "target": "kenallahir.tempatLahirAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirAnak",
+        "label": "Tgl. Lahir Anak",
+        "type": "date",
+        "target": "kenallahir.tanggalLahirAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "anakKe",
+        "label": "Anak Ke",
+        "type": "number",
+        "target": "kenallahir.anakKe",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "lahirDi",
+        "label": "Dilahirkan di",
+        "type": "text",
+        "target": "kenallahir.lahirDi",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusunAnak",
+        "label": "Alamat (Dusun) Anak",
+        "type": "text",
+        "target": "kenallahir.alamatLengkapAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "desaAnak",
+        "label": "Desa Anak",
+        "type": "text",
+        "target": "kenalahir.alamatLengkapAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatanAnak",
+        "label": "Kecamatan Anak",
+        "type": "text",
+        "target": "kenallahir.alamatLengkapAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupatenAnak",
+        "label": "Kabupaten Anak",
+        "type": "text",
+        "target": "kenallahir.alamatLengkapAnak",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": false,
+        "otomatis": true,
+        "options": [
+          "Kepala Desa"
+        ]
+      }
+    ]
+  },
+  "IJIN_TINGGAL": {
+    "label": "Tinggal Sementara",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusunTujuan",
+        "label": "Dusun/Jalan (Tujuan)",
+        "type": "text",
+        "target": "dusunTujuan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desaTujuan",
+        "label": "Desa (Tujuan)",
+        "type": "text",
+        "target": "desaTujuan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatanTujuan",
+        "label": "Kecamatan (Tujuan)",
+        "type": "text",
+        "target": "kecTujuan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupatenTujuan",
+        "label": "Kabupaten (Tujuan)",
+        "type": "text",
+        "target": "kabTujuan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nikPenanggungJawab",
+        "label": "NIK Penanggung Jawab",
+        "type": "number",
+        "target": "nikPenanggungJawab",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "namaPenanggungJawab",
+        "label": "Nama Penanggung Jawab",
+        "type": "text",
+        "target": "namaPenanggungJawab",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "tglLahirPenanggungJawab",
+        "label": "Tgl. Lahir Pj.",
+        "type": "date",
+        "target": "tglLahirPenanggungJawab",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "pekerjaanPenanggungJawab",
+        "label": "Pekerjaan Pj.",
+        "type": "text",
+        "target": "pekerjaanPenanggungJawab",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "AHLI_WARIS": {
+    "label": "Ahli Waris",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "nama",
+        "label": "Nama Almarhum/ah",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin Almarhum/ah",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalKematian",
+        "label": "Tanggal Kematian",
+        "type": "date",
+        "target": "kematian.tanggalKematian",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "hariKematian",
+        "label": "Hari Kematian",
+        "type": "text",
+        "target": "kematian.hariKematian",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "namaPasangan",
+        "label": "Nama Pasangan",
+        "type": "text",
+        "target": "ahliwarisdata.namaPasangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirPasangan",
+        "label": "Tempat Lahir Pasangan",
+        "type": "text",
+        "target": "ahliwarisdata.tempatLahirPasangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirPasangan",
+        "label": "Tgl. Lahir Pasangan",
+        "type": "date",
+        "target": "ahliwarisdata.tanggalLahirPasangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelaminPasangan",
+        "label": "Jenis Kelamin Pasangan",
+        "type": "select",
+        "target": "ahliwarisdata.jenisKelaminPasangan",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "dusunPasangan",
+        "label": "Alamat Pasangan (Dusun/Jalan)",
+        "type": "text",
+        "target": "ahliwarisdata.alamatPasangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desaPasangan",
+        "label": "Desa Pasangan",
+        "type": "text",
+        "target": "ahliwarisdata.alamatPasangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatanPasangan",
+        "label": "Kecamatan Pasangan",
+        "type": "text",
+        "target": "ahliwarisdata.alamatPasangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "kabupatenPasangan",
+        "label": "Kabupaten Pasangan",
+        "type": "text",
+        "target": "ahliwarisdata.alamatPasangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "anak",
+        "label": "Data Anak (Ahli Waris)",
+        "type": "list",
+        "target": "ahliwarisdata.anak[]",
+        "required": false,
+        "otomatis": false,
+        "children": [
+          {
+            "key": "nama",
+            "label": "Nama",
+            "type": "text"
+          },
+          {
+            "key": "tempatLahir",
+            "label": "Tempat Lahir",
+            "type": "text"
+          },
+          {
+            "key": "tanggalLahir",
+            "label": "Tgl. Lahir",
+            "type": "date"
+          },
+          {
+            "key": "jenisKelamin",
+            "label": "Jenis Kelamin",
+            "type": "select",
+            "options": [
+              "Laki-laki",
+              "Perempuan"
+            ]
+          },
+          {
+            "key": "alamat",
+            "label": "Alamat",
+            "type": "text"
+          },
+          {
+            "key": "nik",
+            "label": "NIK",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "key": "namaPenerimaKuasa",
+        "label": "Nama Penerima Kuasa",
+        "type": "text",
+        "target": "ahliwarisdata.namaPenerimaKuasa",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirPenerimaKuasa",
+        "label": "Tempat Lahir Penerima Kuasa",
+        "type": "text",
+        "target": "ahliwarisdata.tempatLahirPenerimaKuasa",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirPenerimaKuasa",
+        "label": "Tgl. Lahir Penerima Kuasa",
+        "type": "date",
+        "target": "ahliwarisdata.tanggalLahirPenerimaKuasa",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelaminPenerimaKuasa",
+        "label": "Jenis Kelamin Penerima Kuasa",
+        "type": "select",
+        "target": "ahliwarisdata.jenisKelaminPenerimaKuasa",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "alamatPenerimaKuasa",
+        "label": "Alamat Penerima Kuasa",
+        "type": "text",
+        "target": "ahliwarisdata.alamatPenerimaKuasa",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "PENGANTAR_ADMINDUK": {
+    "label": "Pengantar Adminduk",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "SK_PINDAH": {
+    "label": "Surat Keterangan Pindah",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "alamatTujuanPindah",
+        "label": "Alamat Tujuan",
+        "type": "text",
+        "target": "alamatTujuanPindah",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "alasanPindah",
+        "label": "Alasan Pindah",
+        "type": "text",
+        "target": "alasanPindah",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "SK_TIDAK_PUNYA_RUMAH": {
+    "label": "SK Tidak Punya Rumah",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "IZIN_KERAMAIAN": {
+    "label": "Izin Keramaian",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKegiatan",
+        "label": "Jenis Kegiatan",
+        "type": "text",
+        "target": "jenisKegiatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalKegiatan",
+        "label": "Tanggal Kegiatan",
+        "type": "date",
+        "target": "tanggalKegiatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "lokasiKegiatan",
+        "label": "Tempat Kegiatan",
+        "type": "text",
+        "target": "lokasiKegiatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "REKENING_KORAN": {
+    "label": "Permohonan Rekening Koran",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "namaKades",
+        "label": "Nama Kepala Desa",
+        "type": "text",
+        "target": "additionalData.namaPejabat",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jabatan",
+        "label": "Jabatan",
+        "type": "text",
+        "target": "additionalData.jabatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "alamatDusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "additionalData.alamatDusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "alamatRt",
+        "label": "RT",
+        "type": "text",
+        "target": "additionalData.alamatRt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "alamatRw",
+        "label": "RW",
+        "type": "text",
+        "target": "additionalData.alamatRw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "alamatDesa",
+        "label": "Desa",
+        "type": "text",
+        "target": "additionalData.alamatDesa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "alamatKecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "additionalData.alamatKecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "alamatKabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "additionalData.alamatKabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaRekening",
+        "label": "Nama Pemegang Rekening",
+        "type": "text",
+        "target": "additionalData.namaPemegangRekening",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nomorRekening",
+        "label": "Nomor Rekening",
+        "type": "number",
+        "target": "additionalData.nomorRekening",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "bank",
+        "label": "Bank",
+        "type": "text",
+        "target": "additionalData.bank",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kcp",
+        "label": "KCP",
+        "type": "text",
+        "target": "additionalData.kcp",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalMulai",
+        "label": "Periode Mulai",
+        "type": "date",
+        "target": "additionalData.periodeRekening",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalSelesai",
+        "label": "Periode Akhir",
+        "type": "date",
+        "target": "additionalData.periodeRekening",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalSurat",
+        "label": "Tanggal Surat",
+        "type": "date",
+        "target": "tanggalSurat",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      }
+    ]
+  },
+  "TEMPLATE_SURAT": {
+    "label": "Template Surat",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalSurat",
+        "label": "Tanggal Surat",
+        "type": "date",
+        "target": "tanggalSurat",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaPejabat",
+        "label": "Nama Penandatangan",
+        "type": "text",
+        "target": "additionalData.namaPejabat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "kolom_<kunci>",
+        "label": "Kolom isian template (dinamis, dari definisi template)",
+        "type": "text",
+        "target": "additionalData.nilai[<kunci>]",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      }
+    ]
+  },
+  "NTCR_N1": {
+    "label": "N1 — Surat Pengantar Nikah",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nikIstri",
+        "label": "NIK Calon Istri",
+        "type": "number",
+        "target": "ntcr.nikIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaIstri",
+        "label": "Nama Calon Istri",
+        "type": "text",
+        "target": "ntcr.namaIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirIstri",
+        "label": "Tempat Lahir Calon Istri",
+        "type": "text",
+        "target": "ntcr.tempatLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirIstri",
+        "label": "Tgl. Lahir Calon Istri",
+        "type": "date",
+        "target": "ntcr.tanggalLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kewarganegaraanIstri",
+        "label": "Kewarganegaraan Calon Istri",
+        "type": "select",
+        "target": "ntcr.kewarganegaraanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "agamaIstri",
+        "label": "Agama Calon Istri",
+        "type": "select",
+        "target": "ntcr.agamaIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "pekerjaanIstri",
+        "label": "Pekerjaan Calon Istri",
+        "type": "text",
+        "target": "ntcr.pekerjaanIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "statusPerkawinanIstri",
+        "label": "Status Kawin Calon Istri",
+        "type": "select",
+        "target": "ntcr.statusPerkawinanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "alamatIstri",
+        "label": "Alamat Calon Istri",
+        "type": "text",
+        "target": "ntcr.alamatIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "pihakDiterangkanN1",
+        "label": "Pihak yang diterangkan pada blanko N1",
+        "type": "select",
+        "target": "ntcr.pihakDiterangkanN1",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Suami",
+          "Istri"
+        ]
+      },
+      {
+        "key": "ayahCalonNama",
+        "label": "Nama Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonBinBinti",
+        "label": "Bin/Binti Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.binBinti",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonNik",
+        "label": "NIK Ayah Calon Suami",
+        "type": "number",
+        "target": "ntcr.AyahCalonSuami.nik",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonTempatLahir",
+        "label": "Tempat Lahir Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.tempatLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonTanggalLahir",
+        "label": "Tgl. Lahir Ayah Calon Suami",
+        "type": "date",
+        "target": "ntcr.AyahCalonSuami.tanggalLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonKewarganegaraan",
+        "label": "Kewarganegaraan Ayah Calon Suami",
+        "type": "select",
+        "target": "ntcr.AyahCalonSuami.kewarganegaraan",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "ayahCalonAgama",
+        "label": "Agama Ayah Calon Suami",
+        "type": "select",
+        "target": "ntcr.AyahCalonSuami.agama",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "ayahCalonPekerjaan",
+        "label": "Pekerjaan Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.pekerjaan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonAlamat",
+        "label": "Alamat Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.alamat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonNama",
+        "label": "Nama Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonBinBinti",
+        "label": "Bin/Binti Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.binBinti",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonNik",
+        "label": "NIK Ibu Calon Suami",
+        "type": "number",
+        "target": "ntcr.IbuCalonSuami.nik",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonTempatLahir",
+        "label": "Tempat Lahir Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.tempatLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonTanggalLahir",
+        "label": "Tgl. Lahir Ibu Calon Suami",
+        "type": "date",
+        "target": "ntcr.IbuCalonSuami.tanggalLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonKewarganegaraan",
+        "label": "Kewarganegaraan Ibu Calon Suami",
+        "type": "select",
+        "target": "ntcr.IbuCalonSuami.kewarganegaraan",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "ibuCalonAgama",
+        "label": "Agama Ibu Calon Suami",
+        "type": "select",
+        "target": "ntcr.IbuCalonSuami.agama",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "ibuCalonPekerjaan",
+        "label": "Pekerjaan Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.pekerjaan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonAlamat",
+        "label": "Alamat Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.alamat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriNama",
+        "label": "Nama Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriBinBinti",
+        "label": "Bin/Binti Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.binBinti",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriNik",
+        "label": "NIK Ayah Calon Istri",
+        "type": "number",
+        "target": "ntcr.AyahCalonIstri.nik",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriTempatLahir",
+        "label": "Tempat Lahir Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.tempatLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriTanggalLahir",
+        "label": "Tgl. Lahir Ayah Calon Istri",
+        "type": "date",
+        "target": "ntcr.AyahCalonIstri.tanggalLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriKewarganegaraan",
+        "label": "Kewarganegaraan Ayah Calon Istri",
+        "type": "select",
+        "target": "ntcr.AyahCalonIstri.kewarganegaraan",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "ayahCalonIstriAgama",
+        "label": "Agama Ayah Calon Istri",
+        "type": "select",
+        "target": "ntcr.AyahCalonIstri.agama",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "ayahCalonIstriPekerjaan",
+        "label": "Pekerjaan Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.pekerjaan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriAlamat",
+        "label": "Alamat Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.alamat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriNama",
+        "label": "Nama Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriBinBinti",
+        "label": "Bin/Binti Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.binBinti",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriNik",
+        "label": "NIK Ibu Calon Istri",
+        "type": "number",
+        "target": "ntcr.IbuCalonIstri.nik",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriTempatLahir",
+        "label": "Tempat Lahir Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.tempatLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriTanggalLahir",
+        "label": "Tgl. Lahir Ibu Calon Istri",
+        "type": "date",
+        "target": "ntcr.IbuCalonIstri.tanggalLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriKewarganegaraan",
+        "label": "Kewarganegaraan Ibu Calon Istri",
+        "type": "select",
+        "target": "ntcr.IbuCalonIstri.kewarganegaraan",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "ibuCalonIstriAgama",
+        "label": "Agama Ibu Calon Istri",
+        "type": "select",
+        "target": "ntcr.IbuCalonIstri.agama",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "ibuCalonIstriPekerjaan",
+        "label": "Pekerjaan Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.pekerjaan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriAlamat",
+        "label": "Alamat Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.alamat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "NTCR_N2": {
+    "label": "N2 — Permohonan Kehendak Nikah",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nikIstri",
+        "label": "NIK Calon Istri",
+        "type": "number",
+        "target": "ntcr.nikIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaIstri",
+        "label": "Nama Calon Istri",
+        "type": "text",
+        "target": "ntcr.namaIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirIstri",
+        "label": "Tempat Lahir Calon Istri",
+        "type": "text",
+        "target": "ntcr.tempatLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirIstri",
+        "label": "Tgl. Lahir Calon Istri",
+        "type": "date",
+        "target": "ntcr.tanggalLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kewarganegaraanIstri",
+        "label": "Kewarganegaraan Calon Istri",
+        "type": "select",
+        "target": "ntcr.kewarganegaraanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "agamaIstri",
+        "label": "Agama Calon Istri",
+        "type": "select",
+        "target": "ntcr.agamaIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "pekerjaanIstri",
+        "label": "Pekerjaan Calon Istri",
+        "type": "text",
+        "target": "ntcr.pekerjaanIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "statusPerkawinanIstri",
+        "label": "Status Kawin Calon Istri",
+        "type": "select",
+        "target": "ntcr.statusPerkawinanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "alamatIstri",
+        "label": "Alamat Calon Istri",
+        "type": "text",
+        "target": "ntcr.alamatIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "tujuanKua",
+        "label": "Kepada KUA / PPN Luar Negeri di",
+        "type": "text",
+        "target": "ntcr.tujuanKua",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "hariTanggalJamAkad",
+        "label": "Hari / tanggal / jam akad nikah",
+        "type": "text",
+        "target": "ntcr.hariTanggalJamAkad",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatAkad",
+        "label": "Tempat akad nikah",
+        "type": "text",
+        "target": "ntcr.tempatAkad",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalDiterima",
+        "label": "Diterima tanggal (diisi KUA)",
+        "type": "date",
+        "target": "ntcr.tanggalDiterima",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      }
+    ]
+  },
+  "NTCR_N3": {
+    "label": "N3 — Permohonan Pencatatan Isbat",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nikIstri",
+        "label": "NIK Calon Istri",
+        "type": "number",
+        "target": "ntcr.nikIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaIstri",
+        "label": "Nama Calon Istri",
+        "type": "text",
+        "target": "ntcr.namaIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirIstri",
+        "label": "Tempat Lahir Calon Istri",
+        "type": "text",
+        "target": "ntcr.tempatLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirIstri",
+        "label": "Tgl. Lahir Calon Istri",
+        "type": "date",
+        "target": "ntcr.tanggalLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kewarganegaraanIstri",
+        "label": "Kewarganegaraan Calon Istri",
+        "type": "select",
+        "target": "ntcr.kewarganegaraanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "agamaIstri",
+        "label": "Agama Calon Istri",
+        "type": "select",
+        "target": "ntcr.agamaIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "pekerjaanIstri",
+        "label": "Pekerjaan Calon Istri",
+        "type": "text",
+        "target": "ntcr.pekerjaanIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "statusPerkawinanIstri",
+        "label": "Status Kawin Calon Istri",
+        "type": "select",
+        "target": "ntcr.statusPerkawinanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "alamatIstri",
+        "label": "Alamat Calon Istri",
+        "type": "text",
+        "target": "ntcr.alamatIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "tujuanKua",
+        "label": "Kepada KUA / PPN Luar Negeri di",
+        "type": "text",
+        "target": "ntcr.tujuanKua",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalPenetapanIsbat",
+        "label": "Tanggal penetapan isbat",
+        "type": "date",
+        "target": "ntcr.tanggalPenetapanIsbat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "pengadilanAgama",
+        "label": "Pengadilan Agama",
+        "type": "text",
+        "target": "ntcr.pengadilanAgama",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalDiterima",
+        "label": "Diterima tanggal (diisi KUA)",
+        "type": "date",
+        "target": "ntcr.tanggalDiterima",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      }
+    ]
+  },
+  "NTCR_N4": {
+    "label": "N4 — Persetujuan Calon Pengantin",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nikIstri",
+        "label": "NIK Calon Istri",
+        "type": "number",
+        "target": "ntcr.nikIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaIstri",
+        "label": "Nama Calon Istri",
+        "type": "text",
+        "target": "ntcr.namaIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirIstri",
+        "label": "Tempat Lahir Calon Istri",
+        "type": "text",
+        "target": "ntcr.tempatLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirIstri",
+        "label": "Tgl. Lahir Calon Istri",
+        "type": "date",
+        "target": "ntcr.tanggalLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kewarganegaraanIstri",
+        "label": "Kewarganegaraan Calon Istri",
+        "type": "select",
+        "target": "ntcr.kewarganegaraanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "agamaIstri",
+        "label": "Agama Calon Istri",
+        "type": "select",
+        "target": "ntcr.agamaIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "pekerjaanIstri",
+        "label": "Pekerjaan Calon Istri",
+        "type": "text",
+        "target": "ntcr.pekerjaanIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "statusPerkawinanIstri",
+        "label": "Status Kawin Calon Istri",
+        "type": "select",
+        "target": "ntcr.statusPerkawinanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "alamatIstri",
+        "label": "Alamat Calon Istri",
+        "type": "text",
+        "target": "ntcr.alamatIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      }
+    ]
+  },
+  "NTCR_N5": {
+    "label": "N5 — Surat Izin Orang Tua",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nikIstri",
+        "label": "NIK Calon Istri",
+        "type": "number",
+        "target": "ntcr.nikIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaIstri",
+        "label": "Nama Calon Istri",
+        "type": "text",
+        "target": "ntcr.namaIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirIstri",
+        "label": "Tempat Lahir Calon Istri",
+        "type": "text",
+        "target": "ntcr.tempatLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirIstri",
+        "label": "Tgl. Lahir Calon Istri",
+        "type": "date",
+        "target": "ntcr.tanggalLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kewarganegaraanIstri",
+        "label": "Kewarganegaraan Calon Istri",
+        "type": "select",
+        "target": "ntcr.kewarganegaraanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "agamaIstri",
+        "label": "Agama Calon Istri",
+        "type": "select",
+        "target": "ntcr.agamaIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "pekerjaanIstri",
+        "label": "Pekerjaan Calon Istri",
+        "type": "text",
+        "target": "ntcr.pekerjaanIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "statusPerkawinanIstri",
+        "label": "Status Kawin Calon Istri",
+        "type": "select",
+        "target": "ntcr.statusPerkawinanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "alamatIstri",
+        "label": "Alamat Calon Istri",
+        "type": "text",
+        "target": "ntcr.alamatIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "pihakAnakIzinOrtu",
+        "label": "Anak kami yang diberi izin pada blanko N5",
+        "type": "select",
+        "target": "ntcr.pihakAnakIzinOrtu",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Suami",
+          "Istri"
+        ]
+      },
+      {
+        "key": "ayahCalonNama",
+        "label": "Nama Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonBinBinti",
+        "label": "Bin/Binti Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.binBinti",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonNik",
+        "label": "NIK Ayah Calon Suami",
+        "type": "number",
+        "target": "ntcr.AyahCalonSuami.nik",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonTempatLahir",
+        "label": "Tempat Lahir Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.tempatLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonTanggalLahir",
+        "label": "Tgl. Lahir Ayah Calon Suami",
+        "type": "date",
+        "target": "ntcr.AyahCalonSuami.tanggalLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonKewarganegaraan",
+        "label": "Kewarganegaraan Ayah Calon Suami",
+        "type": "select",
+        "target": "ntcr.AyahCalonSuami.kewarganegaraan",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "ayahCalonAgama",
+        "label": "Agama Ayah Calon Suami",
+        "type": "select",
+        "target": "ntcr.AyahCalonSuami.agama",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "ayahCalonPekerjaan",
+        "label": "Pekerjaan Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.pekerjaan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonAlamat",
+        "label": "Alamat Ayah Calon Suami",
+        "type": "text",
+        "target": "ntcr.AyahCalonSuami.alamat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonNama",
+        "label": "Nama Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonBinBinti",
+        "label": "Bin/Binti Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.binBinti",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonNik",
+        "label": "NIK Ibu Calon Suami",
+        "type": "number",
+        "target": "ntcr.IbuCalonSuami.nik",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonTempatLahir",
+        "label": "Tempat Lahir Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.tempatLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonTanggalLahir",
+        "label": "Tgl. Lahir Ibu Calon Suami",
+        "type": "date",
+        "target": "ntcr.IbuCalonSuami.tanggalLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonKewarganegaraan",
+        "label": "Kewarganegaraan Ibu Calon Suami",
+        "type": "select",
+        "target": "ntcr.IbuCalonSuami.kewarganegaraan",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "ibuCalonAgama",
+        "label": "Agama Ibu Calon Suami",
+        "type": "select",
+        "target": "ntcr.IbuCalonSuami.agama",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "ibuCalonPekerjaan",
+        "label": "Pekerjaan Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.pekerjaan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonAlamat",
+        "label": "Alamat Ibu Calon Suami",
+        "type": "text",
+        "target": "ntcr.IbuCalonSuami.alamat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriNama",
+        "label": "Nama Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriBinBinti",
+        "label": "Bin/Binti Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.binBinti",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriNik",
+        "label": "NIK Ayah Calon Istri",
+        "type": "number",
+        "target": "ntcr.AyahCalonIstri.nik",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriTempatLahir",
+        "label": "Tempat Lahir Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.tempatLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriTanggalLahir",
+        "label": "Tgl. Lahir Ayah Calon Istri",
+        "type": "date",
+        "target": "ntcr.AyahCalonIstri.tanggalLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriKewarganegaraan",
+        "label": "Kewarganegaraan Ayah Calon Istri",
+        "type": "select",
+        "target": "ntcr.AyahCalonIstri.kewarganegaraan",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "ayahCalonIstriAgama",
+        "label": "Agama Ayah Calon Istri",
+        "type": "select",
+        "target": "ntcr.AyahCalonIstri.agama",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "ayahCalonIstriPekerjaan",
+        "label": "Pekerjaan Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.pekerjaan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ayahCalonIstriAlamat",
+        "label": "Alamat Ayah Calon Istri",
+        "type": "text",
+        "target": "ntcr.AyahCalonIstri.alamat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriNama",
+        "label": "Nama Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriBinBinti",
+        "label": "Bin/Binti Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.binBinti",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriNik",
+        "label": "NIK Ibu Calon Istri",
+        "type": "number",
+        "target": "ntcr.IbuCalonIstri.nik",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriTempatLahir",
+        "label": "Tempat Lahir Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.tempatLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriTanggalLahir",
+        "label": "Tgl. Lahir Ibu Calon Istri",
+        "type": "date",
+        "target": "ntcr.IbuCalonIstri.tanggalLahir",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriKewarganegaraan",
+        "label": "Kewarganegaraan Ibu Calon Istri",
+        "type": "select",
+        "target": "ntcr.IbuCalonIstri.kewarganegaraan",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "ibuCalonIstriAgama",
+        "label": "Agama Ibu Calon Istri",
+        "type": "select",
+        "target": "ntcr.IbuCalonIstri.agama",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "ibuCalonIstriPekerjaan",
+        "label": "Pekerjaan Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.pekerjaan",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "ibuCalonIstriAlamat",
+        "label": "Alamat Ibu Calon Istri",
+        "type": "text",
+        "target": "ntcr.IbuCalonIstri.alamat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      }
+    ]
+  },
+  "NTCR_N6": {
+    "label": "N6 — Keterangan Kematian Suami/Istri",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nikIstri",
+        "label": "NIK Calon Istri",
+        "type": "number",
+        "target": "ntcr.nikIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "namaIstri",
+        "label": "Nama Calon Istri",
+        "type": "text",
+        "target": "ntcr.namaIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirIstri",
+        "label": "Tempat Lahir Calon Istri",
+        "type": "text",
+        "target": "ntcr.tempatLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirIstri",
+        "label": "Tgl. Lahir Calon Istri",
+        "type": "date",
+        "target": "ntcr.tanggalLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kewarganegaraanIstri",
+        "label": "Kewarganegaraan Calon Istri",
+        "type": "select",
+        "target": "ntcr.kewarganegaraanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "agamaIstri",
+        "label": "Agama Calon Istri",
+        "type": "select",
+        "target": "ntcr.agamaIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "pekerjaanIstri",
+        "label": "Pekerjaan Calon Istri",
+        "type": "text",
+        "target": "ntcr.pekerjaanIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "statusPerkawinanIstri",
+        "label": "Status Kawin Calon Istri",
+        "type": "select",
+        "target": "ntcr.statusPerkawinanIstri",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "alamatIstri",
+        "label": "Alamat Calon Istri",
+        "type": "text",
+        "target": "ntcr.alamatIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "pihakMeninggal",
+        "label": "Pihak yang meninggal dunia",
+        "type": "select",
+        "target": "ntcr.pihakMeninggal",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Suami",
+          "Istri"
+        ]
+      },
+      {
+        "key": "tanggalMeninggal",
+        "label": "Tanggal meninggal dunia",
+        "type": "date",
+        "target": "ntcr.tanggalMeninggal",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatMeninggal",
+        "label": "Tempat meninggal dunia",
+        "type": "text",
+        "target": "ntcr.tempatMeninggal",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  },
+  "NTCR_N8": {
+    "label": "N8 — Surat Numpang Nikah (Numpang Kawin)",
+    "fields": [
+      {
+        "key": "nomorSurat",
+        "label": "Nomor Surat",
+        "type": "text",
+        "target": "nomorSurat",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "nik",
+        "label": "NIK",
+        "type": "number",
+        "target": "warga.nik",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nama",
+        "label": "Nama",
+        "type": "text",
+        "target": "warga.nama",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "jenisKelamin",
+        "label": "Jenis Kelamin",
+        "type": "select",
+        "target": "warga.jenisKelamin",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Laki-laki",
+          "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "pekerjaan",
+        "label": "Pekerjaan",
+        "type": "text",
+        "target": "warga.pekerjaan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "dusun",
+        "label": "Dusun/Jalan",
+        "type": "text",
+        "target": "warga.dusun",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "rt",
+        "label": "RT",
+        "type": "text",
+        "target": "warga.rt",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "rw",
+        "label": "RW",
+        "type": "text",
+        "target": "warga.rw",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "desa",
+        "label": "Desa",
+        "type": "text",
+        "target": "warga.desa",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatan",
+        "label": "Kecamatan",
+        "type": "text",
+        "target": "warga.kecamatan",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupaten",
+        "label": "Kabupaten",
+        "type": "text",
+        "target": "warga.kabupaten",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "nikIstri",
+        "label": "NIK Calon Istri",
+        "type": "number",
+        "target": "ntcr.nikIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "namaIstri",
+        "label": "Nama Calon Istri",
+        "type": "text",
+        "target": "ntcr.namaIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tempatLahirIstri",
+        "label": "Tempat Lahir Calon Istri",
+        "type": "text",
+        "target": "ntcr.tempatLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahirIstri",
+        "label": "Tgl. Lahir Calon Istri",
+        "type": "date",
+        "target": "ntcr.tanggalLahirIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kewarganegaraanIstri",
+        "label": "Kewarganegaraan Calon Istri",
+        "type": "select",
+        "target": "ntcr.kewarganegaraanIstri",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "WNI",
+          "WNA"
+        ]
+      },
+      {
+        "key": "agamaIstri",
+        "label": "Agama Calon Istri",
+        "type": "select",
+        "target": "ntcr.agamaIstri",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "pekerjaanIstri",
+        "label": "Pekerjaan Calon Istri",
+        "type": "text",
+        "target": "ntcr.pekerjaanIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "statusPerkawinanIstri",
+        "label": "Status Kawin Calon Istri",
+        "type": "select",
+        "target": "ntcr.statusPerkawinanIstri",
+        "required": false,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
+        "key": "alamatIstri",
+        "label": "Alamat Calon Istri",
+        "type": "text",
+        "target": "ntcr.alamatIstri",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "desaNumpang",
+        "label": "Desa/Kelurahan tempat numpang nikah",
+        "type": "text",
+        "target": "ntcr.desaNumpang",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatanNumpang",
+        "label": "Kecamatan tempat numpang nikah",
+        "type": "text",
+        "target": "ntcr.kecamatanNumpang",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kabupatenNumpang",
+        "label": "Kabupaten/Kota tempat numpang nikah",
+        "type": "text",
+        "target": "ntcr.kabupatenNumpang",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "kecamatanIstri",
+        "label": "Kecamatan tempat tinggal calon istri",
+        "type": "text",
+        "target": "ntcr.kecamatanIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "kabupatenIstri",
+        "label": "Kabupaten/Kota tempat tinggal calon istri",
+        "type": "text",
+        "target": "ntcr.kabupatenIstri",
+        "required": false,
+        "otomatis": false
+      },
+      {
+        "key": "keterangan",
+        "label": "Keterangan",
+        "type": "text",
+        "target": "keterangan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "keperluan",
+        "label": "Keperluan",
+        "type": "text",
+        "target": "keperluan",
+        "required": false,
+        "otomatis": true
+      },
+      {
+        "key": "pejabatPenandatangan",
+        "label": "Pejabat Penandatangan",
+        "type": "select",
+        "target": "pejabatPenandatangan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Kepala Desa",
+          "Sekretaris Desa"
+        ]
+      }
+    ]
+  }
+}

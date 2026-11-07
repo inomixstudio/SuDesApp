@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#00897B</color>
+
+    <color name="accent">#00897B</color>
+    <color name="accent_dark">#00695C</color>
+    <color name="accent_muda">#E0F2F0</color>
+    <color name="page">#F2F5F4</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="teks">#1B2A26</color>
+    <color name="teks_redup">#5C6B66</color>
+    <color name="garis">#D8E0DD</color>
 </resources>
