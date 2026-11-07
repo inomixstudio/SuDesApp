@@ -73,12 +73,11 @@
 
     <!-- Sinkron / pasang perangkat -->
     <string name="label_pasang_perangkat">Pasang Perangkat</string>
-    <string name="petunjuk_pasang">Buka halaman Sinkron Android di komputer desa, lalu pindai kode QR di sana — atau ketik kode 4 angka yang tampil di halaman itu.</string>
+    <string name="petunjuk_pasang">Buka halaman Sinkron Android di komputer desa, lalu pindai kode QR di sana. Kamera terbuka sendiri — tidak ada yang perlu diketik.</string>
     <string name="pindai_qr">Pindai Kode QR</string>
-    <string name="atau_ketik_kode">atau ketik kode 4 angka dari aplikasi desktop</string>
-    <string name="hint_kode">••••</string>
-    <string name="hubungkan">Hubungkan</string>
-    <string name="status_pasang_awal">Pindai kode QR, atau ketik kode 4 angka yang tampil di halaman Sinkron Android pada komputer desa.</string>
+    <string name="status_pasang_awal">Kamera akan terbuka sendiri.\nArahkan ke kode QR di halaman Sinkron Android pada komputer desa.</string>
+    <string name="status_menghubungkan">Menghubungkan…</string>
+    <string name="status_batal_pindai">Pindaian dibatalkan. Ketuk tombol di bawah untuk mencoba lagi.</string>
 
     <!-- Status dan pesan -->
     <string name="sedang_membuat_pdf">Membuat PDF…</string>

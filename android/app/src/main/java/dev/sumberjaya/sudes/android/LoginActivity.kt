@@ -3,7 +3,6 @@ package dev.sumberjaya.sudes.android
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -14,17 +13,22 @@ import kotlinx.coroutines.launch
 /**
  * Layar sambung perangkat — satu-satunya yang membuka aplikasi.
  *
- * Operator cukup memindai QR dari halaman Sinkron Android di desktop, atau
- * mengetik kode verifikasi 4 angka yang tampil di sana. URL, kunci publik,
- * surel, dan kata sandi perangkat tidak pernah diketik di sini.
+ * Cukup memindai kode QR dari halaman Sinkron Android di desktop. Kamera
+ * langsung terbuka saat layar ini muncul, jadi tidak ada kolom yang perlu
+ * diketik: URL, kunci, surel, dan kata sandi perangkat semuanya dari QR.
  */
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var inputKode: EditText
     private lateinit var status: TextView
+    private var sudahMencoba = false
 
     private val pindai = registerForActivityResult(ScanContract()) { hasil ->
-        val teks = hasil.contents ?: return@registerForActivityResult
+        val teks = hasil.contents
+        if (teks.isNullOrBlank()) {
+            // Operator menutup pemindai — beri jalan keluar, jangan macet.
+            status.text = getString(R.string.status_batal_pindai)
+            return@registerForActivityResult
+        }
         dariQr(teks)
     }
 
@@ -38,11 +42,18 @@ class LoginActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_login)
-        inputKode = findViewById(R.id.input_kode)
         status = findViewById(R.id.status_text)
-
         findViewById<Button>(R.id.btn_pindai).setOnClickListener { mulaiPindai() }
-        findViewById<Button>(R.id.btn_hubungkan).setOnClickListener { hubungkan() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Pindai otomatis saat layar muncul, tetapi hanya sekali: setelah
+        // operator menutup pemindai tanpa memindai, tombol tersedia.
+        if (!sudahMencoba && !SupabaseSesi.ambil(this).masuk) {
+            sudahMencoba = true
+            mulaiPindai()
+        }
     }
 
     private fun mulaiPindai() {
@@ -60,21 +71,14 @@ class LoginActivity : AppCompatActivity() {
         val baris = payload.lines().map { it.trim() }.filter { it.isNotEmpty() }
         val kode = baris.lastOrNull { it.length == 4 && it.all { c -> c.isDigit() } }
         if (kode == null) {
-            status.text = "Kode QR tidak terbaca. Coba pindai ulang, atau ketik kode 4 angka."
+            status.text = "Kode QR tidak terbaca. Coba pindai ulang."
             return
         }
         hubungkan(kode)
     }
 
-    private fun hubungkan(otomatis: String? = null) {
-        val kode = (otomatis ?: inputKode.text.toString()).trim()
-        if (kode.length != 4 || !kode.all { it.isDigit() }) {
-            status.text = "Kode harus 4 angka. Lihat kode di aplikasi desktop."
-            return
-        }
-
-        status.text = "Menghubungkan…"
-        findViewById<Button>(R.id.btn_hubungkan).isEnabled = false
+    private fun hubungkan(kode: String) {
+        status.text = getString(R.string.status_menghubungkan)
         lifecycleScope.launch {
             val sesi = try {
                 SupabaseSesi.klien(this@LoginActivity).pakaiKode(kode)
@@ -83,8 +87,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
             if (sesi == null || !sesi.masuk) {
-                status.text = "Kode tidak dikenal atau sudah kedaluwarsa. Minta kode baru di aplikasi desktop."
-                findViewById<Button>(R.id.btn_hubungkan).isEnabled = true
+                status.text = "Sambungan gagal. Periksa kode QR, lalu pindai ulang."
                 return@launch
             }
 
