@@ -2803,7 +2803,8 @@
       {
         "kustom": "Blok tanda tangan formulir (2 kolom, padding atas 30pt): kolom kiri kosong; kolom kanan rata tengah berisi \"{namaDesa}, {tanggal}\", jabatan Kepala Desa/Lurah (huruf besar), ruang 45pt, nama Kepala Desa tebal, dan \"NIP {nip}\" bila kelurahan."
       }
-    ]
+    ],
+    "halamanPenuh": true
   },
   "BEDANAMA": {
     "label": "Beda Nama",
@@ -4616,7 +4617,8 @@
       {
         "kustom": "Blok 2 kolom (padding atas 20pt): kolom kiri \"Mengetahui;\" / jabatan Kepala Desa / ruang / nama Kepala Desa tebal / \"NIP {nip}\" bila kelurahan; kolom kanan \"Menguatkan;\" / \"Nomor : ...................................\" / \"Camat {kecamatan}\" / ruang / nama Camat tebal / GolCamat / \"NIP. {NipCamat}\"."
       }
-    ]
+    ],
+    "halamanPenuh": true
   },
   "PENGANTAR_ADMINDUK": {
     "label": "Pengantar Adminduk",
@@ -5873,7 +5875,8 @@
       {
         "kustom": "Blok tanda tangan di sisi kanan (kolom 250pt): jabatan tebal rata tengah, ruang tanda tangan, nama pejabat tebal rata tengah, \"NIP {nip}\" bila kelurahan."
       }
-    ]
+    ],
+    "halamanPenuh": true
   },
   "TEMPLATE_SURAT": {
     "label": "Template Surat",
@@ -6716,7 +6719,8 @@
       {
         "kustom": "Blok tanda tangan di kolom KANAN (tabel 2 kolom, kolom kiri kosong): baris \"{namaDesa}, {tanggal}\" rata tengah, jabatan rata tengah (\"Kepala Desa\"/\"Lurah\", atau \"A/N Kepala Desa {namaDesa}\\nSekretaris Desa\" bila PejabatPenandatangan = \"Sekretaris Desa\"), ruang tanda tangan, nama pejabat rata tengah tebal, dan \"NIP {nip}\" bila kelurahan."
       }
-    ]
+    ],
+    "halamanPenuh": true
   },
   "NTCR_N2": {
     "label": "N2 — Permohonan Kehendak Nikah",
@@ -7088,7 +7092,8 @@
       {
         "kustom": "Blok 2 kolom (padding atas 20pt): kolom kiri \"Diterima Tanggal {tanggal diterima}\" (bila kosong \"Diterima Tanggal ...............\"), \"Yang menerima,\", \"Kepala KUA/PPN Luar Negeri\", ruang tanda tangan, \"...................................\"; kolom kanan 3 baris kosong lalu \"Wassalam,\", \"Pemohon\", ruang tanda tangan, nama pemohon (calon suami) tebal rata tengah."
       }
-    ]
+    ],
+    "halamanPenuh": true
   },
   "NTCR_N3": {
     "label": "N3 — Permohonan Pencatatan Isbat",
@@ -7458,7 +7463,8 @@
       {
         "kustom": "Blok 2 kolom (padding atas 20pt): kolom kiri \"Diterima Tanggal {tanggal diterima}\" (bila kosong \"Diterima Tanggal ...............\"), \"Yang menerima,\", \"Kepala KUA/PPN Luar Negeri\", ruang tanda tangan, \"...................................\"; kolom kanan 3 baris kosong lalu \"Wassalam,\", \"Pemohon\", ruang tanda tangan, nama pemohon (calon suami) tebal rata tengah."
       }
-    ]
+    ],
+    "halamanPenuh": true
   },
   "NTCR_N4": {
     "label": "N4 — Persetujuan Calon Pengantin",
@@ -7833,7 +7839,8 @@
       {
         "kustom": "Blok 2 kolom (padding atas 10pt): kolom kiri 2 baris kosong lalu \"Calon Suami\" rata tengah, ruang tanda tangan, nama calon suami tebal rata tengah; kolom kanan \"{namaDesa}, {tanggal}\" rata tengah, \"Calon Istri\" rata tengah, ruang tanda tangan, nama calon istri tebal rata tengah."
       }
-    ]
+    ],
+    "halamanPenuh": true
   },
   "NTCR_N5": {
     "label": "N5 — Surat Izin Orang Tua",
@@ -8641,7 +8648,8 @@
       {
         "kustom": "Blok 2 kolom (padding atas 10pt): kolom kiri 2 baris kosong lalu \"Ayah/wali/pengampu\" rata tengah, ruang tanda tangan, nama ayah/wali tebal rata tengah; kolom kanan \"{namaDesa}, {tanggal}\" rata tengah, \"Ibu/wali/pengampu\" rata tengah, ruang tanda tangan, nama ibu/wali tebal rata tengah."
       }
-    ]
+    ],
+    "halamanPenuh": true
   },
   "NTCR_N6": {
     "label": "N6 — Keterangan Kematian Suami/Istri",
@@ -9068,7 +9076,8 @@
       {
         "kustom": "Blok tanda tangan di kolom KANAN (tabel 2 kolom, kolom kiri kosong): baris \"{namaDesa}, {tanggal}\" rata tengah, jabatan rata tengah (\"Kepala Desa\"/\"Lurah\", atau \"A/N Kepala Desa {namaDesa}\\nSekretaris Desa\" bila PejabatPenandatangan = \"Sekretaris Desa\"), ruang tanda tangan, nama pejabat rata tengah tebal, dan \"NIP {nip}\" bila kelurahan."
       }
-    ]
+    ],
+    "halamanPenuh": true
   },
   "NTCR_N8": {
     "label": "N8 — Surat Numpang Nikah (Numpang Kawin)",
@@ -9514,6 +9523,7 @@
       {
         "kustom": "Blok tanda tangan di kolom KANAN (tabel 2 kolom, kolom kiri kosong): baris \"{namaDesa}, {tanggal}\" rata tengah, jabatan rata tengah (\"Kepala Desa\"/\"Lurah\", atau \"A/N Kepala Desa {namaDesa}\\nSekretaris Desa\" bila PejabatPenandatangan = \"Sekretaris Desa\"), ruang tanda tangan, nama pejabat rata tengah tebal, dan \"NIP {nip}\" bila kelurahan."
       }
-    ]
+    ],
+    "halamanPenuh": true
   }
 }

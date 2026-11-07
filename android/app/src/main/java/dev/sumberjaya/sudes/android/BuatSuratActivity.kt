@@ -227,8 +227,21 @@ class BuatSuratActivity : AppCompatActivity() {
             fields.put(b.key, nilaiBidang(b.key))
         }
 
+        // Kunci badan surat diambil dari 'target' skema (mis. warga.nama,
+        // instansi.namaInstansi, ntcr.namaIstri) supaya semua prefiks terisi —
+        // bukan hanya warga.*. Nama prefiks skema desktop berbeda ejaannya
+        // dengan yang dipakai templat badan, jadi diberi jembatan di bawah.
         val nilai = mutableMapOf<String, String>()
-        for (kunci in fields.keys()) nilai["warga.$kunci"] = fields.optString(kunci, "")
+        for (b in jenis.fieldsInput) {
+            if (b.key.equals("nomorSurat", ignoreCase = true)) continue
+            if (b.target.isNotBlank()) nilai[b.target] = teksNilai(b)
+        }
+        for ((ditulis, dibaca) in ALIAS_KUNCI) {
+            val prefiks = "$dibaca."
+            for ((k, v) in nilai.toList()) {
+                if (k.startsWith(prefiks)) nilai[ditulis + k.removePrefix(prefiks)] = v
+            }
+        }
 
         nilai["keterangan"] = listOf("keperluan", "keterangan", "keteranganTambahan")
             .firstNotNullOfOrNull { k -> teksBidang(k).ifBlank { null } }
@@ -365,5 +378,19 @@ class BuatSuratActivity : AppCompatActivity() {
         const val EXTRA_GROUPS = "grup"
         const val GROUP_SURAT = "surat"
         const val GROUP_NTCR = "ntcr"
+
+        /**
+         * Jembatan ejaan antara templat badan (ditulis) dan prefiks 'target'
+         * skema (dibaca). Nilai dari target ikut dipublikasikan di bawah nama
+         * yang dipakai templat, supaya kolom tidak tercetak kosong.
+         */
+        private val ALIAS_KUNCI = mapOf(
+            "wargaKk" to "wargaKK",
+            "ahliwaris" to "ahliwarisdata",
+            "ayah" to "kenalahir.ayah",
+            "ibu" to "kenalahir.ibu",
+            "anak" to "kenallahir.anak",
+            "rekeningkoran" to "additionalData",
+        )
     }
 }
