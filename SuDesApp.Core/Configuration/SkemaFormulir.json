@@ -240,7 +240,8 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
-    ]
+    ],
+    "keteranganBawaan": "Adalah benar warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan sampai saat ini masih berdomisili di desa kami dan belum menikah."
   },
   "DOMISILI_WARGA": {
     "label": "Domisili Warga",
@@ -484,7 +485,8 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
-    ]
+    ],
+    "keteranganBawaan": "Benar bahwa nama tersebut di atas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan sampai saat ini masih berdomisili di desa kami."
   },
   "INSTANSI": {
     "label": "Domisili Instansi",
@@ -908,7 +910,8 @@
         "jarakAtas": 10,
         "jarakBawah": 12
       }
-    ]
+    ],
+    "keteranganBawaan": "Adalah benar warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan menurut sepengetahuan kami orang tersebut mempunyai usaha:"
   },
   "PENGANTAR_SKCK": {
     "label": "Pengantar SKCK",
@@ -1190,7 +1193,8 @@
         "jarakAtas": 5,
         "jarakBawah": 10
       }
-    ]
+    ],
+    "keteranganBawaan": "MELAMAR PEKERJAAN"
   },
   "IZIN_ORTU": {
     "label": "Izin Suami / Orang Tua",
@@ -1825,7 +1829,8 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
-    ]
+    ],
+    "keteranganBawaan": "Benar nama tersebut di atas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan menurut sepengetahuan kami orang tersebut di atas tergolong keluarga ekonomi tidak mampu."
   },
   "SK_BELUM_TERBIT": {
     "label": "Belum Terbit",
@@ -4618,7 +4623,8 @@
         "kustom": "Blok 2 kolom (padding atas 20pt): kolom kiri \"Mengetahui;\" / jabatan Kepala Desa / ruang / nama Kepala Desa tebal / \"NIP {nip}\" bila kelurahan; kolom kanan \"Menguatkan;\" / \"Nomor : ...................................\" / \"Camat {kecamatan}\" / ruang / nama Camat tebal / GolCamat / \"NIP. {NipCamat}\"."
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "keteranganBawaan": "Menyatakan bahwa nama tersebut di atas telah meninggal dunia dan memiliki ahli waris seperti tercantum di dalam Surat Keterangan Ahli Waris Desa {namaDesa}"
   },
   "PENGANTAR_ADMINDUK": {
     "label": "Pengantar Adminduk",
@@ -4861,7 +4867,8 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
-    ]
+    ],
+    "keteranganBawaan": "Adalah benar nama tersebut diatas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan yang bersangkutan akan mengurus dokumen administrasi kependudukan (KTP-elektronik, Kartu Keluarga, Akta Kelahiran, dan dokumen adminduk lainnya) di Dinas Kependudukan dan Pencatatan Sipil."
   },
   "SK_PINDAH": {
     "label": "Surat Keterangan Pindah",
@@ -5369,7 +5376,8 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
-    ]
+    ],
+    "keteranganBawaan": "Adalah benar nama tersebut diatas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan yang bersangkutan saat ini tidak memiliki rumah atau tempat tinggal tetap di wilayah desa kami."
   },
   "IZIN_KERAMAIAN": {
     "label": "Izin Keramaian",

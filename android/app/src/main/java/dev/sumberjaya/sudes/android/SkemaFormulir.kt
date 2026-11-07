@@ -77,6 +77,11 @@ data class SkemaJenis(
     /** Teks bawaan bila kolom keterangan kosong (SKTM dan beberapa jenis lain). */
     val catatan: String = "",
     /**
+     * Keterangan bawaan jenis surat — teks yang dicetak sebelum kalimat penutup.
+     * Berbeda tiap jenis, dibangkitkan desktop saat form dibuka.
+     */
+    val keteranganBawaan: String = "",
+    /**
      * True bila badan sudah mencakup seluruh halaman (kop/judul/tanda tangan)
      * karena generator desktop menimpa ComposeHalaman. Android tidak boleh
      * menambahkan judul lagi — itu akan terduplikasi.
@@ -109,6 +114,7 @@ data class SkemaJenis(
                 pakaiLogo = json.optBoolean("pakaiLogo", false),
                 pemohonDiTandaTangan = json.optBoolean("pemohonDiTandaTangan", false),
                 catatan = json.optString("catatan", ""),
+                keteranganBawaan = json.optString("keteranganBawaan", ""),
                 halamanPenuh = json.optBoolean("halamanPenuh", false),
             )
         }
