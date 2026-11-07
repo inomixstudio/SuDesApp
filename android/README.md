@@ -55,3 +55,18 @@ app/src/main/java/dev/sumberjaya/sudes/android/
   SupabaseSesi.kt       identitas perangkat
   SkemaFormulir.kt      model skema dari desktop
 ```
+
+## Bentuk bidang skema
+
+`type` menentukan cara form dibangun di Android:
+
+| type | Tampilan | Nilai yang dikirim |
+|---|---|---|
+| `text` / `date` | `EditText` | string |
+| `number` | `EditText` angka | string |
+| `select` | `Spinner` | string pilihan |
+| `list` | tombol **Tambah …** + baris berulang | **JSONArray** objek |
+
+`list` dipakai `AHLI_WARIS` untuk daftar anak. Impor desktop membaca
+`ahliwarisdata.anak[]` sebagai array — mengirimnya sebagai teks akan
+membuat anak hilang tanpa pesan galat.

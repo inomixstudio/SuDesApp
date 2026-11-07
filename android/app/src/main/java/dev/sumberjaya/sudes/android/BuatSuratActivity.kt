@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -28,6 +29,10 @@ class BuatSuratActivity : AppCompatActivity() {
 
     private val bidang = mutableMapOf<String, View>()
     private val pilihan = mutableMapOf<String, Spinner>()
+    private val daftarBaris = mutableMapOf<String, MutableList<BarisDaftar>>()
+
+    /** Satu baris pada bidang type="list" beserta field penyusunnya. */
+    private data class BarisDaftar(val wadah: View, val bidang: Map<String, View>)
     private lateinit var klien: SupabaseKlien
     private var skema: Map<String, SkemaJenis> = emptyMap()
     private var terpilih: SkemaJenis? = null
@@ -99,6 +104,7 @@ class BuatSuratActivity : AppCompatActivity() {
         wadahForm.removeAllViews()
         bidang.clear()
         pilihan.clear()
+        daftarBaris.clear()
         if (jenis == null) return
 
         for (b in jenis.fieldsInput) {
@@ -121,6 +127,67 @@ class BuatSuratActivity : AppCompatActivity() {
                     wadahForm.addView(sp)
                 }
 
+                "list" -> {
+                    val wadah = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+                    val barisList = mutableListOf<BarisDaftar>()
+                    daftarBaris[b.key] = barisList
+
+                    fun tambahBaris() {
+                        val baris = LinearLayout(this).apply {
+                            orientation = LinearLayout.VERTICAL
+                            setPadding(0, 8, 0, 8)
+                        }
+                        val peta = linkedMapOf<String, View>()
+
+                        for (anak in b.children) {
+                            baris.addView(TextView(this).apply {
+                                text = anak.label
+                                textSize = 12f
+                            })
+                            if (anak.type == "select") {
+                                val sp = Spinner(this).apply {
+                                    adapter = ArrayAdapter(
+                                        this@BuatSuratActivity,
+                                        android.R.layout.simple_spinner_dropdown_item,
+                                        anak.options.ifEmpty { listOf("-") },
+                                    )
+                                }
+                                peta[anak.key] = sp
+                                baris.addView(sp)
+                            } else {
+                                val et = EditText(this).apply {
+                                    hint = anak.label
+                                    inputType = when (anak.type) {
+                                        "number" -> android.text.InputType.TYPE_CLASS_NUMBER
+                                        else -> android.text.InputType.TYPE_CLASS_TEXT
+                                    }
+                                    setPadding(12, 12, 12, 12)
+                                }
+                                peta[anak.key] = et
+                                baris.addView(et)
+                            }
+                        }
+
+                        baris.addView(Button(this).apply {
+                            text = "Hapus"
+                            textSize = 12f
+                            setOnClickListener {
+                                wadah.removeView(baris)
+                                barisList.remove(BarisDaftar(baris, peta))
+                            }
+                        })
+
+                        wadah.addView(baris)
+                        barisList.add(BarisDaftar(baris, peta))
+                    }
+
+                    wadah.addView(Button(this).apply {
+                        text = "Tambah ${b.label}"
+                        setOnClickListener { tambahBaris() }
+                    })
+                    wadahForm.addView(wadah)
+                }
+
                 else -> {
                     val et = EditText(this)
                     et.hint = b.label
@@ -141,8 +208,15 @@ class BuatSuratActivity : AppCompatActivity() {
 
         // Validasi sederhana: field wajib tidak boleh kosong.
         for (b in jenis.fieldsInput.filter { it.required }) {
-            val nilai = nilaiBidang(b.key)
-            if (nilai.isBlank()) {
+            if (b.type == "list") {
+                if (daftarBaris[b.key].orEmpty().isEmpty()) {
+                    Toast.makeText(this, "${b.label} wajib diisi minimal satu baris", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                continue
+            }
+
+            if (nilaiBidang(b.key).kosong()) {
                 Toast.makeText(this, "${b.label} wajib diisi", Toast.LENGTH_SHORT).show()
                 return
             }
@@ -178,9 +252,34 @@ class BuatSuratActivity : AppCompatActivity() {
         }
     }
 
-    private fun nilaiBidang(key: String): String {
+    /**
+     * Nilai satu bidang. String untuk field biasa, JSONArray untuk type="list" —
+     * impor desktop membaca daftar anak sebagai array, bukan teks.
+     */
+    private fun nilaiBidang(key: String): Any {
         pilihan[key]?.let { return it.selectedItem?.toString() ?: "" }
         bidang[key]?.let { return (it as EditText).text.toString().trim() }
-        return ""
+
+        val baris = daftarBaris[key] ?: return ""
+        if (baris.isEmpty()) return ""
+
+        val arr = JSONArray()
+        for (b in baris) {
+            val objek = JSONObject()
+            for ((k, v) in b.bidang) {
+                objek.put(
+                    k,
+                    when (v) {
+                        is Spinner -> v.selectedItem?.toString() ?: ""
+                        is EditText -> v.text.toString().trim()
+                        else -> ""
+                    }
+                )
+            }
+            arr.put(objek)
+        }
+        return arr
     }
+
+    private fun Any.kosong(): Boolean = this is String && isBlank()
 }

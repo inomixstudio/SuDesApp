@@ -3016,10 +3016,46 @@
       {
         "key": "anak",
         "label": "Data Anak (Ahli Waris)",
-        "type": "text",
+        "type": "list",
         "target": "ahliwarisdata.anak[]",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "children": [
+          {
+            "key": "nama",
+            "label": "Nama",
+            "type": "text"
+          },
+          {
+            "key": "tempatLahir",
+            "label": "Tempat Lahir",
+            "type": "text"
+          },
+          {
+            "key": "tanggalLahir",
+            "label": "Tgl. Lahir",
+            "type": "date"
+          },
+          {
+            "key": "jenisKelamin",
+            "label": "Jenis Kelamin",
+            "type": "select",
+            "options": [
+              "Laki-laki",
+              "Perempuan"
+            ]
+          },
+          {
+            "key": "alamat",
+            "label": "Alamat",
+            "type": "text"
+          },
+          {
+            "key": "nik",
+            "label": "NIK",
+            "type": "number"
+          }
+        ]
       },
       {
         "key": "namaPenerimaKuasa",

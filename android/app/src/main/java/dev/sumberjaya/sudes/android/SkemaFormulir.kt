@@ -12,6 +12,8 @@ data class SkemaBidang(
     val required: Boolean,
     val options: List<String>,
     val otomatis: Boolean,
+    /** Hanya untuk type="list": bidang penyusun tiap baris. */
+    val children: List<SkemaBidang>,
 )
 
 /** Skema formulir satu jenis surat. */
@@ -29,27 +31,35 @@ data class SkemaJenis(
             val daftar = mutableListOf<SkemaBidang>()
             val arr = json.optJSONArray("fields") ?: JSONArray()
             for (i in 0 until arr.length()) {
-                val b = arr.getJSONObject(i)
-                val key = b.optString("key")
-                if (key.isEmpty()) continue
-                val opsi = mutableListOf<String>()
-                val arrOpsi = b.optJSONArray("options")
-                if (arrOpsi != null) {
-                    for (j in 0 until arrOpsi.length()) opsi.add(arrOpsi.optString(j))
-                }
-                daftar.add(
-                    SkemaBidang(
-                        key = key,
-                        label = b.optString("label", key),
-                        type = b.optString("type", "text"),
-                        target = b.optString("target", key),
-                        required = b.optBoolean("required", false),
-                        options = opsi,
-                        otomatis = b.optBoolean("otomatis", false),
-                    )
-                )
+                daftar.add(BidangDariJson(arr.getJSONObject(i)))
             }
             return SkemaJenis(idJenis, label, daftar)
+        }
+
+        private fun BidangDariJson(b: JSONObject): SkemaBidang {
+            val key = b.optString("key")
+            val opsi = mutableListOf<String>()
+            val arrOpsi = b.optJSONArray("options")
+            if (arrOpsi != null) {
+                for (j in 0 until arrOpsi.length()) opsi.add(arrOpsi.optString(j))
+            }
+
+            val anak = mutableListOf<SkemaBidang>()
+            val arrAnak = b.optJSONArray("children")
+            if (arrAnak != null) {
+                for (j in 0 until arrAnak.length()) anak.add(BidangDariJson(arrAnak.getJSONObject(j)))
+            }
+
+            return SkemaBidang(
+                key = key,
+                label = b.optString("label", key),
+                type = b.optString("type", "text"),
+                target = b.optString("target", key),
+                required = b.optBoolean("required", false),
+                options = opsi,
+                otomatis = b.optBoolean("otomatis", false),
+                children = anak,
+            )
         }
     }
 }
