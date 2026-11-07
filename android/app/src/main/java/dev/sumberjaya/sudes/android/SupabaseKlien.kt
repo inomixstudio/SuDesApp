@@ -56,11 +56,15 @@ class SupabaseKlien(
 
                 val json = JSONObject(teks)
                 val user = json.optJSONObject("user")
+                val meta = user?.optJSONObject("app_metadata")
                 sesi.copy(
                     accessToken = json.optString("access_token"),
                     refreshToken = json.optString("refresh_token"),
-                    idPerangkat = user?.optString("id"),
-                    tenant = user?.optJSONObject("app_metadata")?.optString("tenant_id"),
+                    // user.id adalah ID akun auth, BUKAN ID perangkat. RLS
+                    // membandingkan id_perangkat dengan klaim JWT, jadi salah
+                    // sumber di sini membuat seluruh kiriman ditolak 403.
+                    idPerangkat = meta?.optString("id_perangkat")?.ifBlank { null },
+                    tenant = meta?.optString("tenant_id")?.ifBlank { null },
                 )
             }
         } catch (e: Exception) {
@@ -71,7 +75,13 @@ class SupabaseKlien(
     /** Muat skema formulir desa ini dari Supabase. */
     suspend fun muatSkema(): Map<String, SkemaJenis> = withContext(Dispatchers.IO) {
         pastikanTokenSegar()
-        val hasil = get("${sesi.url}/rest/v1/skema_formulir?select=id_jenis,skema")
+        // get() melempar pada non-2xx; tanpa tangkapan, pengecualian keluar dari
+        // coroutine dan menjatuhkan aplikasi saat token sudah tidak berlaku.
+        val hasil = try {
+            get("${sesi.url}/rest/v1/skema_formulir?select=id_jenis,skema")
+        } catch (e: Exception) {
+            return@withContext emptyMap()
+        }
         val peta = mutableMapOf<String, SkemaJenis>()
         val array = JSONArray(hasil)
         for (i in 0 until array.length()) {
@@ -86,11 +96,15 @@ class SupabaseKlien(
     /** Daftar surat milik perangkat ini yang masih di antrean. */
     suspend fun daftarAntrean(): List<AntreanBaris> = withContext(Dispatchers.IO) {
         pastikanTokenSegar()
-        val hasil = get(
-            "${sesi.url}/rest/v1/antrean_surat" +
-                "?select=id,id_jenis,nomor_sementara,nik,status,dibuat_pada,catatan" +
-                "&order=dibuat_pada.desc"
-        )
+        val hasil = try {
+            get(
+                "${sesi.url}/rest/v1/antrean_surat" +
+                    "?select=id,id_jenis,nomor_sementara,nik,status,dibuat_pada,catatan" +
+                    "&order=dibuat_pada.desc"
+            )
+        } catch (e: Exception) {
+            return@withContext emptyList()
+        }
         val daftar = mutableListOf<AntreanBaris>()
         val array = JSONArray(hasil)
         for (i in 0 until array.length()) {
