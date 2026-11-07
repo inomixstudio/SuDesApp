@@ -38,8 +38,15 @@ data class SupabaseSesi(
         fun ambil(ctx: Context): SupabaseSesi {
             val p: SharedPreferences = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             return SupabaseSesi(
-                url = p.getString(K_URL, "") ?: "",
-                kunciPublik = p.getString(K_KUNCI, "") ?: "",
+                // URL dan kunci publik sudah terpasang di dalam APK — operator
+                // tidak perlu mengetiknya. Bila QR memuat keduanya, nilai itu
+                // yang dipakai (disimpan saat perangkat dipasang).
+                url = (p.getString(K_URL, "") ?: "").ifBlank {
+                    dev.sumberjaya.sudes.android.BuildConfig.SUPABASE_URL
+                },
+                kunciPublik = (p.getString(K_KUNCI, "") ?: "").ifBlank {
+                    dev.sumberjaya.sudes.android.BuildConfig.SUPABASE_ANON_KEY
+                },
                 email = p.getString(K_EMAIL, "") ?: "",
                 kataSandi = p.getString(K_SANDI, "") ?: "",
                 accessToken = p.getString(K_ACCESS, "") ?: "",

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Npgsql;
 using SuDesApp.Supabase;
 
@@ -10,12 +10,14 @@ namespace SuDesApp.Sinkron;
 /// <param name="Surel">Surel login perangkat — dipakai menyusun QR.</param>
 /// <param name="KataSandi">Kata sandi perangkat — dipakai menyusun QR.</param>
 /// <param name="PesanGalat">Penyebab gagal, bila gagal.</param>
+/// <param name="Kode">Kode verifikasi 4 angka yang ditunjukkan operator Android.</param>
 public sealed record HasilPerangkaian(
     bool Berhasil,
     Guid? PerangkatId,
     string? Surel,
     string? KataSandi,
-    string? PesanGalat);
+    string? PesanGalat,
+    string? Kode);
 
 /// <summary>Ringkasan satu perangkat yang terpasang.</summary>
 public sealed record PerangkatTerpasang(
@@ -63,6 +65,23 @@ public sealed class PerangkaianPerangkat
         return new string(hasil);
     }
 
+    /// <summary>
+    /// Kode verifikasi 4 angka. Angka acak per digit; nol di depan diperbolehkan
+    /// karena kode dibaca manusia, bukan diuraikan sebagai bilangan.
+    /// </summary>
+    public static string BuatKode()
+    {
+        using var acak = System.Security.Cryptography.RandomNumberGenerator.Create();
+        var buffer = new byte[4];
+        acak.GetBytes(buffer);
+        var hasil = new System.Text.StringBuilder(4);
+        for (var i = 0; i < 4; i++)
+        {
+            hasil.Append((char)('0' + (buffer[i] % 10)));
+        }
+        return hasil.ToString();
+    }
+
     /// <summary>Pasang perangkat baru. Tidak pernah melempar.</summary>
     public async Task<HasilPerangkaian> PasangAsync(
         string nama,
@@ -71,7 +90,7 @@ public sealed class PerangkaianPerangkat
     {
         if (!_pengaturan.Lengkap)
         {
-            return new HasilPerangkaian(false, null, null, null, "Supabase belum dikonfigurasi lengkap.");
+            return new HasilPerangkaian(false, null, null, null, "Supabase belum dikonfigurasi lengkap.", null);
         }
 
         var sandi = BuatKataSandi();
@@ -92,13 +111,53 @@ public sealed class PerangkaianPerangkat
             var hasil = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
             if (hasil is not Guid deviceId)
             {
-                return new HasilPerangkaian(false, null, null, null, "Supabase tidak mengembalikan id perangkat.");
+                return new HasilPerangkaian(false, null, null, null, "Supabase tidak mengembalikan id perangkat.", null);
             }
 
             var surel = await AmbilSurelAsync(conn, deviceId, ct).ConfigureAwait(false);
 
-            _logger.LogInformation("Perangkat {PerangkatId} dipasang untuk {Pengguna}.", deviceId, pengguna);
-            return new HasilPerangkaian(true, deviceId, surel, sandi, null);
+            // Kode 4 angka: satu-satunya yang harus dibaca operator Android.
+            // Berlaku 10 menit dan hanya bisa dipakai sekali (lihat skema
+            // pasangan_sementara). Kode lama yang sudah kedaluwarsa dibersihkan
+            // dulu supaya tabrakan kode mungkin kecil dan tidak menumpuk.
+            await using (var bersih = new NpgsqlCommand(
+                "SELECT public.bersihkan_pasangan_kedaluwarsa()", conn))
+            {
+                await bersih.ExecuteScalarAsync(ct).ConfigureAwait(false);
+            }
+
+            string? kode = null;
+            for (var usaha = 0; usaha < 5 && kode == null; usaha++)
+            {
+                var kandidat = BuatKode();
+                await using var cmdKode = new NpgsqlCommand(
+                    """
+                    INSERT INTO pasangan_sementara (kode, tenant_id, email, kata_sandi, kedaluwarsa_pada)
+                    VALUES (@kode, @tenant, @email, @sandi, now() + interval '10 minutes')
+                    ON CONFLICT (kode) DO NOTHING
+                    """, conn);
+                cmdKode.Parameters.Add(new NpgsqlParameter("kode", kandidat));
+                cmdKode.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
+                cmdKode.Parameters.Add(new NpgsqlParameter("email", surel ?? string.Empty));
+                cmdKode.Parameters.Add(new NpgsqlParameter("sandi", sandi));
+
+                if (await cmdKode.ExecuteNonQueryAsync(ct).ConfigureAwait(false) > 0)
+                {
+                    kode = kandidat;
+                }
+            }
+
+            if (kode == null)
+            {
+                return new HasilPerangkaian(false, deviceId, surel, sandi,
+                    "Gagal membuat kode verifikasi. Coba lagi.", null);
+            }
+
+            _logger.LogInformation(
+                "Perangkat {PerangkatId} dipasang untuk {Pengguna}; kode {Kode} terbit.",
+                deviceId, pengguna, kode);
+
+            return new HasilPerangkaian(true, deviceId, surel, sandi, null, kode);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -107,7 +166,7 @@ public sealed class PerangkaianPerangkat
         catch (Exception ex)
         {
             _logger.LogError(ex, "Gagal memasang perangkat {Nama}.", nama);
-            return new HasilPerangkaian(false, null, null, null, ex.Message);
+            return new HasilPerangkaian(false, null, null, null, ex.Message, null);
         }
     }
 

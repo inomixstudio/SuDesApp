@@ -35,6 +35,41 @@ class SupabaseKlien(
         data class Galat(val kode: Int, val pesan: String) : Hasil<Nothing>()
     }
 
+    /**
+     * Tukar kode verifikasi 4 angka dengan surel + kata sandi perangkat.
+     * Kode hanya berlaku 10 menit dan hanya sekali pakai (lihat skema
+     * pasangan_sementara). Mengembalikan sesi yang sudah masuk, atau null.
+     */
+    suspend fun pakaiKode(kode: String): SupabaseSesi? = withContext(Dispatchers.IO) {
+        val bersih = kode.trim()
+        if (bersih.length != 4 || !bersih.all { it.isDigit() }) return@withContext null
+
+        val bodi = JSONObject().put("p_kode", bersih).toString().toRequestBody(jsonTipe)
+        val req = Request.Builder()
+            .url("${sesi.url}/rest/v1/rpc/ambil_pasangan")
+            .header("apikey", sesi.kunciPublik)
+            .post(bodi)
+            .build()
+
+        try {
+            http.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@withContext null
+                val arr = JSONArray(resp.body?.string().orEmpty())
+                if (arr.length() == 0) return@withContext null
+                val o = arr.getJSONObject(0)
+                val s = sesi.copy(
+                    email = o.optString("email"),
+                    kataSandi = o.optString("kata_sandi"),
+                    accessToken = "",
+                    refreshToken = "",
+                )
+                SupabaseKlien(s).login(s.email, s.kataSandi)
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     /** Masuk dengan surel/kata sandi perangkat. Mengembalikan sesi baru bila berhasil. */
     suspend fun login(email: String, kataSandi: String): SupabaseSesi? = withContext(Dispatchers.IO) {
         val bodi = JSONObject()

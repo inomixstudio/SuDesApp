@@ -2,85 +2,80 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp">
+    android:background="@color/page">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="24dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/label_pasang_perangkat"
-            android:textSize="18sp"
+            android:textColor="@color/teks"
+            android:textSize="22sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="@string/petunjuk_pasang"
-            android:textSize="14sp" />
+            android:textColor="@color/teks_redup"
+            android:textSize="13sp" />
 
         <Button
             android:id="@+id/btn_pindai"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="@string/pindai_qr" />
+            android:layout_marginTop="24dp"
+            android:text="@string/pindai_qr"
+            android:textSize="16sp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="@string/atau_manual"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="28dp"
+            android:gravity="center"
+            android:text="@string/atau_ketik_kode"
+            android:textColor="@color/teks_redup"
+            android:textSize="13sp" />
 
         <EditText
-            android:id="@+id/input_url"
+            android:id="@+id/input_kode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_url"
-            android:inputType="textUri" />
-
-        <EditText
-            android:id="@+id/input_kunci"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_kunci"
-            android:inputType="text" />
-
-        <EditText
-            android:id="@+id/input_email"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_email_perangkat"
-            android:inputType="textEmailAddress" />
-
-        <EditText
-            android:id="@+id/input_sandi"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_sandi"
-            android:inputType="textPassword" />
+            android:layout_marginTop="12dp"
+            android:background="@color/surface"
+            android:gravity="center"
+            android:hint="@string/hint_kode"
+            android:inputType="number"
+            android:letterSpacing="0.4"
+            android:maxLength="4"
+            android:minHeight="72dp"
+            android:padding="12dp"
+            android:textColor="@color/teks"
+            android:textColorHint="@color/teks_redup"
+            android:textSize="32sp" />
 
         <Button
-            android:id="@+id/btn_masuk"
+            android:id="@+id/btn_hubungkan"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="@string/masuk" />
+            android:text="@string/hubungkan"
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/status_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="@string/status_pasang_awal"
+            android:textColor="@color/teks_redup"
             android:textSize="13sp" />
 
     </LinearLayout>
