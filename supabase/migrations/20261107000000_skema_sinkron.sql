@@ -282,6 +282,36 @@ begin
 end $$;
 
 -- =====================================================================
+-- KONTEKS OTOMATIS DARI JWT
+-- =====================================================================
+-- RLS mencentang tenant_id dan id_perangkat terhadap klaim JWT. Klien
+-- sebaiknya mengirim keduanya, tapi trigger ini mengisi dari JWT bila
+-- kosong — supaya tidak ada jalur yang bisa menyisipkan baris tanpa konteks
+-- tenant (atau menyalahgunakan tenant lain: RLS tetap menolak nilai yang
+-- tidak cocok dengan JWT).
+create or replace function public.isi_konteks_antrean() returns trigger
+language plpgsql security definer set search_path = public, auth AS $$
+declare
+    v_meta jsonb := coalesce(auth.jwt() -> 'app_metadata', '{}'::jsonb);
+begin
+    if new.tenant_id is null then
+        new.tenant_id := nullif(v_meta ->> 'tenant_id', '');
+    end if;
+    if new.id_perangkat is null then
+        new.id_perangkat := nullif(v_meta ->> 'id_perangkat', '')::uuid;
+    end if;
+    if new.id_pengguna is null then
+        new.id_pengguna := nullif(v_meta ->> 'id_pengguna', '');
+    end if;
+    return new;
+end $$;
+
+drop trigger if exists trg_isi_konteks_antrean on public.antrean_surat;
+create trigger trg_isi_konteks_antrean
+    before insert on public.antrean_surat
+    for each row execute function public.isi_konteks_antrean();
+
+-- =====================================================================
 -- LAYANAN REST API (PostgREST) UNTUK DESKTOP
 -- =====================================================================
 -- Desktop membaca antrean lewat role postgres (bypass RLS), jadi tidak
