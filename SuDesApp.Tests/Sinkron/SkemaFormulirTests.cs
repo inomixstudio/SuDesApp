@@ -193,4 +193,28 @@ public sealed class SkemaFormulirTests
         Assert.DoesNotContain(n1!.Fields, f => f.Target.StartsWith("ntcr.AyahCalon.", StringComparison.Ordinal));
         Assert.Contains(n1.Fields, f => f.Target.StartsWith("ntcr.AyahCalonSuami.", StringComparison.Ordinal));
     }
+
+    /// <summary>
+    /// Setiap jenis yang memuat NIK wajib juga memuat field yang dipakai
+    /// <see cref="WargaData.IsValid"/> untuk membuat warga baru saat impor.
+    /// Tanpa ini, surat dari Android gagal diimpor dengan
+    /// "Data warga tidak valid: Tempat lahir tidak boleh kosong; ...".
+    /// </summary>
+    [Fact]
+    public void Skema_jenis_ber_NIK_memuat_field_warga_lengkap()
+    {
+        var skema = Muat();
+        var wajib = new[] { "warga.nik", "warga.nama", "warga.tempatLahir", "warga.tanggalLahir", "warga.agama", "warga.statusPerkawinan" };
+
+        foreach (var jenis in skema.IdJenis)
+        {
+            var entri = skema.Cari(jenis);
+            Assert.NotNull(entri);
+            var target = entri!.Fields.Select(f => f.Target).ToHashSet(StringComparer.Ordinal);
+            if (!target.Contains("warga.nik")) continue;
+
+            var kurang = wajib.Where(w => !target.Contains(w)).ToList();
+            Assert.True(kurang.Count == 0, $"Skema {jenis} kehilangan field warga: {string.Join(", ", kurang)}");
+        }
+    }
 }

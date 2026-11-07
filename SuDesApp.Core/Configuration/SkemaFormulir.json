@@ -2044,6 +2044,36 @@
         ]
       },
       {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
+        ]
+      },
+      {
         "key": "pekerjaan",
         "label": "Pekerjaan",
         "type": "text",
@@ -2270,6 +2300,20 @@
           "Hindu",
           "Buddha",
           "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
         ]
       },
       {
@@ -2780,6 +2824,22 @@
         "otomatis": false
       },
       {
+        "key": "tempatLahir",
+        "label": "Tempat Lahir",
+        "type": "text",
+        "target": "warga.tempatLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
+        "key": "tanggalLahir",
+        "label": "Tgl. Lahir",
+        "type": "date",
+        "target": "warga.tanggalLahir",
+        "required": true,
+        "otomatis": false
+      },
+      {
         "key": "jenisKelamin",
         "label": "Jenis Kelamin Almarhum/ah",
         "type": "select",
@@ -2789,6 +2849,36 @@
         "options": [
           "Laki-laki",
           "Perempuan"
+        ]
+      },
+      {
+        "key": "agama",
+        "label": "Agama",
+        "type": "select",
+        "target": "warga.agama",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Islam",
+          "Kristen",
+          "Katolik",
+          "Hindu",
+          "Buddha",
+          "Konghucu"
+        ]
+      },
+      {
+        "key": "statusPerkawinan",
+        "label": "Status Perkawinan",
+        "type": "select",
+        "target": "warga.statusPerkawinan",
+        "required": true,
+        "otomatis": false,
+        "options": [
+          "Belum Kawin",
+          "Kawin",
+          "Cerai Hidup",
+          "Cerai Mati"
         ]
       },
       {
