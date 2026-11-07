@@ -13,9 +13,10 @@
     <string name="menu_register_surat">Register Surat</string>
     <string name="menu_daftar_hadir">Daftar Hadir</string>
     <string name="menu_pengaturan">Pengaturan</string>
+    <string name="menu_sinkron">Sinkron</string>
 
     <string name="keterangan_ntcr">Persyaratan pernikahan: N1–N6 dan N8.</string>
-    <string name="catatan_privasi">Aplikasi ini berjalan tanpa internet dan tidak mengirim data ke mana pun.</string>
+    <string name="catatan_privasi">PDF surat tersimpan di perangkat. Isian surat ikut antrean supaya register desktop bisa melanjutkan penomoran resmi.</string>
 
     <!-- Formulir -->
     <string name="label_buat_surat">Buat Surat Baru</string>
@@ -44,13 +45,41 @@
     <string name="hint_nama_desa">Nama desa</string>
     <string name="hint_kecamatan">Kecamatan</string>
     <string name="hint_kabupaten">Kabupaten</string>
+    <string name="hint_jenis_kabupaten">Jenis kabupaten (Kabupaten/Kota)</string>
+    <string name="hint_jenis_lembaga">Jenis lembaga (Desa/Kelurahan)</string>
+    <string name="hint_alamat">Alamat kantor desa</string>
+    <string name="hint_kodepos">Kodepos</string>
+    <string name="hint_email">Surel kantor desa</string>
+    <string name="hint_email_perangkat">Surel perangkat</string>
+    <string name="hint_kepala_desa">Nama Kepala Desa</string>
+    <string name="hint_sekretaris">Nama Sekretaris Desa</string>
+    <string name="hint_nip">NIP (hanya Lurah)</string>
     <string name="hint_awalan">Awalan nomor (mis. 470)</string>
     <string name="hint_nomor_terakhir">Nomor urut terakhir di register</string>
+    <string name="hint_ukuran">Ukuran kertas (A4/F4)</string>
+    <string name="hint_logo">Jalur berkas logo (kosongkan bila tanpa logo)</string>
     <string name="simpan_pengaturan">Simpan</string>
     <string name="pengaturan_tersimpan">Pengaturan disimpan.</string>
+    <string name="pengaturan_sumber">Identitas kop dan pola nomor diambil dari aplikasi desktop, bukan diketik di sini. Nilai di bawah adalah salinan yang sedang dipakai perangkat ini.</string>
+    <string name="pengaturan_sinkronkan">Sinkronkan sekarang</string>
+    <string name="pengaturan_sinkron_awal">Belum disinkronkan.</string>
+    <string name="pengaturan_sinkron_proses">Menarik pengaturan dari desktop…</string>
+    <string name="pengaturan_sinkron_berhasil">Pengaturan kop &amp; pola nomor diperbarui dari desktop.</string>
+    <string name="pengaturan_sinkron_gagal">Tidak bisa menarik pengaturan. Periksa koneksi dan coba lagi.</string>
+    <string name="pengaturan_belum_terpasang">Perangkat belum dipasang. Buka menu Sinkron untuk menghubungkannya.</string>
     <string name="pengaturan_keterangan">Identitas ini dipakai sebagai kop surat, dan nomor urut dilanjutkan dari angka terakhir supaya tidak lompat.</string>
     <string name="grup_kop_surat">KOP SURAT</string>
     <string name="grup_penomoran">PENOMORAN</string>
+
+    <!-- Sinkron / pasang perangkat -->
+    <string name="label_pasang_perangkat">Pasang Perangkat</string>
+    <string name="petunjuk_pasang">Pindai QR dari halaman Sinkron Android di aplikasi desktop, atau ketik URL, kunci publik, surel, dan kata sandi perangkat.</string>
+    <string name="pindai_qr">Pindai QR</string>
+    <string name="atau_manual">atau ketik manual</string>
+    <string name="hint_url">URL Supabase (https://….supabase.co)</string>
+    <string name="hint_kunci">Kunci publik (anon key)</string>
+    <string name="hint_sandi">Kata sandi perangkat</string>
+    <string name="masuk">Pasang</string>
 
     <!-- Status dan pesan -->
     <string name="sedang_membuat_pdf">Membuat PDF…</string>

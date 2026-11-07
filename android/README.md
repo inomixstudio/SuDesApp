@@ -1,6 +1,6 @@
 # SuDesApp Desa (Android)
 
-Aplikasi Android untuk operator desa yang sedang di lapangan. Tiga peran:
+Aplikasi Android untuk operator desa yang sedang di lapangan.
 
 | Menu | Peran |
 |---|---|
@@ -8,34 +8,38 @@ Aplikasi Android untuk operator desa yang sedang di lapangan. Tiga peran:
 | **Buat NTCR** | Formulir persyaratan pernikahan N1–N6 dan N8; hasilnya PDF |
 | **Register Surat** | Daftar PDF yang pernah dibuat di perangkat ini, bisa dicetak ulang atau dibagikan |
 | **Daftar Hadir** | Buat + cetak PDF daftar hadir, tidak disimpan |
+| **Pengaturan** | Identitas kop surat (seperti Pengaturan Surat di desktop) + penomoran |
+| **Sinkron** | Pasang perangkat ke Supabase (pindai QR dari desktop atau ketik manual) |
 
-## Tidak mengirim data ke mana pun
-
-Aplikasi ini **tidak punya akun, tidak butuh internet, dan tidak mengirim data ke
-layanan mana pun**. Isian surat hanya dijadikan PDF di perangkat:
+## Alur surat
 
 1. Formulir diisi → **Cetak & Simpan PDF**.
 2. PDF langsung ditawarkan ke dialog cetak Android.
 3. Salinan PDF tersimpan di `Downloads/SuDesApp` (Android 11+) atau folder
    `Download/SuDesApp` (Android 10 ke bawah).
+4. Isian surat ikut ke **antrean Supabase** — desktop mengimpornya ke register
+   dan memberikan nomor resmi (nomor Android hanya placeholder, boleh dobel).
 
-Surat berpindah ke register desktop lewat PDF yang dicetak — sama seperti
-surat yang dibuat di desktop lalu di-scan. Data warga tidak meninggalkan
-perangkat.
+Bila perangkat belum dipasang atau jaringan gagal, langkah 4 dilewati; PDF
+tetap tersimpan, jadi surat tidak hilang.
 
-Konsekuensinya: definisi formulir ikut di dalam APK (`assets/skema-formulir.json`),
-jadi bila skema di desktop berubah, APK harus dibangun ulang.
+## Bentuk PDF sama dengan desktop
 
-## Kop surat dan penomoran
+`SuratPdf.kt` memakai angka yang sama dengan sisi desktop:
 
-Menu **Pengaturan** mengatur:
+| Aspek | Sumber di desktop |
+|---|---|
+| Margin kiri/kanan 45 pt, margin atas/bawah & kerapatan | `TataLetakHalamanSurat`, `KerapatanSurat` |
+| Ukuran kertas A4 (595,28 × 841,89 pt) / F4 (607,5 × 935,4 pt) | `PengaturanCetak` |
+| Kop 5 baris + garis ganda 0,8 pt / 1,5 pt | `KopSurat` |
+| Judul 14 pt tebal bergaris bawah + `NOMOR : …` | `SuratRenderer.JudulDanNomor` |
+| Tabel isian rasio kolom 160 : 10 : 340 | `SuratRenderer.TabelFormulir` |
+| Blok tanda tangan dua kolom | `SuratRenderer.TandaTangan` |
+| Font Times New Roman | `Resources/Fonts/times*.ttf` (ikut di `assets/fonts/`) |
 
-- Nama desa, kecamatan, kabupaten → jadi kop tiga baris.
-- Awalan nomor (mis. `470`) dan nomor urut terakhir → dilanjutkan dari angka
-  itu, format `470/001/Ds/2026`. Samakan angka terakhir dengan register
-  desktop supaya nomor tidak lompat.
-
-Semua nilai ini hanya disimpan di perangkat.
+Isi badan surat tiap jenis dibaca dari `badan` pada `assets/skema-formulir.json`
+— blok `paragraf`, `tabel`, `paragrafCampur`, `daftar`, dan `kustom` — supaya
+teks dan urutannya identik dengan generator desktop.
 
 ## Membangun
 
@@ -51,11 +55,20 @@ gradle assembleDebug
 
 ```
 app/src/main/
-  assets/skema-formulir.json   definisi formulir (sumber: SuDesApp.Core/Configuration)
+  assets/
+    skema-formulir.json   definisi formulir + tata letak badan (sumber: SuDesApp.Core/Configuration)
+    fonts/times*.ttf      Times New Roman — sama dengan yang dipakai desktop
   java/dev/sumberjaya/sudes/android/
-    MainActivity.kt        menu utama (Buat Surat / Buat NTCR / Register / Daftar Hadir / Pengaturan)
-    BuatSuratActivity.kt   formulir dinamis → PDF → cetak + simpan
-    SuratPdf.kt            tata letak PDF surat
+    MainActivity.kt        menu utama
+    LoginActivity.kt       pasang perangkat (QR / manual)
+    BuatSuratActivity.kt   formulir dinamis → PDF → cetak + simpan + antre
+    SuratPdf.kt            tata letak PDF (meniru desktop)
+    Kop.kt                 isi baris kop & jabatan pejabat
+    AlamatSusun.kt         alamat lengkap penduduk (meniru AlamatFormatter)
+    FontSet.kt             pemuat Times New Roman
+    AntreanSurat.kt        kirim isian surat ke antrean Supabase
+    SupabaseKlien.kt       klien Auth + PostgREST
+    SupabaseSesi.kt        sesi perangkat
     PdfAksi.kt             simpan ke Downloads, cetak, bagikan
     DaftarSurat.kt         daftar PDF tersimpan
     RegisterSuratActivity.kt  register PDF di perangkat

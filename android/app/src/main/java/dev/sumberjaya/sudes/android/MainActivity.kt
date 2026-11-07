@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 /**
  * Menu utama.
@@ -46,7 +48,22 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, PengaturanActivity::class.java))
         }
 
+        findViewById<Button>(R.id.btn_sinkron).setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
+
         tampilkanIdentitas()
+
+        // Identitas kop dan pola nomor diambil dari desktop, bukan diketik di
+        // sini. Penarikan hanya jalan bila perangkat sudah dipasang.
+        lifecycleScope.launch {
+            try {
+                PengaturanSinkron.tarik(this@MainActivity)
+            } catch (e: Exception) {
+                // Offline / belum terpasang: pakai salinan lokal.
+            }
+            tampilkanIdentitas()
+        }
     }
 
     override fun onResume() {

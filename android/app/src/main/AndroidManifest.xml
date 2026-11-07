@@ -2,11 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-      Aplikasi ini tidak mengirim data ke mana pun, jadi izin jaringan dan
-      kamera tidak diperlukan. Izin tulis hanya untuk menyimpan PDF ke
-      Downloads pada Android 10 ke bawah; Android 11+ memakai MediaStore yang
-      tidak butuh izin.
+      Surat yang dibuat di sini dijadikan PDF dan disimpan ke Downloads. Kiriman
+      ke antrean Supabase hanya memuat isian surat (nomor, NIK, dan kolom
+      formulir) supaya register desktop bisa melanjutkan penomoran resmi —
+      jadi izin jaringan tetap diperlukan.
     -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Pindai QR pairing dari halaman Sinkron Android di desktop. -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
@@ -28,6 +32,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true"
+            android:label="@string/menu_sinkron" />
 
         <activity
             android:name=".BuatSuratActivity"

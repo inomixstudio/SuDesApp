@@ -50,4 +50,25 @@
         <item name="android:background">@color/surface</item>
         <item name="android:padding">16dp</item>
     </style>
+
+    <!-- Formulir: label di atas kolom isian. -->
+    <style name="MenuLabel">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/teks_redup</item>
+    </style>
+
+    <style name="MenuInput">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@color/surface</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:textColor">@color/teks</item>
+        <item name="android:textColorHint">@color/teks_redup</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
 </resources>

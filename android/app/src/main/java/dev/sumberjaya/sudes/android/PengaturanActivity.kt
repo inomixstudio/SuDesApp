@@ -2,58 +2,78 @@ package dev.sumberjaya.sudes.android
 
 import android.os.Bundle
 import android.widget.Button
-import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 /**
- * Pengaturan kop surat dan penomoran.
+ * Pengaturan kop surat — BUKAN tempat mengetik.
  *
- * Identitas desa dipakai sebagai kop surat, dan nomor urut dilanjutkan dari
- * angka terakhir di register desktop supaya nomor surat tidak lompat. Semua
- * nilai hanya disimpan di perangkat ini.
+ * Identitas desa (nama, kecamatan, kabupaten, alamat, pejabat, pola nomor)
+ * diambil dari aplikasi desktop dan disinkronkan otomatis. Halaman ini hanya
+ * menampilkan salinan yang sedang dipakai perangkat, plus tombol menarik ulang.
  */
 class PengaturanActivity : AppCompatActivity() {
 
-    private lateinit var desa: EditText
-    private lateinit var kecamatan: EditText
-    private lateinit var kabupaten: EditText
-    private lateinit var awalan: EditText
-    private lateinit var nomor: EditText
+    private lateinit var isi: TextView
+    private lateinit var status: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pengaturan)
 
-        desa = findViewById(R.id.input_desa)
-        kecamatan = findViewById(R.id.input_kecamatan)
-        kabupaten = findViewById(R.id.input_kabupaten)
-        awalan = findViewById(R.id.input_awalan)
-        nomor = findViewById(R.id.input_nomor)
+        isi = findViewById(R.id.isi_pengaturan)
+        status = findViewById(R.id.status_pengaturan)
 
-        val p = PengaturanSurat.ambil(this)
-        desa.setText(p.namaDesa)
-        kecamatan.setText(p.kecamatan)
-        kabupaten.setText(p.kabupaten)
-        awalan.setText(p.awalanNomor)
-        nomor.setText(if (p.nomorTerakhir > 0) p.nomorTerakhir.toString() else "")
+        findViewById<Button>(R.id.btn_sinkronkan).setOnClickListener { sinkronkan() }
 
-        findViewById<Button>(R.id.btn_simpan).setOnClickListener { simpan() }
+        tampilkan()
     }
 
-    private fun simpan() {
-        val urut = nomor.text.toString().trim().toIntOrNull() ?: 0
-        PengaturanSurat.simpan(
-            this,
-            PengaturanSurat(
-                namaDesa = desa.text.toString().trim(),
-                kecamatan = kecamatan.text.toString().trim(),
-                kabupaten = kabupaten.text.toString().trim(),
-                awalanNomor = awalan.text.toString().trim().ifBlank { "470" },
-                nomorTerakhir = urut,
-            ),
-        )
-        Toast.makeText(this, R.string.pengaturan_tersimpan, Toast.LENGTH_SHORT).show()
-        finish()
+    private fun sinkronkan() {
+        status.text = getString(R.string.pengaturan_sinkron_proses)
+        lifecycleScope.launch {
+            val hasil = try {
+                PengaturanSinkron.tarik(this@PengaturanActivity)
+            } catch (e: Exception) {
+                null
+            }
+            tampilkan()
+            status.text = when {
+                hasil == null -> getString(R.string.pengaturan_sinkron_gagal)
+                !SupabaseSesi.ambil(this@PengaturanActivity).masuk ->
+                    getString(R.string.pengaturan_belum_terpasang)
+                else -> getString(R.string.pengaturan_sinkron_berhasil)
+            }
+            Toast.makeText(
+                this@PengaturanActivity,
+                status.text,
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+
+    private fun tampilkan() {
+        val p = PengaturanSurat.ambil(this)
+        isi.text = listOf(
+            "Nama desa" to p.namaDesa,
+            "Kecamatan" to p.kecamatan,
+            "Kabupaten" to p.kabupaten,
+            "Jenis kabupaten" to p.jenisKabupaten,
+            "Jenis lembaga" to p.jenisLembaga,
+            "Alamat" to p.alamat,
+            "Kodepos" to p.kodepos,
+            "Surel" to p.email,
+            "Kepala Desa" to p.kepalaDesa,
+            "Sekretaris Desa" to p.sekretarisDesa,
+            "NIP" to p.nipKepalaDesa,
+            "Ukuran kertas" to p.ukuranKertas,
+            "Pola nomor" to if (p.formatNomor.isEmpty()) "(bawaan)" else "${p.formatNomor.size} jenis",
+            "Nomor urut terakhir" to if (p.nomorTerakhir > 0) p.nomorTerakhir.toString() else "-",
+        ).joinToString("\n") { (label, nilai) ->
+            "• $label: ${nilai.ifBlank { "-" }}"
+        }
     }
 }
