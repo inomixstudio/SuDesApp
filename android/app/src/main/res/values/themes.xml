@@ -1,7 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.SuDesAndroid" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">#00897B</item>
+        <item name="colorPrimary">@color/accent</item>
         <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">@color/accent_dark</item>
+        <item name="android:colorBackground">@color/page</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="android:textColor">@color/teks</item>
+        <item name="android:textColorPrimary">@color/teks</item>
+        <item name="android:textColorSecondary">@color/teks_redup</item>
+    </style>
+
+    <!-- Menu utama: tombol penuh lebar, sudut membulat. -->
+    <style name="MenuTombol" parent="Widget.Material3.Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">54dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">center</item>
+        <item name="backgroundTint">@color/surface</item>
+        <item name="android:textColor">@color/teks</item>
+        <item name="strokeColor">@color/garis</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="MenuTombolUtama" parent="MenuTombol">
+        <item name="backgroundTint">@color/accent</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <style name="MenuJudulGrup">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/teks_redup</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:layout_marginTop">22dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+
+    <style name="MenuKartu">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:background">@color/surface</item>
+        <item name="android:padding">16dp</item>
     </style>
 </resources>

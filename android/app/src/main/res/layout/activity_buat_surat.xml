@@ -2,33 +2,48 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/page"
     android:orientation="vertical"
     android:padding="20dp">
 
     <TextView
+        android:id="@+id/judul_halaman"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/label_buat_surat"
-        android:textSize="18sp"
+        android:textColor="@color/teks"
+        android:textSize="20sp"
         android:textStyle="bold" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="2dp"
+        android:text="@string/kerangka_menu"
+        android:textColor="@color/teks_redup"
+        android:textSize="13sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="@string/label_jenis_surat"
-        android:textSize="14sp" />
+        android:textColor="@color/teks_redup"
+        android:textSize="13sp"
+        android:textStyle="bold" />
 
     <Spinner
         android:id="@+id/spinner_jenis"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        android:padding="8dp" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginVertical="8dp"
-        android:background="#DDDDDD" />
+        android:layout_marginVertical="10dp"
+        android:background="@color/garis" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -47,7 +62,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="@string/kirim_ke_antrean" />
+        android:backgroundTint="@color/accent"
+        android:text="@string/kirim_ke_antrean"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF" />
 
     <ProgressBar
         android:id="@+id/progres"

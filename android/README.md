@@ -1,36 +1,41 @@
-# SuDesApp Android
+# SuDesApp Desa (Android)
 
-Aplikasi Android untuk operator desa yang sedang di lapangan. Tiga menu:
+Aplikasi Android untuk operator desa yang sedang di lapangan. Tiga peran:
 
 | Menu | Peran |
 |---|---|
-| **Buat Surat Baru** | Formulir dinamis dari skema yang diterbitkan desktop; isian masuk antrean Supabase |
-| **Register Surat** | Daftar surat yang dibuat di perangkat ini + status sinkron |
-| **Daftar Hadir** | Buat + cetak PDF, **tidak** disimpan |
+| **Buat Surat** | Formulir dinamis untuk 20 jenis surat biasa; hasilnya PDF |
+| **Buat NTCR** | Formulir persyaratan pernikahan N1–N6 dan N8; hasilnya PDF |
+| **Register Surat** | Daftar PDF yang pernah dibuat di perangkat ini, bisa dicetak ulang atau dibagikan |
+| **Daftar Hadir** | Buat + cetak PDF daftar hadir, tidak disimpan |
 
-Aplikasi ini **online-only** dan **tidak menyimpan data di perangkat** — hanya
-identitas perangkat (surel, kata sandi, token Supabase) yang disimpan untuk
-membuktikan diri ke Supabase.
+## Tidak mengirim data ke mana pun
 
-## Menghubungkan ke Supabase
+Aplikasi ini **tidak punya akun, tidak butuh internet, dan tidak mengirim data ke
+layanan mana pun**. Isian surat hanya dijadikan PDF di perangkat:
 
-1. Di aplikasi desktop, buka **Pengaturan → Sinkron Android**.
-2. Simpan koneksi (host pooler, tenant, kata sandi DB) dan terbitkan skema formulir.
-3. Pasang perangkat: masukkan nama, lalu pindai QR yang muncul.
-4. QR berisi URL Supabase, kunci publik, surel, dan kata sandi perangkat.
+1. Formulir diisi → **Cetak & Simpan PDF**.
+2. PDF langsung ditawarkan ke dialog cetak Android.
+3. Salinan PDF tersimpan di `Downloads/SuDesApp` (Android 11+) atau folder
+   `Download/SuDesApp` (Android 10 ke bawah).
 
-Bila QR tidak bisa dipindai, ketik manual keempat nilai tersebut di halaman
-yang sama.
+Surat berpindah ke register desktop lewat PDF yang dicetak — sama seperti
+surat yang dibuat di desktop lalu di-scan. Data warga tidak meninggalkan
+perangkat.
 
-## Sinkronisasi
+Konsekuensinya: definisi formulir ikut di dalam APK (`assets/skema-formulir.json`),
+jadi bila skema di desktop berubah, APK harus dibangun ulang.
 
-Surat yang dibuat di Android masuk tabel `antrean_surat` (maks 10). Saat
-aplikasi desktop menjalankan sinkronisasi, surat diimpor ke register desktop —
-nomor dobel dibangkitkan ulang, NIK yang sudah ada memakai data warga yang ada —
-lalu baris antrean dihapus dan jejaknya masuk `sinkron_log`.
+## Kop surat dan penomoran
 
-PDF yang dicetak dari Android adalah **draf**; PDF resmi dibuat desktop dari
-register (bisa dicetak ulang).
+Menu **Pengaturan** mengatur:
+
+- Nama desa, kecamatan, kabupaten → jadi kop tiga baris.
+- Awalan nomor (mis. `470`) dan nomor urut terakhir → dilanjutkan dari angka
+  itu, format `470/001/Ds/2026`. Samakan angka terakhir dengan register
+  desktop supaya nomor tidak lompat.
+
+Semua nilai ini hanya disimpan di perangkat.
 
 ## Membangun
 
@@ -45,28 +50,17 @@ gradle assembleDebug
 ## Struktur
 
 ```
-app/src/main/java/dev/sumberjaya/sudes/android/
-  LoginActivity.kt      pasang perangkat (QR / manual)
-  MainActivity.kt       menu utama + status antrean
-  BuatSuratActivity.kt  formulir dinamis + kirim antrean
-  RegisterSuratActivity.kt  daftar antrean milik perangkat
-  DaftarHadirActivity.kt    PDF daftar hadir + cetak
-  SupabaseKlien.kt      REST client (Auth + PostgREST)
-  SupabaseSesi.kt       identitas perangkat
-  SkemaFormulir.kt      model skema dari desktop
+app/src/main/
+  assets/skema-formulir.json   definisi formulir (sumber: SuDesApp.Core/Configuration)
+  java/dev/sumberjaya/sudes/android/
+    MainActivity.kt        menu utama (Buat Surat / Buat NTCR / Register / Daftar Hadir / Pengaturan)
+    BuatSuratActivity.kt   formulir dinamis → PDF → cetak + simpan
+    SuratPdf.kt            tata letak PDF surat
+    PdfAksi.kt             simpan ke Downloads, cetak, bagikan
+    DaftarSurat.kt         daftar PDF tersimpan
+    RegisterSuratActivity.kt  register PDF di perangkat
+    DaftarHadirActivity.kt    PDF daftar hadir + cetak
+    PengaturanActivity.kt     kop surat + penomoran
+    PengaturanSurat.kt        identitas kop & nomor urut
+    SkemaFormulir.kt       model + pemuat skema lokal
 ```
-
-## Bentuk bidang skema
-
-`type` menentukan cara form dibangun di Android:
-
-| type | Tampilan | Nilai yang dikirim |
-|---|---|---|
-| `text` / `date` | `EditText` | string |
-| `number` | `EditText` angka | string |
-| `select` | `Spinner` | string pilihan |
-| `list` | tombol **Tambah …** + baris berulang | **JSONArray** objek |
-
-`list` dipakai `AHLI_WARIS` untuk daftar anak. Impor desktop membaca
-`ahliwarisdata.anak[]` sebagai array — mengirimnya sebagai teks akan
-membuat anak hilang tanpa pesan galat.

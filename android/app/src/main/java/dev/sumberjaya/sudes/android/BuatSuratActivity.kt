@@ -1,29 +1,31 @@
 package dev.sumberjaya.sudes.android
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 /**
- * Buat Surat Baru: formulir dinamis dibangun dari skema yang diterbitkan
- * desktop. Isian dikirim ke antrean Supabase — aplikasi tidak menyimpan apa
- * pun di perangkat.
+ * Buat Surat: formulir dinamis dari skema yang dibawa APK.
+ *
+ * Isian dijadikan PDF lalu disimpan ke Downloads dan langsung ditawarkan ke
+ * dialog cetak. Tidak ada data yang dikirim ke layanan mana pun — surat
+ * berpindah ke register desktop lewat PDF yang dicetak, sama seperti surat
+ * yang dibuat di desktop lalu di-scan.
  */
 class BuatSuratActivity : AppCompatActivity() {
 
@@ -33,70 +35,62 @@ class BuatSuratActivity : AppCompatActivity() {
 
     /** Satu baris pada bidang type="list" beserta field penyusunnya. */
     private data class BarisDaftar(val wadah: View, val bidang: Map<String, View>)
-    private lateinit var klien: SupabaseKlien
-    private var skema: Map<String, SkemaJenis> = emptyMap()
-    private var terpilih: SkemaJenis? = null
 
     private lateinit var spinnerJenis: Spinner
     private lateinit var wadahForm: LinearLayout
     private lateinit var progres: View
 
+    private var daftar: List<SkemaJenis> = emptyList()
+    private var terpilih: SkemaJenis? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_buat_surat)
+
+        val grup = intent.getStringExtra(EXTRA_GROUPS) ?: GROUP_SURAT
+        daftar = if (grup == GROUP_NTCR) SkemaLokal.ntcr(this) else SkemaLokal.suratBiasa(this)
+
+        title = if (grup == GROUP_NTCR) getString(R.string.label_buat_ntcr) else getString(R.string.label_buat_surat)
 
         spinnerJenis = findViewById(R.id.spinner_jenis)
         wadahForm = findViewById(R.id.wadah_form)
         progres = findViewById(R.id.progres)
 
-        klien = SupabaseSesi.klien(this)
+        if (daftar.isEmpty()) {
+            Toast.makeText(this, R.string.register_kosong, Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
+        spinnerJenis.adapter = object : ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_spinner_item,
+            daftar.map { it.idJenis },
+        ) {
+            override fun getView(pos: Int, convert: View?, parent: android.view.ViewGroup): View {
+                val t = super.getView(pos, convert, parent) as TextView
+                t.text = daftar[pos].label
+                return t
+            }
+
+            override fun getDropDownView(pos: Int, convert: View?, parent: android.view.ViewGroup): View {
+                val t = super.getDropDownView(pos, convert, parent) as TextView
+                t.text = daftar[pos].label
+                return t
+            }
+        }
 
         spinnerJenis.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: android.widget.AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                val idJenis = spinnerJenis.getItemAtPosition(pos) as String
-                bangunForm(skema[idJenis])
+                bangunForm(daftar.getOrNull(pos))
             }
 
             override fun onNothingSelected(p: android.widget.AdapterView<*>?) = Unit
         }
 
-        findViewById<Button>(R.id.btn_kirim).setOnClickListener { kirim() }
+        findViewById<Button>(R.id.btn_kirim).setOnClickListener { buatPdf() }
 
-        muatSkema()
-    }
-
-    private fun muatSkema() {
-        progres.visibility = View.VISIBLE
-        lifecycleScope.launch {
-            skema = klien.muatSkema()
-            if (skema.isEmpty()) {
-                Toast.makeText(this@BuatSuratActivity, "Skema formulir belum ada. Terbitkan dulu dari aplikasi desktop.", Toast.LENGTH_LONG).show()
-                progres.visibility = View.GONE
-                return@launch
-            }
-
-            val daftar = skema.values.sortedBy { it.label }
-            spinnerJenis.adapter = object : ArrayAdapter<String>(
-                this@BuatSuratActivity,
-                android.R.layout.simple_spinner_item,
-                daftar.map { it.idJenis },
-            ) {
-                override fun getView(pos: Int, convert: View?, parent: android.view.ViewGroup): View {
-                    val t = super.getView(pos, convert, parent) as TextView
-                    t.text = daftar[pos].label
-                    return t
-                }
-
-                override fun getDropDownView(pos: Int, convert: View?, parent: android.view.ViewGroup): View {
-                    val t = super.getDropDownView(pos, convert, parent) as TextView
-                    t.text = daftar[pos].label
-                    return t
-                }
-            }
-
-            bangunForm(daftar.firstOrNull())
-            progres.visibility = View.GONE
-        }
+        bangunForm(daftar.firstOrNull())
     }
 
     private fun bangunForm(jenis: SkemaJenis?) {
@@ -108,12 +102,14 @@ class BuatSuratActivity : AppCompatActivity() {
         if (jenis == null) return
 
         for (b in jenis.fieldsInput) {
-            val label = TextView(this).apply {
+            // Nomor surat dibuat aplikasi, bukan diketik operator.
+            if (b.key.equals("nomorSurat", ignoreCase = true)) continue
+
+            wadahForm.addView(TextView(this).apply {
                 text = b.label + if (b.required) " *" else ""
                 textSize = 14f
                 setPadding(0, 12, 0, 4)
-            }
-            wadahForm.addView(label)
+            })
 
             when (b.type) {
                 "select" -> {
@@ -203,54 +199,91 @@ class BuatSuratActivity : AppCompatActivity() {
         }
     }
 
-    private fun kirim() {
+    private fun buatPdf() {
         val jenis = terpilih ?: return
 
-        // Validasi sederhana: field wajib tidak boleh kosong.
         for (b in jenis.fieldsInput.filter { it.required }) {
             if (b.type == "list") {
                 if (daftarBaris[b.key].orEmpty().isEmpty()) {
-                    Toast.makeText(this, "${b.label} wajib diisi minimal satu baris", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.wajib_satu_baris, b.label), Toast.LENGTH_SHORT).show()
                     return
                 }
                 continue
             }
-
-            if (nilaiBidang(b.key).kosong()) {
-                Toast.makeText(this, "${b.label} wajib diisi", Toast.LENGTH_SHORT).show()
+            if (teksBidang(b.key).isBlank()) {
+                Toast.makeText(this, getString(R.string.wajib_diisi, b.label), Toast.LENGTH_SHORT).show()
                 return
             }
         }
 
-        val fields = JSONObject()
-        for (b in jenis.fieldsInput) fields.put(b.key, nilaiBidang(b.key))
+        val isi = mutableListOf<Pair<String, String>>()
+        for (b in jenis.fieldsInput) {
+            if (b.key.equals("nomorSurat", ignoreCase = true)) continue
+            isi.add(b.label to teksNilai(b))
+        }
 
-        val nik = bidang["nik"]?.let { (it as EditText).text.toString().trim() } ?: ""
-        val nomor = "AND-" + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-        val tanggal = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        val tahun = Calendar.getInstance().get(Calendar.YEAR)
 
         progres.visibility = View.VISIBLE
         lifecycleScope.launch {
-            val hasil = klien.kirimSurat(jenis.idJenis, nomor, nik.ifBlank { null }, fields, tanggal)
-            progres.visibility = View.GONE
-
-            when (hasil) {
-                is SupabaseKlien.Hasil.Sukses -> {
-                    Toast.makeText(this@BuatSuratActivity, "Surat terkirim ke antrean (${jenis.idJenis}).", Toast.LENGTH_LONG).show()
-                    finish()
+            try {
+                val berkas = withContext(Dispatchers.IO) {
+                    val p = PengaturanSurat.ambil(this@BuatSuratActivity)
+                    val nomor = p.nomorBerikutnya(tahun, getSharedPreferences("sudes_surat", MODE_PRIVATE))
+                    SuratPdf.buat(
+                        this@BuatSuratActivity,
+                        jenis,
+                        nomor,
+                        isi,
+                        p,
+                        teksBidang("pejabatPenandatangan"),
+                    )
                 }
 
-                is SupabaseKlien.Hasil.Galat -> {
-                    val pesan = if (hasil.kode == 403 || hasil.pesan.contains("penuh", ignoreCase = true)) {
-                        "Antrean penuh (10 surat). Sinkronkan aplikasi desktop dulu."
-                    } else {
-                        "Gagal mengirim: ${hasil.pesan}"
-                    }
-                    Toast.makeText(this@BuatSuratActivity, pesan, Toast.LENGTH_LONG).show()
+                val lokasi = withContext(Dispatchers.IO) {
+                    PdfAksi.simpanKeDownloads(this@BuatSuratActivity, berkas)
                 }
+
+                progres.visibility = View.GONE
+                Toast.makeText(
+                    this@BuatSuratActivity,
+                    if (lokasi != null) getString(R.string.pdf_tersimpan, lokasi)
+                    else getString(R.string.pdf_gagal, "penyimpanan"),
+                    Toast.LENGTH_LONG,
+                ).show()
+
+                // Langsung tawarkan cetak — operator tidak perlu cari berkasnya.
+                PdfAksi.cetak(this@BuatSuratActivity, berkas, jenis.label)
+            } catch (e: Exception) {
+                progres.visibility = View.GONE
+                Toast.makeText(
+                    this@BuatSuratActivity,
+                    getString(R.string.pdf_gagal, e.message ?: "galat tidak diketahui"),
+                    Toast.LENGTH_LONG,
+                ).show()
             }
         }
     }
+
+    /** Nilai satu bidang sebagai teks; daftar (type="list") digabung per baris. */
+    private fun teksNilai(b: SkemaBidang): String {
+        val nilai = nilaiBidang(b.key)
+        return when (nilai) {
+            is JSONArray -> {
+                if (nilai.length() == 0) ""
+                else (0 until nilai.length()).joinToString("; ") { i ->
+                    val o = nilai.optJSONObject(i) ?: return@joinToString ""
+                    o.keys().asSequence()
+                        .mapNotNull { k -> o.optString(k).ifBlank { null } }
+                        .joinToString(", ")
+                }
+            }
+            is String -> nilai
+            else -> ""
+        }
+    }
+
+    private fun teksBidang(key: String): String = nilaiBidang(key).let { if (it is String) it else "" }
 
     /**
      * Nilai satu bidang. String untuk field biasa, JSONArray untuk type="list" —
@@ -281,5 +314,9 @@ class BuatSuratActivity : AppCompatActivity() {
         return arr
     }
 
-    private fun Any.kosong(): Boolean = this is String && isBlank()
+    companion object {
+        const val EXTRA_GROUPS = "grup"
+        const val GROUP_SURAT = "surat"
+        const val GROUP_NTCR = "ntcr"
+    }
 }
