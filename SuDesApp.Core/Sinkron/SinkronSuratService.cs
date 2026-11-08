@@ -181,30 +181,69 @@ public sealed class SinkronSuratService
             """, conn);
         cmd.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
 
-        await using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
-        while (await reader.ReadAsync(ct).ConfigureAwait(false))
+        try
         {
-            var json = reader.IsDBNull(7) ? "{}" : reader.GetString(7);
-            using var doc = JsonDocument.Parse(json);
+            await using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            while (await reader.ReadAsync(ct).ConfigureAwait(false))
+            {
+                daftar.Add(BacaBaris(reader, adaClientUuid: true));
+            }
+            return daftar;
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42703")
+        {
+            // Migrasi client_uuid (20261111000000) belum diterapkan di
+            // Supabase: baca tanpa kolomnya (client_uuid = null) agar
+            // sinkron tetap jalan. Idempotensi kolom ini hanya
+            // pengaman; ketiadaan kolom bukan alasan putaran gagal.
+            _logger.LogWarning(
+                ex,
+                "Kolom client_uuid tidak ditemukan — membaca antrean tanpa kolom itu. " +
+                "Terapkan migrasi 20261111000000_client_uuid_idempotensi.sql di SQL Editor.");
+        }
 
-            daftar.Add(new AntreanSuratBaris(
-                reader.GetGuid(0),
-                reader.GetString(1),
-                reader.GetString(2),
-                reader.IsDBNull(3) ? null : reader.GetGuid(3),
-                reader.GetString(4),
-                reader.IsDBNull(5) ? null : reader.GetString(5),
-                reader.IsDBNull(6) ? null : reader.GetString(6),
-                doc.RootElement.Clone(),
-                reader.GetString(8),
-                reader.GetInt16(9),
-                reader.IsDBNull(10) ? null : reader.GetString(10),
-                reader.GetDateTime(11),
-                reader.GetDateTime(12),
-                reader.IsDBNull(13) ? null : reader.GetGuid(13)));
+        await using var cmdLama = new NpgsqlCommand(
+            """
+            SELECT id, tenant_id, id_pengguna, id_perangkat, id_jenis,
+                   nomor_sementara, nik, data_json::text, status, batas_coba,
+                   catatan, dibuat_pada, diubah_pada
+              FROM antrean_surat
+             WHERE tenant_id = @tenant
+               AND (status = 'menunggu' OR (status = 'gagal' AND batas_coba < 3))
+             ORDER BY dibuat_pada
+             LIMIT 100
+            """, conn);
+        cmdLama.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
+
+        await using var readerLama = await cmdLama.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await readerLama.ReadAsync(ct).ConfigureAwait(false))
+        {
+            daftar.Add(BacaBaris(readerLama, adaClientUuid: false));
         }
 
         return daftar;
+    }
+
+    private static AntreanSuratBaris BacaBaris(NpgsqlDataReader reader, bool adaClientUuid)
+    {
+        var json = reader.IsDBNull(7) ? "{}" : reader.GetString(7);
+        using var doc = JsonDocument.Parse(json);
+
+        return new AntreanSuratBaris(
+            reader.GetGuid(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.IsDBNull(3) ? null : reader.GetGuid(3),
+            reader.GetString(4),
+            reader.IsDBNull(5) ? null : reader.GetString(5),
+            reader.IsDBNull(6) ? null : reader.GetString(6),
+            doc.RootElement.Clone(),
+            reader.GetString(8),
+            reader.GetInt16(9),
+            reader.IsDBNull(10) ? null : reader.GetString(10),
+            reader.GetDateTime(11),
+            reader.GetDateTime(12),
+            adaClientUuid && !reader.IsDBNull(13) ? reader.GetGuid(13) : null);
     }
 
     /// <summary>

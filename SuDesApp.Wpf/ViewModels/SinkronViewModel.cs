@@ -158,6 +158,12 @@ public class SinkronViewModel : ObservableObject
     /// <summary>Mode pasang terakhir: true = tombol Kode, false = tombol QR.</summary>
     public bool ModePasangKode => _modeKode;
 
+    /// <summary>QR ditampilkan hanya bila tombol Buat QR yang ditekan.</summary>
+    public bool TampilkanQr => !_modeKode;
+
+    /// <summary>Blok kode selalu ditampilkan (QR selalu punya kode pendamping).</summary>
+    public bool TampilkanKode => true;
+
     /// <summary>Petunjuk utama panel kode sesuai tombol yang ditekan.</summary>
     public string PetunjukPasangUtama => _modeKode
         ? "Ketik kode ini di aplikasi Android"
@@ -165,7 +171,7 @@ public class SinkronViewModel : ObservableObject
 
     /// <summary>Petunjuk kedua panel kode (jalur alternatif).</summary>
     public string PetunjukPasangKedua => _modeKode
-        ? "atau pindai QR di atas sebagai alternatif"
+        ? "Kode berlaku 10 menit, sekali pakai"
         : "atau ketik kode ini";
 
     /// <summary>Batas antrean Supabase per desa (trigger basis data menolak surat ke-11).</summary>
@@ -479,6 +485,8 @@ public class SinkronViewModel : ObservableObject
 
         _modeKode = modeKode;
         OnPropertyChanged(nameof(ModePasangKode));
+        OnPropertyChanged(nameof(TampilkanQr));
+        OnPropertyChanged(nameof(TampilkanKode));
         OnPropertyChanged(nameof(PetunjukPasangUtama));
         OnPropertyChanged(nameof(PetunjukPasangKedua));
 
