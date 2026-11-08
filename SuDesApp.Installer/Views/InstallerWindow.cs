@@ -55,6 +55,8 @@ namespace SuDesApp.Installer.Views
             Background = Brushes.Transparent;
             UseLayoutRounding = true;
             SnapsToDevicePixels = true;
+            if (Application.Current?.TryFindResource("AppFontFamily") is FontFamily font)
+                FontFamily = font;
 
             var kartuLuar = new Border
             {
@@ -74,49 +76,27 @@ namespace SuDesApp.Installer.Views
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            // Title bar
-            var titleBar = BuatTitleBar();
-            Grid.SetRow(titleBar, 0);
-            grid.Children.Add(titleBar);
-
-            // Kepala gradien emerald
+            // Kepala gradien emerald (judul + tombol x di kanan-atasnya, sama seperti
+            // header hijau LoginWindow — tanpa strip putih di atasnya).
             var kepala = BuatKepala();
-            Grid.SetRow(kepala, 1);
+            Grid.SetRow(kepala, 0);
             grid.Children.Add(kepala);
 
             // Isi (diganti per langkah)
             var isi = BuatIsi();
-            Grid.SetRow(isi, 2);
+            Grid.SetRow(isi, 1);
             grid.Children.Add(isi);
 
             // Tombol
             var tombol = BuatTombol();
-            Grid.SetRow(tombol, 3);
+            Grid.SetRow(tombol, 2);
             grid.Children.Add(tombol);
 
             kartu.Child = grid;
             kartuLuar.Child = kartu;
             Content = kartuLuar;
             TampilkanLangkah(0);
-        }
-
-        private Border BuatTitleBar()
-        {
-            var bar = new Border
-            {
-                Margin = new Thickness(-22, 0, -22, 0),
-                Height = 30,
-                Background = Brushes.White,
-            };
-            bar.MouseLeftButtonDown += (_, e) => { if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed) { try { DragMove(); } catch { /* sedang dimodali */ } } };
-            var dock = new DockPanel { LastChildFill = false };
-            var judul = new TextBlock { Text = Title, FontSize = 13, FontWeight = FontWeights.SemiBold, Foreground = new SolidColorBrush(Color.FromRgb(0x21, 0x21, 0x21)), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
-            dock.Children.Add(judul);
-            DockPanel.SetDock(judul, Dock.Left);
-            bar.Child = dock;
-            return bar;
         }
 
         private Border BuatKepala()
@@ -134,6 +114,8 @@ namespace SuDesApp.Installer.Views
                 ClipToBounds = true,
                 Padding = new Thickness(22)
             };
+            kepala.MouseLeftButtonDown += (_, e) => { if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed) { try { DragMove(); } catch { /* sedang dimodali */ } } };
+            var gridKepala = new Grid();
             var baris = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
             var lencana = new Border { Width = 52, Height = 52, CornerRadius = new CornerRadius(26), Background = new SolidColorBrush(Color.FromArgb(0xF2, 0xFF, 0xFF, 0xFF)), Padding = new Thickness(8) };
             try
@@ -152,7 +134,34 @@ namespace SuDesApp.Installer.Views
             teks.Children.Add(_judul);
             teks.Children.Add(_subjudul);
             baris.Children.Add(teks);
-            kepala.Child = baris;
+            gridKepala.Children.Add(baris);
+            Grid.SetRow(baris, 0);
+            Grid.SetColumn(baris, 0);
+            // Tombol x di kanan-atas bagian hijau (sama seperti LoginWindow).
+            var tutup = new Button
+            {
+                Content = "✕",
+                FontSize = 15,
+                FontWeight = FontWeights.Bold,
+                Width = 32,
+                Height = 28,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = Brushes.White,
+                ToolTip = "Tutup",
+                Cursor = System.Windows.Input.Cursors.Hand,
+                Padding = new Thickness(0),
+                Margin = new Thickness(0, -8, -8, 0)
+            };
+            tutup.Click += (_, _) => { if (_langkah == 2) return; Close(); };
+            gridKepala.Children.Add(tutup);
+            Grid.SetRow(tutup, 0);
+            Grid.SetColumn(tutup, 0);
+            gridKepala.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            gridKepala.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            kepala.Child = gridKepala;
             return kepala;
         }
 
@@ -296,7 +305,7 @@ namespace SuDesApp.Installer.Views
             var kartuLuar = (Border)Content;
             var kartu = (Border)kartuLuar.Child;
             var grid = (Grid)kartu.Child;
-            var isi = (Grid)grid.Children[2];
+            var isi = (Grid)grid.Children[1];
             var panelProgres = (StackPanel)isi.Tag;
             bool pasang = langkah == 2;
             panelProgres.Visibility = pasang ? Visibility.Visible : Visibility.Collapsed;

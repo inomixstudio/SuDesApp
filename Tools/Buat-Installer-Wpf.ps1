@@ -15,7 +15,7 @@ $setupName = "SuDesApp_${Versi}_Setup.exe"
 
 Write-Host "== Publish SuDesApp $Versi =="
 if (Test-Path $publishDir) { Remove-Item -Recurse -Force $publishDir }
-dotnet publish (Join-Path $repoRoot 'SuDesApp.Wpf/SuDesApp.Wpf.csproj') --configuration Release -r $Rku --self-contained true -p:Version=$Versi -p:AssemblyVersion="$Versi.0" -p:FileVersion="$Versi.0" -p:DebugType=none -p:DebugSymbols=false -p:InvariantGlobalization=true --output $publishDir
+dotnet publish (Join-Path $repoRoot 'SuDesApp.Wpf/SuDesApp.Wpf.csproj') --configuration Release -r $Rku --self-contained true -p:Version=$Versi -p:AssemblyVersion="$Versi.0" -p:FileVersion="$Versi.0" -p:DebugType=none -p:DebugSymbols=false --output $publishDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish gagal" }
 if (-not (Test-Path (Join-Path $publishDir 'SuDesApp.exe'))) { throw "SuDesApp.exe tidak ditemukan" }
 
@@ -27,7 +27,7 @@ Write-Host "Payload: $payloadZip"
 
 Write-Host "== Build installer WPF (single-file) =="
 if (Test-Path $outDir) { Remove-Item -Recurse -Force $outDir }
-dotnet publish (Join-Path $repoRoot 'SuDesApp.Installer/SuDesApp.Installer.csproj') --configuration Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -p:DebugSymbols=false -p:InvariantGlobalization=true --output $outDir
+dotnet publish (Join-Path $repoRoot 'SuDesApp.Installer/SuDesApp.Installer.csproj') --configuration Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -p:DebugSymbols=false --output $outDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish installer gagal" }
 
 $exe = Join-Path $outDir 'SuDesAppSetup.exe'
