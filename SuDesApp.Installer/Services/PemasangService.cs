@@ -42,13 +42,18 @@ namespace SuDesApp.Installer.Services
             if (zipTanam is not null)
             {
                 var folder = Path.Combine(Path.GetTempPath(), "SuDesApp-payload-" + App.Versi);
-                Directory.CreateDirectory(folder);
-                lapor.Report(new InstallStep("Mengurai payload aplikasi…", 5));
-                using var fs = File.Open(Path.Combine(folder, "payload.zip"), FileMode.Create, FileAccess.Write);
-                zipTanam.CopyTo(fs);
+                    lapor.Report(new InstallStep("Mengurai payload aplikasi…", 5));
+                // Tutup dulu stream tulis sebelum zip dibuka lagi untuk ekstraksi — bila dibiarkan,
+                // Windows mengunci berkasnya ("being used by another process") dan pasang gagal diam-diam.
+                var pathZip = Path.Combine(folder, "payload.zip");
+                using (var fs = File.Open(pathZip, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    zipTanam.CopyTo(fs);
+                }
+                zipTanam.Dispose();
                 var ubah = Path.Combine(folder, "ubah");
                 Directory.CreateDirectory(ubah);
-                ZipFile.ExtractToDirectory(Path.Combine(folder, "payload.zip"), Path.Combine(ubah, "publish"), overwriteFiles: true);
+                ZipFile.ExtractToDirectory(pathZip, Path.Combine(ubah, "publish"), overwriteFiles: true);
                 return Path.Combine(ubah, "publish");
             }
             // 2) Folder Payload/ di samping exe (uji & portable)
