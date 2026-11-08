@@ -452,6 +452,45 @@ public sealed class CetakContohSuratTests : IDisposable
     }
 
     /// <summary>
+    /// Baris Hubungan Pelapor ikut tercetak walau isinya kosong (formulir
+    /// contoh selalu mencantumkannya): kerangka pratinjau tidak boleh
+    /// kehilangan barisnya.
+    /// </summary>
+    [Fact]
+    public async Task KematianMencetakHubunganWalauKosong()
+    {
+        var config = BuatConfig();
+        var gen = new KematianGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<KematianGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var surat = SuratContoh(SuratConstants.KEMATIAN);
+        surat.Kematian = new KematianData
+        {
+            HariKematian = "Selasa",
+            TanggalKematian = "2021-12-14",
+            PukulKematian = "13.00",
+            PenyebabKematian = "Sakit",
+            NIKPelapor = "3215206412870002",
+            NamaPelapor = "Verawati",
+            AgamaPelapor = "Islam",
+            UmurPelapor = "1987-12-24",
+            PekerjaanPelapor = "Mengurus Rumah Tangga",
+            AlamatPelapor = "Belendung 03 RT/RW 10/04 Desa Sumberjaya Kec. Tempuran Kab. Karawang",
+            HubunganPelapor = ""
+        };
+
+        var pdf = await CetakAsync(gen, surat);
+        SimpanSampel("16b-kematian-tanpa-hubungan", pdf);
+        string teks = BacaTeks(pdf, "16b-kematian-tanpa-hubungan-isi");
+
+        PastikanTercetak(teks,
+            "Hubungan Pelapor dengan yang Meninggal Dunia",
+            "...............................");
+    }
+
+    /// <summary>
     /// Surat desa harus mencetak kop bersama, judul + baris nomor, nama orang
     /// KAPITAL, dan blok tanda tangan Perbup — bukan cuma PDF satu halaman.
     /// </summary>

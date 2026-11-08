@@ -120,11 +120,15 @@ namespace SuDesApp.GeneratorPdf
                 ("Alamat", AlamatPelaporFormulir(kematianDetail.AlamatPelapor))
             }));
 
-            if (!string.IsNullOrWhiteSpace(kematianDetail.HubunganPelapor))
-            {
-                halaman.Paragraf($"Hubungan Pelapor dengan yang Meninggal Dunia : {kematianDetail.HubunganPelapor}",
-                    jarakAtas: 8, jarakBawah: 3);
-            }
+            // Baris Hubungan selalu tercetak seperti formulir contoh (F-2.17):
+            // bila kosong, titik-titiknya yang tercetak — sama seperti baris
+            // lain — supaya kerangka surat tidak kehilangan barisnya saat
+            // pratinjau masih kosong atau data lama tanpa hubungan.
+            string hubunganTampil = string.IsNullOrWhiteSpace(kematianDetail.HubunganPelapor)
+                ? TitikIsian
+                : kematianDetail.HubunganPelapor!.Trim();
+            halaman.Paragraf($"Hubungan Pelapor dengan yang Meninggal Dunia : {hubunganTampil}",
+                jarakAtas: 8, jarakBawah: 3);
 
             // --- Kaki surat gaya formulir: hanya blok pejabat desa/kelurahan ---
             string tanggalTerformat = FormatTanggalUntukTampilan(suratData.TanggalSurat.ToString(DateFormatDb));
