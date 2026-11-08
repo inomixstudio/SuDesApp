@@ -281,16 +281,21 @@ object SuratPdf {
             val kata = blok.bagian.flatMap { (teks, tebal) ->
                 urai(teks, nilai).split(' ').filter { it.isNotEmpty() }.map { it to tebal }
             }
-            val lebarMaks = lebar - MARGIN_SISI * 2 - blok.indentKiri - blok.indent
+            // Lebar dasar harus sama dengan paragraf biasa: dikurangi indentKiri
+            // saja; indent baris pertama dikurangi per baris (lebarMaksBaris).
+            val lebarMaks = lebar - MARGIN_SISI * 2 - blok.indentKiri
             var barisSekarang = mutableListOf<Pair<String, Boolean>>()
             var lebarSekarang = 0f
+            var barisKe = 0
 
             for (k in kata) {
                 val paint = font.paint(UKURAN_TEKS, k.second)
                 val tambah = if (barisSekarang.isEmpty()) paint.measureText(k.first)
                 else paint.measureText(" ${k.first}")
-                if (lebarSekarang + tambah > lebarMaks && barisSekarang.isNotEmpty()) {
-                    gambarBarisCampur(barisSekarang, blok.rata, blok.indent, blok.indentKiri)
+                val batas = lebarMaksBaris(barisKe, lebarMaks, blok.indent)
+                if (lebarSekarang + tambah > batas && barisSekarang.isNotEmpty()) {
+                    gambarBarisCampur(barisSekarang, blok.rata, blok.indent, blok.indentKiri, barisKe == 0)
+                    barisKe += 1
                     barisSekarang = mutableListOf()
                     lebarSekarang = 0f
                 }
@@ -298,7 +303,7 @@ object SuratPdf {
                 lebarSekarang += tambah
             }
             if (barisSekarang.isNotEmpty()) {
-                gambarBarisCampur(barisSekarang, blok.rata, blok.indent, blok.indentKiri)
+                gambarBarisCampur(barisSekarang, blok.rata, blok.indent, blok.indentKiri, barisKe == 0)
             }
 
             if (blok.jarakBawah > 0f) lewati(blok.jarakBawah * kerapatan.faktorJarakBlok)
@@ -309,16 +314,20 @@ object SuratPdf {
             rata: RataBlok,
             indent: Float,
             indentKiri: Float,
+            barisPertama: Boolean,
         ) {
             val spasi = font.paint(UKURAN_TEKS).measureText(" ")
             var total = 0f
             for ((k, tebal) in kata) total += font.paint(UKURAN_TEKS, tebal).measureText(k)
             total += spasi * (kata.size - 1).coerceAtLeast(0)
-            val lebarMaks = lebar - MARGIN_SISI * 2 - indentKiri
+            // Baris pertama dikurangi indent pertama supaya tidak menjulur ke
+            // margin kanan; baris lainnya memakai lebar penuh.
+            val lebarMaks = lebarMaksBaris(if (barisPertama) 0 else 1, lebar - MARGIN_SISI * 2 - indentKiri, indent)
+            val xAwal = MARGIN_SISI + indentKiri + if (barisPertama) indent else 0f
 
             if (rata == RataBlok.JUSTIFY && kata.size > 1) {
                 val sisa = (lebarMaks - total) / (kata.size - 1)
-                var xx = MARGIN_SISI + indentKiri
+                var xx = xAwal
                 for ((k, tebal) in kata) {
                     val paint = font.paint(UKURAN_TEKS, tebal)
                     kanvas.drawText(k, xx, y + UKURAN_TEKS, paint)
@@ -340,7 +349,7 @@ object SuratPdf {
             y += UKURAN_TEKS * kerapatan.faktorLeading
         }
 
-        /** Gambar paragraf dengan lipat baris; baris pertama boleh menjorok. */
+        /** Gambar paragraf dengan lipat baris; baris pertama boleh menjorok. Baris JUSTIFY kecuali terakhir di-rata-kanankan. */
         private fun gambarParagraf(
             teks: String,
             paint: Paint,
@@ -348,19 +357,61 @@ object SuratPdf {
             indent: Float,
             indentKiri: Float,
         ) {
-            val lebarMaks = lebar - MARGIN_SISI * 2 - indentKiri
-            val baris = lipat(teks, paint, lebarMaks)
+            // Baris pertama memakai lebar tercetak dikurangi indent pertama;
+            // baris berikutnya lebar penuh. Ini menjaga baris pertama (mis.
+            // keterangan indent 50pt) tetap di dalam margin kanan 45pt.
+            val lebarPenuh = lebar - MARGIN_SISI * 2 - indentKiri
+            val baris = lipatIndentasi(teks, paint, lebarPenuh, indent)
             for ((i, b) in baris.withIndex()) {
                 if (y + UKURAN_TEKS > tinggi - kerapatan.marginBawah) halamanBaru()
-                val lebarBaris = paint.measureText(b)
-                val x = when (rata) {
-                    RataBlok.KANAN -> lebar - MARGIN_SISI - lebarBaris
-                    RataBlok.TENGAH -> MARGIN_SISI + indentKiri + (lebarMaks - lebarBaris) / 2f
-                    else -> MARGIN_SISI + indentKiri + if (i == 0) indent else 0f
+                val kata = b.split(' ').filter { it.isNotEmpty() }
+                val xMulai = MARGIN_SISI + indentKiri + if (i == 0) indent else 0f
+                if (rata == RataBlok.JUSTIFY && i != baris.lastIndex && kata.size > 1) {
+                    // Rata kanan: sebar spasi antar-kata sampai tepi teks penuh.
+                    var total = 0f
+                    for (k in kata) total += paint.measureText(k)
+                    val spasi = paint.measureText(" ")
+                    total += spasi * (kata.size - 1)
+                    val sisa = (lebarMaksBaris(i, lebarPenuh, indent) - total) / (kata.size - 1)
+                    var xx = xMulai + if (i == 0) 0f else 0f
+                    for (k in kata) {
+                        kanvas.drawText(k, xx, y + UKURAN_TEKS, paint)
+                        xx += paint.measureText(k) + spasi + sisa
+                    }
+                } else {
+                    val lebarBaris = paint.measureText(b)
+                    val x = when (rata) {
+                        RataBlok.KANAN -> lebar - MARGIN_SISI - lebarBaris
+                        RataBlok.TENGAH -> MARGIN_SISI + indentKiri + (lebarMaksBaris(i, lebarPenuh, indent) - lebarBaris) / 2f
+                        else -> xMulai
+                    }
+                    kanvas.drawText(b, x, y + UKURAN_TEKS, paint)
                 }
-                kanvas.drawText(b, x, y + UKURAN_TEKS, paint)
                 y += UKURAN_TEKS * kerapatan.faktorLeading
             }
+        }
+
+        /** Lebar teks baris ke-[i]: baris pertama dikurangi indent pertama. */
+        private fun lebarMaksBaris(i: Int, lebarPenuh: Float, indent: Float): Float =
+            if (i == 0) (lebarPenuh - indent).coerceAtLeast(40f) else lebarPenuh
+
+        private fun lipatIndentasi(teks: String, paint: Paint, lebarPenuh: Float, indent: Float): List<String> {
+            val hasil = mutableListOf<String>()
+            var baris = StringBuilder()
+            for (kata in teks.split(' ')) {
+                val uji = if (baris.isEmpty()) kata else "$baris $kata"
+                val batas = lebarMaksBaris(hasil.size, lebarPenuh, indent)
+                if (paint.measureText(uji) > batas && baris.isNotEmpty()) {
+                    hasil.add(baris.toString())
+                    baris = StringBuilder(kata)
+                } else {
+                    baris = StringBuilder(uji)
+                }
+            }
+            if (baris.isNotEmpty()) hasil.add(baris.toString())
+            // Baris tunggal yang panjangnya melebihi batas tetap dipecah di sini;
+            // baris pendek dibiarkan apa adanya supaya lisip tetap persis.
+            return hasil
         }
 
         private fun lipat(teks: String, paint: Paint, lebarMaks: Float): List<String> {
