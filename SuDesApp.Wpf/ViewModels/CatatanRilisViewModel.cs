@@ -179,6 +179,28 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.13.0 (9 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Aktivasi Lisensi — Sederhana & Seragam", new List<string>
+                        {
+                            "Kartu Aktivasi Manual kini hanya menulis 'Masukan Kode.' dan kartu Server Lisensi diratakan dengan pola yang sama; Blok Pusat Administrasi yang rahasia tidak lagi dicantumkan di informasi lisensi server.",
+                            "Kode aktivasi manual dinormalisasi otomatis (huruf kecil, spasi, dan tanda hubung dari salinan dirapikan), dicek bentuknya sebelum disimpan, didukung Enter = Simpan & Cek, Tempel, dan Hapus; contoh format diperbaiki menjadi SUDES-K7Q2-4831.",
+                            "Tombol Hubungkan pada kartu Server Lisensi menyalakan server lokal bila tersedia lalu menyambung otomatis berulang sampai server menjawab, dan langsung memeriksa status langganan."
+                        }),
+                        new CatatanRilisSubSection("IDM & API Desa — Data Selalu Tampil", new List<string>
+                        {
+                            "Halaman IDM menampilkan data terakhir yang terbit (mis. penilaian 2024 dengan 55 indikator) meski sertifikat situs pusat kedaluwarsa: klien turun ke HTTP dengan peringatan terbuka 'tanpa enkripsi', dan galat hanya tampil bila jalur itu pun gagal.",
+                            "API Desa (SuDesApp.Api) diuji hidup: health, versi, menu, statistik, login sesi, dan proteksi 401 tanpa bearer semuanya menjadi benar."
+                        }),
+                        new CatatanRilisSubSection("Surat, PDF, dan Beranda", new List<string>
+                        {
+                            "Baris Hubungan Pelapor dengan yang Meninggal Dunia selalu tercetak pada Surat Kematian sesuai formulir contoh F-2.17 (nilai terisi, atau titik-titik bila kosong).",
+                            "Pembuatan PDF (surat bawaan, Rekening Koran, Template Surat, dan Laporan IDM) dipindah ke thread latar supaya pratinjau dan simpan tidak membekukan aplikasi.",
+                            "Beranda memakai animasi masuk bertahap, angka statistik menghitung naik, dan kartu pintasan terangkat halus saat dikursor."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.12.1 (8 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
