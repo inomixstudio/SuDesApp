@@ -151,16 +151,16 @@ namespace SuDesApp.Wpf.ViewModels
                 .ToList();
         }
 
-        /// <summary>Emoji pintasan; jenis tanpa ikon khusus memakai ikon surat.</summary>
+        /// <summary>Ikon pintasan (tema ikut via AppIconFont, bukan emoji OS).</summary>
         private static string IkonJenis(string jenis) => jenis switch
         {
-            SuratConstants.SKD_UMUM => "\uD83D\uDCC4",
-            SuratConstants.SKTM => "\uD83D\uDCB0",
-            SuratConstants.SKU => "\uD83C\uDFEA",
-            SuratConstants.DOMISILI_WARGA => "\uD83C\uDFE0",
-            SuratConstants.PENGANTAR_SKCK => "\uD83D\uDD0E",
-            SuratConstants.KEMATIAN => "\uD83D\uDD4A",
-            _ => "\uD83D\uDCC4"
+            SuratConstants.SKD_UMUM => SuDesApp.Wpf.Utilities.IkonMenu.Dokumen,
+            SuratConstants.SKTM => SuDesApp.Wpf.Utilities.IkonMenu.Laporan,
+            SuratConstants.SKU => SuDesApp.Wpf.Utilities.IkonMenu.Perusahaan,
+            SuratConstants.DOMISILI_WARGA => SuDesApp.Wpf.Utilities.IkonMenu.Beranda,
+            SuratConstants.PENGANTAR_SKCK => SuDesApp.Wpf.Utilities.IkonMenu.Perisai,
+            SuratConstants.KEMATIAN => SuDesApp.Wpf.Utilities.IkonMenu.Kalender,
+            _ => SuDesApp.Wpf.Utilities.IkonMenu.Blanko
         };
 
         /// <summary>Muat statistik, pintasan, dan aktivitas terbaru dari register & data warga.</summary>
@@ -175,15 +175,23 @@ namespace SuDesApp.Wpf.ViewModels
                 // Ringkasan register dihitung di database (COUNT/GROUP BY + 5 baris
                 // terbaru). Sumbernya tabel Surat — bukan buku agenda masuk/keluar —
                 // supaya surat yang dibuat lewat Buat Surat benar-benar muncul di sini.
-                var ringkasan = await _surat.GetRingkasanRegisterAsync(5);
+                // Statistik warga dan ringkasan register berjalan paralel (WhenAll);
+                // statistik warga memakai cache Warga_Statistik 30 menit, bukan
+                // CountWargaAsync mentah yang full-scan tiap muat.
+                var tugasRingkasan = _surat.GetRingkasanRegisterAsync(5);
+                var tugasWarga = _warga.GetStatistikWargaAsync();
+                await Task.WhenAll(tugasRingkasan, tugasWarga);
 
+                var ringkasan = await tugasRingkasan;
                 TotalSurat = ringkasan.Total;
                 SuratHariIni = ringkasan.HariIni;
                 SuratBulanIni = ringkasan.BulanIni;
 
                 IsiTerbaru(ringkasan.Terbaru);
                 IsiPintasan(ringkasan.PerJenis);
-                TotalWarga = await _warga.CountWargaAsync();
+
+                var statistik = await tugasWarga;
+                TotalWarga = statistik.TotalSeluruh;
 
                 WaktuMuat = DateTime.Now.ToString("HH:mm:ss");
                 PesanStatus = ringkasan.Total == 0

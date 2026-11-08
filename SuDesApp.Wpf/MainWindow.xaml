@@ -291,9 +291,9 @@
                         </TextBlock>
                     </Grid>
                 </Expander.Header>
-                <!-- Chevron '❯' berputar 90° serentak dengan tinggi isi yang tumbuh/menyusut;
+                <!-- Chevron berputar 90° serentak dengan tinggi isi yang tumbuh/menyusut;
                      keduanya dijalankan dari kode (MainWindow.AnimasikanAccordion) supaya satu
-                     durasi mengikuti kecepatan animasi pilihan pengguna. -->
+                     durasi mengikuti kecepatan animasi pilihan pengguna (KecepatanAnimasiPrefs). -->
                 <!-- ClipToBounds: tinggi konten dianimasikan dari kode-behind, dan
                      tanpa ini isi bisa "bocor" ke luar selama animasi berjalan. -->
                 <StackPanel x:Name="AccordionContent" Margin="12,0,2,2" ClipToBounds="True"
@@ -943,7 +943,9 @@
                     </TextBlock>
                 </Border>
 
-                <!-- Chip resolusi layar (kanan) — diisi ScreenResolutionService -->
+                <!-- Chip resolusi layar (kanan) — diisi ScreenResolutionService.
+                     Pada lebar minimum (900px) chip ini disembunyikan (tooltip tetap
+                     membawa info resolusi via status IDM) agar desa/langganan prioritas. -->
                 <Border DockPanel.Dock="Right" Background="{DynamicResource AccentSubtleBrush}"
                         CornerRadius="9" Padding="9,2" VerticalAlignment="Center"
                         ToolTip="Resolusi &amp; skala layar terdeteksi">

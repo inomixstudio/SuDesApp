@@ -143,8 +143,22 @@ namespace SuDesApp.Wpf.ViewModels
             };
 
             TampilkanBagian(0);
-            PerbaruiPratinjau();
-            _ = LoadAsync();
+            // Pratinjau awal disusun setelah LoadAsync siap (bukan dari form kosong).
+            // LoadAsync dipanggil eksplisit oleh navigasi lewat DibukaAsync().
+        }
+
+        private bool _sudahDimuatPermintaan;
+        private string? _kodeKabupatenTerakhir;
+
+        /// <summary>
+        /// Dipanggil navigasi setiap halaman dibuka..Idempotent: hanya memuat
+        /// sekali per sesi; kunjungan berikutnya langsung memakai isian yang ada.
+        /// </summary>
+        public async Task DibukaAsync()
+        {
+            if (_sudahDimuatPermintaan) return;
+            _sudahDimuatPermintaan = true;
+            await LoadAsync();
         }
 
         // =================================================================
@@ -350,7 +364,11 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        /// <summary>Pindahkan sumber logo dan segarkan pratinjau.</summary>
+        /// <summary>
+        /// Pindahkan sumber logo dan segarkan pratinjau.
+        /// Gambar kop (berat) di-debounce via PerbaruiKopCetak; teks pratinjau
+        /// boleh instan — keduanya dipanggil di PerbaruiPratinjau.
+        /// </summary>
         private void TerapkanSumberLogo(PengaturanCetak.SumberLogo sumber)
         {
             PengaturanCetak.SetSumberLogo(sumber);
@@ -1380,9 +1398,20 @@ namespace SuDesApp.Wpf.ViewModels
             if (string.Equals(kunci, _kopCetakKunci, StringComparison.Ordinal)) return;
             _kopCetakKunci = kunci;
 
-            _kopCetakBatal?.Cancel();
+            BatalkanKopCetakLama();
             var batal = _kopCetakBatal = new CancellationTokenSource();
             _ = MuatKopCetakAsync(desa, logoPath, _ukuranKertas, batal.Token);
+        }
+
+        private void BatalkanKopCetakLama()
+        {
+            var lama = _kopCetakBatal;
+            _kopCetakBatal = null;
+            if (lama is null) return;
+            try { lama.Cancel(); } catch { /* sudah selesai */ }
+            // Dispose sekarang aman: tugas MuatKopCetakAsync tidak lagi
+            // membaca IsCancellationRequested setelah Cancel (await ditunda).
+            try { lama.Dispose(); } catch { /* sudah dibuang */ }
         }
 
         private async Task MuatKopCetakAsync(
@@ -1581,10 +1610,16 @@ namespace SuDesApp.Wpf.ViewModels
 
                 // Nomor surat yang diatur per wilayah mengikuti kode kabupaten/kota
                 // yang benar-benar tersimpan pada data desa. Nama yang diketik manual
-                // tidak cukup untuk memilih aturan hukum secara deterministik.
+                // tidak cukup untuk memilih aturan hukum secara determin deterministic.
                 SuDesApp.Configuration.PenomoranOverrideStore.GunakanDaerah(settings?.KodeKabupaten);
-                if (!string.IsNullOrWhiteSpace(settings?.KodeKabupaten) && _jenisSuratConfig != null)
+                var kodeBaru = settings?.KodeKabupaten;
+                var kodeLama = _kodeKabupatenTerakhir;
+                if (!string.IsNullOrWhiteSpace(kodeBaru) && _jenisSuratConfig != null
+                    && !string.Equals(kodeBaru, kodeLama, StringComparison.Ordinal))
+                {
+                    _kodeKabupatenTerakhir = kodeBaru;
                     await _jenisSuratConfig.RefreshConfigAsync();
+                }
 
                 await JalankanDiUtasHalamanAsync(async () =>
                 {

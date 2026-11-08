@@ -84,7 +84,7 @@ namespace SuDesApp.Wpf.ViewModels
 
             _peringatan = peringatan;
             _previewKembali = previewDenganKembali;
-            SaveCommand = new AsyncRelayCommand(SaveAsync);
+            SaveCommand = new AsyncRelayCommand(SaveAsync, () => !IsBusy && (_tugasInisialisasi == null || _tugasInisialisasi.IsCompleted));
             CancelCommand = new AsyncRelayCommand(CancelAsync);
             PratinjauCommand = new AsyncRelayCommand(PratinjauAsync, () => !IsBusy);
             BukaPengaturanSuratCommand = new RelayCommand(BukaPengaturanSurat);
@@ -208,8 +208,8 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 if (SetProperty(ref _isBusy, value))
                 {
-                    SaveCommand.RaiseCanExecuteChanged();
-                    PratinjauCommand.RaiseCanExecuteChanged();
+                    ((AsyncRelayCommand)SaveCommand).RaiseCanExecuteChanged();
+                    ((AsyncRelayCommand)PratinjauCommand).RaiseCanExecuteChanged();
                 }
             }
         }
@@ -286,6 +286,17 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
+        /// Varian eksplisit: sama dengan Configure tetapi mengembalikan Task
+        /// inisialisasi sehingga pemanggil (navigasi/uji) bisa await hasil nomor
+        /// otomatis. Configure tetap sinkron untuk kompatibilitas lama.
+        /// </summary>
+        public Task ConfigureAsync(string templateName)
+        {
+            Configure(templateName);
+            return _tugasInisialisasi ?? Task.CompletedTask;
+        }
+
+        /// <summary>
         /// Konfigurasi form dalam MODE EDIT: muat data surat yang sudah ada, isi form,
         /// dan kunci nomor surat (nomor tidak boleh diubah saat edit).
         /// </summary>
@@ -331,10 +342,11 @@ namespace SuDesApp.Wpf.ViewModels
         {
             try
             {
-                var jenis = await _unitOfWork.JenisSuratRepository.GetJenisSuratByNamaAsync(_templateName);
+                // Nomor surat (MAX+1) di thread latar; UI thread tidak diblokir.
+                var jenis = await Task.Run(() => _unitOfWork.JenisSuratRepository.GetJenisSuratByNamaAsync(_templateName)).ConfigureAwait(true);
                 if (jenis != null)
                 {
-                    var nomor = await _unitOfWork.JenisSuratRepository.GenerateNomorSuratAsync(jenis.KodeJenis!);
+                    var nomor = await Task.Run(() => _unitOfWork.JenisSuratRepository.GenerateNomorSuratAsync(jenis.KodeJenis!)).ConfigureAwait(true);
                     baseVm.SetNomorSurat(nomor);
                 }
             }
@@ -374,15 +386,10 @@ namespace SuDesApp.Wpf.ViewModels
         /// Tombol Pratinjau: susun surat dari isian yang SEDANG ada di form, buat
         /// PDF sementara, lalu tampilkan halaman pratinjau DI DALAM form.
         ///
-        /// Tidak ada yang ditulis ke register dan nomor surat tidak dipesan: ini
-        /// murni pemeriksaan hasil cetak sebelum Simpan. Form tidak ditinggalkan
-        /// (pratinjau hanya menutupi isian), jadi Batal pada pratinjau kembali ke
-        /// isian yang tetap utuh.
-        ///
-        /// Isian yang belum diisi TIDAK menghalangi pratinjau: selama pembuatan
-        /// PDF, <see cref="PratinjauIsian"/> membuat kolom kosong tercetak sebagai
-        /// titik-titik sehingga kerangka surat tetap tampil utuh — inilah gunanya
-        /// melihat bentuk surat sebelum mulai mengisi.
+        /// Bila form MASIH KOSONG, tombol ini juga berfungsi sebagai cetak
+        /// template kosong: kerangka surat (kop, judul, label & titik-titik)
+        /// tercetak utuh tanpa perlu mengisi apa pun — sesuai permintaan
+        /// "bisa dicetak tanpa inputan data".
         /// </summary>
         private async Task PratinjauAsync()
         {
@@ -416,8 +423,9 @@ namespace SuDesApp.Wpf.ViewModels
                     {
                         // Selama pembuatan PDF, kolom kosong tercetak sebagai
                         // titik-titik sehingga kerangka surat tetap tampil utuh.
-                        var hasilPdf = await SuratPdfHelper.GeneratePdfAsync(
-                            _serviceProvider, _appConfig, suratData, _logger, _templateName);
+                        // Generate di thread_pool agar UI tetap responsif.
+                        var hasilPdf = await Task.Run(() => SuratPdfHelper.GeneratePdfAsync(
+                            _serviceProvider, _appConfig, suratData, _logger, _templateName)).ConfigureAwait(true);
                         path = hasilPdf.Jalur;
                         penyebabPratinjau = hasilPdf.PesanGalat;
                     }

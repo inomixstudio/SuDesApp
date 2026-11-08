@@ -69,6 +69,12 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
+                <!-- Skeleton loading: tampil selama memuat supaya kartu tidak kosong 0 -->
+                <StackPanel Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+                            Margin="0,0,0,8">
+                    <Border Style="{StaticResource SkeletonBar}" Width="220" HorizontalAlignment="Left"/>
+                    <Border Style="{StaticResource SkeletonBar}" Width="160" HorizontalAlignment="Left" Margin="0,6,0,0"/>
+                </StackPanel>
 
                 <!-- ===== Kartu statistik ===== -->
                 <UniformGrid Columns="4" Margin="0,0,-12,0">
@@ -134,7 +140,8 @@
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding Ikon}" FontSize="15"
+                                            <TextBlock Grid.Column="0" Text="{Binding Ikon}" FontSize="15" FontFamily="{StaticResource AppIconFont}"
+                                                       Foreground="{DynamicResource AccentTextBrush}"
                                                        Width="24" TextAlignment="Center"
                                                        VerticalAlignment="Center"/>
                                             <StackPanel Grid.Column="1" Margin="8,0,0,0">

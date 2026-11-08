@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SuDesApp.Data.Models
 {
@@ -44,5 +46,29 @@ namespace SuDesApp.Data.Models
             new() { Label = "SK Tidak Punya Rumah", Jenis = SuratConstants.SK_TIDAK_PUNYA_RUMAH },
             new() { Label = "Izin Keramaian", Jenis = SuratConstants.IZIN_KERAMAIAN },
         };
+        /// <summary>
+        /// Alias tampil → jenis yang diterima hasil copy/paste dari dokumen desa
+        /// (mis. label lama). Dipakai WPF & backend lewat katalog ini, bukan
+        /// duplikasi lokal di ViewModel.
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, string> Alias =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["IZIN ORTU / SUAMI"] = SuratConstants.IZIN_ORTU,
+                ["NUMPANG NIKAH"] = SuratConstants.NTCR_N8,
+                ["IJIN TINGGAL"] = SuratConstants.IJIN_TINGGAL
+            };
+
+        public static bool TryResolveTemplate(string displayName, out string template)
+        {
+            var dibersihkan = displayName.Trim();
+            var pilihan = Semua.FirstOrDefault(p => string.Equals(p.Label, dibersihkan, StringComparison.OrdinalIgnoreCase));
+            if (pilihan is not null)
+            {
+                template = pilihan.Jenis;
+                return true;
+            }
+            return Alias.TryGetValue(dibersihkan, out template!);
+        }
     }
 }

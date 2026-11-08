@@ -11,20 +11,10 @@ internal static class BuatSuratCatalog
     public static IReadOnlyList<(string Label, string Template)> MenuSurat { get; } =
         MenuSuratKatalog.Semua.Select(p => (p.Label, p.Jenis)).ToList();
 
-    private static readonly IReadOnlyDictionary<string, string> TemplateByDisplay =
-        MenuSurat.ToDictionary(item => item.Label, item => item.Template, StringComparer.OrdinalIgnoreCase)
-            .Concat(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["IZIN ORTU / SUAMI"] = SuratConstants.IZIN_ORTU,
-                ["NUMPANG NIKAH"] = SuratConstants.NTCR_N8,
-                ["IJIN TINGGAL"] = SuratConstants.IJIN_TINGGAL
-            })
-            .ToDictionary(item => item.Key, item => item.Value, StringComparer.OrdinalIgnoreCase);
-
     public static string ResolveTemplate(string displayName)
     {
         ArgumentNullException.ThrowIfNull(displayName);
-        return TemplateByDisplay.TryGetValue(displayName.Trim(), out var template)
+        return MenuSuratKatalog.TryResolveTemplate(displayName, out var template)
             ? template
             : displayName;
     }

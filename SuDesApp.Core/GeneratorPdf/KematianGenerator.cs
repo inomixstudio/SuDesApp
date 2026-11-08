@@ -21,8 +21,8 @@ namespace SuDesApp.GeneratorPdf
         protected override string JudulSurat => "SURAT KETERANGAN KEMATIAN";
         private const string DateFormatDb = "yyyy-MM-dd";
         private const string DateFormatUi = "dd-MM-yyyy";
-        private const float LeadingRapat = 12f;
-        private const float LeadingData = 14f;
+        private const float LeadingRapat = 14f;
+        private const float LeadingData = 16f;
         private const float JarakLabelTitikDua = 110f;
 
         public KematianGenerator(AppConfig config, FileService fileService, IDesaRepository desaRepository, ISuratRepository suratRepository, SettingsManager settingsManager, ILogger<KematianGenerator> logger, ILoggerFactory loggerFactory)
@@ -37,10 +37,22 @@ namespace SuDesApp.GeneratorPdf
             var kematianDetail = suratData.Kematian ?? new KematianData();
 
             // --- Kotak kode formulir di kanan atas (text box ala formulir F-2.17) ---
-            halaman.Blok(container => container.PaddingBottom(10f).AlignRight().Width(LebarKotakKode)
-                .Border(0.75f).BorderColor(Colors.Black).Padding(3f)
-                .AlignMiddle()
-                .Text(KODE_FORMULIR_KEMATIAN).FontSize(DEFAULT_FONT_SIZE_KEMATIAN).Bold().AlignCenter());
+            // FIX: sebelumnya AlignRight() pada wadah blok TIDAK menggerakkan kotak
+            // (HAlign wadah tabel diabaikan LayoutEngine) sehingga kotak F-2.17
+            // menempel di kiri. Diganti BARIS TABEL 2 kolom: kolom spacER lebar
+            // penuh + kolom kode 89pt — kotak dijamin di tepi kanan seperti lampiran.
+            halaman.Blok(container => container.Table(tabel =>
+            {
+                tabel.ColumnsDefinition(cols =>
+                {
+                    cols.RelativeColumn(100);
+                    cols.ConstantColumn(LebarKotakKode);
+                });
+                tabel.Cell().Text(string.Empty);
+                tabel.Cell()
+                    .Border(0.75f).BorderColor(Colors.Black).Padding(3f)
+                    .Text(KODE_FORMULIR_KEMATIAN).FontSize(DEFAULT_FONT_SIZE_KEMATIAN).Bold().AlignCenter();
+            }));
 
             // --- Identitas desa berlabel ---
             halaman.Blok(container => container.Column(baris =>
@@ -67,7 +79,9 @@ namespace SuDesApp.GeneratorPdf
                     .LineHeight(LeadingRapat / DEFAULT_FONT_SIZE);
             }));
 
-            // --- Isi surat ---
+            // --- Isi surat (sesuai lampiran Word: satu kalimat pembuka,
+            //     lalu NIK/Nama/Umur dkk. tanpa titik dua tambahan di label —
+            //     nilai setelah "…" dipertahankan pada halaman berikutnya) ---
             halaman.Paragraf("Yang bertanda tangan dibawah ini, menerangkan bahwa :", jarakAtas: 10, jarakBawah: 8);
 
             string umurAlmarhumDisplay = HitungUmurPadaTanggal(wargaAlmarhum.TanggalLahir!, kematianDetail.TanggalKematian!, "Tanggal Lahir Almarhum/ah", "Tanggal Kematian");

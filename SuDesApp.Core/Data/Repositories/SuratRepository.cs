@@ -327,6 +327,7 @@ namespace SuDesApp.Data.Repositories
                 ("Surat", "KodeJenis", "ALTER TABLE Surat ADD COLUMN KodeJenis TEXT NULL;"),
                 ("Surat", "AdditionalData", "ALTER TABLE Surat ADD COLUMN AdditionalData TEXT NULL;"),
                 ("Surat", "CreatedAt", "ALTER TABLE Surat ADD COLUMN CreatedAt TEXT NULL;"),
+                ("Surat", "IdAntreanSinkron", "ALTER TABLE Surat ADD COLUMN IdAntreanSinkron TEXT NULL;"),
                 ("Surat", "UpdatedAt", "ALTER TABLE Surat ADD COLUMN UpdatedAt TEXT NULL;"),
                 // Alur persetujuan + keaslian surat (opsional per surat).
                 ("Surat", "StatusPersetujuan", "ALTER TABLE Surat ADD COLUMN StatusPersetujuan TEXT NULL;"),

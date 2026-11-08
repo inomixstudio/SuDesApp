@@ -76,7 +76,9 @@ namespace SuDesApp.Services
         IReadOnlyList<BarisIdm> Baris);
 
     /// <summary>Jawaban lengkap satu permintaan, termasuk alasan bila tidak berhasil.</summary>
-    /// <param name="LewatHttp">True bila data terpaksa diambil tanpa enkripsi (sertifikat situs pusat bermasalah).</param>
+    /// <param name="LewatHttp">Tidak lagi dipakai: jalur HTTP sudah ditutup (fail-closed).
+    /// Dipertahankan hanya untuk kompatibilitas kontrak warisan cadangan lama.</param>
+    [Obsolete("Jalur HTTP dihapus — selalu false untuk muatan baru. Bila true, berasal dari cadangan lama sebelum November 2026.")]
     public sealed record MuatanIdm(StatusMuatIdm Status, HasilIdm? Hasil, string Pesan, bool LewatHttp = false)
     {
         public static MuatanIdm Galat(string pesan) => new(StatusMuatIdm.Gagal, null, pesan);
@@ -435,7 +437,7 @@ namespace SuDesApp.Services
 
         public IdmKemendesaKlien(HttpClient? http = null, ILogger<IdmKemendesaKlien>? logger = null)
         {
-            _http = http ?? new HttpClient { Timeout = TimeSpan.FromSeconds(25) };
+            _http = http ?? new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
             _logger = logger ?? NullLogger<IdmKemendesaKlien>.Instance;
         }
 
