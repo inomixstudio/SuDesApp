@@ -298,11 +298,14 @@ object DaftarHadirPdf {
             val tetap = kolom.sumOf { lebarDasar(it).toDouble() }
             val relatif = kolom.sumOf { lebarRelatif(it).toDouble() }
             val lebarTabel = lebar - MARGIN_SISI * 2
-            val sisa = lebarTabel - tetap
+            // Bila lebar tersisa negatif (kolom tetap berlebih), berikan porsi
+            // minimal per kolom relatif agar tidak ada lebar negatif.
+            val sisa = maxOf(lebarTabel - tetap.toFloat(), kolom.count { lebarDasar(it) == 0f } * 20f)
+            val sisaGanda = sisa.toDouble()
             val hasil = mutableMapOf<String, Float>()
             for (k in kolom) {
                 val dasar = lebarDasar(k)
-                hasil[k] = if (dasar > 0f) dasar else (sisa * lebarRelatif(k) / relatif).toFloat()
+                hasil[k] = if (dasar > 0f) dasar else (sisaGanda * lebarRelatif(k) / relatif).toFloat()
             }
             return hasil
         }
@@ -392,7 +395,7 @@ object DaftarHadirPdf {
             val desa = pengaturan.namaDesa
             val namaJudul = if (desa.isBlank()) "" else titleCase(desa.lowercase())
             val tanggal = tanggalDariHariTanggal(data.hariTanggal) ?: Date()
-            val tanggalTeks = SimpleDateFormat("d MMMM yyyy", Locale("id", "ID")).format(tanggal)
+            val tanggalTeks = SimpleDateFormat("dd/MM/yyyy", Locale("id", "ID")).format(tanggal)
             val tempatTanggal = if (namaJudul.isBlank()) tanggalTeks else "$namaJudul, $tanggalTeks"
             val jabatan = Kop.jabatan(pengaturan, "Kepala Desa")
             val namaPejabat = pengaturan.kepalaDesa.ifBlank { "..........................." }
@@ -429,9 +432,9 @@ object DaftarHadirPdf {
             val bersih = teks.trim()
             val tanpaHari = bersih.substringAfter(",", bersih).trim()
             val pola = listOf(
+                SimpleDateFormat("dd/MM/yyyy", Locale("id", "ID")),
                 SimpleDateFormat("d MMMM yyyy", Locale("id", "ID")),
                 SimpleDateFormat("yyyy-MM-dd", Locale.US),
-                SimpleDateFormat("dd/MM/yyyy", Locale.US),
                 SimpleDateFormat("dd-MM-yyyy", Locale.US),
             )
             for (p in pola) {

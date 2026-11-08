@@ -163,7 +163,7 @@ object SuratPdf {
             pejabat: String,
             logo: Bitmap?,
         ) {
-            val tanggal = SimpleDateFormat("d MMMM yyyy", Locale("id", "ID")).format(Date())
+            val tanggal = SimpleDateFormat("dd/MM/yyyy", Locale("id", "ID")).format(Date())
 
             kop(pengaturan, if (jenis.pakaiLogo) logo else null)
             if (!jenis.halamanPenuh) {
@@ -294,7 +294,7 @@ object SuratPdf {
                 else paint.measureText(" ${k.first}")
                 val batas = lebarMaksBaris(barisKe, lebarMaks, blok.indent)
                 if (lebarSekarang + tambah > batas && barisSekarang.isNotEmpty()) {
-                    gambarBarisCampur(barisSekarang, blok.rata, blok.indent, blok.indentKiri, barisKe == 0)
+                    gambarBarisCampur(barisSekarang, blok.rata, blok.indent, blok.indentKiri, barisKe == 0, terakhir = false)
                     barisKe += 1
                     barisSekarang = mutableListOf()
                     lebarSekarang = 0f
@@ -303,7 +303,7 @@ object SuratPdf {
                 lebarSekarang += tambah
             }
             if (barisSekarang.isNotEmpty()) {
-                gambarBarisCampur(barisSekarang, blok.rata, blok.indent, blok.indentKiri, barisKe == 0)
+                gambarBarisCampur(barisSekarang, blok.rata, blok.indent, blok.indentKiri, barisKe == 0, terakhir = true)
             }
 
             if (blok.jarakBawah > 0f) lewati(blok.jarakBawah * kerapatan.faktorJarakBlok)
@@ -315,6 +315,7 @@ object SuratPdf {
             indent: Float,
             indentKiri: Float,
             barisPertama: Boolean,
+            terakhir: Boolean,
         ) {
             val spasi = font.paint(UKURAN_TEKS).measureText(" ")
             var total = 0f
@@ -325,7 +326,9 @@ object SuratPdf {
             val lebarMaks = lebarMaksBaris(if (barisPertama) 0 else 1, lebar - MARGIN_SISI * 2 - indentKiri, indent)
             val xAwal = MARGIN_SISI + indentKiri + if (barisPertama) indent else 0f
 
-            if (rata == RataBlok.JUSTIFY && kata.size > 1) {
+            // Baris terakhir tidak di-rata-kanankan (sesuai desktop Justify:
+            // baris pendek penutup tetap rata kiri).
+            if (rata == RataBlok.JUSTIFY && kata.size > 1 && !terakhir) {
                 val sisa = (lebarMaks - total) / (kata.size - 1)
                 var xx = xAwal
                 for ((k, tebal) in kata) {
@@ -505,27 +508,42 @@ object SuratPdf {
             val nip = p.nipKepalaDesa.orBlank()
 
             val setengah = (lebar - MARGIN_SISI * 2) / 2f
+            val xKiri = MARGIN_SISI
             val xKanan = MARGIN_SISI + setengah
             val lebarKolom = setengah
             val paint = font.paint(UKURAN_TEKS)
             val paintTebal = font.paint(UKURAN_TEKS, tebal = true)
 
-            // Kolom kiri: pemohon (bila template menghendaki).
-            if (jenis.pemohonDiTandaTangan && !nilai["warga.nama"].isNullOrBlank()) {
-                teksTengah("Pemohon :", paint, xKanan - setengah, lebarKolom)
-                lewati(TINGGI_BARIS * kerapatan.barisRuangTandaTangan)
-                teksTengah(
-                    nilai["warga.nama"].orBlank().uppercase(Locale("id", "ID")),
-                    paintTebal, xKanan - setengah, lebarKolom,
-                )
-            }
+            // Blok tanda tangan seperti desktop (SuratRenderer.TandaTangan):
+            // pemohon di KIRI, Kepala Desa di KANAN, keduanya mulai di y yang
+            // sama; nama pemohon disejajarkan dengan nama Kepala Desa.
+            val yAwal = y
+            var yAkhir = y
+            val tampilPemohon = jenis.pemohonDiTandaTangan &&
+                !nilai["warga.nama"].isNullOrBlank()
 
-            // Kolom kanan: tempat+tanggal, jabatan, ruang tanda tangan, nama.
+            // Kolom kanan dulu di yAwal: letakkan tempat+tanggal, jabatan,
+            // ruang tanda tangan, nama, NIP — catat posisi nama supaya
+            // setelah itu kolom kiri disejajarkan.
             teksTengah("$namaDesa, $tanggal", paint, xKanan, lebarKolom)
             for (baris in jabatan.split('\n')) teksTengah(baris, paint, xKanan, lebarKolom)
             lewati(TINGGI_BARIS * kerapatan.barisRuangTandaTangan)
             teksTengah(namaPejabat.uppercase(Locale("id", "ID")), paintTebal, xKanan, lebarKolom)
             if (nip.isNotBlank()) teksTengah("NIP $nip", paint, xKanan, lebarKolom)
+            yAkhir = y
+
+            if (tampilPemohon) {
+                y = yAwal
+                teksTengah("Pemohon :", paint, xKiri, lebarKolom)
+                // Pad ruang + satu baris penyeimbang (desktop: RuangTandaTangan
+                // + TinggiBaris) supaya nama pemohon duduk SEJAJAR nama kades.
+                lewati(TINGGI_BARIS * kerapatan.barisRuangTandaTangan + TINGGI_BARIS)
+                teksTengah(
+                    nilai["warga.nama"].orBlank().uppercase(Locale("id", "ID")),
+                    paintTebal, xKiri, lebarKolom,
+                )
+                if (yAkhir > y) y = yAkhir
+            }
         }
 
         private fun teksTengah(teks: String, paint: Paint, xKiri: Float, lebar: Float) {

@@ -63,7 +63,7 @@ class RegisterSuratActivity : AppCompatActivity() {
         }
         kosong.visibility = if (daftar.isEmpty()) View.VISIBLE else View.GONE
 
-        val format = SimpleDateFormat("d MMM yyyy HH:mm", Locale("id", "ID"))
+        val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("id", "ID"))
         for (b in daftar) {
             val kartu = MaterialCardView(this).apply {
                 radius = Ui.dp(this@RegisterSuratActivity, 16).toFloat()
@@ -171,8 +171,8 @@ class RegisterSuratActivity : AppCompatActivity() {
             .setItems(item) { _, which ->
                 when (which) {
                     0 -> editSurat(b)
-                    1 -> if (b.uri != null) PdfAksi.cetakUri(this, b.uri, b.nama)
-                    else PdfAksi.cetak(this, b.berkas!!, b.nama)
+                    1 -> if (b.uri != null) PdfAksi.lihatUri(this, b.uri, b.nama)
+                    else PdfAksi.lihat(this, b.berkas!!, b.nama)
                     2 -> PdfAksi.bagikan(this, b)
                 }
             }
@@ -203,6 +203,7 @@ class RegisterSuratActivity : AppCompatActivity() {
                 putExtra(BuatSuratActivity.EXTRA_GROUPS, BuatSuratActivity.GROUP_SURAT)
                 putExtra(BuatSuratActivity.EXTRA_EDIT_JENIS, idJenis)
                 putExtra(BuatSuratActivity.EXTRA_EDIT_FIELDS, fields.toString())
+                putExtra(BuatSuratActivity.EXTRA_EDIT_NAMA, b.nama)
             },
         )
     }

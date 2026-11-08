@@ -100,6 +100,10 @@
     <string name="edit_surat_judul">Edit %1$s</string>
     <string name="edit_jenis_tidak_dikenal">Jenis surat tidak dikenal.</string>
     <string name="edit_tidak_tersedia">Surat lama tidak punya data edit — buat ulang lewat Buat Surat.</string>
+    <string name="pdf_lihat">Lihat PDF</string>
+    <string name="pdf_cetak_sekarang">Cetak sekarang</string>
+    <string name="pdf_halaman_dari">Halaman %1$d dari %2$d</string>
+    <string name="pdf_tidak_ditemukan">Berkas PDF tidak ditemukan.</string>
 
     <!-- Daftar hadir -->
     <string name="grup_kegiatan">KEGIATAN</string>

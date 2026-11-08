@@ -12,6 +12,7 @@ import android.print.PrintDocumentAdapter
 import android.print.PrintDocumentInfo
 import android.print.PrintManager
 import android.provider.MediaStore
+import android.widget.Toast
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -27,7 +28,54 @@ import java.io.OutputStream
 object PdfAksi {
 
     /**
-     * Salin [sumber] ke Downloads/SuDesApp. Mengembalikan jalur tampilan untuk
+     * Simpan [sumber] ke Downloads/SuDesApp dengan nama tetap [namaPdf]:
+     * entri lama ditimpa (dicari lewat DISPLAY_NAME), entri baru dibuat bila
+     * belum ada. Dipakai edit agar register tidak duplikat.
+     */
+    fun simpanKeDownloadsEdit(ctx: Context, sumber: File, namaPdf: String): String? {
+        // Ganti nama sumber ke nama edit bila perlu lalu delegasi.
+        val tujuan = File(sumber.parent, namaPdf)
+        if (sumber.absolutePath != tujuan.absolutePath) {
+            try {
+                sumber.inputStream().use { masuk ->
+                    tujuan.outputStream().use { keluar -> masuk.copyTo(keluar) }
+                }
+                sumber.delete()
+            } catch (e: Exception) {
+                return null
+            }
+        }
+        // Timpa entri Downloads lama dengan nama yang sama bila ada.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                val uris = mutableListOf<Uri>()
+                ctx.contentResolver.query(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    arrayOf(MediaStore.Downloads.DISPLAY_NAME),
+                    "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                    arrayOf(namaPdf),
+                    null,
+                )?.use { k ->
+                    while (k.moveToNext()) {
+                        val id = k.getLong(0)
+                        uris.add(Uri.withAppendedPath(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id.toString()))
+                    }
+                }
+                if (uris.isNotEmpty()) {
+                    ctx.contentResolver.openOutputStream(uris.first(), "wt")?.use { keluar ->
+                        tujuan.inputStream().use { masuk -> masuk.copyTo(keluar) }
+                    } ?: return null
+                    return "Downloads/SuDesApp/$namaPdf"
+                }
+            } catch (e: Exception) {
+                return null
+            }
+        }
+        return simpanKeDownloads(ctx, tujuan)
+    }
+
+    /**
+     * Simpan [sumber] ke Downloads/SuDesApp. Mengembalikan jalur tampilan untuk
      * pesan, atau null bila gagal (penyimpanan penuh, izin ditolak).
      */
     fun simpanKeDownloads(ctx: Context, sumber: File): String? {
@@ -71,6 +119,25 @@ object PdfAksi {
                 FileOutputStream(tujuan.fileDescriptor).use { keluar -> masuk.copyTo(keluar) }
             }
         })
+    }
+
+    /** Lihat PDF zoomable sebelum cetak (pinch, geser, per halaman). */
+    fun lihat(ctx: Context, berkas: File, judul: String) {
+        PdfZoomActivity.mulai(ctx, berkas, judul)
+    }
+
+    /** Lihat PDF dari URI (MediaStore) — disalin ke cache agar bisa dirender. */
+    fun lihatUri(ctx: Context, uri: Uri, judul: String) {
+        try {
+            // Nama tetap agar tidak menumpuk tiap cetak ulang.
+            val salinan = File(ctx.cacheDir, "lihat-terakhir.pdf")
+            ctx.contentResolver.openInputStream(uri)?.use { masuk ->
+                FileOutputStream(salinan).use { keluar -> masuk.copyTo(keluar) }
+            } ?: return
+            lihat(ctx, salinan, judul)
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "Tidak bisa membuka PDF", Toast.LENGTH_LONG).show()
+        }
     }
 
     /** Cetak berkas yang hanya tersedia sebagai URI (MediaStore di API 29+). */

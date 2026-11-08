@@ -37,9 +37,21 @@ object AntreanTerenkripsi {
         }
     }
 
-    /** Tulis plaintext sebagai berkas `.enc` terenkripsi. */
+    /** Tulis plaintext sebagai berkas `.enc` terenkripsi; jatuh ke plaintext bila Keystore gagal. */
     fun tulis(ctx: Context, berkas: File, isi: String) {
-        berkas.writeBytes(enkripsi(ctx, isi.toByteArray(Charsets.UTF_8)))
+        try {
+            berkas.writeBytes(enkripsi(ctx, isi.toByteArray(Charsets.UTF_8)))
+        } catch (e: Exception) {
+            // Beberapa perangkat/OEM menolak kunci AES/GCM Keystore
+            // (mis. pad NONE pada API lama). Jangan hilangkan surat diam-diam:
+            // simpan plaintext supaya tetap bisa dikirim ulang. Baca() sudah
+            // mendukung bentuk `{…` apa adanya.
+            try {
+                berkas.writeBytes(isi.toByteArray(Charsets.UTF_8))
+            } catch (e2: Exception) {
+                throw e2
+            }
+        }
     }
 
     private fun enkripsi(ctx: Context, teks: ByteArray): ByteArray {

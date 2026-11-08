@@ -74,7 +74,11 @@ class BuatSuratActivity : AppCompatActivity() {
         // Mode Edit (dari Register): jenis terkunci, formulir diisi tangkapannya.
         modeEdit = intent.hasExtra(EXTRA_EDIT_JENIS)
         if (modeEdit) {
-            daftar = daftar.filter { it.idJenis == intent.getStringExtra(EXTRA_EDIT_JENIS) }
+            // Cari di kedua grup: Register selalu mengirim GROUP_SURAT, padahal
+            // surat NTCR termasuk kelompok lain — filter di kelompok SURAT saja
+            // membuat surat NTCR tidak ketemu dan form terlihat kosong.
+            val semua = SkemaLokal.suratBiasa(this) + SkemaLokal.ntcr(this)
+            daftar = semua.filter { it.idJenis == intent.getStringExtra(EXTRA_EDIT_JENIS) }
             if (daftar.isEmpty()) {
                 Toast.makeText(this, getString(R.string.edit_jenis_tidak_dikenal), Toast.LENGTH_LONG).show()
                 finish()
@@ -110,6 +114,9 @@ class BuatSuratActivity : AppCompatActivity() {
 
         spinnerJenis.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: android.widget.AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                // Mode edit mengunci jenis; membangun ulang menimpa isian
+                // praisi (Spinner mengirim peristiwa pilih lewat antrean pesan).
+                if (modeEdit) return
                 bangunForm(daftar.getOrNull(pos))
             }
 
@@ -317,14 +324,14 @@ class BuatSuratActivity : AppCompatActivity() {
         }
     }
 
-    /** Pemilih tanggal: hasil ISO yyyy-MM-dd (dipahami impor desktop). */
+    /** Pemilih tanggal: hasil dd/MM/yyyy (format Indonesia, diterima impor desktop). */
     private fun pilihTanggal(et: TextInputEditText) {
         val kalender = Calendar.getInstance()
         android.app.DatePickerDialog(
             this,
             { _, tahun, bulan, hari ->
                 et.setText(
-                    "%04d-%02d-%02d".format(tahun, bulan + 1, hari),
+                    "%02d/%02d/%04d".format(hari, bulan + 1, tahun),
                 )
             },
             kalender.get(Calendar.YEAR),
@@ -504,7 +511,7 @@ class BuatSuratActivity : AppCompatActivity() {
 
         // Tanggal surat (dipakai sebagian templat badan).
         nilai["surat.tanggal"] = java.text.SimpleDateFormat(
-            "dd MMMM yyyy", java.util.Locale("id", "ID"),
+            "dd/MM/yyyy", java.util.Locale("id", "ID"),
         ).format(java.util.Date())
 
         // Baru sekarang keterangan disusun: isian operator menang, kalau kosong
@@ -519,6 +526,7 @@ class BuatSuratActivity : AppCompatActivity() {
         val tahunTarik = PengaturanSinkron.tahunTarik(this@BuatSuratActivity)
         val tahun = tahunTarik
 
+        val namaEdit = intent.getStringExtra(EXTRA_EDIT_NAMA)
         progres.visibility = View.VISIBLE
         lifecycleScope.launch {
             try {
@@ -538,15 +546,23 @@ class BuatSuratActivity : AppCompatActivity() {
                 }
 
                 val lokasi = withContext(Dispatchers.IO) {
-                    PdfAksi.simpanKeDownloads(this@BuatSuratActivity, berkas)
+                    if (modeEdit && !namaEdit.isNullOrBlank()) {
+                        PdfAksi.simpanKeDownloadsEdit(this@BuatSuratActivity, berkas, namaEdit)
+                    } else {
+                        PdfAksi.simpanKeDownloads(this@BuatSuratActivity, berkas)
+                    }
                 }
 
                 // Simpan tangkapan isian supaya operator bisa memperbaiki lewat
-                // Register → Edit tanpa membuat surat dari awal.
-                withContext(Dispatchers.IO) {
-                    SimpananEdit.simpan(
-                        this@BuatSuratActivity, berkas.name, jenis.idJenis, nomor, fields, pejabat,
-                    )
+                // Register → Edit tanpa membuat surat dari awal. Hanya bila
+                // PDF benar-benar tersimpan ke Downloads (hindari yatim).
+                if (lokasi != null) {
+                    withContext(Dispatchers.IO) {
+                        val namaBerkas = if (modeEdit && !namaEdit.isNullOrBlank()) namaEdit else berkas.name
+                        SimpananEdit.simpan(
+                            this@BuatSuratActivity, namaBerkas, jenis.idJenis, nomor, fields, pejabat,
+                        )
+                    }
                 }
 
                 // Surat yang baru dibuat ikut antrean sinkron desktop.
@@ -575,7 +591,7 @@ class BuatSuratActivity : AppCompatActivity() {
                 Toast.makeText(this@BuatSuratActivity, gabungan, Toast.LENGTH_LONG).show()
 
                 // Langsung tawarkan cetak — operator tidak perlu cari berkasnya.
-                PdfAksi.cetak(this@BuatSuratActivity, berkas, jenis.label)
+                PdfAksi.lihat(this@BuatSuratActivity, berkas, jenis.label)
                 selesai()
             } catch (e: Exception) {
                 progres.visibility = View.GONE
@@ -628,10 +644,10 @@ class BuatSuratActivity : AppCompatActivity() {
         return java.text.SimpleDateFormat("EEEE", java.util.Locale("id", "ID")).format(cal.time)
     }
 
-    /** Tanggal panjang ("12 Januari 2026") dari tanggal ISO; kosong bila tak terbaca. */
+    /** Tanggal panjang ("08/11/2026") dari tanggal ISO; kosong bila tak terbaca. */
     private fun tanggalPanjang(iso: String): String {
         val cal = uraikanTanggal(iso) ?: return ""
-        return java.text.SimpleDateFormat("d MMMM yyyy", java.util.Locale("id", "ID")).format(cal.time)
+        return java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("id", "ID")).format(cal.time)
     }
 
     /** Uraikan ISO yyyy-MM-dd (atau dd/MM/yyyy lama) menjadi Calendar. */
@@ -705,6 +721,7 @@ class BuatSuratActivity : AppCompatActivity() {
         const val GROUP_NTCR = "ntcr"
         const val EXTRA_EDIT_JENIS = "edit_jenis"
         const val EXTRA_EDIT_FIELDS = "edit_fields"
+        const val EXTRA_EDIT_NAMA = "edit_nama"
 
         /**
          * Jembatan ejaan antara templat badan (ditulis) dan prefiks 'target'

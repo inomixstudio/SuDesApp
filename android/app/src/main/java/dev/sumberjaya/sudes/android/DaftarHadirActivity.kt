@@ -136,7 +136,7 @@ class DaftarHadirActivity : AppCompatActivity() {
 
     private fun isiHariTanggalHariIni() {
         hariTanggalDisentuh = false
-        val teks = SimpleDateFormat("EEEE, d MMMM yyyy", Locale("id", "ID")).format(Date())
+        val teks = SimpleDateFormat("dd/MM/yyyy", Locale("id", "ID")).format(Date())
         inputHariTanggal.setText(teks)
     }
 
@@ -186,15 +186,38 @@ class DaftarHadirActivity : AppCompatActivity() {
         }
         kartu.addView(isi)
 
-        fun bidang(label: String, nilai: String) = TextInputEditText(this).apply {
-            hint = label
-            setText(nilai)
-            textSize = 15f
-            inputType = android.text.InputType.TYPE_CLASS_TEXT
-            isSingleLine = true
+        fun berbingkai(label: String, posisi: (TextInputEditText) -> Unit): TextInputEditText {
+            val edit = TextInputEditText(this).apply {
+                textSize = 15f
+                inputType = android.text.InputType.TYPE_CLASS_TEXT
+                isSingleLine = true
+            }
+            posisi(edit)
+            val kerangka = TextInputLayout(this).apply {
+                hint = label
+                boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+                boxBackgroundColor = ContextCompat.getColor(this@DaftarHadirActivity, R.color.surface)
+                boxStrokeColor = ContextCompat.getColor(this@DaftarHadirActivity, R.color.accent)
+                setDefaultHintTextColor(android.content.res.ColorStateList.valueOf(
+                    ContextCompat.getColor(this@DaftarHadirActivity, R.color.teks_redup)))
+                setBoxCornerRadii(
+                    Ui.dp(this@DaftarHadirActivity, 14).toFloat(),
+                    Ui.dp(this@DaftarHadirActivity, 14).toFloat(),
+                    Ui.dp(this@DaftarHadirActivity, 14).toFloat(),
+                    Ui.dp(this@DaftarHadirActivity, 14).toFloat(),
+                )
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ).apply { topMargin = Ui.dp(this@DaftarHadirActivity, 10) }
+                addView(edit, LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT))
+            }
+            return edit
         }
 
-        val nama = TextInputEditText(this).apply { hint = "Nama"; setText(values?.nama.orEmpty()); textSize = 15f }
+        val nama = berbingkai("Nama") { it.setText(values?.nama.orEmpty()) }
         val jk = Spinner(this).apply {
             adapter = ArrayAdapter(this@DaftarHadirActivity,
                 R.layout.item_pilihan, listOf("", "L", "P")).also {
@@ -207,17 +230,17 @@ class DaftarHadirActivity : AppCompatActivity() {
             }
             setSelection(pos)
         }
-        val jabatan = TextInputEditText(this).apply { hint = "Jabatan"; setText(values?.jabatan.orEmpty()); textSize = 15f }
-        val nip = TextInputEditText(this).apply { hint = "NIP"; setText(values?.nip.orEmpty()); textSize = 15f }
-        val nik = TextInputEditText(this).apply { hint = "NIK"; setText(values?.nik.orEmpty()); textSize = 15f }
-        val noHp = TextInputEditText(this).apply {
-            hint = "No. Handphone"; setText(values?.noHp.orEmpty()); textSize = 15f
-            inputType = android.text.InputType.TYPE_CLASS_PHONE
+        val jabatan = berbingkai("Jabatan") { it.setText(values?.jabatan.orEmpty()) }
+        val nip = berbingkai("NIP") { it.setText(values?.nip.orEmpty()) }
+        val nik = berbingkai("NIK") { it.setText(values?.nik.orEmpty()) }
+        val noHp = berbingkai("No. Handphone") {
+            it.setText(values?.noHp.orEmpty())
+            it.inputType = android.text.InputType.TYPE_CLASS_PHONE
         }
-        val alamat = TextInputEditText(this).apply { hint = "Alamat"; setText(values?.alamat.orEmpty()); textSize = 15f }
-        val keterangan = TextInputEditText(this).apply { hint = "Keterangan"; setText(values?.keterangan.orEmpty()); textSize = 15f }
+        val alamat = berbingkai("Alamat") { it.setText(values?.alamat.orEmpty()) }
+        val keterangan = berbingkai("Keterangan") { it.setText(values?.keterangan.orEmpty()) }
 
-        isi.addView(nama)
+        isi.addView(nama.parent as View)
         isi.addView(TextView(this).apply {
             text = "Jenis Kelamin (L/P)"
             textSize = 12f
@@ -225,12 +248,12 @@ class DaftarHadirActivity : AppCompatActivity() {
             setPadding(0, Ui.dp(this@DaftarHadirActivity, 8), 0, Ui.dp(this@DaftarHadirActivity, 4))
         })
         isi.addView(jk)
-        isi.addView(jabatan)
-        isi.addView(nip)
-        isi.addView(nik)
-        isi.addView(noHp)
-        isi.addView(alamat)
-        isi.addView(keterangan)
+        isi.addView(jabatan.parent as View)
+        isi.addView(nip.parent as View)
+        isi.addView(nik.parent as View)
+        isi.addView(noHp.parent as View)
+        isi.addView(alamat.parent as View)
+        isi.addView(keterangan.parent as View)
 
         wadahPeserta.addView(kartu)
         daftarPeserta.add(BarisPeserta(kartu, nama, jk, jabatan, nip, nik, noHp, alamat, keterangan))
@@ -297,7 +320,7 @@ class DaftarHadirActivity : AppCompatActivity() {
                     val logo: Bitmap? = MuatLogo.muat(this@DaftarHadirActivity, pengaturan.logoPath)
                     DaftarHadirPdf.buat(this@DaftarHadirActivity, data, pengaturan, logo)
                 }
-                PdfAksi.cetak(this@DaftarHadirActivity, berkas, "Daftar Hadir")
+                PdfAksi.lihat(this@DaftarHadirActivity, berkas, "Daftar Hadir")
             } catch (e: Exception) {
                 Toast.makeText(
                     this@DaftarHadirActivity,

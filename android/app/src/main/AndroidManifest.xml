@@ -72,6 +72,12 @@
             android:exported="false"
             android:label="@string/menu_pengaturan" />
 
+        <activity
+            android:screenOrientation="portrait"
+            android:name=".PdfZoomActivity"
+            android:exported="false"
+            android:label="@string/pdf_lihat" />
+
         <!-- Pemindai QR milik pustaka zxing: paksa portrait supaya kamera tidak
              memutar layar ke landscape. -->
         <activity
