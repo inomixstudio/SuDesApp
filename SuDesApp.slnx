@@ -7,6 +7,7 @@
   <Project Path="SudesExPlus/SudesExPlus.csproj" />
   <Project Path="SudesPdf/SudesPdf.csproj" />
   <Project Path="SuDesApp.Wpf/SuDesApp.Wpf.csproj" />
+  <Project Path="SuDesApp.Installer/SuDesApp.Installer.csproj" />
   <Project Path="SuDesApp.Tests/SuDesApp.Tests.csproj" />
   <Project Path="Tools/UjiTrialServerE2E/UjiTrialServerE2E.csproj" />
 </Solution>
