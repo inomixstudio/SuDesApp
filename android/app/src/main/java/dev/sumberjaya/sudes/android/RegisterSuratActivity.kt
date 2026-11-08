@@ -1,5 +1,6 @@
 package dev.sumberjaya.sudes.android
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.TextUtils
@@ -10,6 +11,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -163,16 +165,45 @@ class RegisterSuratActivity : AppCompatActivity() {
     }
 
     private fun pilih(b: BerkasSurat) {
-        AlertDialog.Builder(this)
+        val item = arrayOf("Edit", "Cetak ulang", "Bagikan PDF")
+        val pilih = AlertDialog.Builder(this)
             .setTitle(b.nama)
-            .setItems(arrayOf("Cetak ulang", "Bagikan PDF")) { _, which ->
+            .setItems(item) { _, which ->
                 when (which) {
-                    0 -> if (b.uri != null) PdfAksi.cetakUri(this, b.uri, b.nama)
+                    0 -> editSurat(b)
+                    1 -> if (b.uri != null) PdfAksi.cetakUri(this, b.uri, b.nama)
                     else PdfAksi.cetak(this, b.berkas!!, b.nama)
-                    1 -> PdfAksi.bagikan(this, b)
+                    2 -> PdfAksi.bagikan(this, b)
                 }
             }
             .setNegativeButton("Tutup", null)
-            .show()
+        pilih.show()
+        // Edit tidak tersedia untuk surat lama tanpa tangkapan == kolom 0
+        // tetap tampil agar operator tahu caranya buat ulang.
+    }
+
+    private fun editSurat(b: BerkasSurat) {
+        val tangkapan = SimpananEdit.ambil(this, b.nama)
+        if (tangkapan == null) {
+            Toast.makeText(
+                this,
+                getString(R.string.edit_tidak_tersedia),
+                Toast.LENGTH_LONG,
+            ).show()
+            return
+        }
+        val idJenis = tangkapan.optString("id_jenis")
+        val fields = tangkapan.optJSONObject("fields")
+        if (idJenis.isBlank() || fields == null) {
+            Toast.makeText(this, getString(R.string.edit_tidak_tersedia), Toast.LENGTH_LONG).show()
+            return
+        }
+        startActivity(
+            Intent(this, BuatSuratActivity::class.java).apply {
+                putExtra(BuatSuratActivity.EXTRA_GROUPS, BuatSuratActivity.GROUP_SURAT)
+                putExtra(BuatSuratActivity.EXTRA_EDIT_JENIS, idJenis)
+                putExtra(BuatSuratActivity.EXTRA_EDIT_FIELDS, fields.toString())
+            },
+        )
     }
 }

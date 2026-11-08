@@ -40,6 +40,7 @@ class BuatSuratActivity : AppCompatActivity() {
     private val bidang = mutableMapOf<String, View>()
     private val pilihan = mutableMapOf<String, MaterialAutoCompleteTextView>()
     private val daftarBaris = mutableMapOf<String, MutableList<BarisDaftar>>()
+    private val wadahBaris = mutableMapOf<String, LinearLayout>()
 
     /** Satu baris pada bidang type="list" beserta field penyusunnya. */
     private data class BarisDaftar(val wadah: View, val bidang: Map<String, View>)
@@ -50,6 +51,7 @@ class BuatSuratActivity : AppCompatActivity() {
 
     private var daftar: List<SkemaJenis> = emptyList()
     private var terpilih: SkemaJenis? = null
+    private var modeEdit = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,11 +71,24 @@ class BuatSuratActivity : AppCompatActivity() {
         wadahForm = findViewById(R.id.wadah_form)
         progres = findViewById(R.id.progres)
 
+        // Mode Edit (dari Register): jenis terkunci, formulir diisi tangkapannya.
+        modeEdit = intent.hasExtra(EXTRA_EDIT_JENIS)
+        if (modeEdit) {
+            daftar = daftar.filter { it.idJenis == intent.getStringExtra(EXTRA_EDIT_JENIS) }
+            if (daftar.isEmpty()) {
+                Toast.makeText(this, getString(R.string.edit_jenis_tidak_dikenal), Toast.LENGTH_LONG).show()
+                finish()
+                return
+            }
+            title = getString(R.string.edit_surat_judul, daftar.first().label)
+        }
         if (daftar.isEmpty()) {
             Toast.makeText(this, R.string.register_kosong, Toast.LENGTH_LONG).show()
             finish()
             return
         }
+
+        if (modeEdit) spinnerJenis.isEnabled = false
 
         spinnerJenis.adapter = object : ArrayAdapter<String>(
             this,
@@ -109,6 +124,59 @@ class BuatSuratActivity : AppCompatActivity() {
         }
 
         bangunForm(daftar.firstOrNull())
+
+        if (modeEdit) {
+            intent.getStringExtra(EXTRA_EDIT_FIELDS)?.let { json -> isiDariEdit(json) }
+        }
+    }
+
+    /**
+     * Isi formulir dari tangkapan edit (Register → Edit).
+     * Teks langsung ditulis ke bidang; select memilih opsi yang cocok;
+     * list diisi ulang baris per baris dari array tersimpan.
+     */
+    private fun isiDariEdit(json: String) {
+        try {
+            val fields = JSONObject(json)
+            val jenis = terpilih ?: return
+            for (b in jenis.fieldsInput) {
+                if (b.key.equals("nomorSurat", ignoreCase = true)) continue
+                if (!fields.has(b.key)) continue
+                when (b.type) {
+                    "select" -> {
+                        val nilai = fields.optString(b.key)
+                        val posisi = b.options.indexOf(nilai)
+                        if (posisi >= 0) pilihan[b.key]?.setText(nilai, false)
+                        else pilihan[b.key]?.setText(nilai, false)
+                    }
+                    "list" -> {
+                        val arr = fields.optJSONArray(b.key) ?: continue
+                        val barisList = daftarBaris[b.key] ?: continue
+                        val wadahTarget = wadahBaris[b.key] ?: continue
+                        for (i in 0 until arr.length()) {
+                            buatBarisList(b, wadahTarget, barisList)
+                            val objek = arr.optJSONObject(i) ?: continue
+                            val baris = barisList.lastOrNull() ?: continue
+                            for (anak in b.children) {
+                                if (!objek.has(anak.key)) continue
+                                val v = baris.bidang[anak.key] ?: continue
+                                when (v) {
+                                    is EditText -> v.setText(objek.optString(anak.key))
+                                    is MaterialAutoCompleteTextView -> v.setText(objek.optString(anak.key), false)
+                                    else -> {}
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        val v = bidang[b.key] ?: continue
+                        (v as? EditText)?.setText(fields.optString(b.key))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Data edit tidak bisa dibaca", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun bangunForm(jenis: SkemaJenis?) {
@@ -117,6 +185,7 @@ class BuatSuratActivity : AppCompatActivity() {
         bidang.clear()
         pilihan.clear()
         daftarBaris.clear()
+        wadahBaris.clear()
         if (jenis == null) return
 
         for (b in jenis.fieldsInput) {
@@ -140,56 +209,9 @@ class BuatSuratActivity : AppCompatActivity() {
                     }
                     val barisList = mutableListOf<BarisDaftar>()
                     daftarBaris[b.key] = barisList
+                    wadahBaris[b.key] = wadah
 
-                    fun tambahBaris() {
-                        val kartu = MaterialCardView(this).apply {
-                            radius = Ui.dp(this@BuatSuratActivity, 14).toFloat()
-                            strokeWidth = Ui.dp(this@BuatSuratActivity, 1)
-                            strokeColor = ContextCompat.getColor(this@BuatSuratActivity, R.color.garis)
-                            setCardBackgroundColor(
-                                ContextCompat.getColor(this@BuatSuratActivity, R.color.surface)
-                            )
-                            cardElevation = 0f
-                            layoutParams = LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 10) }
-                        }
-                        val isi = LinearLayout(this@BuatSuratActivity).apply {
-                            orientation = LinearLayout.VERTICAL
-                            setPadding(
-                                Ui.dp(this@BuatSuratActivity, 14),
-                                Ui.dp(this@BuatSuratActivity, 6),
-                                Ui.dp(this@BuatSuratActivity, 14),
-                                Ui.dp(this@BuatSuratActivity, 12),
-                            )
-                        }
-                        kartu.addView(isi)
-
-                        val peta = linkedMapOf<String, View>()
-                        for (anak in b.children) {
-                            if (anak.type == "select") {
-                                val wadahPilih = bidangPilih(anak.label, anak.options)
-                                val pilih = wadahPilih.editText as MaterialAutoCompleteTextView
-                                peta[anak.key] = pilih
-                                isi.addView(wadahPilih)
-                            } else {
-                                val wadahTeks = bidangTeks(anak.label, anak.type)
-                                peta[anak.key] = wadahTeks.editText as EditText
-                                isi.addView(wadahTeks)
-                            }
-                        }
-
-                        isi.addView(tombolKecil("Hapus") {
-                            wadah.removeView(kartu)
-                            barisList.removeAll { it.wadah === kartu }
-                        })
-
-                        wadah.addView(kartu)
-                        barisList.add(BarisDaftar(kartu, peta))
-                    }
-
-                    wadah.addView(tombolKecil("Tambah ${b.label}") { tambahBaris() })
+                    wadah.addView(tombolKecil("Tambah ${b.label}") { buatBarisList(b, wadah, barisList) })
                     wadahForm.addView(wadah)
                 }
 
@@ -200,6 +222,59 @@ class BuatSuratActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /** Buat satu baris kartu daftar (dipakai tombol Tambah & isi Edit). */
+    private fun buatBarisList(
+        b: SkemaBidang,
+        wadah: LinearLayout,
+        barisList: MutableList<BarisDaftar>,
+    ) {
+        val kartu = MaterialCardView(this).apply {
+            radius = Ui.dp(this@BuatSuratActivity, 14).toFloat()
+            strokeWidth = Ui.dp(this@BuatSuratActivity, 1)
+            strokeColor = ContextCompat.getColor(this@BuatSuratActivity, R.color.garis)
+            setCardBackgroundColor(
+                ContextCompat.getColor(this@BuatSuratActivity, R.color.surface)
+            )
+            cardElevation = 0f
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 10) }
+        }
+        val isi = LinearLayout(this@BuatSuratActivity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(
+                Ui.dp(this@BuatSuratActivity, 14),
+                Ui.dp(this@BuatSuratActivity, 6),
+                Ui.dp(this@BuatSuratActivity, 14),
+                Ui.dp(this@BuatSuratActivity, 12),
+            )
+        }
+        kartu.addView(isi)
+
+        val peta = linkedMapOf<String, View>()
+        for (anak in b.children) {
+            if (anak.type == "select") {
+                val wadahPilih = bidangPilih(anak.label, anak.options)
+                val pilih = wadahPilih.editText as MaterialAutoCompleteTextView
+                peta[anak.key] = pilih
+                isi.addView(wadahPilih)
+            } else {
+                val wadahTeks = bidangTeks(anak.label, anak.type)
+                peta[anak.key] = wadahTeks.editText as EditText
+                isi.addView(wadahTeks)
+            }
+        }
+
+        isi.addView(tombolKecil("Hapus") {
+            wadah.removeView(kartu)
+            barisList.removeAll { it.wadah === kartu }
+        })
+
+        wadah.addView(kartu)
+        barisList.add(BarisDaftar(kartu, peta))
     }
 
     /** Label bintang untuk bidang wajib. */
@@ -466,6 +541,14 @@ class BuatSuratActivity : AppCompatActivity() {
                     PdfAksi.simpanKeDownloads(this@BuatSuratActivity, berkas)
                 }
 
+                // Simpan tangkapan isian supaya operator bisa memperbaiki lewat
+                // Register → Edit tanpa membuat surat dari awal.
+                withContext(Dispatchers.IO) {
+                    SimpananEdit.simpan(
+                        this@BuatSuratActivity, berkas.name, jenis.idJenis, nomor, fields, pejabat,
+                    )
+                }
+
                 // Surat yang baru dibuat ikut antrean sinkron desktop.
                 val hasilKirim = withContext(Dispatchers.IO) {
                     val hasil = AntreanSurat.kirimHasil(this@BuatSuratActivity, jenis, nomor, fields)
@@ -620,6 +703,8 @@ class BuatSuratActivity : AppCompatActivity() {
         const val EXTRA_GROUPS = "grup"
         const val GROUP_SURAT = "surat"
         const val GROUP_NTCR = "ntcr"
+        const val EXTRA_EDIT_JENIS = "edit_jenis"
+        const val EXTRA_EDIT_FIELDS = "edit_fields"
 
         /**
          * Jembatan ejaan antara templat badan (ditulis) dan prefiks 'target'

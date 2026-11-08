@@ -26,7 +26,7 @@
 
     <!-- Register Surat -->
     <string name="label_register_surat">Register Surat</string>
-    <string name="petunjuk_register">Surat yang pernah dibuat di perangkat ini. Ketuk untuk mencetak ulang atau membagikan PDF-nya.</string>
+    <string name="petunjuk_register">Surat yang pernah dibuat di perangkat ini. Ketuk untuk mengedit, mencetak ulang, atau membagikan PDF-nya.</string>
     <string name="segarkan">Segarkan</string>
     <string name="register_kosong">Belum ada surat. Buat lewat menu Buat Surat.</string>
 
@@ -97,11 +97,24 @@
     <string name="identitas_belum_sinkron">Identitas desa belum disinkronkan</string>
     <string name="jumlah_surat">%1$d surat tersimpan</string>
     <string name="jumlah_surat_kosong">Belum ada surat</string>
+    <string name="edit_surat_judul">Edit %1$s</string>
+    <string name="edit_jenis_tidak_dikenal">Jenis surat tidak dikenal.</string>
+    <string name="edit_tidak_tersedia">Surat lama tidak punya data edit — buat ulang lewat Buat Surat.</string>
 
     <!-- Daftar hadir -->
     <string name="grup_kegiatan">KEGIATAN</string>
     <string name="grup_peserta">PESERTA</string>
+    <string name="grup_judul_surat">JUDUL SURAT</string>
+    <string name="grup_kolom_dicetak">KOLOM YANG DICETAK</string>
+    <string name="dh_judul_harian">Judul yang dicetak</string>
+    <string name="hint_hari_tanggal">Hari / Tanggal</string>
+    <string name="hint_pukul">Pukul</string>
     <string name="hint_pembuat_opsional">Nama pembuat daftar (opsional)</string>
+    <string name="dh_hari_ini">Hari ini</string>
+    <string name="dh_tambah">+ Tambah</string>
+    <string name="dh_hapus">Hapus baris terakhir</string>
+    <string name="dh_bersihkan">Bersihkan (isi ulang)</string>
+    <string name="dh_info_peserta">Klik untuk mengedit. Baris kosong tetap dicetak sebagai baris kosong bernomor.</string>
     <string name="ket_daftar_hadir_form">Isi kegiatan dan daftar peserta, lalu cetak sebagai PDF.</string>
 
     <!-- Antrean sinkronisasi -->
