@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
@@ -118,9 +119,12 @@ namespace SuDesApp.Wpf.Services
                     .ToArray());
                 string path = Path.Combine(appConfig.TempPdfFolder,
                     $"{suratData.NamaJenis}_{safeNomor}_{suratData.ID_Surat}.pdf");
+                // Pembuatan PDF (raster SudesPdf) adalah CPU kerja berat:
+                // jalankan di thread_pool agar UI tetap responsif — pratinjau
+                // dan simpan sama-sama merasakan halaman langsung tampil.
                 string dipakai = await SimpanAsync(
                     path,
-                    stream => generator.GeneratePdfAsync(stream, suratData, suratData.Keterangan!),
+                    stream => Task.Run(() => generator.GeneratePdfAsync(stream, suratData, suratData.Keterangan!)),
                     logger);
                 return HasilPdf.Sukses(dipakai);
             }
@@ -169,7 +173,7 @@ namespace SuDesApp.Wpf.Services
                     $"{SuratConstants.REKENING_KORAN}_{safeNomor}_{suratData.ID_Surat}.pdf");
                 string dipakai = await SimpanAsync(
                     path,
-                    stream => generator.GeneratePdfAsync(stream, data),
+                    stream => Task.Run(() => generator.GeneratePdfAsync(stream, data)),
                     logger);
                 return HasilPdf.Sukses(dipakai);
             }
@@ -215,8 +219,8 @@ namespace SuDesApp.Wpf.Services
                     : suratData.NomorSurat!;
                 if (suratData.TanggalSurat != default) data.TanggalSurat = suratData.TanggalSurat;
 
-                var pdf = await generator.BuatPdfAsync(
-                    data.Template, data.Nilai, data.NomorSurat, data.TanggalSurat, data.NamaPejabat);
+                var pdf = await Task.Run(() => generator.BuatPdfAsync(
+                    data.Template, data.Nilai, data.NomorSurat, data.TanggalSurat, data.NamaPejabat));
 
                 if (pdf.Length == 0)
                 {
