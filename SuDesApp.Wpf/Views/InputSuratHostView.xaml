@@ -118,7 +118,16 @@
                       HorizontalScrollBarVisibility="Disabled"
                       Padding="0,0,0,4">
             <Grid>
-                <ContentControl Content="{Binding InputView}" Margin="20,0,20,4"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <!-- Skeleton selama inisialisasi nomor otomatis berjalan di latar -->
+                <StackPanel Grid.Row="0" Margin="20,8">
+                    <Border Style="{StaticResource SkeletonBar}" Width="260" HorizontalAlignment="Left"/>
+                    <Border Style="{StaticResource SkeletonBar}" Width="190" HorizontalAlignment="Left" Margin="0,6,0,0"/>
+                </StackPanel>
+                <ContentControl Grid.Row="1" Content="{Binding InputView}" Margin="20,0,20,4"/>
             </Grid>
         </ScrollViewer>
         </DockPanel>

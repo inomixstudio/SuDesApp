@@ -44,6 +44,13 @@ namespace SuDesApp.Data.Models
         public string? KodeJenis { get; set; }
         public string? AdditionalData { get; set; }
 
+        /// <summary>
+        /// Kunci idempotensi impor antrean (§ sinkron Android): `client_uuid`
+        /// yang dikirim Android sekali per surat (null untuk surat buatan desktop).
+        /// Ditulis ke kolom IdAntreanSinkron supaya impor ulang tidak dobel.
+        /// </summary>
+        public string? IdAntreanSinkron { get; set; }
+
         // KOLOM STATUS BARU
         public string? Status { get; set; } = "Draft"; // Draft, Active, Cancelled
 

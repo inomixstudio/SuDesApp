@@ -154,13 +154,25 @@ public sealed class FeatureNavigationViewModel
         MenuItems.Add(Beranda);
 
         Header("BUAT SURAT");
-        TambahTombol("Register Surat", IkonMenu.Dokumen, "register-surat");
-
         var buatSurat = Accordion("Buat Surat Baru", IkonMenu.Tambah);
-        // Tiap jenis surat adalah blanko yang diisi — ikon lembar kosong, bukan
-        // ikon buku yang dipakai daftar register.
+        // Ikon per keluarga surat: SKD umum, domisili, usaha, kelahiran, pindah,
+        // ahli waris — supaya 18 anak tidak tampak seragam.
         foreach (var (label, template) in BuatSuratCatalog.MenuSurat)
-            buatSurat.Children.Add(Tombol(label, IkonMenu.Blanko, "surat:" + template));
+        {
+            string ikon = template switch
+            {
+                SuratConstants.SKD_UMUM => IkonMenu.Dokumen,
+                SuratConstants.DOMISILI_WARGA or SuratConstants.INSTANSI or SuratConstants.IJIN_TINGGAL => IkonMenu.Beranda,
+                SuratConstants.SKU or SuratConstants.GARAPAN_SAWAH or SuratConstants.IZIN_KERAMAIAN => IkonMenu.Perusahaan,
+                SuratConstants.SKTM => IkonMenu.Laporan,
+                SuratConstants.KEMATIAN => IkonMenu.Kalender,
+                SuratConstants.KENAL_LAHIR => IkonMenu.Posyandu,
+                SuratConstants.AHLI_WARIS => IkonMenu.Komentar,
+                SuratConstants.SK_PINDAH => IkonMenu.SuratKeluar,
+                _ => IkonMenu.Blanko
+            };
+            buatSurat.Children.Add(Tombol(label, ikon, "surat:" + template));
+        }
         buatSurat.Children.Add(Tombol("Permohonan Rekening Koran", IkonMenu.Rekening, "rekening-koran"));
         MenuItems.Add(buatSurat);
         var buatSendiri = TambahTombol("Buat Surat Sendiri", IkonMenu.Blanko, "template-surat");
@@ -186,6 +198,8 @@ public sealed class FeatureNavigationViewModel
                 Action = Perintah("surat:" + blanko.NamaJenis), Route = "surat:" + blanko.NamaJenis,
                 Description = $"{blanko.Kode} — {blanko.Keterangan}" });
         MenuItems.Add(ntcr);
+        Header("REGISTER");
+        TambahTombol("Register Surat", IkonMenu.Dokumen, "register-surat");
         TambahTombol("Register NTCR", IkonMenu.Dokumen, "register-ntcr");
         TambahTombol("Tutup Buku Tahunan", IkonMenu.TutupBuku, "tutup-buku");
         TambahTombol("Verifikasi Surat", IkonMenu.Verifikasi, "verifikasi-surat");
@@ -211,12 +225,12 @@ public sealed class FeatureNavigationViewModel
         TambahTombol("Laporan Penduduk", IkonMenu.Laporan, "laporan-penduduk");
         Header("PENGATURAN");
         TambahTombol("Pengaturan Aplikasi", IkonMenu.Pengaturan, "pengaturan-aplikasi");
-        TambahTombol("Pengaturan Surat", IkonMenu.Pengaturan, "pengaturan-surat");
+        TambahTombol("Pengaturan Surat", IkonMenu.Dokumen, "pengaturan-surat");
         // Pengaturan nomor surat berdiri sendiri sebagai halaman mandiri —
         // tidak lagi seksi di dalam halaman Pengaturan Aplikasi.
-        var penomoranSurat = TambahTombol("Pengaturan Nomor Surat", IkonMenu.Dokumen, "penomoran-surat");
+        var penomoranSurat = TambahTombol("Pengaturan Nomor Surat", IkonMenu.Blanko, "penomoran-surat");
         penomoranSurat.Description = "Pola nomor penuh tiap jenis surat (awalan & urutan) pada database desa aktif.";
-        TambahTombol("Pengaturan Formulir", IkonMenu.Pengaturan, "pengaturan-formulir");
+        TambahTombol("Pengaturan Formulir", IkonMenu.Halaman, "pengaturan-formulir");
         TambahTombol("Kelola Pengguna", IkonMenu.Pengguna, "kelola-pengguna");
         TambahTombol("Cadangkan & Pulihkan", IkonMenu.Cadangkan, "cadangkan-pulihkan");
         var sinkronAndroid = TambahTombol("Sinkron Android", IkonMenu.Sinkron, "sinkron-android");

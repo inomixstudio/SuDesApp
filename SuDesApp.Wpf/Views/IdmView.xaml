@@ -271,6 +271,22 @@
                                    TextWrapping="Wrap" Margin="0,8,0,0"
                                    Visibility="{Binding AdaPeringatanSumber, Converter={StaticResource BoolToVis}}"/>
 
+                        <!-- Kartu tahun yang belum terbit: bila ada tahun yang tidak bisa
+                             ditampilkan, kartu ini menjelaskan alasan + sumber resmi baru,
+                             bukan sekadar baris pesan. -->
+                        <Border Margin="0,12,0,0" Padding="14" CornerRadius="10"
+                                Background="{DynamicResource PanelBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                Visibility="{Binding AdaPesanTahun, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Tahun yang belum ditampilkan" FontWeight="SemiBold" FontSize="14"/>
+                                <TextBlock Text="{Binding PesanTahun}" TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding PesanCadangan}" TextWrapping="Wrap" FontSize="11" Margin="0,4,0,0"
+                                           Foreground="{DynamicResource WarningTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Peringatan dini masa berlaku sertifikat situs pusat
                              (dari catatan pemantau latar): tampil sebelum halaman
                              menjadi kosong karena sertifikat kedaluwarsa. -->
@@ -943,7 +959,8 @@
                                                     <TextBlock Grid.Column="1" Text="{Binding Bidang}"
                                                                Style="{StaticResource SelIdmTebal}"/>
                                                     <TextBlock Grid.Column="2" Text="{Binding Indikator}"
-                                                               Style="{StaticResource SelIdmTebal}"/>
+                                                               Style="{StaticResource SelIdmTebal}"
+                                                               TextTrimming="CharacterEllipsis"/>
                                                     <TextBlock Grid.Column="3" Text="{Binding Skor}"
                                                                Style="{StaticResource SelIdmAngka}"/>
                                                     <TextBlock Grid.Column="4" Text="{Binding Keterangan}"
@@ -995,22 +1012,38 @@
         <Border Visibility="{Binding SedangMemuat, Converter={StaticResource BoolToVis}}"
                 Background="{DynamicResource TiraiBrush}"
                 AutomationProperties.Name="Dialog Progres IDM">
+            <!-- Kartu gaya SplashStartupWindow: kepala gradien Primary->Secondary,
+                 ornamen mutiara, lencana logo, strip progres di batas kepala-isi. -->
             <Border MaxWidth="440" Margin="24" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Background="{DynamicResource SurfaceBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                    CornerRadius="14">
+                    CornerRadius="14" ClipToBounds="True">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="24" ShadowDepth="3" Opacity="0.35"
+                    <DropShadowEffect BlurRadius="26" ShadowDepth="3" Opacity="0.38"
                                       Color="{DynamicResource BayanganHitamColor}"/>
                 </Border.Effect>
                 <StackPanel>
-                    <!-- Kepala kartu: judul + keterangan singkat. -->
-                    <StackPanel Margin="24,16,24,12">
-                        <TextBlock Text="Memuat data IDM" FontSize="15" FontWeight="SemiBold"/>
-                        <TextBlock Text="Mengambil data dari situs pusat Kemendesa…"
-                                   FontSize="11" Margin="0,3,0,0" TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                    </StackPanel>
+                    <!-- Kepala gradien ala splash (Primary->Secondary) -->
+                    <Border CornerRadius="14,14,0,0" Padding="24,16">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="{DynamicResource PrimaryColor}" Offset="0"/>
+                                <GradientStop Color="{DynamicResource SecondaryColor}" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="44" Height="44" CornerRadius="22" Background="{DynamicResource OnPrimaryTextBrush}" Padding="7">
+                                <Image Source="Resources/AppIcon-256.png" Stretch="Uniform"/>
+                            </Border>
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Memuat data IDM" FontSize="20" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource OnPrimaryTextBrush}"/>
+                                <TextBlock Text="Mengambil data dari situs pusat Kemendesa…"
+                                           FontSize="11" Margin="0,2,0,0"
+                                           Foreground="{DynamicResource OnPrimarySubtleBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
 
                     <!-- Strip progres gaya splash: bar 4 px STATIS (template
                          ProgressBar tema tidak punya animasi tak-tentu), penuh lebar
@@ -1021,6 +1054,16 @@
                                  Background="{DynamicResource PrimaryBrush}"
                                  Foreground="{DynamicResource OnPrimaryTextBrush}"
                                  AutomationProperties.Name="Progres pemuatan IDM"/>
+
+                    <Button Content="Batalkan" Command="{Binding BatalCommand}"
+                            Margin="24,10,24,0" Style="{StaticResource OutlineButton}"
+                            AutomationProperties.Name="Batalkan pemuatan IDM"/>
+
+                    <!-- Skeleton bar: pengganti kartu kosong selama memuat -->
+                    <StackPanel Margin="24,10,24,0">
+                        <Border Style="{StaticResource SkeletonBar}" Width="260" HorizontalAlignment="Left"/>
+                        <Border Style="{StaticResource SkeletonBar}" Width="180" HorizontalAlignment="Left" Margin="0,6,0,0"/>
+                    </StackPanel>
 
                     <!-- Isi: deret ceklis + teks langkah. -->
                     <StackPanel Margin="24,14,24,20">

@@ -277,7 +277,10 @@ namespace SuDesApp.Wpf.Views
         private double SkalaRender(int halaman, double skalaPerangkat)
         {
             double lebarDip = LebarHalamanDip(halaman);
-            int lebarPiksel = Math.Max(1, (int)Math.Round(lebarDip * skalaPerangkat));
+            // DPR dibatasi 1.5: render 2x di layar 4K membekukan pratinjau;
+            // 1.5x tetap tajam untuk teks dan 4x lebih ringan dari 2x.
+            var skalaBatas = Math.Min(skalaPerangkat, 1.5);
+            int lebarPiksel = Math.Max(1, (int)Math.Round(lebarDip * skalaBatas));
             // Epsilon kecil supaya pembulatan ke atas di mesin render tidak
             // menambah satu piksel (yang membuat WPF menyaring ulang).
             return Math.Min(16.0,
@@ -312,7 +315,7 @@ namespace SuDesApp.Wpf.Views
                 Height = tinggiTampil,
                 Stretch = Stretch.Fill
             };
-            RenderOptions.SetBitmapScalingMode(halaman, BitmapScalingMode.HighQuality);
+            RenderOptions.SetBitmapScalingMode(halaman, BitmapScalingMode.LowQuality);
 
             var card = new Border
             {
@@ -565,7 +568,8 @@ namespace SuDesApp.Wpf.Views
             {
                 if (DataContext is PdfPreviewViewModel vm && !await vm.BolehCetakAsync()) return;
                 if (!ReferenceEquals(document, _document)) return;
-                await document.PrintAsync(_title);
+                // Cetak di thread_pool agar UI tidak membeku saat spooling.
+                await Task.Run(() => document.PrintAsync(_title)).ConfigureAwait(true);
             }
             catch (Exception)
             {

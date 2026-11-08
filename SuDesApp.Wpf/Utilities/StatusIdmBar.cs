@@ -24,6 +24,9 @@ namespace SuDesApp.Wpf.Utilities
         /// Susun teks status dari cadangan yang cocok dengan <paramref name="kodeDesa"/>.
         /// Cadangan kosong / milik desa lain → <see cref="BelumAdaData"/>; desa tidak
         /// pernah boleh menampilkan status milik desa lain.
+        ///
+        /// Menampilkan TAHUN TERAKHIR yang terbit (bukan tahun berjalan):
+        /// "Status Desa (IDM): Maju  •  0,7444 (2024) — tahun terakhir 2024".
         /// </summary>
         public static string Susun(IdmSimpanan? cadangan, string kodeDesa)
         {
@@ -38,7 +41,12 @@ namespace SuDesApp.Wpf.Utilities
             var hasil = cadangan.Hasil.OrderByDescending(h => h.Ringkasan.Tahun).First();
             string status = PasangHurufKapital(hasil.Ringkasan.Status);
             string skor = hasil.Ringkasan.Skor.ToString("0.0000", new CultureInfo("id-ID"));
-            return "Status Desa (IDM): " + status + "  •  " + skor + " (" + hasil.Ringkasan.Tahun + ")";
+            int tahunTerakhir = hasil.Ringkasan.Tahun;
+            int tahunBerjalan = DateTime.Today.Year;
+            string akhiran = tahunTerakhir < tahunBerjalan
+                ? $" — tahun terakhir {tahunTerakhir}"
+                : string.Empty;
+            return $"Status Desa (IDM): {status}  •  {skor} ({tahunTerakhir}){akhiran}";
         }
 
         /// <summary>"MAJU" → "Maju"; "Maju" → "Maju"; kosong → "—". Kapital hanya di awal.</summary>

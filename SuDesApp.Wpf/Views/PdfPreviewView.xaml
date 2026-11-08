@@ -51,8 +51,9 @@
                             <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Ekspor}"/><Run Text=" Ekspor"/>
                             </TextBlock>
                         </Button>
-                    <Button x:Name="PrintBtn" Content="Cetak" Click="Print_Click" ToolTip="Cetak dokumen ke printer"
-                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                    <Button x:Name="PrintBtn" Content="Cetak" Click="Print_Click" ToolTip="Cetak dokumen ke printer (hanya untuk pratinjau Kematian; jenis lain lewat Simpan/Cetak Register)"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
+                            Visibility="{Binding BolehCetakPratinjauLangsung, Converter={StaticResource BoolToVis}}"/>
                     <Button Content="Batal" Command="{Binding BatalCommand}" ToolTip="Kembali ke tampilan awal"
                             Style="{StaticResource OutlineButton}"/>
                 </StackPanel>
