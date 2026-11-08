@@ -115,10 +115,6 @@ namespace SuDesApp.Installer.Views
             var judul = new TextBlock { Text = Title, FontSize = 13, FontWeight = FontWeights.SemiBold, Foreground = new SolidColorBrush(Color.FromRgb(0x21, 0x21, 0x21)), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
             dock.Children.Add(judul);
             DockPanel.SetDock(judul, Dock.Left);
-            var tutup = new Button { Content = "✕", Width = 36, Height = 24, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = new SolidColorBrush(Color.FromRgb(0x61, 0x61, 0x61)) };
-            tutup.Click += (_, _) => { if (_langkah == 2) return; Close(); };
-            dock.Children.Add(tutup);
-            DockPanel.SetDock(tutup, Dock.Right);
             bar.Child = dock;
             return bar;
         }
@@ -176,8 +172,8 @@ namespace SuDesApp.Installer.Views
             var sambutan = new TextBlock
             {
                 Text = _cabut
-                    ? "Copot SuDesApp dari komputer ini? Berkas aplikasi akan dihapus; database desa (desa.db), template yang sudah diedit, dan hasil PDF TIDAK dihapus."
-                    : "Selamat datang di pemasangan SuDesApp " + App.Versi + ". Aplikasi akan dipasang per pengguna (tanpa hak admin) dan data desa yang sudah ada tidak akan ditimpa. Pilih lokasi dan lanjutkan.",
+                    ? "Copot SuDesApp?"
+                    : "Selamat datang di SuDesApp " + App.Versi + ".",
                 FontSize = 13,
                 LineHeight = 19,
                 TextWrapping = TextWrapping.Wrap,
@@ -265,7 +261,7 @@ namespace SuDesApp.Installer.Views
             var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            var catatan = new TextBlock { Text = "Per pengguna (tanpa hak admin) · Data desa tidak ditimpa", FontSize = 11, Foreground = new SolidColorBrush(Color.FromRgb(0x61, 0x61, 0x61)), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            var catatan = new TextBlock { Text = "", FontSize = 11, Foreground = new SolidColorBrush(Color.FromRgb(0x61, 0x61, 0x61)), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
             grid.Children.Add(catatan);
             Grid.SetColumn(catatan, 0);
             var pil = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
@@ -310,13 +306,12 @@ namespace SuDesApp.Installer.Views
             if (langkah == 3)
             {
                 _panelSelesai.Children.Clear();
-                _panelSelesai.Children.Add(new TextBlock { Text = _cabut ? "Copot selesai. Data desa tetap ada bila pernah dipasang." : "Pemasangan selesai. SuDesApp " + App.Versi + " siap dipakai.", FontSize = 13, LineHeight = 19, TextWrapping = TextWrapping.Wrap });
-                _panelSelesai.Children.Add(new TextBlock { Text = "Data desa (desa.db, Templates yang sudah diedit, hasil PDF) tidak ditimpa.", FontSize = 11, Foreground = new SolidColorBrush(Color.FromRgb(0x61, 0x61, 0x61)), Margin = new Thickness(0, 6, 0, 0), TextWrapping = TextWrapping.Wrap });
+                _panelSelesai.Children.Add(new TextBlock { Text = _cabut ? "Selesai." : "Selesai.", FontSize = 13, LineHeight = 19, TextWrapping = TextWrapping.Wrap });
             }
             _btnKembali.Visibility = (langkah == 1) ? Visibility.Visible : Visibility.Collapsed;
             _btnLanjut.Content = langkah switch { 0 => "Lanjut", 1 => _cabut ? "Copot" : "Pasang", 2 => "Tunggu…", _ => "Selesai" };
             _btnLanjut.IsEnabled = langkah != 2;
-            _subjudul.Text = langkah switch { 0 => "Sistem Surat Desa · Sumberjaya Dev.", 1 => "Pilih lokasi pemasangan", 2 => "Memasang… jangan tutup jendela ini", _ => "Selesai" };
+            _subjudul.Text = langkah switch { 0 => "Sistem Surat Desa", 1 => "Pilih lokasi", 2 => "Memasang…", _ => "" };
         }
 
         private async Task LanjutAsync()
