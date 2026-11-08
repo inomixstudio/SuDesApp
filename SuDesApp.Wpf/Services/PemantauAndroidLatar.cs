@@ -10,9 +10,12 @@ namespace SuDesApp.Wpf.Services;
 /// dipakai otomatis, tanpa operator membuka halaman Sinkron lebih dulu.
 ///
 /// <para>
-/// Setiap putaran memakai scope DI sendiri: koneksi Npgsql dan SUPABASE
-/// preference tidak ditahan sepanjang umur aplikasi, dan putaran yang lambat
-/// tidak menumpuk (satu pemeriksaan pada satu waktu).
+/// Selain membaca ringkasan, pemantau ini mengimpor antrean otomatis saat
+/// ada baris menunggu (saklar <c>Supabase:SinkronOtomatis</c>, bawaan aktif)
+/// supaya slot antrean 10 surat tidak penuh menunggu klik operator. Impor
+/// manual di halaman Sinkron tetap tersedia untuk memeriksa ulang.
+/// Pemeriksaan impor dan pembacaan ringkasan memakai scope DI sendiri;
+/// putaran yang lambat tidak menumpuk (satu pemeriksaan pada satu waktu).
 /// </para>
 /// </summary>
 public sealed class PemantauAndroidLatar : IDisposable
@@ -28,6 +31,12 @@ public sealed class PemantauAndroidLatar : IDisposable
 
     /// <summary>Dipanggil di thread latar; pelanggan wajib memindahkannya ke UI sendiri.</summary>
     public event Action<RingkasanAndroid>? Berubah;
+
+    /// <summary>
+    /// Dipanggil di thread latar setelah impor otomatis berhasil mengimpor
+    /// satu surat atau lebih; pelanggan wajib memindahkannya ke UI sendiri.
+    /// </summary>
+    public event Action<SinkronHasil>? ImporOtomatisBerhasil;
 
     public PemantauAndroidLatar(
         IServiceScopeFactory scopeFactory,
@@ -67,6 +76,24 @@ public sealed class PemantauAndroidLatar : IDisposable
             using var scope = _scopeFactory.CreateScope();
             var pemantau = scope.ServiceProvider.GetRequiredService<PemantauAndroid>();
             var ringkasan = await pemantau.AmbilAsync().ConfigureAwait(false);
+
+            if (!_berhenti && ringkasan.Terkonfigurasi && ringkasan.JumlahAntrean > 0
+                && PengaturanOtomatisSinkron.Aktif && !SinkronTerkunci(scope.ServiceProvider))
+            {
+                // Impor otomatis: pakai layanan sinkron dari scope yang sama
+                // supaya tidak ada koneksi/modal yang bocor.
+                var layanan = scope.ServiceProvider.GetRequiredService<SinkronSuratService>();
+                var hasil = await layanan.SinkronkanAsync().ConfigureAwait(false);
+                if (hasil.Berhasil > 0) ImporOtomatisBerhasil?.Invoke(hasil);
+                if (hasil.AdaYangDiproses)
+                {
+                    _logger.LogInformation(
+                        "Sinkron otomatis: {Berhasil} masuk, {Gagal} gagal, {Dilewati} dilewati.",
+                        hasil.Berhasil, hasil.Gagal, hasil.Dilewati);
+                    ringkasan = await pemantau.AmbilAsync().ConfigureAwait(false);
+                }
+            }
+
             if (!_berhenti) Berubah?.Invoke(ringkasan);
         }
         catch (Exception ex)
@@ -76,6 +103,24 @@ public sealed class PemantauAndroidLatar : IDisposable
         finally
         {
             Interlocked.Exchange(ref _sedangDiperiksa, 0);
+        }
+    }
+
+    /// <summary>
+    /// Bila lisensi mengunci sinkron, impor otomatis tidak jalan — operator
+    /// harus melihat pesan kunci yang sama seperti tombol manual.
+    /// </summary>
+    private static bool SinkronTerkunci(IServiceProvider sp)
+    {
+        try
+        {
+            var penjaga = sp.GetService<SuDesApp.Services.PenjagaLisensi>();
+            return penjaga is { SinkronTerkunci: true };
+        }
+        catch
+        {
+            // Penjaga belum tersedia (mis. pada uji): anggap tidak terkunci.
+            return false;
         }
     }
 

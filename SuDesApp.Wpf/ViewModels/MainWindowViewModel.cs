@@ -62,6 +62,7 @@ namespace SuDesApp.Wpf.ViewModels
         public void Dispose()
         {
             _pemantauAndroid?.Berhenti();
+            _penerbitanSinkron?.Berhenti();
             _notifications.Dispose();
             _pembaruanLatar.Dispose();
         }
@@ -88,7 +89,8 @@ namespace SuDesApp.Wpf.ViewModels
             SuDesApp.Services.SambunganServerLisensi? sambunganServer = null,
             SuDesApp.Services.IIdmSimpananStore? idmSimpanan = null,
             SuDesApp.Wilayah.WilayahDataStore? wilayah = null,
-            SuDesApp.Wpf.Services.PemantauAndroidLatar? pemantauAndroid = null)
+            SuDesApp.Wpf.Services.PemantauAndroidLatar? pemantauAndroid = null,
+            SuDesApp.Wpf.Services.PenerbitanSinkronLatar? penerbitanSinkron = null)
         {
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
@@ -120,8 +122,12 @@ namespace SuDesApp.Wpf.ViewModels
             if (pemantauAndroid is not null)
             {
                 pemantauAndroid.Berubah += TerapkanStatusAndroid;
+                pemantauAndroid.ImporOtomatisBerhasil += TerapkanImporOtomatis;
                 pemantauAndroid.Mulai();
             }
+
+            _penerbitanSinkron = penerbitanSinkron;
+            _penerbitanSinkron?.Mulai();
 
             // Baris menu Pusat Administrasi menyebut server yang dituju DAN
             // keadaan sambungannya sejak menu dibangun — bukan hanya setelah
@@ -171,6 +177,9 @@ namespace SuDesApp.Wpf.ViewModels
                 void Segarkan()
                 {
                     RefreshVillageInfo();
+                    // Kop berubah → terbitkan ulang ke Android tanpa operator
+                    // membuka halaman Sinkron.
+                    _penerbitanSinkron?.MintaTerbit();
                     // Kode desa bisa berubah → status IDM di status bar disandingkan
                     // ulang dengan cadangan yang sesuai (bila ada).
                     _ = SegarkanStatusIdmAsync();

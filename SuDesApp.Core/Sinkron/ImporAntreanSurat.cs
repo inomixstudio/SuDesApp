@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
@@ -116,6 +117,8 @@ public sealed class ImporAntreanSurat
     /// <summary>
     /// Keterangan bawaan SKTM — sama persis dengan yang dibentuk
     /// <c>SktmInputViewModel.GetDefaultKeteranganAsync</c> saat form dibuka.
+    /// Dipertahankan sebagai cadangan bila skema tidak membawa
+    /// <c>keteranganBawaan</c> untuk SKTM.
     /// </summary>
     private async Task<string> DefaultKeteranganSktmAsync(CancellationToken ct)
     {
@@ -135,6 +138,111 @@ public sealed class ImporAntreanSurat
         {
             return "Keterangan tidak dapat dimuat.";
         }
+    }
+
+    /// <summary>
+    /// Keperluan baku per jenis — sama dengan <c>DefaultKeperluan</c> di
+    /// masing-masing InputViewModel desktop. NTCR diambil dari kode NTCR.
+    /// Null bila jenisnya tidak punya keperluan baku.
+    /// </summary>
+    internal static string? KeperluanBakuUntuk(string? idJenis) =>
+        (idJenis ?? string.Empty).ToUpperInvariant() switch
+        {
+            "SKD_UMUM" => "Surat Keterangan Desa",
+            "DOMISILI_WARGA" => "Surat Keterangan Domisili",
+            "SKU" => "Persyaratan",
+            "SK_TIDAK_PUNYA_RUMAH" => "Surat Keterangan Tidak Punya Rumah",
+            "PENGANTAR_ADMINDUK" => "Pengurusan Adminduk",
+            "AHLI_WARIS" => "Pengurusan Klaim Asuransi",
+            "GARAPAN_SAWAH" => "Pengajuan Pinjaman",
+            _ => (idJenis ?? string.Empty).StartsWith("NTCR_", StringComparison.OrdinalIgnoreCase)
+                ? NtcrKatalog.Keperluan(idJenis)
+                : null,
+        };
+
+    /// <summary>
+    /// Lengkapi field otomatis: keterangan bawaan (termasuk penggantian
+    /// `$desa.*` / `{namaDesa}`), keperluan baku, hari kematian, dan
+    /// pejabat penandatangan untuk jenis yang tidak punya kolomnya.
+    /// Tidak menimpa isi yang sudah ada dari Android (field non-otomatis).
+    /// </summary>
+    private async Task LengkapiOtomatisAsync(SuratData surat, string idJenis, CancellationToken ct)
+    {
+        // Hari kematian diturunkan dari tanggal kematian, sama seperti
+        // KematianInputViewModel / AhliWarisInputViewModel.
+        if (string.IsNullOrWhiteSpace(surat.Kematian?.HariKematian)
+            && !string.IsNullOrWhiteSpace(surat.Kematian?.TanggalKematian)
+            && DateTime.TryParse(surat.Kematian!.TanggalKematian,
+                CultureInfo.GetCultureInfo("id-ID"), DateTimeStyles.None, out var tglMeninggal))
+        {
+            surat.Kematian!.HariKematian = tglMeninggal.ToString("dddd", CultureInfo.GetCultureInfo("id-ID"));
+        }
+
+        // KEMATIAN/KENAL_LAHIR tidak punya kolom PejabatPenandatangan yang
+        // bisa dipilih; desktop selalu Kepala Desa untuk keduanya.
+        if (string.IsNullOrWhiteSpace(surat.PejabatPenandatangan)
+            && ((idJenis ?? string.Empty).Equals(SuratConstants.KEMATIAN, StringComparison.OrdinalIgnoreCase)
+                || (idJenis ?? string.Empty).Equals("KENAL_LAHIR", StringComparison.OrdinalIgnoreCase)))
+        {
+            surat.PejabatPenandatangan = "Kepala Desa";
+        }
+
+        if (string.IsNullOrWhiteSpace(surat.Keperluan))
+        {
+            var baku = KeperluanBakuUntuk(idJenis);
+            if (!string.IsNullOrWhiteSpace(baku)) surat.Keperluan = baku;
+        }
+
+        if (!string.IsNullOrWhiteSpace(surat.Keterangan)) return;
+
+        // Urutan: keteranganBawaan dari skema dulu (8 jenis), cadangan SKTM.
+        var bawaan = _skema.Cari(idJenis)?.KeteranganBawaan ?? string.Empty;
+        if (string.Equals(idJenis, "SKTM", StringComparison.OrdinalIgnoreCase)
+            && string.IsNullOrWhiteSpace(bawaan))
+        {
+            surat.Keterangan = await DefaultKeteranganSktmAsync(ct).ConfigureAwait(false);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(bawaan)) return;
+
+        try
+        {
+            var desa = await _unitOfWork.DesaRepository!.GetInfoDesaAsync().ConfigureAwait(false);
+            surat.Keterangan = UraiKeteranganBawaan(bawaan, desa);
+        }
+        catch
+        {
+            // Tanpa data desa tidak bisa mengurai; biarkan kosong agar
+            // validasi/laporan menampilkan, bukan menebak.
+        }
+    }
+
+    /// <summary>
+    /// Ganti placeholder keterangan bawaan dengan identitas desa.
+    /// Android memakai bentukan `$desa.*`; varian `{namaDesa}` juga
+    /// diterima (Ahli Waris).
+    /// </summary>
+    internal static string UraiKeteranganBawaan(string templat, object? desa)
+    {
+        string Ambil(string properti, string cadangan = "-")
+        {
+            if (desa is null) return cadangan;
+            var prop = desa.GetType().GetProperty(properti,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+            var nilai = prop?.GetValue(desa) as string;
+            return string.IsNullOrWhiteSpace(nilai) ? cadangan : nilai.Trim();
+        }
+
+        var hasil = templat;
+        hasil = hasil.Replace("$desa.nama", Ambil("NamaDesa"), StringComparison.Ordinal);
+        hasil = hasil.Replace("$desa.kecamatan", Ambil("Kecamatan"), StringComparison.Ordinal);
+        hasil = hasil.Replace("$desa.kabupaten", Ambil("Kabupaten"), StringComparison.Ordinal);
+        hasil = hasil.Replace("$desa.jenisKabupaten", Ambil("JenisKabupaten", "Kabupaten"), StringComparison.Ordinal);
+        hasil = hasil.Replace("$desa.lembaga", Ambil("JenisLembaga", "Desa"), StringComparison.Ordinal);
+        hasil = hasil.Replace("$desa.kodepos", Ambil("Kodepos", "-"), StringComparison.Ordinal);
+        hasil = hasil.Replace("{namaDesa}", Ambil("NamaDesa"), StringComparison.OrdinalIgnoreCase);
+        return hasil;
     }
 
     /// <summary>
@@ -191,15 +299,13 @@ public sealed class ImporAntreanSurat
             surat.IdAntreanSinkron = baris.ClientUuid?.ToString()
                 ?? baris.Id.ToString();
 
-            // Jenis yang skemanya menandai keterangan sebagai "otomatis"
-            // dihitung desktop, bukan diminta dari Android — sama seperti saat
-            // form dibuka di desktop. Tanpa ini, surat hasil impor SKTM keluar
-            // dengan keterangan kosong.
-            if (string.IsNullOrWhiteSpace(surat.Keterangan) &&
-                string.Equals(baris.IdJenis, "SKTM", StringComparison.OrdinalIgnoreCase))
-            {
-                surat.Keterangan = await DefaultKeteranganSktmAsync(ct).ConfigureAwait(false);
-            }
+            // Field "otomatis" di skema: Android tidak menampilkannya,
+            // jadi desktop yang menghitungnya — sama seperti saat form
+            // dibuka di desktop. Ini mencakup keterangan bawaan SKTM,
+            // SKD, Domisili, SKU, Ahli Waris, Pengantar Adminduk, dst.,
+            // keperluan per jenis (termasuk NTCR), hari kematian, dan
+            // pejabat penandatangan untuk KEMATIAN/KENAL_LAHIR.
+            await LengkapiOtomatisAsync(surat, baris.IdJenis, ct).ConfigureAwait(false);
 
             var id = await _unitOfWork.SuratRepository
                 .AddSuratAsync(surat, null, ct)

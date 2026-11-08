@@ -10,6 +10,7 @@ namespace SuDesApp.Wpf.ViewModels
     public partial class MainWindowViewModel
     {
         private readonly PemantauAndroidLatar? _pemantauAndroid;
+        private readonly PenerbitanSinkronLatar? _penerbitanSinkron;
 
         /// <summary>Perangkat yang terakhir dilaporkan tersambung — penanda agar notifikasi tidak diulang tiap putaran.</summary>
         private string? _perangkatTerhubungTerakhir;
@@ -60,6 +61,30 @@ namespace SuDesApp.Wpf.ViewModels
             }
 
             _ = dispatcher.BeginInvoke(() => TerapkanStatusAndroidSekarang(ringkasan));
+        }
+
+        /// <summary>
+        /// Notifikasi hasil impor otomatis (≥1 surat). Dipanggil dari thread
+        /// latar; pindah ke UI seperti <see cref="TerapkanStatusAndroid"/>.
+        /// </summary>
+        private void TerapkanImporOtomatis(SinkronHasil hasil)
+        {
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher is null || dispatcher.CheckAccess())
+            {
+                NotifikasiImporOtomatis(hasil);
+                return;
+            }
+
+            _ = dispatcher.BeginInvoke(() => NotifikasiImporOtomatis(hasil));
+        }
+
+        private void NotifikasiImporOtomatis(SinkronHasil hasil)
+        {
+            _notifications.Success(
+                "Sinkron otomatis",
+                $"{hasil.Berhasil} surat dari perangkat masuk ke register desktop.",
+                "sinkron-android");
         }
 
         /// <summary>Potong teks untuk chip status bar; nama lengkap tetap di tooltip.</summary>

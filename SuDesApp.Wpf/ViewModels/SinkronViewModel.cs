@@ -43,6 +43,7 @@ public class SinkronViewModel : ObservableObject
 
     private bool _sedangSinkron;
     private bool _sedangMemasang;
+    private bool _sinkronOtomatis = PengaturanOtomatisSinkron.Aktif;
     private int _jumlahAntrean;
     private SinkronHasil? _hasil;
     private string _namaPerangkat = string.Empty;
@@ -50,6 +51,7 @@ public class SinkronViewModel : ObservableObject
     private PerangkatTerpasang? _perangkatDipilih;
     private HasilPerangkaian? _perangkatBaru;
     private BitmapSource? _gambarQr;
+    private bool _modeKode;
 
     public SinkronViewModel(
         SinkronSuratService sinkron,
@@ -74,8 +76,11 @@ public class SinkronViewModel : ObservableObject
 
         SinkronCommand = new AsyncRelayCommand(SinkronkanAsync, () => !SedangSinkron && KonfigurasiLengkap);
         MuatUlangCommand = new AsyncRelayCommand(MuatUlangAsync, () => !SedangSinkron);
+        ImporUlangCommand = new AsyncRelayCommand(ImporUlangArsipGagalAsync, () => !SedangSinkron);
         SimpanKonfigurasiCommand = new AsyncRelayCommand(SimpanKonfigurasiAsync, () => !SedangSinkron);
-        PasangCommand = new AsyncRelayCommand(PasangAsync, () => !SedangMemasang && !string.IsNullOrWhiteSpace(NamaPerangkat));
+        PasangCommand = new AsyncRelayCommand(() => PasangAsync(modeKode: false), () => !SedangMemasang);
+        BuatQrCommand = new AsyncRelayCommand(() => PasangAsync(modeKode: false), () => !SedangMemasang);
+        BuatKodeCommand = new AsyncRelayCommand(() => PasangAsync(modeKode: true), () => !SedangMemasang);
         CabutCommand = new AsyncRelayCommand(CabutAsync, () => PerangkatDipilih is not null && !SedangMemasang);
         TerbitkanSkemaCommand = new AsyncRelayCommand(TerbitkanSkemaAsync, () => !SedangSinkron);
         TerbitkanPengaturanCommand = new AsyncRelayCommand(TerbitkanPengaturanAsync, () => !SedangSinkron);
@@ -88,7 +93,7 @@ public class SinkronViewModel : ObservableObject
 
     public string HeaderSubtitle =>
         "Tarik surat yang dibuat di aplikasi Android dari antrean Supabase, lalu impor ke register desktop. "
-        + "Antrean dibatasi 10 surat; setelah sinkron, antrean dikosongkan.";
+        + "Antrean dibatasi 10 surat; sinkron berjalan otomatis di latar dan manual tetap tersedia.";
 
     // ------------------------------------------------------------------
     // Konfigurasi
@@ -108,6 +113,22 @@ public class SinkronViewModel : ObservableObject
         !string.IsNullOrWhiteSpace(_kataSandi) &&
         !string.IsNullOrWhiteSpace(_tenant);
 
+    /// <summary>
+    /// Impor antrean otomatis di latar (bawaan aktif). Dimatikan bila
+    /// operator ingin selalu menekan Sinkron secara manual.
+    /// </summary>
+    public bool SinkronOtomatis
+    {
+        get => _sinkronOtomatis;
+        set
+        {
+            if (SetProperty(ref _sinkronOtomatis, value))
+            {
+                AppPreferenceStore.SetBool(PengaturanOtomatisSinkron.Kunci, value);
+            }
+        }
+    }
+
     public bool SedangSinkron
     {
         get => _sedangSinkron;
@@ -116,6 +137,7 @@ public class SinkronViewModel : ObservableObject
             SetProperty(ref _sedangSinkron, value);
             ((AsyncRelayCommand)SinkronCommand).RaiseCanExecuteChanged();
             ((AsyncRelayCommand)MuatUlangCommand).RaiseCanExecuteChanged();
+            ((AsyncRelayCommand)ImporUlangCommand).RaiseCanExecuteChanged();
             ((AsyncRelayCommand)SimpanKonfigurasiCommand).RaiseCanExecuteChanged();
         }
     }
@@ -127,9 +149,24 @@ public class SinkronViewModel : ObservableObject
         {
             SetProperty(ref _sedangMemasang, value);
             ((AsyncRelayCommand)PasangCommand).RaiseCanExecuteChanged();
+            ((AsyncRelayCommand)BuatQrCommand).RaiseCanExecuteChanged();
+            ((AsyncRelayCommand)BuatKodeCommand).RaiseCanExecuteChanged();
             ((AsyncRelayCommand)CabutCommand).RaiseCanExecuteChanged();
         }
     }
+
+    /// <summary>Mode pasang terakhir: true = tombol Kode, false = tombol QR.</summary>
+    public bool ModePasangKode => _modeKode;
+
+    /// <summary>Petunjuk utama panel kode sesuai tombol yang ditekan.</summary>
+    public string PetunjukPasangUtama => _modeKode
+        ? "Ketik kode ini di aplikasi Android"
+        : "Pindai dari aplikasi Android";
+
+    /// <summary>Petunjuk kedua panel kode (jalur alternatif).</summary>
+    public string PetunjukPasangKedua => _modeKode
+        ? "atau pindai QR di atas sebagai alternatif"
+        : "atau ketik kode ini";
 
     /// <summary>Batas antrean Supabase per desa (trigger basis data menolak surat ke-11).</summary>
     public const int AntreanMaksimum = 10;
@@ -193,6 +230,8 @@ public class SinkronViewModel : ObservableObject
         {
             SetProperty(ref _namaPerangkat, value);
             ((AsyncRelayCommand)PasangCommand).RaiseCanExecuteChanged();
+            ((AsyncRelayCommand)BuatQrCommand).RaiseCanExecuteChanged();
+            ((AsyncRelayCommand)BuatKodeCommand).RaiseCanExecuteChanged();
         }
     }
 
@@ -254,8 +293,11 @@ public class SinkronViewModel : ObservableObject
 
     public ICommand SinkronCommand { get; }
     public ICommand MuatUlangCommand { get; }
+    public ICommand ImporUlangCommand { get; }
     public ICommand SimpanKonfigurasiCommand { get; }
     public ICommand PasangCommand { get; }
+    public ICommand BuatQrCommand { get; }
+    public ICommand BuatKodeCommand { get; }
     public ICommand CabutCommand { get; }
     public ICommand TerbitkanSkemaCommand { get; }
     public ICommand TerbitkanPengaturanCommand { get; }
@@ -383,7 +425,7 @@ public class SinkronViewModel : ObservableObject
         }
     }
 
-    private async Task PasangAsync()
+    private async Task ImporUlangArsipGagalAsync()
     {
         if (_penjaga is { SinkronTerkunci: true })
         {
@@ -392,11 +434,63 @@ public class SinkronViewModel : ObservableObject
             return;
         }
 
+        SedangSinkron = true;
+        Hasil = null;
+        try
+        {
+            var hasil = await _sinkron.ImporUlangArsipGagalAsync().ConfigureAwait(true);
+            Hasil = hasil;
+
+            if (!string.IsNullOrWhiteSpace(hasil.PesanGalat))
+            {
+                await _pesan.ShowErrorAsync(hasil.PesanGalat);
+            }
+            else if (hasil.AdaYangDiproses)
+            {
+                await _pesan.ShowInfoAsync(
+                    $"{hasil.Berhasil} arsip gagal berhasil diimpor ulang, {hasil.Gagal} masih gagal.");
+            }
+            else
+            {
+                await _pesan.ShowInfoAsync("Tidak ada arsip gagal untuk diimpor ulang.");
+            }
+
+            await MuatUlangAsync().ConfigureAwait(true);
+        }
+        catch (System.Exception ex)
+        {
+            _logger.LogError(ex, "Impor ulang arsip gagal.");
+            await _pesan.ShowErrorAsync("Impor ulang gagal: " + ex.Message);
+        }
+        finally
+        {
+            SedangSinkron = false;
+        }
+    }
+
+    private async Task PasangAsync(bool modeKode = false)
+    {
+        if (_penjaga is { SinkronTerkunci: true })
+        {
+            await _pesan.ShowInfoAsync(
+                SuDesApp.Services.PenjagaLisensi.PesanSinkronTerkunci);
+            return;
+        }
+
+        _modeKode = modeKode;
+        OnPropertyChanged(nameof(ModePasangKode));
+        OnPropertyChanged(nameof(PetunjukPasangUtama));
+        OnPropertyChanged(nameof(PetunjukPasangKedua));
+
         SedangMemasang = true;
         PerangkatBaru = null;
         try
         {
-            var hasil = await _perangkaian.PasangAsync(NamaPerangkat.Trim()).ConfigureAwait(true);
+            // Nama tidak wajib: kosong → Core membuat nama otomatis.
+            var nama = string.IsNullOrWhiteSpace(NamaPerangkat)
+                ? string.Empty
+                : NamaPerangkat.Trim();
+            var hasil = await _perangkaian.PasangAsync(nama).ConfigureAwait(true);
             PerangkatBaru = hasil;
 
             if (!hasil.Berhasil)

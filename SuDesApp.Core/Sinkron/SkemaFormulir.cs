@@ -23,7 +23,7 @@ public sealed record SkemaBidang(
     bool Otomatis = false);
 
 /// <summary>Skema formulir satu jenis surat.</summary>
-public sealed record SkemaJenis(string IdJenis, string Label, List<SkemaBidang> Fields);
+public sealed record SkemaJenis(string IdJenis, string Label, List<SkemaBidang> Fields, string KeteranganBawaan = "");
 
 /// <summary>
 /// Skema formulir surat yang dibagikan desktop → Android.
@@ -81,12 +81,16 @@ public sealed class SkemaFormulir
             foreach (var jenis in doc.RootElement.EnumerateObject())
             {
                 var label = jenis.Name;
+                var keteranganBawaan = string.Empty;
                 var fields = new List<SkemaBidang>();
 
                 if (jenis.Value.ValueKind == JsonValueKind.Object)
                 {
                     if (jenis.Value.TryGetProperty("label", out var l) && l.ValueKind == JsonValueKind.String)
                         label = l.GetString() ?? jenis.Name;
+
+                    if (jenis.Value.TryGetProperty("keteranganBawaan", out var kb) && kb.ValueKind == JsonValueKind.String)
+                        keteranganBawaan = kb.GetString() ?? string.Empty;
 
                     if (jenis.Value.TryGetProperty("fields", out var f) && f.ValueKind == JsonValueKind.Array)
                     {
@@ -114,7 +118,7 @@ public sealed class SkemaFormulir
                     }
                 }
 
-                skema._jenis[jenis.Name] = new SkemaJenis(jenis.Name, label, fields);
+                skema._jenis[jenis.Name] = new SkemaJenis(jenis.Name, label, fields, keteranganBawaan);
             }
         }
         catch
@@ -357,11 +361,7 @@ public sealed class SkemaFormulir
             "Decimal" => nilai.TryGetDecimal(out var m) ? m : 0m,
             "Boolean" => nilai.ValueKind == JsonValueKind.True
                 || (nilai.ValueKind == JsonValueKind.String && bool.TryParse(nilai.GetString(), out var b) && b),
-            "DateTime" => nilai.ValueKind == JsonValueKind.String
-                && DateTime.TryParse(nilai.GetString(), CultureInfo.InvariantCulture,
-                    DateTimeStyles.RoundtripKind, out var dt)
-                ? dt
-                : null,
+            "DateTime" => TanggalDariAndroid(nilai),
             _ => null,
         };
 
@@ -383,4 +383,42 @@ public sealed class SkemaFormulir
 
     private static string? AmbilString(JsonElement el, string nama) =>
         el.TryGetProperty(nama, out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;
+
+    /// <summary>
+    /// Tanggal dari Android. Android kirim ISO (`yyyy-MM-dd`) dari pemilih
+    /// tanggal; operator lama mungkin mengetik `dd/MM/yyyy` / `dd-MM-yyyy`.
+    /// Semua bentuk itu diterima supaya tanggal tidak diam-diam hilang.
+    /// Format eksplisit dicoba lebih dulu: `DateTime.TryParse` Invariant
+    /// membaca `07/11/2026` sebagai 11 Juli (AS), bukan 7 November.
+    /// </summary>
+    internal static DateTime? TanggalDariAndroid(JsonElement nilai)
+    {
+        if (nilai.ValueKind != JsonValueKind.String) return null;
+        var teks = nilai.GetString();
+        if (string.IsNullOrWhiteSpace(teks)) return null;
+
+        string[] format =
+        [
+            "yyyy-MM-dd",
+            "yyyy-MM-dd HH:mm",
+            "dd/MM/yyyy",
+            "dd-MM-yyyy",
+            "dd.MM.yyyy",
+            "d/M/yyyy",
+            "d-M-yyyy",
+        ];
+        if (DateTime.TryParseExact(teks.Trim(), format,
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out var terbaca))
+        {
+            return terbaca;
+        }
+
+        if (DateTime.TryParse(teks, CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind, out var dt))
+        {
+            return dt;
+        }
+
+        return null;
+    }
 }
