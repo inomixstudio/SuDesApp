@@ -179,6 +179,27 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.12.0 (8 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Fitur Baru — Trial Otomatis Tanpa Form", new List<string>
+                        {
+                            "Trial 30 hari kini aktif otomatis saat aplikasi dijalankan — tanpa form dan tanpa tombol Mulai Trial. Semua fitur langsung berjalan normal pada pemasangan pertama.",
+                            "Setelah trial habis, cetak PDF dan ekspor Excel dikunci di semua menu, kecuali cetak Daftar Hadir yang tetap boleh dipakai. Data tetap bisa dibaca dan dikelola.",
+                            "Sinkron Android ikut dikunci setelah trial habis (tarik antrean, pasang/cabut perangkat, dan terbitkan skema/pengaturan). Popup peringatan mengarahkan ke menu AKTIVASI LISENSI atau hubungi developer lewat tombol WhatsApp di halaman itu."
+                        }),
+                        new CatatanRilisSubSection("Perbaikan — Dialog Persetujuan Tidak Memotong Teks", new List<string>
+                        {
+                            "Dialog persetujuan kebijakan awal (Kebijakan Privasi & Syarat Ketentuan) kini tidak memotong teks — pernyataan persetujuan, daftar dokumen, pesan galat, dan catatan kaki semuanya membungkus pada lebar dialog. Jendela pembaca dokumen juga bisa digulir mendatar untuk baris/tabel lebar.",
+                            "Ikon Beranda memakai glyph tema (bukan emoji warna OS) dan statistik warga + ringkasan register dimuat paralel dengan cache 30 menit, sehingga muat awal lebih ringan."
+                        }),
+                        new CatatanRilisSubSection("Perbaikan — IDM dan Surat", new List<string>
+                        {
+                            "Halaman IDM dapat dibatalkan pemuatannya; pencocokan wilayah (sekitar 90 ribu baris) kini di thread latar agar antarmuka tidak tersendat, dan pemeriksaan Indeks Desa 2025 berjalan paralel.",
+                            "Kotak kode formulir F-2.17 pada Surat Kematian kini benar-benar di sisi kanan; jarak baris dilonggarkan. Katalog menu surat kini satu sumber alias label lama sehingga label dari dokumen desa tetap dikenali."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.11.0 (8 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
