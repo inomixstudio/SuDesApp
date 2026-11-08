@@ -217,4 +217,107 @@ public sealed class SkemaFormulirTests
             Assert.True(kurang.Count == 0, $"Skema {jenis} kehilangan field warga: {string.Join(", ", kurang)}");
         }
     }
+
+    [Fact]
+    public void Skema_memuat_keterangan_bawaan_untuk_jenis_yang_menggunakannya()
+    {
+        var skema = Muat();
+        Assert.False(string.IsNullOrWhiteSpace(skema.Cari("SKTM")?.KeteranganBawaan));
+        Assert.False(string.IsNullOrWhiteSpace(skema.Cari("SKD_UMUM")?.KeteranganBawaan));
+        Assert.False(string.IsNullOrWhiteSpace(skema.Cari("AHLI_WARIS")?.KeteranganBawaan));
+    }
+
+    [Theory]
+    [InlineData("2026-11-07")]
+    [InlineData("07/11/2026")]
+    [InlineData("07-11-2026")]
+    public void Tanggal_dari_android_menerima_iso_dan_ejaan_indonesia(string teks)
+    {
+        using var doc = JsonDocument.Parse($"{{\"v\":\"{teks}\"}}");
+        var hasil = SkemaFormulir.TanggalDariAndroid(doc.RootElement.GetProperty("v"));
+
+        Assert.NotNull(hasil);
+        Assert.Equal(2026, hasil!.Value.Year);
+        Assert.Equal(11, hasil.Value.Month);
+        Assert.Equal(7, hasil.Value.Day);
+    }
+
+    [Fact]
+    public void Urai_keterangan_bawaan_mengganti_placeholder_desa()
+    {
+        var desa = new DesaUji { NamaDesa = "Sumberjaya", Kecamatan = "Bangkong", Kabupaten = "Karawang" };
+        var teks = ImporAntreanSurat.UraiKeteranganBawaan(
+            "warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan ahli waris Desa {namaDesa}",
+            desa);
+
+        Assert.Contains("Sumberjaya", teks);
+        Assert.Contains("Bangkong", teks);
+        Assert.Contains("Karawang", teks);
+        Assert.DoesNotContain("$desa", teks);
+        Assert.DoesNotContain("{namaDesa}", teks);
+    }
+
+    private sealed class DesaUji
+    {
+        public string NamaDesa { get; set; } = string.Empty;
+        public string Kecamatan { get; set; } = string.Empty;
+        public string Kabupaten { get; set; } = string.Empty;
+    }
+
+    [Theory]
+    [InlineData("SKD_UMUM", "Surat Keterangan Desa")]
+    [InlineData("PENGANTAR_ADMINDUK", "Pengurusan Adminduk")]
+    [InlineData("AHLI_WARIS", "Pengurusan Klaim Asuransi")]
+    [InlineData("NTCR_N1", "Surat Pengantar Nikah (N1)")]
+    [InlineData("INSTANSI", null)]
+    public void Keperluan_baku_menurut_jenis(string idJenis, string? harapan)
+    {
+        Assert.Equal(harapan, ImporAntreanSurat.KeperluanBakuUntuk(idJenis));
+    }
+
+    [Fact]
+    public void Nama_otomatis_dibuat_bila_nama_kosong()
+    {
+        var nama = PerangkaianPerangkat.BuatNamaOtomatis();
+
+        Assert.False(string.IsNullOrWhiteSpace(nama));
+        Assert.StartsWith("Android", nama);
+        Assert.False(string.IsNullOrWhiteSpace(PerangkaianPerangkat.BuatKode().Trim()));
+        Assert.Equal(4, PerangkaianPerangkat.BuatKode().Length);
+    }
+
+    [Fact]
+    public void Arsip_gagal_roundtrip_menjaga_data_json_dan_meta()
+    {
+        using var doc = JsonDocument.Parse(
+            """{"tanggal":"2026-11-07","fields":{"nik":"3201010101010001","nama":"Budi"}}""");
+        var id = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var baris = new AntreanSuratBaris(
+            id,
+            "tenant-uji",
+            "pengguna-uji",
+            Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            "SKTM",
+            "AND-1",
+            "3201010101010001",
+            doc.RootElement.Clone(),
+            "gagal",
+            3,
+            null,
+            new DateTime(2026, 11, 7, 9, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 11, 7, 9, 5, 0, DateTimeKind.Utc),
+            Guid.Parse("33333333-3333-3333-3333-333333333333"));
+
+        var teks = SinkronSuratService.BangunArsipGagal(baris, "Warga tidak valid");
+        var kembali = SinkronSuratService.BacaArsipGagal(teks);
+
+        Assert.NotNull(kembali);
+        Assert.Equal(id, kembali!.Id);
+        Assert.Equal("SKTM", kembali.IdJenis);
+        Assert.Equal("3201010101010001", kembali.Nik);
+        Assert.Equal("AND-1", kembali.NomorSementara);
+        Assert.Equal("Budi", kembali.Fields.GetProperty("nama").GetString());
+        Assert.Equal("Warga tidak valid", kembali.Catatan);
+        Assert.Null(SinkronSuratService.BacaArsipGagal("bukan-json"));
+    }
 }

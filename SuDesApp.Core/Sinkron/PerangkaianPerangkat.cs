@@ -82,6 +82,14 @@ public sealed class PerangkaianPerangkat
         return hasil.ToString();
     }
 
+    /// <summary>
+    /// Nama otomatis perangkat bila operator tidak mengisi nama
+    /// (mis. "Android 0803-143022"). Cukup unik untuk dikenali di daftar
+    /// dan status bar; operator tidak perlu mengetik apa pun.
+    /// </summary>
+    public static string BuatNamaOtomatis() =>
+        $"Android {DateTime.Now:ddMM-HHmmss}";
+
     /// <summary>Pasang perangkat baru. Tidak pernah melempar.</summary>
     public async Task<HasilPerangkaian> PasangAsync(
         string nama,
@@ -95,6 +103,7 @@ public sealed class PerangkaianPerangkat
 
         var sandi = BuatKataSandi();
         var pengguna = string.IsNullOrWhiteSpace(idPengguna) ? _pengaturan.Tenant : idPengguna!;
+        var namaEfektif = string.IsNullOrWhiteSpace(nama) ? BuatNamaOtomatis() : nama.Trim();
 
         try
         {
@@ -111,7 +120,7 @@ public sealed class PerangkaianPerangkat
                     "SELECT public.pasang_perangkat_android(@tenant, @pengguna, @nama, @sandi)", conn, transaksi);
                 cmd.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
                 cmd.Parameters.Add(new NpgsqlParameter("pengguna", pengguna));
-                cmd.Parameters.Add(new NpgsqlParameter("nama", nama));
+                cmd.Parameters.Add(new NpgsqlParameter("nama", namaEfektif));
                 cmd.Parameters.Add(new NpgsqlParameter("sandi", sandi));
 
                 var hasil = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
@@ -199,7 +208,7 @@ public sealed class PerangkaianPerangkat
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Gagal memasang perangkat {Nama}.", nama);
+            _logger.LogError(ex, "Gagal memasang perangkat {Nama}.", namaEfektif);
             return new HasilPerangkaian(false, null, null, null, ex.Message, null);
         }
     }

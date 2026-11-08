@@ -1,10 +1,16 @@
 # Sinkronisasi Android → Desktop
 
 Aplikasi Android membuat surat di lapangan: PDF jadi dan tersimpan **di
-perangkat**, sedangkan isian suratnya masuk **antrean Supabase**. Operator
-desktop lalu menekan **Sinkron** di halaman *Sinkron Android* — sinkronisasi
-**tidak berjalan otomatis** — untuk mengunduh antrean, mengimpornya ke SQLite,
-dan mengarsipkan baris yang sudah masuk.
+perangkat**, sedangkan isian suratnya masuk **antrean Supabase**. Desktop
+mengimpornya ke SQLite dan mengarsipkan baris yang sudah masuk. Impor
+**berjalan otomatis di latar** (`PemantauAndroidLatar` tiap ±20 detik saat
+antrean > 0) dan tetap tersedia manual lewat tombol **Sinkron** di halaman
+*Sinkron Android*; saklarnya (`Sinkron otomatis`, bawaan aktif) ada di
+halaman yang sama. Kop &amp; skema juga diterbitkan otomatis (`PenerbitanSinkronLatar`:
+saat aplikasi mulai, saat pengaturan desa disimpan, dan saat
+`SkemaFormulir.json` berubah) dan ditarik Android otomatis (saat aplikasi
+dibuka, tiap kembali ke menu utama bila >5 menit, dan oleh
+`PengirimWorker` berkala).
 
 ```
 Android ──insert──▶ antrean_surat (Supabase, maks 10)
@@ -123,9 +129,16 @@ Impor satu baris bisa gagal (isian tidak lengkap, NIK tidak valid). Aturannya:
 1. Baris `menunggu` selalu diimpor.
 2. Baris `gagal` **dicoba lagi** pada putaran sinkron berikutnya selama
    `batas_coba` belum mencapai 3 (`SinkronSuratService.PerluDiimpor`).
-3. Pada kegagalan ketiga, alasan ditulis ke `sinkron_log`, lalu baris
-   **dihapus** supaya tidak menempati slot batas 10 selamanya.
-4. Operator dapat mengirim ulang surat dari Android; baris baru akan dibuat.
+3. Pada kegagalan ketiga, alasan ditulis ke `sinkron_log`, muatannya
+   diarsipkan ke folder `Gagal` di berkas sinkron, lalu baris **dihapus**
+   supaya tidak menempati slot batas 10 selamanya. Operator dapat mengimpor
+   ulang arsip itu dari desktop lewat tombol *Impor ulang arsip gagal*
+   (halaman Sinkron Android) setelah penyebabnya diperbaiki — tanpa
+   meminta Android mengirim ulang dan tanpa mengetik ulang dari PDF.
+4. Operator juga dapat mengirim ulang surat dari Android; baris baru akan
+   dibuat. Halaman Pengaturan Android kini menampilkan daftar per surat
+   (antrean server + tertunda di perangkat) dan tombol *Hapus* per baris
+   (policy `p_antrean_surat_hapus`, `20261114000000_…`).
 
 Karena jumlah baris dibatasi 10 per desa (trigger `batasi_antrean_surat`),
 langkah 3 penting: tanpa itu sepuluh baris gagal membuat perangkat berhenti
@@ -133,11 +146,14 @@ bisa mengirim.
 
 ## Bila jaringan gagal di perangkat
 
-Isian yang gagal masuk antrean **tidak dibuang**. Android menyimpannya di
-`files/antrean-tertunda/` dan mencoba lagi setiap menu utama dibuka atau saat
-operator menekan *Kirim surat tertunda* di halaman Pengaturan. Halaman itu juga
-menampilkan jumlah surat yang menunggu di Supabase dan yang masih tertunda di
-perangkat.
+Isian yang gagal masuk antrean **tidak dibuang**. Android menyimpannya
+terenkripsi (`AES/GCM`, kunci di Android Keystore, berkas `*.enc` di
+`files/antrean-tertunda/`) dan mencoba lagi setiap menu utama dibuka atau
+saat operator menekan *Kirim surat tertunda* di halaman Pengaturan.
+Halaman itu juga menampilkan jumlah surat yang menunggu di Supabase,
+peringatan batas antrean (8/10 dan 10/10), status perangkat aktif, serta
+daftar per surat. Berkas lama plaintext (`*.json`) masih dibaca dan
+dimigrasikan ke terenkripsi saat pengiriman pertama.
 
 ## Nomor surat
 

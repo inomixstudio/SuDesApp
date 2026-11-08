@@ -450,6 +450,9 @@ namespace SuDesApp.Wpf
             // koneksi Supabase dan keadaan perangkat Android terbaca otomatis
             // tanpa membuka halaman Sinkron.
             services.AddSingleton<SuDesApp.Wpf.Services.PemantauAndroidLatar>();
+            // Penerbitan kop & skema otomatis: saat aplikasi mulai, saat
+            // pengaturan desa disimpan, dan saat SkemaFormulir.json berubah.
+            services.AddSingleton<SuDesApp.Wpf.Services.PenerbitanSinkronLatar>();
             services.AddTransient<SuDesApp.Sinkron.PenerbitSkemaFormulir>();
             services.AddTransient<SuDesApp.Sinkron.PenerbitPengaturanDesa>();
             services.AddTransient<SinkronViewModel>();

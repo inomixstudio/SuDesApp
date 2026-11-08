@@ -142,7 +142,7 @@ public sealed class SinkronSuratService
                 else
                 {
                     gagal++;
-                    await TandaiGagalAsync(conn, b.Id, hasil.PesanGalat, b.BatasCoba, ct).ConfigureAwait(false);
+                    await TandaiGagalAsync(conn, b, hasil.PesanGalat, ct).ConfigureAwait(false);
                 }
             }
 
@@ -248,17 +248,32 @@ public sealed class SinkronSuratService
     /// Baris gagal: naikkan penghitung percobaan. Setelah
     /// <see cref="BatasCobaMaks"/> kali, baris dibuang dari antrean supaya
     /// tidak memblokir slot batas 10 selamanya; penyebabnya tetap tercatat di
-    /// <c>sinkron_log</c>. Selama percobaan masih tersisa, statusnya tetap
-    /// <c>gagal</c> — <see cref="PerluDiimpor"/> yang membuatnya dicoba lagi
-    /// pada putaran berikutnya.
+    /// <c>sinkron_log</c> dan muatannya diarsipkan ke folder
+    /// <c>Gagal</c> agar bisa diimpor ulang dari desktop setelah penyebabnya
+    /// diperbaiki (tidak perlu meminta Android mengirim ulang, apalagi
+    /// mengetik ulang dari PDF). Selama percobaan masih tersisa, statusnya
+    /// tetap <c>gagal</c> — <see cref="PerluDiimpor"/> yang membuatnya
+    /// dicoba lagi pada putaran berikutnya.
     /// </summary>
-    private static async Task TandaiGagalAsync(
-        NpgsqlConnection conn, Guid idAntrean, string? pesan, short batasCoba, CancellationToken ct)
+    private async Task TandaiGagalAsync(
+        NpgsqlConnection conn, AntreanSuratBaris baris, string? pesan, CancellationToken ct)
     {
-        var percobaan = batasCoba + 1;
+        var percobaan = baris.BatasCoba + 1;
+        var idAntrean = baris.Id;
 
         if (percobaan >= BatasCobaMaks)
         {
+            // Arsipkan dulu supaya operator masih bisa mengimpor ulang
+            // dari desktop bila penyebab galatnya sudah diperbaiki.
+            try
+            {
+                await ArsipkanGagalAsync(baris, pesan, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Arsip gagal impor {AntreanId} tidak tersimpan.", idAntrean);
+            }
+
             await using var transaksi = await conn.BeginTransactionAsync(ct).ConfigureAwait(false);
             try
             {
@@ -300,5 +315,210 @@ public sealed class SinkronSuratService
         cmd.Parameters.Add(new NpgsqlParameter("id", idAntrean));
         cmd.Parameters.Add(new NpgsqlParameter("catatan", (object?)pesan ?? DBNull.Value));
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Folder arsip baris gagal (di subfolder <c>Gagal</c> berkas sinkron).</summary>
+    internal string FolderArsipGagal => Path.Combine(_folderBerkas, "Gagal");
+
+    /// <summary>Folder hasil impor ulang arsip gagal yang berhasil.</summary>
+    internal string FolderArsipSelesai => Path.Combine(_folderBerkas, "Selesai");
+
+    private async Task ArsipkanGagalAsync(AntreanSuratBaris baris, string? pesan, CancellationToken ct)
+    {
+        Directory.CreateDirectory(FolderArsipGagal);
+        var jalur = Path.Combine(FolderArsipGagal, $"{baris.Id}-{baris.IdJenis}.json");
+        await File.WriteAllTextAsync(jalur, BangunArsipGagal(baris, pesan), ct).ConfigureAwait(false);
+        _logger.LogInformation("Baris gagal {AntreanId} diarsipkan ke {Jalur}.", baris.Id, jalur);
+    }
+
+    /// <summary>
+    /// Muatan arsip satu baris gagal (JSON) — dipakai impor ulang.
+    /// Termasuk `data_json` utuh supaya isian tetap bisa dipulihkan.
+    /// </summary>
+    internal static string BangunArsipGagal(AntreanSuratBaris baris, string? pesanGalat)
+    {
+        var arsip = new
+        {
+            id = baris.Id.ToString(),
+            tenant_id = baris.TenantId,
+            id_pengguna = baris.IdPengguna,
+            id_perangkat = baris.IdPerangkat?.ToString(),
+            id_jenis = baris.IdJenis,
+            nomor_sementara = baris.NomorSementara,
+            nik = baris.Nik,
+            data_json = baris.DataJson,
+            status = baris.Status,
+            batas_coba = baris.BatasCoba,
+            catatan = baris.Catatan,
+            dibuat_pada = baris.DibuatPada.ToString("O"),
+            diubah_pada = baris.DiubahPada.ToString("O"),
+            client_uuid = baris.ClientUuid?.ToString(),
+            pesan_gagal = pesanGalat,
+            diarsipkan_pada = DateTime.Now.ToString("O"),
+        };
+        return JsonSerializer.Serialize(arsip);
+    }
+
+    /// <summary>Baca kembali arsip gagal menjadi baris antrean siap impor.</summary>
+    internal static AntreanSuratBaris? BacaArsipGagal(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var akar = doc.RootElement;
+            var dataText = akar.TryGetProperty("data_json", out var dj) ? dj.GetRawText() : "{}";
+            using var dataDoc = JsonDocument.Parse(
+                string.IsNullOrWhiteSpace(dataText) ? "{}" : dataText);
+            return new AntreanSuratBaris(
+                akar.TryGetProperty("id", out var id) && Guid.TryParse(id.GetString(), out var gid)
+                    ? gid : Guid.NewGuid(),
+                AmbilTeks(akar, "tenant_id") ?? string.Empty,
+                AmbilTeks(akar, "id_pengguna") ?? string.Empty,
+                AmbilTeks(akar, "id_perangkat") is { } pd && Guid.TryParse(pd, out var gpd) ? gpd : null,
+                AmbilTeks(akar, "id_jenis") ?? string.Empty,
+                AmbilTeks(akar, "nomor_sementara"),
+                AmbilTeks(akar, "nik"),
+                dataDoc.RootElement.Clone(),
+                AmbilTeks(akar, "status") ?? "gagal",
+                akar.TryGetProperty("batas_coba", out var bc) ? bc.GetInt16() : (short)BatasCobaMaks,
+                AmbilTeks(akar, "catatan") ?? AmbilTeks(akar, "pesan_gagal"),
+                AmbilTanggal(akar, "dibuat_pada"),
+                AmbilTanggal(akar, "diubah_pada"),
+                AmbilTeks(akar, "client_uuid") is { } cu && Guid.TryParse(cu, out var gc) ? gc : null);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? AmbilTeks(JsonElement el, string nama) =>
+        el.TryGetProperty(nama, out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;
+
+    private static DateTime AmbilTanggal(JsonElement el, string nama) =>
+        AmbilTeks(el, nama) is { } t && DateTime.TryParse(t,
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind, out var dt)
+            ? dt : DateTime.Now;
+
+    /// <summary>
+    /// Impor ulang arsip gagal lokal (folder <c>Gagal</c>) — supaya surat
+    /// yang penyebabnya sudah diperbaiki (mis. skema/validator) bisa masuk
+    /// register tanpa Android mengirim ulang. Berkas yang berhasil
+    /// dipindah ke <c>Selesai</c>; yang masih gagal dibiarkan di tempat.
+    /// </summary>
+    public async Task<SinkronHasil> ImporUlangArsipGagalAsync(CancellationToken ct = default)
+    {
+        if (!_pengaturan.Lengkap)
+        {
+            return SinkronHasil.Kosong("Supabase belum dikonfigurasi lengkap.");
+        }
+
+        if (!Directory.Exists(FolderArsipGagal))
+        {
+            return SinkronHasil.Kosong("Tidak ada arsip gagal untuk diimpor ulang.");
+        }
+
+        var berkas = Directory.GetFiles(FolderArsipGagal, "*.json", SearchOption.TopDirectoryOnly)
+            .OrderBy(p => p, StringComparer.Ordinal).ToList();
+        if (berkas.Count == 0)
+        {
+            return SinkronHasil.Kosong("Tidak ada arsip gagal untuk diimpor ulang.");
+        }
+
+        var berhasil = 0;
+        var gagal = 0;
+
+        NpgsqlConnection? conn = null;
+        try
+        {
+            await using var koneksi = new SupabaseKoneksi(_pengaturan);
+            conn = await koneksi.BukaAsync(ct).ConfigureAwait(false);
+
+            foreach (var jalur in berkas)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                string teks;
+                try
+                {
+                    teks = await File.ReadAllTextAsync(jalur, ct).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Arsip gagal {Jalur} tidak terbaca.", jalur);
+                    gagal++;
+                    continue;
+                }
+
+                var baris = BacaArsipGagal(teks);
+                if (baris is null)
+                {
+                    _logger.LogWarning("Arsip gagal {Jalur} tidak dikenali formatnya.", jalur);
+                    gagal++;
+                    continue;
+                }
+
+                var hasil = await _impor.ImporAsync(baris, ct).ConfigureAwait(false);
+                if (!hasil.Berhasil)
+                {
+                    gagal++;
+                    _logger.LogWarning(
+                        "Impor ulang arsip {AntreanId} masih gagal: {Pesan}",
+                        baris.Id, hasil.PesanGalat);
+                    continue;
+                }
+
+                berhasil++;
+                try
+                {
+                    await using var log = new NpgsqlCommand(
+                        """
+                        INSERT INTO sinkron_log (tenant_id, id_antrean, nomor_resmi, status, catatan)
+                        VALUES (@tenant, @id, @nomor, 'berhasil', 'Impor ulang arsip gagal')
+                        """, conn!);
+                    log.Parameters.Add(new NpgsqlParameter("tenant", baris.TenantId));
+                    log.Parameters.Add(new NpgsqlParameter("id", baris.Id));
+                    log.Parameters.Add(new NpgsqlParameter("nomor",
+                        hasil.NomorResmi ?? (object)DBNull.Value));
+                    await log.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Surat sudah masuk register; log hanya jejak audit.
+                    _logger.LogWarning(ex, "Log impor ulang {AntreanId} tidak tersimpan.", baris.Id);
+                }
+
+                try
+                {
+                    Directory.CreateDirectory(FolderArsipSelesai);
+                    var tujuan = Path.Combine(FolderArsipSelesai, Path.GetFileName(jalur));
+                    if (File.Exists(tujuan)) File.Delete(tujuan);
+                    File.Move(jalur, tujuan);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Arsip {Jalur} tidak bisa dipindah ke Selesai.", jalur);
+                }
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Impor ulang arsip gagal.");
+            return SinkronHasil.Kosong($"Impor ulang gagal: {ex.Message}");
+        }
+        finally
+        {
+            conn?.Dispose();
+        }
+
+        _logger.LogInformation(
+            "Impor ulang arsip selesai: {Berhasil} berhasil, {Gagal} gagal.",
+            berhasil, gagal);
+        return new SinkronHasil(berkas.Count, berhasil, gagal, 0, FolderArsipSelesai, null);
     }
 }

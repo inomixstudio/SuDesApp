@@ -86,7 +86,7 @@ public sealed class PemantauAndroid
         await using var koneksi = new SupabaseKoneksi(_pengaturan);
         await using var conn = await koneksi.BukaAsync(ct).ConfigureAwait(false);
         await using var cmd = new NpgsqlCommand(
-            "SELECT count(*) FROM antrean_surat WHERE tenant_id = @tenant AND status = 'menunggu'", conn);
+            "SELECT count(*) FROM antrean_surat WHERE tenant_id = @tenant AND (status = 'menunggu' OR (status = 'gagal' AND batas_coba < 3))", conn);
         cmd.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
 
         var hasil = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);

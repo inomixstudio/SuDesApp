@@ -228,7 +228,13 @@
 
                         <ProgressBar Style="{StaticResource BilahAntrean}" Value="{Binding JumlahAntrean, Mode=OneWay}"/>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <CheckBox Content="Sinkron otomatis" IsChecked="{Binding SinkronOtomatis}"
+                                  Margin="0,12,0,0" ToolTip="Aktif: surat masuk register otomatis tiap antrean berkurang tanpa klik Sinkronkan."/>
+                        <TextBlock Margin="24,2,0,0" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="Bila aktif, antrean diimpor di latar tiap ±20 detik. Tombol Sinkron dan Terbitkan manual tetap tersedia."/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                             <Button Command="{Binding SinkronCommand}"
                                     Style="{StaticResource PrimaryButton}" Margin="0,0,8,0">
                                 <StackPanel Orientation="Horizontal">
@@ -244,6 +250,16 @@
                                                FontFamily="{StaticResource AppIconFont}" FontSize="13"
                                                VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="Muat ulang" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding ImporUlangCommand}" Style="{StaticResource OutlineButton}"
+                                    Margin="8,0,0,0"
+                                    ToolTip="Impor ulang berkas gagal yang diarsipkan di folder Sinkron/Gagal.">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{x:Static u:IkonMenu.Riwayat}"
+                                               FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Impor ulang arsip gagal" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -347,17 +363,18 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" Margin="0,0,18,0">
-                            <TextBlock Text="Nama perangkat" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Pasang perangkat baru" Style="{StaticResource FieldLabel}"/>
                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                <TextBox Text="{Binding NamaPerangkat, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource FieldBox}" Width="260"
-                                         ToolTip="Nama perangkat, mis. 'Android Kades'"/>
-                                <Button Content="Buat QR" Command="{Binding PasangCommand}"
-                                        Style="{StaticResource PrimaryButton}" Margin="8,0,0,0"/>
+                                <Button Content="Buat QR" Command="{Binding BuatQrCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        ToolTip="Buat QR + kode: pindai dari aplikasi Android."/>
+                                <Button Content="Buat Kode" Command="{Binding BuatKodeCommand}"
+                                        Style="{StaticResource OutlineButton}" Margin="8,0,0,0"
+                                        ToolTip="Buat kode 4 angka: ketik di aplikasi Android."/>
                             </StackPanel>
                             <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                       Text="Nama membantu operator mengenali perangkat di daftar dan status bar desktop."/>
+                                       Text="Nama perangkat dibuat otomatis — tanpa mengisi apa pun. Tekan salah satu tombol, lalu scan QR atau ketik kode di Android."/>
 
                             <TextBlock Text="PERANGKAT TERPASANG" Style="{StaticResource FieldLabel}"
                                        Margin="0,14,0,4"/>
@@ -387,10 +404,10 @@
                                         <Image Source="{Binding GambarQr}" Width="188" Height="188"
                                                Stretch="Uniform" SnapsToDevicePixels="True"/>
                                     </Border>
-                                    <TextBlock Text="Pindai dari aplikasi Android" Margin="0,8,0,0"
+                                    <TextBlock Text="{Binding PetunjukPasangUtama}" Margin="0,8,0,0"
                                                HorizontalAlignment="Center" FontSize="11"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="atau ketik kode ini" Margin="0,10,0,0"
+                                    <TextBlock Text="{Binding PetunjukPasangKedua}" Margin="0,10,0,0"
                                                HorizontalAlignment="Center" FontSize="11"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     <TextBlock Text="{Binding KodePerangkat}"
@@ -411,7 +428,7 @@
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     <TextBlock Text="Belum ada kode aktif" Margin="0,8,0,0"
                                                HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Isi nama perangkat lalu tekan Buat QR."
+                                    <TextBlock Text="Tekan «Buat QR» atau «Buat Kode» — nama dibuat otomatis."
                                                Margin="0,4,0,0" TextAlignment="Center" TextWrapping="Wrap"
                                                FontSize="11"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
