@@ -65,6 +65,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly Func<string, string, PdfPreviewViewModel> _previewFactory;
         private readonly AppConfig _appConfig;
         private readonly ILogger<AgendaSuratViewModel> _logger;
+        private readonly SuDesApp.Services.PenjagaLisensi? _penjaga;
 
         private string _jenisSurat = "MASUK";
         private string? _selectedTahun;
@@ -89,7 +90,8 @@ namespace SuDesApp.Wpf.ViewModels
             Func<string, SuratKeluarMasukData?, SuratKeluarMasukData?, InputAgendaViewModel> inputFactory,
             Func<string, string, PdfPreviewViewModel> previewFactory,
             AppConfig appConfig,
-            ILogger<AgendaSuratViewModel> logger)
+            ILogger<AgendaSuratViewModel> logger,
+            SuDesApp.Services.PenjagaLisensi? penjaga = null)
         {
             _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -99,6 +101,7 @@ namespace SuDesApp.Wpf.ViewModels
             _inputFactory = inputFactory ?? throw new ArgumentNullException(nameof(inputFactory));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _penjaga = penjaga;
 
             SetMasukCommand = new AsyncRelayCommand(() => SetJenisAsync("MASUK"));
             SetKeluarCommand = new AsyncRelayCommand(() => SetJenisAsync("KELUAR"));
@@ -466,6 +469,13 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task CetakAsync()
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             if (string.IsNullOrEmpty(SelectedTahun)) return;
 
             try

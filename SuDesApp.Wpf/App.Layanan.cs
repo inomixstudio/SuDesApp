@@ -479,7 +479,8 @@ namespace SuDesApp.Wpf
                 appConfig: sp.GetRequiredService<AppConfig>(),
                 pemantauan: sp.GetRequiredService<SuDesApp.Services.IIdmPemantauanStore>(),
                 sertifikat: sp.GetRequiredService<SuDesApp.Services.IIdmSertifikatStore>(),
-                dokumenFactory: sp.GetRequiredService<Func<string, string, Action?, DokumenBacaViewModel>>()));
+                dokumenFactory: sp.GetRequiredService<Func<string, string, Action?, DokumenBacaViewModel>>(),
+                penjaga: sp.GetRequiredService<SuDesApp.Services.PenjagaLisensi>()));
 
             // Akun & arsip tahunan: halaman area konten utama (bukan jendela modal).
             services.AddTransient<KelolaPenggunaViewModel>();

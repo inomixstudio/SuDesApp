@@ -92,7 +92,10 @@ Ada **dua** trial 30 hari dan keduanya tidak saling menggantikan:
 | Server (`POST /aktifkan-trial`) | Kode aktivasi + internet | Server (sekali per desa, batas perangkat) | Desa sudah punya kode, minta masa coba resmi |
 | Lokal (`TrialLokal`) | Tidak perlu apa pun | Berkas di perangkat (sekali per instalasi) | Instalasi baru / belum punya kode, atau server tidak terjangkau saat trial diminta |
 
-Urutan pemakaiannya: `PenjagaLisensi.MulaiPercobaanAsync` mencoba **trial server
+Urutan pemakaian: trial lokal **30 hari aktif otomatis** saat aplikasi
+dijalankan (`PenjagaLisensi.SegarkanDariCache`) — tanpa form dan tanpa menekan
+apa pun, sehingga pemasangan pertama langsung berjalan normal. `MulaiPercobaanAsync`
+tetap tersedia sebagai jalur manual (mis. tombol Langganan): ia mencoba **trial server
 lebih dulu** bila kode aktivasi sudah terpasang dan server menjawab; trial lokal
 hanya dipakai bila kode belum ada atau server tidak terjangkau. Server yang
 menjawab menolak **tidak** diberi cadangan lokal, supaya satu desa tidak bisa
@@ -102,7 +105,9 @@ Trial lokal hanya membuka gerbang menu selama 30 hari; setelah itu aplikasi
 kembali terkunci (baca-saja) sampai ada token langganan yang sah. Bila server
 kemudian menerbitkan token trial maupun berbayar, keadaan `Berlangganan` menang
 atas trial lokal — jadi desa yang membayar tidak pernah “dimundurkan” oleh
-sisa trial lokalnya.
+sisa trial lokalnya. Pengecualian kini berlaku pada jumlah kunci: setelah trial
+habis yang dikunci adalah **cetak PDF, ekspor Excel, dan sinkron Android**
+(selain gerbang rute vital) — cetak Daftar Hadir tetap boleh dipakai.
 
 Trial sengaja **tidak** masuk katalog `Langganan:Paket` — harga 0 di katalog
 tagihan berarti tagihan Rp0 yang bisa dikali ulang. Karena itu uji
@@ -592,9 +597,10 @@ Halaman terdiri dari empat kartu bertumpuk:
    Rp750.000 / Tahunan Rp1.200.000), masing-masing menyebut harga per hari dan
    penghematannya, dengan satu kartu bertanda **PALING HEMAT**. Harga dan durasi
    diisi dari `GET /paket` (katalog server); sebelum server menjawab, kartu
-   menampilkan teks tanpa angka. Di bawah kartu ada **Mulai Trial 30 Hari**
-   yang **tidak meminta kode aktivasi** (sama dengan popup saat aplikasi
-   dibuka: `PenjagaLisensi.MulaiPercobaanAsync` — trial server bila kode sudah
+   menampilkan teks tanpa angka. Sejarahnya ada tombol **Mulai Trial 30 Hari**
+   — kini tombol itu praktis hanya cadangan karena trial sudah otomatis aktif;
+   bila ditekan, ia **tidak meminta kode aktivasi**
+   (sama dengan jalur manual `PenjagaLisensi.MulaiPercobaanAsync` — trial server bila kode sudah
    diisi & server terjangkau, trial lokal bila belum/offline) dan tombol
    **Bayar / Perpanjang** yang memanggil `POST /buat-tagihan` lalu membuka link
    pembayaran QRIS/VA di peramban. Tombol trial hanya tampil selama langganan
@@ -823,9 +829,10 @@ mode demo tanpa token, dan gateway gagal → 500 sementara tagihannya tetap
 tercatat supaya rekonsiliasi bisa menyusul. Satu aturan yang justru wajib:
 desa yang belum membayar tetap boleh membuat tagihan — itu jalan keluarnya.
 
-**`PenjagaLisensiTests`** — aturan alur uji coba 30 hari: instalasi baru yang
-belum pernah trial berkeadaan `Demo` dan terkunci, trial yang berjalan membuka
-menu vital, trial yang habis mengunci lagi walau belum pernah membayar, kode
+**`PenjagaLisensiTests`** — aturan alur uji coba 30 hari: `HitungKeadaan` statis tetap mengenal `Demo`
+untuk jalur murni pengujian, sedangkan jalur startup (`SegarkanDariCache`) langsung
+menjadi `Trial` karena auto-start; trial yang berjalan membuka menu vital,
+trial yang habis mengunci lagi walau belum pernah membayar, kode
 aktivasi tanpa status aktif tetap terkunci, dan langganan aktif menang atas
 sisa trial. Daftar rute vital diuji dari dua sisi (rute pembuatan surat/data
 terkunci; Register, Riwayat, Langganan, dan pencadangan tetap terbuka), begitu
@@ -1421,8 +1428,8 @@ BERTANDA TANGAN plus trial lokal:
 |---|---|---|
 | `Berlangganan` | Token sah (dalam masa aktif / tenggang) | **Penuh.** Menang atas trial |
 | `Trial` | Trial lokal 30 hari masih berjalan | **Penuh sementara** |
-| `Demo` | Instalasi baru, trial belum pernah dimulai | **Terkunci** + popup ajakan trial |
-| `BacaSaja` | Trial habis, atau langganan berakhir, atau kode aktivasi tanpa pembayaran | **Terkunci** + popup wajib bayar |
+| `Demo` | Instalasi baru sebelum auto-start (statis `HitungKeadaan` saja); pada jalur startup langsung menjadi `Trial` | Gerbang startup tidak lagi menunggu klik — `SegarkanDariCache` sudah memulai trial |
+| `BacaSaja` | Trial habis, atau langganan berakhir, atau kode aktivasi tanpa pembayaran | **Cetak PDF/Excel + sinkron Android terkunci** (Daftar Hadir tetap boleh) + popup ke Aktivasi / hubungi developer |
 
 Urutan itu penting dan ditulis sekali di `PenjagaLisensi.HitungKeadaan`:
 langganan aktif menang atas trial, trial aktif menang atas kunci, dan `Demo`
@@ -1430,30 +1437,33 @@ dibedakan dari `BacaSaja` supaya popup yang muncul tepat (ajakan memulai trial
 vs kewajiban membayar). `HitungTerkunci` dan `ApakahMenuVital` diturunkan dari
 aturan yang sama, jadi gerbang navigasi tidak punya daftar kedua.
 
-**Saat aplikasi dijalankan.** Setelah jendela utama tampil (bukan menahan
-penggambaran awal), `App.TampilkanPemberitahuanLisensi` membaca keadaan dari
-cache lalu:
+**Saat aplikasi dijalankan.** `SegarkanDariCache` memulai trial lokal otomatis
+bila belum pernah trial dan langganan cache tidak aktif — tanpa form/popup.
+Setelah jendela utama tampil (bukan menahan penggambaran awal),
+`App.TampilkanPemberitahuanLisensi` membaca keadaan dari cache lalu:
 
-- `Demo` → popup “Mulai masa uji coba 30 hari”. Ya → `MulaiPercobaanAsync()`
-  (trial server bila kode aktivasi ada & server terjangkau, selain itu trial
-  lokal; gerbang langsung terbuka, chip berubah). Tidak → popup “Menu vital
-  terkunci” dan menu tetap terkunci.
+- `Demo` (hanya bila auto-start gagal, mis. berkas tidak bisa ditulis) →
+  aktifkan diam-diam via `MulaiTrialLokal()` tanpa bertanya.
 - `BacaSaja` → popup peringatan setiap kali aplikasi dibuka: “Masa uji coba
   berakhir” (trial lokal habis) atau “Lisensi belum aktif” (langganan
-  berakhir), dengan tawaran membuka halaman Langganan untuk membayar.
+  berakhir), dengan tombol **Buka Aktivasi** ke menu AKTIVASI LISENSI
+  (di sana juga ada tombol hubungi developer via WhatsApp).
 - `Trial` / `Berlangganan` → tidak ada popup.
 
 **Menu vital.** Rute yang membuat/mengubah data administrasi dan mencetak
 dikunci selama keadaan terkunci; daftarnya di `PenjagaLisensi.RuteVital`
 dan diperiksa di satu tempat (`MainWindowViewModel.ResolveFeatureRoute`):
 
-- Rute tetap: `template-surat`, `rekening-koran`, `ntcr-paket`, `daftar-hadir`,
+- Rute tetap: `template-surat`, `rekening-koran`, `ntcr-paket`,
   `warga`, `perangkat-desa`, `sotk-desa`, `apbdes`, `idm`, `formulir`,
-  `pengaturan-surat`, `pengaturan-formulir`, `penomoran-surat`, `kelola-pengguna`.
+  `pengaturan-surat`, `pengaturan-formulir`, `penomoran-surat`, `kelola-pengguna`,
+  `sinkron-android`.
 - Awalan berparameter: `surat:`, `keputusan:`, `agenda:`, `template-pdf:`.
-- Menekan menu terkunci tidak membuka halaman: `Demo` menawarkan memulai trial
-  (dan langsung membuka rute yang tadi diminta bila pengguna setuju);
-  `BacaSaja` menampilkan pesan wajib bayar lalu membuka halaman Langganan.
+- Pengecualian: `daftar-hadir` SENGAJA tidak vital — cetaknya tetap boleh
+  setelah trial habis (layanan harian desa).
+- Menekan menu terkunci tidak membuka halaman: `Demo` mengaktifkan trial
+  diam-diam lalu membuka rute yang diminta; `BacaSaja` menampilkan pesan
+  wajib aktivasi lalu membuka halaman AKTIVASI LISENSI.
 
 **Trial server didahulukan.** `MulaiPercobaanAsync` memilih jalur trial dengan
 urutan tetap:
@@ -1475,8 +1485,9 @@ diberi trial lokal, supaya hitungannya tidak dobel.
 
 Penguncian itu **terlihat sebelum menu diklik**: setiap menu vital yang
 terkunci diberi gembok di ujung kanan baris, judul/ikonnya diredupkan, dan
-tooltip-nya menyebut jalan keluarnya — “klik untuk mulai trial 30 hari” pada
-`Demo`, “klik untuk menyelesaikan pembayaran lisensi” setelah trial habis.
+tooltip-nya menyebut jalan keluarnya — “trial 30 hari otomatis aktif, sila
+tunggu sebentar” pada `Demo`, “cetak PDF/Excel & sinkron terkunci — klik untuk
+aktivasi lisensi atau hubungi developer” setelah trial habis.
 Akordeon ikut bergembok bila SELURUH isinya terkunci (mis. **Buat Surat Baru**),
 termasuk saat daftarnya masih terlipat; akordeon campuran seperti **Formulir**
 tidak diberi gembok di header agar tidak menjanjikan kunci yang tidak ada.
@@ -1484,15 +1495,18 @@ Penandaan ini menyalin keputusan `PenjagaLisensi` yang sama
 (`KunciMenuSidebar` → `NavItem.Terkunci`), jadi tidak mungkin berbeda dari
 gerbang rutenya, dan langsung dilepas begitu trial dimulai atau langganan aktif.
 
-Sengaja TETAP TERBUKA: Register Surat, Riwayat, Register NTCR, Verifikasi,
-Beranda, Laporan Penduduk, halaman Langganan, pencadangan/pemulihan, dan
+Sengaja TETAP TERBUKA: Register Surat, Daftar Hadir, Riwayat, Register NTCR, Verifikasi,
+Beranda, Laporan Penduduk (tampilnya dibaca; cetak/ekspornya ikut dikunci), halaman Langganan, pencadangan/pemulihan, dan
 bantuan. Data desa harus tetap bisa dibaca, diekspor, dan diselamatkan walau
 lisensi belum dibayar — mengunci semuanya justru membuat desa kehilangan data.
 
 Selain gerbang rute, lapis dalam tetap berlaku: `SuratSaveService` menolak
 `SimpanBaruAsync` / `SimpanDalamTransaksiAsync` saat terkunci
-(`KunciLisensiException`), dan tombol **Cetak** pada pratinjau PDF ikut mati
-(PDF masih bisa diekspor). Pintasan Beranda menuju form surat lewat jalur yang
+(`KunciLisensiException`). Cetak PDF/ekspor PDF di pratinjau, cetak & ekspor
+Excel/CSV di Register/Warga/Perangkat Desa/Laporan/Tutup Buku, dan sinkron
+Android kini diperiksa lewat `PenjagaLisensi.BolehCetakPdf/BolehEksporExcel/BolehSinkron`
+— Daftar Hadir selalu boleh. Ekspor cadangan database (Cadangkan & Pulihkan)
+bukan ekspor Excel data dan tetap terbuka. Pintasan Beranda menuju form surat lewat jalur yang
 sama (`LoadSuratAsync`), jadi tidak ada jalan memutar.
 
 Chip keadaan di status bar (bisa diklik → halaman Langganan) selalu tampil dan

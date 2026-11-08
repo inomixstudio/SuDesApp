@@ -80,8 +80,10 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly Func<string, string, Action?, DokumenBacaViewModel>? _dokumenFactory;
         private readonly AppConfig? _appConfig;
         private readonly IMessageService? _pesan;
+        private readonly SuDesApp.Services.PenjagaLisensi? _penjaga;
 
         private bool _sedangMemuat;
+        private CancellationTokenSource? _ctsMuat;
         private string _pesanStatus = string.Empty;
         private string _pesanGalat = string.Empty;
         private string _peringatanSumber = string.Empty;
@@ -119,7 +121,8 @@ namespace SuDesApp.Wpf.ViewModels
             IIdmPemantauanStore? pemantauan = null,
             IIdmSertifikatStore? sertifikat = null,
             IIndeksDesa2025Klien? indeksDesa2025 = null,
-            Func<string, string, Action?, DokumenBacaViewModel>? dokumenFactory = null)
+            Func<string, string, Action?, DokumenBacaViewModel>? dokumenFactory = null,
+            SuDesApp.Services.PenjagaLisensi? penjaga = null)
         {
             _pengaturan = pengaturan ?? throw new ArgumentNullException(nameof(pengaturan));
             _wilayah = wilayah ?? throw new ArgumentNullException(nameof(wilayah));
@@ -135,6 +138,7 @@ namespace SuDesApp.Wpf.ViewModels
             _dokumenFactory = dokumenFactory;
             _appConfig = appConfig;
             _pesan = pesan;
+            _penjaga = penjaga;
 
             Indikator = new ObservableCollection<BarisTampil>();
             Riwayat = new ObservableCollection<RiwayatTampil>();
@@ -145,6 +149,7 @@ namespace SuDesApp.Wpf.ViewModels
             _sertifikatCatatan = _sertifikatStore?.Muat();
 
             MuatCommand = new AsyncRelayCommand(MuatAsync, () => !SedangMemuat);
+            BatalCommand = new RelayCommand(BatalkanMuat, () => SedangMemuat);
             BukaSitusCommand = new RelayCommand(BukaSitus);
             BukaDokumentasiIndeksDesaCommand = new RelayCommand(BukaDokumentasiIndeksDesa);
             BukaTerbitanCommand = new RelayCommand(BukaTerbitan, () => AdaTerbitanBaru);
@@ -713,6 +718,7 @@ namespace SuDesApp.Wpf.ViewModels
         public IReadOnlyList<TitikTren> DeretTren { get; private set; } = Array.Empty<TitikTren>();
 
         public ICommand MuatCommand { get; }
+        public ICommand BatalCommand { get; }
 
         public ICommand BukaSitusCommand { get; }
 
@@ -814,10 +820,19 @@ namespace SuDesApp.Wpf.ViewModels
         /// Ambil data pusat untuk desa pada Pengaturan Surat. Aman dipanggil
         /// berkali-kali (tombol Muat ulang); tidak pernah melempar.
         /// </summary>
+        /// <summary>Batalkan pemuatan yang sedang berjalan (tombol Batal pada dialog).</summary>
+        private void BatalkanMuat()
+        {
+            try { _ctsMuat?.Cancel(); } catch { /* sudah selesai */ }
+        }
+
         public async Task MuatAsync()
         {
             if (SedangMemuat) return;
 
+            _ctsMuat?.Dispose();
+            _ctsMuat = new CancellationTokenSource();
+            var ct = _ctsMuat.Token;
             SedangMemuat = true;
             PesanGalat = string.Empty;
             PeringatanSumber = string.Empty;
@@ -845,8 +860,10 @@ namespace SuDesApp.Wpf.ViewModels
                     return;
                 }
 
-                var pencocokan = WilayahPencocokan.CariRantai(
-                    _wilayah, _namaDesa, _kecamatan, _kabupaten);
+                // Pencocokan wilayah (±90 ribu baris) di thread latar; UI thread
+                // tidak tersendat seperti di Setelan.
+                var pencocokan = await Task.Run(() => WilayahPencocokan.CariRantai(
+                    _wilayah, _namaDesa, _kecamatan, _kabupaten));
 
                 if (pencocokan.Status != StatusPencocokanWilayah.Ditemukan || pencocokan.Rantai == null)
                 {
@@ -870,18 +887,23 @@ namespace SuDesApp.Wpf.ViewModels
 
                 _indeks2025 = null;
                 _indeks2025BerhasilDiperiksa = false;
+                Task? tugasIndeks = null;
                 if (_indeks2025Klien != null)
                 {
-                    TambahTahapMemuat("Mencari penilaian Indeks Desa 2025 berdasarkan kode desa");
-                    try
+                    // Indeks2025 berjalan paralel dengan loop tahun (bukan serial).
+                    tugasIndeks = Task.Run(async () =>
                     {
-                        _indeks2025 = await _indeks2025Klien.MuatAsync(_kodeDesa);
-                        _indeks2025BerhasilDiperiksa = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Dataset Indeks Desa 2025 tidak dapat dimuat");
-                    }
+                        try
+                        {
+                            _indeks2025 = await _indeks2025Klien.MuatAsync(_kodeDesa);
+                            _indeks2025BerhasilDiperiksa = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Dataset Indeks Desa 2025 tidak dapat dimuat");
+                        }
+                        return Task.CompletedTask;
+                    });
                 }
 
                 var hasil = new List<HasilIdm>();
@@ -892,18 +914,19 @@ namespace SuDesApp.Wpf.ViewModels
 
                 TambahTahapMemuat("Menghubungi situs IDM Kemendesa");
 
-                // Ambil sampai lima tahun BERBEDA. Situs pusat kadang menjawab tahun
-                // yang SAMA untuk permintaan tahun lain (parameter tahun diabaikan),
-                // jadi batasnya dihitung dari deret unik — aturan yang sama dengan
-                // yang memasang data di halaman ini (IdmSeriTahun).
-                for (int i = 0; i < TahunDicoba
-                     && IdmSeriTahun.Dari(hasil).Tahun.Count < TahunDitampilkan; i++)
+                // Limal tahun dicoba PARALEL: sebelumnya serial 5x (~50 detik bila
+                // lambat). Kini 5 permintaan tahun BERJALAN bersamaan; pencarian
+                // tahun unik tetap via IdmSeriTahun di sisi pemasangan.
+                var tugasTahun = Enumerable.Range(0, TahunDicoba)
+                    .Select(i => _klien.MuatAsync(_kodeDesa, tahunAwal - i, ct))
+                    .ToList();
+                var semuaMuatan = await Task.WhenAll(tugasTahun);
+                await (tugasIndeks ?? Task.CompletedTask);
+
+                foreach (var muatan in semuaMuatan)
                 {
-                    TambahTahapMemuat($"Mengunduh data IDM tahun {tahunAwal - i}");
-
-                    var muatan = await _klien.MuatAsync(_kodeDesa, tahunAwal - i);
+                    if (IdmSeriTahun.Dari(hasil).Tahun.Count >= TahunDitampilkan) break;
                     lewatHttp |= muatan.LewatHttp;
-
                     if (muatan.Status == StatusMuatIdm.Gagal)
                     {
                         jaringanGagal = true;
@@ -913,16 +936,11 @@ namespace SuDesApp.Wpf.ViewModels
                             PesanGalat = muatan.Pesan;
                             break;
                         }
-
                         continue;
                     }
-
                     gagalBeruntun = 0;
                     if (muatan.Status == StatusMuatIdm.Berhasil && muatan.Hasil != null)
                     {
-                        // Jawaban kembar tetap dikumpulkan; IdmSeriTahun yang
-                        // membuangnya saat dipasang, jadi aturan "satu tahun sekali"
-                        // hanya ada di satu tempat.
                         hasil.Add(muatan.Hasil);
                     }
                 }
@@ -1015,10 +1033,7 @@ namespace SuDesApp.Wpf.ViewModels
             PasangData(hasil, _kodeDesa, _jam(), lewatHttp);
             PesanCadangan = string.Empty;
 
-            PeringatanSumber = lewatHttp
-                ? "Sertifikat situs pusat sedang bermasalah, jadi data diambil lewat HTTP tanpa enkripsi. "
-                  + "Angkanya tetap dari situs resmi; muat ulang saat sertifikatnya sudah diperbaiki."
-                : string.Empty;
+            PeringatanSumber = string.Empty;
 
             // Cadangan hasil yang baru saja BERHASIL dimuat — dipakai lagi saat
             // internet mati, termasuk setelah aplikasi dibuka ulang.
@@ -1169,7 +1184,7 @@ namespace SuDesApp.Wpf.ViewModels
             PasangData(sumber.Hasil, sumber.KodeDesa, sumber.WaktuMuat, sumber.LewatHttp);
 
             PeringatanSumber = sumber.LewatHttp
-                ? "Sertifikat situs pusat sedang bermasalah, jadi data cadangan ini sempat diambil lewat HTTP tanpa enkripsi."
+                ? "Data cadangan ini diambil sebelum perbaikan keamanan (sebelum November 2026) dan pernah lewat jalur tidak terenkripsi. Muat ulang saat internet kembali untuk menggantinya."
                 : string.Empty;
 
             PesanGalat = string.Empty;
@@ -1272,6 +1287,17 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public async Task BuatPdfAsync()
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                PesanGalat = SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci;
+                if (_pesan is not null)
+                {
+                    await _pesan.ShowInfoAsync(
+                        SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                }
+                return;
+            }
+
             if (Hasil is not { } hasil) return;
 
             if (_navigasi == null || _previewFactory == null)

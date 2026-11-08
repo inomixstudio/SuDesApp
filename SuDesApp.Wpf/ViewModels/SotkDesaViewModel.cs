@@ -211,6 +211,13 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task PratinjauAsync()
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             try
             {
                 IsBusy = true;

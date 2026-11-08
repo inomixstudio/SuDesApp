@@ -31,6 +31,7 @@ public class SinkronViewModel : ObservableObject
     private readonly IMessageService _pesan;
     private readonly ILogger<SinkronViewModel> _logger;
     private readonly string _folderBerkas;
+    private readonly SuDesApp.Services.PenjagaLisensi? _penjaga;
 
     private string _host = string.Empty;
     private int _port = 6543;
@@ -56,7 +57,8 @@ public class SinkronViewModel : ObservableObject
         PenerbitSkemaFormulir penerbitSkema,
         PenerbitPengaturanDesa penerbitPengaturan,
         IMessageService pesan,
-        ILogger<SinkronViewModel>? logger = null)
+        ILogger<SinkronViewModel>? logger = null,
+        SuDesApp.Services.PenjagaLisensi? penjaga = null)
     {
         _sinkron = sinkron ?? throw new System.ArgumentNullException(nameof(sinkron));
         _perangkaian = perangkaian ?? throw new System.ArgumentNullException(nameof(perangkaian));
@@ -64,6 +66,7 @@ public class SinkronViewModel : ObservableObject
         _penerbitPengaturan = penerbitPengaturan ?? throw new System.ArgumentNullException(nameof(penerbitPengaturan));
         _pesan = pesan ?? throw new System.ArgumentNullException(nameof(pesan));
         _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SinkronViewModel>.Instance;
+        _penjaga = penjaga;
 
         _folderBerkas = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -330,6 +333,13 @@ public class SinkronViewModel : ObservableObject
 
     private async Task SinkronkanAsync()
     {
+        if (_penjaga is { SinkronTerkunci: true })
+        {
+            await _pesan.ShowInfoAsync(
+                SuDesApp.Services.PenjagaLisensi.PesanSinkronTerkunci);
+            return;
+        }
+
         SedangSinkron = true;
         Hasil = null;
         try
@@ -375,6 +385,13 @@ public class SinkronViewModel : ObservableObject
 
     private async Task PasangAsync()
     {
+        if (_penjaga is { SinkronTerkunci: true })
+        {
+            await _pesan.ShowInfoAsync(
+                SuDesApp.Services.PenjagaLisensi.PesanSinkronTerkunci);
+            return;
+        }
+
         SedangMemasang = true;
         PerangkatBaru = null;
         try
@@ -404,6 +421,13 @@ public class SinkronViewModel : ObservableObject
 
     private async Task TerbitkanSkemaAsync()
     {
+        if (_penjaga is { SinkronTerkunci: true })
+        {
+            await _pesan.ShowInfoAsync(
+                SuDesApp.Services.PenjagaLisensi.PesanSinkronTerkunci);
+            return;
+        }
+
         try
         {
             var jumlah = await _penerbitSkema.TerbitkanAsync().ConfigureAwait(true);
@@ -437,6 +461,13 @@ public class SinkronViewModel : ObservableObject
     /// </summary>
     private async Task TerbitkanPengaturanAsync()
     {
+        if (_penjaga is { SinkronTerkunci: true })
+        {
+            await _pesan.ShowInfoAsync(
+                SuDesApp.Services.PenjagaLisensi.PesanSinkronTerkunci);
+            return;
+        }
+
         try
         {
             var ok = await _penerbitPengaturan.TerbitkanAsync().ConfigureAwait(true);
@@ -454,6 +485,13 @@ public class SinkronViewModel : ObservableObject
 
     private async Task CabutAsync()
     {
+        if (_penjaga is { SinkronTerkunci: true })
+        {
+            await _pesan.ShowInfoAsync(
+                SuDesApp.Services.PenjagaLisensi.PesanSinkronTerkunci);
+            return;
+        }
+
         if (PerangkatDipilih is null) return;
 
         var yakin = await _pesan.ShowConfirmationAsync(

@@ -26,13 +26,13 @@ namespace SuDesApp.Wpf
     public partial class App
     {
         /// <summary>
-        /// Pemberitahuan lisensi setiap aplikasi dijalankan, sesuai alur uji coba:
+        /// Pemberitahuan lisensi setiap aplikasi dijalankan, sesuai alur uji coba otomatis:
         ///
-        /// • Instalasi baru (Demo): popup meminta memulai trial 30 hari. Menu vital
-        ///   tetap terkunci bila pengguna menolak.
-        /// • Trial habis / lisensi belum aktif (BacaSaja): popup mengingatkan bahwa
-        ///   masa uji coba berakhir dan mengarahkan ke halaman pembayaran; menu
-        ///   vital tetap terkunci sampai pembayaran selesai.
+        /// • Instalasi baru: trial 30 hari SUDAH aktif otomatis (via SegarkanDariCache)
+        ///   — tanpa form/popup. Semua fitur berjalan normal.
+        /// • Trial habis / lisensi belum aktif (BacaSaja): popup peringatan mengarahkan
+        ///   ke menu AKTIVASI LISENSI atau hubungi developer (WhatsApp). Cetak PDF/Excel
+        ///   (kecuali Daftar Hadir) dan sinkron Android terkunci.
         ///
         /// Dipanggil SETELAH jendela utama tampil dan dijalankan lewat Dispatcher
         /// supaya popup tidak menghalangi penggambaran awal.
@@ -64,45 +64,12 @@ namespace SuDesApp.Wpf
                     {
                         case SuDesApp.Services.KeadaanLisensi.Demo:
                             {
-                                // Popup pemberitahuan memakai jendela bergaya splash
-                                // (ukuran & kepala yang sama) — bukan dialog pesan umum,
-                                // supaya transisi splash → pemberitahuan trial terasa
-                                // satu layar yang berlanjut.
-                                bool mulai = SuDesApp.Wpf.Views.TrialPemberitahuanWindow.Pilih(
-                                    "Mulai masa uji coba 30 hari",
-                                    SuDesApp.Services.PenjagaLisensi.PesanMulaiTrial,
-                                    "Mulai Trial", "Nanti Saja");
-
-                                if (!mulai)
-                                {
-                                    // Menolak trial: menu vital tetap terkunci, dan
-                                    // pengguna diberi tahu jalan keluarnya.
-                                    SuDesApp.Wpf.Views.TrialPemberitahuanWindow.Pesan(
-                                        "Menu vital terkunci",
-                                        SuDesApp.Services.PenjagaLisensi.PesanBelumTrial,
-                                        nadaPeringatan: true);
-                                    break;
-                                }
-
-                                // Trial server didahulukan bila kode aktivasi sudah ada
-                                // dan server terjangkau; trial lokal hanya cadangan offline.
-                                var percobaan = await penjaga.MulaiPercobaanAsync();
-                                var (judulPercobaan, pesanPercobaan) =
-                                    SuDesApp.Services.PenjagaLisensi.JelaskanPercobaan(percobaan);
-
-                                if (percobaan.BerlakuSampai is DateTime sampaiPercobaan)
-                                {
-                                    pesanPercobaan += $" Berlaku sampai {sampaiPercobaan.ToLocalTime():dd MMM yyyy}.";
-                                }
-
-                                bool ditolak = percobaan.Asal
-                                    is SuDesApp.Services.AsalPercobaan.DitolakServer
-                                    or SuDesApp.Services.AsalPercobaan.SudahPernahTrial;
-
-                                SuDesApp.Wpf.Views.TrialPemberitahuanWindow.Pesan(
-                                    judulPercobaan,
-                                    pesanPercobaan,
-                                    nadaPeringatan: ditolak);
+                                // Seharusnya tidak tercapai: SegarkanDariCache sudah
+                                // mengaktifkan trial otomatis. Bila masih Demo
+                                // (mis. berkas trial gagal ditulis), aktifkan diam-diam
+                                // tanpa form — jangan bertanya ke pengguna.
+                                penjaga.MulaiTrialLokal();
+                                // Tidak ada popup: semua fitur langsung normal.
                                 break;
                             }
 
@@ -116,12 +83,13 @@ namespace SuDesApp.Wpf
                                     ? SuDesApp.Services.PenjagaLisensi.PesanTrialHabis
                                     : SuDesApp.Services.PenjagaLisensi.PesanAksesDikunci;
 
-                                // Popup pemberitahuan memakai jendela bergaya splash
-                                // yang sama (lihat cabang Demo di atas).
+                                // Popup pemberitahuan memakai jendela bergaya splash.
+                                // Arahkan ke menu AKTIVASI LISENSI atau hubungi developer
+                                // (tombol WhatsApp di halaman itu) — sesuai permintaan.
                                 bool bukaLangganan = SuDesApp.Wpf.Views.TrialPemberitahuanWindow.Pilih(
                                     judul,
-                                    pesan + "\n\nBuka halaman Langganan sekarang untuk menyelesaikan pembayaran?",
-                                    "Buka Langganan", "Nanti Saja");
+                                    pesan + "\n\nBuka menu AKTIVASI LISENSI sekarang? Di sana juga ada tombol hubungi developer via WhatsApp.",
+                                    "Buka Aktivasi", "Nanti Saja");
 
                                 if (bukaLangganan && owner.DataContext is SuDesApp.Wpf.ViewModels.MainWindowViewModel vm)
                                 {

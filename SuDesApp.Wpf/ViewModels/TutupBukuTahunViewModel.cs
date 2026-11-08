@@ -27,6 +27,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly IArsipRegisterTahunanService _arsip;
         private readonly IMessageService _messageService;
         private readonly ILogger<TutupBukuTahunViewModel> _logger;
+        private readonly SuDesApp.Services.PenjagaLisensi? _penjaga;
 
         private bool _menyelaraskanTahun;
         private int _tahunTerpilih = DateTime.Now.Year;
@@ -43,13 +44,15 @@ namespace SuDesApp.Wpf.ViewModels
             ITutupBukuTahunService tutupBuku,
             IArsipRegisterTahunanService arsip,
             IMessageService messageService,
-            ILogger<TutupBukuTahunViewModel> logger)
+            ILogger<TutupBukuTahunViewModel> logger,
+            SuDesApp.Services.PenjagaLisensi? penjaga = null)
         {
             _verifikasi = verifikasi;
             _tutupBuku = tutupBuku;
             _arsip = arsip;
             _messageService = messageService;
             _logger = logger;
+            _penjaga = penjaga;
 
             MuatCommand = new AsyncRelayCommand(MuatAsync);
             TutupCommand = new AsyncRelayCommand(TutupAsync);
@@ -330,6 +333,15 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task CetakAsync(string ekstensi)
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    ekstensi == "xlsx"
+                        ? SuDesApp.Services.PenjagaLisensi.PesanEksporTerkunci
+                        : SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             var dialog = new SaveFileDialog
             {
                 Title = "Simpan Arsip Register " + TahunTerpilih,
