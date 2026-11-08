@@ -120,18 +120,35 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>
         /// Penjaga tombol Cetak: dokumen bersurat tidak boleh tercetak memakai nama
         /// desa/pejabat contoh tanpa persetujuan pengguna. True = boleh mencetak.
+        ///
+        /// ATURAN CETAK PRATINJAU (permintaan Pengaturan Surat): hanya pratinjau
+        /// KEMATIAN yang boleh dicetak ke printer langsung dari tombol Pratinjau;
+        /// pratinjau jenis lain hanya boleh disimpan/diekspor — cetak kertasnya
+        /// lewat Simpan lalu Cetak dari Register. V Pembayang: untuk peraturan
+        /// inilah <see cref="BolehCetakPratinjauLangsung"/> ditegakkan; view
+        /// juga menyembunyikan tombol Cetak agar tidak menggantung.
         /// </summary>
         public async Task<bool> BolehCetakAsync()
         {
-            // Mode baca-saja (langganan berakhir): mencetak surat baru ditolak.
-            // Pratinjau tetap boleh dibuka dan PDF tetap bisa diekspor — yang
-            // dikunci hanya jalan keluar kertas.
-            if (_penjaga is { BacaSaja: true })
+            if (!BolehCetakPratinjauLangsung)
             {
                 if (_messageService != null)
                 {
                     await _messageService.ShowInfoAsync(
-                        SuDesApp.Services.PenjagaLisensi.PesanAksesDikunci);
+                        "Hanya pratinjau Surat Kematian yang boleh dicetak langsung dari tombol Pratinjau. " +
+                        "Untuk jenis lain, simpan dulu lalu cetak dari Register Surat.");
+                }
+                return false;
+            }
+
+            // Trial habis / langganan berakhir: cetak PDF dikunci, KECUALI
+            // Daftar Hadir yang tetap boleh. Pratinjau tetap boleh dibuka.
+            if (_penjaga is not null && !_penjaga.BolehCetakPdf(Title))
+            {
+                if (_messageService != null)
+                {
+                    await _messageService.ShowInfoAsync(
+                        SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
                 }
                 return false;
             }
@@ -146,6 +163,23 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
+        /// True hanya bila dokumen pratinjau ini berjudul Kematian — yaitu
+        /// satu-satunya pratinjau yang diizinkan dicetak ke printer langsung.
+        /// Judul pratinjau dari alur Buat Surat ("Pratinjau {nama}") maupun
+        /// Judul suraat ("Surat Kematian") dibaca dari <see cref="Title"/>.
+        /// Pengecualian: Daftar Hadir juga boleh dicetak langsung (tetap
+        /// boleh walau trial berakhir).
+        /// </summary>
+        public bool BolehCetakPratinjauLangsung => SuDesApp.Data.Models.SuratConstants.KEMATIAN == JudulJenis() || Title?.IndexOf("Kematian", StringComparison.OrdinalIgnoreCase) >= 0 || SuDesApp.Services.PenjagaLisensi.ApakahDaftarHadir(Title);
+
+        private string JudulJenis()
+        {
+            // Judul pratinjau "Pratinjau SKD Umum ..." -> SKD_UMUM, dst.
+            // Untuk kematian dipakai SuratConstants.KEMATIAN.
+            return Title ?? string.Empty;
+        }
+
+        /// <summary>
         /// Simpan salinan PDF yang sedang dilihat ke lokasi pilihan pengguna.
         /// Padanan tombol "Export PDF" pada pratinjau dokumen.
         /// </summary>
@@ -153,6 +187,18 @@ namespace SuDesApp.Wpf.ViewModels
         {
             try
             {
+                // Ekspor PDF juga dikunci saat trial habis, kecuali Daftar Hadir.
+                // ExportAs sinkron — pesan ditampilkan fire-and-forget.
+                if (_penjaga is not null && !_penjaga.BolehCetakPdf(Title))
+                {
+                    if (_messageService != null)
+                    {
+                        _ = _messageService.ShowInfoAsync(
+                            SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                    }
+                    return;
+                }
+
                 if (string.IsNullOrEmpty(PdfPath) || !System.IO.File.Exists(PdfPath))
                 {
                     return;

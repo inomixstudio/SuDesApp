@@ -1412,6 +1412,12 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task EksporAsync()
         {
+            if (_penjaga is { EksporTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(PenjagaLisensi.PesanEksporTerkunci);
+                return;
+            }
+
             var sfd = new SaveFileDialog
             {
                 Title = "Ekspor Data Warga",
@@ -1597,6 +1603,12 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private async Task CetakPdfAsync()
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             try
             {
                 IsBusy = true;

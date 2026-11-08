@@ -54,6 +54,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly Func<string, DataKeputusan?, DataKeputusan?, InputKeputusanViewModel> _inputFactory;
         private readonly Func<string, string, PdfPreviewViewModel> _previewFactory;
         private readonly ILogger<KeputusanViewModel> _logger;
+        private readonly SuDesApp.Services.PenjagaLisensi? _penjaga;
 
         private string _jenisKeputusan = "SK";
         private string? _selectedTahun;
@@ -113,7 +114,8 @@ namespace SuDesApp.Wpf.ViewModels
             IMessageService messageService,
             Func<string, DataKeputusan?, DataKeputusan?, InputKeputusanViewModel> inputFactory,
             Func<string, string, PdfPreviewViewModel> previewFactory,
-            ILogger<KeputusanViewModel> logger)
+            ILogger<KeputusanViewModel> logger,
+            SuDesApp.Services.PenjagaLisensi? penjaga = null)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _desaRepository = desaRepository ?? throw new ArgumentNullException(nameof(desaRepository));
@@ -122,6 +124,7 @@ namespace SuDesApp.Wpf.ViewModels
             _inputFactory = inputFactory ?? throw new ArgumentNullException(nameof(inputFactory));
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _penjaga = penjaga;
 
             SetSkCommand = new AsyncRelayCommand(() => SetJenisAsync("SK"));
             SetPerdesCommand = new AsyncRelayCommand(() => SetJenisAsync("PERDES"));
@@ -473,6 +476,13 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task CetakAsync()
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             // Filter "Semua Tahun" (bukan angka) berarti cetak seluruh tahun untuk jenis ini.
             int? year = int.TryParse(SelectedTahun, out int parsedYear) ? parsedYear : null;
 

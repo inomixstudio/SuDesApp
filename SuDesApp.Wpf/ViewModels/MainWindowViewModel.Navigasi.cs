@@ -32,6 +32,7 @@ namespace SuDesApp.Wpf.ViewModels
 
         private DaftarHadirViewModel? _daftarHadirViewModel;
         private FormulirViewModel? _formulirViewModel;
+        private SetelanViewModel? _setelanViewModel;
         private object? _currentView;
         private string _halamanAktif = "Beranda";
 
@@ -401,9 +402,9 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>
         /// Dipanggil ketika pengguna menekan menu VITAL saat lisensi terkunci.
-        /// Instalasi baru (Demo) ditawari memulai trial 30 hari langsung dari
-        /// sini; trial habis / langganan berakhir diarahkan ke halaman Langganan.
-        /// Menu tetap tidak dibuka sampai trial dimulai atau pembayaran selesai.
+        /// Instalasi baru (Demo) seharusnya tidak terjadi — trial sudah otomatis.
+        /// Bila masih Demo, aktifkan diam-diam tanpa form lalu buka menu.
+        /// Trial habis / langganan berakhir diarahkan ke AKTIVASI LISENSI.
         /// </summary>
         private async Task TolakMenuVitalAsync(string route)
         {
@@ -415,53 +416,25 @@ namespace SuDesApp.Wpf.ViewModels
 
             if (penjaga.Keadaan == SuDesApp.Services.KeadaanLisensi.Demo)
             {
-                bool mulai = await _messageService.ShowConfirmationAsync(
-                    "Menu terkunci — mulai trial 30 hari",
-                    SuDesApp.Services.PenjagaLisensi.PesanMulaiTrial);
+                // Tanpa form: langsung aktifkan trial otomatis, lalu buka menu.
+                // Menu hanya dibuka bila gerbang sudah terbuka.
+                penjaga.MulaiTrialLokal();
 
-                if (!mulai)
-                {
-                    await _messageService.ShowInfoAsync(
-                        SuDesApp.Services.PenjagaLisensi.PesanBelumTrial);
-                    return;
-                }
-
-                // Kode aktivasi sudah ada & server terjangkau → trial server
-                // (sekali per desa, bertanda tangan). Trial lokal hanya dipakai
-                // bila kode belum ada atau server tidak terjangkau.
-                var percobaan = await penjaga.MulaiPercobaanAsync();
-                var (judulPercobaan, pesanPercobaan) =
-                    SuDesApp.Services.PenjagaLisensi.JelaskanPercobaan(percobaan);
-
-                if (percobaan.BerlakuSampai is DateTime sampaiPercobaan)
-                {
-                    pesanPercobaan +=
-                        $" Berlaku sampai {sampaiPercobaan.ToLocalTime():dd MMM yyyy}.";
-                }
-
-                bool ditolak = percobaan.Asal
-                    is SuDesApp.Services.AsalPercobaan.DitolakServer
-                    or SuDesApp.Services.AsalPercobaan.SudahPernahTrial;
-
-                await _messageService.ShowMessageAsync(
-                    pesanPercobaan,
-                    judulPercobaan,
-                    SuDesApp.Utilities.AppMessageButton.Ok,
-                    ditolak
-                        ? SuDesApp.Utilities.AppMessageIcon.Warning
-                        : SuDesApp.Utilities.AppMessageIcon.Info);
-
-                // Menu hanya dibuka bila gerbangnya benar-benar sudah terbuka —
-                // trial yang ditolak server tidak boleh membuka halaman.
                 if (!penjaga.Terkunci)
                 {
                     ResolveFeatureRoute(route)();
+                }
+                else
+                {
+                    await _messageService.ShowInfoAsync(
+                        SuDesApp.Services.PenjagaLisensi.PesanTrialHabis);
+                    await ShowLanggananAsync();
                 }
                 return;
             }
 
             // Trial habis / langganan berakhir: menu tetap terkunci, pengguna
-            // diarahkan menyelesaikan pembayaran.
+            // diarahkan ke AKTIVASI LISENSI atau hubungi developer.
             await _messageService.ShowInfoAsync(
                 SuDesApp.Services.PenjagaLisensi.PesanTrialHabis);
             await ShowLanggananAsync();
@@ -787,9 +760,20 @@ namespace SuDesApp.Wpf.ViewModels
         {
             try
             {
-                var sp = BuatScopeHalaman();
-                var vm = sp.GetRequiredService<SetelanViewModel>();
-                NavigasiHalaman<Views.SetelanView>(vm);
+                // VM bertahan seumur sesi: halaman Pengaturan Surat tidak dibangun
+                // ulang tiap buka — isian dan wilayah yang sudah dimuat dipakai
+                // ulang, hanya dimuat ulang bila belum pernah dimuat.
+                if (_setelanViewModel is null)
+                {
+                    _setelanViewModel = BuatScopeBertahan().GetRequiredService<SetelanViewModel>();
+                    NavigasiHalaman<Views.SetelanView>(_setelanViewModel);
+                    await _setelanViewModel.DibukaAsync();
+                }
+                else
+                {
+                    NavigasiHalaman<Views.SetelanView>(_setelanViewModel);
+                    await _setelanViewModel.DibukaAsync();
+                }
             }
             catch (Exception ex)
             {

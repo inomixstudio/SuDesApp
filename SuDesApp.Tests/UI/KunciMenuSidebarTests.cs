@@ -107,7 +107,8 @@ namespace SuDesApp.Tests.UI
                 new[] { warga }, terkunci: true,
                 PenjagaLisensi.TooltipTerkunci(KeadaanLisensi.BacaSaja));
 
-            Assert.Contains("pembayaran lisensi", warga.TooltipTampil);
+            Assert.Contains("aktivasi lisensi", warga.TooltipTampil);
+            Assert.Contains("hubungi developer", warga.TooltipTampil);
             Assert.DoesNotContain("trial 30 hari", warga.TooltipTampil);
         }
     }

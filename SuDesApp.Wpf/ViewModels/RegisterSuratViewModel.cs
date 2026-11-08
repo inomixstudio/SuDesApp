@@ -93,6 +93,7 @@ namespace SuDesApp.Wpf.ViewModels
         protected readonly NavigationService _navigation;
         private readonly Func<string, string, int?, PdfPreviewViewModel> _previewFactory;
         private readonly PdfPrintService _pdfPrintService;
+        private readonly SuDesApp.Services.PenjagaLisensi? _penjaga;
         private CancellationTokenSource? _loadCancellation;
 
         /// <summary>Gerbang serialisasi: Microsoft.Data.Sqlite tidak aman untuk query
@@ -139,7 +140,8 @@ namespace SuDesApp.Wpf.ViewModels
             NavigationService navigation,
             Func<string, string, int?, PdfPreviewViewModel> previewFactory,
             PdfPrintService pdfPrintService,
-            IPeringatanDataDesaContoh? peringatan = null)
+            IPeringatanDataDesaContoh? peringatan = null,
+            SuDesApp.Services.PenjagaLisensi? penjaga = null)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
@@ -155,6 +157,7 @@ namespace SuDesApp.Wpf.ViewModels
             _previewFactory = previewFactory ?? throw new ArgumentNullException(nameof(previewFactory));
             _pdfPrintService = pdfPrintService ?? throw new ArgumentNullException(nameof(pdfPrintService));
             _peringatan = peringatan;
+            _penjaga = penjaga;
 
             SuratItems = new ObservableCollection<SuratDisplayModel>();
             JenisSuratItems = new ObservableCollection<FilterItem>();
@@ -973,6 +976,14 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task ExportDatabaseAsync()
         {
+            // Kunci ekspor Excel saat trial habis — hanya baca, tidak keluarkan berkas.
+            if (_penjaga is { EksporTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanEksporTerkunci);
+                return;
+            }
+
             try
             {
                 var sfd = new SaveFileDialog
@@ -1135,6 +1146,13 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task PrintRegisterAsync()
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             try
             {
                 IsLoading = true;
@@ -1312,6 +1330,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private async Task PrintSuratDirectAsync(SuratDisplayModel? model)
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             if (model?.OriginalSuratData == null) return;
 
             if (string.Equals(model.OriginalSuratData.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
@@ -1514,6 +1539,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private async Task ExportSuratPdfAsync(SuratDisplayModel? model)
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             if (model?.OriginalSuratData == null) return;
 
             try

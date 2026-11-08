@@ -114,35 +114,49 @@ namespace SuDesApp.Services
         /// jalan keluar: mulai trial atau bayar lisensi.
         /// </summary>
         public const string PesanAksesDikunci =
-            "Fitur ini terkunci karena lisensi belum aktif. Data tetap bisa dibaca, " +
-            "tetapi membuat dan mencetak surat baru dikunci. " +
-            "Mulai trial 30 hari atau aktifkan langganan lewat menu Langganan.";
+            "Fitur ini terkunci karena masa uji coba 30 hari sudah berakhir dan lisensi belum aktif. " +
+            "Data tetap bisa dibaca, tetapi cetak PDF, ekspor Excel, dan sinkron Android dikunci. " +
+            "Aktifkan lisensi lewat menu AKTIVASI LISENSI, atau hubungi developer lewat tombol WhatsApp di halaman itu. " +
+            "Cetak Daftar Hadir tetap boleh dipakai.";
 
         /// <summary>Pesan saat instalasi baru belum memulai trial sama sekali.</summary>
         public const string PesanBelumTrial =
-            "Menu vital aplikasi masih terkunci. Mulai trial gratis 30 hari untuk membuka " +
-            "seluruh fitur, atau aktifkan lisensi berbayar lewat menu Langganan.";
+            "Masa uji coba 30 hari otomatis aktif dan seluruh fitur terbuka. " +
+            "Setelah berakhir, cetak PDF/Excel dan sinkron Android dikunci — aktifkan lisensi lewat menu AKTIVASI LISENSI atau hubungi developer.";
 
         /// <summary>Pertanyaan sebelum trial lokal dimulai (dipakai popup startup &amp; menu).</summary>
         public const string PesanMulaiTrial =
-            "Mulai trial gratis 30 hari sekarang? Selama masa uji coba seluruh menu vital terbuka. " +
-            "Bila trial berakhir tanpa pembayaran, menu vital terkunci kembali dan aplikasi hanya bisa dibaca.";
+            "Masa uji coba 30 hari sudah aktif otomatis. Selama masa uji coba seluruh fitur terbuka. " +
+            "Bila trial berakhir tanpa pembayaran, cetak PDF/Excel (kecuali Daftar Hadir) dan sinkron Android dikunci.";
 
         /// <summary>Pesan saat trial 30 hari sudah habis tanpa pembayaran.</summary>
         public const string PesanTrialHabis =
-            "Masa uji coba 30 hari sudah berakhir. Menu vital aplikasi terkunci dan data hanya bisa " +
-            "dibaca. Selesaikan pembayaran lisensi lewat menu Langganan untuk membuka kembali seluruh fitur.";
+            "Masa uji coba 30 hari sudah berakhir. " +
+            "Cetak PDF dan ekspor Excel dikunci di semua menu, kecuali cetak Daftar Hadir. Sinkron Android juga dikunci. " +
+            "Data tetap bisa dibaca. Aktifkan lisensi lewat menu AKTIVASI LISENSI, atau hubungi developer lewat tombol WhatsApp di halaman itu untuk membuka kembali seluruh fitur.";
+
+        /// <summary>Pesan kunci cetak PDF.</summary>
+        public const string PesanCetakTerkunci =
+            "Cetak PDF dikunci karena masa uji coba sudah berakhir. Aktifkan lisensi lewat menu AKTIVASI LISENSI atau hubungi developer. Cetak Daftar Hadir tetap boleh dipakai.";
+
+        /// <summary>Pesan kunci ekspor Excel.</summary>
+        public const string PesanEksporTerkunci =
+            "Ekspor Excel dikunci karena masa uji coba sudah berakhir. Aktifkan lisensi lewat menu AKTIVASI LISENSI atau hubungi developer.";
+
+        /// <summary>Pesan kunci sinkron Android.</summary>
+        public const string PesanSinkronTerkunci =
+            "Sinkron Android dikunci karena masa uji coba sudah berakhir. Aktifkan lisensi lewat menu AKTIVASI LISENSI atau hubungi developer.";
 
         /// <summary>
         /// Tooltip singkat menu vital yang terkunci saat trial belum dimulai —
         /// tampil di sidebar supaya penguncian terlihat SEBELUM menu diklik.
         /// </summary>
         public const string TooltipTerkunciDemo =
-            "menu vital terkunci — klik untuk mulai trial 30 hari";
+            "menu vital terkunci — trial 30 hari otomatis aktif, sila tunggu sebentar";
 
         /// <summary>Tooltip singkat menu vital yang terkunci karena trial/langganan berakhir.</summary>
         public const string TooltipTerkunciBacaSaja =
-            "menu vital terkunci — klik untuk menyelesaikan pembayaran lisensi";
+            "cetak PDF/Excel & sinkron terkunci — klik untuk aktivasi lisensi atau hubungi developer";
 
         /// <summary>
         /// Pilih kalimat tooltip yang tepat untuk keadaan terkunci: instalasi baru
@@ -163,7 +177,6 @@ namespace SuDesApp.Services
             "template-surat",
             "rekening-koran",
             "ntcr-paket",
-            "daftar-hadir",
             "warga",
             "perangkat-desa",
             "sotk-desa",
@@ -173,7 +186,8 @@ namespace SuDesApp.Services
             "formulir",
             "pengaturan-formulir",
             "penomoran-surat",
-            "kelola-pengguna"
+            "kelola-pengguna",
+            "sinkron-android"
         };
 
         /// <summary>Awalan rute vital yang membawa parameter (jenis surat/keputusan/agenda/formulir).</summary>
@@ -189,14 +203,22 @@ namespace SuDesApp.Services
         /// Benar bila rute menu termasuk menu vital yang wajib terkunci selama
         /// lisensi belum aktif. Aturannya ada di Core supaya gerbang navigasi dan
         /// pengujian membaca daftar yang sama.
+        ///
+        /// Pengecualian produk: Daftar Hadir SENGAJA tidak vital — cetaknya
+        /// tetap boleh dipakai walau trial sudah berakhir (layanan harian desa).
         /// </summary>
         public static bool ApakahMenuVital(string? route)
         {
             if (string.IsNullOrWhiteSpace(route)) return false;
+            if (string.Equals(route, "daftar-hadir", StringComparison.OrdinalIgnoreCase)) return false;
             if (RuteVital.Contains(route)) return true;
             return AwalanRuteVital.Any(awalan =>
                 route.StartsWith(awalan, StringComparison.OrdinalIgnoreCase));
         }
+
+        /// <summary>True bila pratinjau ini adalah Daftar Hadir (pengecualian cetak).</summary>
+        public static bool ApakahDaftarHadir(string? judul) =>
+            judul is not null && judul.IndexOf("Daftar Hadir", StringComparison.OrdinalIgnoreCase) >= 0;
 
         private readonly LisensiManager _lisensi;
         private readonly TrialLokal _trial;
@@ -321,6 +343,33 @@ namespace SuDesApp.Services
 
         /// <summary>Benar bila menu vital sedang terkunci.</summary>
         public bool Terkunci => HitungTerkunci(_keadaan);
+
+        /// <summary>
+        /// Benar bila cetak PDF terkunci. Daftar Hadir dikecualikan — pemanggil
+        /// harus memeriksa <see cref="ApakahDaftarHadir(string?)"/> lebih dulu
+        /// atau memakai <see cref="BolehCetakPdf"/>.
+        /// </summary>
+        public bool CetakTerkunci => Terkunci;
+
+        /// <summary>Benar bila ekspor Excel terkunci.</summary>
+        public bool EksporTerkunci => Terkunci;
+
+        /// <summary>Benar bila sinkron Android terkunci.</summary>
+        public bool SinkronTerkunci => Terkunci;
+
+        /// <summary>
+        /// Boleh mencetak PDF? Terkunci = tidak boleh, kecuali Daftar Hadir
+        /// yang selalu boleh. Helper tunggal supaya gerbang di semua ViewModel
+        /// membaca aturan yang sama.
+        /// </summary>
+        public bool BolehCetakPdf(string? judulPratinjau = null) =>
+            !Terkunci || ApakahDaftarHadir(judulPratinjau);
+
+        /// <summary>Boleh ekspor Excel? Tidak ada pengecualian Daftar Hadir.</summary>
+        public bool BolehEksporExcel => !Terkunci;
+
+        /// <summary>Boleh sinkron Android?</summary>
+        public bool BolehSinkron => !Terkunci;
 
         /// <summary>Benar bila trial 30 hari lokal masih berjalan.</summary>
         public bool TrialAktif => _trial.Aktif();
@@ -544,7 +593,30 @@ namespace SuDesApp.Services
             return true;
         }
 
-        /// <summary>Terapkan status dari cache lokal tanpa jaringan (cepat, disebut saat startup).</summary>
-        public void SegarkanDariCache() => Terapkan(_lisensi.BacaCachePublik());
+        /// <summary>
+        /// Terapkan status dari cache lokal tanpa jaringan (cepat, disebut saat startup).
+        /// Di sinilah TRIAL OTOMATIS terjadi: instalasi baru langsung Trial tanpa form.
+        /// Jalur Terapkan() dari server/cache ulang TIDAK menghidupkan trial diam-diam —
+        /// supaya penolakan server tetap berarti (tidak diberi cadangan lokal).
+        /// </summary>
+        public void SegarkanDariCache()
+        {
+            var status = _lisensi.BacaCachePublik();
+
+            // TRIAL OTOMATIS 30 HARI: hanya di startup, hanya bila belum pernah
+            // trial dan langganan cache tidak aktif. TrialLokal.MulaiSekarang
+            // menjamin sekali saja, jadi trial habis tidak pernah hidup lagi.
+            if (status?.Aktif != true && !_trial.SudahMulai)
+            {
+                if (_trial.MulaiSekarang())
+                {
+                    _logger.LogInformation(
+                        "Trial 30 hari lokal otomatis dimulai; berlaku sampai {Sampai:O}.",
+                        _trial.BerakhirUtc);
+                }
+            }
+
+            Terapkan(status);
+        }
     }
 }

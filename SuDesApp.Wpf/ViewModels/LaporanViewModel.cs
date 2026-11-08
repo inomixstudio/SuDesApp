@@ -74,6 +74,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly ActivityLogService _activityLog;
         private readonly IMessageService _messageService;
         private readonly ILogger<LaporanViewModel> _logger;
+        private readonly SuDesApp.Services.PenjagaLisensi? _penjaga;
 
         private bool _isBusy;
         private string _statusText = string.Empty;
@@ -88,7 +89,8 @@ namespace SuDesApp.Wpf.ViewModels
             Func<string, string, PdfPreviewViewModel> previewFactory,
             ActivityLogService activityLog,
             IMessageService messageService,
-            ILogger<LaporanViewModel> logger)
+            ILogger<LaporanViewModel> logger,
+            SuDesApp.Services.PenjagaLisensi? penjaga = null)
         {
             _laporan = laporan ?? throw new ArgumentNullException(nameof(laporan));
             _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
@@ -97,6 +99,7 @@ namespace SuDesApp.Wpf.ViewModels
             _activityLog = activityLog ?? throw new ArgumentNullException(nameof(activityLog));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _penjaga = penjaga;
 
             MuatUlangCommand = new AsyncRelayCommand(() => LoadAsync(), () => !IsBusy);
             // Cetak PDF kini menjalankan alur pratinjau (tombol "Pratinjau"
@@ -456,6 +459,12 @@ namespace SuDesApp.Wpf.ViewModels
         private async Task PratinjauAsync()
         {
             if (IsBusy) return;
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
 
             IsBusy = true;
             try
@@ -489,6 +498,12 @@ namespace SuDesApp.Wpf.ViewModels
         private async Task SimpanAsync(string ekstensi)
         {
             if (IsBusy) return;
+            if (_penjaga is { EksporTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanEksporTerkunci);
+                return;
+            }
 
             var sfd = new SaveFileDialog
             {

@@ -82,6 +82,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly ActivityLogService _activityLog;
         private readonly IMessageService _messageService;
         private readonly ILogger<PerangkatDesaViewModel> _logger;
+        private readonly SuDesApp.Services.PenjagaLisensi? _penjaga;
 
         private string _statusText = string.Empty;
         private string _formGalat = string.Empty;
@@ -194,7 +195,8 @@ namespace SuDesApp.Wpf.ViewModels
             NavigationService navigation,
             ActivityLogService activityLog,
             IMessageService messageService,
-            ILogger<PerangkatDesaViewModel> logger)
+            ILogger<PerangkatDesaViewModel> logger,
+            SuDesApp.Services.PenjagaLisensi? penjaga = null)
         {
             _layanan = layanan ?? throw new ArgumentNullException(nameof(layanan));
             _wargaRepository = wargaRepository ?? throw new ArgumentNullException(nameof(wargaRepository));
@@ -209,6 +211,7 @@ namespace SuDesApp.Wpf.ViewModels
             _activityLog = activityLog ?? throw new ArgumentNullException(nameof(activityLog));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _penjaga = penjaga;
 
             TambahCommand = new AsyncRelayCommand(BukaFormTambahAsync, () => !IsBusy);
             // Pemilih bagian halaman. Kedua tombol tetap aktif — yang membedakan
@@ -1682,6 +1685,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private async Task EksporExcelAsync()
         {
+            if (_penjaga is { EksporTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanEksporTerkunci);
+                return;
+            }
+
             // Bagian kosong diperiksa lebih dulu, sebelum operator diminta memilih
             // nama berkas untuk data yang tidak akan ditulis.
             var baris = TabelAktif.Where(b => b.AdaData).ToList();
@@ -1819,6 +1829,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private async Task CetakPdfAsync()
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             try
             {
                 IsBusy = true;
@@ -1869,6 +1886,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private async Task CetakFormulirAsync()
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             try
             {
                 IsBusy = true;
@@ -2195,6 +2219,13 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private async Task PratinjauSkAsync()
         {
+            if (_penjaga is { CetakTerkunci: true })
+            {
+                await _messageService.ShowInfoAsync(
+                    SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                return;
+            }
+
             try
             {
                 IsBusy = true;

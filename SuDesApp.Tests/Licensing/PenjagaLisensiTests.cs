@@ -26,11 +26,13 @@ namespace SuDesApp.Tests.Licensing
             _folder = Path.Combine(Path.GetTempPath(),
                 "sudesapp-trial-" + Guid.NewGuid().ToString("N"));
             TrialLokal.FolderOverride = _folder;
+            LisensiManager.FolderCacheOverride = _folder;
         }
 
         public void Dispose()
         {
             TrialLokal.FolderOverride = null;
+            LisensiManager.FolderCacheOverride = null;
             try
             {
                 if (Directory.Exists(_folder)) Directory.Delete(_folder, recursive: true);
@@ -108,11 +110,11 @@ namespace SuDesApp.Tests.Licensing
         [InlineData("warga")]
         [InlineData("perangkat-desa")]
         [InlineData("apbdes")]
-        [InlineData("daftar-hadir")]
         [InlineData("rekening-koran")]
         [InlineData("template-surat")]
         [InlineData("formulir")]
         [InlineData("pengaturan-surat")]
+        [InlineData("sinkron-android")]
         [InlineData("surat:SKTM")]
         [InlineData("keputusan:PERDES")]
         [InlineData("template-pdf:DOMISILI")]
@@ -129,6 +131,8 @@ namespace SuDesApp.Tests.Licensing
         [InlineData("langganan")]
         [InlineData("cadangkan-pulihkan")]
         [InlineData("pengaturan-aplikasi")]
+        // Daftar Hadir tetap boleh dicetak walau trial habis (pengecualian produk).
+        [InlineData("daftar-hadir")]
         // Koneksi akun Google untuk pencadangan tidak boleh ikut terkunci:
         // pelengkap cadangan, sama seperti halaman Cadangkan & Pulihkan.
         [InlineData("google-login")]
@@ -172,10 +176,11 @@ namespace SuDesApp.Tests.Licensing
         }
 
         [Fact]
-        public void Penjaga_InstalasiBaru_TerkunciLaluTrialMembukaMenuVital()
+        public void Penjaga_InstalasiBaru_TrialOtomatisMembukaMenuVital()
         {
             // Tanpa kode aktivasi dan tanpa status: keadaan sebenarnya yang
-            // dibaca aplikasi pada instalasi pertama.
+            // dibaca aplikasi pada instalasi pertama. Trial 30 hari OTOMATIS
+            // aktif tanpa form — jangan bertanya ke pengguna.
             var lisensi = new LisensiManager(NullLogger<LisensiManager>.Instance)
             {
                 KodeAktivasi = null
@@ -183,21 +188,25 @@ namespace SuDesApp.Tests.Licensing
             var penjaga = new PenjagaLisensi(lisensi, new TrialLokal(),
                 NullLogger<PenjagaLisensi>.Instance);
 
-            penjaga.Terapkan(null);
-
-            Assert.Equal(KeadaanLisensi.Demo, penjaga.Keadaan);
-            Assert.True(penjaga.Terkunci);
-            Assert.True(penjaga.BacaSaja);
-
             bool berubah = false;
             penjaga.Berubah += () => berubah = true;
 
-            Assert.True(penjaga.MulaiTrialLokal());
+            // Startup memakai SegarkanDariCache (jalur auto-trial); Terapkan
+            // polos dari server tidak boleh menghidupkan trial diam-diam.
+            penjaga.SegarkanDariCache();
+
             Assert.Equal(KeadaanLisensi.Trial, penjaga.Keadaan);
             Assert.False(penjaga.Terkunci);
+            Assert.False(penjaga.BacaSaja);
             Assert.Equal(TrialLokal.DURASI_HARI, penjaga.SisaHariTrial);
             Assert.NotNull(penjaga.TrialBerakhirUtc);
+            Assert.True(penjaga.TrialPernahDimulai);
             Assert.True(berubah);
+
+            // Trial sudah otomatis — tidak bisa dimulai lagi.
+            Assert.False(penjaga.MulaiTrialLokal());
+            Assert.Equal(KeadaanLisensi.Trial, penjaga.Keadaan);
+            Assert.False(penjaga.Terkunci);
         }
 
         [Fact]
