@@ -45,7 +45,14 @@ object AntreanSurat {
             return@withContext false
         }
 
-        val berhasil = kirimKe(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)
+        val berhasil = try {
+            kirimKe(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)
+        } catch (e: SupabaseKlien.SesiKedaluwarsa) {
+            // Sesi kedaluwarsa bukan alasan membuang isian: simpan tertunda
+            // supaya tidak hilang; WorkManager mengulang setelah login ulang.
+            simpanTertunda(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)
+            false
+        }
         if (!berhasil) simpanTertunda(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)
         berhasil
     }
@@ -53,6 +60,10 @@ object AntreanSurat {
     /** Jumlah surat yang tertahan di perangkat karena belum terkirim. */
     fun jumlahTertunda(ctx: Context): Int =
         folder(ctx).listFiles()?.count { it.isFile } ?: 0
+
+    /** Jumlah berkas gagal yang dipindah (rusak / format tak dikenal) — untuk UI terlihat. */
+    fun jumlahGagal(ctx: Context): Int =
+        File(ctx.filesDir, "$FOLDER-gagal").listFiles()?.count { it.isFile } ?: 0
 
     /**
      * Coba kirim semua surat tertunda, terlama lebih dulu. Berhenti pada

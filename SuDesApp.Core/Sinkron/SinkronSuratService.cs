@@ -172,7 +172,7 @@ public sealed class SinkronSuratService
             """
             SELECT id, tenant_id, id_pengguna, id_perangkat, id_jenis,
                    nomor_sementara, nik, data_json::text, status, batas_coba,
-                   catatan, dibuat_pada, diubah_pada
+                   catatan, dibuat_pada, diubah_pada, client_uuid
               FROM antrean_surat
              WHERE tenant_id = @tenant
                AND (status = 'menunggu' OR (status = 'gagal' AND batas_coba < 3))
@@ -200,7 +200,8 @@ public sealed class SinkronSuratService
                 reader.GetInt16(9),
                 reader.IsDBNull(10) ? null : reader.GetString(10),
                 reader.GetDateTime(11),
-                reader.GetDateTime(12)));
+                reader.GetDateTime(12),
+                reader.IsDBNull(13) ? null : reader.GetGuid(13)));
         }
 
         return daftar;

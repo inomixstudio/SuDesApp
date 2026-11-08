@@ -287,6 +287,10 @@ class SupabaseKlien(
                 val teks = resp.body?.string().orEmpty()
                 if (resp.isSuccessful) {
                     Hasil.Sukses(teks)
+                } else if (resp.code == 409) {
+                    // Duplikat client_uuid: sudah ada di server. Anggap sukses
+                    // lokal agar tidak memblokir antrean tertunda selamanya.
+                    Hasil.Sukses(teks)
                 } else {
                     Hasil.Galat(resp.code, teks)
                 }

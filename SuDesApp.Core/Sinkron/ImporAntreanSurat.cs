@@ -185,6 +185,12 @@ public sealed class ImporAntreanSurat
                 BangunWaris(surat);
             }
 
+            // Idempotensi: bawa client_uuid antrean ke surat agar impor kedua
+            // (crash setelah insert, sebelum hapus antrean) terdeteksi walau
+            // sinkron_log belum mencatat. Null untuk surat desktop murni.
+            surat.IdAntreanSinkron = baris.ClientUuid?.ToString()
+                ?? baris.Id.ToString();
+
             // Jenis yang skemanya menandai keterangan sebagai "otomatis"
             // dihitung desktop, bukan diminta dari Android — sama seperti saat
             // form dibuka di desktop. Tanpa ini, surat hasil impor SKTM keluar
