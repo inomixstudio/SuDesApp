@@ -100,6 +100,8 @@ namespace SuDesApp.Wpf.ViewModels
                 () => JalankanSibukAsync(CekLanggananAsync), () => !LanggananSibuk);
             SimpanLanggananCommand = new AsyncRelayCommand(
                 () => JalankanSibukAsync(SimpanLaluCekAsync), () => !LanggananSibuk);
+            TempelKodeCommand = new RelayCommand(TempelKodeDariClipboard, () => !LanggananSibuk);
+            HapusKodeCommand = new RelayCommand(HapusKode, () => !LanggananSibuk && !string.IsNullOrWhiteSpace(KodeAktivasi));
             BayarLanggananCommand = new AsyncRelayCommand(
                 () => JalankanSibukAsync(BayarLanggananAsync), () => !LanggananSibuk);
             MulaiTrialCommand = new AsyncRelayCommand(
@@ -111,6 +113,8 @@ namespace SuDesApp.Wpf.ViewModels
             BukaWaAdminCommand = new RelayCommand(BukaWaAdmin);
             SimpanServerCommand = new AsyncRelayCommand(
                 () => JalankanSibukAsync(SimpanServerAsync), () => !LanggananSibuk);
+            HubungkanCommand = new AsyncRelayCommand(
+                () => JalankanSibukAsync(HubungkanAsync), () => !LanggananSibuk);
             BukaPusatAdministrasiCommand = new AsyncRelayCommand(BukaPusatAdministrasiAsync);
             BukaKunciServerCommand = new RelayCommand(BukaKunciServer,
                 () => _alamatTerkunciSesi && !_lisensi.UrlServerTerkunci);
@@ -163,9 +167,28 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     // Kode ikut ke rincian QRIS (referensi pembayaran manual).
                     OnPropertyChanged(nameof(QrisReferensi));
+                    OnPropertyChanged(nameof(KodeAktivasiFormatOK));
+                    OnPropertyChanged(nameof(KodeAktivasiPetunjuk));
                 }
             }
         }
+
+        /// <summary>
+        /// True bila kode dalam bentuk resmi SUDES-XXXX-XXXX (setelah
+        /// dinormalisasi). Dipakai untuk warna petunjuk di bawah kotak input.
+        /// </summary>
+        public bool KodeAktivasiFormatOK => FormatKodeAktivasi.BentukSah(_kodeAktivasi);
+
+        /// <summary>
+        /// Petunjuk bentuk kode yang selalu terlihat di bawah kotak input,
+        /// supaya kegagalan "tidak dikenal" tidak membingungkan: bentuknya
+        /// dicek sebelum dikirim, bukan hanya ditebak dari balasan server.
+        /// </summary>
+        public string KodeAktivasiPetunjuk => KodeAktivasiFormatOK
+            ? "Format sudah benar (SUDES-XXXX-XXXX) — tekan Simpan & Cek, atau tekan Enter."
+            : string.IsNullOrWhiteSpace(_kodeAktivasi)
+                ? "Contoh bentuk kode: SUDES-K7Q2-4831 (13 karakter, huruf besar). Tempel dari papan klip boleh — spasi dan huruf kecil dirapikan otomatis."
+                : "Bentuknya belum lengkap — harus SUDES-XXXX-XXXX (13 karakter). Perbaiki dulu, atau gunakan Tempel agar tidak salah ketik.";
 
         private string _langgananStatus = "Belum diperiksa";
 
@@ -281,18 +304,24 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     CekLanggananCommand.RaiseCanExecuteChanged();
                     SimpanLanggananCommand.RaiseCanExecuteChanged();
+                    TempelKodeCommand.RaiseCanExecuteChanged();
+                    HapusKodeCommand.RaiseCanExecuteChanged();
                     BayarLanggananCommand.RaiseCanExecuteChanged();
                     MulaiTrialCommand.RaiseCanExecuteChanged();
                     SimpanServerCommand.RaiseCanExecuteChanged();
+                    HubungkanCommand.RaiseCanExecuteChanged();
                 }
             }
         }
 
         public AsyncRelayCommand CekLanggananCommand { get; }
         public AsyncRelayCommand SimpanLanggananCommand { get; }
+        public RelayCommand TempelKodeCommand { get; }
+        public RelayCommand HapusKodeCommand { get; }
         public AsyncRelayCommand BayarLanggananCommand { get; }
         public AsyncRelayCommand MulaiTrialCommand { get; }
         public AsyncRelayCommand SimpanServerCommand { get; }
+        public AsyncRelayCommand HubungkanCommand { get; }
         public RelayCommand BukaKunciServerCommand { get; }
 
         // =======================================================================
@@ -1197,21 +1226,56 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
+        /// Jalankan <paramref name="aksi"/> di thread UI bila sedang di thread
+        /// latar. Sinkron dengan batas 500 ms: bila dispatchernya tidak pernah
+        /// memompa pesan (mis. sesi uji), jatuh ke set langsung supaya pesannya
+        /// tetap tercatat. Invoke tanpa batas bisa menggantung selamanya pada
+        /// dispatcher semacam itu.
+        /// </summary>
+        private static void JalankanDiUi(Action aksi)
+        {
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher is null || dispatcher.CheckAccess())
+            {
+                aksi();
+                return;
+            }
+
+            try
+            {
+                var operasi = dispatcher.InvokeAsync(aksi);
+                operasi.Task.Wait(TimeSpan.FromMilliseconds(500));
+                if (!operasi.Task.IsCompleted)
+                {
+                    aksi();
+                }
+            }
+            catch (Exception)
+            {
+                // Dispatcher tidak bisa dipakai: lanjutkan langsung.
+                aksi();
+            }
+        }
+
+        /// <summary>
         /// Satu-satunya cara menulis banner untuk pesan sementara (galat simpan,
         /// petunjuk QRIS, hasil panduan): nada dan kalimat selalu berubah bersama,
         /// jadi tidak ada banner merah yang berbunyi seolah berhasil.
         /// </summary>
         private void Beritahu(int nada, string keterangan)
         {
-            LanggananTone = nada;
-            LanggananInfo = keterangan;
+            JalankanDiUi(() =>
+            {
+                LanggananTone = nada;
+                LanggananInfo = keterangan;
+            });
         }
 
         private async Task CekLanggananAsync()
         {
             try
             {
-                _lisensi.KodeAktivasi = KodeAktivasi?.Trim();
+                _lisensi.KodeAktivasi = FormatKodeAktivasi.Normalisasi(KodeAktivasi);
                 StatusMessage = "Memeriksa langganan ke server…";
                 var hasil = await _lisensi.CekAsync();
                 // Terapkan dulu ke penjaga fitur, lalu tampilkan — supaya lencana
@@ -1260,14 +1324,78 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Isi tombol "Simpan &amp; Cek": kode disimpan sebagai preferensi, lalu
-        /// statusnya langsung diperiksa — keduanya satu operasi sibuk.
+        /// Isi tombol "Simpan &amp; Cek": kode dinormalisasi dulu (spasi, baris
+        /// baru, dan huruf kecil dari salinan WhatsApp dirapikan), dibentuk
+        /// resminya dicek sebelum disimpan, lalu statusnya langsung diperiksa —
+        /// ketiganya satu operasi sibuk. Tanpa normalisasi ini kode yang
+        /// benar pun gagal ("tidak dikenal") karena pencarian server sensitif
+        /// huruf besar.
         /// </summary>
         private async Task SimpanLaluCekAsync()
         {
-            AppPreferenceStore.SetKodeAktivasi(KodeAktivasi?.Trim() ?? string.Empty);
+            var mentah = KodeAktivasi ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(mentah))
+            {
+                Beritahu(2, "Kode aktivasi masih kosong. Salin kode dari WhatsApp admin, gunakan tombol Tempel, lalu tekan Simpan & Cek.");
+                StatusMessage = "Kode aktivasi belum diisi.";
+                return;
+            }
+
+            var ternormalisasi = FormatKodeAktivasi.Normalisasi(mentah);
+            if (!FormatKodeAktivasi.BentukSah(ternormalisasi))
+            {
+                KodeAktivasi = ternormalisasi;
+                StatusMessage = "Kode aktivasi belum lengkap.";
+                Beritahu(2, "Kode itu belum berformat SUDES-XXXX-XXXX (13 karakter, huruf besar, contoh: SUDES-K7Q2-4831). " +
+                    "Periksa lagi salinan dari admin — satu huruf yang hilang berarti kode tidak dikenal. " +
+                    "Bila sulit dibaca, gunakan Tempel dari WhatsApp supaya tidak salah ketik.");
+                return;
+            }
+
+            KodeAktivasi = ternormalisasi;
+            AppPreferenceStore.SetKodeAktivasi(ternormalisasi);
             _statusSesaat.Tampilkan("Tersimpan — kode aktivasi");
             await CekLanggananAsync();
+        }
+
+        /// <summary>
+        /// Tempel kode dari papan klip (salinan WhatsApp admin) dan rapikan
+        /// langsung — spasi dan huruf kecil tidak lagi jadi penyebab gagal.
+        /// </summary>
+        private void TempelKodeDariClipboard()
+        {
+            string? dariClipboard;
+            try
+            {
+                dariClipboard = System.Windows.Clipboard.GetText();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Papan klip tidak bisa dibaca untuk tempel kode aktivasi");
+                Beritahu(3, "Papan klip tidak bisa dibaca. Ketik kode manual: SUDES-XXXX-XXXX.");
+                return;
+            }
+
+            var ternormalisasi = FormatKodeAktivasi.Normalisasi(dariClipboard);
+            if (ternormalisasi.Length == 0)
+            {
+                Beritahu(2, "Papan klip kosong atau tidak berisi kode. Salin kode dari WhatsApp admin dulu, lalu tekan Tempel.");
+                return;
+            }
+
+            KodeAktivasi = ternormalisasi;
+            var ok = FormatKodeAktivasi.BentukSah(ternormalisasi);
+            Beritahu(ok ? 1 : 2, ok
+                ? "Kode ditempel dan formatnya sudah benar — tekan Simpan & Cek."
+                : "Isi papan klip ditempel, tetapi bentuknya belum SUDES-XXXX-XXXX. Periksa lagi salinan dari admin.");
+            StatusMessage = ok ? "Kode ditempel." : "Kode ditempel, format belum lengkap.";
+        }
+
+        private void HapusKode()
+        {
+            KodeAktivasi = string.Empty;
+            AppPreferenceStore.SetKodeAktivasi(string.Empty);
+            StatusMessage = "Kode aktivasi dihapus.";
         }
 
         /// <summary>
@@ -1326,6 +1454,71 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
+        /// Hubungkan otomatis: simpan alamat saat ini, nyalakan server lokal
+        /// bila tersedia & belum berjalan, lalu coba sambung berulang sampai
+        /// server menjawab atau percobaan habis (5×, jeda 2 detik).
+        /// Setelah terhubung, status langganan langsung diperiksa.
+        /// </summary>
+        private async Task HubungkanAsync()
+        {
+            var url = (UrlServer ?? string.Empty).Trim().TrimEnd('/');
+            if (url.Length == 0 ||
+                !Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                Beritahu(3, "Alamat server belum sah — isi alamat lengkap yang diawali http:// atau https://, lalu tekan Hubungkan.");
+                StatusMessage = "Gagal menghubungkan: alamat server tidak sah.";
+                return;
+            }
+
+            if (_lisensi.UrlServerTerkunci
+                && !string.Equals(url, PenentuAlamatLisensi.Rapikan(_lisensi.UrlServer), StringComparison.Ordinal))
+            {
+                Beritahu(3, "Alamat server dikunci oleh konfigurasi aplikasi; Hubungkan memakai alamat produksi tersebut.");
+            }
+            else if (!_lisensi.UrlServerTerkunci)
+            {
+                AppPreferenceStore.SetUrlServerLisensi(url);
+            }
+
+            _lisensi.UrlServer = url;
+            UrlServer = url;
+            _angkaDariSumberIni = false;
+            StatusMessage = "Menghubungkan ke server " + url + " …";
+
+            // Nyalakan server lokal otomatis bila build mendukungnya dan
+            // server belum berjalan — tanpa ini alamat localhost tidak akan
+            // pernah menjawab walau dicoba berulang.
+            if (TampilServerLokal && _serverLokal is { Berjalan: false })
+            {
+                ServerLokalAktif = true;
+            }
+
+            const int maksPercobaan = 6;
+            for (var percobaan = 1; percobaan <= maksPercobaan; percobaan++)
+            {
+                await MuatKatalogAsync(paksa: true);
+                if (_keadaanServer == KeadaanServer.Terhubung) break;
+                if (percobaan < maksPercobaan)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                }
+            }
+
+            if (_keadaanServer == KeadaanServer.Terhubung)
+            {
+                await CekLanggananAsync();
+                StatusMessage = "Terhubung — server lisensi menjawab di " + url + ".";
+                Beritahu(1, "Terhubung — server lisensi menjawab di " + url + ".");
+                return;
+            }
+
+            Beritahu(3, "Server tidak menjawab di " + url + ". Periksa koneksi internet, dan pastikan " +
+                "server lisensi sedang berjalan.");
+            StatusMessage = "Gagal menghubungi server lisensi.";
+        }
+
+        /// <summary>
         /// Mulai masa uji coba 30 hari dari halaman ini — TANPA memaksa kode
         /// aktivasi, sama seperti popup saat aplikasi dibuka.
         ///
@@ -1354,7 +1547,7 @@ namespace SuDesApp.Wpf.ViewModels
                 // trial server bisa dipilih saat server memang terjangkau.
                 if (!string.IsNullOrWhiteSpace(KodeAktivasi))
                 {
-                    _lisensi.KodeAktivasi = KodeAktivasi!.Trim();
+                    _lisensi.KodeAktivasi = FormatKodeAktivasi.Normalisasi(KodeAktivasi);
                 }
 
                 StatusMessage = "Menyiapkan masa uji coba 30 hari…";
@@ -1674,7 +1867,10 @@ namespace SuDesApp.Wpf.ViewModels
         public string StatusMessage
         {
             get => _statusMessage;
-            private set => SetProperty(ref _statusMessage, value);
+            private set
+            {
+                JalankanDiUi(() => SetProperty(ref _statusMessage, value));
+            }
         }
     }
 

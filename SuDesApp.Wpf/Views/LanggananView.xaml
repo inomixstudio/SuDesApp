@@ -701,23 +701,41 @@
                         </Border>
                         <StackPanel Style="{StaticResource LanggananCardBody}">
                                 <TextBlock Style="{StaticResource LanggananDesc}"
-                                           Text="Aktivasi manual memakai kode aktivasi yang diberikan admin lewat WhatsApp setelah pembayaran manual (QRIS/transfer) dikonfirmasi. Kode ini berfungsi sebagai identitas desa, bukan rahasia. Masukkan kode di bawah, lalu tekan Simpan &amp; Cek sampai status berubah menjadi Aktif."/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="140"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Kode aktivasi" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBox VerticalContentAlignment="Center"
-                                                 Text="{Binding KodeAktivasi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 ToolTip="Contoh: SUDES-XXXX-001"/>
-                                        <Button Content="Simpan &amp; Cek" Command="{Binding SimpanLanggananCommand}" MinWidth="150"
-                                                Margin="0,12,0,0" HorizontalAlignment="Left" Style="{StaticResource SecondaryButton}"
-                                                ToolTip="Simpan kode aktivasi lalu periksa status langganan"/>
-                                    </StackPanel>
-                                </Grid>
+                                           Text="Masukan Kode."/>
+                                <TextBlock Margin="0,4,0,6" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Text="KODE AKTIVASI"/>
+                                <TextBox VerticalContentAlignment="Center"
+                                         Text="{Binding KodeAktivasi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Contoh: SUDES-K7Q2-4831 — huruf besar, 13 karakter, bentuk SUDES-XXXX-XXXX. Enter = Simpan &amp; Cek.">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding SimpanLanggananCommand}"/>
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <TextBlock Text="{Binding KodeAktivasiPetunjuk}" Margin="0,5,0,0"
+                                           FontSize="11" TextWrapping="Wrap" LineHeight="16">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding KodeAktivasiFormatOK}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <WrapPanel Margin="0,10,0,0">
+                                    <Button Content="Tempel" Command="{Binding TempelKodeCommand}" MinWidth="110"
+                                            Style="{StaticResource SecondaryButton}"
+                                            ToolTip="Tempel kode dari papan klip dan rapikan otomatis"/>
+                                    <Button Content="Hapus" Command="{Binding HapusKodeCommand}" MinWidth="110"
+                                            Margin="8,0,0,0" Style="{StaticResource SecondaryButton}"
+                                            ToolTip="Kosongkan kotak kode aktivasi"/>
+                                    <Button Content="Simpan &amp; Cek" Command="{Binding SimpanLanggananCommand}" MinWidth="130"
+                                            Margin="8,0,0,0" Style="{StaticResource PrimaryButton}"
+                                            ToolTip="Simpan kode aktivasi lalu periksa status langganan (sama seperti tekan Enter di kotak kode)"/>
+                                </WrapPanel>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -760,72 +778,40 @@
                             </Border>
                             <StackPanel Style="{StaticResource LanggananCardBody}">
                                 <TextBlock Style="{StaticResource LanggananDesc}"
-                                           Text="Alamat server tempat status langganan dan tagihan diperiksa. Isi alamat hasil pemasangan server lisensi (panduan langkah demi langkah ada di docs/deploy-server.md), lalu tekan Simpan &amp; Uji."/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="140"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="Alamat server" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBox VerticalContentAlignment="Center"
-                                                 Text="{Binding UrlServer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 IsReadOnly="{Binding UrlServerTerkunci}"
-                                                 ToolTip="Contoh: https://lisensi.contoh.go.id"/>
-                                        <!-- Pesannya mengikuti keadaan sambungan yang sebenarnya
-                                             (PesanServer), bukan sekadar "alamatnya masih localhost" —
-                                             server yang benar-benar menjawab tidak lagi dilabeli
-                                             "pembayaran akan gagal". -->
-                                        <TextBlock Text="{Binding PesanServer}"
-                                                   FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
-                                                   Foreground="{DynamicResource WarningTextBrush}"
-                                                   Visibility="{Binding ServerBelumTersambung, Converter={StaticResource BoolToVis}}"/>
-                                        <TextBlock Text="{Binding CatatanAlamatServer}"
-                                                   FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                                   Visibility="{Binding UrlServerTerkunci, Converter={StaticResource BoolToVis}}"/>
-                                        <WrapPanel Margin="0,12,0,0">
-                                            <Button Content="Simpan &amp; Uji" Command="{Binding SimpanServerCommand}" MinWidth="150"
-                                                    Style="{StaticResource SecondaryButton}"
-                                                    IsEnabled="{Binding UrlServerDapatDiubah}"
-                                                    ToolTip="Simpan alamat server lalu langsung memeriksa status langganan"/>
-                                            <Button Content="Ubah alamat" Command="{Binding BukaKunciServerCommand}"
-                                                    MinWidth="120" Margin="8,0,0,0"
-                                                    Style="{StaticResource SecondaryButton}"
-                                                    Visibility="{Binding TampilBukaKunciServer, Converter={StaticResource BoolToVis}}"
-                                                    ToolTip="Buka kunci alamat untuk sesi ini, lalu ganti dan uji alamat baru"/>
-                                        </WrapPanel>
-                                    </StackPanel>
-                                </Grid>
-
-                                <!-- Server lokal: kendali operator untuk pusat administrasi
-                                     di komputer ini. Tampil hanya bila alamat server boleh
-                                     diganti (build uji lokal), bukan pada rilis yang
-                                     terkunci ke server produksi. -->
-                                <Border Style="{StaticResource LanggananInfoBox}" Margin="0,14,0,0"
-                                        Visibility="{Binding TampilServerLokal, Converter={StaticResource BoolToVis}}">
-                                    <StackPanel>
-                                        <DockPanel>
-                                            <CheckBox DockPanel.Dock="Left" Content="Jalankan server lisensi di komputer ini"
-                                                      IsChecked="{Binding ServerLokalAktif, Mode=TwoWay}"
-                                                      VerticalAlignment="Center"/>
-                                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right"
-                                                       Text="{Binding ServerLokalStatus}" FontSize="11" FontWeight="Bold"
-                                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                                       VerticalAlignment="Center"/>
-                                        </DockPanel>
-                                        <TextBlock Text="{Binding ServerLokalCatatan}" FontSize="11"
-                                                   TextWrapping="Wrap" LineHeight="18" Margin="0,8,0,0"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                        <Button Content="Buka Pusat Administrasi"
-                                                Command="{Binding BukaPusatAdministrasiCommand}"
-                                                MinWidth="170" Margin="0,10,0,0" HorizontalAlignment="Left"
-                                                Style="{StaticResource SecondaryButton}"
-                                                Visibility="{Binding TampilPusatAdministrasi, Converter={StaticResource BoolToVis}}"
-                                                ToolTip="Halaman operator server lisensi pada alamat yang sama dengan alamat langganan"/>
-                                    </StackPanel>
-                                </Border>
+                                           Text="Alamat server tempat status langganan dan tagihan diperiksa."/>
+                                <TextBlock Margin="0,4,0,6" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Text="ALAMAT SERVER"/>
+                                <TextBox VerticalContentAlignment="Center"
+                                         Text="{Binding UrlServer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         IsReadOnly="{Binding UrlServerTerkunci}"
+                                         ToolTip="Contoh: https://lisensi.contoh.go.id"/>
+                                <!-- Pesannya mengikuti keadaan sambungan yang sebenarnya
+                                     (PesanServer), bukan sekadar "alamatnya masih localhost" —
+                                     server yang benar-benar menjawab tidak lagi dilabeli
+                                     "pembayaran akan gagal". -->
+                                <TextBlock Text="{Binding PesanServer}"
+                                           FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                                           Foreground="{DynamicResource WarningTextBrush}"
+                                           Visibility="{Binding ServerBelumTersambung, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Text="{Binding CatatanAlamatServer}"
+                                           FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Visibility="{Binding UrlServerTerkunci, Converter={StaticResource BoolToVis}}"/>
+                                <WrapPanel Margin="0,10,0,0">
+                                    <Button Content="Hubungkan" Command="{Binding HubungkanCommand}" MinWidth="150"
+                                            Style="{StaticResource PrimaryButton}"
+                                            ToolTip="Simpan alamat saat ini lalu sambungkan otomatis (coba berulang sampai server menjawab)"/>
+                                    <Button Content="Simpan &amp; Uji" Command="{Binding SimpanServerCommand}" MinWidth="150"
+                                            Margin="8,0,0,0" Style="{StaticResource SecondaryButton}"
+                                            IsEnabled="{Binding UrlServerDapatDiubah}"
+                                            ToolTip="Simpan alamat server lalu langsung memeriksa status langganan"/>
+                                    <Button Content="Ubah alamat" Command="{Binding BukaKunciServerCommand}"
+                                            MinWidth="120" Margin="8,0,0,0"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Visibility="{Binding TampilBukaKunciServer, Converter={StaticResource BoolToVis}}"
+                                            ToolTip="Buka kunci alamat untuk sesi ini, lalu ganti dan uji alamat baru"/>
+                                </WrapPanel>
                             </StackPanel>
                         </StackPanel>
                     </Border>
