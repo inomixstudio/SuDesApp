@@ -17,7 +17,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsNotAsErrors>CS0108;CS0618;CS0168;CS8765</WarningsNotAsErrors>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <!-- Payload aplikasi (zip hasil publish) ditanam sebagai resource bila ada.
@@ -26,6 +25,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Payload.zip" Condition="Exists('Payload.zip')" LogicalName="Payload.zip" />
     <Resource Include="..\\Resources\\AppIcon-256.png" Link="Resources\\AppIcon-256.png" />
+    <Resource Include="..\\SuDesApp.Wpf\\Fonts\\GoogleSans.ttc" Link="Fonts\\GoogleSans.ttc" />
   </ItemGroup>
 
   <ItemGroup>
