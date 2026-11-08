@@ -179,6 +179,28 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.11.0 (8 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Keamanan — Koneksi dan Data", new List<string>
+                        {
+                            "Koneksi Supabase kini memverifikasi sertifikat (SSL Mode Require murni); man-in-the-middle pada pooler terdeteksi. Data IDM tidak lagi diambil lewat HTTP polos bila sertifikat bermasalah — aplikasi menampilkan galat alih-alih angka tanpa enkripsi.",
+                            "Secret OAuth Google tidak lagi tertanam di assembly rilis; build rilis memakai kredensial DPAPI perangkat. Backend SuDesApp.Api kini ikat loopback, ber-rate-limit, mencatat audit akses data pribadi, dan menyimpan token sesi sebagai digest SHA-256.",
+                            "Kunci lisensi mendapat identitas (kid): token baru berformat v2.kid.payload.signature, format lama v1 tetap diterima selama masa transisi. Di Production, kunci yang hilang tidak lagi diganti diam-diam. Kode aktivasi disamarkan di log."
+                        }),
+                        new CatatanRilisSubSection("Android — Keamanan dan Retry", new List<string>
+                        {
+                            "Kredensial perangkat (kata sandi dan token) kini disimpan terenkripsi dengan kunci di Android Keystore. URL QR hanya diterima bila https dan host resmi Supabase; QR asing ditolak. Keluar perangkat ikut mengakhiri sesi di server.",
+                            "Surat tertunda dikirim ulang secara terjadwal saat jaringan tersedia (WorkManager), bukan hanya saat menu dibuka. Berkas tertunda yang rusak dipindah ke folder gagal untuk diperiksa, bukan dihapus diam-diam. Setiap surat mendapat client_uuid sekali sehingga retry setelah timeout tidak menduplikasi surat di register."
+                        }),
+                        new CatatanRilisSubSection("Desktop — Penomoran dan Ketahanan", new List<string>
+                        {
+                            "Penomoran surat diserialkan sehingga tabrakan nomor antar jendela/impor sinkron tidak lagi terjadi. Sinkronisasi menandai surat dalam transaksi atomik dan menarik antrean dengan batas 100 per putaran.",
+                            "QueryProvider, FileService, RelayCommand, PenggunaRepository, DetakSambunganServer, dan ApiListener diperkuat: komentar query tidak lagi memotong literal string, traversal direktori ditolak, parameter null/salah tipe tidak lagi meledakkan CanExecute, pemblokiran GetResult di konstruktor dihapus, CTS tidak lagi dibuang selagi loop berjalan, dan burst API dibatasi 32 konkurensi. Parser impor dibatasi ukuran (XLSX 50 MB, PDF 100 MB).",
+                            "Wizard pemasangan kini berbahasa Indonesia, dan ditambah panduan cadangan-dan-pemulihan untuk petugas desa."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.10.5 (6 November 2026)",
                     new List<CatatanRilisSubSection>
                     {

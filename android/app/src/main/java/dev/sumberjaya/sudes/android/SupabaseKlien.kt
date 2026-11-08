@@ -27,6 +27,21 @@ class SupabaseKlien(
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
+    /** Akhiri sesi di server (auth/v1/logout) agar refresh token dicabut. */
+    suspend fun logoutServer(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val permintaan = Request.Builder()
+                .url("${sesi.url}/auth/v1/logout")
+                .post("".toRequestBody(null))
+                .addHeader("apikey", sesi.kunciPublik)
+                .addHeader("Authorization", "Bearer ${sesi.accessToken}")
+                .build()
+            http.newCall(permintaan).execute().use { it.isSuccessful }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     private val jsonTipe = "application/json; charset=utf-8".toMediaType()
 
     /** Hasil yang membedakan "gagal karena jaringan" dari "gagal karena data". */
@@ -36,13 +51,32 @@ class SupabaseKlien(
     }
 
     /**
-     * Tukar kode verifikasi 4 angka dengan surel + kata sandi perangkat.
-     * Kode hanya berlaku 10 menit dan hanya sekali pakai (lihat skema
-     * pasangan_sementara). Mengembalikan sesi yang sudah masuk, atau null.
+     * Sesi perangkat tidak berlaku lagi (token kedaluwarsa dan penyegaran
+     * gagal, atau server menolak dengan 401). Dibedakan dari galat jaringan
+     * supaya operator diminta memasang ulang perangkat, bukan menunggu
+     * koneksi.
      */
-    suspend fun pakaiKode(kode: String): SupabaseSesi? = withContext(Dispatchers.IO) {
+    class SesiKedaluwarsa(pesan: String = "Sesi perangkat tidak berlaku.") : Exception(pesan)
+
+    /** Hasil penukaran kode pasangan — pesannya ditampilkan ke operator. */
+    sealed class HasilKode {
+        data class Sukses(val sesi: SupabaseSesi) : HasilKode()
+        data class Galat(val pesan: String) : HasilKode()
+    }
+
+    /**
+     * Tukar kode verifikasi 4 angka dengan surel + kata sandi perangkat.
+     * Kode hanya berlaku 10 menit, hanya sekali pakai, dan dibatasi 10
+     * percobaan per 15 menit per alamat IP (lihat migrasi
+     * 20261110000000_batas_percobaan_pasangan.sql). Pesan galat dari server
+     * diteruskan apa adanya supaya operator tahu apakah harus menunggu atau
+     * minta kode baru.
+     */
+    suspend fun pakaiKode(kode: String): HasilKode = withContext(Dispatchers.IO) {
         val bersih = kode.trim()
-        if (bersih.length != 4 || !bersih.all { it.isDigit() }) return@withContext null
+        if (bersih.length != 4 || !bersih.all { it.isDigit() }) {
+            return@withContext HasilKode.Galat("Kode harus 4 angka.")
+        }
 
         val bodi = JSONObject().put("p_kode", bersih).toString().toRequestBody(jsonTipe)
         val req = Request.Builder()
@@ -53,9 +87,18 @@ class SupabaseKlien(
 
         try {
             http.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return@withContext null
-                val arr = JSONArray(resp.body?.string().orEmpty())
-                if (arr.length() == 0) return@withContext null
+                val teks = resp.body?.string().orEmpty()
+                if (!resp.isSuccessful) {
+                    return@withContext HasilKode.Galat(pesanGalat(teks, resp.code))
+                }
+
+                val arr = JSONArray(teks)
+                if (arr.length() == 0) {
+                    return@withContext HasilKode.Galat(
+                        "Kode tidak dikenal atau sudah kedaluwarsa. Minta kode baru di aplikasi desktop."
+                    )
+                }
+
                 val o = arr.getJSONObject(0)
                 val s = sesi.copy(
                     email = o.optString("email"),
@@ -63,11 +106,24 @@ class SupabaseKlien(
                     accessToken = "",
                     refreshToken = "",
                 )
-                SupabaseKlien(s).login(s.email, s.kataSandi)
+                val sesiBaru = SupabaseKlien(s).login(s.email, s.kataSandi)
+                if (sesiBaru == null) {
+                    HasilKode.Galat("Kode benar, tetapi masuk ke Supabase gagal. Periksa koneksi lalu coba lagi.")
+                } else {
+                    HasilKode.Sukses(sesiBaru)
+                }
             }
         } catch (e: Exception) {
-            null
+            HasilKode.Galat("Tidak bisa menghubungi server: ${e.message ?: "jaringan"}")
         }
+    }
+
+    /** Ambil pesan galat PostgREST ({"message": ...}) atau jatuh ke kode HTTP. */
+    private fun pesanGalat(teks: String, kode: Int): String = try {
+        val o = JSONObject(teks)
+        o.optString("message").ifBlank { o.optString("msg") }.ifBlank { "HTTP $kode" }
+    } catch (e: Exception) {
+        "HTTP $kode"
     }
 
     /** Masuk dengan surel/kata sandi perangkat. Mengembalikan sesi baru bila berhasil. */
@@ -110,42 +166,54 @@ class SupabaseKlien(
     /**
      * Muat identitas kop surat dan pola nomor yang diterbitkan desktop.
      * Bentuk kembalian sama dengan yang ditulis PenerbitPengaturanDesa.
+     * Null berarti desktop belum menerbitkan; kegagalan jaringan dilempar
+     * sebagai pengecualian supaya pemanggil bisa membedakan keduanya.
      */
     suspend fun muatPengaturan(): JSONObject? = withContext(Dispatchers.IO) {
         pastikanTokenSegar()
-        val hasil = try {
-            get("${sesi.url}/rest/v1/pengaturan_desa?select=kop,nomor&limit=1")
-        } catch (e: Exception) {
-            return@withContext null
-        }
-        val array = JSONArray(hasil)
+        val array = JSONArray(get("${sesi.url}/rest/v1/pengaturan_desa?select=kop,nomor&limit=1"))
         if (array.length() == 0) return@withContext null
         array.optJSONObject(0)
     }
 
-    /** Muat skema formulir desa ini dari Supabase. */
-    suspend fun muatSkema(): Map<String, SkemaJenis> = withContext(Dispatchers.IO) {
+    /**
+     * Muat skema formulir terbitan desktop dalam bentuk JSON mentah
+     * ({"ID_JENIS": {...}}), siap disimpan sebagai salinan lokal oleh
+     * [SkemaLokal]. Null bila perangkat belum dipasang, jaringan gagal, atau
+     * desktop belum pernah menerbitkan skema.
+     */
+    suspend fun muatSkemaJson(): String? = withContext(Dispatchers.IO) {
         pastikanTokenSegar()
         // get() melempar pada non-2xx; tanpa tangkapan, pengecualian keluar dari
         // coroutine dan menjatuhkan aplikasi saat token sudah tidak berlaku.
         val hasil = try {
             get("${sesi.url}/rest/v1/skema_formulir?select=id_jenis,skema")
         } catch (e: Exception) {
-            return@withContext emptyMap()
+            return@withContext null
         }
-        val peta = mutableMapOf<String, SkemaJenis>()
+
         val array = JSONArray(hasil)
+        if (array.length() == 0) return@withContext null
+
+        val akar = JSONObject()
         for (i in 0 until array.length()) {
-            val item = array.getJSONObject(i)
+            val item = array.optJSONObject(i) ?: continue
             val id = item.optString("id_jenis")
             val skema = item.optJSONObject("skema") ?: continue
-            peta[id] = SkemaJenis.fromJson(id, skema)
+            if (id.isBlank()) continue
+            akar.put(id, skema)
         }
-        peta
+
+        if (akar.length() == 0) null else akar.toString()
     }
 
-    /** Daftar surat milik perangkat ini yang masih di antrean. */
-    suspend fun daftarAntrean(): List<AntreanBaris> = withContext(Dispatchers.IO) {
+    /**
+     * Daftar surat milik perangkat ini yang masih di antrean. Null bila
+     * daftar tidak bisa diambil — tampilan harus membedakan "kosong" dari
+     * "tidak terjangkau", bukan menampilkan 0 seolah antrean benar-benar
+     * kosong.
+     */
+    suspend fun daftarAntrean(): List<AntreanBaris>? = withContext(Dispatchers.IO) {
         pastikanTokenSegar()
         val hasil = try {
             get(
@@ -153,8 +221,11 @@ class SupabaseKlien(
                     "?select=id,id_jenis,nomor_sementara,nik,status,dibuat_pada,catatan" +
                     "&order=dibuat_pada.desc"
             )
+        } catch (e: SesiKedaluwarsa) {
+            // Bukan soal jaringan — tampilan perlu meminta pemasangan ulang.
+            throw e
         } catch (e: Exception) {
-            return@withContext emptyList()
+            return@withContext null
         }
         val daftar = mutableListOf<AntreanBaris>()
         val array = JSONArray(hasil)
@@ -185,6 +256,7 @@ class SupabaseKlien(
         nik: String?,
         fields: JSONObject,
         tanggal: String,
+        clientUuid: String? = null,
     ): Hasil<String> = withContext(Dispatchers.IO) {
         pastikanTokenSegar()
         val bodi = JSONObject()
@@ -194,6 +266,9 @@ class SupabaseKlien(
             // RLS mencentang tenant_id dan id_perangkat terhadap klaim JWT,
             // jadi klien wajib mengirim keduanya (RLS menolak yang tidak
             // cocok). id_pengguna hanya metadata.
+            // client_uuid adalah kunci idempotensi: dibuat sekali per surat,
+            // dipakai ulang saat retry agar timeout tidak menduplikasi surat.
+            .put("client_uuid", clientUuid ?: java.util.UUID.randomUUID().toString())
             .put("tenant_id", sesi.tenant ?: JSONObject.NULL)
             .put("id_pengguna", sesi.email)
             .put("id_perangkat", sesi.idPerangkat ?: JSONObject.NULL)
@@ -236,6 +311,25 @@ class SupabaseKlien(
         }
     }
 
+    /**
+     * Laporkan bahwa perangkat ini sedang dipakai. Desktop memakai
+     * `terakhir_online` untuk menampilkan "Android terhubung" di status bar;
+     * RPC hanya memperbarui baris perangkat pemilik token (lihat migrasi
+     * 20261110000001_perangkat_tunggal_dan_status_online.sql).
+     */
+    suspend fun tandaiOnline(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            pastikanTokenSegar()
+            val req = builder()
+                .url("${sesi.url}/rest/v1/rpc/tandai_perangkat_online")
+                .post("{}".toRequestBody(jsonTipe))
+                .build()
+            http.newCall(req).execute().use { it.isSuccessful }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     private fun builder(): Request.Builder =
         Request.Builder()
             .header("apikey", sesi.kunciPublik)
@@ -248,7 +342,13 @@ class SupabaseKlien(
      */
     private suspend fun pastikanTokenSegar() {
         if (!tokenKedaluwarsa()) return
-        muatUlangToken()
+
+        // Token sudah tidak layak pakai dan tidak bisa disegarkan: kirim galat
+        // yang jelas, jangan lanjut dengan token mati (hasilnya 401 yang
+        // tertelan menjadi "data kosong").
+        if (!muatUlangToken() && tokenKedaluwarsa()) {
+            throw SesiKedaluwarsa()
+        }
     }
 
     /** True bila token tidak terbaca atau sisa berlakunya kurang dari 5 menit. */
@@ -307,6 +407,7 @@ class SupabaseKlien(
     private fun get(url: String): String {
         val req = builder().url(url).build()
         http.newCall(req).execute().use { resp ->
+            if (resp.code == 401) throw SesiKedaluwarsa()
             if (!resp.isSuccessful) throw IllegalStateException("HTTP ${resp.code}")
             return resp.body?.string() ?: "[]"
         }

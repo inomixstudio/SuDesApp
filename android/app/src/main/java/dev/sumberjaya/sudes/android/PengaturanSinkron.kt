@@ -18,17 +18,42 @@ import java.io.File
  */
 object PengaturanSinkron {
 
+    /** Hasil tarikan — agar layar bisa membedakan "belum terbit" dari "gagal". */
+    sealed class HasilTarik {
+        data class Sukses(val pengaturan: PengaturanSurat) : HasilTarik()
+        object BelumTerbit : HasilTarik()
+        object SesiKedaluwarsa : HasilTarik()
+        object Gagal : HasilTarik()
+    }
+
     /**
      * Tarik pengaturan terbitan desktop dan simpan sebagai salinan lokal.
-     * Mengembalikan null bila perangkat belum dipasang, jaringan gagal, atau
-     * desktop belum pernah menerbitkan.
+     * [HasilTarik.BelumTerbit] berarti desktop belum pernah menerbitkan kop;
+     * [HasilTarik.Gagal] berarti perangkat belum dipasang atau jaringan gagal.
      */
-    suspend fun tarik(ctx: Context): PengaturanSurat? = withContext(Dispatchers.IO) {
+    suspend fun tarik(ctx: Context): HasilTarik = withContext(Dispatchers.IO) {
         val sesi = SupabaseSesi.ambil(ctx)
-        if (!sesi.masuk) return@withContext null
+        if (!sesi.masuk) return@withContext HasilTarik.Gagal
 
         val klien = SupabaseSesi.klien(ctx)
-        val muatan = klien.muatPengaturan() ?: return@withContext null
+
+        // Skema formulir ikut ditarik: desktop adalah sumbernya, dan tanpa
+        // langkah ini tombol "Terbitkan skema" di desktop tidak berpengaruh
+        // apa pun ke perangkat. Kegagalannya tidak membatalkan pengaturan.
+        try {
+            val skema = klien.muatSkemaJson()
+            if (skema != null) SkemaLokal.simpan(ctx, skema)
+        } catch (e: Exception) {
+            // Skema lama (salinan lokal/aset APK) tetap dipakai.
+        }
+
+        val muatan = try {
+            klien.muatPengaturan()
+        } catch (e: SupabaseKlien.SesiKedaluwarsa) {
+            return@withContext HasilTarik.SesiKedaluwarsa
+        } catch (e: Exception) {
+            return@withContext HasilTarik.Gagal
+        } ?: return@withContext HasilTarik.BelumTerbit
 
         val kop = muatan.optJSONObject("kop") ?: JSONObject()
         val nomor = muatan.optJSONObject("nomor") ?: JSONObject()
@@ -67,7 +92,7 @@ object PengaturanSinkron {
         )
 
         PengaturanSurat.simpan(ctx, hasil)
-        hasil
+        HasilTarik.Sukses(hasil)
     }
 
     /** Simpan logo base64 ke berkas lokal; kosong bila tidak ada/rusak. */

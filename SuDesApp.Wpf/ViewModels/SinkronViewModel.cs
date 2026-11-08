@@ -128,11 +128,34 @@ public class SinkronViewModel : ObservableObject
         }
     }
 
+    /// <summary>Batas antrean Supabase per desa (trigger basis data menolak surat ke-11).</summary>
+    public const int AntreanMaksimum = 10;
+
     public int JumlahAntrean
     {
         get => _jumlahAntrean;
-        private set => SetProperty(ref _jumlahAntrean, value);
+        private set
+        {
+            SetProperty(ref _jumlahAntrean, value);
+            OnPropertyChanged(nameof(RingkasanAntrean));
+            OnPropertyChanged(nameof(RasioAntrean));
+            OnPropertyChanged(nameof(AntreanPenuh));
+        }
     }
+
+    /// <summary>"2 / 10" untuk kartu ringkasan.</summary>
+    public string RingkasanAntrean => $"{_jumlahAntrean} / {AntreanMaksimum}";
+
+    /// <summary>Persentase isi antrean (0–100) untuk bilah kemajuan.</summary>
+    public double RasioAntrean => Math.Min(100d, _jumlahAntrean * 100d / AntreanMaksimum);
+
+    public bool AntreanPenuh => _jumlahAntrean >= AntreanMaksimum;
+
+    public int JumlahPerangkat => Perangkat.Count;
+
+    public int JumlahPerangkatAktif => Perangkat.Count(p => p.Aktif);
+
+    public bool AdaPerangkat => Perangkat.Count > 0;
 
     public SinkronHasil? Hasil
     {
@@ -173,7 +196,13 @@ public class SinkronViewModel : ObservableObject
     public ObservableCollection<PerangkatTerpasang> Perangkat
     {
         get => _perangkat;
-        private set => SetProperty(ref _perangkat, value);
+        private set
+        {
+            SetProperty(ref _perangkat, value);
+            OnPropertyChanged(nameof(JumlahPerangkat));
+            OnPropertyChanged(nameof(JumlahPerangkatAktif));
+            OnPropertyChanged(nameof(AdaPerangkat));
+        }
     }
 
     public PerangkatTerpasang? PerangkatDipilih
@@ -314,15 +343,18 @@ public class SinkronViewModel : ObservableObject
             }
             else if (hasil.AdaYangDiproses)
             {
-                // Baris berstatus 'gagal' tidak dicoba lagi, jadi tanpanya pesan
-                // ini akan berbunyi "0 surat berhasil" tanpa penjelasan — operator
-                // tidak tahu ada antrean yang macet.
+                // Baris yang gagal diimpor dicoba lagi pada putaran berikutnya
+                // (maks 3 kali) lalu dibuang; "dilewati" kini hanya berarti
+                // status barisnya tidak dikenal oleh impor.
                 var pesan = $"{hasil.Berhasil} surat berhasil diimpor ke register.";
-                if (hasil.Gagal > 0) pesan += $" {hasil.Gagal} gagal.";
+                if (hasil.Gagal > 0)
+                {
+                    pesan += $" {hasil.Gagal} gagal dan akan dicoba lagi pada sinkron berikutnya.";
+                }
+
                 if (hasil.Dilewati > 0)
                 {
-                    pesan += $" {hasil.Dilewati} dilewati karena gagal pada percobaan sebelumnya " +
-                             "(perbaiki isian di Android, lalu kirim ulang).";
+                    pesan += $" {hasil.Dilewati} dilewati karena statusnya bukan antrean baru.";
                 }
 
                 await _pesan.ShowInfoAsync(pesan);

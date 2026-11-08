@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <!-- Dipakai saat membagikan PDF yang dibuat aplikasi ini. -->
-    <external-path name="downloads" path="." />
+    <external-path name="downloads" path="Download/SuDesApp/" />
     <cache-path name="surat" path="surat/" />
 </paths>

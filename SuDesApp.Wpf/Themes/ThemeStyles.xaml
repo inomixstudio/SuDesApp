@@ -32,8 +32,24 @@
          supaya template baris bisa memilih penyaji kolom atau penyaji isi biasa. -->
     <conv:NotNullConverter x:Key="TampilanAda"/>
     <SolidColorBrush x:Key="ToggleHoverBrush" Color="{StaticResource PutihColor}" Opacity="0.2"/>
-    <CornerRadius x:Key="CardCornerRadius">6</CornerRadius>
-    <Thickness x:Key="CardPadding">16</Thickness>
+    <!-- Token radius modern (satu set untuk seluruh halaman):
+         Kecil 4 (ikon), Kontrol 6 (button/input), Kartu 8, Header 10,
+         Dialog 14, Penuh 999 (pill). -->
+    <CornerRadius x:Key="RadiusKecil">4</CornerRadius>
+    <CornerRadius x:Key="RadiusKontrol">6</CornerRadius>
+    <CornerRadius x:Key="RadiusKartu">8</CornerRadius>
+    <CornerRadius x:Key="RadiusHeader">10</CornerRadius>
+    <CornerRadius x:Key="RadiusDialog">14</CornerRadius>
+    <CornerRadius x:Key="RadiusPenuh">999</CornerRadius>
+    <Thickness x:Key="PaddingKartu">12</Thickness>
+    <Thickness x:Key="PaddingForm">18</Thickness>
+    <Thickness x:Key="PaddingHalaman">20</Thickness>
+    <!-- Skeleton loading: satu tinggi (6) untuk semua halaman, bukan 3/4/8/10 px -->
+    <Style x:Key="SkeletonBar" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusKontrol}"/>
+        <Setter Property="Height" Value="6"/>
+    </Style>
 
     <!-- ========== Ukuran baku kontrol isian & tombol ==========
          Satu angka untuk ketiganya: kolom isian (TextBox), pilihan (ComboBox),
@@ -1320,9 +1336,10 @@
 
     <Style TargetType="DataGrid" BasedOn="{StaticResource ModernDataGrid}"/>
 
-    <!-- ========== Editable DataGrid (edit-in-place untuk form, mis. rincian garapan) ========== -->
-    <!-- Sama dengan ModernDataGrid tetapi membolehkan pengeditan sel + virtualisasi tetap dimatikan.
-         Tinggi baris mengikuti ModernDataGrid (40 px) supaya seragam di seluruh aplikasi. -->
+    <!-- ========== Editable DataGrid (edit-in-place untuk form, mis. rincian garapan) ==========
+         Sama dengan ModernDataGrid; virtualisasi warisan (EnableRowVirtualization
+         True + Recycling dari ModernDataGrid di atas) tetap aktif — tinggi baris
+         mengikuti ModernDataGrid (40 px) supaya seragam di seluruh aplikasi. -->
     <Style TargetType="DataGrid" x:Key="EditableDataGrid" BasedOn="{StaticResource ModernDataGrid}">
         <Setter Property="IsReadOnly" Value="False"/>
         <Setter Property="SelectionMode" Value="Single"/>

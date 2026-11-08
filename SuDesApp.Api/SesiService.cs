@@ -13,8 +13,8 @@ namespace SuDesApp.Api;
 /// lapisan ini selain diteruskan ke <c>PenggunaService.MasukAsync</c> yang sudah
 /// memakai PBKDF2 + kunci 3x gagal persis seperti layar login desktop.
 ///
-/// Token disimpan apa adanya (bukan hash) karena tidak pernah ditulis ke disk;
-/// kerentanannya setara dengan sesi di memori aplikasi desktop mana pun.
+/// Token hanya disimpan sebagai digest SHA-256 di memori: dump memori tidak
+/// mengungkap token hidup. Token mentah hanya dipegang pemanggil (header Bearer).
 /// </summary>
 public sealed class SesiService
 {
@@ -26,6 +26,9 @@ public sealed class SesiService
 
     private readonly ConcurrentDictionary<string, SesiAktif> _sesi = new(StringComparer.Ordinal);
     private readonly object _sapu = new();
+
+    private static string Kunci(string token) =>
+        Convert.ToBase64String(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
 
     /// <summary>Buat sesi baru untuk akun yang baru saja berhasil masuk.</summary>
     public SesiAktif Buat(Pengguna pengguna)
@@ -42,7 +45,7 @@ public sealed class SesiService
             pengguna.Peran,
             DateTime.UtcNow.Add(Durasi));
 
-        _sesi[token] = sesi;
+        _sesi[Kunci(token)] = sesi;
         SapuKadaluarsa();
         return sesi;
     }
@@ -51,11 +54,12 @@ public sealed class SesiService
     public SesiAktif? Ambil(string? token)
     {
         if (string.IsNullOrWhiteSpace(token)) return null;
-        if (!_sesi.TryGetValue(token, out var sesi)) return null;
+        var kunci = Kunci(token);
+        if (!_sesi.TryGetValue(kunci, out var sesi)) return null;
 
         if (sesi.BerlakuSampai <= DateTime.UtcNow)
         {
-            _sesi.TryRemove(token, out _);
+            _sesi.TryRemove(kunci, out _);
             return null;
         }
         return sesi;
@@ -63,7 +67,7 @@ public sealed class SesiService
 
     /// <summary>Akhiri sesi (logout). True bila token memang terdaftar.</summary>
     public bool Akhiri(string? token)
-        => !string.IsNullOrWhiteSpace(token) && _sesi.TryRemove(token, out _);
+        => !string.IsNullOrWhiteSpace(token) && _sesi.TryRemove(Kunci(token), out _);
 
     /// <summary>
     /// Akhiri SEMUA sesi milik satu akun; mengembalikan jumlah yang diputus.

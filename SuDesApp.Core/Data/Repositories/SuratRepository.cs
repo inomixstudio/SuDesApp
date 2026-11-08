@@ -1349,7 +1349,7 @@ namespace SuDesApp.Data.Repositories
             // Register nomor terbit & register surat ikut basi setiap ada
             // penulisan surat — angka tutup buku tidak boleh mencerminkan
             // keadaan sebelum surat ini tersimpan.
-            _jenisSuratRepository.TandaiRegisterBerubah();
+            await _jenisSuratRepository.TandaiRegisterBerubahAsync().ConfigureAwait(false);
         }
 
         /// <summary>

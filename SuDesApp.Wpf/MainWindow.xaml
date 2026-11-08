@@ -841,6 +841,55 @@
                     </Grid>
                 </Border>
 
+                <!-- Status sinkron Android — chip ringkas menempel di kiri lonceng.
+                     Teks sengaja pendek ("Android · nama" / "n surat menunggu");
+                     rinciannya ada di tooltip. -->
+                <Border DockPanel.Dock="Right" Margin="0,0,4,0" Padding="8,2" CornerRadius="9"
+                        VerticalAlignment="Center" MaxWidth="200"
+                        ToolTip="{Binding StatusAndroidTooltip}"
+                        Visibility="{Binding StatusAndroidVisible, Converter={StaticResource BoolToVis}}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding StatusAndroidTone}" Value="1">
+                                    <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Static u:IkonMenu.Sinkron}"
+                                   FontFamily="{StaticResource AppIconFont}" FontSize="11"
+                                   VerticalAlignment="Center" Margin="0,0,5,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding StatusAndroidTone}" Value="1">
+                                            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{Binding StatusAndroidTampil}" FontSize="11" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" MaxWidth="152"
+                                   TextTrimming="CharacterEllipsis">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding StatusAndroidTone}" Value="1">
+                                            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
                 <!-- Chip status langganan (kanan, bisa diklik → Langganan): "Full Service"
                      (langganan sah — plus sisa hari selama masih ada), "Demo" (belum
                      berlangganan), "Baca-saja" (berakhir).

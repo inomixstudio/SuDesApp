@@ -55,15 +55,15 @@ jobs:
     outputs:
       versi: ${{ steps.rilis.outputs.versi }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # Riwayat dan tag lengkap: rilis.ps1 memeriksa tag yang sudah ada dan
           # publish membandingkan dengan tag rilis sebelumnya.
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
-          dotnet-version: 10.0.401
+          dotnet-version: 11.0.100-rc.3
 
       # Commit dan tag dibuat atas nama bot, bukan akun pribadi. Tanpa ini git
       # menolak commit dengan "Please tell me who you are".

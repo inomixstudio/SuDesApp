@@ -44,7 +44,12 @@ data class PengaturanSurat(
         tahun: Int,
         prefs: android.content.SharedPreferences,
     ): String {
-        val urut = nomorTerakhir + 1
+        // Nomor terakhir dibaca dari penyimpanan, bukan dari field objek ini:
+        // layar formulir memakai satu objek PengaturanSurat untuk beberapa
+        // surat, jadi field yang tidak diperbarui membuat dua surat berturut-
+        // turut mendapat nomor placeholder yang sama.
+        val terakhir = maxOf(nomorTerakhir, prefs.getInt(K_NOMOR, 0))
+        val urut = terakhir + 1
         val pola = formatNomor[idJenis]
             ?: formatNomor[idJenis.uppercase()]
             ?: "${awalanNomor.trim()}/{urut.toString().padStart(3, '0')}/Ds/$tahun"

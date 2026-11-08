@@ -323,7 +323,12 @@ namespace SuDesApp.Utilities
                     Prompt = "select_account"
                 });
 
-                var credential = AuthorizeWithScopesAsync(flow, dataStore, "sudesapp", scopes, ct)
+                // Alur OAuth memblokir di browser — dijalankan tanpa menangkap
+                // konteks sinkronisasi UI (ConfigureAwait(false) di dalamnya)
+                // supaya tidak deadlock saat dipanggil dari thread UI WPF.
+                // GetAwaiter().GetResult() di sini BUKAN di atas async lanjutan
+                // UI: pemanggil sync ini disengaja untuk API Google yang sync.
+                var credential = Task.Run(() => AuthorizeWithScopesAsync(flow, dataStore, "sudesapp", scopes, ct))
                     .GetAwaiter().GetResult();
 
                 return new DriveService(new BaseClientService.Initializer

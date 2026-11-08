@@ -1,11 +1,24 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SuDesApp.Data.Queries
 {
     public class QueryProvider
     {
+        /// <summary>
+        /// Baris penanda nama query: <c>-- NamaQuery</c> atau
+        /// <c>-- NamaQuery: keterangan</c>. Komentar biasa di dalam query
+        /// (mis. <c>-- segmen kedua nomor surat ...</c>) tidak boleh dianggap
+        /// penanda — dulu setiap baris <c>--</c> dianggap nama query, sehingga
+        /// query yang punya komentar lanjutan tersimpan kosong dan gagal saat
+        /// dipakai (halaman Sinkron Android tidak bisa dibuka).
+        /// </summary>
+        private static readonly Regex PenandaQuery = new(
+            @"^--\s*([A-Za-z][A-Za-z0-9_]*)\s*(?::.*)?$",
+            RegexOptions.Compiled);
+
         private readonly Dictionary<string, string> _queries;
         private readonly string _filePath;
         private readonly IOptions<QueryProviderOptions>? _options;
@@ -14,7 +27,7 @@ namespace SuDesApp.Data.Queries
         public QueryProvider(string filePath, ILogger<QueryProvider>? logger = null)
         {
             _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-            _logger = logger!;
+            _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<QueryProvider>.Instance;
             _queries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             LoadQueries();
         }
@@ -22,7 +35,7 @@ namespace SuDesApp.Data.Queries
         public QueryProvider(IOptions<QueryProviderOptions> options, ILogger<QueryProvider>? logger = null)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _logger = logger!;
+            _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<QueryProvider>.Instance;
             _queries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             // Use the file path from options
@@ -80,23 +93,30 @@ namespace SuDesApp.Data.Queries
             foreach (var line in lines)
             {
                 var trimmedLine = line.Trim();
-                if (trimmedLine.StartsWith("--"))
+                if (trimmedLine.StartsWith("--", StringComparison.Ordinal))
                 {
+                    var penanda = PenandaQuery.Match(trimmedLine);
+                    if (!penanda.Success)
+                    {
+                        // Komentar lanjutan milik query yang sedang dibaca.
+                        currentQuery.AppendLine(line);
+                        continue;
+                    }
+
                     if (!string.IsNullOrEmpty(currentQueryName))
                     {
                         var queryText = CleanQuery(currentQuery.ToString().Trim());
                         ValidateQuery(currentQueryName, queryText);
+                        // Definisi ganda: yang TERAKHIR menang (mis. InsertSurat
+                        // didefinisikan dua kali di SuratQueries.sql). Ditolak
+                        // berisik kini diganti penanda log supaya tidak diam-diam.
+                        if (_queries.ContainsKey(currentQueryName))
+                            _logger?.LogWarning("Query '{QueryName}' didefinisikan dua kali — definisi terakhir dipakai.", currentQueryName);
                         _queries[currentQueryName] = queryText;
                         _logger?.LogDebug("Loaded query '{QueryName}': {QueryText}", currentQueryName, queryText);
                         currentQuery.Clear();
                     }
-                    var parts = trimmedLine.TrimStart('-').Trim().Split(':');
-                    if (parts.Length == 0 || string.IsNullOrWhiteSpace(parts[0]))
-                    {
-                        _logger?.LogError("Invalid query name format in line: {Line}", line);
-                        throw new FormatException($"Invalid query name format in line: {line}");
-                    }
-                    currentQueryName = parts[0].Trim();
+                    currentQueryName = penanda.Groups[1].Value;
                 }
                 else
                 {
@@ -108,6 +128,8 @@ namespace SuDesApp.Data.Queries
             {
                 var queryText = CleanQuery(currentQuery.ToString().Trim());
                 ValidateQuery(currentQueryName, queryText);
+                if (_queries.ContainsKey(currentQueryName))
+                    _logger?.LogWarning("Query '{QueryName}' didefinisikan dua kali — definisi terakhir dipakai.", currentQueryName);
                 _queries[currentQueryName] = queryText;
                 _logger?.LogDebug("Loaded query '{QueryName}': {QueryText}", currentQueryName, queryText);
             }
@@ -115,13 +137,43 @@ namespace SuDesApp.Data.Queries
 
         private string CleanQuery(string query)
         {
-            var lines = query.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-            var cleanedLines = lines.Select(line =>
+            // Buang komentar -- hanya di luar literal string ('...'): literal
+            // yang mengandung "--" tidak boleh ikut terpotong. Baris tetap
+            // dipertahankan pemisah spasi agar literal multi-baris/adjoining
+            // tidak rusak.
+            var hasil = new StringBuilder();
+            var diString = false;
+            var i = 0;
+            while (i < query.Length)
             {
-                var commentIndex = line.IndexOf("--");
-                return commentIndex >= 0 ? line.Substring(0, commentIndex).TrimEnd() : line;
-            }).Where(line => !string.IsNullOrWhiteSpace(line));
-            return string.Join(" ", cleanedLines).Trim();
+                var c = query[i];
+                if (c == '\'')
+                {
+                    if (diString && i + 1 < query.Length && query[i + 1] == '\'')
+                    {
+                        hasil.Append(c).Append(query[i + 1]);
+                        i += 2;
+                        continue;
+                    }
+                    diString = !diString;
+                    hasil.Append(c);
+                    i++;
+                    continue;
+                }
+                if (!diString && c == '-' && i + 1 < query.Length && query[i + 1] == '-')
+                {
+                    // Lewati sampai akhir baris.
+                    while (i < query.Length && query[i] != '\n') i++;
+                    continue;
+                }
+                hasil.Append(c);
+                i++;
+            }
+            var tanpaKomentar = hasil.ToString();
+            var baris = tanpaKomentar.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+                .Select(l => l.Trim())
+                .Where(l => !string.IsNullOrWhiteSpace(l));
+            return string.Join(" ", baris).Trim();
         }
 
         private void ValidateQuery(string queryName, string query)
@@ -131,7 +183,11 @@ namespace SuDesApp.Data.Queries
 
             if (query.Contains("@"))
             {
-                var hasValidClause = query.Contains("WHERE") || query.Contains("VALUES") || query.Contains("SET");
+                // {WhereClause} adalah placeholder dinamis — dihitung sah.
+                var hasValidClause = query.IndexOf("WHERE", StringComparison.OrdinalIgnoreCase) >= 0
+                    || query.IndexOf("VALUES", StringComparison.OrdinalIgnoreCase) >= 0
+                    || query.IndexOf("SET", StringComparison.OrdinalIgnoreCase) >= 0
+                    || query.IndexOf("{WhereClause}", StringComparison.OrdinalIgnoreCase) >= 0;
                 if (!hasValidClause)
                     throw new InvalidOperationException($"Query '{queryName}' contains parameters but no WHERE, VALUES, or SET clause.");
             }

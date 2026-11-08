@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -36,6 +36,7 @@ internal static class XlsxReader
     /// tetap wajar tanpa memengaruhi tabel yang benar-benar berisi.
     /// </summary>
     private const int MaksSelGaya = 200_000;
+    private const long MaksUkuranEntri = 50 * 1024 * 1024; // 50 MB per entri zip
 
     /// <summary>Baca berkas; kegagalan I/O dilempar ke pemanggil.</summary>
     public static void Muat(string jalur, ExcelWorkbook workbook)
@@ -1022,6 +1023,8 @@ internal static class XlsxReader
 
     private static XDocument BacaXDocument(ZipArchiveEntry entri)
     {
+        if (entri.Length > MaksUkuranEntri)
+            throw new InvalidOperationException($"Entri {entri.FullName} melebihi batas ukuran ({MaksUkuranEntri} byte).");
         using var aliran = entri.Open();
         return XDocument.Load(aliran, LoadOptions.None);
     }

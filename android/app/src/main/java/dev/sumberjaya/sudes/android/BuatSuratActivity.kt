@@ -1,7 +1,10 @@
 package dev.sumberjaya.sudes.android
 
+import android.content.res.ColorStateList
 import android.os.Bundle
+import android.text.InputType
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -10,7 +13,13 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -30,7 +39,7 @@ import java.util.Date
 class BuatSuratActivity : AppCompatActivity() {
 
     private val bidang = mutableMapOf<String, View>()
-    private val pilihan = mutableMapOf<String, Spinner>()
+    private val pilihan = mutableMapOf<String, MaterialAutoCompleteTextView>()
     private val daftarBaris = mutableMapOf<String, MutableList<BarisDaftar>>()
 
     /** Satu baris pada bidang type="list" beserta field penyusunnya. */
@@ -46,11 +55,16 @@ class BuatSuratActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_buat_surat)
+        Ui.insetAtas(findViewById(R.id.kepala))
+        Ui.insetBawah(findViewById(R.id.konten))
 
         val grup = intent.getStringExtra(EXTRA_GROUPS) ?: GROUP_SURAT
         daftar = if (grup == GROUP_NTCR) SkemaLokal.ntcr(this) else SkemaLokal.suratBiasa(this)
 
         title = if (grup == GROUP_NTCR) getString(R.string.label_buat_ntcr) else getString(R.string.label_buat_surat)
+        findViewById<TextView>(R.id.subjudul_halaman).text = getString(
+            if (grup == GROUP_NTCR) R.string.ket_buat_ntcr else R.string.ket_buat_surat
+        )
 
         spinnerJenis = findViewById(R.id.spinner_jenis)
         wadahForm = findViewById(R.id.wadah_form)
@@ -64,7 +78,7 @@ class BuatSuratActivity : AppCompatActivity() {
 
         spinnerJenis.adapter = object : ArrayAdapter<String>(
             this,
-            android.R.layout.simple_spinner_item,
+            R.layout.item_pilihan,
             daftar.map { it.idJenis },
         ) {
             override fun getView(pos: Int, convert: View?, parent: android.view.ViewGroup): View {
@@ -78,7 +92,7 @@ class BuatSuratActivity : AppCompatActivity() {
                 t.text = daftar[pos].label
                 return t
             }
-        }
+        }.also { it.setDropDownViewResource(R.layout.item_pilihan_dropdown) }
 
         spinnerJenis.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: android.widget.AdapterView<*>?, v: View?, pos: Int, id: Long) {
@@ -105,99 +119,189 @@ class BuatSuratActivity : AppCompatActivity() {
             // Nomor surat dibuat aplikasi, bukan diketik operator.
             if (b.key.equals("nomorSurat", ignoreCase = true)) continue
 
-            wadahForm.addView(TextView(this).apply {
-                text = b.label + if (b.required) " *" else ""
-                textSize = 14f
-                setPadding(0, 12, 0, 4)
-            })
-
             when (b.type) {
                 "select" -> {
-                    val sp = Spinner(this)
-                    sp.adapter = ArrayAdapter(
-                        this,
-                        android.R.layout.simple_spinner_dropdown_item,
-                        b.options.ifEmpty { listOf("-") },
-                    )
-                    pilihan[b.key] = sp
-                    wadahForm.addView(sp)
+                    val wadahPilih = bidangPilih(b.label + wajib(b.required), b.options)
+                    pilihan[b.key] = wadahPilih.editText as MaterialAutoCompleteTextView
+                    wadahForm.addView(wadahPilih)
                 }
 
                 "list" -> {
-                    val wadah = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+                    val wadah = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        layoutParams = LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 12) }
+                    }
                     val barisList = mutableListOf<BarisDaftar>()
                     daftarBaris[b.key] = barisList
 
                     fun tambahBaris() {
-                        val baris = LinearLayout(this).apply {
+                        val kartu = MaterialCardView(this).apply {
+                            radius = Ui.dp(this@BuatSuratActivity, 14).toFloat()
+                            strokeWidth = Ui.dp(this@BuatSuratActivity, 1)
+                            strokeColor = ContextCompat.getColor(this@BuatSuratActivity, R.color.garis)
+                            setCardBackgroundColor(
+                                ContextCompat.getColor(this@BuatSuratActivity, R.color.surface)
+                            )
+                            cardElevation = 0f
+                            layoutParams = LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 10) }
+                        }
+                        val isi = LinearLayout(this@BuatSuratActivity).apply {
                             orientation = LinearLayout.VERTICAL
-                            setPadding(0, 8, 0, 8)
+                            setPadding(
+                                Ui.dp(this@BuatSuratActivity, 14),
+                                Ui.dp(this@BuatSuratActivity, 6),
+                                Ui.dp(this@BuatSuratActivity, 14),
+                                Ui.dp(this@BuatSuratActivity, 12),
+                            )
                         }
+                        kartu.addView(isi)
+
                         val peta = linkedMapOf<String, View>()
-
                         for (anak in b.children) {
-                            baris.addView(TextView(this).apply {
-                                text = anak.label
-                                textSize = 12f
-                            })
                             if (anak.type == "select") {
-                                val sp = Spinner(this).apply {
-                                    adapter = ArrayAdapter(
-                                        this@BuatSuratActivity,
-                                        android.R.layout.simple_spinner_dropdown_item,
-                                        anak.options.ifEmpty { listOf("-") },
-                                    )
-                                }
-                                peta[anak.key] = sp
-                                baris.addView(sp)
+                                val wadahPilih = bidangPilih(anak.label, anak.options)
+                                val pilih = wadahPilih.editText as MaterialAutoCompleteTextView
+                                peta[anak.key] = pilih
+                                isi.addView(wadahPilih)
                             } else {
-                                val et = EditText(this).apply {
-                                    hint = anak.label
-                                    inputType = when (anak.type) {
-                                        "number" -> android.text.InputType.TYPE_CLASS_NUMBER
-                                        else -> android.text.InputType.TYPE_CLASS_TEXT
-                                    }
-                                    setPadding(12, 12, 12, 12)
-                                }
-                                peta[anak.key] = et
-                                baris.addView(et)
+                                val wadahTeks = bidangTeks(anak.label, anak.type)
+                                peta[anak.key] = wadahTeks.editText as EditText
+                                isi.addView(wadahTeks)
                             }
                         }
 
-                        baris.addView(Button(this).apply {
-                            text = "Hapus"
-                            textSize = 12f
-                            setOnClickListener {
-                                wadah.removeView(baris)
-                                barisList.remove(BarisDaftar(baris, peta))
-                            }
+                        isi.addView(tombolKecil("Hapus") {
+                            wadah.removeView(kartu)
+                            barisList.removeAll { it.wadah === kartu }
                         })
 
-                        wadah.addView(baris)
-                        barisList.add(BarisDaftar(baris, peta))
+                        wadah.addView(kartu)
+                        barisList.add(BarisDaftar(kartu, peta))
                     }
 
-                    wadah.addView(Button(this).apply {
-                        text = "Tambah ${b.label}"
-                        setOnClickListener { tambahBaris() }
-                    })
+                    wadah.addView(tombolKecil("Tambah ${b.label}") { tambahBaris() })
                     wadahForm.addView(wadah)
                 }
 
                 else -> {
-                    val et = EditText(this)
-                    et.hint = b.label
-                    et.inputType = when (b.type) {
-                        "number" -> android.text.InputType.TYPE_CLASS_NUMBER
-                        else -> android.text.InputType.TYPE_CLASS_TEXT
-                    }
-                    et.setPadding(12, 12, 12, 12)
-                    bidang[b.key] = et
-                    wadahForm.addView(et)
+                    val wadahTeks = bidangTeks(b.label + wajib(b.required), b.type)
+                    bidang[b.key] = wadahTeks.editText as EditText
+                    wadahForm.addView(wadahTeks)
                 }
             }
         }
     }
+
+    /** Label bintang untuk bidang wajib. */
+    private fun wajib(required: Boolean): String = if (required) "  *" else ""
+
+    /** Kolom teks bergaya outlined Material 3. */
+    private fun bidangTeks(label: String, tipe: String): TextInputLayout {
+        val et = TextInputEditText(this).apply {
+            inputType = when (tipe) {
+                "number" -> InputType.TYPE_CLASS_NUMBER
+                else -> InputType.TYPE_CLASS_TEXT
+            }
+            isSingleLine = tipe != "textarea"
+            textSize = 15f
+            setPadding(
+                Ui.dp(this@BuatSuratActivity, 16),
+                Ui.dp(this@BuatSuratActivity, 12),
+                Ui.dp(this@BuatSuratActivity, 16),
+                Ui.dp(this@BuatSuratActivity, 12),
+            )
+        }
+        return bidangLayout(label).apply {
+            addView(
+                et,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ),
+            )
+        }
+    }
+
+    /** Pilihan bergaya dropdown Material 3. */
+    private fun bidangPilih(label: String, opsiAsli: List<String>): TextInputLayout {
+        val opsi = opsiAsli.ifEmpty { listOf("-") }
+        val pilih = MaterialAutoCompleteTextView(this).apply {
+            inputType = InputType.TYPE_NULL
+            threshold = 0
+            textSize = 15f
+            setAdapter(
+                ArrayAdapter(
+                    this@BuatSuratActivity,
+                    R.layout.item_pilihan,
+                    opsi,
+                ).also { it.setDropDownViewResource(R.layout.item_pilihan_dropdown) }
+            )
+            setText(opsi.first(), false)
+        }
+        return bidangLayout(label).apply {
+            endIconMode = TextInputLayout.END_ICON_DROPDOWN_MENU
+            setEndIconTintList(warna(R.color.accent))
+            addView(
+                pilih,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ),
+            )
+        }
+    }
+
+    /** Kerangka umum TextInputLayout supaya semua bidang seragam. */
+    private fun bidangLayout(label: String): TextInputLayout =
+        TextInputLayout(this).apply {
+            hint = label
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            boxBackgroundColor = ContextCompat.getColor(this@BuatSuratActivity, R.color.surface)
+            boxStrokeColor = ContextCompat.getColor(this@BuatSuratActivity, R.color.accent)
+            setDefaultHintTextColor(warna(R.color.teks_redup))
+            setBoxCornerRadii(
+                Ui.dp(this@BuatSuratActivity, 14).toFloat(),
+                Ui.dp(this@BuatSuratActivity, 14).toFloat(),
+                Ui.dp(this@BuatSuratActivity, 14).toFloat(),
+                Ui.dp(this@BuatSuratActivity, 14).toFloat(),
+            )
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 12) }
+        }
+
+    /** Tombol kecil untuk menambah / menghapus baris daftar. */
+    private fun tombolKecil(teks: String, aksi: () -> Unit): MaterialButton =
+        MaterialButton(this).apply {
+            text = teks
+            textSize = 12f
+            isAllCaps = false
+            cornerRadius = Ui.dp(this@BuatSuratActivity, 12)
+            backgroundTintList = warna(R.color.accent_muda)
+            setTextColor(ContextCompat.getColor(this@BuatSuratActivity, R.color.accent_dark))
+            minHeight = Ui.dp(this@BuatSuratActivity, 40)
+            setPadding(
+                Ui.dp(this@BuatSuratActivity, 14),
+                0,
+                Ui.dp(this@BuatSuratActivity, 14),
+                0,
+            )
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 10) }
+            setOnClickListener { aksi() }
+        }
+
+    private fun warna(id: Int): ColorStateList =
+        ColorStateList.valueOf(ContextCompat.getColor(this, id))
 
     private fun buatPdf() {
         val jenis = terpilih ?: return
@@ -316,11 +420,12 @@ class BuatSuratActivity : AppCompatActivity() {
                 progres.visibility = View.GONE
                 val pesan = if (lokasi != null) getString(R.string.pdf_tersimpan, lokasi)
                 else getString(R.string.pdf_gagal, "penyimpanan")
-                Toast.makeText(
-                    this@BuatSuratActivity,
-                    if (antre) "$pesan • antrean desktop" else pesan,
-                    Toast.LENGTH_LONG,
-                ).show()
+                val gabungan = if (antre) {
+                    getString(R.string.toast_antrean_terkirim, pesan)
+                } else {
+                    getString(R.string.toast_antrean_tertunda, pesan)
+                }
+                Toast.makeText(this@BuatSuratActivity, gabungan, Toast.LENGTH_LONG).show()
 
                 // Langsung tawarkan cetak — operator tidak perlu cari berkasnya.
                 PdfAksi.cetak(this@BuatSuratActivity, berkas, jenis.label)
@@ -360,7 +465,7 @@ class BuatSuratActivity : AppCompatActivity() {
      * impor desktop membaca daftar anak sebagai array, bukan teks.
      */
     private fun nilaiBidang(key: String): Any {
-        pilihan[key]?.let { return it.selectedItem?.toString() ?: "" }
+        pilihan[key]?.let { return it.text?.toString().orEmpty() }
         bidang[key]?.let { return (it as EditText).text.toString().trim() }
 
         val baris = daftarBaris[key] ?: return ""
@@ -373,7 +478,6 @@ class BuatSuratActivity : AppCompatActivity() {
                 objek.put(
                     k,
                     when (v) {
-                        is Spinner -> v.selectedItem?.toString() ?: ""
                         is EditText -> v.text.toString().trim()
                         else -> ""
                     }

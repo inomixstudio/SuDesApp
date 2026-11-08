@@ -671,11 +671,20 @@
                                  AlternationCount="4"
                                  BorderThickness="0" Background="Transparent" Padding="0"
                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 ScrollViewer.CanContentScroll="True"
+                                 VirtualizingStackPanel.IsVirtualizing="True"
+                                 VirtualizingStackPanel.IsVirtualizingWhenGrouping="True"
+                                 VirtualizingStackPanel.VirtualizationMode="Standard"
                                  SelectionMode="Single"
                                  SelectedItem="{Binding SelectedSurat, Mode=TwoWay}"
                                  MouseDoubleClick="TabelRegister_MouseDoubleClick"
                                  ContextMenuOpening="TabelRegister_ContextMenuOpening">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,7">

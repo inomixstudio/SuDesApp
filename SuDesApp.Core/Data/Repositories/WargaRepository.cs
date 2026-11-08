@@ -809,7 +809,7 @@ namespace SuDesApp.Data.Repositories
 
                 await _cacheService.SetAsync(cacheKey, hasil, new MemoryCacheEntryOptions
                 {
-                    SlidingExpiration = TimeSpan.FromMinutes(10),
+                    SlidingExpiration = TimeSpan.FromMinutes(30),
                     AbsoluteExpirationRelativeToNow = _cacheExpiration
                 }, cancellationToken);
 

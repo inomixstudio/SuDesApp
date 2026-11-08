@@ -27,6 +27,25 @@ public sealed class SinkronSuratService
     public const int BatasCobaMaks = 3;
 
     /// <summary>
+    /// True bila baris masih boleh diimpor pada putaran ini: baris baru
+    /// (<c>menunggu</c>) atau baris yang pernah gagal tetapi percobaannya belum
+    /// habis. Tanpa cabang kedua, baris gagal tidak pernah dicoba lagi dan
+    /// menempati satu slot batas 10 selamanya.
+    /// </summary>
+    public static bool PerluDiimpor(AntreanSuratBaris baris)
+    {
+        if (baris is null) throw new System.ArgumentNullException(nameof(baris));
+
+        if (string.Equals(baris.Status, "menunggu", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return string.Equals(baris.Status, "gagal", StringComparison.OrdinalIgnoreCase)
+            && baris.BatasCoba < BatasCobaMaks;
+    }
+
+    /// <summary>
     /// Folder berkas .xlsx jejak sinkron. Di luar folder instalasi supaya
     /// tambalan pembaruan tidak menimpanya.
     /// </summary>
@@ -107,7 +126,7 @@ public sealed class SinkronSuratService
             {
                 ct.ThrowIfCancellationRequested();
 
-                if (!string.Equals(b.Status, "menunggu", StringComparison.OrdinalIgnoreCase))
+                if (!PerluDiimpor(b))
                 {
                     dilewati++;
                     continue;
@@ -156,7 +175,9 @@ public sealed class SinkronSuratService
                    catatan, dibuat_pada, diubah_pada
               FROM antrean_surat
              WHERE tenant_id = @tenant
+               AND (status = 'menunggu' OR (status = 'gagal' AND batas_coba < 3))
              ORDER BY dibuat_pada
+             LIMIT 100
             """, conn);
         cmd.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
 
@@ -193,50 +214,76 @@ public sealed class SinkronSuratService
     private static async Task TandaiSinkronAsync(
         NpgsqlConnection conn, Guid idAntrean, string? nomorResmi, CancellationToken ct)
     {
-        await using var log = new NpgsqlCommand(
-            """
-            INSERT INTO sinkron_log (tenant_id, id_antrean, nomor_resmi, status, catatan)
-            SELECT tenant_id, @id, @nomor, 'berhasil', 'Impor desktop'
-              FROM antrean_surat WHERE id = @id
-            """, conn);
-        log.Parameters.Add(new NpgsqlParameter("id", idAntrean));
-        log.Parameters.Add(new NpgsqlParameter("nomor", nomorResmi ?? (object)DBNull.Value));
-        await log.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+        // Atomik: log + hapus dalam satu transaksi — crash di antaranya
+        // tidak lagi membuat baris diimpor ulang.
+        await using var transaksi = await conn.BeginTransactionAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await using var log = new NpgsqlCommand(
+                """
+                INSERT INTO sinkron_log (tenant_id, id_antrean, nomor_resmi, status, catatan)
+                SELECT tenant_id, @id, @nomor, 'berhasil', 'Impor desktop'
+                  FROM antrean_surat WHERE id = @id
+                """, conn, transaksi);
+            log.Parameters.Add(new NpgsqlParameter("id", idAntrean));
+            log.Parameters.Add(new NpgsqlParameter("nomor", nomorResmi ?? (object)DBNull.Value));
+            await log.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
 
-        await using var hapus = new NpgsqlCommand(
-            "DELETE FROM antrean_surat WHERE id = @id", conn);
-        hapus.Parameters.Add(new NpgsqlParameter("id", idAntrean));
-        await hapus.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+            await using var hapus = new NpgsqlCommand(
+                "DELETE FROM antrean_surat WHERE id = @id", conn, transaksi);
+            hapus.Parameters.Add(new NpgsqlParameter("id", idAntrean));
+            await hapus.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+
+            await transaksi.CommitAsync(ct).ConfigureAwait(false);
+        }
+        catch
+        {
+            await transaksi.RollbackAsync(ct).ConfigureAwait(false);
+            throw;
+        }
     }
 
     /// <summary>
     /// Baris gagal: naikkan penghitung percobaan. Setelah
     /// <see cref="BatasCobaMaks"/> kali, baris dibuang dari antrean supaya
     /// tidak memblokir slot batas 10 selamanya; penyebabnya tetap tercatat di
-    /// <c>sinkron_log</c>.
+    /// <c>sinkron_log</c>. Selama percobaan masih tersisa, statusnya tetap
+    /// <c>gagal</c> — <see cref="PerluDiimpor"/> yang membuatnya dicoba lagi
+    /// pada putaran berikutnya.
     /// </summary>
     private static async Task TandaiGagalAsync(
         NpgsqlConnection conn, Guid idAntrean, string? pesan, short batasCoba, CancellationToken ct)
     {
-        var sisa = BatasCobaMaks - (batasCoba + 1);
+        var percobaan = batasCoba + 1;
 
-        if (sisa <= 0)
+        if (percobaan >= BatasCobaMaks)
         {
-            await using var log = new NpgsqlCommand(
-                """
-                INSERT INTO sinkron_log (tenant_id, id_antrean, nomor_resmi, status, catatan)
-                SELECT tenant_id, @id, NULL, 'gagal', @catatan
-                  FROM antrean_surat WHERE id = @id
-                """, conn);
-            log.Parameters.Add(new NpgsqlParameter("id", idAntrean));
-            log.Parameters.Add(new NpgsqlParameter("catatan",
-                (object?)($"Dibuang setelah {BatasCobaMaks} percobaan: {pesan}") ?? DBNull.Value));
-            await log.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+            await using var transaksi = await conn.BeginTransactionAsync(ct).ConfigureAwait(false);
+            try
+            {
+                await using var log = new NpgsqlCommand(
+                    """
+                    INSERT INTO sinkron_log (tenant_id, id_antrean, nomor_resmi, status, catatan)
+                    SELECT tenant_id, @id, NULL, 'gagal', @catatan
+                      FROM antrean_surat WHERE id = @id
+                    """, conn, transaksi);
+                log.Parameters.Add(new NpgsqlParameter("id", idAntrean));
+                log.Parameters.Add(new NpgsqlParameter("catatan",
+                    (object?)($"Dibuang setelah {BatasCobaMaks} percobaan: {pesan}") ?? DBNull.Value));
+                await log.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
 
-            await using var hapus = new NpgsqlCommand(
-                "DELETE FROM antrean_surat WHERE id = @id", conn);
-            hapus.Parameters.Add(new NpgsqlParameter("id", idAntrean));
-            await hapus.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+                await using var hapus = new NpgsqlCommand(
+                    "DELETE FROM antrean_surat WHERE id = @id", conn, transaksi);
+                hapus.Parameters.Add(new NpgsqlParameter("id", idAntrean));
+                await hapus.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+
+                await transaksi.CommitAsync(ct).ConfigureAwait(false);
+            }
+            catch
+            {
+                await transaksi.RollbackAsync(ct).ConfigureAwait(false);
+                throw;
+            }
             return;
         }
 

@@ -16,15 +16,15 @@
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button x:Name="OpenBrowserButton" Content="Buka di Browser"
                             Padding="14,7" Margin="12,0,0,0" Click="OpenBrowserButton_Click"
-                            Style="{DynamicResource SecondaryButton}"
+                            Style="{StaticResource SecondaryButton}"
                             ToolTip="Buka halaman yang sama di peramban bawaan — jalur cadangan bila WebView2 tidak tersedia"/>
                     <Button x:Name="RefreshButton" Content="Muat Ulang"
                             Padding="14,7" Margin="8,0,0,0" Click="RefreshButton_Click"
-                            Style="{DynamicResource SecondaryButton}"/>
+                            Style="{StaticResource SecondaryButton}"/>
                 </StackPanel>
                 <StackPanel>
                     <TextBlock Text="PUSAT ADMINISTRASI" FontSize="15" FontWeight="Bold"
-                               Foreground="{DynamicResource TextBrush}"/>
+                               Foreground="{DynamicResource TextBrush}" Style="{StaticResource HeaderTitle}"/>
                     <TextBlock x:Name="StatusText" Text="Menghubungkan ke server lisensi…"
                                Margin="0,3,0,0" FontSize="11" TextWrapping="Wrap"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>

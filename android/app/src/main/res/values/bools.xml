@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Semua layar memakai kepala bergradien gelap, jadi ikon status bar harus
+      terang. Navigation bar berada di atas latar terang, jadi ikonnya gelap.
+    -->
+    <bool name="status_bar_terang">false</bool>
+    <bool name="nav_bar_terang">true</bool>
+</resources>

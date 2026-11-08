@@ -144,13 +144,18 @@ Anda tidak boleh:
 1. **Data Desa tetap milik Anda.** Kami tidak mengklaim kepemilikan atas data
    warga, surat, arsip, atau keuangan desa.
 2. Data Desa tersimpan di komputer Anda dan **tidak dapat dibaca
-   Kami**. Kami tidak memiliki akses jarak jauh ke komputer desa.
+   Kami**. Kami tidak memiliki akses jarak jauh ke komputer desa. Satu
+   pengecualian: bila desa memasang aplikasi Android dan membuat surat di
+   sana, isian surat yang menunggu sinkron disimpan sementara di basis data
+   Supabase milik desa sampai diimpor ke register desktop lalu dihapus
+   (rinciannya di [Kebijakan Privasi](kebijakan-privasi.md) bagian 6.7).
 3. Anda bertanggung jawab atas: dasar pemrosesan data warga, pemberitahuan
    kepada warga, ketepatan data, pembatasan akses, pencadangan, dan masa
    simpan. Aplikasi menyediakan alatnya, tetapi keputusan dan tanggung
    jawabnya ada pada desa.
 4. Pencadangan (manual atau ke Google Drive akun desa) adalah tanggung jawab
-   Anda. Kami tidak menyimpan salinan Data Desa.
+   Anda. Kami tidak menyimpan salinan Data Desa selain antrean sinkronisasi
+   Android yang disebut pada butir 2.
 5. Bantuan teknis dilakukan berdasarkan permintaan Anda. Kami tidak akan
    meminta database desa; bila diperlukan diagnosis, Anda cukup mengirim log
    galat atau tangkapan layar yang sudah Anda periksa.

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mode gelap mengikuti tema Dark desktop: kanvas #121212, kartu #1E1E1E,
+         aksen emerald #34D399. -->
+    <color name="ic_launcher_background">#0DAD78</color>
+
+    <color name="accent">#34D399</color>
+    <color name="accent_dark">#6EE7B7</color>
+    <color name="accent_muda">#123B2C</color>
+    <color name="accent_lembut">#0E2318</color>
+    <color name="on_accent">#052E16</color>
+
+    <color name="emas">#F59E0B</color>
+    <color name="emas_muda">#78350F</color>
+
+    <color name="page">#121212</color>
+    <color name="surface">#1E1E1E</color>
+    <color name="surface_naik">#242424</color>
+    <color name="teks">#E0E0E0</color>
+    <color name="teks_redup">#BDBDBD</color>
+    <color name="garis">#2F3733</color>
+    <color name="bahaya">#EF4444</color>
+    <color name="berhasil">#22C55E</color>
+</resources>

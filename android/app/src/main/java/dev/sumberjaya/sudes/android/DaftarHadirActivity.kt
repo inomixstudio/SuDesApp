@@ -30,6 +30,8 @@ class DaftarHadirActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_daftar_hadir)
+        Ui.insetAtas(findViewById(R.id.kepala))
+        Ui.insetBawah(findViewById(R.id.konten))
 
         val acara = findViewById<EditText>(R.id.input_acara)
         val tanggal = findViewById<EditText>(R.id.input_tanggal)

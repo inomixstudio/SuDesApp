@@ -55,7 +55,7 @@ namespace SuDesApp.Tests.UI
                         }
                         catch (Exception ex)
                         {
-                            gagal.Add($"{jenis.Name}: {ex.GetType().Name}: {ex.Message}");
+                            gagal.Add($"{jenis.Name}: {ex.GetType().Name}: {ex.Message} | dalam: {ex.InnerException?.GetType().Name} {ex.InnerException?.Message}");
                         }
                     }
 

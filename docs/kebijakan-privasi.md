@@ -202,6 +202,31 @@ Aplikasi menanyakan `GET /pengumuman` secara berkala (±60 detik) untuk
 menampilkan pemberitahuan. Permintaan tidak memuat kode desa maupun data
 warga; server hanya melihat alamat IP seperti permintaan HTTP biasa.
 
+### 6.7 Aplikasi Android dan antrean sinkronisasi (opsional)
+
+Aplikasi Android (`android/`) dipakai operator desa di lapangan. Fitur ini
+**opsional** dan baru aktif setelah perangkat dipasangkan dari komputer desa.
+
+- **Yang tetap di perangkat Android:** PDF surat, salinan kop surat dan pola
+  nomor, serta daftar surat yang pernah dibuat. PDF tidak pernah diunggah.
+- **Yang dikirim ke Supabase atas perintah desa:** isian formulir surat —
+  termasuk nama, NIK, dan alamat pemohon — beserta nomor placeholder, supaya
+  register desktop dapat memberi nomor resmi. Baris antrean dihapus setelah
+  berhasil diimpor; jejak impor tersimpan di `sinkron_log`.
+- **Batas antrean:** maksimum 10 surat per desa. Surat yang gagal diimpor
+  dicoba ulang paling banyak tiga kali, lalu dibuang dengan catatan alasannya
+  di `sinkron_log`.
+- **Kredensial perangkat:** setiap perangkat memakai akun Supabase sendiri
+  dengan klaim desa. Pemasangan memakai kode empat angka yang berlaku 10 menit,
+  hanya sekali pakai, dan dibatasi 10 percobaan per 15 menit per alamat IP.
+- **Lokasi pemrosesan:** proyek Supabase desa berada pada wilayah yang dipilih
+  operator; proyek contoh berada di `ap-northeast-2` (di luar Indonesia).
+- **Mematikan:** cabut perangkat dari halaman *Sinkron Android* di desktop.
+  Antrean yang belum diimpor ikut dihapus; surat yang sudah diimpor tetap ada
+  di register desktop.
+- **Sinkronisasi bersifat manual:** desktop menarik antrean hanya ketika
+  operator menekan tombol Sinkron, bukan otomatis di latar belakang.
+
 ---
 
 ## 7. Pihak ketiga dan transfer internasional
@@ -210,6 +235,7 @@ warga; server hanya melihat alamat IP seperti permintaan HTTP biasa.
 |---|---|---|---|
 | Midtrans | gateway pembayaran | data transaksi dan instrumen pembayaran sesuai kebijakan Midtrans | Indonesia |
 | Penyedia basis data & hosting server lisensi (mis. Supabase/PostgreSQL) | menyimpan data langganan | tabel pelanggan, langganan, tagihan, pembayaran, perangkat | sesuai wilayah yang dipilih operator; dapat di luar Indonesia |
+| Supabase proyek desa (opsional, sinkronisasi Android) | antrean surat dari perangkat Android | isian surat: nama, NIK, alamat, nomor placeholder, status | sesuai wilayah proyek desa; dapat di luar Indonesia |
 | Google | Drive opsional | berkas cadangan, token OAuth | global |
 | Kemendesa | data IDM | kode desa dan tahun | Indonesia |
 | GitHub | rilis dan pembaruan | versi aplikasi, alamat IP | global |

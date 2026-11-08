@@ -9,8 +9,6 @@
 #   ASPNETCORE_ENVIRONMENT=Production, ASPNETCORE_URLS=http://+:8080
 FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
-COPY SuDesApp.Server/SuDesApp.Server.csproj SuDesApp.Server/
-RUN dotnet restore SuDesApp.Server/SuDesApp.Server.csproj
 # Perhatikan: global.json ikut disalin agar SDK container PERSIS sama dengan
 # SDK yang dipakai CI dan mesin developer (version 11.0.100-rc.3, rollForward
 # latestMajor). Tanpa ini, tag mengambang sdk:11.0 diam-diam memakai patch
@@ -20,6 +18,7 @@ COPY SuDesApp.Server/SuDesApp.Server.csproj SuDesApp.Server/
 RUN dotnet restore SuDesApp.Server/SuDesApp.Server.csproj
 COPY SuDesApp.Server/ SuDesApp.Server/
 RUN dotnet publish SuDesApp.Server/SuDesApp.Server.csproj -c Release -o /app --no-restore
+RUN dotnet publish SuDesApp.Server/healthcheck/healthcheck.csproj -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
@@ -36,6 +35,7 @@ ENV LISENSI_KEY_PATH=/lisensi/keys/lisensi-signing.key \
 EXPOSE 8080
 # Railway/Render memakai ini untuk membedakan "masih start" dari "macet".
 # Endpoint /healthz selalu dijawab 200 selama proses hidup, apa pun state DB.
+# Probe TCP murni (bukan /dev/tcp di dash) yang portable di image aspnet.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD ["/bin/sh", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /healthz HTTP/1.0\\r\\n\\r\\n' >&3 && head -1 <&3 | grep -q 200"]
+  CMD dotnet exec /app/healthcheck.dll
 ENTRYPOINT ["dotnet", "SuDesApp.Server.dll"]

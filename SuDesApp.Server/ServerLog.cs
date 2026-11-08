@@ -9,6 +9,9 @@ namespace SuDesApp.Server;
 /// </summary>
 internal static partial class ServerLog
 {
+/// <summary>Samarkan kredensial: hanya 4 karakter terakhir yang tampil di log.</summary>
+internal static string Samarkan(string? nilai) =>
+    string.IsNullOrEmpty(nilai) ? "****" : (nilai.Length <= 4 ? "****" : "****" + nilai[^4..]);
     [LoggerMessage(1, LogLevel.Warning, "Admin menghapus {Jumlah} perangkat desa '{Kode}'{Sasaran}.")]
     internal static partial void AdminHapusPerangkat(ILogger logger, int jumlah, string kode, string sasaran);
 

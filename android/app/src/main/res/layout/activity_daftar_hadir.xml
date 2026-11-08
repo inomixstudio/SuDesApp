@@ -1,71 +1,160 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp">
+    android:background="@color/page"
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/kepala"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:background="@drawable/bg_header"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="24dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/label_daftar_hadir"
-            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
             android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/input_acara"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="@string/hint_acara" />
-
-        <EditText
-            android:id="@+id/input_tanggal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_tanggal" />
-
-        <EditText
-            android:id="@+id/input_tempat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_tempat" />
-
-        <EditText
-            android:id="@+id/input_pembuat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/hint_pembuat" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/label_peserta"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="4dp"
+            android:text="@string/ket_daftar_hadir_form"
+            android:textColor="#B3FFFFFF"
+            android:textSize="12sp" />
+    </LinearLayout>
 
-        <EditText
-            android:id="@+id/input_peserta"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:gravity="top"
-            android:hint="@string/hint_peserta"
-            android:inputType="textMultiLine" />
+    <ScrollView
+        android:id="@+id/konten"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:scrollbars="none">
 
-        <Button
-            android:id="@+id/btn_cetak"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="@string/cetak_pdf" />
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="20dp">
 
-    </LinearLayout>
-</ScrollView>
+            <TextView
+                style="@style/JudulGrup"
+                android:text="@string/grup_kegiatan" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/KartuStatis">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/BidangIsian"
+                        android:hint="@string/hint_acara">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/input_acara"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapSentences"
+                            android:maxLines="1" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/BidangIsian"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_tanggal">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/input_tanggal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="date"
+                            android:maxLines="1" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/BidangIsian"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_tempat">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/input_tempat"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapSentences"
+                            android:maxLines="1" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/BidangIsian"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_pembuat_opsional">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/input_pembuat"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPersonName"
+                            android:maxLines="1" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/JudulGrup"
+                android:text="@string/grup_peserta" />
+
+            <com.google.android.material.card.MaterialCardView style="@style/KartuStatis">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/BidangIsian"
+                        android:hint="@string/label_peserta">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/input_peserta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine|textCapWords"
+                            android:minLines="7"
+                            android:scrollbars="vertical" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <Button
+                android:id="@+id/btn_cetak"
+                style="@style/TombolUtama"
+                android:layout_marginTop="18dp"
+                android:text="@string/cetak_pdf"
+                app:icon="@drawable/ic_surat"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="@color/on_accent" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

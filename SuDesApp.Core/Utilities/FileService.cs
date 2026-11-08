@@ -65,6 +65,20 @@ namespace SuDesApp.Utilities
 
             // Separate directory and file name
             string directory = Path.GetDirectoryName(normalizedPath) ?? string.Empty;
+
+            // Tolak traversal pada jalur RELATIF: segmen ".." tidak boleh
+            // lolos — hasil akhir wajib di dalam folder bawaan. Jalur absolut
+            // yang dipanggil internal (sudah terverifikasi) tetap diizinkan
+            // selama masih di dalam BaseDirectory; sebaliknya ditolak.
+            if (!string.IsNullOrEmpty(directory))
+            {
+                var segmen = directory.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+                if (segmen.Any(s => s.Trim() == ".."))
+                {
+                    throw new ArgumentException("Path contains directory traversal.", nameof(path));
+                }
+            }
+
             string fileName = Path.GetFileName(normalizedPath);
 
             // Remove invalid characters from file name
@@ -76,6 +90,15 @@ namespace SuDesApp.Utilities
             string fullPath = Path.IsPathRooted(combinedPath)
                 ? Path.GetFullPath(combinedPath)
                 : Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, combinedPath));
+
+            // Hasil akhir untuk jalur relatif wajib di dalam BaseDirectory.
+            string dasar = Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory);
+            if (!Path.IsPathRooted(combinedPath) &&
+                !fullPath.StartsWith(dasar + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(fullPath, dasar, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Path escapes application directory.", nameof(path));
+            }
 
             _logger.LogDebug("Sanitized path: {FullPath}", fullPath);
             return fullPath;

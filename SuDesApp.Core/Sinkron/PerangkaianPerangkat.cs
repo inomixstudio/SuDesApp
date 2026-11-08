@@ -114,6 +114,30 @@ public sealed class PerangkaianPerangkat
                 return new HasilPerangkaian(false, null, null, null, "Supabase tidak mengembalikan id perangkat.", null);
             }
 
+            // Satu perangkat aktif per desa: perangkat lama dinonaktifkan, bukan
+            // dihapus — antreannya yang belum tersinkron masih bisa ditarik
+            // desktop sebelum operator benar-benar meninggalkannya. Kegagalan
+            // di sini tidak membatalkan perangkaian (migrasi mungkin belum
+            // diterapkan), tetapi dicatat agar tidak diam-diam lolos.
+            try
+            {
+                await using var cmdLain = new NpgsqlCommand(
+                    "SELECT public.nonaktifkan_perangkat_lain(@tenant, @baru)", conn);
+                cmdLain.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
+                cmdLain.Parameters.Add(new NpgsqlParameter("baru", deviceId));
+                var dimatikan = await cmdLain.ExecuteScalarAsync(ct).ConfigureAwait(false);
+                if (dimatikan is int jumlah && jumlah > 0)
+                {
+                    _logger.LogInformation(
+                        "{Jumlah} perangkat lama dinonaktifkan; hanya {PerangkatId} yang aktif.",
+                        jumlah, deviceId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Perangkat lain gagal dinonaktifkan; aturan satu perangkat belum berlaku.");
+            }
+
             var surel = await AmbilSurelAsync(conn, deviceId, ct).ConfigureAwait(false);
 
             // Kode 4 angka: satu-satunya yang harus dibaca operator Android.

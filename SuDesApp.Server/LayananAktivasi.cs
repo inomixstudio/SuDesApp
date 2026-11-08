@@ -1,4 +1,4 @@
-namespace SuDesApp.Server;
+﻿namespace SuDesApp.Server;
 
 /// <summary>
 /// Hasil satu permintaan aktivasi.
@@ -69,6 +69,9 @@ public sealed class LayananAktivasi
 
     public async Task<HasilAktivasi> AktivasiAsync(AktivasiRequest req, CancellationToken ct = default)
     {
+        // Batas panjang di tepi: hindari string 128 KB masuk penyimpanan perangkat.
+        if (req.KodeAktivasi?.Length > 128 || req.IdPerangkat?.Length > 128)
+            return HasilAktivasi.Ditolak(400, "Kode aktivasi atau ID perangkat terlalu panjang.");
         // 1. Kode aktivasi = kredensial. Kosong/spasi bukan "kode salah", tapi
         //    permintaan yang belum lengkap.
         if (string.IsNullOrWhiteSpace(req.KodeAktivasi))
@@ -84,7 +87,7 @@ public sealed class LayananAktivasi
             .ConfigureAwait(false);
         if (!boleh)
         {
-            ServerLog.AktivasiDitolak(_logger, pelanggan.Id, pesan);
+            ServerLog.AktivasiDitolak(_logger, ServerLog.Samarkan(pelanggan.Id), pesan);
             return HasilAktivasi.Ditolak(403, pesan ?? "Batas perangkat tercapai untuk langganan ini.");
         }
 
@@ -161,7 +164,7 @@ public sealed class LayananAktivasi
             .ConfigureAwait(false);
         if (!boleh)
         {
-            ServerLog.TrialDitolakPerangkat(_logger, pelanggan.Id, pesan);
+            ServerLog.TrialDitolakPerangkat(_logger, ServerLog.Samarkan(pelanggan.Id), pesan);
             return HasilAktivasi.Ditolak(403, pesan ?? "Batas perangkat tercapai untuk langganan ini.");
         }
 
@@ -169,7 +172,7 @@ public sealed class LayananAktivasi
         var trial = await _repo.MulaiTrialAsync(pelanggan.Id, HariTrial, sekarang).ConfigureAwait(false);
         if (!trial.Boleh || trial.BerlakuSampai is null)
         {
-            ServerLog.TrialDitolak(_logger, pelanggan.Id, trial.Pesan);
+            ServerLog.TrialDitolak(_logger, ServerLog.Samarkan(pelanggan.Id), trial.Pesan);
             return HasilAktivasi.Ditolak(403, trial.Pesan ?? "Trial tidak bisa diaktifkan.");
         }
 

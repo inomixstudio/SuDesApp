@@ -8,9 +8,11 @@
     <RootNamespace>SuDesApp</RootNamespace>
     <AssemblyName>SuDesApp.Core</AssemblyName>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-    <!-- TreatWarningsAsErrors untuk mencegah kode mati; nullability + legacy warnings tetap warning -->
+    <!-- TreatWarningsAsErrors untuk mencegah kode mati; CS86xx nullability
+         sudah diperketat untuk Core (hanya CS8618 non-nullable field tersisa
+         sebagai jembatan migrasinya, lihat roadmap nullable). -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsNotAsErrors>CS8601;CS8602;CS8603;CS8604;CS8618;CS8619;CS8620;CS8625;CS8629;CS0108;CS0618;CS0168</WarningsNotAsErrors>
+    <WarningsNotAsErrors>CS8618;CS0108;CS0618;CS0168</WarningsNotAsErrors>
   </PropertyGroup>
 
 
@@ -85,10 +87,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- File yang sengaja dikecualikan (sama seperti proyek utama) -->
-    <Compile Remove="GeneratorPdf\NonClosingStreamWrapper.cs" />
-    <Compile Remove="Configuration\DapperExtensions.cs" />
-    <Compile Remove="db\DatabaseMigrator.cs" />
+    <!-- (Dulu: NonClosingStreamWrapper/DapperExtensions/DatabaseMigrator yang
+         dikecualikan compile; ketiganya sudah dihapus — entri Remove dibersihkan.) -->
   </ItemGroup>
 
   <!-- Kredensial OAuth Google tertanam: nilai asli hidup DI LUAR git di
@@ -96,8 +96,16 @@
        ikut compile otomatis lewat globbing SDK). Saat berkas lokal ada, simbol
        GOOGLE_KREDENSIAL_LOKAL membuat placeholder di GoogleClientCredentialsBawaan.cs
        menjadi kosong — source yang ter-commit tidak pernah memuat rahasia. -->
-  <PropertyGroup Condition="Exists('Utilities\GoogleClientCredentialsBawaan.lokal.cs')">
+  <PropertyGroup Condition="Exists('Utilities\GoogleClientCredentialsBawaan.lokal.cs') And '$(Configuration)'!='Release'">
     <DefineConstants>$(DefineConstants);GOOGLE_KREDENSIAL_LOKAL</DefineConstants>
   </PropertyGroup>
+
+  <!-- Berkas lokal TIDAK PERNAH ikut build Release: secret OAuth dilarang
+       tertanam di assembly rilis. Build rilis wajib memakai kredensial dari
+       penyimpanan DPAPI perangkat atau diisi teknisi lewat Pengaturan. Build
+       Debug lokal tetap boleh memakai berkas lokal untuk pengembangan. -->
+  <ItemGroup Condition="'$(Configuration)'=='Release'">
+    <Compile Remove="**\*.lokal.cs" />
+  </ItemGroup>
 
 </Project>

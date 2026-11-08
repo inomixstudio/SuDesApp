@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Penanda padding awal sebelum inset sistem ditambahkan. -->
+    <item name="tag_inset_atas" type="id" />
+    <item name="tag_inset_bawah" type="id" />
+</resources>

@@ -430,7 +430,11 @@ namespace SuDesApp.Wpf
             // perangkaian perangkat (QR). Konfigurasi Supabase dibaca ulang dari
             // preferensi tiap di-resolve supaya perubahan yang baru disimpan
             // langsung dipakai tanpa mulai ulang.
-            services.AddTransient(_ => SuDesApp.Supabase.SupabasePengaturan.Muat());
+            // Konfigurasi dibaca dari preferensi operator, lalu dilengkapi dari
+            // appsettings (Supabase:*) untuk instalasi baru — halaman Sinkron
+            // tidak lagi meminta host/kata sandi diketik.
+            services.AddTransient(sp => SuDesApp.Supabase.SupabasePengaturan.Muat(
+                sp.GetRequiredService<IConfiguration>()));
             services.AddTransient(_ => SuDesApp.Sinkron.SkemaFormulir.Muat());
             services.AddTransient<SuDesApp.Sinkron.ImporAntreanSurat>();
             services.AddTransient<SuDesApp.Sinkron.SinkronSuratService>(sp =>
@@ -440,6 +444,12 @@ namespace SuDesApp.Wpf
                     sp.GetRequiredService<ILogger<SuDesApp.Sinkron.SinkronSuratService>>(),
                     SuDesApp.Sinkron.SinkronSuratService.FolderBawaan));
             services.AddTransient<SuDesApp.Sinkron.PerangkaianPerangkat>();
+            services.AddTransient<SuDesApp.Sinkron.PemantauAndroid>();
+
+            // Pemantau status bar: berjalan sejak jendela utama dibuat, jadi
+            // koneksi Supabase dan keadaan perangkat Android terbaca otomatis
+            // tanpa membuka halaman Sinkron.
+            services.AddSingleton<SuDesApp.Wpf.Services.PemantauAndroidLatar>();
             services.AddTransient<SuDesApp.Sinkron.PenerbitSkemaFormulir>();
             services.AddTransient<SuDesApp.Sinkron.PenerbitPengaturanDesa>();
             services.AddTransient<SinkronViewModel>();

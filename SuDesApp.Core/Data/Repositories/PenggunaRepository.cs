@@ -56,6 +56,8 @@ namespace SuDesApp.Data.Repositories
         private readonly SqliteConnection _connection;
         private readonly ILogger<PenggunaRepository> _logger;
 
+        private bool _sudahEnsureTable;
+
         public PenggunaRepository(
             SqliteConnection connection,
             ILogger<PenggunaRepository> logger)
@@ -64,16 +66,27 @@ namespace SuDesApp.Data.Repositories
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             // Self-heal: repository boleh dipakai di database lama yang belum
-            // punya tabel Pengguna (mis. uji pakai skema dasar saja) — pastikan
-            // tabel + indeksnya ada sebelum kueri pertama.
-            EnsureTableAsync().GetAwaiter().GetResult();
+            // punya tabel Pengguna (mis. uji pakai skema dasar saja) — tabel
+            // + indeks dipastikan sebelum kueri pertama.
+            // Inisialisasi dipindah ke EnsureTableAsync eksplisit dari pemanggil
+            // (factory/registrasi) supaya konstruktor tidak memblokir async
+            // (GetAwaiter().GetResult() di konstruktor = deadlock di thread UI).
         }
 
         public async Task EnsureTableAsync(CancellationToken cancellationToken = default)
         {
-            await BukaAsync(cancellationToken).ConfigureAwait(false);
+            if (_sudahEnsureTable) return;
+            if (_connection.State != ConnectionState.Open)
+                await _connection.OpenAsync(cancellationToken).ConfigureAwait(false);
             await _connection.ExecuteAsync(new CommandDefinition(
                 Ddl.CreateTable + Ddl.Index, cancellationToken: cancellationToken)).ConfigureAwait(false);
+            _sudahEnsureTable = true;
+        }
+
+        private async Task PastikanTabelAsync(CancellationToken cancellationToken)
+        {
+            if (!_sudahEnsureTable)
+                await EnsureTableAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<Pengguna?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
@@ -238,6 +251,14 @@ namespace SuDesApp.Data.Repositories
         {
             if (_connection.State != ConnectionState.Open)
                 await _connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            // Self-heal lazy: pastikan tabel ada sebelum kueri pertama.
+            // (EnsureTableAsync TIDAK memanggil BukaAsync — ia membuka langsung.)
+            if (!_sudahEnsureTable)
+            {
+                await _connection.ExecuteAsync(new CommandDefinition(
+                    Ddl.CreateTable + Ddl.Index, cancellationToken: cancellationToken)).ConfigureAwait(false);
+                _sudahEnsureTable = true;
+            }
         }
 
         /// <summary>DDL tabel pengguna, dipakai initializer maupun repository.</summary>

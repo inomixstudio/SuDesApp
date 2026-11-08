@@ -253,8 +253,17 @@
                                  AlternationCount="4"
                                  BorderThickness="0" Background="Transparent" Padding="0"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 ScrollViewer.CanContentScroll="True"
+                                 VirtualizingStackPanel.IsVirtualizing="True"
+                                 VirtualizingStackPanel.IsVirtualizingWhenGrouping="True"
+                                 VirtualizingStackPanel.VirtualizationMode="Standard"
                                  MouseDoubleClick="TabelWarga_MouseDoubleClick">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Border BorderBrush="{DynamicResource BorderBrush}"
