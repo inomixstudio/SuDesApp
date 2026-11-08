@@ -1,9 +1,13 @@
 # SuDesApp — Sistem Surat Desa
 
-Aplikasi desktop Windows (WPF) untuk administrasi surat-menyurat desa: pembuatan
-surat resmi dengan penomoran sesuai perbup, register & agenda digital, data
-penduduk lengkap dengan mutasi, sampai alur persetujuan (ajukan → verifikasi →
-tanda tangan) yang opsional per surat.
+Aplikasi surat desa lintas perangkat: desktop Windows (WPF, .NET 10), backend
+API, server lisensi, dan pendamping Android (Kotlin) dengan sinkron Supabase.
+Fitur inti: pembuatan surat resmi dengan penomoran sesuai perbup, register &
+agenda digital, data penduduk lengkap dengan mutasi, sampai alur persetujuan
+opsional (ajukan → verifikasi → tanda tangan) per surat. Masa uji coba 30 hari
+aktif otomatis; setelah habis cetak PDF/Excel dan sinkron Android dikunci
+kecuali Daftar Hadir, dan popup mengarahkan ke AKTIVASI LISENSI atau hubungi
+developer.
 
 ## Fitur utama
 
@@ -36,6 +40,14 @@ tanda tangan) yang opsional per surat.
   warga, register surat, statistik, dan kelola pengguna
   (`docs/backend-web.md`). Kanal WhatsApp dan Google Form/Sheet sudah dihapus;
   login Google kini hanya untuk pencadangan ke Google Drive.
+- **Sinkron Android** — aplikasi Android native (Kotlin di `android/`) menarik
+  kop surat dan pola nomor dari desktop via Supabase, membuat surat dan PDF di
+  perangkat, lalu mengantrekan di `antrean_surat` untuk diimpor desktop.
+  Perangkat dipasangkan via QR atau kode 4 angka.
+- **Lisensi** — trial 30 hari otomatis tanpa form; setelah habis cetak PDF/Excel
+  dan sinkron Android dikunci (Daftar Hadir tetap boleh), popup mengarahkan ke
+  AKTIVASI LISENSI atau hubungi developer
+  (`docs/langganan-dan-lisensi.md`).
 - **Multi-pengguna** — akun dengan peran & izin, kunci akun setelah percobaan
   login gagal, dan halaman **Pengguna & Peran** untuk membuat akun,
   mengganti peran/status, mereset kata sandi, dan menghapus akun
@@ -129,6 +141,9 @@ Skrip itu hanya memeriksa pesan commit, bukan isi berkas.
 | `SudesPdf.Core/` | Mesin PDF aplikasi sendiri: penulis dokumen, penata letak surat, pembaca, dan penggambar halaman — tanpa pustaka PDF pihak ketiga |
 | `SudesPdf/` | Lapisan WPF untuk mesin tadi: pratinjau halaman, pembungkus dokumen, dan cetak |
 | `SudesExPlus/` | Pustaka .xlsx milik aplikasi sendiri (baca/tulis, gaya, rumus) pengganti EPPlus |
+| `SuDesApp.Server/` | Server lisensi (ASP.NET Core) — token bertanda tangan, katalog, tagihan, dan pusat administrasi |
+| `android/` | Pendamping Android (Kotlin): buat surat & PDF lokal, antrean via Supabase; desktop adalah otoritas kop & nomor |
+| `supabase/` | Migrasi & skema Supabase untuk sinkron, perangkat, dan pairing |
 | `docs/` | Dokumentasi kebijakan & API (tautan di bawah) |
 | `Bawaan/`, `Templates/`, `Resources/`, `installer/`, `Tools/` | Contoh bawaan aplikasi (JSON), template formulir, sumber daya, installer, alat bantu |
 
