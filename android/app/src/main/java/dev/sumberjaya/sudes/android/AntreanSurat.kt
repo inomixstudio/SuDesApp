@@ -27,34 +27,84 @@ object AntreanSurat {
 
     private const val FOLDER = "antrean-tertunda"
 
+    /** Hasil kirim satu surat, dibedakan supaya UI bisa memberi tahu yang benar. */
+    enum class HasilKirim {
+        TERKIRIM,
+        TERTUNDA,
+        ANTREAN_PENUH,
+        PERANGKAT_NONAKTIF,
+        SESI_MATI,
+    }
+
+    /** Satu baris tertunda lokal untuk daftar status di layar Pengaturan. */
+    data class TertundaBaris(
+        val berkas: File,
+        val idJenis: String,
+        val nomor: String,
+        val tanggal: String,
+    )
+
     /**
      * Kirim satu surat. Mengembalikan true bila langsung masuk antrean.
-     * Kegagalan disimpan sebagai surat tertunda, bukan dilaporkan hilang.
+     * Kegagalan disimpan sebagai surat tertunda (terenkripsi), bukan
+     * dilaporkan hilang.
      */
     suspend fun kirim(
         ctx: Context,
         jenis: SkemaJenis,
         nomor: String,
         fields: JSONObject,
-    ): Boolean = withContext(Dispatchers.IO) {
+    ): Boolean = kirimHasil(ctx, jenis, nomor, fields) == HasilKirim.TERKIRIM
+
+    /** Sama seperti [kirim] tetapi membedakan sebabnya untuk UI. */
+    suspend fun kirimHasil(
+        ctx: Context,
+        jenis: SkemaJenis,
+        nomor: String,
+        fields: JSONObject,
+    ): HasilKirim = withContext(Dispatchers.IO) {
         val tanggal = capWaktu()
         val uuid = UUID.randomUUID().toString()
 
         if (!SupabaseSesi.ambil(ctx).masuk) {
             simpanTertunda(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)
-            return@withContext false
+            return@withContext HasilKirim.TERTUNDA
         }
 
-        val berhasil = try {
-            kirimKe(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)
+        try {
+            when (val hasil = kirimKeHasil(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)) {
+                is SupabaseKlien.Hasil.Sukses -> HasilKirim.TERKIRIM
+                is SupabaseKlien.Hasil.Galat -> {
+                    val hasilKirim = petakanGalat(ctx, hasil)
+                    // Semua galat tetap disimpan tertunda (terenkripsi) supaya
+                    // isian tidak hilang; sebabnya hanya ubah pesan ke operator.
+                    simpanTertunda(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)
+                    hasilKirim
+                }
+            }
         } catch (e: SupabaseKlien.SesiKedaluwarsa) {
-            // Sesi kedaluwarsa bukan alasan membuang isian: simpan tertunda
-            // supaya tidak hilang; WorkManager mengulang setelah login ulang.
             simpanTertunda(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)
-            false
+            HasilKirim.SESI_MATI
         }
-        if (!berhasil) simpanTertunda(ctx, jenis.idJenis, nomor, fields, tanggal, uuid)
-        berhasil
+    }
+
+    /** Bedakan galat kirim menjadi penuh / perangkat nonaktif / tertunda biasa. */
+    private suspend fun petakanGalat(
+        ctx: Context,
+        galat: SupabaseKlien.Hasil.Galat,
+    ): HasilKirim {
+        val pesan = galat.pesan.lowercase()
+        if ("penuh" in pesan) return HasilKirim.ANTREAN_PENUH
+        if (galat.kode == 403) {
+            try {
+                if (SupabaseSesi.klien(ctx).perangkatAktif() == false) {
+                    return HasilKirim.PERANGKAT_NONAKTIF
+                }
+            } catch (e: Exception) {
+                // Biarkan tertunda biasa bila status perangkat tak diketahui.
+            }
+        }
+        return HasilKirim.TERTUNDA
     }
 
     /** Jumlah surat yang tertahan di perangkat karena belum terkirim. */
@@ -69,9 +119,11 @@ object AntreanSurat {
      * Coba kirim semua surat tertunda, terlama lebih dulu. Berhenti pada
      * kegagalan pertama supaya tidak menunggu timeout berkali-kali saat
      * jaringan masih terputus. Mengembalikan jumlah yang berhasil terkirim.
+     * Berkas lama plaintext dimigrasikan ke terenkripsi lebih dulu.
      */
     suspend fun kirimTertunda(ctx: Context): Int = withContext(Dispatchers.IO) {
         if (!SupabaseSesi.ambil(ctx).masuk) return@withContext 0
+        migrasikanLama(ctx)
 
         var terkirim = 0
         val daftar = folder(ctx).listFiles()
@@ -81,7 +133,7 @@ object AntreanSurat {
 
         for (berkas in daftar) {
             val isi = try {
-                JSONObject(berkas.readText())
+                AntreanTerenkripsi.baca(ctx, berkas)?.let { JSONObject(it) }
             } catch (e: Exception) {
                 null
             }
@@ -122,6 +174,49 @@ object AntreanSurat {
         terkirim
     }
 
+    /**
+     * Daftar surat tertunda untuk tampilan (jenis, nomor, tanggal).
+     * Berkas rusak dilewati — dihitung lewat [jumlahGagal].
+     */
+    fun daftarTertunda(ctx: Context): List<TertundaBaris> {
+        val hasil = mutableListOf<TertundaBaris>()
+        for (berkas in folder(ctx).listFiles()?.filter { it.isFile }?.sortedBy { it.name }.orEmpty()) {
+            val isi = try {
+                AntreanTerenkripsi.baca(ctx, berkas)?.let { JSONObject(it) }
+            } catch (e: Exception) {
+                null
+            } ?: continue
+            hasil.add(
+                TertundaBaris(
+                    berkas = berkas,
+                    idJenis = isi.optString("id_jenis"),
+                    nomor = isi.optString("nomor"),
+                    tanggal = isi.optString("tanggal"),
+                ),
+            )
+        }
+        return hasil
+    }
+
+    /**
+     * Ubah berkas lama plaintext (`*.json` diawali `{`) menjadi `.enc`
+     * terenkripsi. Best-effort: berkas yang gagal tetap dibaca apa adanya.
+     */
+    private fun migrasikanLama(ctx: Context) {
+        for (berkas in folder(ctx).listFiles()?.filter { it.isFile && it.name.endsWith(".json") }.orEmpty()) {
+            try {
+                val teks = berkas.readText().trim()
+                if (!teks.startsWith("{")) continue
+                JSONObject(teks).optJSONObject("fields") ?: continue
+                val tujuan = File(berkas.parent, berkas.nameWithoutExtension + ".enc")
+                AntreanTerenkripsi.tulis(ctx, tujuan, teks)
+                berkas.delete()
+            } catch (e: Exception) {
+                // Biarkan apa adanya; baca masih mendukung plaintext lama.
+            }
+        }
+    }
+
     private suspend fun kirimKe(
         ctx: Context,
         idJenis: String,
@@ -146,6 +241,25 @@ object AntreanSurat {
         }
     }
 
+    private suspend fun kirimKeHasil(
+        ctx: Context,
+        idJenis: String,
+        nomor: String?,
+        fields: JSONObject,
+        tanggal: String,
+        clientUuid: String? = null,
+    ): SupabaseKlien.Hasil<String> {
+        val klien = SupabaseSesi.klien(ctx)
+        return klien.kirimSurat(
+            idJenis = idJenis,
+            nomorSementara = nomor,
+            nik = fields.optString("nik", "").ifBlank { null },
+            fields = fields,
+            tanggal = tanggal,
+            clientUuid = clientUuid,
+        )
+    }
+
     private fun simpanTertunda(
         ctx: Context,
         idJenis: String,
@@ -162,8 +276,8 @@ object AntreanSurat {
                 .put("client_uuid", clientUuid ?: UUID.randomUUID().toString())
                 .put("fields", fields)
 
-            val berkas = File(folder(ctx), "${System.currentTimeMillis()}-${UUID.randomUUID()}.json")
-            berkas.writeText(isi.toString())
+            val berkas = File(folder(ctx), "${System.currentTimeMillis()}-${UUID.randomUUID()}.enc")
+            AntreanTerenkripsi.tulis(ctx, berkas, isi.toString())
         } catch (e: Exception) {
             // Penyimpanan penuh atau ditolak: PDF di Downloads tetap ada, jadi
             // surat masih bisa dicetak dan isiannya diketik ulang bila perlu.

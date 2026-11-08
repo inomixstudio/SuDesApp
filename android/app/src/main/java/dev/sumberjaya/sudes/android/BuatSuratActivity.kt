@@ -32,9 +32,8 @@ import java.util.Date
  * Buat Surat: formulir dinamis dari skema yang dibawa APK.
  *
  * Isian dijadikan PDF lalu disimpan ke Downloads dan langsung ditawarkan ke
- * dialog cetak. Tidak ada data yang dikirim ke layanan mana pun — surat
- * berpindah ke register desktop lewat PDF yang dicetak, sama seperti surat
- * yang dibuat di desktop lalu di-scan.
+ * dialog cetak. PDF ini draf; isian yang sama ikut ke antrean Supabase dan
+ * desktop membangkitkan nomor resmi + PDF resmi dari register.
  */
 class BuatSuratActivity : AppCompatActivity() {
 
@@ -102,7 +101,12 @@ class BuatSuratActivity : AppCompatActivity() {
             override fun onNothingSelected(p: android.widget.AdapterView<*>?) = Unit
         }
 
-        findViewById<Button>(R.id.btn_kirim).setOnClickListener { buatPdf() }
+        val tombolKirim = findViewById<Button>(R.id.btn_kirim)
+        tombolKirim.setOnClickListener {
+            // Cegah dobel klik: satu pembuatan = satu PDF + satu antrean.
+            tombolKirim.isEnabled = false
+            buatPdf { tombolKirim.isEnabled = true }
+        }
 
         bangunForm(daftar.firstOrNull())
     }
@@ -206,7 +210,17 @@ class BuatSuratActivity : AppCompatActivity() {
         val et = TextInputEditText(this).apply {
             inputType = when (tipe) {
                 "number" -> InputType.TYPE_CLASS_NUMBER
+                // Tanggal tidak mengetik bebas: pemilih tanggal di bawah
+                // menulis ISO yyyy-MM-dd supaya impor desktop selalu bisa
+                // membacanya (bentuk lain sering gagal parse dan hilang).
+                "date" -> InputType.TYPE_NULL
                 else -> InputType.TYPE_CLASS_TEXT
+            }
+            if (tipe == "date") {
+                isFocusable = false
+                isFocusableInTouchMode = false
+                keyListener = null
+                setOnClickListener { pilihTanggal(this) }
             }
             isSingleLine = tipe != "textarea"
             textSize = 15f
@@ -226,6 +240,22 @@ class BuatSuratActivity : AppCompatActivity() {
                 ),
             )
         }
+    }
+
+    /** Pemilih tanggal: hasil ISO yyyy-MM-dd (dipahami impor desktop). */
+    private fun pilihTanggal(et: TextInputEditText) {
+        val kalender = Calendar.getInstance()
+        android.app.DatePickerDialog(
+            this,
+            { _, tahun, bulan, hari ->
+                et.setText(
+                    "%04d-%02d-%02d".format(tahun, bulan + 1, hari),
+                )
+            },
+            kalender.get(Calendar.YEAR),
+            kalender.get(Calendar.MONTH),
+            kalender.get(Calendar.DAY_OF_MONTH),
+        ).show()
     }
 
     /** Pilihan bergaya dropdown Material 3. */
@@ -303,19 +333,21 @@ class BuatSuratActivity : AppCompatActivity() {
     private fun warna(id: Int): ColorStateList =
         ColorStateList.valueOf(ContextCompat.getColor(this, id))
 
-    private fun buatPdf() {
-        val jenis = terpilih ?: return
+    private fun buatPdf(selesai: () -> Unit = {}) {
+        val jenis = terpilih ?: run { selesai(); return }
 
         for (b in jenis.fieldsInput.filter { it.required }) {
             if (b.type == "list") {
                 if (daftarBaris[b.key].orEmpty().isEmpty()) {
                     Toast.makeText(this, getString(R.string.wajib_satu_baris, b.label), Toast.LENGTH_SHORT).show()
+                    selesai()
                     return
                 }
                 continue
             }
             if (teksBidang(b.key).isBlank()) {
                 Toast.makeText(this, getString(R.string.wajib_diisi, b.label), Toast.LENGTH_SHORT).show()
+                selesai()
                 return
             }
         }
@@ -346,6 +378,11 @@ class BuatSuratActivity : AppCompatActivity() {
                 if (k.startsWith(prefiks)) nilai[ditulis + k.removePrefix(prefiks)] = v
             }
         }
+        // Alias kunci penuh: awalan target skema vs nama yang dipakai badan
+        // (mis. instansi.namaInstansi → $instansi.nama).
+        for ((ditulis, dibaca) in ALIAS_PENUH) {
+            nilai[dibaca]?.let { nilai[ditulis] = it }
+        }
 
         // Keterangan: isian operator bila ada, kalau kosong pakai keterangan
         // bawaan jenis surat — sama seperti desktop saat form dibuka.
@@ -358,6 +395,22 @@ class BuatSuratActivity : AppCompatActivity() {
         ).joinToString(", ")
 
         nilai["warga.alamat"] = AlamatSusun.susun(nilai)
+
+        // Turunan yang dipakai badan tetapi tidak punya kolom sendiri —
+        // batasan ini sama dengan generator desktop (NtcrGenerator,
+        // KematianInputViewModel).
+        nilai["warga.kewarganegaraan"] =
+            nilai["warga.kewarganegaraan"]?.ifBlank { null } ?: "WNI"
+        nilai["warga.umur"] = umurDari(teksBidang("tanggalLahir"))
+        nilai["warga.rtRw"] = AlamatSusun.formatRtRw(
+            nilai["warga.rt"]?.ifBlank { null }, nilai["warga.rw"]?.ifBlank { null },
+        )
+        nilai["kematian.hari"] = hariDariTanggal(teksBidang("tanggalKematian"))
+        nilai["kematian.tanggal"] = tanggalPanjang(teksBidang("tanggalKematian"))
+        nilai["warga.statusPerkawinanSebutan"] =
+            sebutanStatus(perempuan = false, nilai["warga.statusPerkawinan"])
+        nilai["ntcr.statusPerkawinanIstriSebutan"] =
+            sebutanStatus(perempuan = true, nilai["ntcr.statusPerkawinanIstri"])
 
         nilai["pejabat.nama"] = listOf("namaPejabat", "namaPejabatPenandatangan")
             .firstNotNullOfOrNull { k -> teksBidang(k).ifBlank { null } }
@@ -414,25 +467,33 @@ class BuatSuratActivity : AppCompatActivity() {
                 }
 
                 // Surat yang baru dibuat ikut antrean sinkron desktop.
-                val antre = withContext(Dispatchers.IO) {
-                    val terkirim = AntreanSurat.kirim(this@BuatSuratActivity, jenis, nomor, fields)
+                val hasilKirim = withContext(Dispatchers.IO) {
+                    val hasil = AntreanSurat.kirimHasil(this@BuatSuratActivity, jenis, nomor, fields)
                     // Jadwalkan pengiriman tertunda segera — tidak menunggu periodik 15 mnt.
                     try { PengirimWorker.sekali(this@BuatSuratActivity) } catch (e: Exception) { /* jadwal boleh gagal */ }
-                    terkirim
+                    hasil
                 }
 
                 progres.visibility = View.GONE
                 val pesan = if (lokasi != null) getString(R.string.pdf_tersimpan, lokasi)
                 else getString(R.string.pdf_gagal, "penyimpanan")
-                val gabungan = if (antre) {
-                    getString(R.string.toast_antrean_terkirim, pesan)
-                } else {
-                    getString(R.string.toast_antrean_tertunda, pesan)
+                val gabungan = when (hasilKirim) {
+                    AntreanSurat.HasilKirim.TERKIRIM ->
+                        getString(R.string.toast_antrean_terkirim, pesan)
+                    AntreanSurat.HasilKirim.ANTREAN_PENUH ->
+                        getString(R.string.toast_antrean_penuh, pesan)
+                    AntreanSurat.HasilKirim.PERANGKAT_NONAKTIF ->
+                        getString(R.string.toast_perangkat_nonaktif, pesan)
+                    AntreanSurat.HasilKirim.SESI_MATI ->
+                        getString(R.string.toast_sesi_mati, pesan)
+                    AntreanSurat.HasilKirim.TERTUNDA ->
+                        getString(R.string.toast_antrean_tertunda, pesan)
                 }
                 Toast.makeText(this@BuatSuratActivity, gabungan, Toast.LENGTH_LONG).show()
 
                 // Langsung tawarkan cetak — operator tidak perlu cari berkasnya.
                 PdfAksi.cetak(this@BuatSuratActivity, berkas, jenis.label)
+                selesai()
             } catch (e: Exception) {
                 progres.visibility = View.GONE
                 Toast.makeText(
@@ -440,6 +501,7 @@ class BuatSuratActivity : AppCompatActivity() {
                     getString(R.string.pdf_gagal, e.message ?: "galat tidak diketahui"),
                     Toast.LENGTH_LONG,
                 ).show()
+                selesai()
             }
         }
     }
@@ -464,6 +526,67 @@ class BuatSuratActivity : AppCompatActivity() {
 
     private fun teksBidang(key: String): String = nilaiBidang(key).let { if (it is String) it else "" }
 
+    /** Umur tahun dari tanggal lahir (ISO yyyy-MM-dd); kosong bila tak terbaca. */
+    private fun umurDari(iso: String): String {
+        val lahir = uraikanTanggal(iso) ?: return ""
+        val sekarang = Calendar.getInstance()
+        var umur = sekarang.get(Calendar.YEAR) - lahir.get(Calendar.YEAR)
+        val bulan = sekarang.get(Calendar.MONTH)
+        val hari = sekarang.get(Calendar.DAY_OF_MONTH)
+        val bulanLahir = lahir.get(Calendar.MONTH)
+        val hariLahir = lahir.get(Calendar.DAY_OF_MONTH)
+        if (bulan < bulanLahir || (bulan == bulanLahir && hari < hariLahir)) umur -= 1
+        return if (umur < 0) "" else umur.toString()
+    }
+
+    /** Nama hari Indonesia ("Senin"…) dari tanggal ISO; kosong bila tak terbaca. */
+    private fun hariDariTanggal(iso: String): String {
+        val cal = uraikanTanggal(iso) ?: return ""
+        return java.text.SimpleDateFormat("EEEE", java.util.Locale("id", "ID")).format(cal.time)
+    }
+
+    /** Tanggal panjang ("12 Januari 2026") dari tanggal ISO; kosong bila tak terbaca. */
+    private fun tanggalPanjang(iso: String): String {
+        val cal = uraikanTanggal(iso) ?: return ""
+        return java.text.SimpleDateFormat("d MMMM yyyy", java.util.Locale("id", "ID")).format(cal.time)
+    }
+
+    /** Uraikan ISO yyyy-MM-dd (atau dd/MM/yyyy lama) menjadi Calendar. */
+    private fun uraikanTanggal(teks: String): Calendar? {
+        val bersih = teks.trim()
+        if (bersih.isEmpty()) return null
+        val pola = listOf(
+            java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US),
+            java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.US),
+            java.text.SimpleDateFormat("dd-MM-yyyy", java.util.Locale.US),
+        )
+        for (p in pola) {
+            try {
+                val cal = Calendar.getInstance()
+                cal.setTime(p.parse(bersih) ?: continue)
+                return cal
+            } catch (e: Exception) {
+                // Coba pola berikutnya.
+            }
+        }
+        return null
+    }
+
+    /** Sebutan N1: "Belum kawin" → Jejaka/Perawan; cerai/janda/duda → Duda/Janda. */
+    private fun sebutanStatus(perempuan: Boolean, status: String?): String {
+        val bersih = status?.trim().orEmpty()
+        if (bersih.isEmpty()) return ""
+        return when {
+            bersih.contains("Belum", ignoreCase = true) ->
+                if (perempuan) "Perawan" else "Jejaka"
+            bersih.contains("Cerai", ignoreCase = true) ||
+                bersih.contains("Janda", ignoreCase = true) ||
+                bersih.contains("Duda", ignoreCase = true) ->
+                if (perempuan) "Janda" else "Duda"
+            else -> bersih
+        }
+    }
+
     /**
      * Nilai satu bidang. String untuk field biasa, JSONArray untuk type="list" —
      * impor desktop membaca daftar anak sebagai array, bukan teks.
@@ -483,6 +606,7 @@ class BuatSuratActivity : AppCompatActivity() {
                     k,
                     when (v) {
                         is EditText -> v.text.toString().trim()
+                        is MaterialAutoCompleteTextView -> v.text?.toString()?.trim().orEmpty()
                         else -> ""
                     }
                 )
@@ -509,6 +633,15 @@ class BuatSuratActivity : AppCompatActivity() {
             "ibu" to "kenalahir.ibu",
             "anak" to "kenallahir.anak",
             "rekeningkoran" to "additionalData",
+        )
+
+        /** Alias kunci penuh (ditulis → dibaca) untuk badan surat. */
+        private val ALIAS_PENUH = mapOf(
+            "instansi.nama" to "instansi.namaInstansi",
+            "instansi.alamat" to "instansi.alamatInstansi",
+            "instansi.nomorSk" to "instansi.nomorSkIzinUsaha",
+            "instansi.pimpinan" to "instansi.pimpinanInstansi",
+            "instansi.nikPimpinan" to "instansi.nikPimpinan",
         )
     }
 }

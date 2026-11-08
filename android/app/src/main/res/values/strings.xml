@@ -107,6 +107,9 @@
     <!-- Antrean sinkronisasi -->
     <string name="toast_antrean_terkirim">%1$s \u00B7 sudah masuk antrean desktop</string>
     <string name="toast_antrean_tertunda">%1$s \u00B7 akan dikirim ke desktop saat jaringan tersedia</string>
+    <string name="toast_antrean_penuh">%1$s \u00B7 antrean desktop penuh (10 surat) — surat tersimpan tertunda, sinkronkan desktop segera.</string>
+    <string name="toast_perangkat_nonaktif">%1$s \u00B7 perangkat dinonaktifkan di desktop — pasang ulang untuk surat baru.</string>
+    <string name="toast_sesi_mati">%1$s \u00B7 sesi perangkat tidak berlaku — pasang ulang sebelum mengirim.</string>
     <string name="antrean_tertunda_terkirim">%1$d surat tertunda berhasil dikirim ke antrean desktop.</string>
     <string name="grup_sinkronisasi">SINKRONISASI PERANGKAT</string>
     <string name="sinkron_status_perangkat">Status perangkat</string>
@@ -118,6 +121,19 @@
     <string name="sinkron_memuat">Memuat…</string>
     <string name="sinkron_antrean_nilai">%1$d menunggu, %2$d gagal</string>
     <string name="sinkron_tertunda_nilai">%1$d surat</string>
+    <string name="sinkron_batas_antrean">Batas antrean</string>
+    <string name="sinkron_batas_antrean_nilai">%1$d / 10</string>
+    <string name="sinkron_batas_hampir">Hampir penuh (%1$d/10) — sinkronkan desktop segera.</string>
+    <string name="sinkron_batas_penuh">Penuh (10/10) — surat baru tersimpan tertunda di perangkat.</string>
+    <string name="sinkron_status_aktif">Perangkat aktif di desktop</string>
+    <string name="sinkron_aktif_ya">Aktif</string>
+    <string name="sinkron_aktif_tidak">Dinonaktifkan — pasang ulang di desktop</string>
+    <string name="sinkron_aktif_tidak_dikenal">Tidak diketahui</string>
+    <string name="sinkron_detail_judul">Detail antrean &amp; tertunda</string>
+    <string name="sinkron_detail_kosong">Tidak ada surat menunggu atau tertunda.</string>
+    <string name="sinkron_detail_hapus">Hapus</string>
+    <string name="sinkron_detail_hapus_judul">Hapus baris antrean?</string>
+    <string name="sinkron_detail_hapus_pesan">Hapus surat %1$s dari antrean desktop? PDF di perangkat tetap ada.</string>
     <string name="btn_kirim_tertunda">Kirim surat tertunda</string>
     <string name="btn_keluar_perangkat">Keluar perangkat</string>
     <string name="kirim_tertunda_kosong">Tidak ada surat tertunda.</string>

@@ -36,6 +36,22 @@ object PengaturanSinkron {
             ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
 
     /**
+     * Stempel “terakhir menarik” (milidetik) supaya layar utama bisa
+     * menarik ulang secara berkala tanpa membebani server tiap kembali.
+     */
+    fun tandaiTarik(ctx: Context) {
+        ctx.getSharedPreferences("tarikan_terakhir", Context.MODE_PRIVATE)
+            .edit().putLong("terakhir", System.currentTimeMillis()).apply()
+    }
+
+    /** True bila kop/skema belum ditarik dalam [batasMs] milidetik terakhir. */
+    fun perluTarikUlang(ctx: Context, batasMs: Long = 5 * 60_000L): Boolean {
+        val terakhir = ctx.getSharedPreferences("tarikan_terakhir", Context.MODE_PRIVATE)
+            .getLong("terakhir", 0L)
+        return System.currentTimeMillis() - terakhir >= batasMs
+    }
+
+    /**
      * [HasilTarik.BelumTerbit] berarti desktop belum pernah menerbitkan kop;
      * [HasilTarik.Gagal] berarti perangkat belum dipasang atau jaringan gagal.
      */
@@ -101,6 +117,7 @@ object PengaturanSinkron {
         )
 
         PengaturanSurat.simpan(ctx, hasil)
+        tandaiTarik(ctx)
         HasilTarik.Sukses(hasil)
     }
 

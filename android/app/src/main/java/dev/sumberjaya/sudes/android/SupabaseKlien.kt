@@ -186,8 +186,12 @@ class SupabaseKlien(
         pastikanTokenSegar()
         // get() melempar pada non-2xx; tanpa tangkapan, pengecualian keluar dari
         // coroutine dan menjatuhkan aplikasi saat token sudah tidak berlaku.
+        // SesiKedaluwarsa dilempar ulang supaya pemanggil bisa meminta
+        // pemasangan ulang (bukan mengira skema kosong).
         val hasil = try {
             get("${sesi.url}/rest/v1/skema_formulir?select=id_jenis,skema")
+        } catch (e: SesiKedaluwarsa) {
+            throw e
         } catch (e: Exception) {
             return@withContext null
         }
@@ -292,7 +296,9 @@ class SupabaseKlien(
                     // lokal agar tidak memblokir antrean tertunda selamanya.
                     Hasil.Sukses(teks)
                 } else {
-                    Hasil.Galat(resp.code, teks)
+                    // Pesan galat trigger (mis. antrean penuh) diurai supaya
+                    // operator mendapat tahu penyebabnya, bukan "HTTP 400".
+                    Hasil.Galat(resp.code, pesanGalat(teks, resp.code))
                 }
             }
         } catch (e: Exception) {
@@ -312,6 +318,43 @@ class SupabaseKlien(
             }
         } catch (e: Exception) {
             null
+        }
+    }
+
+    /**
+     * True bila perangkat ini masih aktif di desktop; false bila sudah
+     * dinonaktifkan (surat baru akan ditolak RLS 403); null bila tidak
+     * diketahui (jaringan / belum dipasang).
+     */
+    suspend fun perangkatAktif(): Boolean? = withContext(Dispatchers.IO) {
+        pastikanTokenSegar()
+        val id = sesi.idPerangkat ?: return@withContext null
+        try {
+            val req = builder()
+                .url("${sesi.url}/rest/v1/perangkat_android?select=aktif&id=eq.$id&limit=1")
+                .build()
+            http.newCall(req).execute().use { resp ->
+                if (!resp.isSuccessful) return@withContext null
+                val array = JSONArray(resp.body?.string() ?: "[]")
+                if (array.length() == 0) return@withContext null
+                array.optJSONObject(0)?.optBoolean("aktif", false)
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** Hapus satu baris antrean milik perangkat ini (butuh policy hapus sederhana). */
+    suspend fun hapusAntrean(id: String): Boolean = withContext(Dispatchers.IO) {
+        pastikanTokenSegar()
+        try {
+            val req = builder()
+                .url("${sesi.url}/rest/v1/antrean_surat?id=eq.$id")
+                .delete()
+                .build()
+            http.newCall(req).execute().use { it.isSuccessful }
+        } catch (e: Exception) {
+            false
         }
     }
 
