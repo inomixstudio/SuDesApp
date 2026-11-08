@@ -179,6 +179,23 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.12.1 (8 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Sinkron — Serba Otomatis", new List<string>
+                        {
+                            "Impor antrean dari Android kini berjalan otomatis di latar (±20 detik) dengan notifikasi; saklar Sinkron otomatis ada di halaman Sinkron. Kop dan skema diterbitkan otomatis dari desktop dan ditarik otomatis oleh Android.",
+                            "Pasang perangkat satu klik: tekan Buat QR atau Buat Kode, nama perangkat dibuat otomatis — tidak perlu mengisi textbox.",
+                            "Keterangan bawaan, keperluan per jenis, hari kematian, dan pejabat penandatangan kini diisi saat impor; pilihan di daftar, alias PDF, dan tanggal kini berperilaku benar."
+                        }),
+                        new CatatanRilisSubSection("Android — Batas, Keamanan, dan Daftar Per Surat", new List<string>
+                        {
+                            "Peringatan batas antrean 8/10 dan 10/10, pesan penuh / perangkat dinonaktifkan / sesi tidak berlaku, serta daftar per surat (antrean + tertunda) dengan tombol hapus per baris.",
+                            "Surat tertunda terenkripsi AES/GCM; baris gagal setelah 3 kali coba kini diarsipkan (folder Gagal) dan dapat diimpor ulang dari desktop via tombol Impor ulang arsip gagal.",
+                            "Migrasi Supabase 20261114000000_hapus_baris_antrean_sendiri.sql perlu diterapkan sekali di SQL Editor sebelum memakai tombol Hapus baris di Android."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.12.0 (8 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
