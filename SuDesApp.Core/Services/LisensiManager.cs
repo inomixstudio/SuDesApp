@@ -243,7 +243,7 @@ namespace SuDesApp.Services
                     {
                         var resp = await _http.PostAsJsonAsync(
                             AlamatEndpoint("aktivasi"),
-                            new { kodeAktivasi = KodeAktivasi!.Trim(), idPerangkat = IdPerangkat },
+                            new { kodeAktivasi = FormatKodeAktivasi.Normalisasi(KodeAktivasi), idPerangkat = IdPerangkat },
                             cancellationToken).ConfigureAwait(false);
 
                         // Balasan diterima (apa pun statusnya) = server benar-benar
@@ -472,7 +472,7 @@ namespace SuDesApp.Services
                     KoneksiDatabase!,
                     new LisensiAktivasi
                     {
-                        KodeAktivasi = KodeAktivasi!.Trim(),
+                        KodeAktivasi = FormatKodeAktivasi.Normalisasi(KodeAktivasi),
                         NamaDesa = status.NamaDesa,
                         Paket = status.Paket,
                         Token = status.Token,
@@ -509,7 +509,7 @@ namespace SuDesApp.Services
             try
             {
                 var bukti = await LisensiAktivasiRepository.AmbilDenganKoneksiAsync(
-                    KoneksiDatabase!, KodeAktivasi!, ct).ConfigureAwait(false);
+                    KoneksiDatabase!, FormatKodeAktivasi.Normalisasi(KodeAktivasi), ct).ConfigureAwait(false);
 
                 if (bukti is null || string.IsNullOrWhiteSpace(bukti.Token))
                 {
@@ -539,7 +539,7 @@ namespace SuDesApp.Services
             try
             {
                 await LisensiAktivasiRepository.HapusDenganKoneksiAsync(
-                    KoneksiDatabase!, KodeAktivasi!, ct).ConfigureAwait(false);
+                    KoneksiDatabase!, FormatKodeAktivasi.Normalisasi(KodeAktivasi), ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
