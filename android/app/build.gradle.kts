@@ -71,7 +71,7 @@ dependencies {
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
     // Penyimpanan sesi terenkripsi (kunci di Android Keystore).
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.security:security-crypto:1.1.0")
 
     // Retry terjadwal saat jaringan tersedia (WorkManager).
     implementation("androidx.work:work-runtime-ktx:2.9.0")
