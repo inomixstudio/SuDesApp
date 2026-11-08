@@ -34,7 +34,9 @@
                         MouseLeftButtonDown="CaptionBorder_MouseLeftButtonDown">
                     <DockPanel LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" x:Name="JudulText" Text="Dokumen"
-                                   Style="{StaticResource WindowTitleText}" FontWeight="SemiBold"/>
+                                   Style="{StaticResource WindowTitleText}" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"
+                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
                         <Button DockPanel.Dock="Right" Style="{StaticResource CloseCaptionButton}"
                                 Command="{x:Static ctrl:AppChromeCommands.Close}"
                                 ToolTip="Tutup (Esc)">
@@ -52,21 +54,30 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                        <TextBlock x:Name="VersiText" FontSize="11"
+                    <!-- Grid (bukan StackPanel) agar dua teks ini membungkus
+                         pada lebar jendela, bukan meluap terpotong. -->
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" x:Name="VersiText" FontSize="11" TextWrapping="Wrap"
+                                   LineHeight="16"
                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBlock x:Name="GalatText" FontSize="11" Margin="0,6,0,0"
+                        <TextBlock Grid.Row="1" x:Name="GalatText" FontSize="11" Margin="0,6,0,0"
                                    Foreground="{DynamicResource WarningTextBrush}"
-                                   TextWrapping="Wrap" Visibility="Collapsed"/>
-                    </StackPanel>
+                                   TextWrapping="Wrap" LineHeight="16" Visibility="Collapsed"/>
+                    </Grid>
 
                     <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="8" ClipToBounds="True">
+                        <!-- Horizontal Auto (bukan Disabled): baris/tabel lebar pada dokumen
+                             panjang tetap bisa digulir, tidak terpotong diam-diam. -->
                         <FlowDocumentScrollViewer x:Name="Pembaca"
                                                   IsToolBarVisible="False"
                                                   VerticalScrollBarVisibility="Auto"
-                                                  HorizontalScrollBarVisibility="Disabled"
+                                                  HorizontalScrollBarVisibility="Auto"
                                                   Background="Transparent" Padding="0"/>
                     </Border>
 

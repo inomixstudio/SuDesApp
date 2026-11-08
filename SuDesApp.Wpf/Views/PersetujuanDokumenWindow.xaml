@@ -69,13 +69,20 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
 
-                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
-                        <TextBlock Text="{Binding Judul}" FontSize="15" FontWeight="SemiBold"
+                    <!-- Grid (bukan StackPanel) supaya Judul/Subjudul membungkus
+                         pada lebar kolom — StackPanel mengukur tanpa batas dan
+                         teksnya meluap terpotong. -->
+                    <Grid Grid.Column="1" Margin="14,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="{Binding Judul}" FontSize="15" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding Subjudul}" FontSize="13" Margin="0,5,0,0"
+                        <TextBlock Grid.Row="1" Text="{Binding Subjudul}" FontSize="13" Margin="0,5,0,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" LineHeight="19"/>
-                    </StackPanel>
+                    </Grid>
                 </Grid>
 
                 <!-- ===== Daftar dokumen: versi yang terpasang + tombol baca ===== -->
@@ -93,29 +100,32 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Dokumen.Judul}" FontSize="14"
-                                                       FontWeight="SemiBold"
+                                        <!-- Grid (bukan StackPanel) agar semua teks membungkus
+                                             pada lebar kolom, bukan meluap tanpa batas. -->
+                                        <Grid Grid.Column="0" VerticalAlignment="Center">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="{Binding Dokumen.Judul}" FontSize="14"
+                                                       FontWeight="SemiBold" TextWrapping="Wrap"
                                                        Foreground="{DynamicResource TextBrush}"/>
-                                            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                                <TextBlock Text="{Binding VersiTerpasangTampil}" FontSize="11"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                                <TextBlock Text="  ·  " FontSize="11"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                                <TextBlock Text="{Binding TanggalBerlakuTampil}" FontSize="11"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                            </StackPanel>
+                                            <TextBlock Grid.Row="1" FontSize="11" Margin="0,3,0,0" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}">
+                                                <Run Text="{Binding VersiTerpasangTampil, Mode=OneWay}"/><Run Text="  ·  "/><Run Text="{Binding TanggalBerlakuTampil, Mode=OneWay}"/>
+                                            </TextBlock>
 
                                             <!-- Dokumen yang sudah disetujui pada versi lebih lama:
                                                  pengguna perlu tahu bahwa inilah yang berubah. -->
-                                            <TextBlock FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
+                                            <TextBlock Grid.Row="2" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
                                                        Foreground="{DynamicResource WarningTextBrush}"
                                                        Visibility="{Binding VersiBerubah, Converter={StaticResource BoolToVis}}">
                                                 <Run Text="Sebelumnya Anda menyetujui Versi"/>
                                                 <Run Text="{Binding Tercatat.Versi, Mode=OneWay}"/>
                                                 <Run Text="— versi baru ini perlu disetujui ulang."/>
                                             </TextBlock>
-                                        </StackPanel>
+                                        </Grid>
 
                                         <Button Grid.Column="1" Content="Baca" MinWidth="76"
                                                 VerticalAlignment="Center" Margin="12,0,0,0"
@@ -134,49 +144,72 @@
                 <!-- ===== Pernyataan persetujuan ===== -->
                 <Border Grid.Row="3" Background="{DynamicResource LapisanLembutBrush}"
                         CornerRadius="10" Padding="14,12" Margin="0,0,0,10">
-                    <StackPanel>
-                        <CheckBox IsChecked="{Binding Terima, Mode=TwoWay}"
+                    <!-- Grid luar (bukan StackPanel) agar Catatan juga membungkus. -->
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <CheckBox Grid.Row="0" IsChecked="{Binding Terima, Mode=TwoWay}"
                                   VerticalContentAlignment="Top">
-                            <StackPanel>
-                                <TextBlock TextWrapping="Wrap" FontSize="13" LineHeight="19"
+                            <!-- Grid (bukan StackPanel) supaya TextWrapping punya batas
+                                 lebar — StackPanel mengukur anaknya tanpa batas sehingga
+                                 teks meluap dan terpotong di sisi kanan dialog. -->
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" TextWrapping="Wrap" FontSize="13" LineHeight="19"
                                            Foreground="{DynamicResource TextBrush}">
                                     Saya telah membaca dan menyetujui Kebijakan Privasi serta
                                     Syarat dan Ketentuan yang berlaku pada versi di atas.
                                 </TextBlock>
 
                                 <!-- Jujur bila salah satu berkas tidak ikut terpasang -->
-                                <TextBlock Text="{Binding PesanBerkasHilang}" FontSize="11"
+                                <TextBlock Grid.Row="1" Text="{Binding PesanBerkasHilang}" FontSize="11"
                                            Margin="0,6,0,0" TextWrapping="Wrap" LineHeight="16"
                                            Foreground="{DynamicResource WarningTextBrush}"
                                            Visibility="{Binding AdaBerkasHilang, Converter={StaticResource BoolToVis}}"/>
-                            </StackPanel>
+                            </Grid>
                         </CheckBox>
-                        <TextBlock Text="{Binding Catatan}" FontSize="11" Margin="0,8,0,0"
+                        <TextBlock Grid.Row="1" Text="{Binding Catatan}" FontSize="11" Margin="0,8,0,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" LineHeight="16"/>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- ===== Galat simpan (jarang: folder preferensi tidak bisa ditulis) ===== -->
                 <Border Grid.Row="4" Margin="0,0,0,10" Padding="12,9" CornerRadius="8"
                         Background="{DynamicResource WarningSubtleBrush}"
                         Visibility="{Binding AdaGalat, Converter={StaticResource BoolToVis}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#9888;" FontSize="14" Margin="0,0,8,0"
+                    <!-- Grid (bukan StackPanel Horizontal) supaya teks galat yang panjang
+                         membungkus di sisa lebar, bukan meluap tanpa batas. -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="&#9888;" FontSize="14" Margin="0,0,8,0"
                                    VerticalAlignment="Top"
                                    Foreground="{DynamicResource WarningTextBrush}"/>
-                        <TextBlock Text="{Binding PesanGalat}" FontSize="11" TextWrapping="Wrap"
+                        <TextBlock Grid.Column="1" Text="{Binding PesanGalat}" FontSize="11" TextWrapping="Wrap"
                                    Foreground="{DynamicResource WarningTextBrush}"/>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- ===== Tombol ===== -->
                 <Grid Grid.Row="5" Margin="0,4,0,0">
-                    <TextBlock VerticalAlignment="Center" FontSize="11" HorizontalAlignment="Left"
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Membungkus (bukan ellipsis): catatan tidak boleh hilang di balik tombol. -->
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" FontSize="11"
                                Foreground="{DynamicResource TextSecondaryBrush}"
                                Text="Persetujuan hanya disimpan di komputer ini."
-                               TextTrimming="CharacterEllipsis" MaxWidth="300"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                               TextWrapping="Wrap" Margin="0,0,12,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Button Content="Keluar" Width="110" Margin="0,0,8,0"
                                 Style="{StaticResource SecondaryButton}"
                                 Click="Keluar_Click"
