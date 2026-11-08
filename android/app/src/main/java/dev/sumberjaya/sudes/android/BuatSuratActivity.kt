@@ -388,7 +388,8 @@ class BuatSuratActivity : AppCompatActivity() {
                 ""
             }
 
-        val tahun = Calendar.getInstance().get(Calendar.YEAR)
+        val tahunTarik = PengaturanSinkron.tahunTarik()
+        val tahun = tahunTarik
 
         progres.visibility = View.VISIBLE
         lifecycleScope.launch {
@@ -415,6 +416,8 @@ class BuatSuratActivity : AppCompatActivity() {
                 // Surat yang baru dibuat ikut antrean sinkron desktop.
                 val antre = withContext(Dispatchers.IO) {
                     AntreanSurat.kirim(this@BuatSuratActivity, jenis, nomor, fields)
+                    // Jadwalkan pengiriman tertunda segera — tidak menunggu periodik 15 mnt.
+                    try { PengirimWorker.sekali(this@BuatSuratActivity) } catch (e: Exception) { /* jadwal boleh gagal */ }
                 }
 
                 progres.visibility = View.GONE

@@ -101,80 +101,90 @@ public sealed class PerangkaianPerangkat
             await using var koneksi = new SupabaseKoneksi(_pengaturan);
             await using var conn = await koneksi.BukaAsync(ct).ConfigureAwait(false);
 
-            await using var cmd = new NpgsqlCommand(
-                "SELECT public.pasang_perangkat_android(@tenant, @pengguna, @nama, @sandi)", conn);
-            cmd.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
-            cmd.Parameters.Add(new NpgsqlParameter("pengguna", pengguna));
-            cmd.Parameters.Add(new NpgsqlParameter("nama", nama));
-            cmd.Parameters.Add(new NpgsqlParameter("sandi", sandi));
-
-            var hasil = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
-            if (hasil is not Guid deviceId)
-            {
-                return new HasilPerangkaian(false, null, null, null, "Supabase tidak mengembalikan id perangkat.", null);
-            }
-
-            // Satu perangkat aktif per desa: perangkat lama dinonaktifkan, bukan
-            // dihapus — antreannya yang belum tersinkron masih bisa ditarik
-            // desktop sebelum operator benar-benar meninggalkannya. Kegagalan
-            // di sini tidak membatalkan perangkaian (migrasi mungkin belum
-            // diterapkan), tetapi dicatat agar tidak diam-diam lolos.
+            await using var transaksi = await conn.BeginTransactionAsync(ct).ConfigureAwait(false);
+            Guid deviceId;
+            string? surel;
+            string? kode = null;
             try
             {
-                await using var cmdLain = new NpgsqlCommand(
-                    "SELECT public.nonaktifkan_perangkat_lain(@tenant, @baru)", conn);
-                cmdLain.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
-                cmdLain.Parameters.Add(new NpgsqlParameter("baru", deviceId));
-                var dimatikan = await cmdLain.ExecuteScalarAsync(ct).ConfigureAwait(false);
-                if (dimatikan is int jumlah && jumlah > 0)
+                await using var cmd = new NpgsqlCommand(
+                    "SELECT public.pasang_perangkat_android(@tenant, @pengguna, @nama, @sandi)", conn, transaksi);
+                cmd.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
+                cmd.Parameters.Add(new NpgsqlParameter("pengguna", pengguna));
+                cmd.Parameters.Add(new NpgsqlParameter("nama", nama));
+                cmd.Parameters.Add(new NpgsqlParameter("sandi", sandi));
+
+                var hasil = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
+                if (hasil is not Guid idBaru)
                 {
-                    _logger.LogInformation(
-                        "{Jumlah} perangkat lama dinonaktifkan; hanya {PerangkatId} yang aktif.",
-                        jumlah, deviceId);
+                    await transaksi.RollbackAsync(ct).ConfigureAwait(false);
+                    return new HasilPerangkaian(false, null, null, null, "Supabase tidak mengembalikan id perangkat.", null);
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Perangkat lain gagal dinonaktifkan; aturan satu perangkat belum berlaku.");
-            }
+                deviceId = idBaru;
 
-            var surel = await AmbilSurelAsync(conn, deviceId, ct).ConfigureAwait(false);
-
-            // Kode 4 angka: satu-satunya yang harus dibaca operator Android.
-            // Berlaku 10 menit dan hanya bisa dipakai sekali (lihat skema
-            // pasangan_sementara). Kode lama yang sudah kedaluwarsa dibersihkan
-            // dulu supaya tabrakan kode mungkin kecil dan tidak menumpuk.
-            await using (var bersih = new NpgsqlCommand(
-                "SELECT public.bersihkan_pasangan_kedaluwarsa()", conn))
-            {
-                await bersih.ExecuteScalarAsync(ct).ConfigureAwait(false);
-            }
-
-            string? kode = null;
-            for (var usaha = 0; usaha < 5 && kode == null; usaha++)
-            {
-                var kandidat = BuatKode();
-                await using var cmdKode = new NpgsqlCommand(
-                    """
-                    INSERT INTO pasangan_sementara (kode, tenant_id, email, kata_sandi, kedaluwarsa_pada)
-                    VALUES (@kode, @tenant, @email, @sandi, now() + interval '10 minutes')
-                    ON CONFLICT (kode) DO NOTHING
-                    """, conn);
-                cmdKode.Parameters.Add(new NpgsqlParameter("kode", kandidat));
-                cmdKode.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
-                cmdKode.Parameters.Add(new NpgsqlParameter("email", surel ?? string.Empty));
-                cmdKode.Parameters.Add(new NpgsqlParameter("sandi", sandi));
-
-                if (await cmdKode.ExecuteNonQueryAsync(ct).ConfigureAwait(false) > 0)
+                // Satu perangkat aktif per desa — dalam transaksi yang sama
+                // sehingga tidak ada jendela dua perangkat aktif bersamaan.
+                try
                 {
-                    kode = kandidat;
+                    await using var cmdLain = new NpgsqlCommand(
+                        "SELECT public.nonaktifkan_perangkat_lain(@tenant, @baru)", conn, transaksi);
+                    cmdLain.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
+                    cmdLain.Parameters.Add(new NpgsqlParameter("baru", deviceId));
+                    var dimatikan = await cmdLain.ExecuteScalarAsync(ct).ConfigureAwait(false);
+                    if (dimatikan is int jumlah && jumlah > 0)
+                    {
+                        _logger.LogInformation(
+                            "{Jumlah} perangkat lama dinonaktifkan; hanya {PerangkatId} yang aktif.",
+                            jumlah, deviceId);
+                    }
                 }
-            }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Perangkat lain gagal dinonaktifkan; aturan satu perangkat belum berlaku.");
+                }
 
-            if (kode == null)
+                surel = await AmbilSurelAsync(conn, deviceId, ct, transaksi).ConfigureAwait(false);
+
+                // Bersihkan kadaluwarsa di dalam transaksi yang sama.
+                await using (var bersih = new NpgsqlCommand(
+                    "SELECT public.bersihkan_pasangan_kedaluwarsa()", conn, transaksi))
+                {
+                    await bersih.ExecuteScalarAsync(ct).ConfigureAwait(false);
+                }
+
+                for (var usaha = 0; usaha < 5 && kode == null; usaha++)
+                {
+                    var kandidat = BuatKode();
+                    await using var cmdKode = new NpgsqlCommand(
+                        """
+                        INSERT INTO pasangan_sementara (kode, tenant_id, email, kata_sandi, kedaluwarsa_pada)
+                        VALUES (@kode, @tenant, @email, @sandi, now() + interval '10 minutes')
+                        ON CONFLICT (kode) DO NOTHING
+                        """, conn, transaksi);
+                    cmdKode.Parameters.Add(new NpgsqlParameter("kode", kandidat));
+                    cmdKode.Parameters.Add(new NpgsqlParameter("tenant", _pengaturan.Tenant));
+                    cmdKode.Parameters.Add(new NpgsqlParameter("email", surel ?? string.Empty));
+                    cmdKode.Parameters.Add(new NpgsqlParameter("sandi", sandi));
+
+                    if (await cmdKode.ExecuteNonQueryAsync(ct).ConfigureAwait(false) > 0)
+                    {
+                        kode = kandidat;
+                    }
+                }
+
+                if (kode == null)
+                {
+                    await transaksi.RollbackAsync(ct).ConfigureAwait(false);
+                    return new HasilPerangkaian(false, deviceId, surel, sandi,
+                        "Gagal membuat kode verifikasi. Coba lagi.", null);
+                }
+
+                await transaksi.CommitAsync(ct).ConfigureAwait(false);
+            }
+            catch
             {
-                return new HasilPerangkaian(false, deviceId, surel, sandi,
-                    "Gagal membuat kode verifikasi. Coba lagi.", null);
+                await transaksi.RollbackAsync(ct).ConfigureAwait(false);
+                throw;
             }
 
             _logger.LogInformation(
@@ -257,7 +267,7 @@ public sealed class PerangkaianPerangkat
     }
 
     private static async Task<string?> AmbilSurelAsync(
-        NpgsqlConnection conn, Guid perangkatId, CancellationToken ct)
+        NpgsqlConnection conn, Guid perangkatId, CancellationToken ct, System.Data.Common.DbTransaction? transaksi = null)
     {
         await using var cmd = new NpgsqlCommand(
             """
@@ -265,7 +275,7 @@ public sealed class PerangkaianPerangkat
               FROM perangkat_android p
               JOIN auth.users u ON u.id = p.supabase_user_id
              WHERE p.id = @id
-            """, conn);
+            """, conn, transaksi as NpgsqlTransaction);
         cmd.Parameters.Add(new NpgsqlParameter("id", perangkatId));
         var hasil = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
         return hasil as string;

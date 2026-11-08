@@ -33,6 +33,8 @@ data class PengaturanSurat(
     val logoPath: String = "",
     /** Pola nomor per id jenis surat, diterbitkan desktop. */
     val formatNomor: Map<String, String> = emptyMap(),
+    /** Tahun terbitan dari desktop (diisi PengaturanSinkron). */
+    val tahun: Int = 0,
 ) {
     /**
      * Nomor surat berikutnya dan angka yang tersimpan naik satu.
@@ -53,7 +55,11 @@ data class PengaturanSurat(
         val pola = formatNomor[idJenis]
             ?: formatNomor[idJenis.uppercase()]
             ?: "${awalanNomor.trim()}/{urut.toString().padStart(3, '0')}/Ds/$tahun"
-        val nomor = susunNomor(pola, urut, "", tahun.toString())
+        // Placeholder {1} (kode jenis) diisi kode jenis lowercase dari map;
+        // bila pola butuh kode yang belum diketahui, kosong (register desktop
+        // yang menormalkan) — tidak dicetak segmen kosong membingungkan.
+        val kodeJenis = idJenis.lowercase()
+        val nomor = susunNomor(pola, urut, kodeJenis, tahun.toString())
         prefs.edit().putInt(K_NOMOR, urut).apply()
         return nomor
     }
@@ -92,6 +98,7 @@ data class PengaturanSurat(
         private const val K_UKURAN = "ukuranKertas"
         private const val K_LOGO = "logoPath"
         private const val K_FORMAT = "formatNomor"
+        private const val K_TAHUN = "tahun"
 
         fun ambil(ctx: Context): PengaturanSurat {
             val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -122,6 +129,7 @@ data class PengaturanSurat(
                 ukuranKertas = (p.getString(K_UKURAN, "A4") ?: "A4"),
                 logoPath = p.getString(K_LOGO, "") ?: "",
                 formatNomor = format,
+                tahun = p.getInt(K_TAHUN, 0),
             )
         }
 
@@ -143,6 +151,7 @@ data class PengaturanSurat(
                 .putString(K_UKURAN, p.ukuranKertas)
                 .putString(K_LOGO, p.logoPath)
                 .putString(K_FORMAT, org.json.JSONObject(p.formatNomor as Map<*, *>).toString())
+                .putInt(K_TAHUN, p.tahun)
                 .apply()
         }
 

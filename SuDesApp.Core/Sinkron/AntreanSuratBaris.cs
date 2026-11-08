@@ -17,6 +17,7 @@ namespace SuDesApp.Sinkron;
 /// <param name="Status">menunggu | sinkron | gagal.</param>
 /// <param name="BatasCoba">Berapa kali impor baris ini gagal.</param>
 /// <param name="Catatan">Catatan dari Android, mis. pesan galat.</param>
+/// <param name="ClientUuid">Kunci idempotensi dibuat Android sekali per surat.
 public sealed record AntreanSuratBaris(
     Guid Id,
     string TenantId,
@@ -30,7 +31,8 @@ public sealed record AntreanSuratBaris(
     short BatasCoba,
     string? Catatan,
     DateTime DibuatPada,
-    DateTime DiubahPada)
+    DateTime DiubahPada,
+    Guid? ClientUuid = null)
 {
     /// <summary>Tanggal surat dari payload, atau tanggal baris dibuat bila absen/rusak.</summary>
     public DateTime TanggalSurat

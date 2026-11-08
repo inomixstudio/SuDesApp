@@ -96,9 +96,11 @@ class PengaturanActivity : AppCompatActivity() {
             }
 
             val sisa = AntreanSurat.jumlahTertunda(this@PengaturanActivity)
+            val gagal = AntreanSurat.jumlahGagal(this@PengaturanActivity)
             status.text = when {
                 terkirim > 0 -> getString(R.string.antrean_tertunda_terkirim, terkirim)
                 sisa > 0 -> getString(R.string.kirim_tertunda_gagal)
+                gagal > 0 -> "Ada $gagal berkas tertunda gagal (rusak) — hubungi desa, jangan hapus manual di aplikasi ini."
                 else -> getString(R.string.kirim_tertunda_kosong)
             }
 

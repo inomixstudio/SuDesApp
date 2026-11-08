@@ -27,7 +27,13 @@ object PengaturanSinkron {
     }
 
     /**
-     * Tarik pengaturan terbitan desktop dan simpan sebagai salinan lokal.
+     * Tahun penarikan terakhir dari desktop (tahun terbitan kodedesa).
+     * Bila tidak pernah ditarik, fallback ke tahun kalender — beda jam
+     * perangkat dengan desktop tidak lagi membuat nomor placeholder menyimpang.
+     */
+    fun tahunTarik(): Int =
+        PengaturanSurat.terakhirBaru?.tahun?.takeIf { it > 0 }
+            ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
      * [HasilTarik.BelumTerbit] berarti desktop belum pernah menerbitkan kop;
      * [HasilTarik.Gagal] berarti perangkat belum dipasang atau jaringan gagal.
      */
@@ -89,6 +95,7 @@ object PengaturanSinkron {
             ukuranKertas = kop.optString("ukuranKertas", "A4").ifBlank { "A4" },
             logoPath = logoPath,
             formatNomor = format,
+            tahun = nomor.optInt("tahun", 0),
         )
 
         PengaturanSurat.simpan(ctx, hasil)
