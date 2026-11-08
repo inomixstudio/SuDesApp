@@ -13,10 +13,12 @@ using Xunit;
 namespace SuDesApp.Tests.Idm;
 
 /// <summary>
-/// Gagal-tertutup sertifikat pada <see cref="IdmKemendesaKlien"/>: sertifikat
-/// kedaluwarsa TIDAK lagi turun ke HTTP polos, karena angka IDM yang dipakai
-/// kantor desa tidak boleh datang tanpa enkripsi (bisa dimodifikasi MITM).
-/// Halaman menampilkan galat, dan tidak ada permintaan HTTP yang dikirim.
+/// Sertifikat situs IDM kedaluwarsa berarti HTTPS tidak bisa dipakai — tetapi
+/// halaman tidak boleh kosong permanen (sertifikat pusat kedaluwarsa sejak
+/// 16 Agustus 2026). Klien turun ke HTTP dengan penanda
+/// <see cref="MuatanIdm.LewatHttp"/> sehingga halaman memperingatkan pengguna
+/// secara terbuka bahwa angka datang tanpa enkripsi. Galat jaringan biasa
+/// (bukan sertifikat) tetap tidak mencoba HTTP.
 /// </summary>
 public sealed class IdmKlienSertifikatTests
 {
@@ -33,7 +35,7 @@ public sealed class IdmKlienSertifikatTests
         """;
 
     [Fact]
-    public async Task Sertifikat_bermasalah_gagal_tertutup_tanpa_http()
+    public async Task Sertifikat_bermasalah_turun_ke_http_dengan_penanda()
     {
         var handler = new HandlerPalsu(request =>
             request.RequestUri!.Scheme == "https"
@@ -41,13 +43,13 @@ public sealed class IdmKlienSertifikatTests
                 : Jawaban(JawabanSah));
         var muatan = await Klien(handler).MuatAsync(KodeDesa, 2024);
 
-        Assert.Equal(StatusMuatIdm.Gagal, muatan.Status);
-        Assert.False(muatan.LewatHttp);
-        Assert.DoesNotContain(handler.Permintaan, u => u.Scheme == "http");
+        Assert.Equal(StatusMuatIdm.Berhasil, muatan.Status);
+        Assert.True(muatan.LewatHttp);
+        Assert.Contains(handler.Permintaan, u => u.Scheme == "http");
     }
 
     [Fact]
-    public async Task Sertifikat_bermasalah_tidak_mencoba_http_membaca_jawaban_tidak_ditemukan()
+    public async Task Sertifikat_bermasalah_http_membaca_jawaban_tidak_ditemukan()
     {
         var handler = new HandlerPalsu(request =>
             request.RequestUri!.Scheme == "https"
@@ -55,12 +57,12 @@ public sealed class IdmKlienSertifikatTests
                 : Jawaban("""{ "error": true, "message": "ID Desa tidak ditemukan" }"""));
         var muatan = await Klien(handler).MuatAsync(KodeDesa, 2026);
 
-        Assert.Equal(StatusMuatIdm.Gagal, muatan.Status);
-        Assert.DoesNotContain(handler.Permintaan, u => u.Scheme == "http");
+        Assert.Equal(StatusMuatIdm.TidakDitemukan, muatan.Status);
+        Assert.True(muatan.LewatHttp);
     }
 
     [Fact]
-    public async Task Sertifikat_bermasalah_menghasilkan_galat_jelas_tanpa_http()
+    public async Task Sertifikat_bermasalah_dan_http_gagal_menghasilkan_galat_sertifikat()
     {
         var handler = new HandlerPalsu(request =>
             request.RequestUri!.Scheme == "https"
@@ -71,7 +73,6 @@ public sealed class IdmKlienSertifikatTests
 
         Assert.Equal(StatusMuatIdm.Gagal, muatan.Status);
         Assert.Contains("Sertifikat", muatan.Pesan);
-        Assert.DoesNotContain(handler.Permintaan, u => u.Scheme == "http");
     }
 
     [Fact]

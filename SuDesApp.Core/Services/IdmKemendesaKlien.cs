@@ -75,10 +75,10 @@ namespace SuDesApp.Services
         IdentitasIdm? Identitas,
         IReadOnlyList<BarisIdm> Baris);
 
-    /// <summary>Jawaban lengkap satu permintaan, termasuk alasan bila tidak berhasil.</summary>
-    /// <param name="LewatHttp">Tidak lagi dipakai: jalur HTTP sudah ditutup (fail-closed).
-    /// Dipertahankan hanya untuk kompatibilitas kontrak warisan cadangan lama.</param>
-    [Obsolete("Jalur HTTP dihapus — selalu false untuk muatan baru. Bila true, berasal dari cadangan lama sebelum November 2026.")]
+    /// <summary>Jawaban lengkap satu permintaan, termasuk alasan bila tidak berhasil.
+    /// <paramref name="LewatHttp"/> bernilai true bila angka datang lewat HTTP
+    /// karena sertifikat situs pusat bermasalah — halaman wajib memperingatkan
+    /// pengguna secara terbuka (lihat <see cref="IdmKemendesaKlien"/>).</summary>
     public sealed record MuatanIdm(StatusMuatIdm Status, HasilIdm? Hasil, string Pesan, bool LewatHttp = false)
     {
         public static MuatanIdm Galat(string pesan) => new(StatusMuatIdm.Gagal, null, pesan);
@@ -415,13 +415,15 @@ namespace SuDesApp.Services
     /// pemerintah pusat.
     ///
     /// Permintaan selalu mencoba HTTPS lebih dulu. Bila sertifikat situs pusat
-    /// bermasalah (mis. kedaluwarsa — kejadian nyata pada Agustus 2026), alamat
-    /// yang sama diulang lewat HTTP dan hasilnya ditandai
-    /// <see cref="MuatanIdm.LewatHttp"/>: halaman IDM lalu memperingatkan pengguna
-    /// secara terbuka bahwa angka datang tanpa enkripsi, dan peringatan itu ikut
-    /// tersimpan pada cadangan. Penurunan ke HTTP karena itu tidak pernah
-    /// diam-diam — angka yang dipakai kantor desa harus bisa dimodifikasi pihak
-    /// di jaringan, dan pengguna berhak tahu saat hal itu mungkin terjadi.
+    /// bermasalah (mis. kedaluwarsa — kejadian nyata sejak 16 Agustus 2026),
+    /// alamat yang sama diulang lewat HTTP dan hasilnya ditandai
+    /// <see cref="MuatanIdm.LewatHttp"/>: halaman IDM memperingatkan pengguna
+    /// secara terbuka bahwa angka datang tanpa enkripsi, dan peringatan itu
+    /// ikut tersimpan pada cadangan. Penurunan ke HTTP karena itu tidak pernah
+    /// diam-diam — angka yang dipakai kantor desa bisa dimodifikasi pihak di
+    /// jaringan, dan pengguna berhak tahu saat hal itu terjadi; tetapi halaman
+    /// juga tidak boleh kosong permanen hanya karena sertifikat pusat yang
+    /// kedaluwarsa, jadi data resmi tetap ditampilkan selama jalurnya dibuka.
     /// </summary>
     public sealed class IdmKemendesaKlien : IIdmKemendesaKlien
     {
@@ -430,7 +432,8 @@ namespace SuDesApp.Services
         /// <summary>Situs pusat yang dibuka tombol "Buka situs pusat".</summary>
         public const string AlamatSitus = "https://idm.kemendesa.go.id/";
 
-        private const string AkarHttps = "https://"+Host+"/open/api/desa/rumusan/";
+        private const string AkarHttps = "https://" + Host + "/open/api/desa/rumusan/";
+        private const string AkarHttp = "http://" + Host + "/open/api/desa/rumusan/";
 
         private readonly HttpClient _http;
         private readonly ILogger<IdmKemendesaKlien> _logger;
@@ -467,14 +470,31 @@ namespace SuDesApp.Services
             }
             catch (HttpRequestException ex) when (SertifikatBermasalah(ex))
             {
-                // Sertifikat kedaluwarsa/salah → GAGAL-TERTUTUP. Tidak ada
-                // penurunan ke HTTP: angka IDM yang dipakai kantor desa tidak
-                // boleh datang tanpa enkripsi karena bisa dimodifikasi pihak
-                // di jaringan. Halaman menampilkan galat, bukan data.
+                // Sertifikat kedaluwarsa/salah → turun ke HTTP dengan
+                // pengungkapan penuh (LewatHttp). Tanpa ini halaman kosong
+                // permanen selama sertifikat pusat belum diperbarui
+                // (kedaluwarsa sejak 16 Agustus 2026) — padahal datanya
+                // sendiri resmi dari situs yang sama.
                 _logger.LogWarning(
-                    "Sertifikat situs IDM bermasalah untuk desa {Kode} tahun {Tahun} ({Pesan}); menolak jalur tidak terenkripsi.",
+                    "Sertifikat situs IDM bermasalah untuk desa {Kode} tahun {Tahun} ({Pesan}); mencoba jalur HTTP dengan peringatan terbuka.",
                     kode, tahun, ex.Message);
-                return MuatanIdm.Galat("Sertifikat situs pusat bermasalah. Data IDM tidak ditampilkan karena keamanan sambungan tidak dapat dijamin.");
+                try
+                {
+                    var isiHttp = await BacaAsync(AkarHttp + kode + "/" + tahun, ct)
+                        .ConfigureAwait(false);
+                    var muatanHttp = IdmKemendesaBaca.Urai(isiHttp, tahun);
+                    return muatanHttp with { LewatHttp = true };
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception exHttp)
+                {
+                    _logger.LogWarning(exHttp,
+                        "Jalur HTTP IDM juga gagal untuk desa {Kode} tahun {Tahun}", kode, tahun);
+                    return MuatanIdm.Galat("Sertifikat situs pusat bermasalah dan jalur tanpa enkripsi tidak terjangkau. Data IDM tidak ditampilkan karena keamanan sambungan tidak dapat dijamin.");
+                }
             }
             catch (HttpRequestException ex)
             {

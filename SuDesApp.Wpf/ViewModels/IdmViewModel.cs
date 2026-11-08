@@ -1033,7 +1033,11 @@ namespace SuDesApp.Wpf.ViewModels
             PasangData(hasil, _kodeDesa, _jam(), lewatHttp);
             PesanCadangan = string.Empty;
 
-            PeringatanSumber = string.Empty;
+            PeringatanSumber = lewatHttp
+                ? "Data ini diambil tanpa enkripsi karena sertifikat situs pusat bermasalah. Angka berasal dari "
+                  + "situs resmi, tetapi perjalanannya tidak terlindungi — muat ulang saat sertifikat pusat sudah "
+                  + "beres untuk menggantinya dengan jalur terenkripsi."
+                : string.Empty;
 
             // Cadangan hasil yang baru saja BERHASIL dimuat — dipakai lagi saat
             // internet mati, termasuk setelah aplikasi dibuka ulang.
@@ -1314,7 +1318,8 @@ namespace SuDesApp.Wpf.ViewModels
                     hasil, _data?.Seri.Tahun, desa, _data?.WaktuMuat, _jam());
 
                 using var penampung = new MemoryStream();
-                new LaporanIdmGenerator().GenerateLaporanPdf(penampung, data);
+                await Task.Run(() => new LaporanIdmGenerator().GenerateLaporanPdf(penampung, data))
+                    .ConfigureAwait(true);
 
                 string jalur = await PratinjauPdf
                     .SimpanAsync(_appConfig, penampung.ToArray(), data.NamaBerkas)
