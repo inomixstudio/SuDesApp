@@ -204,8 +204,8 @@
                 </Border>
             </Grid>
 
-            <!-- ===== Sinkronisasi Surat ===== -->
-            <Grid Grid.Row="2" Margin="0,14,0,0">
+            <!-- ===== Sinkronisasi Surat (di bawah) ===== -->
+            <Grid Grid.Row="3" Margin="0,14,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
@@ -294,8 +294,8 @@
                 </Border>
             </Grid>
 
-            <!-- ===== Perangkat ===== -->
-            <Border Grid.Row="3" Style="{StaticResource FormCard}" Margin="0,14,0,0">
+            <!-- ===== Perangkat (di atas) ===== -->
+            <Border Grid.Row="2" Style="{StaticResource FormCard}" Margin="0,14,0,0">
                 <StackPanel>
                     <DockPanel>
                         <TextBlock Text="PERANGKAT ANDROID" Style="{StaticResource FormSectionTitle}"/>
@@ -326,13 +326,10 @@
                                 <Button Content="Buat QR" Command="{Binding BuatQrCommand}"
                                         Style="{StaticResource PrimaryButton}"
                                         ToolTip="Buat QR + kode: pindai dari aplikasi Android."/>
-                                <Button Content="Buat Kode" Command="{Binding BuatKodeCommand}"
-                                        Style="{StaticResource OutlineButton}" Margin="8,0,0,0"
-                                        ToolTip="Buat kode 4 angka: ketik di aplikasi Android."/>
                             </StackPanel>
                             <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                       Text="Nama perangkat dibuat otomatis — tanpa mengisi apa pun. Tekan salah satu tombol, lalu scan QR atau ketik kode di Android."/>
+                                       Text="Nama perangkat dibuat otomatis — tanpa mengisi apa pun. Tekan Buat QR, lalu scan QR atau ketik kode di Android."/>
 
                             <TextBlock Text="PERANGKAT TERPASANG" Style="{StaticResource FieldLabel}"
                                        Margin="0,14,0,4"/>

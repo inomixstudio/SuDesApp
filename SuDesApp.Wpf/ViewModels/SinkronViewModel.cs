@@ -271,6 +271,7 @@ public class SinkronViewModel : ObservableObject
             SetProperty(ref _perangkatBaru, value);
             OnPropertyChanged(nameof(AdaPerangkatBaru));
             OnPropertyChanged(nameof(QrPayload));
+            OnPropertyChanged(nameof(KodePerangkat));
             GambarQr = QrGambar.Buat(QrPayload);
         }
     }
