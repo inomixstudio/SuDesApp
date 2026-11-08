@@ -66,7 +66,9 @@ public sealed class SigningServiceTests
             var layanan = BuatLayanan(directory);
             var token = layanan.Tandatangani(KlaimContoh());
 
-            Assert.False(layanan.CobaVerifikasi("v2" + token[2..], layanan.KunciPublikB64Url, out _));
+            // Token kini berformat v2; mutasi awalan versinya harus ditolak.
+            Assert.StartsWith("v2.", token);
+            Assert.False(layanan.CobaVerifikasi("v9" + token[2..], layanan.KunciPublikB64Url, out _));
             Assert.False(layanan.CobaVerifikasi("rusak", layanan.KunciPublikB64Url, out _));
         });
     }

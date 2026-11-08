@@ -61,6 +61,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public void Dispose()
         {
+            _pemantauAndroid?.Berhenti();
             _notifications.Dispose();
             _pembaruanLatar.Dispose();
         }
@@ -86,7 +87,8 @@ namespace SuDesApp.Wpf.ViewModels
             SuDesApp.Services.LisensiManager? lisensi = null,
             SuDesApp.Services.SambunganServerLisensi? sambunganServer = null,
             SuDesApp.Services.IIdmSimpananStore? idmSimpanan = null,
-            SuDesApp.Wilayah.WilayahDataStore? wilayah = null)
+            SuDesApp.Wilayah.WilayahDataStore? wilayah = null,
+            SuDesApp.Wpf.Services.PemantauAndroidLatar? pemantauAndroid = null)
         {
             _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
@@ -110,6 +112,16 @@ namespace SuDesApp.Wpf.ViewModels
             _sambunganServer = sambunganServer;
             _idmSimpanan = idmSimpanan;
             _wilayah = wilayah;
+
+            // Status Android di status bar aktif sejak aplikasi dijalankan:
+            // koneksi Supabase dipakai otomatis, dan perangkat yang melapor
+            // langsung terlihat (plus satu notifikasi saat baru tersambung).
+            _pemantauAndroid = pemantauAndroid;
+            if (pemantauAndroid is not null)
+            {
+                pemantauAndroid.Berubah += TerapkanStatusAndroid;
+                pemantauAndroid.Mulai();
+            }
 
             // Baris menu Pusat Administrasi menyebut server yang dituju DAN
             // keadaan sambungannya sejak menu dibangun — bukan hanya setelah

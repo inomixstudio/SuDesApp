@@ -125,6 +125,28 @@ builder.Services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
 // CORS untuk klien mobile/browser saat pengembangan (dipakai di bawah).
 builder.Services.AddCors();
 
+// Backend ini membaca data pribadi (NIK/NoKK) — default bind loopback
+// saja. Bila perlu diakses jaringan lain, jalankan di belakang reverse proxy
+// HTTPS yang terkonfigurasi (loopback di host yang sama).
+if (builder.Configuration.GetValue<string>("Api:Alamat") is not { Length: > 0 } alamat)
+{
+    builder.WebHost.UseUrls("http://127.0.0.1:5188");
+}
+
+// Rate limit global: lindungi login & endpoint PII dari brute-force.
+builder.Services.AddRateLimiter(o =>
+{
+    o.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(
+        ctx => System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            "global",
+            _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 120,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
 var app = builder.Build();
 
 // Gagal di sini berarti database tidak bisa dibuka sama sekali — hentikan lebih
@@ -157,6 +179,41 @@ if (app.Environment.IsDevelopment())
     // Produksi di belakangi origin yang sama / reverse proxy.
     app.UseCors(p => p.SetIsOriginAllowed(_ => true).AllowAnyHeader().AllowAnyMethod());
 }
+
+// Penanganan galat terpusat — galat internal tidak bocor sebagai stack/500 mentah (kecuali Dev).
+app.Use(async (ctx, next) =>
+{
+    try { await next(ctx); }
+    catch (Exception ex)
+    {
+        if (ctx.Response.HasStarted) throw;
+        var logger = ctx.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Galat tidak tertangani pada {Metode} {Jalur}", ctx.Request.Method, ctx.Request.Path);
+        ctx.Response.Clear();
+        ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        ctx.Response.ContentType = "application/problem+json";
+        var masalah = new Microsoft.AspNetCore.Mvc.ProblemDetails
+        {
+            Status = StatusCodes.Status500InternalServerError,
+            Title = "Terjadi galat pada server.",
+            Detail = app.Environment.IsDevelopment() ? ex.Message : null
+        };
+        await ctx.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(masalah));
+    }
+});
+app.UseRateLimiter();
+// Audit akses data pribadi: siapa membaca apa.
+app.Use(async (ctx, next) =>
+{
+    await next(ctx);
+    if (ctx.Request.Path.StartsWithSegments("/sudes/api/v1/warga") ||
+        ctx.Request.Path.StartsWithSegments("/sudes/api/v1/surat"))
+    {
+        var logger = ctx.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Akses data pribadi {Metode} {Jalur} dari {IP} (HTTP {Kode})",
+            ctx.Request.Method, ctx.Request.Path, ctx.Connection.RemoteIpAddress, ctx.Response.StatusCode);
+    }
+});
 
 // ==== Identitas per-permintaan: sesi login → SessionContext Core ====
 // Satu proses Api melayani banyak pengguna sekaligus, jadi identitas tidak

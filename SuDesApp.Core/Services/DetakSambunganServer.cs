@@ -66,13 +66,34 @@ namespace SuDesApp.Services
         /// <summary>Hentikan denyut. Aman dipanggil kapan saja, termasuk sebelum Mulai.</summary>
         public void Berhenti()
         {
+            CancellationTokenSource? lama;
+            Task? tugas;
             lock (_kunci)
             {
-                if (_berhenti == null) return;
-                try { _berhenti.Cancel(); } catch { /* loop sudah selesai dan membuang CTS */ }
-                try { _berhenti.Dispose(); } catch { /* sudah dibuang */ }
+                lama = _berhenti;
+                tugas = _tugas;
                 _berhenti = null;
                 _tugas = null;
+            }
+            if (lama == null) return;
+            try { lama.Cancel(); } catch { /* loop sudah selesai */ }
+            // Tunggu loop selesai sebelum dispose, tapi JANGAN blokir UI lama:
+            // loop keluar pada OperationCanceled/ObjectDisposed. Bila tugas
+            // sudah selesai, langsung dispose.
+            if (tugas != null && tugas.IsCompleted)
+            {
+                try { tugas.Dispose(); } catch { /* sudah dibuang */ }
+                try { lama.Dispose(); } catch { /* sudah dibuang */ }
+            }
+            else
+            {
+                // Dispose ditunda sampai loop benar-benar berhenti — cara
+                // sebelumnya membuang CTS selagi `IsCancellationRequested`
+                // masih dibaca loop (ObjectDisposedException).
+                tugas?.ContinueWith((_, state) =>
+                {
+                    try { ((CancellationTokenSource)state!).Dispose(); } catch { /* sudah dibuang */ }
+                }, lama, TaskScheduler.Default);
             }
         }
 

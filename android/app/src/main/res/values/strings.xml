@@ -42,22 +42,8 @@
 
     <!-- Pengaturan -->
     <string name="label_pengaturan">Pengaturan Surat</string>
-    <string name="hint_nama_desa">Nama desa</string>
-    <string name="hint_kecamatan">Kecamatan</string>
-    <string name="hint_kabupaten">Kabupaten</string>
-    <string name="hint_jenis_kabupaten">Jenis kabupaten (Kabupaten/Kota)</string>
-    <string name="hint_jenis_lembaga">Jenis lembaga (Desa/Kelurahan)</string>
-    <string name="hint_alamat">Alamat kantor desa</string>
-    <string name="hint_kodepos">Kodepos</string>
-    <string name="hint_email">Surel kantor desa</string>
-    <string name="hint_email_perangkat">Surel perangkat</string>
-    <string name="hint_kepala_desa">Nama Kepala Desa</string>
-    <string name="hint_sekretaris">Nama Sekretaris Desa</string>
-    <string name="hint_nip">NIP (hanya Lurah)</string>
-    <string name="hint_awalan">Awalan nomor (mis. 470)</string>
-    <string name="hint_nomor_terakhir">Nomor urut terakhir di register</string>
-    <string name="hint_ukuran">Ukuran kertas (A4/F4)</string>
-    <string name="hint_logo">Jalur berkas logo (kosongkan bila tanpa logo)</string>
+    <!-- (Dulu: hint pengisian manual nama desa/awalan/logo — dihapus; identitas kini
+         read-only dari desktop, jadi hint itu tak terpakai.) -->
     <string name="simpan_pengaturan">Simpan</string>
     <string name="pengaturan_tersimpan">Pengaturan disimpan.</string>
     <string name="pengaturan_sumber">Identitas kop dan pola nomor diambil dari aplikasi desktop, bukan diketik di sini. Nilai di bawah adalah salinan yang sedang dipakai perangkat ini.</string>
@@ -66,6 +52,9 @@
     <string name="pengaturan_sinkron_proses">Menarik pengaturan dari desktop…</string>
     <string name="pengaturan_sinkron_berhasil">Pengaturan kop &amp; pola nomor diperbarui dari desktop.</string>
     <string name="pengaturan_sinkron_gagal">Tidak bisa menarik pengaturan. Periksa koneksi dan coba lagi.</string>
+    <string name="pengaturan_belum_terbit">Desktop belum menerbitkan kop surat. Buka halaman Sinkron Android di desktop, lalu terbitkan pengaturan.</string>
+    <string name="sesi_tidak_berlaku">Sesi perangkat tidak berlaku lagi. Pindai ulang kode QR dari halaman Sinkron Android di desktop.</string>
+    <string name="sesi_tidak_berlaku_singkat">Sesi tidak berlaku — pasang ulang</string>
     <string name="pengaturan_belum_terpasang">Perangkat belum dipasang. Buka menu Sinkron untuk menghubungkannya.</string>
     <string name="pengaturan_keterangan">Identitas ini dipakai sebagai kop surat, dan nomor urut dilanjutkan dari angka terakhir supaya tidak lompat.</string>
     <string name="grup_kop_surat">KOP SURAT</string>
@@ -73,11 +62,18 @@
 
     <!-- Sinkron / pasang perangkat -->
     <string name="label_pasang_perangkat">Pasang Perangkat</string>
-    <string name="petunjuk_pasang">Buka halaman Sinkron Android di komputer desa, lalu pindai kode QR di sana. Kamera terbuka sendiri — tidak ada yang perlu diketik.</string>
+    <string name="petunjuk_pasang">Buka halaman Sinkron Android di komputer desa. Pilih Pindai Kode QR, atau ketik kode 4 angka bila kamera tidak bisa dipakai.</string>
     <string name="pindai_qr">Pindai Kode QR</string>
-    <string name="status_pasang_awal">Kamera akan terbuka sendiri.\nArahkan ke kode QR di halaman Sinkron Android pada komputer desa.</string>
+    <string name="status_pasang_awal">Pilih Pindai Kode QR untuk memindai kode dari halaman Sinkron Android di komputer desa, atau ketik kode 4 angka di bawah.</string>
     <string name="status_menghubungkan">Menghubungkan…</string>
     <string name="status_batal_pindai">Pindaian dibatalkan. Ketuk tombol di bawah untuk mencoba lagi.</string>
+    <string name="status_kode_tidak_terbaca">Kode QR tidak terbaca. Coba pindai ulang.</string>
+    <string name="kode_manual_judul">Punya kode 4 angka?</string>
+    <string name="kode_manual_petunjuk">Ketik kode yang tampil di halaman Sinkron Android pada komputer desa. Memindai kode QR tetap cara tercepat.</string>
+    <string name="kode_manual_hint">Kode 4 angka</string>
+    <string name="hubungkan_kode">Hubungkan</string>
+    <string name="status_kode_tidak_valid">Kode harus terdiri dari 4 angka.</string>
+    <string name="status_mengambil_pengaturan">Terhubung. Mengambil pengaturan desa dari desktop…</string>
 
     <!-- Status dan pesan -->
     <string name="sedang_membuat_pdf">Membuat PDF…</string>
@@ -87,4 +83,47 @@
     <string name="wajib_diisi">%1$s wajib diisi</string>
     <string name="wajib_satu_baris">%1$s wajib diisi minimal satu baris</string>
     <string name="belum_ada_hasil">Surat belum dibuat.</string>
+
+    <!-- Keterangan kartu menu -->
+    <string name="ket_buat_surat">Formulir surat desa, hasil PDF siap cetak</string>
+    <string name="ket_buat_ntcr">N1-N6 dan N8 untuk persyaratan pernikahan</string>
+    <string name="ket_register_surat">Cetak ulang atau bagikan PDF tersimpan</string>
+    <string name="ket_daftar_hadir">Buat daftar hadir lalu cetak PDF</string>
+    <string name="ket_pengaturan">Kop surat dan penomoran dari desktop</string>
+    <string name="ket_pengaturan_header">Kop surat dan penomoran desa</string>
+    <string name="ket_sinkron">Hubungkan perangkat lewat kode QR</string>
+    <string name="menu_judul">Menu</string>
+    <string name="pil_privasi">Data tetap di perangkat</string>
+    <string name="identitas_belum_sinkron">Identitas desa belum disinkronkan</string>
+    <string name="jumlah_surat">%1$d surat tersimpan</string>
+    <string name="jumlah_surat_kosong">Belum ada surat</string>
+
+    <!-- Daftar hadir -->
+    <string name="grup_kegiatan">KEGIATAN</string>
+    <string name="grup_peserta">PESERTA</string>
+    <string name="hint_pembuat_opsional">Nama pembuat daftar (opsional)</string>
+    <string name="ket_daftar_hadir_form">Isi kegiatan dan daftar peserta, lalu cetak sebagai PDF.</string>
+
+    <!-- Antrean sinkronisasi -->
+    <string name="toast_antrean_terkirim">%1$s \u00B7 sudah masuk antrean desktop</string>
+    <string name="toast_antrean_tertunda">%1$s \u00B7 akan dikirim ke desktop saat jaringan tersedia</string>
+    <string name="antrean_tertunda_terkirim">%1$d surat tertunda berhasil dikirim ke antrean desktop.</string>
+    <string name="grup_sinkronisasi">SINKRONISASI PERANGKAT</string>
+    <string name="sinkron_status_perangkat">Status perangkat</string>
+    <string name="sinkron_antrean_supabase">Menunggu di antrean desktop</string>
+    <string name="sinkron_tertunda_perangkat">Tertunda di perangkat</string>
+    <string name="sinkron_terpasang">Terpasang</string>
+    <string name="sinkron_belum_terpasang">Belum terpasang</string>
+    <string name="sinkron_tidak_terjangkau">Tidak terjangkau</string>
+    <string name="sinkron_memuat">Memuat…</string>
+    <string name="sinkron_antrean_nilai">%1$d menunggu, %2$d gagal</string>
+    <string name="sinkron_tertunda_nilai">%1$d surat</string>
+    <string name="btn_kirim_tertunda">Kirim surat tertunda</string>
+    <string name="btn_keluar_perangkat">Keluar perangkat</string>
+    <string name="kirim_tertunda_kosong">Tidak ada surat tertunda.</string>
+    <string name="kirim_tertunda_proses">Mengirim surat tertunda…</string>
+    <string name="kirim_tertunda_gagal">Belum bisa mengirim. Periksa koneksi lalu coba lagi.</string>
+    <string name="keluar_judul">Keluar perangkat</string>
+    <string name="keluar_pesan">Keluarkan perangkat ini? Surat yang belum terkirim tetap tersimpan dan dikirim setelah perangkat dipasang lagi.</string>
+    <string name="keluar_berhasil">Perangkat dikeluarkan. Pindai kode QR untuk memasang lagi.</string>
 </resources>

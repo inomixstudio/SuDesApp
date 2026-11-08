@@ -1391,7 +1391,7 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 // Ketikan cepat tidak perlu merender setiap huruf: tunggu sampai diam.
-                await Task.Delay(120, batal);
+                await Task.Delay(350, batal);
                 var gambar = await KopSuratPratinjauService.BuatAsync(desa, logoPath, ukuran, batal);
                 if (!batal.IsCancellationRequested) PratinjauKopGambar = gambar;
             }

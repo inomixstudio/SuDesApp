@@ -64,12 +64,20 @@ namespace SuDesApp.Services
     /// </summary>
     public static class VerifikasiLisensi
     {
-        private const string Versi = "v1";
+        private const string VersiLama = "v1";
+        private const string VersiBaru = "v2";
+
+        public static string KidDariPublik(string kunciPublikB64Url)
+        {
+            var hash = System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(kunciPublikB64Url));
+            return Convert.ToHexString(hash)[..16].ToLowerInvariant();
+        }
 
         /// <summary>
         /// Verifikasi tanda tangan dan isi token.
         /// </summary>
-        /// <param name="token">Token penuh <c>v1.payload.signature</c>.</param>
+        /// <param name="token">Token penuh <c>v1.payload.signature</c> (lama) atau <c>v2.kid.payload.signature</c> (baru).</param>
         /// <param name="kunciPublikB64Url">Kunci publik SPKI base64url.</param>
         /// <param name="klaim">Klaim hasil decode bila tanda tangan sah.</param>
         /// <returns>True bila token sah secara kriptografis.</returns>
@@ -82,7 +90,23 @@ namespace SuDesApp.Services
             try
             {
                 var bagian = token!.Split('.');
-                if (bagian.Length != 3 || !string.Equals(bagian[0], Versi, StringComparison.Ordinal))
+
+                // v2: v2.<kid>.<payload>.<signature>
+                if (bagian.Length == 4 && string.Equals(bagian[0], VersiBaru, StringComparison.Ordinal))
+                {
+                    if (!string.Equals(bagian[1], KidDariPublik(kunciPublikB64Url!), StringComparison.Ordinal))
+                        return false;
+                    var payloadV2 = B64Url.Decode(bagian[2]);
+                    var tandaTanganV2 = B64Url.Decode(bagian[3]);
+                    using var kunciV2 = ECDsa.Create();
+                    kunciV2.ImportSubjectPublicKeyInfo(B64Url.Decode(kunciPublikB64Url!), out _);
+                    if (!kunciV2.VerifyData(payloadV2, tandaTanganV2, HashAlgorithmName.SHA256))
+                        return false;
+                    klaim = JsonSerializer.Deserialize<KlaimLisensi>(payloadV2);
+                    return klaim is not null;
+                }
+
+                if (bagian.Length != 3 || !string.Equals(bagian[0], VersiLama, StringComparison.Ordinal))
                     return false;
 
                 var payload = B64Url.Decode(bagian[1]);

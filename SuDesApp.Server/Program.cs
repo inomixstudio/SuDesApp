@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using System.Threading.RateLimiting;
@@ -818,9 +818,9 @@ app.MapGet("/admin/pengumuman", async (HttpRequest req) =>
             })
         });
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-        return Results.Json(new { pesan = "Gagal membaca pengumuman: " + ex.Message },
+        return Results.Json(new { pesan = "Gagal membaca pengumuman." },
             statusCode: StatusCodes.Status500InternalServerError);
     }
 })
@@ -846,9 +846,9 @@ app.MapPost("/admin/pengumuman", async (HttpRequest req, BuatPengumumanRequest b
             pesan = "Pengumuman terbit — seluruh aplikasi desa akan menampilkannya dalam ±60 detik."
         });
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-        return Results.Json(new { pesan = "Gagal menulis pengumuman: " + ex.Message },
+        return Results.Json(new { pesan = "Gagal menulis pengumuman." },
             statusCode: StatusCodes.Status500InternalServerError);
     }
 })
@@ -866,9 +866,9 @@ app.MapDelete("/admin/pengumuman/{id}", async (string id, HttpRequest req) =>
             ? Results.Ok(new { dihapus = true, pesan = "Pengumuman dihapus." })
             : Results.NotFound(new { pesan = "Pengumuman tidak dikenal." });
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-        return Results.Json(new { pesan = "Gagal menghapus pengumuman: " + ex.Message },
+        return Results.Json(new { pesan = "Gagal menghapus pengumuman." },
             statusCode: StatusCodes.Status500InternalServerError);
     }
 })

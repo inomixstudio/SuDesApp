@@ -138,7 +138,11 @@ namespace SuDesApp.Wpf.Mvvm
 
         public bool CanExecute(object? parameter)
         {
-            return !_isExecuting && (_canExecute?.Invoke((T)parameter!) ?? true);
+            if (_isExecuting) return false;
+            if (_canExecute == null) return true;
+            if (parameter is T nilai) return _canExecute(nilai);
+            // Parameter null/salah tipe bukan crash — tandai tidak bisa dieksekusi.
+            return false;
         }
 
         public async void Execute(object? parameter)
@@ -152,7 +156,7 @@ namespace SuDesApp.Wpf.Mvvm
             RaiseCanExecuteChanged();
             try
             {
-                await _execute((T)parameter!);
+                await _execute(parameter is T nilai ? nilai : default!);
             }
             catch (OperationCanceledException)
             {

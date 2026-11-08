@@ -428,10 +428,7 @@ namespace SuDesApp.Services
         /// <summary>Situs pusat yang dibuka tombol "Buka situs pusat".</summary>
         public const string AlamatSitus = "https://idm.kemendesa.go.id/";
 
-        private const string AkarHttps = "https://" + Host + "/open/api/desa/rumusan/";
-
-        /// <summary>Alamat yang sama tanpa enkripsi — hanya untuk jalur cadangan sertifikat.</summary>
-        private const string AkarHttp = "http://" + Host + "/open/api/desa/rumusan/";
+        private const string AkarHttps = "https://"+Host+"/open/api/desa/rumusan/";
 
         private readonly HttpClient _http;
         private readonly ILogger<IdmKemendesaKlien> _logger;
@@ -468,14 +465,14 @@ namespace SuDesApp.Services
             }
             catch (HttpRequestException ex) when (SertifikatBermasalah(ex))
             {
-                // Sertifikat kedaluwarsa/salah → ulangi permintaan lewat HTTP polos.
-                // Jawaban TIDAK pernah dipasang diam-diam: LewatHttp ikut terbawa
-                // sehingga halaman memperingatkan pengguna bahwa angka datang tanpa
-                // enkripsi (peringatan yang sama ikut tersimpan pada cadangan).
+                // Sertifikat kedaluwarsa/salah → GAGAL-TERTUTUP. Tidak ada
+                // penurunan ke HTTP: angka IDM yang dipakai kantor desa tidak
+                // boleh datang tanpa enkripsi karena bisa dimodifikasi pihak
+                // di jaringan. Halaman menampilkan galat, bukan data.
                 _logger.LogWarning(
-                    "Sertifikat situs IDM bermasalah ({Pesan}); mencoba jalur cadangan HTTP "
-                    + "untuk desa {Kode} tahun {Tahun}.", ex.Message, kode, tahun);
-                return await MuatLewatHttpAsync(kode, tahun, ct).ConfigureAwait(false);
+                    "Sertifikat situs IDM bermasalah untuk desa {Kode} tahun {Tahun} ({Pesan}); menolak jalur tidak terenkripsi.",
+                    kode, tahun, ex.Message);
+                return MuatanIdm.Galat("Sertifikat situs pusat bermasalah. Data IDM tidak ditampilkan karena keamanan sambungan tidak dapat dijamin.");
             }
             catch (HttpRequestException ex)
             {
@@ -490,43 +487,8 @@ namespace SuDesApp.Services
         }
 
         /// <summary>
-        /// Jalur cadangan saat sertifikat HTTPS bermasalah: alamat yang sama lewat
-        /// HTTP polos, ditandai <c>LewatHttp</c> supaya halaman tidak pernah
-        /// menampilkan angka tanpa enkripsi tanpa peringatan. Kegagalan di jalur
-        /// ini pun tidak dilempar — halaman IDM menerima galat seperti biasa.
-        /// </summary>
-        private async Task<MuatanIdm> MuatLewatHttpAsync(string kode, int tahun, CancellationToken ct)
-        {
-            try
-            {
-                var isi = await BacaAsync(AkarHttp + kode + "/" + tahun, ct).ConfigureAwait(false);
-                var muatan = IdmKemendesaBaca.Urai(isi, tahun);
-                return muatan with { LewatHttp = true };
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (TaskCanceledException)
-            {
-                return MuatanIdm.Galat(
-                    "Sertifikat situs pusat bermasalah; jalur cadangan HTTP tidak menjawab (waktu habis).");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Jalur cadangan HTTP IDM juga gagal untuk desa {Kode} tahun {Tahun}.",
-                    kode, tahun);
-                return MuatanIdm.Galat(
-                    "Sertifikat situs pusat bermasalah dan jalur cadangan HTTP juga gagal. "
-                    + "Periksa sambungan internet lalu muat ulang.");
-            }
-        }
-
-        /// <summary>
         /// Benar bila rantai galat memuat kegagalan validasi sertifikat TLS
-        /// (kedaluwarsa, nama tidak cocok, dsb.) — satu-satunya alasan klien ini
-        /// turun ke HTTP. Kegagalan jaringan biasa tidak memicu cadangan: HTTP
-        /// akan ikut gagal, hanya lebih lambat.
+        /// (kedaluwarsa, nama tidak cocok, dsb.).
         /// </summary>
         private static bool SertifikatBermasalah(Exception ex)
         {

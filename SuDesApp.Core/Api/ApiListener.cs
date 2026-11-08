@@ -47,6 +47,10 @@ namespace SuDesApp.Api
         private readonly ApiPembatas _pembatas;
         private readonly object _gapu = new();
 
+        // Batas konkurensi: burst tidak menumpuk koneksi DB. Bila penuh,
+        // LayaniAsync menjawab 503 (Retry-After) alih-alih antre tak terbatas.
+        private static readonly SemaphoreSlim _konkurensi = new(32, 32);
+
         /// <summary>
         /// Sesi login pemanggil API (mis. HP kantor). Satu toko per listener:
         /// listener mati bersama aplikasi desktop, jadi semua token ikut gugur.
@@ -186,7 +190,21 @@ namespace SuDesApp.Api
                     continue;
                 }
 
-                _ = Task.Run(() => LayaniAsync(ctx, ct), CancellationToken.None);
+                if (!await _konkurensi.WaitAsync(0, ct).ConfigureAwait(false))
+                {
+                    try
+                    {
+                        Tulis(ctx, 503, ApiAmplop.Gagal(ApiKodeGalat.TerlaluBanyak,
+                            "Server sibuk. Coba lagi beberapa saat lagi."), RetryAfter: "1");
+                    }
+                    catch { /* respons sudah tidak bisa ditulis */ }
+                    continue;
+                }
+                _ = Task.Run(async () =>
+                {
+                    try { await LayaniAsync(ctx, ct).ConfigureAwait(false); }
+                    finally { _konkurensi.Release(); }
+                }, CancellationToken.None);
             }
         }
 

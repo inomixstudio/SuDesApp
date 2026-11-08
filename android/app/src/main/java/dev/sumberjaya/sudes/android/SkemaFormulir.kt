@@ -3,6 +3,7 @@ package dev.sumberjaya.sudes.android
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 
 /** Satu bidang formulir surat di Android. */
 data class SkemaBidang(
@@ -231,15 +232,17 @@ data class SkemaJenis(
 }
 
 /**
- * Skema formulir dibawa di dalam APK, bukan diunduh.
+ * Sumber definisi formulir di perangkat.
  *
- * Aplikasi ini sengaja tidak mengirim data apa pun: definisi formulir ikut
- * terpasang bersama APK, jadi perangkat tidak perlu terhubung ke layanan mana
- * pun untuk bekerja. Bila skema di desktop berubah, APK harus diperbarui —
- * konsekuensi yang diambil demi data warga tidak keluar perangkat.
+ * Urutannya: salinan lokal hasil tarikan dari desktop
+ * (`filesDir/skema-cache.json`) lebih dulu, lalu `assets/skema-formulir.json`
+ * yang ikut APK. Dengan begitu skema yang diterbitkan desktop ikut dipakai
+ * tanpa menunggu APK baru, sementara perangkat yang belum pernah tersambung —
+ * atau sedang offline — tetap bisa membuat surat dari salinan terakhir.
  */
 object SkemaLokal {
     private const val BERKAS = "skema-formulir.json"
+    private const val CACHE = "skema-cache.json"
 
     @Volatile
     private var cache: Map<String, SkemaJenis>? = null
@@ -248,15 +251,64 @@ object SkemaLokal {
     fun muat(ctx: Context): Map<String, SkemaJenis> {
         cache?.let { return it }
 
-        val teks = ctx.assets.open(BERKAS).bufferedReader().use { it.readText() }
-        val akar = JSONObject(teks)
-        val peta = mutableMapOf<String, SkemaJenis>()
-        for (kunci in akar.keys()) {
-            peta[kunci] = SkemaJenis.fromJson(kunci, akar.getJSONObject(kunci))
-        }
+        val peta = bacaBerkas(File(ctx.filesDir, CACHE))
+            ?: bacaAset(ctx)
+            ?: emptyMap()
 
         cache = peta
         return peta
+    }
+
+    /**
+     * Simpan skema terbitan desktop sebagai salinan lokal. False bila isinya
+     * kosong/rusak — salinan lama (atau aset APK) tetap dipakai.
+     */
+    fun simpan(ctx: Context, json: String): Boolean {
+        val peta = try {
+            uraikan(json)
+        } catch (e: Exception) {
+            null
+        } ?: return false
+
+        return try {
+            val tujuan = File(ctx.filesDir, CACHE)
+            val sementara = File(ctx.filesDir, "$CACHE.tmp")
+            sementara.writeText(json)
+            if (!sementara.renameTo(tujuan)) {
+                sementara.copyTo(tujuan, overwrite = true)
+                sementara.delete()
+            }
+            cache = peta
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun bacaBerkas(berkas: File): Map<String, SkemaJenis>? {
+        if (!berkas.isFile) return null
+        return try {
+            uraikan(berkas.readText())
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun bacaAset(ctx: Context): Map<String, SkemaJenis>? = try {
+        ctx.assets.open(BERKAS).bufferedReader().use { uraikan(it.readText()) }
+    } catch (e: Exception) {
+        null
+    }
+
+    private fun uraikan(teks: String): Map<String, SkemaJenis>? {
+        val akar = JSONObject(teks)
+        val peta = mutableMapOf<String, SkemaJenis>()
+        for (kunci in akar.keys()) {
+            val obj = akar.optJSONObject(kunci) ?: continue
+            peta[kunci] = SkemaJenis.fromJson(kunci, obj)
+        }
+
+        return if (peta.isEmpty()) null else peta
     }
 
     /** Jenis surat biasa (bukan NTCR), diurutkan untuk tampilan menu. */

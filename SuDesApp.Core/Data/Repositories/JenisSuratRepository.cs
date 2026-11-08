@@ -41,7 +41,7 @@ namespace SuDesApp.Data.Repositories
         /// Kosongkan cache register nomor terbit & register surat — dipanggil
         /// repositori surat setiap ada penulisan surat baru/berubah.
         /// </summary>
-        void TandaiRegisterBerubah();
+        Task TandaiRegisterBerubahAsync(CancellationToken cancellationToken = default);
     }
 
     public class JenisSuratRepository : BaseRepository<JenisSuratKelas>, IJenisSuratRepository
@@ -49,6 +49,11 @@ namespace SuDesApp.Data.Repositories
         private readonly ICacheService _cacheService;
         private readonly IJenisSuratConfigLoader _configLoader;
         private readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(2);
+
+        // Serial penomoran: hitung MAX+1 lalu cek exists terpisah (check-then-
+        // insert) rawan race antar jendela/impor sinkron. Semaphore statis
+        // menyerialkan antar-instance; constraint UNIQUE tetap jaring terakhir.
+        private static readonly SemaphoreSlim _penomoranSemaphore = new(1, 1);
 
         // Hapus hard-coded grup, gunakan konfigurasi dinamis
         private HashSet<string>? _cachedSharedNumberingGroup;
@@ -177,6 +182,9 @@ namespace SuDesApp.Data.Repositories
             if (string.IsNullOrWhiteSpace(kodeJenis))
                 throw new ArgumentNullException(nameof(kodeJenis), "Kode jenis surat tidak boleh kosong.");
 
+            await _penomoranSemaphore.WaitAsync();
+            try
+            {
             _logger.LogInformation("Generate nomor surat untuk KodeJenis: {KodeJenis}", kodeJenis);
 
             try
@@ -204,6 +212,11 @@ namespace SuDesApp.Data.Repositories
             {
                 _logger.LogError(ex, "Gagal generate nomor surat untuk KodeJenis: {KodeJenis}", kodeJenis);
                 throw new DataRetrievalException("Gagal generate nomor surat", ex);
+            }
+            }
+            finally
+            {
+                _penomoranSemaphore.Release();
             }
         }
 
@@ -361,11 +374,11 @@ namespace SuDesApp.Data.Repositories
         /// ketika ada surat baru/berubah, supaya angka tutup buku tidak pernah
         /// mencerminkan keadaan sebelum surat itu tersimpan.
         /// </summary>
-        public void TandaiRegisterBerubah()
+        public async Task TandaiRegisterBerubahAsync(CancellationToken cancellationToken = default)
         {
-            _cacheService.RemoveByPrefixAsync("NomorTerbit_").GetAwaiter().GetResult();
-            _cacheService.RemoveByPrefixAsync("RegisterSurat_").GetAwaiter().GetResult();
-            _cacheService.RemoveByPrefixAsync("AvailableYears").GetAwaiter().GetResult();
+            await _cacheService.RemoveByPrefixAsync("NomorTerbit_", cancellationToken).ConfigureAwait(false);
+            await _cacheService.RemoveByPrefixAsync("RegisterSurat_", cancellationToken).ConfigureAwait(false);
+            await _cacheService.RemoveByPrefixAsync("AvailableYears", cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<List<BarisNomorTerbit>> GetNomorTerbitAsync(int? tahun = null)

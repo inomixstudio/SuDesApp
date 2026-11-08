@@ -22,7 +22,11 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # Gitleaks: pemindai secret penuh (lebih tajam dari pola manual di bawah).
+      - name: Pindai secret dengan Gitleaks
+        uses: gitleaks/gitleaks-action@v2
 
       - name: Scan tracked files for secrets
         shell: pwsh
@@ -44,7 +48,7 @@ jobs:
           }
 
       - name: Install pinned .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: 11.0.100-rc.3
 
@@ -67,3 +71,32 @@ jobs:
         shell: bash
         timeout-minutes: 10
         run: bash Tools/uji-e2e-trial-server.sh
+
+  android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install JDK 21
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Siapkan Gradle (wrapper)
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
+
+      # Kunci Supabase hanya dipakai saat rilis; build debug tanpa
+      # supabase.properties tetap sah (BuildConfig berisi string kosong) dan
+      # sudah cukup membuktikan kode Kotlin, resource, dan manifest kompilasi.
+      - name: Bangun APK debug
+        working-directory: android
+        run: ./gradlew assembleDebug --console=plain
+
+      - name: Uji unit Android
+        working-directory: android
+        run: ./gradlew testDebugUnitTest --console=plain

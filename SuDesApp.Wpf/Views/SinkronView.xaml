@@ -6,7 +6,83 @@
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
     <UserControl.Resources>
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+
+        <!-- Bilah isi antrean: tipis, membulat secara visual lewat latar panel,
+             dan berubah merah saat antrean penuh. -->
+        <Style x:Key="BilahAntrean" TargetType="ProgressBar">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="Minimum" Value="0"/>
+            <Setter Property="Maximum" Value="10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding AntreanPenuh}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="LabelKpi" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="KeteranganKpi" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,6,0,0"/>
+        </Style>
+
+        <DataTemplate x:Key="BarisPerangkat">
+            <Grid Margin="0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Nama}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                               TextTrimming="CharacterEllipsis">
+                        <Run Text="Terakhir online: "/>
+                        <Run Text="{Binding TerakhirOnline, Mode=OneWay, TargetNullValue=belum pernah, StringFormat={}{0:dd MMM yyyy HH:mm}}"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <Border Grid.Column="1" CornerRadius="8" Padding="8,1" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Aktif}" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock FontSize="11" FontWeight="SemiBold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                <Setter Property="Text" Value="Nonaktif"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Aktif}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                        <Setter Property="Text" Value="Aktif"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+            </Grid>
+        </DataTemplate>
     </UserControl.Resources>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Margin="20">
             <Grid.RowDefinitions>
@@ -16,149 +92,253 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Header -->
+            <!-- ===== Kepala halaman ===== -->
             <Border Grid.Row="0" Style="{StaticResource PageHeader}">
-                <StackPanel Orientation="Horizontal">
-                    <Border Style="{StaticResource HeaderIconChip}">
-                        <TextBlock Text="⇅" FontSize="20"
-                                   FontFamily="{StaticResource AppIconFont}"
-                                   Foreground="{DynamicResource PrimaryBrush}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
-                        <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"
-                                   TextWrapping="Wrap" MaxWidth="900"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Style="{StaticResource HeaderIconChip}">
+                            <TextBlock Text="{x:Static u:IkonMenu.Sinkron}"
+                                       FontSize="20"
+                                       FontFamily="{StaticResource AppIconFont}"
+                                       Foreground="{DynamicResource PrimaryBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
+                            <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}"
+                                       TextWrapping="Wrap" MaxWidth="720"/>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+
+                    <!-- Koneksi Supabase dipakai otomatis; ditandai sekali di kepala
+                         halaman supaya operator tidak mencari kolom pengaturan. -->
+                    <Border Grid.Column="1" CornerRadius="10" Padding="10,5" VerticalAlignment="Center"
+                            Background="{DynamicResource SuccessBrush}"
+                            Visibility="{Binding KonfigurasiLengkap, Converter={StaticResource BoolToVis}}"
+                            ToolTip="Koneksi Supabase dibaca otomatis dari konfigurasi aplikasi saat dijalankan.">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="7" Height="7" Fill="{DynamicResource SuccessBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="KONEKSI OTOMATIS" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource HeaderTextBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" CornerRadius="10" Padding="10,5" VerticalAlignment="Center"
+                            Background="{DynamicResource PanelBrush}"
+                            Visibility="{Binding KonfigurasiLengkap, Converter={StaticResource InverseBoolToVis}}">
+                        <TextBlock Text="KONEKSI BELUM SIAP" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource HeaderTextBrush}" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
             </Border>
 
-            <!-- Konfigurasi Supabase -->
-            <Border Grid.Row="1" Style="{StaticResource FormCard}" Padding="18" Margin="0,14,0,0">
-                <StackPanel>
-                    <TextBlock Text="KONEKSI SUPABASE" Style="{StaticResource FormSectionTitle}"/>
-                    <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,4,0,10"
-                               Text="Hubungkan aplikasi ini ke Supabase desa. Kata sandi basis data disimpan terenkripsi (DPAPI) per akun Windows."/>
+            <!-- ===== Tiga angka ringkas ===== -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource KpiCard}" Padding="16,14">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="SURAT MENUNGGU" Style="{StaticResource LabelKpi}"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{x:Static u:IkonMenu.SuratMasuk}"
+                                       FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                       Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                            <TextBlock Text="{Binding JumlahAntrean}" FontSize="28" FontWeight="Bold"
+                                       Foreground="{DynamicResource PrimaryBrush}"/>
+                            <TextBlock Text="/ 10" FontSize="13" Margin="6,0,0,4" VerticalAlignment="Bottom"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                        <ProgressBar Style="{StaticResource BilahAntrean}" Value="{Binding JumlahAntrean, Mode=OneWay}"/>
+                        <TextBlock Style="{StaticResource KeteranganKpi}"
+                                   Text="Antrean dikosongkan setelah surat diimpor ke register."/>
+                    </StackPanel>
+                </Border>
 
-                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,10">
-                            <TextBlock Text="Host pooler" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldBox}"
-                                     ToolTip="aws-0-ap-northeast-2.pooler.supabase.com"/>
+                <Border Grid.Column="1" Style="{StaticResource KpiCard}" Padding="16,14">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="PERANGKAT" Style="{StaticResource LabelKpi}"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{x:Static u:IkonMenu.Sinkron}"
+                                       FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                       Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                            <TextBlock Text="{Binding JumlahPerangkatAktif}" FontSize="28" FontWeight="Bold"
+                                       Foreground="{DynamicResource PrimaryBrush}"/>
+                            <TextBlock Text="aktif" FontSize="13" Margin="6,0,0,4" VerticalAlignment="Bottom"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource KeteranganKpi}">
+                            <Run Text="Dari "/>
+                            <Run Text="{Binding JumlahPerangkat, Mode=OneWay}" FontWeight="SemiBold"/>
+                            <Run Text=" perangkat terpasang. Hanya satu yang boleh aktif."/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource KpiCard}" Padding="16,14" Margin="0">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="PENGATURAN ANDROID" Style="{StaticResource LabelKpi}"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{x:Static u:IkonMenu.Pengaturan}"
+                                       FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                       Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                            <TextBlock Text="Otomatis" FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource PrimaryBrush}"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource KeteranganKpi}"
+                                   Text="Kop surat, pola nomor, dan skema formulir ditarik perangkat dari desktop."/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- ===== Sinkronisasi + Penerbitan ===== -->
+            <Grid Grid.Row="2" Margin="0,14,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource FormCard}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="SINKRONISASI SURAT" Style="{StaticResource FormSectionTitle}"/>
+                            <Border DockPanel.Dock="Right" CornerRadius="9" Padding="8,1"
+                                    Background="{DynamicResource AccentSubtleBrush}" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding RingkasanAntrean}" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AccentTextBrush}"/>
+                            </Border>
+                        </DockPanel>
+
+                        <TextBlock Margin="0,6,0,10" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="Tarik surat yang dibuat di aplikasi Android dari antrean Supabase, lalu impor ke register desktop. Setiap surat diberi nomor resmi sekali saja."/>
+
+                        <ProgressBar Style="{StaticResource BilahAntrean}" Value="{Binding JumlahAntrean, Mode=OneWay}"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <Button Command="{Binding SinkronCommand}"
+                                    Style="{StaticResource PrimaryButton}" Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{x:Static u:IkonMenu.Sinkron}"
+                                               FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Sinkronkan sekarang" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding MuatUlangCommand}" Style="{StaticResource OutlineButton}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{x:Static u:IkonMenu.Riwayat}"
+                                               FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Muat ulang" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
-                            <TextBlock Text="Port" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldBox}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0"
+                                    Visibility="{Binding SedangSinkron, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{x:Static u:IkonMenu.Sinkron}"
+                                       FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                       Foreground="{DynamicResource AccentTextBrush}"
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Sedang menyinkronkan…" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,10">
-                            <TextBlock Text="Pengguna" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding Pengguna, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldBox}"
-                                     ToolTip="postgres.&lt;project-ref&gt;"/>
-                        </StackPanel>
+                        <Border Margin="0,12,0,0" CornerRadius="8" Padding="12,9"
+                                Background="{DynamicResource AccentSubtleBrush}"
+                                Visibility="{Binding AdaHasil, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{x:Static u:IkonMenu.Verifikasi}"
+                                           FontFamily="{StaticResource AppIconFont}" FontSize="14"
+                                           Foreground="{DynamicResource AccentTextBrush}"
+                                           VerticalAlignment="Top" Margin="0,1,8,0"/>
+                                <TextBlock Text="{Binding HasilRingkasan}" TextWrapping="Wrap"
+                                           FontWeight="SemiBold" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                        </Border>
 
-                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,10">
-                            <TextBlock Text="Kata sandi basis data" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding KataSandi, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldBox}"/>
-                        </StackPanel>
+                        <TextBlock Margin="0,12,0,0" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="Hasil impor juga tercatat di log sinkron dan notifikasi aplikasi."/>
+                    </StackPanel>
+                </Border>
 
-                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,10,10">
-                            <TextBlock Text="Tenant / id desa" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding Tenant, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldBox}"
-                                     ToolTip="Id pelanggan di Supabase (32 karakter hex)"/>
-                        </StackPanel>
+                <Border Grid.Column="1" Style="{StaticResource FormCard}" Margin="0">
+                    <StackPanel>
+                        <TextBlock Text="PENERBITAN UNTUK ANDROID" Style="{StaticResource FormSectionTitle}"/>
+                        <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,6,0,12"
+                                   Text="Perangkat mengambil pengaturan ini sendiri saat tersambung. Terbitkan ulang setiap kali kop atau formulir berubah di desktop."/>
 
-                        <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,0,10">
-                            <TextBlock Text="URL REST" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding UrlRest, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldBox}"
-                                     ToolTip="https://&lt;project-ref&gt;.supabase.co"/>
-                        </StackPanel>
-                    </Grid>
+                        <Button Command="{Binding TerbitkanPengaturanCommand}"
+                                Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left" Margin="0,0,0,8"
+                                ToolTip="Terbitkan identitas kop surat dan pola nomor.">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{x:Static u:IkonMenu.SuratKeluar}"
+                                           FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Terbitkan kop &amp; nomor" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                    <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,4"
-                               Text="Kunci publik Supabase (publishable key) — dipakai aplikasi Android."/>
-                    <TextBox Text="{Binding KunciPublik, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource FieldBox}" Margin="0,0,0,12"/>
+                        <Button Command="{Binding TerbitkanSkemaCommand}"
+                                Style="{StaticResource OutlineButton}" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                ToolTip="Unggah definisi formulir 27 jenis surat ke Supabase.">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{x:Static u:IkonMenu.Dokumen}"
+                                           FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Terbitkan skema formulir" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Simpan koneksi" Command="{Binding SimpanKonfigurasiCommand}"
-                                Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
-                        <Button Content="Terbitkan skema formulir" Command="{Binding TerbitkanSkemaCommand}"
-                                Style="{StaticResource OutlineButton}" Margin="0,0,8,0"/>
-                        <Button Content="Terbitkan kop &amp; nomor" Command="{Binding TerbitkanPengaturanCommand}"
-                                Style="{StaticResource OutlineButton}" Margin="0,0,8,0"
-                                ToolTip="Terbitkan ulang identitas kop surat dan pola nomor. Android mengambilnya otomatis."/>
-                        <TextBlock Text="Belum tersimpan / tidak lengkap" VerticalAlignment="Center"
+                        <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,10,0,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Text="Skema formulir ikut diterbitkan bersama kop, supaya jenis surat di perangkat sama persis dengan desktop."/>
+
+                        <TextBlock Text="Koneksi Supabase belum tersedia di komputer ini."
+                                   Margin="0,10,0,0" TextWrapping="Wrap"
                                    Foreground="{DynamicResource ErrorTextBrush}"
                                    Visibility="{Binding KonfigurasiLengkap, Converter={StaticResource InverseBoolToVis}}"/>
                     </StackPanel>
-                    <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,8,0,0"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               Text="Terbitkan skema formulir mengunggah definisi formulir 27 jenis surat ke Supabase supaya aplikasi Android memakai definisi yang sama persis."/>
-                </StackPanel>
-            </Border>
+                </Border>
+            </Grid>
 
-            <!-- Sinkronisasi -->
-            <Border Grid.Row="2" Style="{StaticResource FormCard}" Padding="18" Margin="0,14,0,0">
+            <!-- ===== Perangkat ===== -->
+            <Border Grid.Row="3" Style="{StaticResource FormCard}" Margin="0,14,0,0">
                 <StackPanel>
-                    <TextBlock Text="SINKRONISASI SURAT" Style="{StaticResource FormSectionTitle}"/>
+                    <DockPanel>
+                        <TextBlock Text="PERANGKAT ANDROID" Style="{StaticResource FormSectionTitle}"/>
+                        <Border DockPanel.Dock="Right" CornerRadius="9" Padding="8,1"
+                                Background="{DynamicResource PanelBrush}" VerticalAlignment="Center">
+                            <TextBlock FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}">
+                                <Run Text="{Binding JumlahPerangkatAktif, Mode=OneWay}"/>
+                                <Run Text=" aktif · "/>
+                                <Run Text="{Binding JumlahPerangkat, Mode=OneWay}"/>
+                                <Run Text=" terpasang"/>
+                            </TextBlock>
+                        </Border>
+                    </DockPanel>
 
-                    <TextBlock TextWrapping="Wrap" Margin="0,4,0,12"
-                               Foreground="{DynamicResource TextSecondaryBrush}">
-                        <Run Text="Surat menunggu di antrean: "/>
-                        <Run Text="{Binding JumlahAntrean, Mode=OneWay}" FontWeight="Bold"/>
-                        <Run Text=" (maksimum 10)."/>
-                    </TextBlock>
-
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Sinkronkan sekarang" Command="{Binding SinkronCommand}"
-                                Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
-                        <Button Content="Muat ulang" Command="{Binding MuatUlangCommand}"
-                                Style="{StaticResource OutlineButton}"/>
-                    </StackPanel>
-
-                    <TextBlock Text="Sedang menyinkronkan…" Margin="0,10,0,0"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               Visibility="{Binding SedangSinkron, Converter={StaticResource BoolToVis}}"/>
-
-                    <TextBlock Text="{Binding HasilRingkasan}" Margin="0,10,0,0" TextWrapping="Wrap"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               Visibility="{Binding AdaHasil, Converter={StaticResource BoolToVis}}"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Perangkat -->
-            <Border Grid.Row="3" Style="{StaticResource FormCard}" Padding="18" Margin="0,14,0,0">
-                <StackPanel>
-                    <TextBlock Text="PERANGKAT ANDROID" Style="{StaticResource FormSectionTitle}"/>
-                    <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,4,0,10"
-                               Text="Pasang perangkat baru dengan memindai QR. QR berisi URL Supabase, kunci publik, surel, dan kata sandi perangkat."/>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <TextBox Text="{Binding NamaPerangkat, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource FieldBox}" Width="240"
-                                 ToolTip="Nama perangkat, mis. 'Android Kades'"/>
-                        <Button Content="Buat QR" Command="{Binding PasangCommand}"
-                                Style="{StaticResource PrimaryButton}" Margin="10,0,0,0"/>
-                    </StackPanel>
+                    <TextBlock Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,6,0,12"
+                               Text="Pasang satu perangkat dengan memindai QR atau mengetik kode 4 angka. Memasang perangkat baru menonaktifkan perangkat sebelumnya; antreannya tetap bisa disinkronkan."/>
 
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -166,34 +346,79 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <ListBox Grid.Column="0" ItemsSource="{Binding Perangkat}"
-                                 SelectedItem="{Binding PerangkatDipilih}"
-                                 DisplayMemberPath="Nama" Height="120"
-                                 Style="{StaticResource {x:Type ListBox}}"/>
+                        <StackPanel Grid.Column="0" Margin="0,0,18,0">
+                            <TextBlock Text="Nama perangkat" Style="{StaticResource FieldLabel}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <TextBox Text="{Binding NamaPerangkat, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource FieldBox}" Width="260"
+                                         ToolTip="Nama perangkat, mis. 'Android Kades'"/>
+                                <Button Content="Buat QR" Command="{Binding PasangCommand}"
+                                        Style="{StaticResource PrimaryButton}" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Text="Nama membantu operator mengenali perangkat di daftar dan status bar desktop."/>
 
-                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Top"
-                                    Visibility="{Binding AdaPerangkatBaru, Converter={StaticResource BoolToVis}}">
-                            <Border Padding="8" Background="{DynamicResource SurfaceBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                                <Image Source="{Binding GambarQr}" Width="180" Height="180"
-                                       Stretch="Uniform" SnapsToDevicePixels="True"/>
-                            </Border>
-                            <TextBlock Text="Pindai dari aplikasi Android" Margin="0,6,0,0"
-                                       HorizontalAlignment="Center"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="Kode di dalam QR" Margin="0,12,0,2"
-                                       HorizontalAlignment="Center"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="{Binding KodePerangkat}"
-                                       FontSize="40" FontWeight="Bold"
-                                       HorizontalAlignment="Center" FontFamily="Consolas"
-                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="PERANGKAT TERPASANG" Style="{StaticResource FieldLabel}"
+                                       Margin="0,14,0,4"/>
+                            <ListBox ItemsSource="{Binding Perangkat}"
+                                     SelectedItem="{Binding PerangkatDipilih}"
+                                     ItemTemplate="{StaticResource BarisPerangkat}"
+                                     MinHeight="96" MaxHeight="150"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+
+                            <TextBlock Text="Belum ada perangkat terpasang." Margin="2,8,0,0"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       Visibility="{Binding AdaPerangkat, Converter={StaticResource InverseBoolToVis}}"/>
+
+                            <Button Content="Cabut perangkat terpilih" Command="{Binding CabutCommand}"
+                                    Style="{StaticResource OutlineButton}" Margin="0,12,0,0"
+                                    HorizontalAlignment="Left"/>
                         </StackPanel>
-                    </Grid>
 
-                    <Button Content="Cabut perangkat terpilih" Command="{Binding CabutCommand}"
-                            Style="{StaticResource OutlineButton}" Margin="0,12,0,0"
-                            HorizontalAlignment="Left"/>
+                        <!-- Panel kode: QR + kode 4 angka setelah perangkat dibuat -->
+                        <Border Grid.Column="1" Width="252" CornerRadius="10" Padding="14"
+                                Background="{DynamicResource PanelBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                            <Grid>
+                                <StackPanel Visibility="{Binding AdaPerangkatBaru, Converter={StaticResource BoolToVis}}">
+                                    <Border Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8">
+                                        <Image Source="{Binding GambarQr}" Width="188" Height="188"
+                                               Stretch="Uniform" SnapsToDevicePixels="True"/>
+                                    </Border>
+                                    <TextBlock Text="Pindai dari aplikasi Android" Margin="0,8,0,0"
+                                               HorizontalAlignment="Center" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="atau ketik kode ini" Margin="0,10,0,0"
+                                               HorizontalAlignment="Center" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding KodePerangkat}"
+                                               FontSize="36" FontWeight="Bold" FontFamily="Consolas"
+                                               HorizontalAlignment="Center" Margin="0,0,0,2"
+                                               Foreground="{DynamicResource PrimaryBrush}"/>
+                                    <TextBlock Text="Berlaku 10 menit dan hanya sekali pakai."
+                                               HorizontalAlignment="Center" TextAlignment="Center"
+                                               FontSize="11" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                            Visibility="{Binding AdaPerangkatBaru, Converter={StaticResource InverseBoolToVis}}">
+                                    <TextBlock Text="{x:Static u:IkonMenu.Gembok}"
+                                               FontFamily="{StaticResource AppIconFont}" FontSize="24"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="Belum ada kode aktif" Margin="0,8,0,0"
+                                               HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Isi nama perangkat lalu tekan Buat QR."
+                                               Margin="0,4,0,0" TextAlignment="Center" TextWrapping="Wrap"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>

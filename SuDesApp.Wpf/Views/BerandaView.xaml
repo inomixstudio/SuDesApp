@@ -4,15 +4,10 @@
              xmlns:c="clr-namespace:SuDesApp.Wpf.Controls"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
     <UserControl.Resources>
-        <!-- Kartu statistik: angka besar + label kecil -->
-        <Style x:Key="StatCard" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
+        <!-- Kartu statistik: angka besar + label kecil (basis KpiCardStyle global) -->
+        <Style x:Key="StatCard" TargetType="Border" BasedOn="{StaticResource KpiCardStyle}">
             <Setter Property="Padding" Value="14,12"/>
             <Setter Property="Margin" Value="0,0,12,12"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
         </Style>
 
         <!-- Tombol pintasan jenis surat: kartu klik-able -->

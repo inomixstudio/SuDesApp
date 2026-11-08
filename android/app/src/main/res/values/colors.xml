@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#00897B</color>
+    <!-- Palet disamakan dengan tema default aplikasi desktop (GreenTheme):
+         hijau hutan #166534, aksen emerald #15803D, latar #F0FDF4. -->
+    <color name="ic_launcher_background">#0DAD78</color>
 
-    <color name="accent">#00897B</color>
-    <color name="accent_dark">#00695C</color>
-    <color name="accent_muda">#E0F2F0</color>
-    <color name="page">#F2F5F4</color>
+    <color name="accent">#15803D</color>
+    <color name="accent_dark">#14532D</color>
+    <color name="accent_muda">#DCFCE7</color>
+    <color name="accent_lembut">#F0FDF4</color>
+    <color name="on_accent">#FFFFFF</color>
+
+    <!-- Aksen sekunder (kelompok NTCR) = WarningColor desktop. -->
+    <color name="emas">#D97706</color>
+    <color name="emas_muda">#FEF3C7</color>
+
+    <color name="page">#F0FDF4</color>
     <color name="surface">#FFFFFF</color>
-    <color name="teks">#1B2A26</color>
-    <color name="teks_redup">#5C6B66</color>
-    <color name="garis">#D8E0DD</color>
+    <color name="surface_naik">#E7F9EE</color>
+    <color name="teks">#052E16</color>
+    <color name="teks_redup">#3F614E</color>
+    <color name="garis">#C8EED6</color>
+    <color name="bahaya">#DC2626</color>
+    <color name="berhasil">#15803D</color>
 </resources>

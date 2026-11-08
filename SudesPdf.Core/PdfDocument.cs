@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -92,10 +92,13 @@ public sealed class PdfDocument
 
     public bool IsEncrypted => Encryption is not null;
 
+    private const long MaksUkuranPdf = 100 * 1024 * 1024; // 100 MB
+
     public static PdfDocument Load(byte[] data)
     {
         ArgumentNullException.ThrowIfNull(data);
         if (data.Length == 0) throw new PdfException("Berkas PDF kosong.");
+        if (data.Length > MaksUkuranPdf) throw new PdfException("Berkas PDF melebihi batas ukuran (100 MB)." );
         var document = new PdfDocument(data);
         document.Initialize();
         return document;

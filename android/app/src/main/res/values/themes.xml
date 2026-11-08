@@ -1,74 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!--
+      Tema dasar Material 3. Warna diambil dari values/colors.xml (dan versi
+      malam di values-night) supaya mode gelap ikut rapi tanpa tema terpisah.
+    -->
     <style name="Theme.SuDesAndroid" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/accent</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorOnPrimary">@color/on_accent</item>
+        <item name="colorPrimaryContainer">@color/accent_muda</item>
+        <item name="colorOnPrimaryContainer">@color/accent_dark</item>
         <item name="colorSecondary">@color/accent_dark</item>
+        <item name="colorOnSecondary">@color/on_accent</item>
+        <item name="colorSecondaryContainer">@color/accent_muda</item>
+        <item name="colorOnSecondaryContainer">@color/accent_dark</item>
+        <item name="colorTertiary">@color/emas</item>
+        <item name="colorOnTertiary">#FFFFFF</item>
+        <item name="colorTertiaryContainer">@color/emas_muda</item>
+        <item name="colorOnTertiaryContainer">@color/emas</item>
+
         <item name="android:colorBackground">@color/page</item>
         <item name="colorSurface">@color/surface</item>
-        <item name="android:textColor">@color/teks</item>
+        <item name="colorOnSurface">@color/teks</item>
+        <item name="colorSurfaceVariant">@color/surface_naik</item>
+        <item name="colorOnSurfaceVariant">@color/teks_redup</item>
+        <item name="colorOutline">@color/garis</item>
+        <item name="colorOutlineVariant">@color/garis</item>
+        <item name="colorError">@color/bahaya</item>
+
+        <item name="android:windowBackground">@color/page</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">@bool/status_bar_terang</item>
+        <item name="android:windowLightNavigationBar">@bool/nav_bar_terang</item>
         <item name="android:textColorPrimary">@color/teks</item>
         <item name="android:textColorSecondary">@color/teks_redup</item>
+        <item name="android:textColorHint">@color/teks_redup</item>
+        <item name="android:forceDarkAllowed">false</item>
     </style>
 
-    <!-- Menu utama: tombol penuh lebar, sudut membulat. -->
-    <style name="MenuTombol" parent="Widget.Material3.Button">
+    <!-- ================= Tipografi ================= -->
+
+    <style name="JudulHalaman">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/teks</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <style name="Subjudul">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:textColor">@color/teks_redup</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <style name="JudulGrup">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">22dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:textColor">@color/teks_redup</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.14</item>
+    </style>
+
+    <!-- ================= Tombol ================= -->
+
+    <style name="TombolUtama" parent="Widget.Material3.Button">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">54dp</item>
         <item name="android:textSize">15sp</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:gravity">center</item>
-        <item name="backgroundTint">@color/surface</item>
-        <item name="android:textColor">@color/teks</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="backgroundTint">@color/accent</item>
+        <item name="android:textColor">@color/on_accent</item>
+    </style>
+
+    <style name="TombolSekunder" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">52dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="backgroundTint">@color/accent_muda</item>
+        <item name="android:textColor">@color/accent_dark</item>
+    </style>
+
+    <style name="TombolKecil" parent="Widget.Material3.Button.TextButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:textColor">@color/accent_dark</item>
+        <item name="backgroundTint">@color/accent_muda</item>
+    </style>
+
+    <!-- ================= Kartu ================= -->
+
+    <style name="Kartu">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="cardCornerRadius">18dp</item>
+        <item name="cardElevation">0dp</item>
         <item name="strokeColor">@color/garis</item>
         <item name="strokeWidth">1dp</item>
-        <item name="cornerRadius">14dp</item>
-        <item name="elevation">0dp</item>
+        <item name="rippleColor">@color/accent_muda</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
     </style>
 
-    <style name="MenuTombolUtama" parent="MenuTombol">
-        <item name="backgroundTint">@color/accent</item>
-        <item name="android:textColor">#FFFFFF</item>
-        <item name="strokeWidth">0dp</item>
+    <style name="KartuStatis" parent="Kartu">
+        <item name="android:clickable">false</item>
+        <item name="android:focusable">false</item>
+        <item name="rippleColor">@android:color/transparent</item>
     </style>
 
-    <style name="MenuJudulGrup">
+    <!-- ================= Bidang isian ================= -->
+
+    <style name="BidangIsian" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/teks_redup</item>
-        <item name="android:letterSpacing">0.08</item>
-        <item name="android:layout_marginTop">22dp</item>
-        <item name="android:layout_marginBottom">8dp</item>
+        <item name="boxCornerRadiusTopStart">14dp</item>
+        <item name="boxCornerRadiusTopEnd">14dp</item>
+        <item name="boxCornerRadiusBottomStart">14dp</item>
+        <item name="boxCornerRadiusBottomEnd">14dp</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxBackgroundColor">@color/surface</item>
+        <item name="hintTextColor">@color/teks_redup</item>
+        <item name="android:textColorHint">@color/teks_redup</item>
     </style>
 
-    <style name="MenuKartu">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:orientation">vertical</item>
-        <item name="android:background">@color/surface</item>
-        <item name="android:padding">16dp</item>
-    </style>
-
-    <!-- Formulir: label di atas kolom isian. -->
-    <style name="MenuLabel">
+    <style name="LabelBidang">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">12dp</item>
-        <item name="android:layout_marginBottom">4dp</item>
-        <item name="android:textSize">13sp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <item name="android:layout_marginStart">4dp</item>
         <item name="android:textColor">@color/teks_redup</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
-    <style name="MenuInput">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">@color/surface</item>
-        <item name="android:padding">12dp</item>
-        <item name="android:textColor">@color/teks</item>
-        <item name="android:textColorHint">@color/teks_redup</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:minHeight">48dp</item>
-    </style>
 </resources>

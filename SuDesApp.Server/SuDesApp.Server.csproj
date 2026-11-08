@@ -17,6 +17,8 @@
   <ItemGroup>
     <!-- Jangan kompilasi file generated dari hasil build/verifikasi bersarang. -->
     <Compile Remove="artifacts\**\*.cs" />
+    <!-- healthcheck adalah proyek terpisah dengan Program.cs sendiri. -->
+    <Compile Remove="healthcheck\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

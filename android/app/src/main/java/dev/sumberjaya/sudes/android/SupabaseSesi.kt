@@ -2,15 +2,12 @@ package dev.sumberjaya.sudes.android
 
 import android.content.Context
 import android.content.SharedPreferences
-import java.util.concurrent.TimeUnit
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 
 /**
- * Sesi Supabase perangkat ini.
- *
- * Aplikasi tidak menyimpan data desa — hanya identitas perangkat untuk
- * membuktikan diri ke Supabase. Bila token kedaluwarsa, [SupabaseKlien]
- * menyegarkannya dengan refresh token; bila gagal, masuk ulang dengan surel
- * dan kata sandi yang disimpan.
+ * Sesi Supabase — EncryptedSharedPreferences (kunci di Android Keystore).
+ * Kata sandi dan token tidak lagi plaintext di SharedPreferences biasa.
  */
 data class SupabaseSesi(
     val url: String,
@@ -35,8 +32,34 @@ data class SupabaseSesi(
         private const val K_PERANGKAT = "perangkat"
         private const val K_TENANT = "tenant"
 
+        private fun prefs(ctx: Context): SharedPreferences {
+            val masterKey = MasterKey.Builder(ctx).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
+            return EncryptedSharedPreferences.create(
+                ctx, PREFS, masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+            )
+        }
+
         fun ambil(ctx: Context): SupabaseSesi {
-            val p: SharedPreferences = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val p = prefs(ctx)
+            if (p.getString(K_EMAIL, null) == null) {
+                val lama = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                val emailLama = lama.getString(K_EMAIL, null)
+                if (emailLama != null) {
+                    p.edit()
+                        .putString(K_URL, lama.getString(K_URL, ""))
+                        .putString(K_KUNCI, lama.getString(K_KUNCI, ""))
+                        .putString(K_EMAIL, emailLama)
+                        .putString(K_SANDI, lama.getString(K_SANDI, ""))
+                        .putString(K_ACCESS, lama.getString(K_ACCESS, ""))
+                        .putString(K_REFRESH, lama.getString(K_REFRESH, ""))
+                        .putString(K_PERANGKAT, lama.getString(K_PERANGKAT, null))
+                        .putString(K_TENANT, lama.getString(K_TENANT, null))
+                        .apply()
+                    lama.edit().clear().apply()
+                }
+            }
             return SupabaseSesi(
                 // URL dan kunci publik sudah terpasang di dalam APK — operator
                 // tidak perlu mengetiknya. Bila QR memuat keduanya, nilai itu
@@ -57,7 +80,7 @@ data class SupabaseSesi(
         }
 
         fun simpan(ctx: Context, sesi: SupabaseSesi) {
-            ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            prefs(ctx).edit()
                 .putString(K_URL, sesi.url)
                 .putString(K_KUNCI, sesi.kunciPublik)
                 .putString(K_EMAIL, sesi.email)
@@ -70,7 +93,7 @@ data class SupabaseSesi(
         }
 
         fun keluar(ctx: Context) {
-            ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear().apply()
+            prefs(ctx).edit().clear().apply()
         }
 
         /**
@@ -79,32 +102,5 @@ data class SupabaseSesi(
          */
         fun klien(ctx: Context): SupabaseKlien =
             SupabaseKlien(ambil(ctx)) { sesiBaru -> simpan(ctx, sesiBaru) }
-
-        /**
-         * Susun sesi dari isi QR pairing: URL, kunci publik, surel, kata sandi.
-         * QR sengaja memakai empat baris teks biasa supaya Android tidak butuh
-         * parser khusus. Fungsi ini suspending karena di dalamnya ada login
-         * jaringan — jangan blokir thread utama.
-         */
-        suspend fun dariQr(ctx: Context, payload: String): SupabaseSesi? {
-            val baris = payload.lines().map { it.trim() }.filter { it.isNotEmpty() }
-            if (baris.size < 4) return null
-
-            val url = baris[0].trimEnd('/')
-            val kunci = baris[1]
-            val email = baris[2]
-            val sandi = baris[3]
-
-            val dasar = SupabaseSesi.ambil(ctx).copy(
-                url = url,
-                kunciPublik = kunci,
-                email = email,
-                kataSandi = sandi,
-                accessToken = "",
-                refreshToken = "",
-            )
-
-            return SupabaseKlien(dasar).login(email, sandi)
-        }
     }
 }
