@@ -388,7 +388,7 @@ class BuatSuratActivity : AppCompatActivity() {
                 ""
             }
 
-        val tahunTarik = PengaturanSinkron.tahunTarik()
+        val tahunTarik = PengaturanSinkron.tahunTarik(this@BuatSuratActivity)
         val tahun = tahunTarik
 
         progres.visibility = View.VISIBLE
@@ -415,9 +415,10 @@ class BuatSuratActivity : AppCompatActivity() {
 
                 // Surat yang baru dibuat ikut antrean sinkron desktop.
                 val antre = withContext(Dispatchers.IO) {
-                    AntreanSurat.kirim(this@BuatSuratActivity, jenis, nomor, fields)
+                    val terkirim = AntreanSurat.kirim(this@BuatSuratActivity, jenis, nomor, fields)
                     // Jadwalkan pengiriman tertunda segera — tidak menunggu periodik 15 mnt.
                     try { PengirimWorker.sekali(this@BuatSuratActivity) } catch (e: Exception) { /* jadwal boleh gagal */ }
+                    terkirim
                 }
 
                 progres.visibility = View.GONE

@@ -31,9 +31,11 @@ object PengaturanSinkron {
      * Bila tidak pernah ditarik, fallback ke tahun kalender — beda jam
      * perangkat dengan desktop tidak lagi membuat nomor placeholder menyimpang.
      */
-    fun tahunTarik(): Int =
-        PengaturanSurat.terakhirBaru?.tahun?.takeIf { it > 0 }
+    fun tahunTarik(ctx: Context): Int =
+        PengaturanSurat.ambil(ctx).tahun.takeIf { it > 0 }
             ?: java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+
+    /**
      * [HasilTarik.BelumTerbit] berarti desktop belum pernah menerbitkan kop;
      * [HasilTarik.Gagal] berarti perangkat belum dipasang atau jaringan gagal.
      */
