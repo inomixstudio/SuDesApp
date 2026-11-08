@@ -297,8 +297,8 @@ namespace SuDesApp.Installer.Views
         private void TampilkanLangkah(int langkah)
         {
             _langkah = langkah;
-            var wadah = (Grid)Content;
-            var kartu = (Border)wadah.Children[0];
+            var kartuLuar = (Border)Content;
+            var kartu = (Border)kartuLuar.Child;
             var grid = (Grid)kartu.Child;
             var isi = (Grid)grid.Children[2];
             var panelProgres = (StackPanel)isi.Tag;
