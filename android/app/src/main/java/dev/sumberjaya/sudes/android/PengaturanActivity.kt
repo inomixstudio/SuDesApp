@@ -72,8 +72,16 @@ class PengaturanActivity : AppCompatActivity() {
                     getString(R.string.pengaturan_sinkron_berhasil)
                 PengaturanSinkron.HasilTarik.BelumTerbit ->
                     getString(R.string.pengaturan_belum_terbit)
-                PengaturanSinkron.HasilTarik.SesiKedaluwarsa ->
-                    getString(R.string.sesi_tidak_berlaku)
+                PengaturanSinkron.HasilTarik.SesiKedaluwarsa -> {
+                    // Sama seperti menu utama: bersihkan sesi dan minta
+                    // pasang ulang, jangan biarkan layar terjebak.
+                    SupabaseSesi.keluar(this@PengaturanActivity)
+                    val pesan = getString(R.string.sesi_tidak_berlaku)
+                    Toast.makeText(this@PengaturanActivity, pesan, Toast.LENGTH_LONG).show()
+                    startActivity(Intent(this@PengaturanActivity, LoginActivity::class.java))
+                    finish()
+                    return@launch
+                }
                 else -> getString(R.string.pengaturan_sinkron_gagal)
             }
             Toast.makeText(
@@ -170,6 +178,10 @@ class PengaturanActivity : AppCompatActivity() {
      * Status sinkronisasi. Jumlah antrean di Supabase butuh jaringan, jadi
      * ditampilkan "memuat" dulu lalu diperbarui; kegagalan jaringan
      * ditampilkan apa adanya, bukan dianggap nol.
+     *
+     * Termasuk peringatan batas antrean (8/10, 10/10), status perangkat
+     * aktif, dan daftar per surat (antrean server + tertunda lokal) dengan
+     * tombol hapus per baris.
      */
     private fun tampilkanSinkron() {
         val sesi = SupabaseSesi.ambil(this)
@@ -186,33 +198,209 @@ class PengaturanActivity : AppCompatActivity() {
             getString(R.string.sinkron_tidak_terjangkau)
         }
 
+        val nilaiBatas = tambahBaris(wadahSinkron, getString(R.string.sinkron_batas_antrean))
+        nilaiBatas.text = if (sesi.masuk) {
+            getString(R.string.sinkron_memuat)
+        } else {
+            getString(R.string.sinkron_tidak_terjangkau)
+        }
+
+        val nilaiAktif = tambahBaris(wadahSinkron, getString(R.string.sinkron_status_aktif))
+        nilaiAktif.text = if (sesi.masuk) {
+            getString(R.string.sinkron_memuat)
+        } else {
+            getString(R.string.sinkron_tidak_terjangkau)
+        }
+
         tambahBaris(wadahSinkron, getString(R.string.sinkron_tertunda_perangkat)).text =
             getString(R.string.sinkron_tertunda_nilai, tertunda)
 
         btnKirimTertunda.isEnabled = sesi.masuk && tertunda > 0
 
-        if (!sesi.masuk) return
+        if (!sesi.masuk) {
+            tampilkanDetailTertundaLokal()
+            return
+        }
 
         lifecycleScope.launch {
-            val teks = try {
-                val daftar = SupabaseSesi.klien(this@PengaturanActivity).daftarAntrean()
-                if (daftar == null) {
-                    getString(R.string.sinkron_tidak_terjangkau)
-                } else {
-                    getString(
-                        R.string.sinkron_antrean_nilai,
-                        daftar.count { it.status.equals("menunggu", ignoreCase = true) },
-                        daftar.count { it.status.equals("gagal", ignoreCase = true) },
-                    )
-                }
+            val daftar = try {
+                SupabaseSesi.klien(this@PengaturanActivity).daftarAntrean()
             } catch (e: SupabaseKlien.SesiKedaluwarsa) {
-                getString(R.string.sesi_tidak_berlaku_singkat)
+                null
             } catch (e: Exception) {
-                getString(R.string.sinkron_tidak_terjangkau)
+                null
+            }
+            val aktif = try {
+                SupabaseSesi.klien(this@PengaturanActivity).perangkatAktif()
+            } catch (e: Exception) {
+                null
             }
 
             if (isFinishing || isDestroyed) return@launch
-            nilaiAntrean.text = teks
+
+            if (daftar == null) {
+                val teks = try {
+                    SupabaseSesi.klien(this@PengaturanActivity).daftarAntrean()
+                    getString(R.string.sinkron_tidak_terjangkau)
+                } catch (e: SupabaseKlien.SesiKedaluwarsa) {
+                    getString(R.string.sesi_tidak_berlaku_singkat)
+                } catch (e: Exception) {
+                    getString(R.string.sinkron_tidak_terjangkau)
+                }
+                nilaiAntrean.text = teks
+                nilaiBatas.text = getString(R.string.sinkron_tidak_terjangkau)
+            } else {
+                val menunggu = daftar.count { it.status.equals("menunggu", ignoreCase = true) }
+                val gagal = daftar.count { it.status.equals("gagal", ignoreCase = true) }
+                nilaiAntrean.text = getString(R.string.sinkron_antrean_nilai, menunggu, gagal)
+                val total = daftar.size
+                nilaiBatas.text = when {
+                    total >= 10 -> getString(R.string.sinkron_batas_penuh)
+                    total >= 8 -> getString(R.string.sinkron_batas_hampir, total)
+                    else -> getString(R.string.sinkron_batas_antrean_nilai, total)
+                }
+            }
+            nilaiAktif.text = when (aktif) {
+                true -> getString(R.string.sinkron_aktif_ya)
+                false -> getString(R.string.sinkron_aktif_tidak)
+                null -> getString(R.string.sinkron_aktif_tidak_dikenal)
+            }
+            // Perangkat nonaktif: kirim tertunda tidak akan berhasil.
+            btnKirimTertunda.isEnabled = sesi.masuk && tertunda > 0 && aktif != false
+
+            tampilkanDetail(daftar.orEmpty())
+        }
+    }
+
+    /** Daftar per surat: antrean server (dengan hapus) + tertunda lokal. */
+    private fun tampilkanDetail(barisServer: List<AntreanBaris>) {
+        val daftarLokal = AntreanSurat.daftarTertunda(this)
+        if (barisServer.isEmpty() && daftarLokal.isEmpty()) {
+            tambahBaris(wadahSinkron, getString(R.string.sinkron_detail_judul)).text =
+                getString(R.string.sinkron_detail_kosong)
+            return
+        }
+        for (baris in barisServer) {
+            val teks = listOfNotNull(
+                baris.idJenis.ifBlank { null },
+                baris.nomorSementara.ifBlank { null },
+            ).joinToString(" · ").ifBlank { baris.id }
+            val judulBaris = "ANTREAN · $teks"
+            val nilai = tambahBaris(wadahSinkron, judulBaris)
+            val catatan = listOfNotNull(
+                baris.statusLabel,
+                baris.catatan.ifBlank { null },
+            ).joinToString(" · ")
+            nilai.text = catatan
+            tambahTombolHapus(wadahSinkron, onHapus = {
+                konfirmasiHapusServer(baris)
+            })
+        }
+        for (baris in daftarLokal) {
+            val teks = listOfNotNull(
+                baris.idJenis.ifBlank { null },
+                baris.nomor.ifBlank { null },
+            ).joinToString(" · ").ifBlank { baris.berkas.name }
+            val nilai = tambahBaris(wadahSinkron, "TERTUNDA · $teks")
+            nilai.text = baris.tanggal.ifBlank { "Tertunda di perangkat" }
+            tambahTombolHapus(wadahSinkron, onHapus = {
+                konfirmasiHapusLokal(baris)
+            })
+        }
+    }
+
+    /** Tombol kecil "Hapus" untuk satu baris detail. */
+    private fun tambahTombolHapus(wadah: LinearLayout, onHapus: () -> Unit) {
+        val tombol = android.widget.Button(this).apply {
+            text = getString(R.string.sinkron_detail_hapus)
+            textSize = 12f
+            isAllCaps = false
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                gravity = android.view.Gravity.END
+                topMargin = Ui.dp(this@PengaturanActivity, 4)
+            }
+            setOnClickListener { onHapus() }
+        }
+        wadah.addView(tombol)
+    }
+
+    private fun konfirmasiHapusServer(baris: AntreanBaris) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.sinkron_detail_hapus_judul)
+            .setMessage(
+                getString(
+                    R.string.sinkron_detail_hapus_pesan,
+                    listOfNotNull(
+                        baris.idJenis.ifBlank { null },
+                        baris.nomorSementara.ifBlank { null },
+                    ).joinToString(" · ").ifBlank { baris.id },
+                ),
+            )
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.sinkron_detail_hapus) { _, _ -> hapusServer(baris) }
+            .show()
+    }
+
+    private fun hapusServer(baris: AntreanBaris) {
+        lifecycleScope.launch {
+            val ok = try {
+                SupabaseSesi.klien(this@PengaturanActivity).hapusAntrean(baris.id)
+            } catch (e: Exception) {
+                false
+            }
+            Toast.makeText(
+                this@PengaturanActivity,
+                if (ok) "Dihapus." else "Tidak bisa menghapus. Periksa koneksi.",
+                Toast.LENGTH_SHORT,
+            ).show()
+            tampilkanSinkron()
+        }
+    }
+
+    private fun konfirmasiHapusLokal(baris: AntreanSurat.TertundaBaris) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.sinkron_detail_hapus_judul)
+            .setMessage(
+                getString(
+                    R.string.sinkron_detail_hapus_pesan,
+                    listOfNotNull(
+                        baris.idJenis.ifBlank { null },
+                        baris.nomor.ifBlank { null },
+                    ).joinToString(" · ").ifBlank { baris.berkas.name },
+                ),
+            )
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.sinkron_detail_hapus) { _, _ ->
+                baris.berkas.delete()
+                tampilkanSinkron()
+            }
+            .show()
+    }
+
+    private fun tampilkanDetailTertundaLokal() {
+        // Tampilkan tertunda lokal saja (offline / belum terpasang).
+        val daftar = AntreanSurat.daftarTertunda(this)
+        if (daftar.isEmpty()) {
+            tambahBaris(wadahSinkron, getString(R.string.sinkron_detail_judul)).text =
+                getString(R.string.sinkron_detail_kosong)
+            return
+        }
+        for (baris in daftar) {
+            val teks = listOfNotNull(
+                baris.idJenis.ifBlank { null },
+                baris.nomor.ifBlank { null },
+            ).joinToString(" · ").ifBlank { baris.berkas.name }
+            val nilai = tambahBaris(
+                wadahSinkron,
+                "TERTUNDA · $teks",
+            )
+            nilai.text = baris.tanggal.ifBlank { "Tertunda di perangkat" }
+            tambahTombolHapus(wadahSinkron, onHapus = {
+                konfirmasiHapusLokal(baris)
+            })
         }
     }
 

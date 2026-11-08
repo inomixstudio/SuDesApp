@@ -79,6 +79,26 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         tampilkanIdentitas()
         laporkanAktif()
+        tarikBilaLama()
+    }
+
+    /**
+     * Tarik kop/skema lagi bila sudah lama (>5 menit) — supaya perubahan di
+     * desktop terlihat tanpa operator menekan tombol sinkron di Pengaturan.
+     * Tarikan pertama tetap di onCreate.
+     */
+    private fun tarikBilaLama() {
+        if (!SupabaseSesi.ambil(this).masuk) return
+        if (!PengaturanSinkron.perluTarikUlang(this)) return
+        lifecycleScope.launch {
+            try {
+                PengaturanSinkron.tarik(this@MainActivity)
+            } catch (e: Exception) {
+                // Offline: pakai salinan lokal; dicoba lagi lain waktu.
+            } finally {
+                tampilkanIdentitas()
+            }
+        }
     }
 
     /**
