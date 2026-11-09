@@ -51,13 +51,14 @@ object PdfAksi {
                 val uris = mutableListOf<Uri>()
                 ctx.contentResolver.query(
                     MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                    arrayOf(MediaStore.Downloads.DISPLAY_NAME),
+                    arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
                     "${MediaStore.Downloads.DISPLAY_NAME} = ?",
                     arrayOf(namaPdf),
                     null,
                 )?.use { k ->
+                    val kolomId = k.getColumnIndexOrThrow(MediaStore.Downloads._ID)
                     while (k.moveToNext()) {
-                        val id = k.getLong(0)
+                        val id = k.getLong(kolomId)
                         uris.add(Uri.withAppendedPath(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id.toString()))
                     }
                 }
@@ -156,7 +157,7 @@ object PdfAksi {
         crossinline tulis: (
             callback: PrintDocumentAdapter.WriteResultCallback,
             aliran: InputStream,
-            sinyal: android.os.CancellationSignal,
+            sinyal: android.os.CancellationSignal?,
             tujuan: android.os.ParcelFileDescriptor,
         ) -> Unit,
     ) {
@@ -201,7 +202,7 @@ object PdfAksi {
                     }
 
                     try {
-                        tulis(callback, aliran, pembatalan!!, tujuan)
+                        tulis(callback, aliran, pembatalan, tujuan)
                         callback.onWriteFinished(arrayOf(PageRange.ALL_PAGES))
                     } catch (e: Exception) {
                         callback.onWriteFailed(e.message)

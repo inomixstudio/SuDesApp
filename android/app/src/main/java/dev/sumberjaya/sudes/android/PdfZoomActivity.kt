@@ -196,9 +196,10 @@ private class GambarZoom(ctx: Context) : ImageView(ctx) {
     private var awalDy = 0f
 
     fun setBitmap(bitmap: Bitmap, lebarAsli: Float, tinggiAsli: Float) {
-        bitmapTampil?.recycle()
+        val lama = bitmapTampil
         bitmapTampil = bitmap
         setImageBitmap(bitmap)
+        lama?.recycle()
         skala = 1f
         dx = 0f
         dy = 0f
