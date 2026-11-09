@@ -126,7 +126,10 @@ class PdfZoomActivity : AppCompatActivity() {
             val bitmap = Bitmap.createBitmap(
                 (page.width * skala).toInt(), (page.height * skala).toInt(),
                 Bitmap.Config.ARGB_8888)
-            page.render(bitmap, null, null, 0)
+            // Mode render HARUS konstanta resmi (1 = FOR_DISPLAY, 2 = FOR_PRINT).
+            // Nilai mentah 0 melempar IllegalArgumentException("Unsupported
+            // render mode") — itulah error yang muncul saat membuka/cetak PDF.
+            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
             tampilan.setBitmap(bitmap, page.width.toFloat(), page.height.toFloat())
             halaman = tujuan
             labelHalaman.text = getString(R.string.pdf_halaman_dari, halaman + 1, jumlahHalaman)
