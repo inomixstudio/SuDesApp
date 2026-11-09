@@ -179,6 +179,16 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.13.1 (9 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Android — Daftar Hadir, Cetak, dan Simpan PDF", new List<string>
+                        {
+                            "Menu Daftar Hadir tidak lagi error saat dibuka: baris peserta dipasang dari layout bingkai langsung, bukan lewat rantai parent yang rapuh.",
+                            "Simpan hasil edit surat diperbaiki (query MediaStore kini membaca kolom _ID yang benar), cetak ulang dari Register aman dari berkas null, cetak PDF tahan sinyal batal null, dan penampil PDF tidak lagi me-recycle bitmap sebelum diganti."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.13.0 (9 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
