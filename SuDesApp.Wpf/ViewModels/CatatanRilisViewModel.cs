@@ -179,6 +179,15 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.13.2 (9 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Android — Cetak PDF Tidak Error Lagi", new List<string>
+                        {
+                            "Cetak PDF Daftar Hadir (dan seluruh PDF surat) tidak lagi error Unsupported render mode: PdfZoomActivity kini memakai konstanta resmi RENDER_MODE_FOR_DISPLAY, terverifikasi di emulator viewer tampil utuh."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.13.1 (9 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
