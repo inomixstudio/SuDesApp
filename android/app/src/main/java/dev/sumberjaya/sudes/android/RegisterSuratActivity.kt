@@ -171,8 +171,16 @@ class RegisterSuratActivity : AppCompatActivity() {
             .setItems(item) { _, which ->
                 when (which) {
                     0 -> editSurat(b)
-                    1 -> if (b.uri != null) PdfAksi.lihatUri(this, b.uri, b.nama)
-                    else PdfAksi.lihat(this, b.berkas!!, b.nama)
+                    1 -> {
+                        val uri = b.uri
+                        val berkas = b.berkas
+                        when {
+                            uri != null -> PdfAksi.lihatUri(this, uri, b.nama)
+                            berkas != null -> PdfAksi.lihat(this, berkas, b.nama)
+                            else -> Toast.makeText(
+                                this, getString(R.string.pdf_tidak_ditemukan), Toast.LENGTH_LONG).show()
+                        }
+                    }
                     2 -> PdfAksi.bagikan(this, b)
                 }
             }

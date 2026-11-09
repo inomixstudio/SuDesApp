@@ -186,7 +186,7 @@ class DaftarHadirActivity : AppCompatActivity() {
         }
         kartu.addView(isi)
 
-        fun berbingkai(label: String, posisi: (TextInputEditText) -> Unit): TextInputEditText {
+        fun berbingkai(label: String, posisi: (TextInputEditText) -> Unit): Pair<TextInputEditText, TextInputLayout> {
             val edit = TextInputEditText(this).apply {
                 textSize = 15f
                 inputType = android.text.InputType.TYPE_CLASS_TEXT
@@ -214,10 +214,10 @@ class DaftarHadirActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT))
             }
-            return edit
+            return edit to kerangka
         }
 
-        val nama = berbingkai("Nama") { it.setText(values?.nama.orEmpty()) }
+        val (nama, bingkaiNama) = berbingkai("Nama") { it.setText(values?.nama.orEmpty()) }
         val jk = Spinner(this).apply {
             adapter = ArrayAdapter(this@DaftarHadirActivity,
                 R.layout.item_pilihan, listOf("", "L", "P")).also {
@@ -230,17 +230,17 @@ class DaftarHadirActivity : AppCompatActivity() {
             }
             setSelection(pos)
         }
-        val jabatan = berbingkai("Jabatan") { it.setText(values?.jabatan.orEmpty()) }
-        val nip = berbingkai("NIP") { it.setText(values?.nip.orEmpty()) }
-        val nik = berbingkai("NIK") { it.setText(values?.nik.orEmpty()) }
-        val noHp = berbingkai("No. Handphone") {
+        val (jabatan, bingkaiJabatan) = berbingkai("Jabatan") { it.setText(values?.jabatan.orEmpty()) }
+        val (nip, bingkaiNip) = berbingkai("NIP") { it.setText(values?.nip.orEmpty()) }
+        val (nik, bingkaiNik) = berbingkai("NIK") { it.setText(values?.nik.orEmpty()) }
+        val (noHp, bingkaiNoHp) = berbingkai("No. Handphone") {
             it.setText(values?.noHp.orEmpty())
             it.inputType = android.text.InputType.TYPE_CLASS_PHONE
         }
-        val alamat = berbingkai("Alamat") { it.setText(values?.alamat.orEmpty()) }
-        val keterangan = berbingkai("Keterangan") { it.setText(values?.keterangan.orEmpty()) }
+        val (alamat, bingkaiAlamat) = berbingkai("Alamat") { it.setText(values?.alamat.orEmpty()) }
+        val (keterangan, bingkaiKeterangan) = berbingkai("Keterangan") { it.setText(values?.keterangan.orEmpty()) }
 
-        isi.addView(nama.parent as View)
+        isi.addView(bingkaiNama)
         isi.addView(TextView(this).apply {
             text = "Jenis Kelamin (L/P)"
             textSize = 12f
@@ -248,12 +248,12 @@ class DaftarHadirActivity : AppCompatActivity() {
             setPadding(0, Ui.dp(this@DaftarHadirActivity, 8), 0, Ui.dp(this@DaftarHadirActivity, 4))
         })
         isi.addView(jk)
-        isi.addView(jabatan.parent as View)
-        isi.addView(nip.parent as View)
-        isi.addView(nik.parent as View)
-        isi.addView(noHp.parent as View)
-        isi.addView(alamat.parent as View)
-        isi.addView(keterangan.parent as View)
+        isi.addView(bingkaiJabatan)
+        isi.addView(bingkaiNip)
+        isi.addView(bingkaiNik)
+        isi.addView(bingkaiNoHp)
+        isi.addView(bingkaiAlamat)
+        isi.addView(bingkaiKeterangan)
 
         wadahPeserta.addView(kartu)
         daftarPeserta.add(BarisPeserta(kartu, nama, jk, jabatan, nip, nik, noHp, alamat, keterangan))
