@@ -122,9 +122,9 @@ object PengaturanSinkron {
         )
 
         PengaturanSurat.simpan(ctx, hasil)
-                ctx.getSharedPreferences("sudes_versi", Context.MODE_PRIVATE)
-                    .edit().putString("desktop", kop.optString("versiAplikasi", "")).apply()
-                tandaiTarik(ctx)
+        ctx.getSharedPreferences("sudes_versi", Context.MODE_PRIVATE)
+            .edit().putString("desktop", kop.optString("versiAplikasi", "")).apply()
+        tandaiTarik(ctx)
         HasilTarik.Sukses(hasil)
     }
 
