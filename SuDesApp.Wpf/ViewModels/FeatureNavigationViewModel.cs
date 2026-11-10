@@ -155,23 +155,11 @@ public sealed class FeatureNavigationViewModel
 
         Header("BUAT SURAT");
         var buatSurat = Accordion("Buat Surat Baru", IkonMenu.Tambah);
-        // Ikon per keluarga surat: SKD umum, domisili, usaha, kelahiran, pindah,
-        // ahli waris — supaya 18 anak tidak tampak seragam.
+        // Ikon per keluarga surat — satu sumber dengan pintasan Beranda via
+        // IkonJenisSurat supaya ikon sidebar dan Beranda tidak bisa saling beda.
         foreach (var (label, template) in BuatSuratCatalog.MenuSurat)
         {
-            string ikon = template switch
-            {
-                SuratConstants.SKD_UMUM => IkonMenu.Dokumen,
-                SuratConstants.DOMISILI_WARGA or SuratConstants.INSTANSI or SuratConstants.IJIN_TINGGAL => IkonMenu.Beranda,
-                SuratConstants.SKU or SuratConstants.GARAPAN_SAWAH or SuratConstants.IZIN_KERAMAIAN => IkonMenu.Perusahaan,
-                SuratConstants.SKTM => IkonMenu.Laporan,
-                SuratConstants.KEMATIAN => IkonMenu.Kalender,
-                SuratConstants.KENAL_LAHIR => IkonMenu.Posyandu,
-                SuratConstants.AHLI_WARIS => IkonMenu.Komentar,
-                SuratConstants.SK_PINDAH => IkonMenu.SuratKeluar,
-                _ => IkonMenu.Blanko
-            };
-            buatSurat.Children.Add(Tombol(label, ikon, "surat:" + template));
+            buatSurat.Children.Add(Tombol(label, IkonJenisSurat.UntukJenis(template), "surat:" + template));
         }
         buatSurat.Children.Add(Tombol("Permohonan Rekening Koran", IkonMenu.Rekening, "rekening-koran"));
         MenuItems.Add(buatSurat);

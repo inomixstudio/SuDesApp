@@ -140,9 +140,14 @@ namespace SuDesApp.Wpf.ViewModels
             int Hitung(string jenis) =>
                 jumlahPerJenis.TryGetValue(jenis, out var n) ? n : 0;
 
+            // Bawaan dicari dengan FirstOrDefault + filter: bila suatu saat satu
+            // jenis bawaan keluar dari katalog, Beranda tidak boleh crash saat
+            // dibuka — cukup kurangi satu pintasan.
             IEnumerable<PilihanSurat> kandidat =
                 jumlahPerJenis.Values.All(n => n <= 0)
-                    ? PintasanBawaan.Select(jenis => MenuSuratKatalog.Semua.First(p => p.Jenis == jenis))
+                    ? PintasanBawaan
+                        .Select(jenis => MenuSuratKatalog.Semua.FirstOrDefault(p => p.Jenis == jenis))
+                        .OfType<PilihanSurat>()
                     : MenuSuratKatalog.Semua.OrderByDescending(p => Hitung(p.Jenis));
 
             return kandidat
@@ -151,17 +156,9 @@ namespace SuDesApp.Wpf.ViewModels
                 .ToList();
         }
 
-        /// <summary>Ikon pintasan (tema ikut via AppIconFont, bukan emoji OS).</summary>
-        private static string IkonJenis(string jenis) => jenis switch
-        {
-            SuratConstants.SKD_UMUM => SuDesApp.Wpf.Utilities.IkonMenu.Dokumen,
-            SuratConstants.SKTM => SuDesApp.Wpf.Utilities.IkonMenu.Laporan,
-            SuratConstants.SKU => SuDesApp.Wpf.Utilities.IkonMenu.Perusahaan,
-            SuratConstants.DOMISILI_WARGA => SuDesApp.Wpf.Utilities.IkonMenu.Beranda,
-            SuratConstants.PENGANTAR_SKCK => SuDesApp.Wpf.Utilities.IkonMenu.Perisai,
-            SuratConstants.KEMATIAN => SuDesApp.Wpf.Utilities.IkonMenu.Kalender,
-            _ => SuDesApp.Wpf.Utilities.IkonMenu.Blanko
-        };
+        /// <summary>Ikon pintasan — satu sumber dengan sidebar (IkonJenisSurat).</summary>
+        private static string IkonJenis(string jenis) =>
+            SuDesApp.Wpf.Utilities.IkonJenisSurat.UntukJenis(jenis);
 
         /// <summary>Muat statistik, pintasan, dan aktivitas terbaru dari register & data warga.</summary>
         public async Task MuatAsync()
