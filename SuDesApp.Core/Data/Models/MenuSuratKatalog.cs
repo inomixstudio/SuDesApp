@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace SuDesApp.Data.Models
 {
-    /// <summary>Satu pilihan pada menu "Buat Surat Baru".</summary>
+    /// <summary>Satu pilihan pada menu "Surat Bawaan".</summary>
     public sealed class PilihanSurat
     {
         /// <summary>Label yang dibaca pengguna, mis. "SKD Belum Menikah".</summary>
@@ -15,7 +15,7 @@ namespace SuDesApp.Data.Models
     }
 
     /// <summary>
-    /// Katalog pilihan surat pada menu "Buat Surat Baru" — satu sumber untuk
+    /// Katalog pilihan surat pada menu "Surat Bawaan" — satu sumber untuk
     /// aplikasi desktop dan backend HTTP, sehingga keduanya menampilkan daftar
     /// yang sama persis: label, jenis surat, dan urutannya.
     ///
