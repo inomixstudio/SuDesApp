@@ -595,8 +595,10 @@ object SuratPdf {
                 i += 1
                 continue
             }
-            hasil.append(nilai[templat.substring(i + 1, akhir)] ?: "")
-            i = akhir
+            val kunciMentah = templat.substring(i + 1, akhir)
+            val kunci = kunciMentah.trimEnd('.')
+            hasil.append(nilai[kunci] ?: "")
+            i = i + 1 + kunci.length
         }
         return hasil.toString()
     }
@@ -651,7 +653,7 @@ object Kop {
 
     fun baris(p: PengaturanSurat): List<Baris> {
         val jenisKab = p.jenisKabupaten.ifBlank { "Kabupaten" }
-        val kabupaten = bersihkan(p.kabupaten, "Kabupaten", "Kab.")
+        val kabupaten = bersihkan(p.kabupaten, jenisKab, if (jenisKab.equals("Kabupaten", ignoreCase = true)) "Kab." else null)
         val kecamatan = bersihkan(p.kecamatan, "Kecamatan", "Kec.")
         val desa = bersihkan(p.namaDesa, "Desa")
         val alamat = p.alamat.ifBlank { "[Alamat Kantor Desa]" }
@@ -681,17 +683,24 @@ object Kop {
      * disusun memakai [jabatanBadan] (huruf awal besar, nama desa menyusul).
      */
     fun jabatan(p: PengaturanSurat, pejabat: String): String {
-        val kata = kataPejabat(p, pejabat)
-        val desa = p.namaDesa.trim()
-        return if (kata.equals("Sekretaris Desa", ignoreCase = true)) {
-            "A/N KEPALA DESA ${desa.uppercase()}\nSEKRETARIS DESA"
-        } else {
-            "${kata} ${desa}".uppercase()
+            val kata = kataPejabat(p, pejabat)
+            val desa = bersihkan(p.namaDesa, "Desa").trim()
+            return if (kata.equals("Sekretaris Desa", ignoreCase = true)) {
+                "A/N KEPALA DESA ${desa.uppercase()}\nSEKRETARIS DESA"
+            } else {
+                "${kata} ${desa}".uppercase()
+            }
         }
-    }
 
     /** Jabatan untuk baris "Jabatan" di badan: huruf awal besar, tanpa kapital semua. */
     fun jabatanBadan(p: PengaturanSurat, pejabat: String): String = kataPejabat(p, pejabat)
+
+    fun SurelBersih(teks: String): String {
+        val t = teks.trim()
+        if (t.isEmpty()) return ""
+        val regex = Regex("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}")
+        return regex.find(t)?.value ?: t
+    }
 
     private fun kataPejabat(p: PengaturanSurat, pejabat: String): String = when {
         pejabat.isBlank() || pejabat.equals("Kepala Desa", ignoreCase = true) ->
