@@ -6,13 +6,14 @@ plugins {
 android {
     namespace = "dev.sumberjaya.sudes.android"
     compileSdk = 35
+    buildToolsVersion = "36.0.0"
 
     defaultConfig {
         applicationId = "dev.sumberjaya.sudes.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 21302
+        versionName = "2.13.2"
     }
 
     buildTypes {
@@ -56,6 +57,7 @@ android {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")

@@ -49,6 +49,7 @@
     <string name="pengaturan_sumber">Identitas kop dan pola nomor diambil dari aplikasi desktop, bukan diketik di sini. Nilai di bawah adalah salinan yang sedang dipakai perangkat ini.</string>
     <string name="pengaturan_sinkronkan">Sinkronkan sekarang</string>
     <string name="pengaturan_sinkron_awal">Belum disinkronkan.</string>
+    <string name="versi_tidak_sama">Versi aplikasi Android berbeda dengan desktop (%1$s vs %2$s). Perbarui APK ke versi yang sama.</string>
     <string name="pengaturan_sinkron_proses">Menarik pengaturan dari desktop…</string>
     <string name="pengaturan_sinkron_berhasil">Pengaturan kop &amp; pola nomor diperbarui dari desktop.</string>
     <string name="pengaturan_sinkron_gagal">Tidak bisa menarik pengaturan. Periksa koneksi dan coba lagi.</string>

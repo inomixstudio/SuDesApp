@@ -50,6 +50,7 @@ class PengaturanActivity : AppCompatActivity() {
 
         tampilkan()
         tampilkanSinkron()
+        periksaVersi()
     }
 
     override fun onResume() {
@@ -146,6 +147,17 @@ class PengaturanActivity : AppCompatActivity() {
             Toast.makeText(this@PengaturanActivity, R.string.keluar_berhasil, Toast.LENGTH_LONG).show()
             startActivity(Intent(this@PengaturanActivity, LoginActivity::class.java))
             finish()
+        }
+    }
+
+    private fun periksaVersi() {
+        val vDesktop = PengaturanSinkron.versiDesktop(this)
+        if (vDesktop.isNotBlank() && vDesktop != BuildConfig.VERSION_NAME) {
+            AlertDialog.Builder(this)
+                .setTitle("Pembaruan tersedia")
+                .setMessage(getString(R.string.versi_tidak_sama, vDesktop, BuildConfig.VERSION_NAME))
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
         }
     }
 

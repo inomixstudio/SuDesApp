@@ -44,6 +44,11 @@ object PengaturanSinkron {
             .edit().putLong("terakhir", System.currentTimeMillis()).apply()
     }
 
+    /** Versi desktop terakhir yang diterbitkan ke Supabase (kosong bila belum). */
+    fun versiDesktop(ctx: Context): String =
+        ctx.getSharedPreferences("sudes_versi", Context.MODE_PRIVATE)
+            .getString("desktop", "") ?: ""
+
     /** True bila kop/skema belum ditarik dalam [batasMs] milidetik terakhir. */
     fun perluTarikUlang(ctx: Context, batasMs: Long = 5 * 60_000L): Boolean {
         val terakhir = ctx.getSharedPreferences("tarikan_terakhir", Context.MODE_PRIVATE)
@@ -117,7 +122,9 @@ object PengaturanSinkron {
         )
 
         PengaturanSurat.simpan(ctx, hasil)
-        tandaiTarik(ctx)
+                ctx.getSharedPreferences("sudes_versi", Context.MODE_PRIVATE)
+                    .edit().putString("desktop", kop.optString("versiAplikasi", "")).apply()
+                tandaiTarik(ctx)
         HasilTarik.Sukses(hasil)
     }
 
