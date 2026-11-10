@@ -60,6 +60,8 @@ OutputBaseFilename=SuDesApp_{#AppVersion}_Setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+WizardImageFile=Assets\WizardImage.bmp
+WizardSmallImageFile=Assets\WizardSmallImage.bmp
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile=..\Resources\AppIcon.ico
@@ -74,8 +76,12 @@ AppMutex=SuDesApp_SingletonMutex
 Uninstallable=yes
 
 [Languages]
-Name: "indonesian"; MessagesFile: "compiler:Languages\Indonesian.isl"
+Name: "indonesian"; MessagesFile: "Languages\Indonesian.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[LangOptions]
+DialogFontName=Google Sans
+DialogFontSize=9
 
 [Tasks]
 Name: "desktopicon"; Description: "Buat ikon Desktop"; GroupDescription: "Ikon:"; Flags: unchecked
@@ -112,6 +118,10 @@ Source: "..\artifacts\publish\Templates\*"; DestDir: "{app}\Templates"; \
 ; contoh template sama sekali.
 Name: "{app}\Templates"
 
+[Fonts]
+; Pasang Google Sans ke Windows agar wizard Inno memakai font brand.
+Source: "..\SuDesApp.Wpf\Fonts\GoogleSans.ttc"; DestDir: "{fonts}"; FontInstall: "Google Sans"
+
 [InstallDelete]
 ; Native library untuk RID yang sudah tidak dipakai (runtimes\linux-musl-*,
 ; maccatalyst-*, dan seterusnya — ada belasan RID dalam satu paket) harus
@@ -140,6 +150,36 @@ Filename: "{app}\SuDesApp.exe"; Description: "Jalankan SuDesApp"; Flags: nowait 
 var
   FolderCadanganDatabase: String;
   AdaDatabaseLama: Boolean;
+
+// ----------------------------------------------------------------------------
+//  Tema & teks wizard
+// ----------------------------------------------------------------------------
+procedure SesuaikanTeksWizard();
+begin
+  if Assigned(WizardForm.WelcomeLabel1) then
+    WizardForm.WelcomeLabel1.Caption := 'Selamat datang di SuDesApp {#AppVersion}.';
+  if Assigned(WizardForm.WelcomeLabel2) then
+    WizardForm.WelcomeLabel2.Caption := 'Akan memasang SuDesApp {#AppVersion} di komputer ini. ' +
+      'Data desa (desa.db, Templates, dan hasil PDF) tidak dihapus.';
+
+  if Assigned(WizardForm.FinishedHeadingLabel) then
+    WizardForm.FinishedHeadingLabel.Caption := 'SuDesApp {#AppVersion} terpasang';
+  if Assigned(WizardForm.FinishedLabel) then
+    WizardForm.FinishedLabel.Caption := 'Klik Selesai untuk menutup pemasang. ' +
+      'Anda dapat membuka SuDesApp dari menu Mulai.';
+
+  if Assigned(WizardForm.SelectDirLabel) then
+    WizardForm.SelectDirLabel.Caption := 'Pilih folder pemasangan SuDesApp.';
+  if Assigned(WizardForm.ReadyLabel) then
+    WizardForm.ReadyLabel.Caption := 'Siap memasang SuDesApp {#AppVersion}. ' +
+      'Klik Pasang untuk memulai, atau Kembali untuk memeriksa lagi.';
+end;
+
+procedure InitializeWizard();
+begin
+  WizardForm.Color := $345316;
+  SesuaikanTeksWizard();
+end;
 
 function CadangkanDatabase(Nama: String): Boolean;
 var
