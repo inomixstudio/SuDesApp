@@ -666,7 +666,8 @@ object Kop {
             Baris("Alamat $alamat $kata $desa Kec. $kecamatan Kodepos ${p.kodepos}".trimEnd(), SuratPdf.FONT_ALAMAT, false),
             Baris(kabupaten.uppercase(), SuratPdf.FONT_KABUPATEN_BAWAH, true),
         )
-        if (p.email.isNotBlank()) hasil.add(Baris("", SuratPdf.FONT_ALAMAT, false, "Email ${p.email}"))
+        val surel = SurelBersih(p.email)
+        if (surel.isNotBlank()) hasil.add(Baris("", SuratPdf.FONT_ALAMAT, false, "Email $surel"))
         return hasil
     }
 

@@ -14,6 +14,31 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.14.0 (11 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Beranda — Aman dan Ikon Seragam", new List<string>
+                        {
+                            "Pintasan cepat Beranda tidak lagi bisa crash saat dibuka: jenis bawaan yang hilang dari katalog kini dilewati, bukan melempar galat.",
+                            "Ikon jenis surat kini satu sumber antara sidebar Buat Surat dan pintasan Beranda — keduanya tidak bisa saling berbeda lagi."
+                        }),
+                        new CatatanRilisSubSection("Installer — Penuh lewat Inno Setup", new List<string>
+                        {
+                            "Proyek installer WPF lama dihapus; pemasangan kini sepenuhnya lewat Inno Setup dengan wizard berbahasa Indonesia dan aset gambar wizard.",
+                            "Aset wizard dapat dibuat ulang konsisten lewat skrip Tools/buat-aset-wizard.ps1 tanpa editor gambar manual."
+                        }),
+                        new CatatanRilisSubSection("Android — Peringatan Versi dan Kop Perbaikan", new List<string>
+                        {
+                            "Pengaturan menampilkan peringatan bila versi desktop yang tersinkron berbeda dengan versi aplikasi Android; nomor versi kini sejalan dengan desktop (2.14.0).",
+                            "Kop surat menghormati jenis wilayah selain Kabupaten (mis. 'Kota' tidak lagi dipotong sebagai 'Kab.'), nama desa pada jabatan dibersihkan dari awalan 'Desa', placeholder bertitik di akhir terbaca benar, dan alamat surel disaring lewat Kop.SurelBersih sebelum dicetak.",
+                            "ProGuard dan konfigurasi keamanan jaringan ditambahkan sebagai persiapan rilis produksi; validasi form dipisah ke modul sendiri disertai uji unit."
+                        }),
+                        new CatatanRilisSubSection("Kode Internal — Tanpa Perubahan Perilaku", new List<string>
+                        {
+                            "Kelas-kelas raksasa (ViewModel, repository, generator PDF, DatabaseInitializer, SupabaseStore) dipecah menjadi partial class per tanggung jawab; build dan seluruh uji tetap hijau."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.13.2 (9 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
