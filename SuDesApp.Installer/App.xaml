@@ -1,9 +1,0 @@
-<Application x:Class="SuDesApp.Installer.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             ShutdownMode="OnMainWindowClose">
-    <Application.Resources>
-        <!-- Font yang sama persis dengan aplikasi (SuDesApp.Wpf/Themes/*Theme.xaml). -->
-        <FontFamily x:Key="AppFontFamily">pack://application:,,,/SuDesAppSetup;component/Fonts/GoogleSans.ttc#Google Sans, Segoe UI Variable, Segoe UI</FontFamily>
-    </Application.Resources>
-</Application>
