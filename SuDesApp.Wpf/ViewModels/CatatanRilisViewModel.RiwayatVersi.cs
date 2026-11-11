@@ -14,6 +14,28 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.15.0 (11 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Platform — .NET 11", new List<string>
+                        {
+                            "Aplikasi kini berjalan di atas .NET 11 dengan paket pendukung versi terbaru; pembangunan dikunci ke SDK stabil sehingga hasil build lebih dapat diulang.",
+                            "Server lisensi yang di-container juga ikut diperbarui ke runtime .NET 11."
+                        }),
+                        new CatatanRilisSubSection("Bersih dan Ringkas", new List<string>
+                        {
+                            "Audit menyeluruh menghapus puluhan resource tampilan, converter, dan skrip yang sudah tidak terpakai — tampilan, laporan, dan data tidak berubah sama sekali."
+                        }),
+                        new CatatanRilisSubSection("Login Google Tetap Nyambung", new List<string>
+                        {
+                            "Penyimpanan token login Google pindah ke serialisasi bawaan platform dengan uji kompatibilitas dua arah, sehingga sesi Google yang sudah ada tetap berlaku tanpa perlu login ulang."
+                        }),
+                        new CatatanRilisSubSection("Uji dan Gerbang Rilis", new List<string>
+                        {
+                            "Uji baru menjaga daftar tema di pengaturan selalu cocok dengan berkas tema yang tersedia; gerbang uji E2E server lisensi diperbaiki agar bisa dijalankan berulang dan mengenal format token keamanan terbaru."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.14.0 (11 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
