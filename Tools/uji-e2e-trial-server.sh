@@ -2,8 +2,8 @@
 # uji-e2e-trial-server.sh — Uji E2E trial SERVER (alat permanen, sebelum rilis).
 #
 # Membangun dan menyalakan server lisensi lokal (Development, penyimpanan
-# MEMORI — tanpa Supabase, tanpa Midtrans), lalu menjalankan harness klien
-# Tools/UjiTrialServerE2E yang memakai klien lisensi yang SAMA dengan aplikasi:
+# berkas per-putaran di folder temp — tanpa Supabase, tanpa Midtrans), lalu
+# menjalankan harness klien Tools/UjiTrialServerE2E yang memakai klien lisensi yang SAMA dengan aplikasi:
 # mendaftar desa via admin, meminta trial, membaca token bertanda tangan,
 # memeriksa keadaan & chip status, lalu membuktikan trial kedua dari perangkat
 # lain ditolak TANPA cadangan trial lokal.
@@ -34,6 +34,10 @@ export ASPNETCORE_URLS="http://127.0.0.1:$PORT"
 export SUPABASE_HOST=""
 export SUPABASE_DB_PASSWORD=""
 export LISENSI_KEY_PATH="$(cygpath -m "$TMP_RUN/kunci.pem" 2>/dev/null || echo "$TMP_RUN/kunci.pem")"
+# Penyimpanan berkas server lisensi ikut per-putaran: tanpa ini, status trial
+# run sebelumnya (%LOCALAPPDATA%\SuDesApp\server-lisensi\langganan.json) membuat
+# putaran berikutnya gagal pada "trial sudah pernah dipakai" — uji tidak idempoten.
+export PenyimpananLokal__Path="$(cygpath -m "$TMP_RUN/langganan.json" 2>/dev/null || echo "$TMP_RUN/langganan.json")"
 
 export SUDES_ADMIN_OPERATORS__0__ID="uji01"
 export SUDES_ADMIN_OPERATORS__0__NAME="Operator Uji Trial"
@@ -43,7 +47,7 @@ export SUDES_ADMIN_OPERATORS__0__PERMISSIONS__1="customers.read"
 export SUDES_ADMIN_OPERATORS__0__PERMISSIONS__2="customers.create"
 export SUDES_ADMIN_OPERATORS__0__PERMISSIONS__3="devices.read"
 
-echo "== Menyiapkan server lisensi lokal (Development/memori) di port $PORT =="
+echo "== Menyiapkan server lisensi lokal (Development/berkas per-putaran) di port $PORT =="
 dotnet build SuDesApp.Server/SuDesApp.Server.csproj -v q --nologo || exit 1
 dotnet build Tools/UjiTrialServerE2E/UjiTrialServerE2E.csproj -v q --nologo || exit 1
 
