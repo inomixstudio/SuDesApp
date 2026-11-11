@@ -20,7 +20,7 @@ COPY SuDesApp.Server/ SuDesApp.Server/
 RUN dotnet publish SuDesApp.Server/SuDesApp.Server.csproj -c Release -o /app --no-restore
 RUN dotnet publish SuDesApp.Server/healthcheck/healthcheck.csproj -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS final
 WORKDIR /app
 # Server lisensi memegang data pembayaran & data per-tenant — jangan jalan
 # sebagai root. Image aspnet sudah menyediakan user "app" (UID 1654).

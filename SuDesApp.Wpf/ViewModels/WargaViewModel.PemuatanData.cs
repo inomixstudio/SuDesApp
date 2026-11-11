@@ -120,6 +120,7 @@ namespace SuDesApp.Wpf.ViewModels
 
                 _daftarWilayah.Clear();
                 foreach (var pair in baru) _daftarWilayah[pair.Key] = pair.Value;
+                _daftarWilayahItem = null;
                 OnPropertyChanged(nameof(DaftarWilayah));
             }
             catch (Exception ex)
@@ -180,12 +181,26 @@ namespace SuDesApp.Wpf.ViewModels
         {
             get
             {
-                yield return new System.Windows.Controls.ComboBoxItem { Content = "Semua wilayah", Tag = string.Empty };
-                foreach (var pair in _daftarWilayah.OrderBy(p => p.Key, StringComparer.Ordinal))
-                {
-                    yield return new System.Windows.Controls.ComboBoxItem { Content = pair.Value, Tag = pair.Key };
-                }
+                // Cache identitas stabil antar-perubahan data (WFO2000): daftar
+                // dibangun sekali lalu dibangun ulang oleh MuatDaftarWilayahAsync.
+                _daftarWilayahItem ??= BangunDaftarWilayah();
+                return _daftarWilayahItem;
             }
+        }
+
+        private List<System.Windows.Controls.ComboBoxItem>? _daftarWilayahItem;
+
+        private List<System.Windows.Controls.ComboBoxItem> BangunDaftarWilayah()
+        {
+            var hasil = new List<System.Windows.Controls.ComboBoxItem>
+            {
+                new() { Content = "Semua wilayah", Tag = string.Empty },
+            };
+            foreach (var pair in _daftarWilayah.OrderBy(p => p.Key, StringComparer.Ordinal))
+            {
+                hasil.Add(new System.Windows.Controls.ComboBoxItem { Content = pair.Value, Tag = pair.Key });
+            }
+            return hasil;
         }
 
         private WargaFilter SusunFilter()

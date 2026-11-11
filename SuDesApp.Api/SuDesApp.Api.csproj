@@ -2,23 +2,26 @@
 
   <PropertyGroup>
     <!--
-      Ber-target net10.0-windows7.0 agar bisa merujuk SuDesApp.Core yang juga
+      Ber-target net11.0-windows7.0 agar bisa merujuk SuDesApp.Core yang juga
       ber-target windows (karena DPAPI/ProtectedData di KunciDatabase, ApiKunci,
       GoogleClientCredentials, dan ProtectedGoogleTokenDataStore).
-      Begitu kripto tersebut diabstraksi, ubah kembali ke <TargetFramework>net10.0</TargetFramework>
+      Begitu kripto tersebut diabstraksi, ubah kembali ke <TargetFramework>net11.0</TargetFramework>
       agar backend ini bisa di-deploy ke Linux.
     -->
-    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <TargetFramework>net11.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>SuDesApp.Api</RootNamespace>
     <!-- Sama seperti SuDesApp.Core: beberapa paket transitif (mis. Microsoft.Win32.SystemEvents)
          masih membawa target build ber-TFM lama dan akan menolak net10.0-windows7.0. -->
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    <!-- Samakan disiplin dengan Core/Wpf/Server: peringatan = error,
+         supaya kode mati dan pemakaian yang ceroboh tidak lolos build. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
   </ItemGroup>
 
   <ItemGroup>
