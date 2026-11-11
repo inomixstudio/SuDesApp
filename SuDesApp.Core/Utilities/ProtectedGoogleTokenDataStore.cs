@@ -1,9 +1,10 @@
 using Google.Apis.Util.Store;
-using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +18,16 @@ namespace SuDesApp.Utilities;
 internal sealed class ProtectedGoogleTokenDataStore : IDataStore
 {
     private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("SuDesApp.GoogleOAuthToken.v1");
+
+    /// <summary>
+    /// Opsi serialisasi: konverter <see cref="TokenResponseJson"/> menjaga bentuk
+    /// JSON tetap sama dengan bawaan Google/Newtonsoft (lihat komentar di sana).
+    /// </summary>
+    private static readonly JsonSerializerOptions Opsi = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new TokenResponseJson() },
+    };
 
     private readonly string _root;
     private readonly string _protectedRoot;
@@ -34,7 +45,7 @@ internal sealed class ProtectedGoogleTokenDataStore : IDataStore
     public async Task StoreAsync<T>(string key, T value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        string json = JsonConvert.SerializeObject(value);
+        string json = JsonSerializer.Serialize(value, Opsi);
         byte[] encrypted = ProtectedData.Protect(
             Encoding.UTF8.GetBytes(json), Entropy, DataProtectionScope.CurrentUser);
         string path = PathFor<T>(key);
@@ -66,12 +77,16 @@ internal sealed class ProtectedGoogleTokenDataStore : IDataStore
                     byte[] encrypted = await File.ReadAllBytesAsync(path).ConfigureAwait(false);
                     byte[] clear = ProtectedData.Unprotect(
                         encrypted, Entropy, DataProtectionScope.CurrentUser);
-                    return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(clear))!;
+                    return JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(clear), Opsi)!;
                 }
-                catch (Exception ex) when (ex is CryptographicException or JsonException)
+                catch (Exception ex) when (ex is CryptographicException
+                    or System.Text.Json.JsonException
+                    or Newtonsoft.Json.JsonException)
                 {
                     // Token rusak/tidak dapat dibuka: hapus dan minta login ulang,
                     // bukan membuat pengguna terjebak pada sesi yang tidak valid.
+                    // Newtonsoft.Json.JsonException ikut ditangkap karena berkas
+                    // token lawas ditulis serializer Newtonsoft bawaan Google.
                     File.Delete(path);
                 }
             }
@@ -83,17 +98,18 @@ internal sealed class ProtectedGoogleTokenDataStore : IDataStore
             {
                 legacy = await _legacy.GetAsync<T>(key).ConfigureAwait(false);
             }
-            catch (JsonException)
+            catch (Newtonsoft.Json.JsonException)
             {
-                // FileDataStore lama menyimpan JSON plaintext. Jika file rusak,
-                // buang hanya entri token itu dan lanjutkan ke alur login baru.
+                // FileDataStore lama menyimpan JSON plaintext lewat serializer
+                // Newtonsoft milik Google. Jika file rusak, buang hanya entri
+                // token itu dan lanjutkan ke alur login baru.
                 await _legacy.DeleteAsync<T>(key).ConfigureAwait(false);
                 return default!;
             }
 
             if (legacy is not null)
             {
-                string json = JsonConvert.SerializeObject(legacy);
+                string json = JsonSerializer.Serialize(legacy, Opsi);
                 byte[] encrypted = ProtectedData.Protect(
                     Encoding.UTF8.GetBytes(json), Entropy, DataProtectionScope.CurrentUser);
                 await WriteEncryptedAsync(path, encrypted).ConfigureAwait(false);

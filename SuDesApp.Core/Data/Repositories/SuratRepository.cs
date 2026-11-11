@@ -2,7 +2,6 @@ using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using SuDesApp.Configuration;
 using SuDesApp.Data.Handlers;
 using SuDesApp.Data.Models;
