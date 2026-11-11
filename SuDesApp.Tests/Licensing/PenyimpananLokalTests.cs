@@ -30,7 +30,8 @@ public sealed class PenyimpananLokalTests : IDisposable
 
     private string Berkas => Path.Combine(_folder, "langganan.json");
 
-    private static PaketLangganan Bulanan => new("bulanan", "Bulanan", 150_000, 30);
+    // Cache identitas stabil (WFO2000): record ini hanya dibaca oleh uji.
+    private static readonly PaketLangganan Bulanan = new("bulanan", "Bulanan", 150_000, 30);
 
     [Fact]
     public async Task LanggananTetapAdaSetelahServerBerhenti()

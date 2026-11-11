@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <TargetFramework>net11.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -46,29 +46,28 @@
     <!-- Koneksi Supabase (sinkronisasi surat Android). Role yang dipakai sama
          dengan server lisensi; RLS tetap berlaku untuk role non-pemilik. -->
     <PackageReference Include="Npgsql" Version="10.0.3" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.78.0.4313" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.78.0.4327" />
     <!-- Provider SQLite MILIK SENDIRI: Microsoft.Data.Sqlite.Core + bundle
          e_sqlcipher. Database desa baru tetap SQLite biasa (SQLCipher hanya
          mengaktifkan enkripsi bila Password diisi), tetapi bundle ini membuat
          database terenkripsi dari versi lama tetap bisa dibuka setelah update.
          Paket "Microsoft.Data.Sqlite" biasa menarik bundle_e_sqlite3 dan tidak
          bisa membuka database SQLCipher, jadi jangan diganti kembali. -->
-    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="11.0.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.14" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.14" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.14" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.14" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.14" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="11.0.0" />
+    <!-- Serialisasi token Google: kode aplikasi memakai System.Text.Json,
+         tetapi paket ini tetap dirujuk karena FileDataStore bawaan Google.Apis
+         membuang Newtonsoft.Json.JsonException pada berkas token lawas yang
+         harus ditangkap saat migrasi (lihat ProtectedGoogleTokenDataStore). -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <!-- QR untuk kaki surat (QrCodeSurat) -->
     <PackageReference Include="QRCoder" Version="1.8.1" />
     <!-- DPAPI utk kredensial klien OAuth Google (GoogleClientCredentials) -->
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.14" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="11.0.0" />
   </ItemGroup>
 
   <ItemGroup>

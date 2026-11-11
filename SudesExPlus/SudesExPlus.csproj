@@ -1,11 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <RootNamespace>SudesExPlus</RootNamespace>
     <AssemblyName>SudesExPlus</AssemblyName>
+    <!-- Samakan disiplin dengan Core/Wpf/Server: peringatan = error,
+         supaya kode mati dan pemakaian yang ceroboh tidak lolos build. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!--
       SudesExPlus adalah pustaka Excel (.xlsx) milik aplikasi sendiri:
       pengganti EPPlus tanpa paket pihak ketiga dan tanpa permintaan lisensi
