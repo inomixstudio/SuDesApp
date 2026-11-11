@@ -87,12 +87,16 @@ Cek("kunci publik diambil dari /kunci-publik (bukan bawaan)",
 if (token is not null)
 {
     var bagian = token.Split('.');
-    Cek("token berbentuk v1.payload.signature", bagian.Length == 3 && bagian[0] == "v1",
+    // Klien asli (VerifikasiLisensi) menerima dua bentuk: v1.payload.signature
+    // (lama) dan v2.kid.payload.signature (baru, sejak key id disertakan).
+    bool v1 = bagian.Length == 3 && bagian[0] == "v1";
+    bool v2 = bagian.Length == 4 && bagian[0] == "v2";
+    Cek("token berbentuk v1.payload.signature atau v2.kid.payload.signature", v1 || v2,
         $"{bagian.Length} bagian, versi '{bagian[0]}'");
 
-    if (bagian.Length == 3)
+    if (v1 || v2)
     {
-        string klaim = Encoding.UTF8.GetString(Convert.FromBase64String(B64Url(bagian[1])));
+        string klaim = Encoding.UTF8.GetString(Convert.FromBase64String(B64Url(bagian[v2 ? 2 : 1])));
         Console.WriteLine($"  klaim token: {klaim}");
 
         using var doc = JsonDocument.Parse(klaim);
@@ -177,7 +181,8 @@ static string? BacaTokenCache(string folder)
     {
         if (properti.Value.ValueKind == JsonValueKind.String
             && properti.Value.GetString() is { } nilai
-            && nilai.StartsWith("v1.", StringComparison.Ordinal))
+            && (nilai.StartsWith("v1.", StringComparison.Ordinal)
+                || nilai.StartsWith("v2.", StringComparison.Ordinal)))
         {
             return nilai;
         }
