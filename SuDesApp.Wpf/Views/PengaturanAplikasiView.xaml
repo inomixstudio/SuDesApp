@@ -134,20 +134,8 @@
         </Style>
 
         <!-- Centang hari layanan (tetap pakai tema CheckBox aplikasi) -->
-        <Style x:Key="DayCheck" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
-            <Setter Property="Margin" Value="0,0,18,8"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="MinWidth" Value="60"/>
-        </Style>
 
         <!-- Kotak keterangan abu (opsional/langkah) -->
-        <Style x:Key="InlineNote" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="LineHeight" Value="20"/>
-            <Setter Property="Margin" Value="140,6,0,0"/>
-        </Style>
 
         <!-- Kotak jalur berkas (mono) -->
         <Style x:Key="PathBox" TargetType="Border">
@@ -173,11 +161,6 @@
         </Style>
 
         <!-- Pemisah antar kelompok -->
-        <Style x:Key="Divider" TargetType="Border">
-            <Setter Property="Height" Value="1"/>
-            <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
-            <Setter Property="Margin" Value="0,6,0,14"/>
-        </Style>
 
         <!-- Kotak hasil aksi (uji koneksi / buat otomatis), warna menyusul via DataTrigger nada -->
         <Style x:Key="InfoBox" TargetType="Border">

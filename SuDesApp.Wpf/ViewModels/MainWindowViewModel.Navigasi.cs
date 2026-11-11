@@ -136,11 +136,6 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Ubah mode sidebar (dipanggil jendela saat tombol ganti tampilan diklik).</summary>
         public void SetSidebarMode(SidebarMode mode) => ModeSidebar = mode;
 
-        /// <summary>
-        /// Kompatibilitas: ciut = mode ikon saja, lebar = tampilan penuh.
-        /// </summary>
-        public void SetSidebarCiut(bool ciut)
-            => SetSidebarMode(ciut ? SidebarMode.IkonRingkas : SidebarMode.Terbuka);
 
         /// <summary>Buka halaman awal dan sorot item Beranda pada sidebar.</summary>
         public void BukaBeranda()

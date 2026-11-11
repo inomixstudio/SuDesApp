@@ -19,11 +19,6 @@ namespace SuDesApp.Wpf.Services
             return PrintAsync(() => Document.LoadAsync(pdfPath), documentName);
         }
 
-        public Task<bool> PrintPdfBytesAsync(byte[] pdfBytes, string documentName)
-        {
-            ArgumentNullException.ThrowIfNull(pdfBytes);
-            return PrintAsync(() => Document.LoadAsync(pdfBytes), documentName);
-        }
 
         private async Task<bool> PrintAsync(Func<Task<Document>> load, string documentName)
         {

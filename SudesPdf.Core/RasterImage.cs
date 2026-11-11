@@ -43,24 +43,6 @@ public sealed class RasterImage
         }
     }
 
-    public RasterImage Crop(PdfRect area)
-    {
-        int x0 = Math.Max(0, (int)Math.Floor(area.Left));
-        int y0 = Math.Max(0, (int)Math.Floor(area.Bottom));
-        int x1 = Math.Min(Width, (int)Math.Ceiling(area.Right));
-        int y1 = Math.Min(Height, (int)Math.Ceiling(area.Top));
-        int w = Math.Max(1, x1 - x0);
-        int h = Math.Max(1, y1 - y0);
-        var result = new RasterImage(w, h, transparent: true);
-        for (int y = 0; y < h; y++)
-        {
-            int sourceRow = ((y0 + y) * Width + x0) * 4;
-            int targetRow = y * w * 4;
-            Array.Copy(Pixels, sourceRow, result.Pixels, targetRow, w * 4);
-        }
-
-        return result;
-    }
 
     /// <summary>Enkode PNG (RGBA) untuk diagnostik dan pengujian.</summary>
     public byte[] EncodePng()

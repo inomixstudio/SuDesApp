@@ -84,54 +84,7 @@ namespace SuDesApp.Services
             return terpasang;
         }
 
-        /// <summary>Jumlah template pengguna yang berasal dari sebuah contoh bawaan.</summary>
-        public static int JumlahBisaDisegarkan(IEnumerable<TemplateSuratKustom>? daftarPengguna)
-        {
-            if (daftarPengguna == null) return 0;
-            return daftarPengguna.Count(t =>
-                t != null && TemplateSuratBawaan.KodeDariNama(t.NamaTampil) != null);
-        }
 
-        /// <summary>
-        /// Segarkan template pengguna yang berasal dari contoh bawaan: definisinya diganti
-        /// definisi contoh terbaru, sedangkan identitasnya (id, nama yang dipakai
-        /// pengguna, dan nomor urut terakhir) tetap dipertahankan. Dipakai supaya
-        /// perbaikan contoh bawaan ikut sampai ke pengguna yang sudah memasangnya.
-        /// </summary>
-        public async Task<List<TemplateSuratKustom>> SegarkanAsync(IEnumerable<string>? kode = null)
-        {
-            var hasil = new List<TemplateSuratKustom>();
-            var daftar = await _repository.GetAllAsync().ConfigureAwait(false);
-            var diminta = kode == null
-                ? null
-                : new HashSet<string>(kode, StringComparer.OrdinalIgnoreCase);
-
-            foreach (var template in daftar)
-            {
-                string? kodeContoh = TemplateSuratBawaan.KodeDariNama(template.NamaTampil);
-                if (kodeContoh == null) continue;
-                if (diminta != null && !diminta.Contains(kodeContoh)) continue;
-
-                var contoh = TemplateSuratBawaan.Cari(kodeContoh);
-                if (contoh == null) continue;
-
-                var segar = contoh.Salinan();
-                segar.Id = template.Id;
-                segar.Nama = template.Nama;
-                segar.Dibuat = template.Dibuat;
-                segar.DibuatOleh = template.DibuatOleh;
-                segar.NomorTerakhir = template.NomorTerakhir;
-                segar.TahunNomor = template.TahunNomor;
-                segar.Diubah = DateTime.Now;
-
-                await _repository.UpdateAsync(segar).ConfigureAwait(false);
-                hasil.Add(segar);
-
-                _logger.LogInformation("Contoh template bawaan disegarkan: {Nama} (kode {Kode})", segar.Nama, kodeContoh);
-            }
-
-            return hasil;
-        }
 
         /// <summary>
         /// Pemasangan otomatis contoh bawaan. Contoh baru (kodenya belum tercatat pada

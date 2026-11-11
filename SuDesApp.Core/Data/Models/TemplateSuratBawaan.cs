@@ -818,14 +818,6 @@ namespace SuDesApp.Data.Models
                 return this;
             }
 
-            /// <summary>Kolom identitas warga yang paling sering dipakai surat desa.</summary>
-            public PenyusunContoh IdentitasWarga() => Kolom("Nama", wajib: true)
-                .Kolom("NIK", TipeKolomTemplate.Nik, wajib: true)
-                .Kolom("Tempat Lahir")
-                .Kolom("Tanggal Lahir", TipeKolomTemplate.Tanggal)
-                .Kolom("Jenis Kelamin", TipeKolomTemplate.Pilihan, pilihan: "Laki-laki|Perempuan")
-                .Kolom("Pekerjaan")
-                .Kolom("Alamat", TipeKolomTemplate.Paragraf, wajib: true);
 
             public TemplateSuratKustom Jadi() => _template;
         }

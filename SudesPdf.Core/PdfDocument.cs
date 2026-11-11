@@ -733,18 +733,7 @@ public sealed class PdfDocument
 
     // ------------------------------------------------------------- Metadata
 
-    public string? GetInfoString(string key)
-    {
-        var info = ResolveDictionary(Trailer.Raw("Info"));
-        var value = Resolve(info?.Raw(key));
-        return value is PdfString text ? DecodeTextString(text) : null;
-    }
 
-    public string? GetCatalogString(string key)
-    {
-        var value = Resolve(Catalog.Raw(key));
-        return value is PdfString text ? DecodeTextString(text) : null;
-    }
 
     private static string DecodeTextString(PdfString text) => PdfText.DecodePdfString(text.Bytes);
 
@@ -762,6 +751,4 @@ public sealed class PdfDocument
     public override string ToString() =>
         $"PDF {Version}{(IsEncrypted ? " (terproteksi)" : string.Empty)}, {PageCount} halaman";
 
-    internal static string FormatNumber(double value) =>
-        value.ToString("0.####", CultureInfo.InvariantCulture);
 }

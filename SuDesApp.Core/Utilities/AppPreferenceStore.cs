@@ -367,16 +367,6 @@ namespace SuDesApp.Utilities
 
         public static void SetKunciIdleAktif(bool v) => SetBool(KeyKunciIdleAktif, v);
 
-        /// <summary>
-        /// Batas waktu diam sebelum aplikasi mengunci dirinya, dalam menit
-        /// (1-120, bawaan 15). Nilai di luar rentang jatuh ke bawaan — 0 menit
-        /// akan mengunci seketika dan tidak boleh sah.
-        /// </summary>
-        public static int GetKunciIdleMenit()
-        {
-            int v = GetInt(KeyKunciIdleMenit, 15);
-            return v is < 1 or > 120 ? 15 : v;
-        }
 
         public static void SetKunciIdleMenit(int v) => SetInt(KeyKunciIdleMenit, v);
 
@@ -440,8 +430,6 @@ namespace SuDesApp.Utilities
         public static string GetJalurServerLisensiLokal() =>
             GetString(KeyServerLisensiLokalJalur, string.Empty) ?? string.Empty;
 
-        public static void SetJalurServerLisensiLokal(string? jalur) =>
-            SetString(KeyServerLisensiLokalJalur, jalur?.Trim() ?? string.Empty);
     }
 
 }

@@ -44,14 +44,5 @@ namespace SuDesApp.Wpf.Themes
 
         public static ResourceDictionary Muat(string sumber) => new() { Source = Alamat(sumber) };
 
-        /// <summary>Muat seluruh kamus dasar ke dalam koleksi milik pemanggil.</summary>
-        public static void MuatDasar(ResourceDictionary tujuan)
-        {
-            ArgumentNullException.ThrowIfNull(tujuan);
-            foreach (string sumber in BerkasDasar)
-            {
-                tujuan.MergedDictionaries.Add(Muat(sumber));
-            }
-        }
     }
 }

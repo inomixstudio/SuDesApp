@@ -88,39 +88,6 @@ namespace SuDesApp.Services
             return hasil;
         }
 
-        /// <summary>
-        /// Susun satu baris lampiran dari NIK warga saja — jalur "tambah nama"
-        /// untuk orang yang bukan perangkat desa (mis. kader yang belum tercatat
-        /// di Data Perangkat Desa). Null bila NIK tidak ada di data warga.
-        /// </summary>
-        public async Task<BarisLampiranSk?> SusunSatuAsync(
-            string? nik,
-            string? peran = null,
-            string? unit = null,
-            CancellationToken ct = default)
-        {
-            if (string.IsNullOrWhiteSpace(nik))
-            {
-                return null;
-            }
-
-            string kunci = nik.Trim();
-            try
-            {
-                var warga = await _wargaRepository.GetWargaByNikAsync(kunci).ConfigureAwait(false);
-                if (warga == null)
-                {
-                    return null;
-                }
-
-                return Bangun(warga, null, peran, unit);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Gagal membaca warga untuk lampiran SK.");
-                return null;
-            }
-        }
 
         private async Task<Dictionary<string, WargaData>> AmbilPetaWargaAsync(
             IEnumerable<string?> daftarNik, CancellationToken ct)

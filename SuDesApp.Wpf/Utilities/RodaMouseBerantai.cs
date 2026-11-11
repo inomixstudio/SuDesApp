@@ -45,7 +45,6 @@ namespace SuDesApp.Wpf.Utilities
 
         private static bool _terpasang;
 
-        internal static bool SudahTerpasang => _terpasang;
 
         /// <summary>
         /// Pasang sekali per proses. Pemanggilan berulang tidak menambah handler

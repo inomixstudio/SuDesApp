@@ -397,20 +397,6 @@ namespace SuDesApp.Utilities
             old?.Dispose();
         }
 
-        /// <summary>
-        /// Membangun initializer klien Google API (OAuth credential + ApplicationName)
-        /// untuk layanan lain di luar Drive yang memakai token OAuth yang sama
-        /// (mode layanan online Google Sheet/Form) supaya warga cukup login Google sekali.
-        /// </summary>
-        public async Task<BaseClientService.Initializer> BuildSharedInitializerAsync(CancellationToken ct = default)
-        {
-            var drive = await GetClientAsync(ct).ConfigureAwait(false);
-            return new BaseClientService.Initializer
-            {
-                HttpClientInitializer = drive.HttpClientInitializer,
-                ApplicationName = "SuDesApp"
-            };
-        }
 
         public async Task<IList<DriveItem>> ListItemsAsync(string? folderId = null, CancellationToken ct = default)
         {
@@ -545,40 +531,6 @@ namespace SuDesApp.Utilities
             return result;
         }
 
-        public async Task<DriveItem> UploadBytesAsync(byte[] content, string mimeType, string fileName, string? parentId = default,
-            IProgress<double>? progress = null, CancellationToken ct = default)
-        {
-            var client = await GetClientAsync(ct).ConfigureAwait(false);
-            var effectiveParent = string.IsNullOrWhiteSpace(parentId) ? GetRootFolderIdOrRoot() : parentId;
-
-            var meta = new Google.Apis.Drive.v3.Data.File
-            {
-                Name = fileName,
-                Parents = new List<string> { effectiveParent }
-            };
-
-            await using var stream = new MemoryStream(content);
-            var request = client.Files.Create(meta, stream, mimeType);
-            request.Fields = "id,name,mimeType,size,modifiedTime,webViewLink,parents";
-            request.SupportsAllDrives = true;
-
-            if (progress != null && stream.Length > 0)
-            {
-                request.ProgressChanged += p =>
-                {
-                    if (p.Status == UploadStatus.Uploading)
-                    {
-                        progress.Report(Math.Min(100, p.BytesSent * 100.0 / stream.Length));
-                    }
-                };
-            }
-
-            var upload = await request.UploadAsync(ct);
-            if (upload.Status != UploadStatus.Completed)
-                throw upload.Exception ?? new Exception($"Upload gagal dengan status {upload.Status}");
-
-            return ToDriveItem(request.ResponseBody, effectiveParent);
-        }
 
         public async Task<byte[]> DownloadToBytesAsync(string fileId, CancellationToken ct = default)
         {
@@ -637,22 +589,6 @@ namespace SuDesApp.Utilities
 
         public string ToWebViewLink(string fileId) => $"https://drive.google.com/file/d/{fileId}/view";
 
-        /// <summary>
-        /// Mengizinkan siapa saja yang memiliki tautan membaca berkas (dipakai
-        /// agar warga tanpa akun Google bisa membuka formulir layanan surat).
-        /// </summary>
-        public async Task SetAnyoneReaderAsync(string fileId, CancellationToken ct = default)
-        {
-            var permission = new Google.Apis.Drive.v3.Data.Permission
-            {
-                Type = "anyone",
-                Role = "reader"
-            };
-            var request = (await GetClientAsync(ct).ConfigureAwait(false)).Permissions.Create(permission, fileId);
-            request.Fields = "id";
-            await request.ExecuteAsync(ct).ConfigureAwait(false);
-            _logger.LogInformation("Izin 'siapa saja dengan tautan' diberikan untuk berkas {Id}", fileId);
-        }
 
         private static DriveItem ToDriveItem(Google.Apis.Drive.v3.Data.File f, string? parentId)
         {

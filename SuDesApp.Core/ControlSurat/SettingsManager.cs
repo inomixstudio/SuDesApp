@@ -33,63 +33,6 @@ namespace SuDesApp.ControlSurat
             _logger = logger ?? NullLogger<SettingsManager>.Instance;
         }
 
-        public async Task<bool> IsSettingsEmptyAsync()
-        {
-            try
-            {
-                _logger.LogInformation("Checking if InfoDesa is empty...");
-                using var connection = new SqliteConnection(_connectionString);
-                await connection.OpenAsync();
-
-                // using: SqliteCommand memegang handle statement SQLite unmanaged yang
-                // tidak segera dibebaskan GC. Jalur ini dipakai tiap aplikasi dibuka
-                // dan tiap clerk menyimpan data desa, sehingga handle menumpuk.
-                using var command = connection.CreateCommand();
-                command.CommandText = "SELECT COUNT(*) FROM InfoDesa";
-                var count = Convert.ToInt32(await command.ExecuteScalarAsync());
-                if (count == 0)
-                {
-                    _logger.LogInformation("InfoDesa is empty: True");
-                    return true;
-                }
-
-                // InfoDesa dianggap "belum diisi" bila barisnya hanya placeholder
-                // (mis. sisa data default "Default Village" dari setup lama).
-                using var dataCommand = connection.CreateCommand();
-                dataCommand.CommandText = "SELECT NamaDesa, Kecamatan, Kabupaten, KepalaDesa FROM InfoDesa LIMIT 1";
-                using var reader = await dataCommand.ExecuteReaderAsync();
-                if (!await reader.ReadAsync())
-                {
-                    _logger.LogInformation("InfoDesa is empty: True");
-                    return true;
-                }
-
-                var namaDesa = reader.IsDBNull(0) ? null : reader.GetString(0).Trim();
-                var kecamatan = reader.IsDBNull(1) ? null : reader.GetString(1).Trim();
-                var kabupaten = reader.IsDBNull(2) ? null : reader.GetString(2).Trim();
-                var kepalaDesa = reader.IsDBNull(3) ? null : reader.GetString(3).Trim();
-
-                bool isEmpty = string.IsNullOrWhiteSpace(namaDesa) ||
-                               string.IsNullOrWhiteSpace(kecamatan) ||
-                               string.IsNullOrWhiteSpace(kabupaten) ||
-                               string.IsNullOrWhiteSpace(kepalaDesa) ||
-                               namaDesa.StartsWith("Default", StringComparison.OrdinalIgnoreCase) ||
-                               namaDesa.StartsWith("Nama ", StringComparison.OrdinalIgnoreCase);
-
-                _logger.LogInformation("InfoDesa is empty: {IsEmpty}", isEmpty);
-                return isEmpty;
-            }
-            catch (SqliteException sqlEx)
-            {
-                _logger.LogError(sqlEx, "SQLite error while checking if InfoDesa is empty.");
-                throw new Exception("Database error while checking settings.", sqlEx);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error while checking if InfoDesa is empty.");
-                throw new Exception("An unexpected error occurred while checking settings.", ex);
-            }
-        }
 
         public async Task<DesaData?> GetSettingsAsync()
         {

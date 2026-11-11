@@ -28,17 +28,6 @@ namespace SuDesApp.Api
 
         private const string AwalBearer = "Bearer ";
 
-        /// <summary>
-        /// True bila kunci yang diberikan caller cocok dengan kunci tersimpan.
-        /// Kunci kosong di kedua sisi tetap ditolak.
-        /// </summary>
-        public static bool Diizinkan(string? kunciDiberikan, string? kunciTersimpan)
-        {
-            if (string.IsNullOrWhiteSpace(kunciTersimpan)) return false;
-            if (string.IsNullOrWhiteSpace(kunciDiberikan)) return false;
-
-            return PerbandinganTetap(kunciDiberikan!, kunciTersimpan!);
-        }
 
         /// <summary>
         /// Cari kunci yang cocok di antara semua kunci tersimpan (utama +

@@ -456,13 +456,6 @@ namespace SuDesApp
         }
 
         // Cek apakah template valid
-        public bool IsValidTemplate(string templateName)
-        {
-            if (string.IsNullOrWhiteSpace(templateName))
-                return false; // Template kosong tidak valid
-
-            return TemplateNames.Contains(templateName.ToUpperInvariant()); // Cek daftar template
-        }
 
         // Cek apakah jenis surat memakai grup penomoran bersama (IsSharedNumbering di JenisSuratConfig.json)
         public bool IsSharedNumbering(string namaJenis)

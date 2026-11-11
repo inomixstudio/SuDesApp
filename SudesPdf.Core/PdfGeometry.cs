@@ -54,16 +54,6 @@ public readonly struct PdfRect
         return FromEdges(x0, y0, x1, y1);
     }
 
-    public PdfRect Union(PdfRect other)
-    {
-        if (IsEmpty) return other;
-        if (other.IsEmpty) return this;
-        return FromEdges(
-            Math.Min(Left, other.Left),
-            Math.Min(Bottom, other.Bottom),
-            Math.Max(Right, other.Right),
-            Math.Max(Top, other.Top));
-    }
 
     public bool Contains(double x, double y) => x >= Left && x <= Right && y >= Bottom && y <= Top;
 
@@ -322,33 +312,6 @@ public sealed class PdfPathBuilder
         _y = y;
     }
 
-    /// <summary>Tambahkan jalur lain apa adanya (mis. glif pada matriks lain).</summary>
-    public void AddPath(PdfPath path, in PdfMatrix matrix)
-    {
-        foreach (var contour in path.Contours)
-        {
-            FinishCurrent(false);
-            if (contour.Count == 0) continue;
-            StartSubpath(
-                matrix.Transform(contour.X(0), contour.Y(0)).X,
-                matrix.Transform(contour.X(0), contour.Y(0)).Y);
-            for (int i = 1; i < contour.Count; i++)
-            {
-                var p = matrix.Transform(contour.X(i), contour.Y(i));
-                AddPoint(p.X, p.Y);
-            }
-
-            FinishCurrent(contour.Closed);
-            _closedAtStart = contour.Closed;
-            _x = contour.X(contour.Count - 1);
-            _y = contour.Y(contour.Count - 1);
-            if (contour.Closed)
-            {
-                _x = contour.X(0);
-                _y = contour.Y(0);
-            }
-        }
-    }
 
     public PdfPath Build()
     {

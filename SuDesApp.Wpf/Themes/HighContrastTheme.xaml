@@ -37,8 +37,6 @@
     <Color x:Key="MenuBackgroundColor">#000000</Color>
     <Color x:Key="MenuTextColor">#FFFFFF</Color>
     <Color x:Key="AccentLightColor">#FFD400</Color>
-    <Color x:Key="AccentDarkColor">#997A00</Color>
-    <Color x:Key="ShadowColor">#50000000</Color>
 
     <!-- Subtle badge colors: dibuat sangat gelap agar teks terang di atasnya
          tetap >= 7:1. -->
@@ -88,7 +86,6 @@
     <!-- Helper brushes -->
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#E6E6E6"/>
-    <SolidColorBrush x:Key="LogoCircleBackgroundBrush" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="ErrorOverlayBrush" Color="{StaticResource ErrorColor}" Opacity="0.15"/>
 
     <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>

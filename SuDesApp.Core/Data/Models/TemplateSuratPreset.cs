@@ -35,10 +35,6 @@ namespace SuDesApp.Data.Models
             new("Keterangan", TipeKolomTemplate.Paragraf, false)
         };
 
-        /// <summary>Ada kolom umum dengan label tertentu pada definisi template.</summary>
-        public static bool SudahAda(TemplateSuratKustom? template, string label) =>
-            template?.Kolom != null &&
-            template.Kolom.Any(k => string.Equals(k.Label, label, System.StringComparison.OrdinalIgnoreCase));
 
         /// <summary>
         /// Buat kolom dari preset, dengan kunci unik yang belum dipakai template.

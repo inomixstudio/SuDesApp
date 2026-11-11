@@ -1,12 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <RootNamespace>SudesPdf.Core</RootNamespace>
     <AssemblyName>SudesPdf.Core</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Samakan disiplin dengan Core/Wpf/Server: peringatan = error,
+         supaya kode mati dan pemakaian yang ceroboh tidak lolos build. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!--
       SudesPdf.Core adalah mesin PDF milik aplikasi sendiri: tanpa paket pihak
       ketiga sama sekali (tidak ada PDFium, PDF.js, Skia, atau MIT/Apache

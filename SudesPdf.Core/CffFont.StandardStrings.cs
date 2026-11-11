@@ -9,7 +9,6 @@ public sealed partial class CffFont : IPdfGlyphSource
     internal static string? StandardString(int sid) =>
         sid >= 0 && sid < StandardStrings.Length ? StandardStrings[sid] : null;
 
-    internal static int StandardStringCount => StandardStrings.Length;
 
     private static readonly string[] StandardStrings =
     {

@@ -164,24 +164,5 @@ namespace SuDesApp.Wpf.Utilities
                 .FirstOrDefault(a => a.Username.Equals(dicari, StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>
-        /// Pastikan satu akun ada di berkas (dipakai untuk akun bawaan dan akun
-        /// pusat). Akun yang sudah ada TIDAK ditimpa — kata sandi yang pernah
-        /// berganti tidak boleh dikembalikan ke bawaan hanya karena aplikasi
-        /// dibuka lagi. Mengembalikan true bila akun baru benar-benar ditulis.
-        /// </summary>
-        public static bool PastikanAkun(string jalur, string username, string kataSandi, bool pusat)
-        {
-            var akun = Baca(jalur);
-            if (akun.Any(a => a.Username.Equals(username, StringComparison.OrdinalIgnoreCase)))
-            {
-                return false;
-            }
-
-            string garam = BuatGaram();
-            akun.Add(new AkunLogin(username, garam, HitungHash(kataSandi, garam), pusat));
-            Tulis(jalur, akun);
-            return true;
-        }
     }
 }

@@ -153,8 +153,6 @@ public static class LayoutContainerExtensions
     public static IContainer AlignMiddle(this IContainer container) =>
         Set(container, node => node.VAlign = VerticalAlign.Middle);
 
-    public static IContainer AlignBottom(this IContainer container) =>
-        Set(container, node => node.VAlign = VerticalAlign.Bottom);
 
     /// <summary>Kotak ini tidak boleh terpotong oleh batas halaman.</summary>
     public static IContainer ShowEntire(this IContainer container) =>

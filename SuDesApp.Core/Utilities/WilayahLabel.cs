@@ -27,11 +27,6 @@ namespace SuDesApp.Utilities
         public static string PeraturanDaerah(string? jenisKabupaten, string namaKabupaten) =>
             $"Peraturan Daerah {Jenis(jenisKabupaten)} {namaKabupaten}";
 
-        /// <summary>
-        /// "Peraturan Bupati {nama}" atau "Peraturan Wali Kota {nama}".
-        /// </summary>
-        public static string PeraturanKepala(string? jenisKabupaten, string namaKabupaten) =>
-            $"Peraturan {Kepala(jenisKabupaten)} {namaKabupaten}";
 
         /// <summary>
         /// "Peraturan Bupati" atau "Peraturan Wali Kota" (tanpa nama).
@@ -51,10 +46,5 @@ namespace SuDesApp.Utilities
         public static string IdentitasWilayah(string? jenisKabupaten, string namaKabupaten) =>
             $"{Jenis(jenisKabupaten)} {namaKabupaten}";
 
-        /// <summary>
-        /// "dilaporkan kepada Bupati" atau "dilaporkan kepada Wali Kota".
-        /// </summary>
-        public static string LaporanKepala(string? jenisKabupaten) =>
-            $"kepada {Kepala(jenisKabupaten)}";
     }
 }

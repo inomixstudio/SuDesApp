@@ -196,21 +196,6 @@ namespace SuDesApp.Data.Models
                 .ToList();
         }
 
-        /// <summary>Nama kelompok untuk menu dan filter — huruf besar semua hanya
-        /// pas untuk kolom tabel, tidak untuk daftar menu.</summary>
-        public static string TampilanKelompok(string? kelompok) => Normalisasi(kelompok) switch
-        {
-            "PERANGKAT DESA" => "Perangkat Desa",
-            "RT/RW" => "RT/RW",
-            "LINMAS" => "Linmas",
-            "LPM" => "LPM",
-            "PKK" => "PKK",
-            "POSYANDU" => "Posyandu",
-            "BPD" => "BPD",
-            "KADER STUNTING" => "Kader Stunting",
-            "KADER KPM" => "Kader KPM",
-            _ => "Lainnya"
-        };
 
         public static bool Valid(string? jabatan) =>
             !string.IsNullOrWhiteSpace(jabatan)

@@ -119,9 +119,6 @@ namespace SuDesApp.Data.Models
                 .ToList();
         }
 
-        /// <summary>Jumlah baris yang benar-benar akan tercetak.</summary>
-        public static int HitungBaris(IEnumerable<BarisLampiranSk>? baris) =>
-            Kelompokkan(baris).Sum(blok => blok.Jumlah);
 
         /// <summary>
         /// True bila lampiran perlu judul blok ("UNIT …"): lebih dari satu unit,
