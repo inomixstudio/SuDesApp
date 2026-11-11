@@ -160,5 +160,32 @@ habis.
   berjalan terus-menerus, jalankan desktop dan backend pada berkas database
   yang sama dengan hati-hati (mis. satu proses sebagai pemilik data).
 - **Belum ada dokumen deploy.** `Dockerfile` di repo ini adalah untuk server
-  lisensi, bukan backend ini. Untuk produksi, siapkan image .NET 10 + volume
+  lisensi, bukan backend ini. Untuk produksi, siapkan image .NET 11 + volume
   `desa.db` + reverse proxy HTTPS.
+
+---
+
+## 5. Kapan memakai yang mana
+
+Tiga permukaan HTTP di repo ini punya tanggung jawab berbeda — jangan
+tertukar saat mengembangkan:
+
+| Kebutuhan | Pakai | Bentuk proses | Kontrak |
+|---|---|---|---|
+| Komputer kantor desa: angka agregat + verifikasi surat untuk dashboard/pihak ketiga | **`ApiListener`** (`SuDesApp.Core/Api/`) | Menyala **in-process** bersama aplikasi desktop WPF | `/sudes/api/v1/*` dengan kunci API (`ApiKunci`) |
+| Klien mobile/Android/browser: sesi login, data warga, register surat, kelola pengguna | **`SuDesApp.Api`** | Proses server **terpisah** (ASP.NET Core), bisa dihosting sendiri | `/sudes/api/v1/*` dengan token sesi (`Authorization: Bearer`) |
+| Lisensi langganan, aktivasi perangkat, sinkronisasi Supabase | **`SuDesApp.Server`** | Proses server terpisah (dipublish pipeline rilis) | Endpoint lisensi/sinkron sendiri |
+
+Prefix `/sudes/api/v1` sengaja **dibuat sama** antara `ApiListener` dan
+`SuDesApp.Api` supaya kontrak statistik/sesi tidak bercabang; yang membedakan
+hanya mekanisme autentikasi (kunci API vs sesi) dan cakupan datanya.
+
+### Status penerbitan
+
+- **`SuDesApp.Server`** ikut pipeline rilis: tag `vX.Y.Z` memicu
+  `.github/workflows/release.yml` yang menerbitkan server + installer desktop.
+- **`SuDesApp.Api`** saat ini **belum** dipublish pipeline mana pun — dirujuk
+  uji `SuDesApp.Tests/Api/` dan dijalankan manual
+  (`dotnet run --project SuDesApp.Api`). Saat klien mobile/browser mulai
+  diproduksikan, tambahkan job publish terpisah (mis. container image) —
+  jangan digabung ke rilis desktop karena siklus hidupnya berbeda.
