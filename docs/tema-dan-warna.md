@@ -85,21 +85,22 @@ tema.
 2. Tambahkan satu entri ke `Services/ThemeCatalog.cs` dengan nama, label, dan
    warna swatch. `ThemeService` mengambil daftar serta nama resource dari sana,
    lalu `PemuatanTema` membentuk pack URI; jangan menambahkan daftar tema kedua.
-3. Uji `SetiapTemaDiLayanan_PunyaBerkasDanSebaliknya` memastikan daftar layanan
-   dan berkas tidak berbeda.
+3. Uji `SetiapTemaDiLayanan_PunyaBerkasDanSebaliknya` (di
+   `TemaKonsistenTests`) memastikan daftar layanan dan berkas tidak berbeda.
 
 ## Gerbang CI wajib (setiap pull request)
 
-> **Status: belum ada.** Job **Audit kontras tema** dan
-> `Tools/check-kontras-wcag.ps1` tidak ada di repo ini, jadi belum ada gerbang
-> kontras yang berjalan. Yang berjalan sekarang hanya "Penjaga otomatis" di
-> bawah. Teks selebihnya adalah **rancangan**, bukan catatan berkas yang ada.
+> **Status:** `Tools/check-kontras-wcag.ps1` **ada** di repo dan bisa dijalankan
+> manual, tetapi job CI **Audit kontras tema** belum ada di `.github/workflows/`,
+> jadi belum ada gerbang kontras yang berjalan pada every PR. Yang berjalan
+> sekarang hanya "Penjaga otomatis" di bawah. Baris tentang job CI dan uji
+> render-per-halaman di bawah adalah **rancangan**, bukan catatan berkas yang ada.
 
 Rancangan yang **belum diimplementasikan**:
 
 | Langkah rancangan | Memeriksa | TIDAK menangkap |
 |---|---|---|
-| `Tools/check-kontras-wcag.ps1` | pasangan token teks/latar di **berkas tema** (AA; AAA untuk HighContrast) + konsistensi kunci antar sebelas tema | teks yang kehilangan `Foreground` karena `Style` eksplisit, atau warna warisan yang tertimpa gaya implisit |
+| Job CI **Audit kontras tema** (belum ada) yang menjalankan `Tools/check-kontras-wcag.ps1` | pasangan token teks/latar di **berkas tema** (AA; AAA untuk HighContrast) + konsistensi kunci antar sebelas tema | teks yang kehilangan `Foreground` karena `Style` eksplisit, atau warna warisan yang tertimpa gaya implisit |
 | uji render-per-halaman (mulai dari `JelajahRenderTemaTests`) | teks yang **benar-benar dirender**: setiap `TextBlock` di semua halaman × sebelas tema diukur terhadap latar efektifnya | pasangan token yang belum dipakai halaman mana pun |
 
 Bila nanti diimplementasikan, job itu sebaiknya **terpisah** dari `build-test`
@@ -113,10 +114,13 @@ Yang **sudah ada** dan dijalankan pada setiap `dotnet test`:
 
 | Berkas | Uji |
 |---|---|
-| `SuDesApp.Tests/UI/TemaKonsistenTests.cs` | `SemuaTema_MendefinisikanKunciYangSama`, `Tampilan_TidakMemakaiWarnaLiteral`, `KunciMilikTema_TidakDirujukDenganStaticResource` |
+| `SuDesApp.Tests/UI/TemaKonsistenTests.cs` | `SemuaTema_MendefinisikanKunciYangSama`, `SetiapTemaDiLayanan_PunyaBerkasDanSebaliknya`, `Tampilan_TidakMemakaiWarnaLiteral`, `KunciMilikTema_TidakDirujukDenganStaticResource` |
 | `SuDesApp.Tests/UI/UkuranHurufStandarTests.cs` | `Literal_FontSize_seluruhnya_di_skala_baku` |
 
-Tabel di bawah adalah **rancangan cakupan**, bukan catatan berkas yang ada:
+Tabel di bawah adalah **rancangan cakupan**; yang sudah diimplementasikan
+hanya baris `SemuaTema_MendefinisikanKunciYangSama`,
+`SetiapTemaDiLayanan_PunyaBerkasDanSebaliknya`, `Tampilan_TidakMemakaiWarnaLiteral`,
+`KunciMilikTema_TidakDirujukDenganStaticResource`, dan `UkuranHurufStandarTests`.
 `JelajahRenderTemaTests`, `FontAntarmukaTests`, `GayaKpiDanJudulTerpusatTests`,
 `PemilihTemaTests`, dan baris `TemaKonsistenTests` lainnya belum diimplementasikan.
 

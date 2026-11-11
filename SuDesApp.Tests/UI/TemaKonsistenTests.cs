@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using SuDesApp.Wpf.Services;
 using Xunit;
 
 namespace SuDesApp.Tests.UI
@@ -67,6 +68,36 @@ namespace SuDesApp.Tests.UI
                     + $"Kurang: [{string.Join(", ", kurang)}]. "
                     + $"Lebih: [{string.Join(", ", lebih)}].");
             }
+        }
+
+        [Fact]
+        public void SetiapTemaDiLayanan_PunyaBerkasDanSebaliknya()
+        {
+            // Katalog layanan (ThemeCatalog) dan berkas tema harus sepakat:
+            // tema tanpa berkas membuat pergantian tema jatuh ke tema bawaan,
+            // berkas tanpa katalog menjadi tema yatim yang tak bisa dipilih.
+            string? akar = CariRootRepo();
+            Assert.True(akar is not null, "Akar repo (berisi SuDesApp.slnx) tidak ditemukan.");
+
+            var diLayanan = ThemeCatalog.GetAvailableThemes()
+                .Where(nama => !string.Equals(nama, "Auto", StringComparison.Ordinal))
+                .ToHashSet(StringComparer.Ordinal);
+
+            var diBerkas = Directory
+                .EnumerateFiles(Path.Combine(akar, "SuDesApp.Wpf", "Themes"), "*Theme.xaml")
+                .Select(Path.GetFileNameWithoutExtension)
+                .Select(nama => nama!.EndsWith("Theme", StringComparison.Ordinal)
+                    ? nama[..^"Theme".Length]
+                    : nama)
+                .ToHashSet(StringComparer.Ordinal);
+
+            string[] tanpaBerkas = diLayanan.Except(diBerkas).ToArray();
+            string[] tanpaKatalog = diBerkas.Except(diLayanan).ToArray();
+
+            Assert.True(tanpaBerkas.Length == 0 && tanpaKatalog.Length == 0,
+                "Daftar tema ThemeCatalog dan berkas *Theme.xaml tidak sama. "
+                + $"Tanpa berkas: [{string.Join(", ", tanpaBerkas)}]. "
+                + $"Tanpa katalog: [{string.Join(", ", tanpaKatalog)}].");
         }
 
         [Fact]
