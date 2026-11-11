@@ -5,7 +5,6 @@
               xmlns:views="clr-namespace:SuDesApp.Wpf.Views"
               xmlns:vm="clr-namespace:SuDesApp.Wpf.ViewModels"
               xmlns:input="clr-namespace:SuDesApp.Wpf.Input"
-              xmlns:local="clr-namespace:SuDesApp.Wpf.Converters"
               ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <ResourceDictionary>
@@ -26,8 +25,6 @@
                 <ResourceDictionary Source="Themes/KartuCatatanRilis.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-            <local:StringToBoolConverter x:Key="StringToBoolConverter"/>
-            <local:ByteArrayToImageConverter x:Key="ByteArrayToImage"/>
 
             <!-- Logo Google "G" resmi (4 warna) sebagai vektor — dipakai bersama
                  di LoginWindow, GoogleLoginView, GoogleDriveView. Viewbox menskalakan
@@ -43,21 +40,6 @@
                 </Viewbox>
             </DataTemplate>
 
-<!-- LinkButton style for clickable links -->
-<Style x:Key="HyperlinkStyle" TargetType="TextBlock">
-    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-    <Setter Property="Cursor" Value="Hand"/>
-    <Setter Property="TextDecorations" Value="Underline"/>
-    <Setter Property="Margin" Value="0"/>
-    <Setter Property="Padding" Value="0"/>
-    <Setter Property="VerticalAlignment" Value="Center"/>
-    <Style.Triggers>
-        <Trigger Property="IsMouseOver" Value="True">
-            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
-        </Trigger>
-    </Style.Triggers>
-</Style>
-            
             <!-- DataTemplates untuk navigasi View ke ViewModel -->
             <!-- Beranda: halaman pembuka setelah login -->
             <DataTemplate DataType="{x:Type vm:BerandaViewModel}">

@@ -157,21 +157,6 @@ namespace SuDesApp.Wpf.ViewModels
             return $"Data {tahun} · Diperbarui {tanggal}";
         }
 
-        /// <summary>
-        /// Cocokkan cadangan IDM dengan kode desa pada Pengaturan Surat (lewat data
-        /// wilayah, sama seperti halaman IDM), lalu susun teksnya. Tanpa cadangan,
-        /// kode tidak cocok, atau desa belum dipilih → "Status Desa (IDM): belum ada data".
-        /// </summary>
-        internal async Task<string> HitungStatusIdmAsync()
-        {
-            string kosong = StatusIdmBar.BelumAdaData;
-            if (_idmSimpanan == null || _wilayah == null) return kosong;
-
-            string kode = await IdmDesaAktif.KodeAsync(_settingsManager, _wilayah);
-            if (kode.Length == 0) return kosong;
-
-            return StatusIdmBar.Susun(_idmSimpanan.Muat(), kode);
-        }
 
         public string UserName
         {

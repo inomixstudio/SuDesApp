@@ -97,9 +97,6 @@
             <Setter Property="Padding" Value="12,9"/>
             <Setter Property="Margin" Value="0,0,8,8"/>
         </Style>
-        <Style x:Key="KepingAngka" TargetType="StackPanel">
-            <Setter Property="Orientation" Value="Horizontal"/>
-        </Style>
 
         <!-- Judul section dengan balok aksen di kiri: dipakai seluruh judul di
              halaman ini supaya hierarki kartu seragam dengan halaman lain. -->

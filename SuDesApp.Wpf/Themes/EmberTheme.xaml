@@ -25,8 +25,6 @@
     <Color x:Key="MenuBackgroundColor">#1C130E</Color>
     <Color x:Key="MenuTextColor">#F5E9E0</Color>
     <Color x:Key="AccentLightColor">#F4B88C</Color>
-    <Color x:Key="AccentDarkColor">#9C6842</Color>
-    <Color x:Key="ShadowColor">#50000000</Color>
 
     <!-- Subtle badge colors -->
     <Color x:Key="SuccessSubtleColor">#1E331E</Color>
@@ -75,7 +73,6 @@
     <!-- Helper brushes -->
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#FAFAFA"/>
     <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="LogoCircleBackgroundBrush" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="ErrorOverlayBrush" Color="{StaticResource ErrorColor}" Opacity="0.18"/>
 
     <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>

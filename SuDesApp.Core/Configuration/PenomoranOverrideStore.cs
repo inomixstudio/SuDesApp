@@ -184,12 +184,5 @@ namespace SuDesApp.Configuration
             }
         }
 
-        /// <summary>Format penyesuaian untuk satu jenis surat; null bila tidak ada.</summary>
-        public static string? FormatUntuk(string namaJenis)
-        {
-            if (string.IsNullOrWhiteSpace(namaJenis)) return null;
-            var peta = Muat();
-            return peta.TryGetValue(namaJenis.Trim(), out var format) ? format : null;
-        }
     }
 }

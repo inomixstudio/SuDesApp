@@ -451,18 +451,6 @@ public static class PdfFilters
             _buffer[_length++] = value;
         }
 
-        public bool CopyBack(int distance, int count)
-        {
-            if (distance <= 0 || distance > _length) return false;
-            if (_length + count > _buffer.Length) Grow(_length + count);
-            int source = _length - distance;
-            for (int i = 0; i < count; i++)
-            {
-                _buffer[_length++] = _buffer[source + i];
-            }
-
-            return true;
-        }
 
         public byte[] ToArray()
         {

@@ -63,7 +63,7 @@ Audit ini bersifat inventaris dan rekomendasi saja; tidak ada file proyek yang d
   `sumber.json`) dan `Data/Wilayah/wilayah.tsv.gz`.
 - **Dikecualikan dan masuk `.gitignore`**: `_idm-build-check/`,
   `**/.build-google-auth/`, cache/backup/probe installer, `installer/*.aip`
-  (dibuat ulang oleh `Tools/Buat-Installer-Advanced.ps1`), `Tools/__pycache__/`,
+  (dulu dibuat ulang oleh skrip Advanced Installer yang sudah dihapus), `Tools/__pycache__/`,
   dan `.uji-render/`.
 - **Pemeriksaan rahasia**: tidak ada kredensial nyata pada kandidat commit;
   `appsettings.lokal.template.json` hanya berisi placeholder, dan

@@ -355,10 +355,6 @@ public sealed class PdfParser
         return token;
     }
 
-    public void SkipKeyword()
-    {
-        if (Peek().Type == PdfTokenType.Keyword) Next();
-    }
 
     public bool TryParseValue(out PdfObject value, int depth = 0)
     {

@@ -8,7 +8,6 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <CollectionViewSource x:Key="JenisSuratItemsView" Source="{Binding JenisSuratItems}"/>
 
         <views:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter"/>
         <views:StatusToBorderConverter x:Key="StatusToBorderConverter"/>

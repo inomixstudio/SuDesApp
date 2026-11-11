@@ -26,8 +26,6 @@
     <Color x:Key="MenuBackgroundColor">#14261F</Color>
     <Color x:Key="MenuTextColor">#E6F2EC</Color>
     <Color x:Key="AccentLightColor">#6EE7B7</Color>
-    <Color x:Key="AccentDarkColor">#047857</Color>
-    <Color x:Key="ShadowColor">#50000000</Color>
 
     <!-- Subtle badge colors for dark mode -->
     <Color x:Key="SuccessSubtleColor">#14532D</Color>
@@ -75,7 +73,6 @@
     <!-- Helper brushes untuk teks di atas header berwarna -->
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#FAFAFA"/>
     <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#D1FAE5"/>
-    <SolidColorBrush x:Key="LogoCircleBackgroundBrush" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="ErrorOverlayBrush" Color="{StaticResource ErrorColor}" Opacity="0.18"/>
 
     <SolidColorBrush x:Key="OnPrimaryTextBrush" Color="#FFFFFF"/>

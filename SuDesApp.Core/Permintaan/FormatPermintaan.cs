@@ -238,44 +238,7 @@ namespace SuDesApp.Permintaan
             };
         }
 
-        /// <summary>
-        /// Mengecek seluruh field wajib untuk jenis surat (mengikuti form generator).
-        /// Berlaku selalu — termasuk saat NIK sudah terdaftar.
-        /// Mengembalikan daftar label yang kurang.
-        /// </summary>
-        public static List<string> CekKelengkapan(string namaJenis, Dictionary<string, string> fields, string? nik = null)
-        {
-            var missing = new List<string>();
-            var defs = FieldDefs(namaJenis);
 
-            foreach (var def in defs)
-            {
-                if (!def.Required) continue;
-                var value = def.Key == "nik" ? nik : fields.GetValueOrDefault(def.Key);
-                if (NilaiTidakValid(def.Key, value))
-                    missing.Add(def.Label);
-            }
-
-            return missing;
-        }
-
-        /// <summary>Contoh format lengkap untuk satu jenis surat (mengikuti field form generator).</summary>
-        public static string FormatTemplate(string namaJenis)
-        {
-            var defs = FieldDefs(namaJenis);
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"📋 FORMAT {TampilanJenis(namaJenis).ToUpperInvariant()}");
-            sb.AppendLine("Salin contoh di bawah, ganti isinya dengan data Anda:");
-            sb.AppendLine();
-            sb.AppendLine(TampilanJenis(namaJenis).ToUpperInvariant());
-            foreach (var def in defs)
-            {
-                sb.Append(def.Label).Append(": ").Append(def.Contoh ?? "…");
-                if (!def.Required) sb.Append(" (opsional)");
-                sb.AppendLine();
-            }
-            return sb.ToString();
-        }
 
         /// <summary>Mendeteksi jenis surat dari teks pesan (baris pertama / kata kunci).</summary>
         public static string? DetectJenisSurat(string text)
@@ -313,9 +276,6 @@ namespace SuDesApp.Permintaan
         public static bool IsOfflineOnly(string namaJenis)
             => OfflineOnly.Contains(namaJenis, StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>Daftar jenis yang didukung online (untuk ditampilkan ke warga).</summary>
-        public static string DaftarSuratOnline()
-            => string.Join(", ", KatalogSurat.Select(k => "• " + TampilanJenis(k.NamaJenis)));
 
         public static string TampilanJenis(string? namaJenis)
             => string.IsNullOrWhiteSpace(namaJenis) ? string.Empty : namaJenis.Replace("_", " ");
@@ -467,28 +427,6 @@ namespace SuDesApp.Permintaan
             };
         }
 
-        public static string? NormalkanPendidikan(string? input)
-        {
-            if (string.IsNullOrWhiteSpace(input)) return null;
-            var s = input.Trim().ToLowerInvariant();
-            return s switch
-            {
-                "1" or "sd" => "SD",
-                "2" or "smp" => "SMP",
-                "3" or "sma" or "slta" => "SMA",
-                "4" or "d3" => "D3",
-                "5" or "s1" => "S1",
-                "6" or "s2" => "S2",
-                "7" or "s3" => "S3",
-                _ => input.Trim()
-            };
-        }
 
-        public static string? NormalkanKewarganegaraan(string? input)
-        {
-            if (string.IsNullOrWhiteSpace(input)) return null;
-            var s = input.Trim().ToLowerInvariant();
-            return s is "1" or "wni" ? "WNI" : s is "2" or "wna" ? "WNA" : input.Trim();
-        }
     }
 }

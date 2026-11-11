@@ -72,16 +72,6 @@ namespace SuDesApp.Data.Models
         public static bool MasihDalamAlur(string? status) =>
             Normalisasi(status) is Diajukan or Diverifikasi;
 
-        /// <summary>
-        /// True bila label cetak harus tampil sebagai peringatan (merah): surat
-        /// yang belum sah atau sudah ditolak. Label SALINAN tidak termasuk — salinan
-        /// memang sah dipakai, hanya perlu dibedakan dari lembar aslinya.
-        /// </summary>
-        public static bool PeringatanCetak(string? status)
-        {
-            var rapi = Normalisasi(status);
-            return rapi == Ditolak || MasihDalamAlur(rapi);
-        }
 
         /// <summary>
         /// Label yang dicetak di atas judul surat. Null berarti surat dicetak

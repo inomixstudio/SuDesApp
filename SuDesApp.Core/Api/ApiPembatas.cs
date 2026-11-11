@@ -95,14 +95,6 @@ namespace SuDesApp.Api
             }
         }
 
-        /// <summary>Jumlah permintaan yang tercatat untuk satu klien.</summary>
-        public int JumlahTercatat(string kunci)
-        {
-            lock (_gapu)
-            {
-                return _antrean.TryGetValue(kunci, out var antrean) ? antrean.Count : 0;
-            }
-        }
 
         /// <summary>Lupakan semua catatan (dipakai saat listener dinyalakan ulang).</summary>
         public void Bersihkan()

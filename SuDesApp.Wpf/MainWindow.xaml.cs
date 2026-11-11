@@ -281,19 +281,6 @@ namespace SuDesApp.Wpf
             }
         }
 
-        /// <summary>Deretan glyph indikator (diputar + diganti tiap 120 ms → cakram berputar).</summary>
-        // Glyph spinner memakai font ikon (AppIconFont, lihat XAML): E895 = Sync.
-        // Gerakan diperoleh dari rotasi 90° per langkah, bukan pergantian karakter —
-        // karakter ◐◓◑◒ tidak punya glyph di font ikon (tampil kotak/rusak).
-        /// <summary>Segmen animasi spinner pembaruan: glyph Sinkron (E895) diputar
-        /// 90° tiap langkah lewat RotateTransform yang sudah ada.</summary>
-        private static readonly string[] GlyphPembaruan = { SuDesApp.Wpf.Utilities.IkonMenu.Sinkron };
-
-        /// <summary>Pita animasi glyph indikator pembaruan (dibangun sekali).</summary>
-        private Storyboard? _pembaruanSpin;
-
-        private int _indeksGlyph;
-
         /// <summary>Benar bila penutupan final sedang berlangsung (alur penundaan tidak boleh jalan lagi).</summary>
         private bool _keluarFinal;
 
@@ -346,42 +333,11 @@ namespace SuDesApp.Wpf
             (DataContext as ViewModels.MainWindowViewModel)?.Dispose();
         }
 
-        /// <summary>Tampilkan chip indikator status bar pada fase yang diberikan.</summary>
-        private void TampilkanIndikatorPembaruan(string fase)
-        {
-            AutoUpdateChipText.Text = fase;
-            AutoUpdateChip.Visibility = Visibility.Visible;
-
-            if (_pembaruanSpin == null)
-            {
-                var putar = new DoubleAnimation
-                {
-                    From = 0,
-                    To = 90,
-                    Duration = TimeSpan.FromMilliseconds(120)
-                };
-                _pembaruanSpin = new Storyboard { Duration = TimeSpan.FromMilliseconds(120) };
-                _pembaruanSpin.Children.Add(putar);
-                Storyboard.SetTarget(putar, AutoUpdateSpin);
-                Storyboard.SetTargetProperty(putar, new PropertyPath("(TextBlock.RenderTransform).(RotateTransform.Angle)"));
-                _pembaruanSpin.Completed += (_, _) =>
-                {
-                    if (AutoUpdateChip.Visibility != Visibility.Visible) return;
-
-                    _indeksGlyph = (_indeksGlyph + 1) % GlyphPembaruan.Length;
-                    AutoUpdateSpin.Text = GlyphPembaruan[_indeksGlyph];
-                    _pembaruanSpin!.Begin(this, true);
-                };
-            }
-
-            _pembaruanSpin.Begin(this, true);
-        }
 
         /// <summary>Sembunyikan chip indikator dan hentikan animasinya.</summary>
         private void SembunyikanIndikatorPembaruan()
         {
             AutoUpdateChip.Visibility = Visibility.Collapsed;
-            _pembaruanSpin?.Stop(this);
         }
 
         /// <summary>Tutup jendela utama secara final (alur penundaan tidak jalan lagi).</summary>

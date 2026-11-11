@@ -98,12 +98,6 @@ public sealed class Document : IAsyncDisposable
         return ToBitmap(image, dpi);
     }
 
-    public async Task<byte[]> RenderPngAsync(
-        int pageIndex, double scale = 1.0, CancellationToken cancellationToken = default)
-    {
-        var image = await Task.Run(() => Render(pageIndex, scale), cancellationToken).ConfigureAwait(false);
-        return image.EncodePng();
-    }
 
     public async Task<string> GetTextAsync(int pageIndex, CancellationToken cancellationToken = default)
     {

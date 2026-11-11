@@ -37,21 +37,6 @@ namespace SuDesApp.Utilities
             }
         }
 
-        public async Task SaveBytesAsync(byte[] data, string destinationPath)
-        {
-            try
-            {
-                string path = SanitizePath(destinationPath);
-                await EnsureDirectoryExistsAsync(path);
-                await WriteFileWithRetryAsync(path, data); // Gunakan method dengan retry
-                _logger.LogDebug("Saved {Length} bytes to {Path}", data.Length, path);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to save bytes to {DestinationPath}", destinationPath);
-                throw;
-            }
-        }
 
         public string SanitizePath(string path)
         {
@@ -234,31 +219,6 @@ namespace SuDesApp.Utilities
             }
         }
 
-        public async Task DeleteFileAsync(string path)
-        {
-            try
-            {
-                string sanitizedPath = SanitizePath(path);
-
-                // Use FindActualFilePath to get the correct file path
-                string actualPath = FindActualFilePath(sanitizedPath);
-
-                if (await FileExistsAsync(actualPath))
-                {
-                    await Task.Run(() => File.Delete(actualPath));
-                    _logger.LogDebug("Berkas berhasil dihapus: {ActualPath}", actualPath);
-                }
-                else
-                {
-                    _logger.LogWarning("File not found for deletion: {Path} (resolved to: {ActualPath})", path, actualPath);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to delete file: {Path}", path);
-                throw;
-            }
-        }
 
         public void EnsureDirectoryExists(string path)
         {
@@ -349,49 +309,7 @@ namespace SuDesApp.Utilities
             }
         }
 
-        public async Task SaveFileAsync(string content, string destinationPath, Encoding? encoding = null)
-        {
-            try
-            {
-                if (content == null)
-                {
-                    throw new ArgumentNullException(nameof(content));
-                }
 
-                string path = SanitizePath(destinationPath);
-                await EnsureDirectoryExistsAsync(path);
-
-                await File.WriteAllTextAsync(path, content, encoding ?? Encoding.UTF8);
-                _logger.LogDebug("Saved file to {Path} with {Length} characters", path, content.Length);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to save file: {DestinationPath}", destinationPath);
-                throw;
-            }
-        }
-
-        public void SaveFile(string content, string destinationPath, Encoding? encoding = null)
-        {
-            try
-            {
-                if (content == null)
-                {
-                    throw new ArgumentNullException(nameof(content));
-                }
-
-                string path = SanitizePath(destinationPath);
-                EnsureDirectoryExists(path);
-
-                File.WriteAllText(path, content, encoding ?? Encoding.UTF8);
-                _logger.LogDebug("Saved file to {Path} with {Length} characters", path, content.Length);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to save file: {DestinationPath}", destinationPath);
-                throw;
-            }
-        }
 
         public async Task<string> ReadFileAsync(string path, Encoding? encoding = null)
         {

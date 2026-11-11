@@ -19,11 +19,6 @@ namespace SuDesApp.Wpf.Mvvm
         /// <summary>Token pembatalan yang dibatalkan saat aplikasi keluar.</summary>
         public static CancellationToken Token => _cts.Token;
 
-        /// <summary>Batalkan semua tugas latar yang masih berjalan.</summary>
-        public static void BatalkanSemua()
-        {
-            _cts.Cancel();
-        }
 
         /// <summary>Jalankan tugas tanpa ditunggu; galat dicatat ke error.log.</summary>
         public static void Jalankan(Func<Task> tugas, string konteks)

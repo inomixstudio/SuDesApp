@@ -25,25 +25,14 @@
     </ResourceDictionary.MergedDictionaries>
 
     <!-- ========== Shared UI tokens ========== -->
-    <conv:NotNullConverter x:Key="IndukTombolAda"/>
     <!-- Membatasi aturan warna teks tombol agar berhenti di batas ToolTip. -->
     <conv:TeksMilikTombolConverter x:Key="TeksMilikTombol"/>
     <!-- Untuk ListViewItem: tahu apakah ListView sedang memakai View (GridView),
          supaya template baris bisa memilih penyaji kolom atau penyaji isi biasa. -->
     <conv:NotNullConverter x:Key="TampilanAda"/>
     <SolidColorBrush x:Key="ToggleHoverBrush" Color="{StaticResource PutihColor}" Opacity="0.2"/>
-    <!-- Token radius modern (satu set untuk seluruh halaman):
-         Kecil 4 (ikon), Kontrol 6 (button/input), Kartu 8, Header 10,
-         Dialog 14, Penuh 999 (pill). -->
-    <CornerRadius x:Key="RadiusKecil">4</CornerRadius>
+    <!-- Token radius modern: Kontrol 6 (button/input). -->
     <CornerRadius x:Key="RadiusKontrol">6</CornerRadius>
-    <CornerRadius x:Key="RadiusKartu">8</CornerRadius>
-    <CornerRadius x:Key="RadiusHeader">10</CornerRadius>
-    <CornerRadius x:Key="RadiusDialog">14</CornerRadius>
-    <CornerRadius x:Key="RadiusPenuh">999</CornerRadius>
-    <Thickness x:Key="PaddingKartu">12</Thickness>
-    <Thickness x:Key="PaddingForm">18</Thickness>
-    <Thickness x:Key="PaddingHalaman">20</Thickness>
     <!-- Skeleton loading: satu tinggi (6) untuk semua halaman, bukan 3/4/8/10 px -->
     <Style x:Key="SkeletonBar" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
@@ -2309,14 +2298,6 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Panel judul: drag penuh (Chrome.DragMove), tombol tetap klik-able
-         lewat WindowChrome.IsHitTestVisibleInChrome. -->
-    <Style x:Key="WindowCaptionStyle" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource SidebarBackgroundBrush}"/>
-        <Setter Property="Height" Value="32"/>
-        <Setter Property="VerticalAlignment" Value="Top"/>
-        <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="False"/>
-    </Style>
 
     <Style x:Key="WindowTitleText" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource SidebarTextBrush}"/>

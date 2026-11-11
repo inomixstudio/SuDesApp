@@ -304,15 +304,6 @@ namespace SuDesApp.Services
         /// </summary>
         public StatusLisensi BacaCachePublik() => BacaCache();
 
-        /// <summary>
-        /// True bila lisensi saat ini sah. Semua inputnya berasal dari klaim
-        /// token terverifikasi, jadi tidak bisa dipalsukan dari sisi klien.
-        /// </summary>
-        public bool MasihSah(StatusLisensi? status = null)
-        {
-            var s = status ?? BacaCache();
-            return s != null && s.Aktif;
-        }
 
         /// <summary>
         /// Ambil kunci publik: dari konfigurasi dulu; bila belum ada, ambil dari

@@ -187,9 +187,6 @@ public static class BuktiTransfer
     public static string? Ringkas(bool adaBukti, string? tipe, int ukuran) =>
         adaBukti ? $"{LabelTipe(tipe)} · {UkuranTeks(ukuran)}" : null;
 
-    /// <summary>Nama berkas unduhan; dipakai saat gambar disajikan ke peramban.</summary>
-    public static string NamaUnduhan(string? tipe, string orderId) =>
-        $"bukti-{orderId}.{Ekstensi(tipe)}";
 
     /// <summary>Ekstensi berkas menurut jenis gambarnya.</summary>
     public static string Ekstensi(string? tipe) => tipe switch
@@ -199,9 +196,6 @@ public static class BuktiTransfer
         _ => "jpg",
     };
 
-    /// <summary>Teks yang aman disisipkan ke header Content-Disposition (tanpa kutip &amp; kendali).</summary>
-    public static string NamaHeader(string nama) =>
-        new string(nama.Where(c => !char.IsControl(c) && c is not ('"' or '\\')).ToArray());
 
     private static HasilBacaBukti Tolak(string pesan) => new(null, pesan);
 }

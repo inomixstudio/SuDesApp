@@ -114,17 +114,6 @@ namespace SuDesApp.Services
             return $"{Awalan}-{isi[..4]}-{isi[4..]}";
         }
 
-        /// <summary>
-        /// Isi QR yang dicetak di surat: kode + cuplikan hash dokumen, sehingga
-        /// pemeriksa bisa tahu isi surat masih sama dengan yang diterbitkan.
-        /// </summary>
-        public static string BuatPayload(string kode, string? hash)
-        {
-            var singkat = HashSingkat(hash);
-            return string.IsNullOrWhiteSpace(singkat)
-                ? $"{AwalanPayload}|{kode}"
-                : $"{AwalanPayload}|{kode}|{singkat}";
-        }
 
         /// <summary>Cuplikan hash untuk QR (huruf besar, tanpa spasi).</summary>
         public static string HashSingkat(string? hash)

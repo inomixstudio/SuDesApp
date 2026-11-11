@@ -82,20 +82,11 @@ SuDesApp.Server/keys/
 .github/upgrades/**/assessment.json
 .github/upgrades/**/assessment.csv
 
-# ===== Hasil build/publish, cache & probe installer lokal =====
-# Di luar pola [Bb]in*/[Oo]bj*: publish mandiri dan cache Advanced Installer
-# membuat ratusan MB ikut muncul sebagai untracked.
+# ===== Hasil build/publish & cache lokal =====
+# Di luar pola [Bb]in*/[Oo]bj*: publish mandiri membuat ratusan MB ikut
+# muncul sebagai untracked.
 _idm-build-check/
 **/.build-google-auth/
-installer/SuDesApp-Advanced-SetupFiles/
-installer/SuDesApp-Advanced-v24-cache/
-installer/SuDesApp-Advanced-v24-backups/
-installer/_*-backups/
-
-# Proyek .aip dibuat ulang oleh Tools/Buat-Installer-Advanced.ps1 (skrip
-# menolak jalan bila berkasnya sudah ada), jadi ini keluaran, bukan sumber.
-# Bila konfigurasi ingin disimpan, tambahkan sadar lewat `git add -f`.
-installer/*.aip
 
 # Cache Python dari alat di Tools/
 __pycache__/

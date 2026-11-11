@@ -72,13 +72,6 @@
     </Style>
 
     <!-- ListBox fitur: tanpa chrome, virtualisasi tetap aktif -->
-    <Style x:Key="FiturList" TargetType="ListBox">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-        <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True"/>
-        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling"/>
-    </Style>
 
     <!-- Judul bagian memakai SectionTitle dari Themes/ThemeStyles.xaml — jangan
          disalin lagi di sini; salinan lokal membuat halaman ini bisa menyimpang

@@ -186,20 +186,5 @@ public class PdfException : Exception
 
 public static class PdfObjectExtensions
 {
-    /// <summary>Kamus dari nilai apa pun yang bisa berupa referensi.</summary>
-    public static PdfDictionary? AsDictionary(this PdfObject? value) => value switch
-    {
-        PdfDictionary dict => dict,
-        PdfStream stream => stream.Dictionary,
-        _ => null
-    };
 
-    public static string Describe(this PdfObject? value) => value switch
-    {
-        null => "(kosong)",
-        PdfNull => "null",
-        PdfName name => "/" + name.Value,
-        PdfNumber number => number.ToString(),
-        _ => value.GetType().Name
-    };
 }

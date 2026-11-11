@@ -102,18 +102,4 @@
     <SolidColorBrush x:Key="GoogleKuningBrush" Color="#FBBC05"/>
     <SolidColorBrush x:Key="GoogleMerahBrush" Color="#EA4335"/>
 
-    <!-- ── Mockup panduan (peramban & terminal) ───────────────────────── -->
-    <!-- Tangkapan layar tiruan: warnanya meniru peramban/terminal sungguhan,
-         bukan warna aplikasi, jadi tidak ikut tema. -->
-    <SolidColorBrush x:Key="MockupMerahBrush" Color="#FF5F57"/>
-    <SolidColorBrush x:Key="MockupKuningBrush" Color="#FEBC2E"/>
-    <SolidColorBrush x:Key="MockupHijauBrush" Color="#28C840"/>
-    <Color x:Key="MockupLatarColor">#0D1117</Color>
-    <SolidColorBrush x:Key="MockupLatarBrush" Color="{StaticResource MockupLatarColor}"/>
-    <Color x:Key="MockupTepiColor">#30363D</Color>
-    <SolidColorBrush x:Key="MockupTepiBrush" Color="{StaticResource MockupTepiColor}"/>
-    <Color x:Key="MockupTeksColor">#E6EDF3</Color>
-    <SolidColorBrush x:Key="MockupTeksBrush" Color="{StaticResource MockupTeksColor}"/>
-    <SolidColorBrush x:Key="TerminalAksenBrush" Color="#7EE787"/>
-
 </ResourceDictionary>

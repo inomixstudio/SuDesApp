@@ -47,8 +47,6 @@ public sealed partial class TrueTypeFont : IPdfGlyphSource
         return advances;
     }
 
-    public double GetAdvance(int glyphId) =>
-        glyphId >= 0 && glyphId < _advances.Length ? _advances[glyphId] : 0;
 
     // -------------------------------------------------------------- Pengkodean
 

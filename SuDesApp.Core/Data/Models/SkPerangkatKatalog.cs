@@ -119,13 +119,6 @@ namespace SuDesApp.Data.Models
             _ => KetentuanPengangkatanLampiranUmum
         };
 
-        /// <summary>
-        /// Kalimat keputusan lampiran untuk pengangkatan/pemberhentian
-        /// (tanpa bentuk penetapan) — bentuk nyaman untuk halaman isian SK.
-        /// </summary>
-        public static string KetentuanLampiranUmum(bool pengangkatan) => pengangkatan
-            ? KetentuanPengangkatanLampiranUmum
-            : KetentuanPemberhentianLampiranUmum;
 
         /// <summary>Menimbang baku untuk SK pemberhentian (berlaku semua kelompok).</summary>
         public static readonly IReadOnlyList<string> MenimbangPemberhentian = new[]
