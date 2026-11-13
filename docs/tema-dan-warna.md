@@ -90,23 +90,29 @@ tema.
 
 ## Gerbang CI wajib (setiap pull request)
 
-> **Status:** `Tools/check-kontras-wcag.ps1` **ada** di repo dan bisa dijalankan
-> manual, tetapi job CI **Audit kontras tema** belum ada di `.github/workflows/`,
-> jadi belum ada gerbang kontras yang berjalan pada every PR. Yang berjalan
-> sekarang hanya "Penjaga otomatis" di bawah. Baris tentang job CI dan uji
-> render-per-halaman di bawah adalah **rancangan**, bukan catatan berkas yang ada.
+> **Status:** `Tools/check-kontras-wcag.ps1` **ada** di repo dan dipakai
+> sebagai gerbang CI — job **Audit kontras tema (WCAG)** di
+> `.github/workflows/ci.yml` menjalankannya pada setiap push ke `master`,
+> jadi tema baru yang melanggar paritas kunci atau kontras AA gagal build.
+> Yang **belum ada** hanya uji render-per-halaman di bawah.
+
+Yang **sudah ada** sebagai gerbang CI:
+
+| Langkah | Memeriksa | TIDAK menangkap |
+|---|---|---|
+| Job **Audit kontras tema (WCAG)** di `ci.yml` menjalankan `Tools/check-kontras-wcag.ps1` | pasangan token teks/latar di **berkas tema** (AA; AAA untuk HighContrast) + konsistensi kunci antar sebelas tema | teks yang kehilangan `Foreground` karena `Style` eksplisit, atau warna warisan yang tertimpa gaya implisit |
 
 Rancangan yang **belum diimplementasikan**:
 
 | Langkah rancangan | Memeriksa | TIDAK menangkap |
 |---|---|---|
-| Job CI **Audit kontras tema** (belum ada) yang menjalankan `Tools/check-kontras-wcag.ps1` | pasangan token teks/latar di **berkas tema** (AA; AAA untuk HighContrast) + konsistensi kunci antar sebelas tema | teks yang kehilangan `Foreground` karena `Style` eksplisit, atau warna warisan yang tertimpa gaya implisit |
 | uji render-per-halaman (mulai dari `JelajahRenderTemaTests`) | teks yang **benar-benar dirender**: setiap `TextBlock` di semua halaman × sebelas tema diukur terhadap latar efektifnya | pasangan token yang belum dipakai halaman mana pun |
 
-Bila nanti diimplementasikan, job itu sebaiknya **terpisah** dari `build-test`
-supaya punya nama status sendiri, dan ditandai sebagai *required status check*
-di **Settings → Branches → Branch protection rules**. Workflow tidak bisa
-memaksa branch protection karena itu pengaturan repo, bukan berkas.
+Bila nanti diimplementasikan, langkah itu sebaiknya **terpisah** dari
+`build-test` supaya punya nama status sendiri, dan ditandai sebagai
+*required status check* di **Settings → Branches → Branch protection rules**.
+Workflow tidak bisa memaksa branch protection karena itu pengaturan repo,
+bukan berkas.
 
 ## Penjaga otomatis
 

@@ -61,6 +61,15 @@ jobs:
       - name: Run automated tests
         run: dotnet test SuDesApp.Tests/SuDesApp.Tests.csproj --no-build --no-restore --configuration Release
 
+      # Audit kontras tema: sebelas berkas tema wajib punya kunci yang sama
+      # persis dan setiap pasangan teks/latar lolos WCAG AA (AAA untuk
+      # HighContrast). Tanpa gerbang ini, tema baru bisa lolos build lalu
+      # membuat teks tak terbaca — temuan yang pernah terjadi (lihat
+      # docs/tema-dan-warna.md). Skripnya sudah ada dan dipakai manual; ini
+      # mengalirkannya ke setiap push.
+      - name: Audit kontras tema (WCAG)
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File Tools/check-kontras-wcag.ps1
+
       # Uji E2E trial server: menyalakan server lisensi lokal (mode memori)
       # lalu menjalankan harness klien Tools/UjiTrialServerE2E — alur pendaftaran
       # desa, permintaan trial, token bertanda tangan, dan penolakan trial
