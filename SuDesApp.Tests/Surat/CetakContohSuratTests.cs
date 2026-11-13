@@ -249,7 +249,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task SKDUmumCetakSatuHalaman()
     {
         var config = BuatConfig();
-        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new SKDGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
@@ -264,7 +264,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task SKDKelurahanMencetakLurahDanNip()
     {
         var config = BuatConfig();
-        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new SKDGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
@@ -281,7 +281,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task SKTMCetakSatuHalaman()
     {
         var config = BuatConfig();
-        var gen = new SKTMGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new SKTMGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<SKTMGenerator>.Instance, NullLoggerFactory.Instance);
@@ -296,7 +296,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task PengantarSkckCetakSatuHalaman()
     {
         var config = BuatConfig();
-        var gen = new SKCKGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new SKCKGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<SKCKGenerator>.Instance, NullLoggerFactory.Instance);
@@ -311,7 +311,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task DomisiliInstansiCetakSatuHalaman()
     {
         var config = BuatConfig();
-        var gen = new DomisiliInstansiGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new DomisiliInstansiGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<DomisiliInstansiGenerator>.Instance, NullLoggerFactory.Instance);
@@ -334,7 +334,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task PengantarAdmindukCetakSatuHalaman()
     {
         var config = BuatConfig();
-        var gen = new PengantarAdmindukGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new PengantarAdmindukGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<PengantarAdmindukGenerator>.Instance, NullLoggerFactory.Instance);
@@ -349,7 +349,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task SkPindahCetakSatuHalaman()
     {
         var config = BuatConfig();
-        var gen = new PindahGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new PindahGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<PindahGenerator>.Instance, NullLoggerFactory.Instance);
@@ -369,7 +369,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task SkTidakPunyaRumahCetakSatuHalaman()
     {
         var config = BuatConfig();
-        var gen = new TidakPunyaRumahGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new TidakPunyaRumahGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<TidakPunyaRumahGenerator>.Instance, NullLoggerFactory.Instance);
@@ -384,7 +384,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task IzinKeramaianCetakSatuHalaman()
     {
         var config = BuatConfig();
-        var gen = new KeramaianGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new KeramaianGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<KeramaianGenerator>.Instance, NullLoggerFactory.Instance);
@@ -411,7 +411,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task KematianMencetakAlamatTigaBarisSepertiFormulir()
     {
         var config = BuatConfig();
-        var gen = new KematianGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new KematianGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<KematianGenerator>.Instance, NullLoggerFactory.Instance);
@@ -460,7 +460,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task KematianMencetakHubunganWalauKosong()
     {
         var config = BuatConfig();
-        var gen = new KematianGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new KematianGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<KematianGenerator>.Instance, NullLoggerFactory.Instance);
@@ -498,7 +498,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task SkdUmumMencetakKopJudulNomorDanNamaKapital()
     {
         var config = BuatConfig();
-        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new SKDGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
@@ -536,7 +536,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task KopMemakaiDuaGarisTerpisah()
     {
         var config = BuatConfig();
-        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new SKDGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
@@ -581,7 +581,7 @@ public sealed class CetakContohSuratTests : IDisposable
     {
         var config = BuatConfig();
         var gen = new RekeningKoranGenerator(config,
-            new FileService(config, NullLogger<FileService>.Instance),
+            new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<RekeningKoranGenerator>.Instance, NullLoggerFactory.Instance);
@@ -640,7 +640,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task SkdKelurahanMencetakJabatanLurahDanNip()
     {
         var config = BuatConfig();
-        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new SKDGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
@@ -667,7 +667,7 @@ public sealed class CetakContohSuratTests : IDisposable
     {
         var config = BuatConfig();
         var gen = new DaftarHadirGenerator(config,
-            new FileService(config, NullLogger<FileService>.Instance),
+            new FileService(NullLogger<FileService>.Instance),
             NullLogger<DaftarHadirGenerator>.Instance);
 
         var data = new DaftarHadirData
@@ -746,7 +746,7 @@ public sealed class CetakContohSuratTests : IDisposable
     public async Task LogoKopDitanamPadaResolusiCetak()
     {
         var config = BuatConfig();
-        var gen = new SKDGenerator(config, new FileService(config, NullLogger<FileService>.Instance),
+        var gen = new SKDGenerator(config, new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<SKDGenerator>.Instance, NullLoggerFactory.Instance);
@@ -775,7 +775,7 @@ public sealed class CetakContohSuratTests : IDisposable
     {
         var config = BuatConfig();
         var gen = new RekeningKoranGenerator(config,
-            new FileService(config, NullLogger<FileService>.Instance),
+            new FileService(NullLogger<FileService>.Instance),
             new DesaRepoPalsu(), new SuratRepoPalsu(),
             new SettingsManager(new DesaRepoPalsu(), config),
             NullLogger<RekeningKoranGenerator>.Instance, NullLoggerFactory.Instance);

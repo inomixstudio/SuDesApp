@@ -5,7 +5,6 @@ namespace SuDesApp.Wpf.Mvvm
 {
     /// <summary>
     /// Base class untuk ViewModel dengan INotifyPropertyChanged.
-    /// (Bisa diganti CommunityToolkit.Mvvm [ObservableObject] jika ditambahkan.)
     /// </summary>
     public abstract class ObservableObject : INotifyPropertyChanged
     {

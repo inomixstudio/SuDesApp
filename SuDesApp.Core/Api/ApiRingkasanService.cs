@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.Data.Models;
 using SuDesApp.Data.Repositories;
 using SuDesApp.Services;
-using SuDesApp.Permintaan;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -123,11 +122,7 @@ namespace SuDesApp.Api
         }
 
         public IReadOnlyList<string> AmbilJenisSuratOnline()
-            => FormatPermintaan.KatalogSurat
-                .Where(k => !FormatPermintaan.IsOfflineOnly(k.NamaJenis))
-                .Select(k => k.NamaJenis)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            => KatalogSuratDaring.NamaJenisOnline();
 
         public async Task<ApiRekapBulanan> AmbilRekapBulananAsync(
             int? tahun = null, CancellationToken ct = default)

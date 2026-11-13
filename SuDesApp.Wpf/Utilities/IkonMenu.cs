@@ -67,10 +67,6 @@ namespace SuDesApp.Wpf.Utilities
         public const string Cadangkan = "\uE74E";
         /// <summary>Palet warna — akordeon Tema.</summary>
         public const string Tema = "\uE790";
-        /// <summary>Bintang garis — tema bawaan di daftar tema.</summary>
-        public const string TemaDefault = "\uE735";
-        /// <summary>Bintang isi — tema pilihan lain di daftar tema.</summary>
-        public const string TemaLain = "\uE734";
         /// <summary>Panah melingkar — halaman Pembaruan (sama dengan glyph Sinkron).</summary>
         public const string Pembaruan = Sinkron;
         /// <summary>Halaman berlembar — Catatan Rilis (glyph "Page").</summary>
@@ -146,8 +142,6 @@ namespace SuDesApp.Wpf.Utilities
         public const string PanahBawah = "\uE70D";
         /// <summary>Panah ke kiri — kembali ke langkah/halaman sebelumnya.</summary>
         public const string Kembali = "\uE72B";
-        /// <summary>Rantai tautan — alamat web/tautan luar.</summary>
-        public const string Tautan = "\uE71B";
         /// <summary>Bola dunia — situs web resmi.</summary>
         public const string Dunia = "\uE774";
         /// <summary>Amplop — surel/email (glyph sama dengan Surat Masuk).</summary>
@@ -173,7 +167,7 @@ namespace SuDesApp.Wpf.Utilities
         /// <summary>Stopwatch — kecepatan animasi.</summary>
         public const string Kecepatan = "\uE916";
         /// <summary>Bintang garis — dukungan untuk pengembang.</summary>
-        public const string Dukungan = TemaDefault;
+        public const string Dukungan = "\uE735";
         /// <summary>Panah memutar — orientasi kertas.</summary>
         public const string Putar = "\uE7AD";
         /// <summary>Penggeser — preferensi aplikasi.</summary>
@@ -233,9 +227,5 @@ namespace SuDesApp.Wpf.Utilities
         public const string Hapus = "\uE74D";
         /// <summary>Pencil — ubah data.</summary>
         public const string Ubah = "\uE70F";
-        /// <summary>Panah turun — muat daftar dari sumber lain (glyph "Download").</summary>
-        public const string MuatDaftar = "\uE896";
-        /// <summary>Silang — kosongkan pencarian/saringan (memakai glyph Keluar).</summary>
-        public const string Bersihkan = Keluar;
     }
 }

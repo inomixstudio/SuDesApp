@@ -1,42 +1,19 @@
 using Microsoft.Extensions.Logging;
-using System.Text;
 
 namespace SuDesApp.Utilities
 {
     public class FileService
     {
         private readonly ILogger<FileService> _logger;
-        private readonly AppConfig _config;
 
-        public FileService(AppConfig config, ILogger<FileService> logger)
+        // AppConfig sengaja BUKAN bagian dari kelas ini: seluruh metode bekerja
+        // pada jalur yang diberikan pemanggil, dan folder bawaan (template,
+        // font, PDF) diputuskan di AppConfig — bukan di sini. Dulu parameter
+        // ini ada dan disimpan ke field yang tak pernah dibaca.
+        public FileService(ILogger<FileService> logger)
         {
-            _config = config;
             _logger = logger;
         }
-
-        private async Task WriteFileWithRetryAsync(string path, byte[] data, int retries = 3, int delayMs = 500)
-        {
-            for (int i = 0; i < retries; i++)
-            {
-                try
-                {
-                    await File.WriteAllBytesAsync(path, data);
-                    _logger.LogDebug("Berkas berhasil ditulis: {Path}", path);
-                    return;
-                }
-                catch (IOException ex)
-                {
-                    if (i == retries - 1)
-                    {
-                        _logger.LogError(ex, "Failed to write file {Path} after {Retries} attempts", path, retries);
-                        throw new IOException($"Failed to write file {path} after {retries} attempts", ex);
-                    }
-                    _logger.LogWarning(ex, "Retry {Attempt}/{Retries} writing file: {Path}", i + 1, retries, path);
-                    await Task.Delay(delayMs);
-                }
-            }
-        }
-
 
         public string SanitizePath(string path)
         {
@@ -238,24 +215,6 @@ namespace SuDesApp.Utilities
             }
         }
 
-        public async Task EnsureDirectoryExistsAsync(string path)
-        {
-            try
-            {
-                string? directory = Path.GetDirectoryName(SanitizePath(path));
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                {
-                    await Task.Run(() => Directory.CreateDirectory(directory));
-                    _logger.LogDebug("Created directory: {Directory}", directory);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to create directory for path: {Path}", path);
-                throw;
-            }
-        }
-
         public async Task CopyFileAsync(string sourcePath, string destinationPath, bool overwrite = true)
         {
             try
@@ -282,7 +241,7 @@ namespace SuDesApp.Utilities
                     throw new ArgumentException("Path sumber dan tujuan tidak boleh sama.", nameof(destinationPath));
                 }
 
-                await EnsureDirectoryExistsAsync(dest);
+                EnsureDirectoryExists(dest);
 
                 // Add retry mechanism for file copy
                 int maxRetries = 3;
@@ -310,31 +269,6 @@ namespace SuDesApp.Utilities
         }
 
 
-
-        public async Task<string> ReadFileAsync(string path, Encoding? encoding = null)
-        {
-            try
-            {
-                string sanitizedPath = SanitizePath(path);
-                string actualPath = FindActualFilePath(sanitizedPath);
-
-                if (!File.Exists(actualPath))
-                {
-                    throw new FileNotFoundException($"File tidak ditemukan: {path}", actualPath);
-                }
-
-                string content = await File.ReadAllTextAsync(actualPath, encoding ?? Encoding.UTF8);
-                _logger.LogDebug("Read file from {Path} with {Length} characters", actualPath, content.Length);
-                return content;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to read file: {Path}", path);
-                throw;
-            }
-        }
-
-        public Task<string> ReadFileAsStringAsync(string path, Encoding? encoding = null) => ReadFileAsync(path, encoding);
 
         public bool IsValidPdf(string filePath)
         {
@@ -364,9 +298,5 @@ namespace SuDesApp.Utilities
             }
         }
 
-        public async Task<bool> FileExistsAsync(string path)
-        {
-            return await Task.Run(() => FileExists(path));
-        }
     }
 }
