@@ -4,5 +4,9 @@
     <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Samakan disiplin dengan proyek lain: peringatan = error. Probe ini
+         berjalan di HEALTHCHECK image produksi, jadi kode mati di sini
+         sebaiknya gagal build, bukan lolos diam-diam. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 </Project>
