@@ -26,7 +26,7 @@ jobs:
 
       # Gitleaks: pemindai secret penuh (lebih tajam dari pola manual di bawah).
       - name: Pindai secret dengan Gitleaks
-        uses: gitleaks/gitleaks-action@v3
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
 
       - name: Scan tracked files for secrets
         shell: pwsh
