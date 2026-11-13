@@ -1,11 +1,10 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 android {
     namespace = "dev.sumberjaya.sudes.android"
-    compileSdk = 35
+    compileSdk = 37
     buildToolsVersion = "36.0.0"
 
     defaultConfig {
@@ -26,10 +25,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -66,7 +61,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
 
     // Supabase REST (Auth + PostgREST) — client tipis, tanpa SDK berat.
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp:5.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     // Pindai QR pairing.
