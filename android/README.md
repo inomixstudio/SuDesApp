@@ -54,12 +54,14 @@ desktop berlaku tanpa memasang APK baru.
 
 ## Membangun dan menjalankan
 
-Toolchain: JDK 17/21, Android SDK (compileSdk 35). Gradle **memakai wrapper**
-di folder ini, jadi tidak perlu Gradle global:
+Toolchain: JDK 21, Android SDK (compileSdk 37, targetSdk 35), AGP 9.3 dengan
+built-in Kotlin. Gradle **memakai wrapper** di folder ini, jadi tidak perlu
+Gradle global:
 
 ```
 cd android
 ./gradlew assembleDebug        # Windows: gradlew.bat assembleDebug
+./gradlew testDebugUnitTest    # uji unit JVM (bukan instrumentasi)
 ```
 
 `local.properties` berisi `sdk.dir` per mesin — sengaja tidak di-commit.
