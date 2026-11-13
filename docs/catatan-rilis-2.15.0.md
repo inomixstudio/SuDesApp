@@ -20,6 +20,7 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 
 - **Uji tema baru** `SetiapTemaDiLayanan_PunyaBerkasDanSebaliknya` menjaga katalog tema di `ThemeCatalog` selalu cocok dengan berkas `*Theme.xaml` — tema tanpa berkas atau berkas tanpa katalog kini membuat build gagal, bukan diam-diam jatuh ke tema bawaan.
 - **Gerbang uji E2E trial server diperbaiki**: penyimpanan server kini per-putaran sehingga uji bisa dijalankan berulang (idempoten), dan harness mengenal format token `v2.<kid>.<payload>.<sig>` yang sebelumnya membuat pemeriksaan token meleset sejak key id disertakan.
+- **Audit kontras tema kini berjalan di CI**: job *Audit kontras tema (WCAG)* menjalankan `Tools/check-kontras-wcag.ps1` pada setiap push, jadi tema baru yang melanggar paritas kunci atau kontras AA gagal build.
 - **Dokumentasi**: `docs/backend-web.md` kini memuat tabel keputusan kapan memakai `ApiListener` (desktop), `SuDesApp.Api` (mobile/browser), atau `SuDesApp.Server` (lisensi) beserta status penerbitannya.
 
 ## Android

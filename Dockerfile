@@ -10,8 +10,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 # Perhatikan: global.json ikut disalin agar SDK container PERSIS sama dengan
-# SDK yang dipakai CI dan mesin developer (version 11.0.100-rc.3, rollForward
-# latestMajor). Tanpa ini, tag mengambang sdk:11.0 diam-diam memakai patch
+# SDK yang dipakai CI dan mesin developer (version 11.0.100, rollForward
+# latestPatch). Tanpa ini, tag mengambang sdk:11.0 diam-diam memakai patch
 # terbaru yang berbeda.
 COPY global.json ./
 COPY SuDesApp.Server/SuDesApp.Server.csproj SuDesApp.Server/

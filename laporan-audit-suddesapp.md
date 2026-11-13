@@ -62,10 +62,13 @@ tabel pasangan kontras `Tools/check-kontras-wcag.ps1`.
 
 ## 3. Yang perlu diperbaiki (fixes)
 
-1. **Ketidakseragaman `TreatWarningsAsErrors`** — `SudesPdf.Core`, `SudesExPlus`, dan `SuDesApp.Api` belum menyetel `TreatWarningsAsErrors`, sementara Core/Wpf/Server/SudesPdf sudah. Samakan agar semua proyek mendapat perlindungan yang sama terhadap kode mati/unused.
-2. **`global.json` memakai SDK prarilis** (`11.0.100-rc.3`, `allowPrerelease: true`). Begitu .NET 11 SDK GA tersedia, kunci ke versi stabil.
-3. **Dokumentasi `SuDesApp.Api` vs `ApiListener` in-process** (temuan lama, belum tuntas): tulis eksplisit di `docs/backend-web.md` kapan memakai `SuDesApp.Api` (klien mobile/browser) vs `ApiListener` (desktop), dan apakah `SuDesApp.Api` perlu ikut pipeline publish rilis.
-4. **Uji tema yang dirancang belum ada** — `docs/tema-dan-warna.md` (sudah dikoreksi akurasinya) menyebut rancangan uji render-per-halaman (`JelajahRenderTemaTests`, dll.) yang belum diimplementasikan. Opsional: implementasikan bila dokumen dijadikan spesifikasi.
+> Semua butir di bawah **sudah selesai** pada 11 November 2026 (lihat bagian 6).
+> Teks asli dipertahankan sebagai catatan proses.
+
+1. **Ketidakseragaman `TreatWarningsAsErrors`** — `SudesPdf.Core`, `SudesExPlus`, dan `SuDesApp.Api` belum menyetel `TreatWarningsAsErrors`, sementara Core/Wpf/Server/SudesPdf sudah. Samakan agar semua proyek mendapat perlindungan yang sama terhadap kode mati/unused. **→ Selesai.**
+2. **`global.json` memakai SDK prarilis** (`11.0.100-rc.3`, `allowPrerelease: true`). Begitu .NET 11 SDK GA tersedia, kunci ke versi stabil. **→ Selesai (11.0.100 stabil).**
+3. **Dokumentasi `SuDesApp.Api` vs `ApiListener` in-process** — tulis eksplisit di `docs/backend-web.md` kapan memakai `SuDesApp.Api` (klien mobile/browser) vs `ApiListener` (desktop), dan apakah `SuDesApp.Api` perlu ikut pipeline publish rilis. **→ Selesai.**
+4. **Uji tema yang dirancang belum ada** — `docs/tema-dan-warna.md` menyebut rancangan uji render-per-halaman (`JelajahRenderTemaTests`, dll.) yang belum diimplementasikan. **→ Masih terbuka** (opsional; bukan gerbang build).
 
 ---
 
@@ -75,15 +78,15 @@ tabel pasangan kontras `Tools/check-kontras-wcag.ps1`.
 
 | Paket | Saat ini | Tersedia |
 |---|---|---|
-| `Google.Apis.Drive.v3` | 1.78.0.4313 | **1.78.0.4327** |
-| `Microsoft.NET.Test.Sdk` | 18.11.0 | **18.11.1** |
+| `Google.Apis.Drive.v3` | 1.78.0.4327 | (versi terbaru per 13 November 2026) |
+| `Microsoft.NET.Test.Sdk` | 18.11.1 | **18.12.0** |
 
-### Menunggu keputusan migrasi .NET 11
+### Selesai: migrasi .NET 11
 
-Seluruh paket `Microsoft.Extensions.*` (10.0.14), `Microsoft.Data.Sqlite.Core` (10.0.14), dan
-`Microsoft.AspNetCore.OpenApi` (10.0.14) punya versi **11.0.0**. Naikkan **bersamaan** dengan
-perpindahan `TargetFramework` ke `net11.0`/`net11.0-windows` (SDK 11 RC sudah terpasang).
-Jangan naikkan paket 11.x sementara TFM masih net10.0.
+Seluruh paket `Microsoft.Extensions.*`, `Microsoft.Data.Sqlite.Core`, dan
+`Microsoft.AspNetCore.OpenApi` sudah naik ke **11.0.0** bersamaan dengan
+perpindahan `TargetFramework` ke `net11.0`/`net11.0-windows` dan `global.json`
+ke SDK stabil 11.0.100.
 
 ### Opsional
 
@@ -125,3 +128,54 @@ Google dipindahkan ke System.Text.Json dengan uji kompatibilitas dua arah.
 | P3 | Migrasi .NET 11 (TFM + paket 11.x + global.json SDK GA) | **Selesai** |
 | P3 | Dokumentasi SuDesApp.Api vs ApiListener | **Selesai** |
 | P3 | Newtonsoft.Json → System.Text.Json (kode aplikasi) | **Selesai** — paket tetap dirujuk untuk menangkap JsonException milik FileDataStore Google |
+
+---
+
+## 7. Tindak lanjut — 13 November 2026
+
+Pemeriksaan ulang seluruh repo (bukan hanya working tree) menemukan hal yang
+tidak tertutup audit 11 November.
+
+### Diperbaiki
+
+| Item | Lokasi | Alasan |
+|---|---|---|
+| `Tools/check-rilis.ps1` **gagal** di tahap 3 | asumsi `BersihkanWargaContohAsync` ada di `DatabaseInitializer.cs` | kini di `DatabaseInitializer.FiturBaru.cs`; skrip membaca folder `Configuration` dan semua berkas `DatabaseInitializer*.cs`. Sebelumnya gerbang pra-rilis mati diam-diam. |
+| Kode mati dihapus (562 baris) | `FormatPermintaan.cs` (432 baris: seluruh pemroses WhatsApp — `Parse`, `FieldDefs`, `DetectJenisSurat`, `NormalizeLabel`, `Normalkan*`, `TtlPisah*`, `TampilanJenis`, `InstruksiFormat`, `HasilParsePermintaan`, `FieldPermintaan`, 30 field `F_*`), `FileService.cs` (76 baris: 5 method), 2 kelas pengecualian (38 baris), `PdfObjects.cs` (5 baris: class kosong), `IkonMenu.cs` (11 baris: 5 konstanta) | 0 rujukan di seluruh solusi |
+| Uji katalog daring ditambahkan | `SuDesApp.Tests/Api/KatalogSuratDaringTests.cs` (6 uji) | `KatalogSuratDaring` (pengganti `FormatPermintaan`) sebelumnya tanpa uji; merah-hijau diverifikasi dengan menyuntik NTCR ke daftar daring |
+| Uji keselarasan catatan rilis ditambahkan | `SuDesApp.Tests/UI/CatatanRilisSelarasTests.cs` (3 uji) | catatan rilis hidup di dua tempat (kartu aplikasi + `docs/catatan-rilis-*.md`) tanpa gerbang pembanding; kartu teratas kini wajib cocok dengan `AssemblyVersion`, dan setiap dokumen rilis wajib punya kartu |
+| Catatan rilis 2.15.0 diperbarui | `docs/catatan-rilis-2.15.0.md`, `CatatanRilisViewModel.RiwayatVersi.cs` | gerbang kontras CI dan uji katalog daring belum tercatat; angka uji sengaja dibiarkan 449/449 (kondisi saat rilis, bukan sesi lanjutan) |
+| `FormatPermintaan` diganti `KatalogSuratDaring` | `SuDesApp.Core/Api/KatalogSuratDaring.cs` | nama kelas lama menyesatkan; katalog kini di tempat pemakainya |
+| `FileService._config` menganggur | konstruktor | `AppConfig` disimpan tak pernah dibaca; parameter dihapus, 18 situs uji diperbarui |
+| Flaky `JejakWebhookTests.Notifikasi_lunas_tercatat_sebagai_diterima` | `MidtransService` | akar masalah: uji lain mengubah `MIDTRANS_SERVER_KEY` di proses paralel; `KonfigurasiMidtrans.ServerKey` memprioritaskan env. Ditambahkan konstruktor dengan `serverKey` eksplisit |
+| `IDEA.md` dihapus | root | template "mobile hub" berbahasa Inggris, tak pernah ter-commit, bertentangan dengan isi aplikasi |
+| Dokumen menyesatkan | `README.md`, `Dockerfile`, `.agents/*.md`, `.vscode/launch.json`, `laporan-audit-suddesapp.md`, `docs/tema-dan-warna.md` | masih menyebut .NET 10 / SDK rc.3 / jalur `net10.0` |
+| Gerbang kontras tema | `.github/workflows/ci.yml` | job **Audit kontras tema (WCAG)** menjalankan `Tools/check-kontras-wcag.ps1` di setiap push |
+| `artifacts/` 858 MB → 263 MB | installer 2.10.3/2.10.4 + uninstaller | tak lagi diperlukan; pembanding tambalan diambil versi tertua dari GitHub |
+| `artifacts/RELEASE.md` dipulihkan | | pemeriksaan digest lokal `check-rilis` kini berfungsi (10 lulus, 0 gagal) |
+| `bin/Debug` (1,2 GB) + `.vs` (9 MB) dibersihkan | | hasil build, dibangun ulang otomatis, sudah gitignore |
+| `TreatWarningsAsErrors` disamakan | `UjiTrialServerE2E`, `healthcheck` | dulu `false` / tak disetel |
+| `Microsoft.NET.Test.Sdk` 18.11.1 → 18.12.0 | `SuDesApp.Tests.csproj` | patch aman |
+
+### Terbuka (butuh keputusan pemilik repo)
+
+| Item | Keterangan |
+|---|---|
+| **CI GitHub Actions gagal sejak 9 November** | *"The job was not started because your account is locked due to a billing issue."* Semua 11 PR dependabot berstatus UNSTABLE karena ini — **bukan** masalah kode. Harus diselesaikan di halaman penagihan GitHub. |
+| 11 PR dependabot | semua MERGEABLE; #11 (Test.Sdk) kini duplikat karena sudah dinaikkan manual |
+| TFM `-windows7.0` vs `-windows` | dibiarkan: mengubah menyebar ke 6 proyek tanpa manfaat |
+| `Newtonsoft.Json` 13.0.4 | masih dibutuhkan untuk `JsonException` FileDataStore Google |
+| Uji render-per-halaman (`JelajahRenderTemaTests`) | rancangan di `docs/tema-dan-warna.md`, belum diimplementasikan |
+
+### Verifikasi 13 November 2026
+
+| Pemeriksaan | Hasil |
+|---|---|
+| `dotnet build SuDesApp.slnx -c Release` | 0 warning, 0 error |
+| `dotnet test SuDesApp.Tests` | **458/458 lolos** (449 asal + 6 uji katalog daring + 3 uji catatan rilis) |
+| `Tools/check-rilis.ps1 -TanpaGitHub` | **10 lulus, 0 gagal**, 3 dilewati |
+| `Tools/check-resources.ps1 -FailOnOrphan` | 0 error, 0 peringatan |
+| `Tools/check-kontras-wcag.ps1` | semua lolos |
+| Validasi XAML | 0 rusak |
+| Parse semua `Tools/*.ps1` | 15/15 OK |
+

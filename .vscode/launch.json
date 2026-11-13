@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/SuDesApp.Server/bin/Debug/net10.0/SuDesApp.Server.dll",
+            "program": "${workspaceFolder}/SuDesApp.Server/bin/Debug/net11.0/SuDesApp.Server.dll",
             "args": [],
             "cwd": "${workspaceFolder}/SuDesApp.Server",
             "stopAtEntry": false,
