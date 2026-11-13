@@ -161,8 +161,8 @@ tidak tertutup audit 11 November.
 
 | Item | Keterangan |
 |---|---|
-| **CI GitHub Actions gagal sejak 9 November** | *"The job was not started because your account is locked due to a billing issue."* Semua 11 PR dependabot berstatus UNSTABLE karena ini — **bukan** masalah kode. Harus diselesaikan di halaman penagihan GitHub. |
-| 11 PR dependabot | semua MERGEABLE; #11 (Test.Sdk) kini duplikat karena sudah dinaikkan manual |
+| **CI GitHub Actions gagal sejak 9 November** | *"The job was not started because your account is locked due to a billing issue."* Semua 10 PR dependabot berstatus UNSTABLE karena ini — **bukan** masalah kode. Harus diselesaikan di halaman penagihan GitHub. |
+| 10 PR dependabot | semua MERGEABLE; isinya **sudah dikerjakan lokal** (lihat bagian 8) sehingga PR-nya bisa ditutup, bukan digabung |
 | TFM `-windows7.0` vs `-windows` | dibiarkan: mengubah menyebar ke 6 proyek tanpa manfaat |
 | `Newtonsoft.Json` 13.0.4 | masih dibutuhkan untuk `JsonException` FileDataStore Google |
 | Uji render-per-halaman (`JelajahRenderTemaTests`) | rancangan di `docs/tema-dan-warna.md`, belum diimplementasikan |
@@ -178,4 +178,60 @@ tidak tertutup audit 11 November.
 | `Tools/check-kontras-wcag.ps1` | semua lolos |
 | Validasi XAML | 0 rusak |
 | Parse semua `Tools/*.ps1` | 15/15 OK |
+| Android `./gradlew assembleDebug` | **BUILD SUCCESSFUL** (AGP 9.3.0, Gradle 9.8.2, JDK 21) |
+| Android `./gradlew testDebugUnitTest` | **34/34 lolos**, 0 gagal |
+
+---
+
+## 8. Upgrade dependensi — dikerjakan lokal (13 November 2026)
+
+Seluruh isi PR dependabot dikerjakan **di mesin lokal** dan diverifikasi dengan build lokal,
+bukan digabung lewat GitHub. Ini juga membuktikan jalur lokal bisa diandalkan penuh.
+
+### GitHub Actions (workflow)
+
+| Action | Dari | Ke |
+|---|---|---|
+| `actions/checkout` | 4.4.0 | **7.0.1** |
+| `actions/setup-dotnet` | 4.3.1 | **6.1.0** |
+| `actions/setup-java` | 4.0.0 | **6.2.0** |
+| `gradle/actions/setup-gradle` | 4.4.2 | **6.4.1** |
+| `gitleaks/gitleaks-action` | v2 | **v3** |
+
+Penurunan tetap dikunci ke commit SHA dengan komentar versi seperti konvensi repo.
+
+### Android
+
+| Komponen | Dari | Ke | Catatan |
+|---|---|---|---|
+| Gradle wrapper | 8.11.1 | **9.8.2** | berkas `gradlew`/`gradlew.bat`/wrapper jar dibangkitkan ulang memakai biner 9.8.2 |
+| Plugin Kotlin | 2.0.21 | **2.2.10** | wajib lebih dulu: coroutines 1.11.0 membuat kompiler 2.0.21 gagal "internal compiler error" |
+| AGP | 8.7.3 | **9.3.0** | built-in Kotlin; plugin `org.jetbrains.kotlin.android` dan blok `kotlinOptions` dihapus |
+| `compileSdk` | 35 | **37** | dituntut okhttp 5.5.1; `targetSdk` tetap 35 |
+| `okhttp3:okhttp` | 4.12.0 | **5.5.1** | major |
+| `kotlinx-coroutines-android` | 1.8.1 | **1.11.0** | |
+| `androidx.recyclerview` | 1.3.2 | **1.4.0** | |
+| `androidx.security:security-crypto` | 1.1.0-alpha06 | **1.1.0** | |
+
+### Rantai ketergantungan yang ditemukan
+
+Upgrade Android **tidak bisa dilakukan sebagian**: coroutines 1.11.0 dibangun dengan Kotlin
+lebih baru sehingga menaikkannya memaksa naikkan plugin Kotlin lebih dulu; okhttp 5.5.1
+menuntut `compileSdk` 37 yang hanya didukung AGP 9.1+. Jadi urutannya: Kotlin plugin →
+Gradle → AGP → compileSdk → okhttp, dan tiap langkah diverifikasi build lokal.
+
+### Verifikasi lokal Android
+
+- `./gradlew assembleDebug` — BUILD SUCCESSFUL
+- `./gradlew testDebugUnitTest` — 34 uji, 0 gagal
+- APK debug terbangun: `compileSdkVersion 37`, `targetSdkVersion 35`, `versionName 2.15.0`
+- Satu-satunya deprecation warning berasal dari AGP sendiri (`Configuration.setVisible`),
+  bukan dari kode aplikasi
+
+### Prasyarat lokal yang dipasang
+
+- **JDK 21** (`Eclipse Adoptium 21.0.13+9`) via `winget install --id EclipseAdoptium.Temurin.21.JDK`.
+  JBR bawaan Android Studio melaporkan versi `25.0.4` yang tidak bisa di-parse Kotlin DSL
+  Gradle sehingga build gagal tanpa penjelasan. Detail ditambahkan ke `.agents/build-test.md`.
+
 
