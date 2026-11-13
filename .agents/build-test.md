@@ -4,6 +4,12 @@
 - Jangan menambahkan `-f net10.0` pada `dotnet test`: proyek uji hanya punya target `net11.0-windows`, hasilnya galat NETSDK1005 yang menyesalkan (seolah restore belum jalan).
 - Analyzer SUDES0001 (dipasang lewat `Directory.Build.props`) menggagalkan build bila ada blok `catch` kosong tanpa komentar alasan di dalamnya.
 
+## Android
+- Build Android **lokal**, bukan lewat GitHub Actions: `cd android && ./gradlew assembleDebug --console=plain` lalu `./gradlew testDebugUnitTest --console=plain`.
+- Butuh `JAVA_HOME` ke **JDK 21** (sama dengan CI). JBR bawaan Android Studio (`C:\Program Files\Android\Android Studio\jbr`) melaporkan versi `25.0.4` yang **tidak bisa di-parse** Kotlin DSL Gradle 8.11.1 — build gagal dengan `java.lang.IllegalArgumentException: 25.0.4` tanpa penjelasan lain. JDK 21 lokal: `C:\Program Files\Eclipse Adoptium\jdk-21.0.13.9-hotspot` (pasang dengan `winget install --id EclipseAdoptium.Temurin.21.JDK`).
+- `android/local.properties` sudah berisi `sdk.dir` ke SDK lokal, jadi `ANDROID_HOME` tidak perlu disetel.
+- Build pertama mengunduh dependensi; beri waktu beberapa menit sebelum menyimpulkan gagal.
+
 ## Uji
 - Perintah `dotnet test ... -v q` ala README menyembunyikan keluaran `ITestOutputHelper`; tambahkan `--logger "console;verbosity=detailed"` lalu saring dengan grep bila butuh angka dari tes.
 - Uji xunit berjalan PARALEL dalam satu proses, jadi `Environment.SetEnvironmentVariable` di satu uji mengganggu uji lain yang membaca env yang sama. `MidtransService` menerima parameter `serverKey` eksplisit (konstruktor 4 argumen) supaya uji signature tidak bergantung pada env global — pakai itu, jangan andalkan `Midtrans:ServerKey` dari config. Akar flaky `JejakWebhookTests.Notifikasi_lunas_tercatat_sebagai_diterima` (dulu 403 saat suite penuh, lolos sendirian) adalah ini.
