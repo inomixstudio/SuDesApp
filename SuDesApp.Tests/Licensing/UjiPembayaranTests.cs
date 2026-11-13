@@ -412,7 +412,8 @@ public sealed class JejakWebhookTests
         await repo.SimpanTagihanAsync(
             pelanggan.Id, "SUDES-UJI-1", new PaketLangganan("bulanan", "Bulanan", 150_000, 30));
 
-        var midtrans = new MidtransService(Config(), NullLogger<MidtransService>.Instance);
+        var midtrans = new MidtransService(
+            Config(), NullLogger<MidtransService>.Instance, http: null, serverKey: Kunci);
         var pelacak = new PelacakWebhook();
         var layanan = new LayananWebhook(repo, midtrans, NullLogger<LayananWebhook>.Instance, pelacak);
         return (layanan, pelacak, repo);
@@ -528,7 +529,12 @@ public sealed class StatusMidtransTests
                 ["Midtrans:UseSandbox"] = "true"
             })
             .Build();
-        return new MidtransService(config, NullLogger<MidtransService>.Instance, new HttpClient(handler));
+        // Kunci diberikan eksplisit: uji lain mengubah MIDTRANS_SERVER_KEY di
+        // proses yang sama, dan env menang atas appsettings — tanpa jalur ini
+        // signature uji bergantung pada keadaan env global (flaky).
+        return new MidtransService(
+            config, NullLogger<MidtransService>.Instance, new HttpClient(handler),
+            serverKey: "kunci-uji-midtrans");
     }
 
     [Fact]
