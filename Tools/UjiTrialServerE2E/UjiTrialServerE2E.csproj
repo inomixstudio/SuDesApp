@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <!-- Alat permanen untuk uji E2E trial server (sebelum rilis); bukan bagian aplikasi. -->
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SuDesApp.Core\SuDesApp.Core.csproj" />
