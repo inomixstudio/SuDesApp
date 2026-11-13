@@ -97,11 +97,13 @@ function CariPython {
 }
 
 # Skrip uji perilaku database (tahap 3). Pola DELETE diambil langsung dari
-# DatabaseInitializer.cs sehingga pemeriksaan tidak meniru SQL dua kali.
+# DatabaseInitializer*.cs sehingga pemeriksaan tidak meniru SQL dua kali.
+# cs_path adalah FOLDER Configuration (bukan satu berkas) karena pembersih
+# tinggal di salah satu berkas partial dan lokasinya berpindah-pindah.
 $pySkrip = @'
-import io, re, sqlite3, sys
+import glob, io, os, re, sqlite3, sys
 
-sql_path, cs_path = sys.argv[1], sys.argv[2]
+sql_path, cs_dir = sys.argv[1], sys.argv[2]
 
 
 def gagal(pesan, kode):
@@ -111,12 +113,14 @@ def gagal(pesan, kode):
 
 with io.open(sql_path, "r", encoding="utf-8-sig", errors="replace") as f:
     sql = f.read()
-with io.open(cs_path, "r", encoding="utf-8-sig", errors="replace") as f:
-    cs = f.read()
+cs = ""
+for jalur in sorted(glob.glob(os.path.join(cs_dir, "DatabaseInitializer*.cs"))):
+    with io.open(jalur, "r", encoding="utf-8-sig", errors="replace") as f:
+        cs += f.read() + "\n"
 
 m = re.search(r"DELETE FROM Warga\s+WHERE NIK = '([^']*)'\s+AND Nama = '([^']*)'", cs)
 if not m:
-    gagal("pola DELETE pembersih tidak ditemukan di DatabaseInitializer.cs", 2)
+    gagal("pola DELETE pembersih tidak ditemukan di DatabaseInitializer*.cs", 2)
 nik, nama = m.group(1), m.group(2)
 hapus_sql = m.group(0)
 
@@ -202,11 +206,15 @@ if (-not (Test-Path -LiteralPath $slnx)) {
 # ================= TAHAP 3/5: BENIH SQL & PERILAKU =================
 Tahap 'TAHAP 3/5: Benih SQL & perilaku pembersih contoh'
 $sqlPath = Join-Path $repoRoot 'desa.db.sql'
-$csPath = Join-Path $repoRoot 'SuDesApp.Core\Configuration\DatabaseInitializer.cs'
+# Pembersih contoh tinggal di salah satu berkas partial DatabaseInitializer —
+# berkas itu berpindah- pindah (FiturBaru.cs, dst.), jadi cari di seluruh
+# folder Configuration alih-alih menebak satu nama berkas. Asumsi satu berkas
+# pernah membuat pemeriksaan ini gagal padahal kodenya ada.
+$csPath = Join-Path $repoRoot 'SuDesApp.Core\Configuration'
 $sqlAda = Test-Path -LiteralPath $sqlPath
-$csAda = Test-Path -LiteralPath $csPath
+$csAda = Test-Path -LiteralPath $csPath -PathType Container
 if (-not $sqlAda) { Gagal 'desa.db.sql tidak ditemukan' }
-if (-not $csAda)  { Gagal 'SuDesApp.Core/Configuration/DatabaseInitializer.cs tidak ditemukan' }
+if (-not $csAda)  { Gagal 'SuDesApp.Core/Configuration tidak ditemukan' }
 
 if ($sqlAda -and $csAda) {
     # 1) Teks: seed tidak boleh menyuntik warga contoh (baris komentar dikecualikan)
@@ -228,9 +236,10 @@ if ($sqlAda -and $csAda) {
     }
 
     # 2) Teks: pembersih contoh ada dan dipanggil saat startup
-    $csTeks = Get-Content -LiteralPath $csPath -Raw
+    $csTeks = (Get-ChildItem -LiteralPath $csPath -Filter 'DatabaseInitializer*.cs' -File |
+        ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }) -join "`n"
     if ($csTeks -notmatch 'BersihkanWargaContohAsync') {
-        Gagal 'BersihkanWargaContohAsync tidak ada di DatabaseInitializer.cs'
+        Gagal 'BersihkanWargaContohAsync tidak ada di DatabaseInitializer*.cs'
     } elseif ($csTeks -notmatch 'await BersihkanWargaContohAsync') {
         Gagal 'BersihkanWargaContohAsync tidak dipanggil saat startup'
     } else {

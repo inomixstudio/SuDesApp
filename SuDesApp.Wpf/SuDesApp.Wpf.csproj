@@ -155,15 +155,10 @@
 
   <!--
     CATATAN MIGRASI:
-    HandyControl (https://github.com/HandyOrg/HandyControl) opsional untuk UI modern:
-    <PackageReference Include="HandyControl" Version="3.6.0" />
-
-    CommunityToolkit.Mvvm opsional untuk Source Generator MVVM:
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-
     Pratinjau, ekstraksi teks, dan cetak PDF memakai library SudesPdf, yang
     berdiri di atas mesin SudesPdf.Core buatan sendiri (tanpa PDFium, PDF.js,
-    atau paket native pihak ketiga).
+    atau paket native pihak ketiga). UI memakai WPF standar + Konverter buatan
+    sendiri; jangan menambahkan paket UI pihak ketiga tanpa alasan yang kuat.
   -->
 
 </Project>

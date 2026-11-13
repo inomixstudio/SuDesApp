@@ -183,8 +183,3 @@ public class PdfException : Exception
     {
     }
 }
-
-public static class PdfObjectExtensions
-{
-
-}
