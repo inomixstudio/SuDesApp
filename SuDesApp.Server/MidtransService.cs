@@ -27,6 +27,19 @@ public class MidtransService : IPenyediaStatusPembayaran, IPembuatTagihan
     private readonly string[]? _enabledPayments;
 
     public MidtransService(IConfiguration config, ILogger<MidtransService> logger, HttpClient? http = null)
+        : this(config, logger, http, serverKey: null)
+    {
+    }
+
+    /// <summary>
+    /// Konstruktor untuk pengujian dan pemakaian eksplisit: ServerKey diberikan
+    /// langsung, bukan dibaca dari konfigurasi/env. Tanpa jalur ini, uji yang
+    /// mengubah <c>MIDTRANS_SERVER_KEY</c> di proses yang sama membuat uji
+    /// signature lain gagal (env menang atas appsettings) — flaky yang hanya
+    /// muncul saat seluruh suite dijalankan bersama.
+    /// </summary>
+    public MidtransService(
+        IConfiguration config, ILogger<MidtransService> logger, HttpClient? http, string? serverKey)
     {
         _logger = logger;
         _http = http ?? new HttpClient();
@@ -40,7 +53,9 @@ public class MidtransService : IPenyediaStatusPembayaran, IPembuatTagihan
         // Aturan env-kosong-mengIMPORTANT: env var yang ADA tetapi KOSONG tetap
         // diabaikan (fallback ke appsettings), dan nilai kosong di kedua sumber
         // berarti "belum diisi", bukan "kunci kosong".
-        _serverKey = KonfigurasiMidtrans.ServerKey(config);
+        _serverKey = string.IsNullOrWhiteSpace(serverKey)
+            ? KonfigurasiMidtrans.ServerKey(config)
+            : serverKey.Trim();
 
         // Sandbox default; production bila MIDTRANS_SANDBOX=false atau config UseSandbox=false.
         // Nilai KOSONG dianggap belum diisi — sama seperti ServerKey di atas.
