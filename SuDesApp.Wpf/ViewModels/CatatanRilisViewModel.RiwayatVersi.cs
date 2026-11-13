@@ -32,7 +32,8 @@ namespace SuDesApp.Wpf.ViewModels
                         }),
                         new CatatanRilisSubSection("Uji dan Gerbang Rilis", new List<string>
                         {
-                            "Uji baru menjaga daftar tema di pengaturan selalu cocok dengan berkas tema yang tersedia; gerbang uji E2E server lisensi diperbaiki agar bisa dijalankan berulang dan mengenal format token keamanan terbaru."
+                            "Uji baru menjaga daftar tema di pengaturan selalu cocok dengan berkas tema yang tersedia; gerbang uji E2E server lisensi diperbaiki agar bisa dijalankan berulang dan mengenal format token keamanan terbaru.",
+                            "Audit kontras tema kini berjalan sebagai gerbang CI, dan enam uji baru menjaga daftar surat yang bisa diminta lewat API desa — daftar itu tidak bisa diam-diam berubah lagi."
                         })
                     }),
                 new CatatanRilisEntry(

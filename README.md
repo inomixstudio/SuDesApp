@@ -1,6 +1,6 @@
 # SuDesApp — Sistem Surat Desa
 
-Aplikasi surat desa lintas perangkat: desktop Windows (WPF, .NET 10), backend
+Aplikasi surat desa lintas perangkat: desktop Windows (WPF, .NET 11), backend
 API, server lisensi, dan pendamping Android (Kotlin) dengan sinkron Supabase.
 Fitur inti: pembuatan surat resmi dengan penomoran sesuai perbup, register &
 agenda digital, data penduduk lengkap dengan mutasi, sampai alur persetujuan
@@ -62,10 +62,12 @@ developer.
 
 ## Kebutuhan
 
-- Windows 10/11 dengan **.NET 11 SDK** (build) atau runtime .NET 10 (menjalankan).
-  Versi SDK dikunci lewat `global.json` ke **11.0.100-rc.3** sehingga build developer dan
-  CI (GitHub Actions) selalu memakai SDK yang sama; bila mesin Anda belum punya
-  versi itu, pasang dulu dari https://dotnet.microsoft.com/download.
+- Windows 10/11 dengan **.NET 11 SDK** (build). Paket rilis self-contained,
+  jadi komputer kantor desa tidak perlu memasang runtime .NET terpisah untuk
+  menjalankannya. Versi SDK dikunci lewat `global.json` ke **11.0.100** stabil
+  sehingga build developer dan CI (GitHub Actions) selalu memakai SDK yang sama;
+  bila mesin Anda belum punya versi itu, pasang dulu dari
+  https://dotnet.microsoft.com/download.
 - Microsoft Word opsional — hanya untuk konversi berkas `.doc` lama dan impor
   template.
 
