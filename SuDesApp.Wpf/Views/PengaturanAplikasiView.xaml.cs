@@ -15,13 +15,10 @@ namespace SuDesApp.Wpf.Views
     /// </summary>
     public partial class PengaturanAplikasiView : UserControl
     {
-        /// <summary>Urutan bagian sama persis dengan urutan StackPanel pada XAML.
-        /// Bagian "google-oauth" (Kredensial Google) tetap ada: paket yang dibangun
-        /// tanpa berkas rahasia build tidak memuat kredensial OAuth tertanam,
-        /// sehingga teknisi harus bisa mengisinya di komputer pengguna.</summary>
+        /// <summary>Urutan bagian sama persis dengan urutan StackPanel pada XAML.</summary>
         private static readonly string[] UrutanSeksi =
         {
-            "umum", "google-oauth", "database", "informasi"
+            "umum", "database", "informasi"
         };
 
         private ViewModels.PengaturanAplikasiViewModel? _vm;
@@ -39,19 +36,6 @@ namespace SuDesApp.Wpf.Views
             DaftarBagian.SelectionChanged += (_, _) => IsiPengaturan?.ScrollToTop();
         }
 
-        /// <summary>
-        /// Client Secret di kartu Kredensial Google tidak bisa diikat langsung ke
-        /// ViewModel (PasswordBox tidak menyediakan properti terikat), jadi nilainya
-        /// disalurkan lewat kode di sini saat kotak diisi teknisi.
-        /// </summary>
-        private void GoogleSecretBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (_vm != null && sender is PasswordBox kotak)
-            {
-                _vm.GoogleClientSecret = kotak.Password;
-            }
-        }
-
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if (e.OldValue is ViewModels.PengaturanAplikasiViewModel lama)
@@ -65,13 +49,6 @@ namespace SuDesApp.Wpf.Views
 
             _vm = vm;
             vm.PropertyChanged += OnVmPropertyChanged;
-
-            // Isi kotak Client Secret dengan nilai tersimpan (bila ada) supaya
-            // teknisi bisa langsung mengecek/menguji kredensial di komputer ini.
-            if (!string.IsNullOrEmpty(vm.GoogleClientSecret))
-            {
-                GoogleSecretBox.Password = vm.GoogleClientSecret;
-            }
 
             KumpulkanSeksi();
             TampilkanSeksi(vm.SelectedSection);

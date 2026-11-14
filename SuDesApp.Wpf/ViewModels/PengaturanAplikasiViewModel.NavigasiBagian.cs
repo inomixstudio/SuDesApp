@@ -27,7 +27,6 @@ namespace SuDesApp.Wpf.ViewModels
         public ObservableCollection<PengaturanSectionVM> Sections { get; } = new();
 
         public PengaturanSectionVM BagianUmum { get; private set; } = null!;
-        public PengaturanSectionVM BagianGoogleOauth { get; private set; } = null!;
         public PengaturanSectionVM BagianDatabase { get; private set; } = null!;
         public PengaturanSectionVM BagianInformasi { get; private set; } = null!;
 
@@ -62,9 +61,6 @@ namespace SuDesApp.Wpf.ViewModels
             // tema dan tampil konsisten dengan sidebar — bukan emoji berwarna.
             BagianUmum = new PengaturanSectionVM("umum", "Umum & Preferensi", IkonMenu.Pengaturan,
                 "Perilaku aplikasi, kecepatan animasi antarmuka, preferensi kerja, dan pembersihan berkas berkala.");
-            BagianGoogleOauth = new PengaturanSectionVM("google-oauth", "Kredensial Google", IkonMenu.KataSandi,
-                "Client ID & Client Secret klien OAuth aplikasi: pemeriksaan sumber kredensial dan isian " +
-                "untuk komputer yang paketnya tidak memuat kredensial tertanam.");
             BagianDatabase = new PengaturanSectionVM("database", "Database Desa", IkonMenu.Cadangkan,
                 "Lokasi berkas database desa yang sedang dipakai dan pemindahannya ke folder data sendiri, " +
                 "misalnya di drive lain — tanpa menyalin berkas ke folder aplikasi.");
@@ -73,7 +69,7 @@ namespace SuDesApp.Wpf.ViewModels
 
             foreach (var bagian in new[]
                      {
-                         BagianUmum, BagianGoogleOauth, BagianDatabase, BagianInformasi
+                         BagianUmum, BagianDatabase, BagianInformasi
                      })
             {
                 Sections.Add(bagian);

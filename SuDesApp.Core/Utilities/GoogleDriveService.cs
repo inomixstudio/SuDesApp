@@ -75,9 +75,8 @@ namespace SuDesApp.Utilities
         private readonly ILogger<GoogleDriveService> _logger;
         private readonly string _rootFolderId;
         private readonly string _authMode;
-        // Tidak readonly: dapat diperbarui via SaveClientCredentials (setup awal).
-        private string _clientId;
-        private string _clientSecret;
+        private readonly string _clientId;
+        private readonly string _clientSecret;
         private readonly string _tokenFolder;
         // Nullable: klien dibangun malas lewat GetClientAsync dan dibuang lewat ResetClient.
         private DriveService? _service;
@@ -106,19 +105,12 @@ namespace SuDesApp.Utilities
             _authMode = section["authMode"] ?? "";
 
             // Sumber kredensial (urutan):
-            // 1. File terenkripsi DPAPI per-user (GoogleClientCredentials) — diisi teknisi
-            //    lewat API SaveClientCredentials (bukan UI pengaturan);
-            // 2. Kredensial tertanam di aplikasi (GoogleClientCredentialsBawaan) — ikut
-            //    installer, tidak dapat diubah pengguna;
-            // 3. appsettings.json (kompatibilitas instalasi lama).
-            var stored = GoogleClientCredentials.Load();
-            if (!string.IsNullOrWhiteSpace(stored?.ClientId) && !string.IsNullOrWhiteSpace(stored.ClientSecret))
-            {
-                _clientId = stored.ClientId;
-                _clientSecret = stored.ClientSecret;
-                CredentialSource = "Tersimpan di komputer ini (terenkripsi)";
-            }
-            else if (GoogleClientCredentialsBawaan.Tersedia)
+            // 1. Kredensial tertanam di aplikasi (GoogleClientCredentialsBawaan) — ikut
+            //    installer, tidak dapat diubah pengguna; login Google otomatis
+            //    aktif tanpa isian apa pun di komputer pengguna;
+            // 2. appsettings.json (kompatibilitas build yang tanpa berkas rahasia,
+            //    mis. build CI).
+            if (GoogleClientCredentialsBawaan.Tersedia)
             {
                 _clientId = GoogleClientCredentialsBawaan.ClientId;
                 _clientSecret = GoogleClientCredentialsBawaan.ClientSecret;
@@ -158,17 +150,15 @@ namespace SuDesApp.Utilities
         public string RootFolderId => _rootFolderId;
 
         /// <summary>
-        /// Sumber kredensial klien OAuth yang sedang dipakai (ditampilkan di halaman
-        /// Pengaturan → Kredensial Google) supaya teknisi tahu apakah paket ini
-        /// memuat kredensial tertanam atau kredensial diisi di komputer pengguna.
+        /// Sumber kredensial klien OAuth yang sedang dipakai (untuk diagnostik).
         /// </summary>
         public string CredentialSource { get; private set; } = "Belum ada";
 
         /// <summary>
         /// Benar bila paket aplikasi ini memuat kredensial OAuth tertanam (bukan
         /// placeholder). Paket yang dibangun tanpa berkas rahasia build bernilai
-        /// false; pada paket seperti itu login Google hanya bisa dihidupkan lewat
-        /// kredensial yang disimpan teknisi pada komputer pengguna.
+        /// false; pada paket seperti itu login Google tidak dapat diaktifkan —
+        /// gunakan installer yang dibangun lengkap dengan kredensial tertanam.
         /// </summary>
         public static bool EmbeddedCredentialsAvailable => GoogleClientCredentialsBawaan.Tersedia;
 
@@ -186,26 +176,6 @@ namespace SuDesApp.Utilities
             IsOAuthEnabled
             && Directory.Exists(_tokenFolder)
             && Directory.GetFiles(_tokenFolder, "*", SearchOption.AllDirectories).Any();
-
-        /// <summary>
-        /// Simpan kredensial klien OAuth (clientId + clientSecret) terenkripsi DPAPI
-        /// per user Windows. Dipakai alur setup awal oleh teknisi/admin; setelah ini
-        /// IsOAuthEnabled aktif tanpa menyentuh appsettings.json.
-        /// </summary>
-        public void SaveClientCredentials(string clientId, string clientSecret)
-        {
-            GoogleClientCredentials.Save(clientId, clientSecret);
-            _clientId = clientId.Trim();
-            _clientSecret = clientSecret.Trim();
-
-            // Klien lama dibangun dengan kredensial lama — buang agar percobaan
-            // berikutnya memakai kredensial baru tanpa perlu menjalankan ulang.
-            ResetClient();
-            ClientInvalidated?.Invoke();
-        }
-
-        /// <summary>Lokasi file penyimpanan kredensial (untuk pesan petunjuk setup).</summary>
-        public static string CredentialsStorePath => GoogleClientCredentials.StoreDisplayPath;
 
         public async Task<DriveService> GetClientAsync(CancellationToken ct = default)
         {
@@ -288,12 +258,12 @@ namespace SuDesApp.Utilities
             if (!IsOAuthEnabled)
             {
                 throw new InvalidOperationException(
-                    "Login Google belum dikonfigurasi.\n\n" +
-                    "Kredensial klien OAuth (Client ID & Client Secret) tidak ada di paket aplikasi ini dan " +
-                    "belum tersimpan di komputer ini. Buka Pengaturan Aplikasi → Kredensial Google, isi " +
-                    "Client ID & Client Secret, lalu klik Simpan Kredensial dan Uji Koneksi (tersimpan " +
-                    "terenkripsi di " + CredentialsStorePath + "), agar setiap pengguna bisa login ke akun " +
-                    "Google Drive miliknya sendiri.");
+                    "Login Google tidak tersedia pada paket ini.\n\n" +
+                    "Paket aplikasi tidak memuat kredensial klien OAuth (Client ID & Client Secret) — " +
+                    "biasanya karena dibangun tanpa berkas rahasia build " +
+                    "(SuDesApp.Core/Utilities/GoogleClientCredentialsBawaan.lokal.cs). " +
+                    "Login Google aktif otomatis pada installer resmi yang dibangun lengkap; " +
+                    "tidak ada isian kredensial di dalam aplikasi.");
             }
 
             return BuildOAuthClient(ct);
@@ -347,7 +317,7 @@ namespace SuDesApp.Utilities
                 throw new Exception(
                     "Gagal masuk ke akun Google.\n\n" +
                     "Periksa hal berikut:\n" +
-                    "1. clientId & clientSecret klien OAuth sudah disimpan (terenkripsi di " + CredentialsStorePath + ").\n" +
+                    "1. Paket aplikasi ini memuat kredensial klien OAuth tertanam (installer resmi).\n" +
                     "2. OAuth consent screen di Google Cloud Console berstatus \"In production\" (bila di \"Testing\", hanya akun yang terdaftar sebagai test user yang boleh login).\n" +
                     "3. Google Drive API sudah diaktifkan pada proyek Cloud.",
                     ex);

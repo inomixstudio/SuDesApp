@@ -54,11 +54,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Dipanggil setelah berhasil login agar sidebar diperbarui.</summary>
         public Action<string>? OnLoggedIn { get; set; }
 
-        /// <summary>Diminta membuka halaman lain (mis. Pengaturan Aplikasi saat kredensial belum diisi).</summary>
-        public event Action<string>? BukaHalamanDiminta;
-
-        public string InfoText { get => _infoText; private set => SetProperty(ref _infoText, value); }
-        public string ActionLabel { get => _actionLabel; private set => SetProperty(ref _actionLabel, value); }
+        public string InfoText { get => _infoText; private set => SetProperty(ref _infoText, value); }        public string ActionLabel { get => _actionLabel; private set => SetProperty(ref _actionLabel, value); }
 
         /// <summary>Label tombol bawah: "Batalkan" saat login berjalan, "Kembali" saat diam.</summary>
         public string BatalLabel { get => _batalLabel; private set => SetProperty(ref _batalLabel, value); }
@@ -91,13 +87,6 @@ namespace SuDesApp.Wpf.ViewModels
 
         private async Task MasukAsync()
         {
-            if (IsNotConfigured)
-            {
-                // Kredensial belum ada: klik utama membuka tempat mengisinya,
-                // bukan melempar galat yang mengulang InfoText yang sama.
-                BukaPengaturanKredensial();
-                return;
-            }
             if (IsConnected)
             {
                 OpenDrive();
@@ -209,9 +198,6 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        /// <summary>Buka Pengaturan Aplikasi (bagian Kredensial Google) dari tombol utama.</summary>
-        private void BukaPengaturanKredensial() => BukaHalamanDiminta?.Invoke("pengaturan-aplikasi");
-
         /// <summary>
         /// Kembalikan CTS aktif. CTS yang sudah dibatalkan (mis. lewat tombol Batal)
         /// diganti baru agar percobaan login berikutnya tidak langsung gagal.
@@ -250,12 +236,11 @@ namespace SuDesApp.Wpf.ViewModels
             IsConnected = false;
             IsNotConfigured = true;
             IsBusy = false;
-            InfoText = "Koneksi akun Google belum diaktifkan.\n\n" +
-                       "Kredensial klien OAuth (Client ID & Client Secret) belum tersimpan di komputer ini. " +
-                       "Klik tombol di bawah untuk membuka Pengaturan Aplikasi → Kredensial Google, isi Client ID " +
-                       "& Client Secret, lalu klik Simpan Kredensial dan Uji Koneksi (tersimpan terenkripsi di " +
-                       GoogleDriveService.CredentialsStorePath + ").";
-            ActionLabel = "Buka Pengaturan Kredensial";
+            InfoText = "Paket aplikasi ini tidak memuat kredensial OAuth Google tertanam, " +
+                       "sehingga login Google tidak dapat diaktifkan dari sini.\n\n" +
+                       "Gunakan installer resmi SuDesApp yang dibangun lengkap — login aktif " +
+                       "otomatis tanpa isian apa pun.";
+            ActionLabel = "Coba Lagi";
         }
 
         private void SetLoggedOut()

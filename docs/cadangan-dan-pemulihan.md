@@ -5,7 +5,7 @@ Panduan satu halaman untuk petugas desa. **SuDesApp tidak mengirim data desa ke 
 ## Di mana cadangan disimpan
 
 1. **Cadangan harian lokal** — dibuat otomatis saat aplikasi ditutup, lewat `DatabaseBackupService` (`VACUUM INTO`, anti-rusak WAL). Lihat folder `Output/` / `desa_backup*.db` di folder instalasi, dan folder lokal aplikasi (`%LOCALAPPDATA%\SuDesApp`).
-2. **Cadangan Google Drive** — bila Kredensial Google sudah diisi di Pengaturan, cadangan dibuat otomatis saat ditutup ke folder Drive yang dipilih.
+2. **Cadangan Google Drive** — bila akun Google sudah terhubung (login Google), cadangan dibuat otomatis saat ditutup ke folder Drive yang dipilih.
 3. **Berkas jejak sinkron** — setiap putaran sinkron Android menulis berkas `.xlsx` jejak di `%LOCALAPPDATA%\SuDesApp\Sinkron`.
 
 ## Cara memulihkan

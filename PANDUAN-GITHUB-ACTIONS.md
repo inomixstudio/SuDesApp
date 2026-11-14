@@ -110,7 +110,8 @@ atau izin Actions), bukan isi workflow-nya.
   Google** (pencadangan ke Google Drive) di komputer pengguna.
 - Karena itu workflow Release membuat paket CI dengan `-IzinkanTanpaKredensial`:
   asetnya tetap terbit, tetapi status **"Kredensial Google TIDAK tertanam"** ikut
-  tertulis di `RELEASE.md` dan teknisi mengisinya di Pengaturan Aplikasi. Untuk rilis
+  tertulis di `RELEASE.md` dan fitur Google Drive tidak bisa dipakai pada paket
+  tersebut. Untuk rilis
   yang fitur Google-nya langsung siap dipakai, bangun asetnya di komputer yang memiliki
   berkas rahasia itu — lihat **Jalur cadangan** di bawah.
 - Jangan pernah menaruh `GoogleClientCredentialsBawaan.lokal.cs` atau token apa pun ke
@@ -264,11 +265,10 @@ kapan pun untuk memeriksa paket yang sudah jadi:
 ```
 
 Bila rilis tanpa kredensial Google memang disengaja, tambahkan `-IzinkanTanpaKredensial`
-pada `publish-release.ps1` (statusnya ikut tertulis di `artifacts/RELEASE.md`). Untuk
-paket yang sudah terpasang tanpa kredensial, koneksi Google tetap bisa dihidupkan di
-komputer pengguna lewat **Pengaturan Aplikasi → Kredensial Google** → isi Client ID &
-Client Secret → **Simpan Kredensial** → **Uji Koneksi** (tersimpan terenkripsi DPAPI per
-pengguna Windows).
+pada `publish-release.ps1` (statusnya ikut tertulis di `artifacts/RELEASE.md`). Tidak
+ada isian kredensial di dalam aplikasi — paket yang terbit tanpa kredensial tidak bisa
+menghidupkan login Google; bangun ulang asetnya di komputer yang memiliki berkas rahasia
+build lalu terbitkan ulang.
 
 ### 2. Hasilnya (semuanya di `artifacts/`, folder ini gitignored)
 
