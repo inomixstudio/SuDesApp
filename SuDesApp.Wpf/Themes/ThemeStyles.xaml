@@ -132,6 +132,10 @@
         <Setter Property="MinHeight" Value="{StaticResource TinggiKontrol}"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
+        <!-- Umpan balik tekan halus untuk semua tombol (mengecil 0,97 saat ditekan,
+             kembali lembut saat dilepas). Durasi mengikuti kecepatan animasi
+             pilihan pengguna; detail di SuDesApp.Wpf/Controls/TekananHalus.cs. -->
+        <Setter Property="ctrl:TekananHalus.Aktif" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
