@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Wpf.Services;
 
@@ -169,6 +170,28 @@ namespace SuDesApp.Wpf
 
             SembunyikanToast();
             NotificationToast.Visibility = Visibility.Visible;
+
+            // Masuk dari kanan: fade + geser singkat. Hanya Opacity/RenderTransform
+            // (lapisan komposisi) dan tidak menunggu apa pun — toast sudah tampil
+            // selagi bergerak. Dilewati bila animasi sistem dimatikan.
+            if (SystemParameters.ClientAreaAnimation)
+            {
+                if (NotificationToast.RenderTransform is not TranslateTransform geser)
+                {
+                    geser = new TranslateTransform();
+                    NotificationToast.RenderTransform = geser;
+                }
+                geser.BeginAnimation(TranslateTransform.XProperty, null);
+                NotificationToast.BeginAnimation(OpacityProperty, null);
+
+                var durasi = KecepatanAnimasiPrefs.Skala(TimeSpan.FromMilliseconds(220));
+                var kurva = new CubicEase { EasingMode = EasingMode.EaseOut };
+                NotificationToast.BeginAnimation(OpacityProperty,
+                    new DoubleAnimation(0, 1, durasi) { EasingFunction = kurva });
+                geser.BeginAnimation(TranslateTransform.XProperty,
+                    new DoubleAnimation(24, 0, durasi) { EasingFunction = kurva });
+            }
+
             _toastTimer.Stop();
             _toastTimer.Start();
         }
@@ -177,6 +200,11 @@ namespace SuDesApp.Wpf
         {
             _toastTimer.Stop();
             NotificationToast.Visibility = Visibility.Collapsed;
+            NotificationToast.BeginAnimation(OpacityProperty, null);
+            if (NotificationToast.RenderTransform is TranslateTransform t)
+            {
+                t.BeginAnimation(TranslateTransform.XProperty, null);
+            }
         }
 
         /// <summary>Klik toast → buka daftar notifikasi lengkap.</summary>
