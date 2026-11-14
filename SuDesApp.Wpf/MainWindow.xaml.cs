@@ -55,6 +55,10 @@ namespace SuDesApp.Wpf
             // Ikon jendela/taskbar mengikuti warna aksen tema aktif; ikon digambar
             // ulang setiap kali tema diganti (ubin aksen + amplop putih).
             viewModel.TemaService.TemaBerubah += () => TerapkanIkonTema();
+
+            // Transisi halaman: setiap pergantian menu, konten baru memudar masuk
+            // sambil menggeser naik tipis (lihat OnViewModelPropertyChanged).
+            viewModel.PropertyChanged += OnViewModelPropertyChanged;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -94,6 +98,55 @@ namespace SuDesApp.Wpf
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
             LayoutGrid.BeginAnimation(OpacityProperty, masuk);
+        }
+
+        /// <summary>
+        /// Pergantian CurrentView di ViewModel = pergantian halaman di MainContent.
+        /// Opacity dinolkan SEKARANG (sebelum satu frame pun dirender) supaya halaman
+        /// baru tidak berkedip tampil penuh lalu melompat ke transparan; animasinya
+        /// sendiri dijalankan setelah templat halaman selesai dipasang.
+        /// </summary>
+        private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(MainWindowViewModel.CurrentView)) return;
+            if (!IsLoaded || _viewModel.CurrentView is null) return;
+
+            // Hormati setelan sistem: pengguna yang menonaktifkan animasi di
+            // Windows tidak dibebani transisi apa pun — halaman langsung tampil.
+            if (!SystemParameters.ClientAreaAnimation) return;
+
+            MainContent.Opacity = 0;
+            Dispatcher.BeginInvoke(new Action(AnimasikanMasukHalaman), DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// Transisi masuk halaman: fade 0→1 + geser naik 14→0 piksel dengan kurva
+        /// EaseOut. Hanya menyentuh Opacity dan RenderTransform — keduanya
+        /// dianimasikan di lapisan komposisi (tanpa pengukuran/penataan ulang
+        /// layout), sehingga halus dan murah meski halaman padat. Durasi mengikuti
+        /// kecepatan animasi pilihan pengguna (Lambat/Normal/Cepat).
+        /// </summary>
+        private void AnimasikanMasukHalaman()
+        {
+            // Halaman mungkin sudah tergantikan lagi sebelum tugas ini jalan —
+            // pemeriksaan ulang mencegah animasi basi menimpa halaman aktif.
+            if (!IsLoaded || _viewModel.CurrentView is null) return;
+
+            var durasi = KecepatanAnimasiPrefs.Skala(KecepatanAnimasiPrefs.DasarTransisiHalaman);
+            var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+            MainContent.BeginAnimation(OpacityProperty, null);
+            var fade = new DoubleAnimation(0, 1, durasi) { EasingFunction = ease };
+            MainContent.BeginAnimation(OpacityProperty, fade);
+
+            if (MainContent.RenderTransform is not TranslateTransform geser)
+            {
+                geser = new TranslateTransform();
+                MainContent.RenderTransform = geser;
+            }
+            geser.BeginAnimation(TranslateTransform.YProperty, null);
+            var naik = new DoubleAnimation(14, 0, durasi) { EasingFunction = ease };
+            geser.BeginAnimation(TranslateTransform.YProperty, naik);
         }
 
         /// <summary>
