@@ -127,6 +127,7 @@
                                           Background="Transparent"
                                           Cursor="Hand"
                                           Click="AccordionHeader_Click"
+                                          AutomationProperties.Name="{Binding Title}"
                                           ctrl:HoverAnimasiSidebar.Aktif="True">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
