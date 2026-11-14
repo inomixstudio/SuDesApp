@@ -92,6 +92,9 @@ namespace SuDesApp.Wpf.ViewModels
             $"dropdown {KecepatanAnimasiPrefs.ContohTeks(_kecepatanAnimasiTerpilih.Nilai, KecepatanAnimasiPrefs.DasarDropdown)}, " +
             $"sorotan menu {KecepatanAnimasiPrefs.ContohTeks(_kecepatanAnimasiTerpilih.Nilai, KecepatanAnimasiPrefs.DasarSorotMasuk)}.";
 
+        /// <summary>Tombol Batal di halaman Pengaturan: kembali ke halaman utama.</summary>
+        public RelayCommand BatalCommand { get; }
+
         public PengaturanAplikasiViewModel(
             NavigationService navigation,
             ILogger<PengaturanAplikasiViewModel> logger,
@@ -110,14 +113,6 @@ namespace SuDesApp.Wpf.ViewModels
             PakaiDatabaseBawaanCommand = new RelayCommand(PakaiDatabaseBawaan, () => DatabasePunyaPilihan);
             BukaFolderDatabaseCommand = new RelayCommand(BukaFolderDatabase);
             SimpanMulaiUlangDatabaseCommand = new AsyncRelayCommand(SimpanMulaiUlangDatabaseAsync, () => !DatabaseSibuk);
-
-            // Kredensial OAuth: nilai yang sudah tersimpan dimuat supaya teknisi
-            // bisa memeriksa/memperbarui tanpa mengetik ulang dari nol.
-            var kredensialTersimpan = GoogleClientCredentials.Load();
-            _googleClientId = kredensialTersimpan?.ClientId ?? string.Empty;
-            _googleClientSecret = kredensialTersimpan?.ClientSecret ?? string.Empty;
-            SimpanKredensialGoogleCommand = new AsyncRelayCommand(SimpanKredensialGoogleAsync);
-            UjiKredensialGoogleCommand = new AsyncRelayCommand(UjiKredensialGoogleAsync);
 
             // Langganan sudah pindah menjadi halaman tersendiri di navigasi menu
             // utama (LanggananViewModel / LanggananView) — tidak lagi di sini.

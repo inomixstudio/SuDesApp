@@ -42,7 +42,7 @@ namespace SuDesApp.Wpf.ViewModels
                 "angka agregat, membaca data perangkat desa, dan memverifikasi " +
                 "keaslian surat terbit lewat kode verifikasinya.\n\n" +
                 "Pencadangan data otomatis ke Google Drive serta ekspor ke Excel, CSV, dan JSON. " +
-                "Kredensial Google disimpan terenkripsi di komputer, dan berkas database desa.db " +
+                "Koneksi akun Google aktif otomatis dari installer (tanpa isian kredensial), dan berkas database desa.db " +
                 "tetap berada di komputer desa tanpa pernah dikirim ke mana pun.\n\n" +
                 "Pembaruan aplikasi diperiksa dan diunduh dari GitHub Releases di latar belakang, " +
                 "dengan verifikasi SHA-256 bila rilis menyertakan sidik jarinya. Setelah unduhan siap, lonceng notifikasi menawarkan " +
@@ -85,7 +85,7 @@ namespace SuDesApp.Wpf.ViewModels
                 ("Data & arsip", "Arsip dokumen APBDes per tahun anggaran dan per tahapan (Rancangan, Awal, Perubahan, Pertanggungjawaban/LPJ, DPA/DPPA/DPAL, Laporan Realisasi, dan Lainnya): isi dokumen dibaca, disunting, dan disimpan kembali, sementara angka resmi tetap dibuat di Siskeudes"),
                 ("Data & arsip", "Tutup Buku Tahunan: periksa keutuhan penomoran satu tahun, tutup atau buka bukunya, lalu cetak arsip register"),
                 ("Keamanan & pencadangan", "Pencadangan database dan formulir otomatis ke Google Drive"),
-                ("Keamanan & pencadangan", "Kredensial Google disimpan terenkripsi DPAPI untuk akun Windows ini, bukan sebagai teks biasa di appsettings.json"),
+                ("Keamanan & pencadangan", "Koneksi akun Google aktif otomatis dari installer; kredensial OAuth tidak diisi manual dan tidak ditulis sebagai teks biasa di appsettings.json"),
                 ("Keamanan & pencadangan", "Kata sandi pengguna disimpan sebagai PBKDF2 bersalt, percobaan masuk dibatasi, dan akun pusat dipisahkan dari akun desa"),
                 ("Keamanan & pencadangan", "Basis data desa.db tersimpan sebagai SQLite lokal tanpa enkripsi; database dari versi lama yang masih terenkripsi tetap dibuka bila berkas kuncinya tersedia di komputer ini; lokasi berkas database dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa"),
                 ("Layanan digital", "API Desa: layanan HTTP lokal dengan kunci API ber-cakupan (Agregat/Penuh) untuk membaca statistik & data perangkat, dan memverifikasi surat lewat kode verifikasinya"),

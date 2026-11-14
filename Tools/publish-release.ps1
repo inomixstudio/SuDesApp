@@ -339,7 +339,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Publish dibatalkan: hasil publish tidak memuat kredensial OAuth Google, sehingga aplikasi terpasang tidak bisa menyambungkan akun Google (Formulir/Sheet/Drive). Bangun aset rilis di komputer yang memiliki berkas rahasia build Utilities/GoogleClientCredentialsBawaan.lokal.cs, atau tambahkan -IzinkanTanpaKredensial bila rilis tanpa kredensial Google memang disengaja."
 }
 if ($IzinkanTanpaKredensial) {
-    $statusKredensial = 'Kredensial Google TIDAK tertanam - teknisi mengisinya di Pengaturan Aplikasi -> Kredensial Google pada tiap komputer.'
+    $statusKredensial = 'Kredensial Google TIDAK tertanam - login Google tidak aktif pada paket ini; bangun ulang di komputer yang memiliki berkas rahasia build.'
 }
 
 # ---------- tanda tangan Authenticode (executable) ----------

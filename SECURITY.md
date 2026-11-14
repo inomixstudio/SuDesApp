@@ -55,7 +55,7 @@ yang belum tertutup.
 
 | Rahasia | Lokasi | Dibuat |
 |---|---|---|
-| Kredensial OAuth Google | `GoogleClientCredentialsBawaan.lokal.cs` (terlokal, tidak terlacak) + DPAPI di `%LOCALAPPDATA%` |saat build lokal, atau diisi teknisi lewat Pengaturan → Kredensial Google |
+| Kredensial OAuth Google | `GoogleClientCredentialsBawaan.lokal.cs` (terlokal, tidak terlacak) — ikut semua konfigurasi build; login Google aktif otomatis dari installer, tanpa isian di aplikasi | saat build lokal |
 | Kredensial Supabase | `appsettings.lokal.json` (terlokal, tidak terlacak) atau environment variable | saat deploy |
 | Kunci privat lisensi | `SuDesApp.Server/keys/` (terlokal, tidak terlacak) atau env `LISENSI_KEY_PATH` | saat deploy |
 

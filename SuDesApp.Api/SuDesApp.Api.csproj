@@ -4,7 +4,7 @@
     <!--
       Ber-target net11.0-windows7.0 agar bisa merujuk SuDesApp.Core yang juga
       ber-target windows (karena DPAPI/ProtectedData di KunciDatabase, ApiKunci,
-      GoogleClientCredentials, dan ProtectedGoogleTokenDataStore).
+      dan ProtectedGoogleTokenDataStore).
       Begitu kripto tersebut diabstraksi, ubah kembali ke <TargetFramework>net11.0</TargetFramework>
       agar backend ini bisa di-deploy ke Linux.
     -->

@@ -5,9 +5,11 @@
     Kredensial klien OAuth hidup di SuDesApp.Core/Utilities/GoogleClientCredentialsBawaan.lokal.cs
     yang SENGAJA tidak ikut git. Bila berkas itu tidak ada saat build (mis. build di
     CI), yang ter-compile adalah placeholder "GANTI_CLIENT_ID"/"GANTI_CLIENT_SECRET" —
-    aplikasi hasil install lalu TIDAK bisa menyambungkan akun Google ke fitur layanan
-    (Formulir/Sheet/Drive) karena klien OAuth tidak aktif. Login aplikasi sendiri TIDAK
+    aplikasi hasil install lalu TIDAK bisa menyambungkan akun Google ke Google Drive
+    karena klien OAuth tidak aktif. Login aplikasi sendiri TIDAK
     terpengaruh: layar login memakai akun aplikasi, bukan akun Google.
+    Tidak ada isian kredensial di dalam aplikasi — satu-satunya perbaikan adalah
+    membangun paket di komputer yang memiliki berkas rahasia build.
 
     Skrip ini membaca assembly hasil build dan memastikan:
       1. ada kredensial asli (string "apps.googleusercontent.com" tertanam), dan
@@ -89,14 +91,13 @@ if ($lolos) {
 
 $penjelasan = @(
     'Paket ini dibangun TANPA kredensial OAuth tertanam, sehingga halaman Login Google',
-    '(menu samping) di aplikasi terpasang akan menampilkan "Login Google belum dikonfigurasi".',
+    '(menu samping) di aplikasi terpasang akan menampilkan "Login Google tidak tersedia".',
     '',
     'Cara memperbaiki:',
-    '  1. Bangun aset rilis di komputer yang memiliki berkas rahasia build',
-    '     SuDesApp.Core/Utilities/GoogleClientCredentialsBawaan.lokal.cs',
-    '     (mis. ./Tools/publish-release.ps1 -Version <versi> -VersiLama <versi lama>), atau',
-    '  2. setelah terpasang, isi Client ID & Client Secret pada halaman',
-    '     Pengaturan Aplikasi -> Kredensial Google, lalu klik Uji Koneksi.'
+    '  Bangun aset rilis di komputer yang memiliki berkas rahasia build',
+    '  SuDesApp.Core/Utilities/GoogleClientCredentialsBawaan.lokal.cs',
+    '  (mis. ./Tools/publish-release.ps1 -Version <versi> -VersiLama <versi lama>).',
+    '  Tidak ada isian kredensial di dalam aplikasi — installer harus dibangun lengkap.'
 )
 
 if ($IzinkanTanpaKredensial) {

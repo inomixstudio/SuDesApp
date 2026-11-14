@@ -162,7 +162,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public string PetunjukKeadaan =>
             "Daftar hanya dibaca dari Drive — berkas tidak diubah atau dihapus oleh pemuatan ini. "
-            + "Bila akun Google belum terhubung, atur kredensialnya di Pengaturan Aplikasi → Kredensial Google, lalu tekan Segarkan.";
+            + "Bila akun Google belum terhubung, tekan Segarkan dan selesaikan login di peramban.";
 
         public bool CanGoUp => _folderStack.Count > 0;
         public bool CanDownload => SelectedRow != null && !SelectedRow.IsFolder;
@@ -199,15 +199,15 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 if (!_driveService.IsOAuthEnabled)
                 {
-                    StatusText = "Login Google belum dikonfigurasi.";
+                    StatusText = "Login Google tidak tersedia pada paket ini.";
                     PathLabel = "Google Drive";
-                    GalatMuat = "Fitur Google Drive belum aktif: kredensial OAuth belum tersimpan di komputer ini.";
+                    GalatMuat = "Fitur Google Drive tidak tersedia pada paket ini: kredensial OAuth tidak tertanam.";
                     await _messageService.ShowInfoAsync(
-                        "Fitur Google Drive belum aktif.\n\n" +
-                        "Aplikasi perlu OAuth Client ID & Client Secret agar setiap pengguna login ke akun Google Drive miliknya sendiri (bukan akun bersama).\n\n" +
-                        "Kredensial belum tersimpan di komputer ini — hubungi teknisi untuk menyimpannya " +
-                        "(terenkripsi di " + GoogleDriveService.CredentialsStorePath + ") atau isi bagian GoogleDrive " +
-                        "pada appsettings.json, lalu jalankan ulang aplikasi.");
+                        "Fitur Google Drive tidak tersedia.\n\n" +
+                        "Paket aplikasi ini tidak memuat kredensial OAuth Google tertanam, sehingga login akun " +
+                        "Google tidak dapat diaktifkan dari dalam aplikasi.\n\n" +
+                        "Gunakan installer resmi SuDesApp yang dibangun lengkap — login Google aktif otomatis " +
+                        "tanpa isian apa pun.");
                     return;
                 }
 
