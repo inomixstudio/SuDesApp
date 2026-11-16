@@ -19,6 +19,13 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            // Tanpa baris ini app/proguard-rules.pro tidak pernah dibaca dan
+            // R8 membuang konstruktor no-arg WorkDatabase_Impl — aplikasi
+            // crash saat androidx.startup.InitializationProvider dipasang.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 
