@@ -145,7 +145,7 @@
         "label": "Keterangan",
         "type": "text",
         "target": "keterangan",
-        "required": false,
+        "required": true,
         "otomatis": false
       },
       {
@@ -389,7 +389,7 @@
         "label": "Keterangan",
         "type": "text",
         "target": "keterangan",
-        "required": false,
+        "required": true,
         "otomatis": false
       },
       {
@@ -544,7 +544,7 @@
         "label": "Keterangan",
         "type": "text",
         "target": "keterangan",
-        "required": false,
+        "required": true,
         "otomatis": false
       },
       {
@@ -802,7 +802,7 @@
         "label": "Keterangan",
         "type": "text",
         "target": "keterangan",
-        "required": false,
+        "required": true,
         "otomatis": false
       },
       {
@@ -1003,7 +1003,7 @@
         "label": "Pekerjaan",
         "type": "text",
         "target": "warga.pekerjaan",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -1079,7 +1079,7 @@
         "label": "Maksud",
         "type": "text",
         "target": "keterangan",
-        "required": false,
+        "required": true,
         "otomatis": false
       },
       {
@@ -2442,7 +2442,7 @@
         "label": "Status Perkawinan",
         "type": "select",
         "target": "warga.statusPerkawinan",
-        "required": true,
+        "required": false,
         "otomatis": false,
         "options": [
           "Belum Kawin",
@@ -2578,7 +2578,8 @@
           {
             "key": "keteranganGarapan",
             "label": "Keterangan",
-            "type": "text"
+            "type": "select",
+            "options": ["Garap", "Sewa", "Hak Milik"]
           }
         ]
       },
@@ -2739,7 +2740,7 @@
         "label": "Status Perkawinan",
         "type": "select",
         "target": "warga.statusPerkawinan",
-        "required": true,
+        "required": false,
         "otomatis": false,
         "options": [
           "Belum Kawin",
@@ -3184,7 +3185,7 @@
         "label": "Agama",
         "type": "select",
         "target": "warga.agama",
-        "required": true,
+        "required": false,
         "otomatis": false,
         "options": [
           "Islam",
@@ -3200,7 +3201,7 @@
         "label": "Status Perkawinan",
         "type": "select",
         "target": "warga.statusPerkawinan",
-        "required": true,
+        "required": false,
         "otomatis": false,
         "options": [
           "Belum Kawin",
@@ -3214,7 +3215,7 @@
         "label": "Pekerjaan",
         "type": "text",
         "target": "warga.pekerjaan",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -3536,7 +3537,7 @@
         "label": "Status Perkawinan",
         "type": "select",
         "target": "warga.statusPerkawinan",
-        "required": true,
+        "required": false,
         "otomatis": false,
         "options": [
           "Belum Kawin",
@@ -4282,7 +4283,7 @@
         "label": "Tempat Lahir",
         "type": "text",
         "target": "warga.tempatLahir",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -4290,7 +4291,7 @@
         "label": "Tgl. Lahir",
         "type": "date",
         "target": "warga.tanggalLahir",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -4310,7 +4311,7 @@
         "label": "Agama",
         "type": "select",
         "target": "warga.agama",
-        "required": true,
+        "required": false,
         "otomatis": false,
         "options": [
           "Islam",
@@ -4326,7 +4327,7 @@
         "label": "Status Perkawinan",
         "type": "select",
         "target": "warga.statusPerkawinan",
-        "required": true,
+        "required": false,
         "otomatis": false,
         "options": [
           "Belum Kawin",
@@ -5072,7 +5073,7 @@
         "label": "Keterangan",
         "type": "text",
         "target": "keterangan",
-        "required": false,
+        "required": true,
         "otomatis": false
       },
       {
@@ -5581,7 +5582,7 @@
         "label": "Keterangan",
         "type": "text",
         "target": "keterangan",
-        "required": false,
+        "required": true,
         "otomatis": false
       },
       {
@@ -6388,7 +6389,7 @@
         "label": "Kabupaten",
         "type": "text",
         "target": "warga.kabupaten",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -7175,7 +7176,7 @@
         "label": "Kabupaten",
         "type": "text",
         "target": "warga.kabupaten",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -7551,7 +7552,7 @@
         "label": "Kabupaten",
         "type": "text",
         "target": "warga.kabupaten",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -7925,7 +7926,7 @@
         "label": "Kabupaten",
         "type": "text",
         "target": "warga.kabupaten",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -8304,7 +8305,7 @@
         "label": "Kabupaten",
         "type": "text",
         "target": "warga.kabupaten",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -9116,7 +9117,7 @@
         "label": "Kabupaten",
         "type": "text",
         "target": "warga.kabupaten",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
@@ -9548,7 +9549,7 @@
         "label": "Kabupaten",
         "type": "text",
         "target": "warga.kabupaten",
-        "required": true,
+        "required": false,
         "otomatis": false
       },
       {
