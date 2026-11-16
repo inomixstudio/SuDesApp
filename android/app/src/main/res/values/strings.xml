@@ -13,7 +13,6 @@
     <string name="menu_register_surat">Register Surat</string>
     <string name="menu_daftar_hadir">Daftar Hadir</string>
     <string name="menu_pengaturan">Pengaturan</string>
-    <string name="menu_sinkron">Sinkron</string>
 
     <string name="keterangan_ntcr">Persyaratan pernikahan: N1–N6 dan N8.</string>
     <string name="catatan_privasi">PDF surat tersimpan di perangkat. Isian surat ikut antrean supaya register desktop bisa melanjutkan penomoran resmi.</string>
@@ -92,7 +91,6 @@
     <string name="ket_daftar_hadir">Buat daftar hadir lalu cetak PDF</string>
     <string name="ket_pengaturan">Kop surat dan penomoran dari desktop</string>
     <string name="ket_pengaturan_header">Kop surat dan penomoran desa</string>
-    <string name="ket_sinkron">Hubungkan perangkat lewat kode QR</string>
     <string name="menu_judul">Menu</string>
     <string name="pil_privasi">Data tetap di perangkat</string>
     <string name="identitas_belum_sinkron">Identitas desa belum disinkronkan</string>
@@ -119,8 +117,8 @@
     <string name="dh_tambah">+ Tambah</string>
     <string name="dh_hapus">Hapus baris terakhir</string>
     <string name="dh_bersihkan">Bersihkan (isi ulang)</string>
-    <string name="dh_info_peserta">Klik untuk mengedit. Baris kosong tetap dicetak sebagai baris kosong bernomor.</string>
-    <string name="ket_daftar_hadir_form">Isi kegiatan dan daftar peserta, lalu cetak sebagai PDF.</string>
+    <string name="dh_info_peserta">Baris dicetak kosong untuk diisi tangan. Jumlah baris ikut tercetak (minimum 10).</string>
+    <string name="ket_daftar_hadir_form">Isi kegiatan, atur jumlah baris, lalu cetak sebagai PDF.</string>
 
     <!-- Antrean sinkronisasi -->
     <string name="toast_antrean_terkirim">%1$s \u00B7 sudah masuk antrean desktop</string>

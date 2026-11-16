@@ -1,17 +1,10 @@
 package dev.sumberjaya.sudes.android
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -21,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -30,27 +22,21 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Daftar Hadir: membuat, mencetak, dan membagikan daftar hadir sebagai PDF.
- * Sepenuhnya juga mengakui pengaturan kolom, jumlah baris peserta, dan orientasi
- * sesuai DaftarHadirViewModel & DaftarHadirGenerator di desktop. PDF dibuat di
- * `cacheDir`, dicetak lewat pemindai Android, dan tidak masuk antrean Supabase
- * (fitur cetak saja, sesuai kesepakatan).
+ * Daftar Hadir: membuat dan mencetak daftar hadir kosong sebagai PDF.
+ *
+ * Baris peserta tidak diisi di aplikasi — PDF dicetak dengan baris kosong
+ * bernomor untuk diisi tangan di lembar cetakan. Operator hanya menentukan
+ * kegiatan, kolom yang dicetak, dan jumlah baris (bawaan 10, bisa ditambah /
+ * dihapus). Jumlah baris ikut tercetak, minimum 10 (potret) / 6 (lanskap)
+ * mengikuti `DaftarHadirDocument` desktop. PDF dibuat di `cacheDir`, dicetak
+ * lewat pemindai Android, dan tidak masuk antrean Supabase.
  */
 class DaftarHadirActivity : AppCompatActivity() {
 
-    private data class BarisPeserta(
-        val kartu: MaterialCardView,
-        val nama: TextInputEditText,
-        val jk: Spinner,
-        val jabatan: TextInputEditText,
-        val nip: TextInputEditText,
-        val nik: TextInputEditText,
-        val noHp: TextInputEditText,
-        val alamat: TextInputEditText,
-        val keterangan: TextInputEditText,
-    )
+    /** Satu baris kosong: kartu pinggir + label nomornya. */
+    private data class BarisKosong(val kartu: MaterialCardView, val nomor: TextView)
 
-    private val daftarPeserta = mutableListOf<BarisPeserta>()
+    private val daftarBaris = mutableListOf<BarisKosong>()
 
     private lateinit var inputJudul: TextInputEditText
     private lateinit var inputHariTanggal: TextInputEditText
@@ -108,18 +94,19 @@ class DaftarHadirActivity : AppCompatActivity() {
             }
         })
 
-        for (i in 0 until MIN_POTRET) tambahBaris(null)
+        for (i in 0 until MIN_POTRET) tambahBaris()
         perbaruiInfo()
 
         findViewById<Button>(R.id.btn_hari_ini).setOnClickListener { isiHariTanggalHariIni() }
         findViewById<Button>(R.id.btn_tambah).setOnClickListener {
-            tambahBaris(null)
+            tambahBaris()
             perbaruiInfo()
         }
         findViewById<Button>(R.id.btn_hapus).setOnClickListener {
-            if (daftarPeserta.isNotEmpty()) {
-                val terakhir = daftarPeserta.removeAt(daftarPeserta.lastIndex)
+            if (daftarBaris.isNotEmpty()) {
+                val terakhir = daftarBaris.removeAt(daftarBaris.lastIndex)
                 wadahPeserta.removeView(terakhir.kartu)
+                pasangNomor()
                 perbaruiInfo()
             }
         }
@@ -159,15 +146,16 @@ class DaftarHadirActivity : AppCompatActivity() {
                 checkKop.isChecked = true
                 checkFooter.isChecked = true
                 wadahPeserta.removeAllViews()
-                daftarPeserta.clear()
-                for (i in 0 until MIN_POTRET) tambahBaris(null)
+                daftarBaris.clear()
+                for (i in 0 until MIN_POTRET) tambahBaris()
                 isiHariTanggalHariIni()
                 perbaruiInfo()
             }
             .show()
     }
 
-    private fun tambahBaris(values: DaftarHadirPdf.Peserta?) {
+    /** Satu baris kosong baru; dipakai kondisi awal, tombol Tambah, dan Bersihkan. */
+    private fun tambahBaris() {
         val kartu = MaterialCardView(this).apply {
             radius = Ui.dp(this@DaftarHadirActivity, 14).toFloat()
             strokeWidth = Ui.dp(this@DaftarHadirActivity, 1)
@@ -177,95 +165,36 @@ class DaftarHadirActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { topMargin = Ui.dp(this@DaftarHadirActivity, 10) }
+            ).apply { topMargin = Ui.dp(this@DaftarHadirActivity, 8) }
         }
-        val isi = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(Ui.dp(this@DaftarHadirActivity, 14), Ui.dp(this@DaftarHadirActivity, 6),
-                Ui.dp(this@DaftarHadirActivity, 14), Ui.dp(this@DaftarHadirActivity, 12))
-        }
-        kartu.addView(isi)
-
-        fun berbingkai(label: String, posisi: (TextInputEditText) -> Unit): Pair<TextInputEditText, TextInputLayout> {
-            val edit = TextInputEditText(this).apply {
-                textSize = 15f
-                inputType = android.text.InputType.TYPE_CLASS_TEXT
-                isSingleLine = true
-            }
-            posisi(edit)
-            val kerangka = TextInputLayout(this).apply {
-                hint = label
-                boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
-                boxBackgroundColor = ContextCompat.getColor(this@DaftarHadirActivity, R.color.surface)
-                boxStrokeColor = ContextCompat.getColor(this@DaftarHadirActivity, R.color.accent)
-                setDefaultHintTextColor(android.content.res.ColorStateList.valueOf(
-                    ContextCompat.getColor(this@DaftarHadirActivity, R.color.teks_redup)))
-                setBoxCornerRadii(
-                    Ui.dp(this@DaftarHadirActivity, 14).toFloat(),
-                    Ui.dp(this@DaftarHadirActivity, 14).toFloat(),
-                    Ui.dp(this@DaftarHadirActivity, 14).toFloat(),
-                    Ui.dp(this@DaftarHadirActivity, 14).toFloat(),
-                )
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                ).apply { topMargin = Ui.dp(this@DaftarHadirActivity, 10) }
-                addView(edit, LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT))
-            }
-            return edit to kerangka
-        }
-
-        val (nama, bingkaiNama) = berbingkai("Nama") { it.setText(values?.nama.orEmpty()) }
-        val jk = Spinner(this).apply {
-            adapter = ArrayAdapter(this@DaftarHadirActivity,
-                R.layout.item_pilihan, listOf("", "L", "P")).also {
-                it.setDropDownViewResource(R.layout.item_pilihan_dropdown)
-            }
-            val pos = when (values?.jenisKelamin) {
-                "L" -> 1
-                "P" -> 2
-                else -> 0
-            }
-            setSelection(pos)
-        }
-        val (jabatan, bingkaiJabatan) = berbingkai("Jabatan") { it.setText(values?.jabatan.orEmpty()) }
-        val (nip, bingkaiNip) = berbingkai("NIP") { it.setText(values?.nip.orEmpty()) }
-        val (nik, bingkaiNik) = berbingkai("NIK") { it.setText(values?.nik.orEmpty()) }
-        val (noHp, bingkaiNoHp) = berbingkai("No. Handphone") {
-            it.setText(values?.noHp.orEmpty())
-            it.inputType = android.text.InputType.TYPE_CLASS_PHONE
-        }
-        val (alamat, bingkaiAlamat) = berbingkai("Alamat") { it.setText(values?.alamat.orEmpty()) }
-        val (keterangan, bingkaiKeterangan) = berbingkai("Keterangan") { it.setText(values?.keterangan.orEmpty()) }
-
-        isi.addView(bingkaiNama)
-        isi.addView(TextView(this).apply {
-            text = "Jenis Kelamin (L/P)"
-            textSize = 12f
+        val nomor = TextView(this).apply {
+            textSize = 14f
             setTextColor(ContextCompat.getColor(this@DaftarHadirActivity, R.color.teks_redup))
-            setPadding(0, Ui.dp(this@DaftarHadirActivity, 8), 0, Ui.dp(this@DaftarHadirActivity, 4))
-        })
-        isi.addView(jk)
-        isi.addView(bingkaiJabatan)
-        isi.addView(bingkaiNip)
-        isi.addView(bingkaiNik)
-        isi.addView(bingkaiNoHp)
-        isi.addView(bingkaiAlamat)
-        isi.addView(bingkaiKeterangan)
-
+            setPadding(
+                Ui.dp(this@DaftarHadirActivity, 16),
+                Ui.dp(this@DaftarHadirActivity, 12),
+                Ui.dp(this@DaftarHadirActivity, 16),
+                Ui.dp(this@DaftarHadirActivity, 12),
+            )
+        }
+        kartu.addView(nomor)
         wadahPeserta.addView(kartu)
-        daftarPeserta.add(BarisPeserta(kartu, nama, jk, jabatan, nip, nik, noHp, alamat, keterangan))
+        daftarBaris.add(BarisKosong(kartu, nomor))
+        pasangNomor()
+    }
+
+    /** Nomor baris selalu berurutan walau baris terakhir baru saja dihapus. */
+    private fun pasangNomor() {
+        for ((i, b) in daftarBaris.withIndex()) b.nomor.text = "Baris ${i + 1}"
     }
 
     private fun perbaruiInfo() {
         val jumlahKolom = jumlahKolomTerpilih()
         val landscape = jumlahKolom >= 7
         val minimal = if (landscape) MIN_LANSKAP else MIN_POTRET
-        infoPeserta.text = "Baris grid: ${daftarPeserta.size} baris · orientasi " +
-            if (landscape) "lanskap" else "potret" +
-            " · semua baris ikut dicetak, kekurangan diisi baris kosong hingga minimal $minimal baris."
+        val orientasi = if (landscape) "lanskap" else "potret"
+        infoPeserta.text =
+            "PDF mencetak ${daftarBaris.size} baris kosong · orientasi $orientasi · minimum $minimal baris."
     }
 
     private fun jumlahKolomTerpilih(): Int {
@@ -285,18 +214,8 @@ class DaftarHadirActivity : AppCompatActivity() {
         if (!hariTanggalDisentuh) isiHariTanggalHariIni()
 
         val pengaturan = PengaturanSurat.ambil(this)
-        val peserta = daftarPeserta.map {
-            DaftarHadirPdf.Peserta(
-                nama = it.nama.text.toString().trim(),
-                jenisKelamin = it.jk.selectedItem?.toString().orEmpty().trim(),
-                jabatan = it.jabatan.text.toString().trim(),
-                nip = it.nip.text.toString().trim(),
-                nik = it.nik.text.toString().trim(),
-                noHp = it.noHp.text.toString().trim(),
-                alamat = it.alamat.text.toString().trim(),
-                keterangan = it.keterangan.text.toString().trim(),
-            )
-        }
+        // Baris kosong: isian daring tidak diperlukan, PDF diisi tangan.
+        val peserta = List(daftarBaris.size) { DaftarHadirPdf.Peserta() }
         val data = DaftarHadirPdf.Data(
             judul = inputJudul.text.toString().trim().ifBlank { "DAFTAR HADIR" },
             hariTanggal = inputHariTanggal.text.toString().trim(),
