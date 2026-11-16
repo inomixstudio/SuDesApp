@@ -176,15 +176,6 @@ class MainActivity : AppCompatActivity() {
         ) {
             startActivity(Intent(this, PengaturanActivity::class.java))
         }
-
-        tambahKartu(
-            R.id.wadah_lainnya,
-            R.drawable.ic_sinkron,
-            R.string.menu_sinkron,
-            R.string.ket_sinkron,
-        ) {
-            startActivity(Intent(this, LoginActivity::class.java))
-        }
     }
 
     private fun tambahKartu(

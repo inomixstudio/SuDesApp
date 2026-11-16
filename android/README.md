@@ -7,14 +7,18 @@ Aplikasi Android untuk operator desa yang sedang di lapangan.
 | **Buat Surat** | Formulir dinamis untuk surat biasa; hasilnya PDF |
 | **Buat NTCR** | Formulir persyaratan pernikahan N1–N6 dan N8; hasilnya PDF |
 | **Register Surat** | Daftar PDF yang pernah dibuat di perangkat ini, bisa dicetak ulang atau dibagikan |
-| **Daftar Hadir** | Buat + cetak PDF daftar hadir, tidak disimpan |
+| **Daftar Hadir** | Cetak daftar hadir kosong (baris diisi tangan), tidak disimpan |
 | **Pengaturan** | Salinan kop surat & penomoran dari desktop, status sinkronisasi, kirim surat tertunda, keluar perangkat |
-| **Sinkron** | Pasang perangkat ke Supabase (pindai QR dari desktop) |
+
+Perangkat dipasang sekali saat aplikasi pertama dibuka (pindai kode QR dari
+halaman *Sinkron Android* di desktop, atau ketik kode 4 angka). Setelah itu
+menu utama langsung muncul; sinkron ulang bisa dari **Pengaturan**.
 
 ## Alur surat
 
 1. Formulir diisi → **Cetak & Simpan PDF**.
-2. PDF langsung ditawarkan ke dialog cetak Android.
+2. PDF terbuka di penampil untuk diperiksa atau dicetak; formulir tertutup
+   otomatis, kembali ke menu utama (atau Register Surat bila tadi dari Edit).
 3. Salinan PDF tersimpan di `Downloads/SuDesApp` (Android 11+) atau folder
    `Download/SuDesApp` (Android 10 ke bawah).
 4. Isian surat ikut ke **antrean Supabase** — desktop mengimpornya ke register
