@@ -224,11 +224,30 @@ class BuatSuratActivity : AppCompatActivity() {
 
                 else -> {
                     val wadahTeks = bidangTeks(b.label + wajib(b.required), b.type)
-                    bidang[b.key] = wadahTeks.editText as EditText
+                    val isian = wadahTeks.editText as EditText
+                    bidang[b.key] = isian
+                    praisiWilayah(b.key, isian)
                     wadahForm.addView(wadahTeks)
                 }
             }
         }
+    }
+
+    /**
+     * Desa/Kecamatan/Kabupaten diisi dari pengaturan kop: identitas itu sama
+     * di semua surat, operator tidak perlu mengetiknya berulang kali. Kolom
+     * turunan (Desa Anak, Desa Pelapor, Desa Tujuan, dan sebagainya) tidak
+     * diisi — itu alamat pihak lain yang bisa berbeda.
+     */
+    private fun praisiWilayah(key: String, isian: EditText) {
+        val p = PengaturanSurat.ambil(this)
+        val nilai = when (key) {
+            "desa" -> p.namaDesa
+            "kecamatan" -> p.kecamatan
+            "kabupaten" -> p.kabupaten
+            else -> return
+        }
+        if (nilai.isNotBlank()) isian.setText(nilai)
     }
 
     /** Buat satu baris kartu daftar (dipakai tombol Tambah & isi Edit). */
@@ -601,6 +620,26 @@ class BuatSuratActivity : AppCompatActivity() {
             nilai["ahliwaris.penandatangan"] = penandatangan.joinToString("\n")
         }
 
+        // Rekening Koran: badan surat memakai $pejabat.alamat dan $rekeningkoran.*
+        // yang tidak punya kolom sendiri, jadi disusun di sini dari kolom alamat
+        // dan kolom periode — bentuknya sama dengan RekeningKoranGenerator desktop
+        // ("01 Januari 2026 s/d 31 Maret 2026").
+        if (jenis.idJenis.equals("REKENING_KORAN", ignoreCase = true)) {
+            nilai["pejabat.alamat"] = AlamatSusun.susun(
+                dusunJalan = teksBidang("alamatDusun"),
+                desa = teksBidang("alamatDesa"),
+                kecamatan = teksBidang("alamatKecamatan"),
+                kabupaten = teksBidang("alamatKabupaten"),
+                rt = teksBidang("alamatRt"),
+                rw = teksBidang("alamatRw"),
+            )
+            nilai["rekeningkoran.namaPemegang"] = teksBidang("namaRekening")
+            nilai["rekeningkoran.periode"] = listOf(
+                tanggalPanjangIndo(teksBidang("tanggalMulai")),
+                tanggalPanjangIndo(teksBidang("tanggalSelesai")),
+            ).filter { it.isNotBlank() }.joinToString(" s/d ").ifBlank { "N/A" }
+        }
+
         val tahunTarik = PengaturanSinkron.tahunTarik(this@BuatSuratActivity)
         val tahun = tahunTarik
 
@@ -670,6 +709,10 @@ class BuatSuratActivity : AppCompatActivity() {
 
                 // Langsung tawarkan cetak — operator tidak perlu cari berkasnya.
                 PdfAksi.lihat(this@BuatSuratActivity, berkas, jenis.label)
+                // Surat sudah selesai (PDF tersimpan + isian masuk antrean):
+                // tutup formulir supaya operator tidak menekan Back berkali-kali.
+                // Bila ini layar Edit, yang di bawah adalah Register Surat.
+                finish()
                 selesai()
             } catch (e: Exception) {
                 progres.visibility = View.GONE
