@@ -470,6 +470,7 @@ namespace SuDesApp.Wpf.ViewModels
                          nameof(SumberIndeksDesa2025),
                          nameof(KodeDesaTampil), nameof(TahunTampil), nameof(SkorTampil),
                          nameof(TahunDipilih),
+                         nameof(TahunCetakPilihan), nameof(TahunCetakTerpilih),
                          nameof(JumlahTahunDimuat), nameof(TahunTerakhirIdmTampil),
                          nameof(RingkasanTahunDimuat), nameof(AdaRiwayatTahun),
                          nameof(StatusTampil), nameof(IksTampil), nameof(IkeTampil),

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -52,7 +52,12 @@ namespace SuDesApp.Wpf.ViewModels
             get => _pesanStatus;
             private set
             {
-                if (SetProperty(ref _pesanStatus, value)) OnPropertyChanged(nameof(AdaPesanStatus));
+                if (SetProperty(ref _pesanStatus, value))
+                {
+                    OnPropertyChanged(nameof(AdaPesanStatus));
+                    OnPropertyChanged(nameof(PesanBilah));
+                    OnPropertyChanged(nameof(AdaPesanBilah));
+                }
             }
         }
 
@@ -71,6 +76,10 @@ namespace SuDesApp.Wpf.ViewModels
                     OnPropertyChanged(nameof(TampilkanKartuKeadaan));
                     OnPropertyChanged(nameof(JudulKeadaan));
                     OnPropertyChanged(nameof(IsiKeadaan));
+                    OnPropertyChanged(nameof(PesanBilah));
+                    OnPropertyChanged(nameof(AdaPesanBilah));
+                    OnPropertyChanged(nameof(PesanBilahAdalahGalat));
+                    OnPropertyChanged(nameof(PesanBilahAdalahPeringatan));
                 }
             }
         }
@@ -87,7 +96,13 @@ namespace SuDesApp.Wpf.ViewModels
             get => _pesanCadangan;
             private set
             {
-                if (SetProperty(ref _pesanCadangan, value)) OnPropertyChanged(nameof(AdaPesanCadangan));
+                if (SetProperty(ref _pesanCadangan, value))
+                {
+                    OnPropertyChanged(nameof(AdaPesanCadangan));
+                    OnPropertyChanged(nameof(PesanBilah));
+                    OnPropertyChanged(nameof(AdaPesanBilah));
+                    OnPropertyChanged(nameof(PesanBilahAdalahPeringatan));
+                }
             }
         }
 
@@ -119,6 +134,36 @@ namespace SuDesApp.Wpf.ViewModels
         /// pesannya sudah dibawa kartu keadaan sehingga tidak tampil dua kali.
         /// </summary>
         public bool AdaGalatDiToolbar => AdaGalat && AdaData;
+
+        // ===================== Satu bilah pesan (bukan tumpukan) =====================
+
+        /// <summary>
+        /// Satu-satunya baris pesan di toolbar. Dulu galat, pesan cadangan,
+        /// peringatan sumber, dan status proses muncul BERSAMAAN sebagai empat
+        /// baris berbeda warna — halaman terasa penuh peringatan. Sekarang
+        /// dipilih SATU pesan paling relevan: galat mengalahkan cadangan,
+        /// cadangan mengalahkan peringatan sumber, dan status proses paling
+        /// akhir (biasanya sudah tergantikan pesan lain yang lebih berguna).
+        /// </summary>
+        public string PesanBilah
+        {
+            get
+            {
+                if (AdaGalatDiToolbar) return _pesanGalat;
+                if (AdaPesanCadangan) return _pesanCadangan;
+                if (AdaPeringatanSumber) return _peringatanSumber;
+                return _pesanStatus;
+            }
+        }
+
+        /// <summary>Benar bila pesan bilah menandai masalah (merah) — bukan info netral.</summary>
+        public bool PesanBilahAdalahGalat => AdaGalatDiToolbar;
+
+        /// <summary>Benar bila pesan bilah peringatan (kuning) — cadangan/sertifikat.</summary>
+        public bool PesanBilahAdalahPeringatan => !PesanBilahAdalahGalat && (AdaPesanCadangan || AdaPeringatanSumber);
+
+        /// <summary>Bilah pesan tampil hanya bila ada sesuatu untuk disampaikan.</summary>
+        public bool AdaPesanBilah => PesanBilah.Length > 0;
 
         /// <summary>
         /// Teks petunjuk saat halaman belum pernah memuat data. Ditulis sebagai

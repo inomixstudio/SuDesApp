@@ -661,7 +661,7 @@
                                            TextWrapping="Wrap" Margin="0,4,0,0"
                                            ToolTip="Berkas JSON di profil pengguna — sunting lalu tekan Segarkan"/>
                                 <TextBlock Style="{StaticResource InformasiIsi}" FontSize="11"
-                                           Text="Formulir adminduk mengikuti Permendagri 109/2019, jadi isinya sama di seluruh kabupaten. Sumber daerah lain ada di halaman Tentang → Thanks to." TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                           Text="Formulir adminduk mengikuti Permendagri 109/2019 sehingga isinya sama di seluruh kabupaten. Sumber daerah lain ada di halaman Tentang → Terima kasih." TextWrapping="Wrap" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
 

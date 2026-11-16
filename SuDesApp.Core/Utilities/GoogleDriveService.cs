@@ -190,7 +190,11 @@ namespace SuDesApp.Utilities
                 existing = _service;
                 if (existing != null) return existing;
 
-                var drive = await Task.Run(() => BuildClient(ct: ct), ct).ConfigureAwait(false);
+                // Tidak dibungkus Task.Run lagi: BuildClientAsync sendiri sudah
+                // melempar bagian pemblokiran browser ke worker, dan bila otentikasi
+                // dibatalkan/tenggang habis, Task ini selesai — bukan menggantung
+                // sambil memegang gembok.
+                var drive = await BuildClientAsync(ct).ConfigureAwait(false);
                 _service = drive;
                 return drive;
             }
@@ -232,6 +236,16 @@ namespace SuDesApp.Utilities
             {
                 throw;
             }
+            catch (Google.Apis.Auth.OAuth2.Responses.TokenResponseException tex)
+                when (tex.Error?.Error is "access_denied" or "cancelled_by_user" or "user_cancelled")
+            {
+                // Pengguna menekan Batal/Tolak pada layar persetujuan Google.
+                // Dilempar TANPA bungkus supaya ViewModel bisa menampilkan pesan
+                // ramah "login dibatalkan", bukan galat teknis yang menyalahkan
+                // consent screen.
+                _logger.LogInformation("Login Google dibatalkan pengguna pada layar persetujuan: {Error}", tex.Error?.Error);
+                throw;
+            }
             catch (Google.GoogleApiException gex) when (gex.HttpStatusCode == System.Net.HttpStatusCode.Forbidden)
             {
                 _logger.LogWarning("Google Drive API not enabled or access forbidden: {Message}", gex.Message);
@@ -253,7 +267,7 @@ namespace SuDesApp.Utilities
             }
         }
 
-        private DriveService BuildClient(CancellationToken ct = default)
+        private async Task<DriveService> BuildClientAsync(CancellationToken ct)
         {
             if (!IsOAuthEnabled)
             {
@@ -266,10 +280,10 @@ namespace SuDesApp.Utilities
                     "tidak ada isian kredensial di dalam aplikasi.");
             }
 
-            return BuildOAuthClient(ct);
+            return await BuildOAuthClientAsync(ct).ConfigureAwait(false);
         }
 
-        private DriveService BuildOAuthClient(CancellationToken ct)
+        private async Task<DriveService> BuildOAuthClientAsync(CancellationToken ct)
         {
             try
             {
@@ -293,13 +307,13 @@ namespace SuDesApp.Utilities
                     Prompt = "select_account"
                 });
 
-                // Alur OAuth memblokir di browser — dijalankan tanpa menangkap
-                // konteks sinkronisasi UI (ConfigureAwait(false) di dalamnya)
-                // supaya tidak deadlock saat dipanggil dari thread UI WPF.
-                // GetAwaiter().GetResult() di sini BUKAN di atas async lanjutan
-                // UI: pemanggil sync ini disengaja untuk API Google yang sync.
-                var credential = Task.Run(() => AuthorizeWithScopesAsync(flow, dataStore, "sudesapp", scopes, ct))
-                    .GetAwaiter().GetResult();
+                // Otorisasi memblokir di browser sampai pengguna selesai di layar
+                // persetujuan — dilempar ke worker agar thread UI tidak tersangkut.
+                // ct ikut ke Task.Run: bila pembatalan datang SEBELUM badan tugas
+                // mulai, tugas langsung berakhir — tidak ada jalur yang menggantung.
+                var credential = await Task.Run(
+                    () => AuthorizeWithScopesAsync(flow, dataStore, "sudesapp", scopes, ct), ct)
+                    .ConfigureAwait(false);
 
                 return new DriveService(new BaseClientService.Initializer
                 {
@@ -343,7 +357,16 @@ namespace SuDesApp.Utilities
             if (token == null)
             {
                 var installedApp = new AuthorizationCodeInstalledApp(flow, new LocalServerCodeReceiver());
-                return await installedApp.AuthorizeAsync(userId, ct).ConfigureAwait(false);
+
+                // Tenggang tunggu browser: bila pengguna MENUTUP tab persetujuan
+                // (bukan menekan Tolak), penerima kode Google bisa menunggu tanpa
+                // ujung dan ikut memegang gembok GetClientAsync — semua operasi
+                // Google berikutnya menggantung dan tombol Masuk mati selamanya.
+                // Batas 10 menit cukup longgar untuk menyelesaikan login, lalu
+                // melepas gembok walau penerima kode tidak menghormati ct.
+                using var tenggang = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                tenggang.CancelAfter(TimeSpan.FromMinutes(10));
+                return await installedApp.AuthorizeAsync(userId, tenggang.Token).ConfigureAwait(false);
             }
 
             return new UserCredential(flow, userId, token);

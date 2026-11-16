@@ -139,6 +139,8 @@ public class SinkronViewModel : ObservableObject
             ((AsyncRelayCommand)MuatUlangCommand).RaiseCanExecuteChanged();
             ((AsyncRelayCommand)ImporUlangCommand).RaiseCanExecuteChanged();
             ((AsyncRelayCommand)SimpanKonfigurasiCommand).RaiseCanExecuteChanged();
+            ((AsyncRelayCommand)TerbitkanSkemaCommand).RaiseCanExecuteChanged();
+            ((AsyncRelayCommand)TerbitkanPengaturanCommand).RaiseCanExecuteChanged();
         }
     }
 

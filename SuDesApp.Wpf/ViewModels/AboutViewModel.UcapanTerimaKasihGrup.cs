@@ -15,7 +15,7 @@ using SuDesApp.Wpf.Utilities;
 
 namespace SuDesApp.Wpf.ViewModels
 {
-    /// <summary>Satu kelompok ucapan terima kasih pada bagian "Thanks to".</summary>
+    /// <summary>Satu kelompok ucapan terima kasih pada bagian "Terima kasih".</summary>
     public class UcapanTerimaKasihGrup
     {
         public UcapanTerimaKasihGrup(string ikon, string judul, List<string> butir)

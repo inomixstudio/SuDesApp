@@ -306,7 +306,6 @@ namespace SuDesApp.Data.Models
             PengantarRtRw(),
             KeteranganDomisiliUsaha(),
             IzinKeramaian(),
-            KeteranganPenghasilan(),
             KeteranganBelumMenikah(),
             UndanganRapat(),
             SuratKuasa(),
@@ -420,29 +419,6 @@ namespace SuDesApp.Data.Models
                 .Teks("Surat ini hanya berfungsi sebagai pengantar/pendataan dari desa dan tidak menggantikan izin atau persetujuan instansi yang berwenang.")
                 .Teks("Demikian surat pengantar permohonan kegiatan ini dibuat untuk " +
                       "dipergunakan sebagaimana mestinya.")
-                .Jadi());
-
-        private static ContohTemplateSurat KeteranganPenghasilan() => new(
-            "keterangan-penghasilan",
-            "Surat Keterangan Penghasilan",
-            "Keterangan",
-            "Contoh pencatatan keterangan penghasilan. Nilai dan kalimat kelayakan harus didasarkan pada data/pemeriksaan dan persyaratan program setempat.",
-            new PenyusunContoh("Surat Keterangan Penghasilan", "SURAT KETERANGAN PENGHASILAN", "472")
-                .SusunanBagian()
-                .Teks("Yang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:", RataBlokTemplate.Kiri)
-                .BagianDataDiri("Pemohon",
-                    F("Nama", wajib: true),
-                    F("NIK", TipeKolomTemplate.Nik, true),
-                    F("Alamat", TipeKolomTemplate.Paragraf, true))
-                .KelompokKolom("Data Penghasilan")
-                .Kolom("Pekerjaan/Usaha", TipeKolomTemplate.Teks, wajib: true,
-                       bawaan: "")
-                .Kolom("Penghasilan per Bulan", TipeKolomTemplate.Angka, wajib: true)
-                .Kolom("Jumlah Tanggungan", TipeKolomTemplate.Angka)
-                .Teks("Keterangan penghasilan di atas dicatat berdasarkan keterangan pemohon dan/atau pemeriksaan yang benar-benar dilakukan.")
-                .Teks("Surat ini menerangkan data penghasilan; surat ini bukan penetapan kelayakan bantuan atau program tertentu.")
-                .Teks("Demikian surat keterangan ini dibuat dengan sebenarnya untuk keperluan pengajuan " +
-                      "beasiswa/bantuan sosial dan dipergunakan sebagaimana mestinya.")
                 .Jadi());
 
         private static ContohTemplateSurat KeteranganBelumMenikah() => new(

@@ -134,7 +134,10 @@ Perbup 74/2020.
    `IsKeteranganDesa`). Tiga belas jenis saat ini memakai pola 470 dan deret
    bersama. Contoh lampiran Perbup mendukung 470 untuk beberapa surat keterangan,
    tetapi tidak membuktikan semua tiga belas jenis harus memakai kode dan deret
-   yang sama; operator Karawang perlu mengonfirmasi cakupan ini.
+   yang sama; operator Karawang perlu mengonfirmasi cakupan ini. Setiap entri
+   juga memuat teks `AcuanNomor` — ringkasan acuan nyata (regulasi daerah atau
+   blanko resmi) yang ditampilkan langsung pada kartu jenis surat di halaman
+   Pengaturan Nomor Surat, diambil dari dokumen ini.
 2. **Deret bersama adalah kebijakan aplikasi**, dihitung otomatis dari flag `IsSharedNumbering`
    (`JenisSuratRepository.GetSharedNumberingGroupAsync` → `GetNextDocumentNumberAsync`),
    tanpa melihat awalan — jadi perpindahan kode tidak memutus urutan deret baru.

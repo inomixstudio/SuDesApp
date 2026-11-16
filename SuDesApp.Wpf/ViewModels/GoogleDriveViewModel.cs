@@ -1,3 +1,4 @@
+﻿using System;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -88,18 +89,51 @@ namespace SuDesApp.Wpf.ViewModels
             BackupDatabaseCommand = new AsyncRelayCommand(BackupDatabaseAsync, () => !IsBusy);
             RestoreDatabaseCommand = new AsyncRelayCommand(RestoreDatabaseAsync, () => CanDownload && !IsBusy);
             DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => SelectedRow != null && !IsBusy);
-            AccountCommand = new AsyncRelayCommand(AccountAsync, () => !IsBusy);
-            BatalCommand = new RelayCommand(() => _navigation.ShowDefault());
+            MasukCommand = new AsyncRelayCommand(() => InitializeAsync(), () => !IsBusy);
+            GantiAkunCommand = new AsyncRelayCommand(GantiAkunAsync, () => !IsBusy);
+            // Batal juga membatalkan tunggu login yang sedang berjalan: kalau
+            // pengguna menutup tab persetujuan Google, permintaan OAuth harus
+            // berhenti — bukan menggantung dengan IsBusy sampai halamannya ditutup.
+            BatalCommand = new RelayCommand(() =>
+            {
+                BatalkanTunggu();
+                _navigation.ShowDefault();
+            });
         }
 
         public bool IsOAuthEnabled => _driveService.IsOAuthEnabled;
         public ObservableCollection<DriveItemRow> Items { get; } = new();
 
         public string HeaderTitle => "GOOGLE DRIVE — ARSIP SURAT";
-        public string HeaderSubtitle => _accountEmail != null ? $"Terhubung sebagai {_accountEmail}" : (_driveService.IsOAuthEnabled ? "Akun Google masing-masing (OAuth)" : "Login Google belum dikonfigurasi");
+        public string HeaderSubtitle => "Arsip surat dan cadangan database pada Google Drive";
+
+        /// <summary>Baris status kartu Akun Google: email terhubung atau ajakan masuk.</summary>
+        public string StatusAkun =>
+            _accountEmail != null ? $"Terhubung sebagai {_accountEmail}"
+            : _driveService.IsOAuthEnabled ? "Belum terhubung — tekan Masuk dengan Google"
+            : "Login Google belum dikonfigurasi pada paket ini";
 
         public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
         public string PathLabel { get => _pathLabel; private set => SetProperty(ref _pathLabel, value); }
+
+        /// <summary>Email akun Google yang terhubung; null bila belum login.</summary>
+        public string? AccountEmail => _accountEmail;
+
+        /// <summary>Benar bila sudah ada akun Google yang terhubung.</summary>
+        public bool IsConnected => _accountEmail != null;
+
+        /// <summary>Dipanggil setelah koneksi akun terverifikasi — dipakai halaman utama untuk segarkan badge.</summary>
+        public Action<string>? SetelahLoginTerverifikasi { get; set; }
+
+        /// <summary>Perbarui email akun dan semua tampilan yang bergantung padanya.</summary>
+        private void SetEmail(string? email)
+        {
+            _accountEmail = email;
+            OnPropertyChanged(nameof(AccountEmail));
+            OnPropertyChanged(nameof(IsConnected));
+            OnPropertyChanged(nameof(HeaderSubtitle));
+            OnPropertyChanged(nameof(StatusAkun));
+        }
 
         public bool IsBusy
         {
@@ -186,7 +220,8 @@ namespace SuDesApp.Wpf.ViewModels
         public ICommand DownloadCommand { get; }
         public ICommand OpenOnlineCommand { get; }
         public ICommand DeleteCommand { get; }
-        public ICommand AccountCommand { get; }
+        public ICommand MasukCommand { get; }
+        public ICommand GantiAkunCommand { get; }
         public ICommand BatalCommand { get; }
         public ICommand BackupDatabaseCommand { get; }
         public ICommand RestoreDatabaseCommand { get; }
@@ -194,6 +229,12 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Konek ke akun lalu muat folder root (padanan Shown + LoadFolder).</summary>
         public async Task InitializeAsync()
         {
+            // Halaman membuka InitializeAsync OTOMATIS saat dibuka; klik Masuk
+            // manual yang tumpang-tindih akan menumpuk dua alur OAuth sekaligus
+            // (dua jendela browser, dua tunggu gembok). Cukup satu — yang baru
+            // mulai dibiarkan berjalan.
+            if (IsBusy) return;
+
             IsBusy = true;
             try
             {
@@ -213,9 +254,12 @@ namespace SuDesApp.Wpf.ViewModels
 
                 StatusText = "Menghubungkan ke akun Google... Selesaikan login di browser bila diminta.";
                 var email = await _driveService.GetAccountEmailAsync(GetCts().Token);
-                _accountEmail = email;
-                OnPropertyChanged(nameof(HeaderSubtitle));
+                SetEmail(email);
                 StatusText = email != null ? $"Terhubung sebagai {email}." : "Terhubung ke akun Google.";
+                if (email != null)
+                {
+                    SetelahLoginTerverifikasi?.Invoke(email);
+                }
 
                 _currentFolderId = _driveService.GetRootFolderIdOrRoot();
                 _currentFolderName = _driveService.RootFolderId == "" ? "Google Drive" : "Folder Drive";
@@ -223,7 +267,19 @@ namespace SuDesApp.Wpf.ViewModels
             }
             catch (OperationCanceledException)
             {
-                // Dibatalkan permintaan berikutnya; bukan kegagalan yang perlu dilaporkan.
+                // Dibatalkan (tombol Batal/halaman ditutup): bukan kegagalan yang
+                // perlu dilaporkan, cukup kembalikan halaman ke keadaan netral.
+                StatusText = "Login dibatalkan.";
+            }
+            catch (Google.Apis.Auth.OAuth2.Responses.TokenResponseException tex)
+                when (tex.Error?.Error is "access_denied" or "cancelled_by_user" or "user_cancelled")
+            {
+                // Pengguna menolak persetujuan di layar Google — bukan galat,
+                // jadi jangan lempar kartu galat teknis yang menyalahkan
+                // consent screen.
+                StatusText = "Login dibatalkan.";
+                GalatMuat = "Anda membatalkan persetujuan login di layar Google — tidak ada yang berubah. "
+                            + "Tekan Masuk dengan Google bila ingin mencoba lagi.";
             }
             catch (Exception ex)
             {
@@ -616,7 +672,7 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        private async Task AccountAsync()
+        private async Task GantiAkunAsync()
         {
             if (!_driveService.IsOAuthEnabled) return;
 
@@ -630,17 +686,27 @@ namespace SuDesApp.Wpf.ViewModels
             try
             {
                 await _driveService.ClearTokenAsync(GetCts().Token);
-                _accountEmail = null;
-                OnPropertyChanged(nameof(HeaderSubtitle));
+                SetEmail(null);
                 StatusText = "Menghubungkan ke akun Google... Selesaikan login di browser bila diminta.";
-                _accountEmail = await _driveService.GetAccountEmailAsync(GetCts().Token);
-                OnPropertyChanged(nameof(HeaderSubtitle));
-                StatusText = _accountEmail != null ? $"Terhubung sebagai {_accountEmail}." : "Terhubung ke akun Google.";
+                var email = await _driveService.GetAccountEmailAsync(GetCts().Token);
+                SetEmail(email);
+                StatusText = email != null ? $"Terhubung sebagai {email}." : "Terhubung ke akun Google.";
+                if (email != null)
+                {
+                    SetelahLoginTerverifikasi?.Invoke(email);
+                }
                 await LoadFolderAsync(_currentFolderId, _currentFolderName, resolveRootName: _driveService.RootFolderId != "");
             }
             catch (OperationCanceledException)
             {
-                // Dibatalkan permintaan berikutnya; bukan kegagalan yang perlu dilaporkan.
+                // Dibatalkan (tombol Batal/halaman ditutup): kembalikan keadaan netral.
+                StatusText = "Login dibatalkan.";
+            }
+            catch (Google.Apis.Auth.OAuth2.Responses.TokenResponseException tex)
+                when (tex.Error?.Error is "access_denied" or "cancelled_by_user" or "user_cancelled")
+            {
+                // Pengguna menolak persetujuan ulang di layar Google — bukan galat.
+                StatusText = "Ganti akun dibatalkan.";
             }
             catch (Exception ex)
             {
@@ -678,7 +744,8 @@ namespace SuDesApp.Wpf.ViewModels
             if (DownloadCommand is AsyncRelayCommand d) d.RaiseCanExecuteChanged();
             if (OpenOnlineCommand is AsyncRelayCommand o) o.RaiseCanExecuteChanged();
             if (DeleteCommand is AsyncRelayCommand del) del.RaiseCanExecuteChanged();
-            if (AccountCommand is AsyncRelayCommand a) a.RaiseCanExecuteChanged();
+            if (MasukCommand is AsyncRelayCommand m) m.RaiseCanExecuteChanged();
+            if (GantiAkunCommand is AsyncRelayCommand ga) ga.RaiseCanExecuteChanged();
             if (RestoreDatabaseCommand is AsyncRelayCommand rs) rs.RaiseCanExecuteChanged();
             if (BackupDatabaseCommand is AsyncRelayCommand bk) bk.RaiseCanExecuteChanged();
         }
@@ -692,13 +759,44 @@ namespace SuDesApp.Wpf.ViewModels
             return string.IsNullOrWhiteSpace(name) ? "file" : name;
         }
 
-        private CancellationTokenSource GetCts() => _cts ??= new CancellationTokenSource();
+        /// <summary>
+        /// Batalkan semua permintaan yang sedang menunggu (login OAuth, unggah,
+        /// unduh). Cancel SAJA tanpa Dispose: tugas yang sedang berjalan bisa
+        /// membaca token ini SETELAH tombol Batal ditekan, dan membuang CTS di
+        /// sini memicu ObjectDisposedException pada pembacaan tersebut.
+        /// </summary>
+        private void BatalkanTunggu()
+        {
+            try
+            {
+                _cts?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // CTS sudah dibuang sebelumnya — tidak ada yang perlu dibatalkan.
+            }
+        }
+
+        /// <summary>
+        /// CTS untuk permintaan yang sedang berjalan. Bila CTS lama sudah
+        /// pernah dibatalkan (tombol Batal), buat yang baru — tanpa ini aksi
+        /// berikutnya langsung gagal diam-diam dengan OperationCanceledException.
+        /// </summary>
+        private CancellationTokenSource GetCts()
+        {
+            if (_cts is { IsCancellationRequested: true })
+            {
+                _cts = null;
+            }
+
+            return _cts ??= new CancellationTokenSource();
+        }
 
         public void Dispose()
         {
-            _cts?.Cancel();
-            _cts?.Dispose();
-            _cts = null;
+            // Cancel tanpa WaitForExit/Dispose langsung: tugas latar bisa membaca
+            // token setelah halaman ditutup; dispose lewat GC tidak berbahaya di sini.
+            BatalkanTunggu();
         }
     }
 }

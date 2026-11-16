@@ -77,7 +77,7 @@ namespace SuDesApp.GeneratorPdf
                     jarakBawah: 12);
 
                 badan.Paragraf("Demikian surat pengantar ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
-                    rata: Rata.Kiri,
+                    rata: Rata.Justify,
                     jarakBawah: 12);
             }
             catch (Exception ex)

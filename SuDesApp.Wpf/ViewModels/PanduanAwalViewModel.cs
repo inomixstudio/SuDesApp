@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
@@ -40,12 +39,11 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly SettingsManager _settings;
         private readonly PenomoranSuratService _penomoran;
         private readonly IPanduanAwalStore _store;
-        private readonly IServiceProvider _provider;
-        private readonly NavigationService _navigation;
         private readonly ILogger<PanduanAwalViewModel> _logger;
 
         private string _statusPesan = "Memeriksa kelengkapan data…";
         private string _pesanKesalahan = string.Empty;
+        private bool _dataDesaMasihContoh;
 
         public PanduanAwalViewModel(
             SettingsManager settings,
@@ -58,9 +56,12 @@ namespace SuDesApp.Wpf.ViewModels
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _penomoran = penomoran ?? throw new ArgumentNullException(nameof(penomoran));
             _store = store ?? throw new ArgumentNullException(nameof(store));
-            _provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // provider & navigation tidak lagi dipakai langsung: tombol langkah
+            // membuka halaman pengaturan lewat callback host (BukaPengaturanSurat /
+            // BukaPenomoranSurat), sehingga yang terbuka adalah halaman ASLI dengan
+            // data yang sudah termuat — bukan instance baru yang kosong.
 
             Langkah = new ObservableCollection<PanduanLangkahViewModel>
             {
@@ -94,6 +95,17 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>Dipicu saat pengguna menutup panduan — host memindahkannya ke Beranda.</summary>
         public event Action? PanduanDitutup;
+
+        /// <summary>
+        /// Callback pembuka halaman Pengaturan Surat pada bagian tertentu (0 = Data
+        /// Desa, 1 = Pejabat, 3 = Cetak &amp; Logo). Dipasang host (MainWindowViewModel)
+        /// supaya tombol langkah membuka INSTANCE pengaturan yang asli — VM bertahan
+        /// dengan data yang sudah termuat — bukan instance baru yang formnya kosong.
+        /// </summary>
+        public Func<int, Task>? BukaPengaturanSurat { get; set; }
+
+        /// <summary>Callback pembuka halaman Pengaturan Nomor Surat — alasan sama.</summary>
+        public Func<Task>? BukaPenomoranSurat { get; set; }
 
         public ObservableCollection<PanduanLangkahViewModel> Langkah { get; }
 
@@ -189,6 +201,17 @@ namespace SuDesApp.Wpf.ViewModels
             !_store.SudahSelesai && (!LangkahDataDesa.Selesai || !LangkahPejabatDesa.Selesai);
 
         /// <summary>
+        /// Benar bila data desa atau pejabat masih memakai contoh bawaan aplikasi.
+        /// Halaman pembuka memakainya untuk membuka Pengaturan Surat lebih dulu,
+        /// supaya surat pertama tidak memakai data contoh.
+        /// </summary>
+        public bool DataDesaMasihContoh
+        {
+            get => _dataDesaMasihContoh;
+            private set => SetProperty(ref _dataDesaMasihContoh, value);
+        }
+
+        /// <summary>
         /// Periksa ulang keadaan seluruh langkah dari data aplikasi, lalu perbarui
         /// kemajuan, teks statusbar, dan penanda "panduan tidak perlu dibuka lagi".
         /// </summary>
@@ -216,26 +239,43 @@ namespace SuDesApp.Wpf.ViewModels
         {
             if (langkah == null) return;
 
+            Task? tugas;
             try
             {
                 PesanKesalahan = string.Empty;
 
-                if (langkah.Nomor == 3)
+                tugas = langkah.Nomor switch
                 {
-                    // Pengaturan nomor surat kini halaman mandiri di navigasi utama
-                    // (PengaturanNomorSuratViewModel / PengaturanNomorSuratView).
-                    var penomoran = _provider.GetRequiredService<PengaturanNomorSuratViewModel>();
-                    _navigation.Navigate(penomoran);
-                    StatusPesan = "Membuka Pengaturan Nomor Surat…";
-                    return;
-                }
+                    3 => BukaPenomoranSurat is { } bukaNomor
+                        ? bukaNomor()
+                        : throw new InvalidOperationException(
+                            "Navigasi ke Pengaturan Nomor Surat belum siap — buka lewat menu Penomoran Surat."),
+                    _ => BukaPengaturanSurat is { } bukaSetelan
+                        ? bukaSetelan(langkah.Nomor - 1)
+                        : throw new InvalidOperationException(
+                            "Navigasi ke Pengaturan Surat belum siap — buka lewat menu Pengaturan Surat."),
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuka langkah panduan {Nomor}", langkah.Nomor);
+                PesanKesalahan = $"Langkah \"{langkah.Judul}\" gagal dibuka: {ex.Message}";
+                return;
+            }
 
-                // Langkah 1, 2, dan 4 semuanya ada di halaman Pengaturan Surat; nomor
-                // langkah (1..4) sejajar dengan urutan bagian di halaman itu.
-                var setelan = _provider.GetRequiredService<SetelanViewModel>();
-                setelan.TampilkanBagian(langkah.Nomor - 1);
-                _navigation.Navigate(setelan);
-                StatusPesan = "Membuka Pengaturan Surat…";
+            StatusPesan = "Membuka halaman pengaturan…";
+            _ = AntreBuka(tugas, langkah);
+        }
+
+        /// <summary>
+        /// Menunggu pembukaan halaman yang dijalankan lewat RelayCommand sinkron;
+        /// kegagalannya tetap tampil di halaman, bukan hilang di task latar.
+        /// </summary>
+        private async Task AntreBuka(Task tugas, PanduanLangkahViewModel langkah)
+        {
+            try
+            {
+                await tugas;
             }
             catch (Exception ex)
             {
@@ -281,6 +321,8 @@ namespace SuDesApp.Wpf.ViewModels
             LangkahPejabatDesa.Rincian = kolomPejabat.Count == 0
                 ? $"Terisi: {Isi(desa?.KepalaDesa)} (Kepala Desa) dan {Isi(desa?.SekretarisDesa)} (Sekretaris Desa)."
                 : "Masih contoh atau belum diisi: " + string.Join(", ", kolomPejabat) + ".";
+
+            DataDesaMasihContoh = kolomDesa.Count > 0 || kolomPejabat.Count > 0;
         }
 
         private void PeriksaPenomoran()

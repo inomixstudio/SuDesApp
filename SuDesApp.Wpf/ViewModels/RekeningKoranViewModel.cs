@@ -237,7 +237,8 @@ namespace SuDesApp.Wpf.ViewModels
                     NomorSurat = await NomorSuratBerikutnyaAsync();
                 }
 
-                NamaKades = desaData.KepalaDesa?.ToUpperInvariant() ?? string.Empty;
+                // Gelar tetap apa adanya — hanya nama pokok yang kapital.
+                NamaKades = desaData.KepalaDesa == null ? string.Empty : NamaFormatter.ToUpperNama(desaData.KepalaDesa);
                 var namaDesa = desaData.NamaDesa ?? string.Empty;
                 // Jabatan mengikuti lembaga yang dipilih di Pengaturan Surat:
                 // “Kepala Desa X” pada desa, “Lurah X” pada kelurahan.

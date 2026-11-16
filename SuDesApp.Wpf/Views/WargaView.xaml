@@ -214,7 +214,7 @@
                                     <ColumnDefinition Width="2*" MinWidth="140"/>
                                     <ColumnDefinition Width="115"/>
                                     <ColumnDefinition Width="95"/>
-                                    <ColumnDefinition Width="250"/>
+                                    <ColumnDefinition Width="230"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="NIK" FontWeight="Bold"
                                            FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -224,25 +224,22 @@
                                 <TextBlock Grid.Column="2" Text="No. KK" FontWeight="Bold"
                                            FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                            Margin="0,0,12,0"/>
-                                <TextBlock Grid.Column="3" Text="L/P" FontWeight="Bold"
-                                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
-                                           Margin="0,0,12,0"/>
+                                <TextBlock Grid.Column="3" Text="L/P" FontWeight="Bold" TextAlignment="Center"
+                                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Grid.Column="4" Text="TTL" FontWeight="Bold"
                                            FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                            Margin="0,0,12,0"/>
-                                <TextBlock Grid.Column="5" Text="Umur" FontWeight="Bold"
-                                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
-                                           Margin="0,0,12,0"/>
+                                <TextBlock Grid.Column="5" Text="Umur" FontWeight="Bold" TextAlignment="Center"
+                                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Grid.Column="6" Text="Alamat" FontWeight="Bold"
                                            FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                            Margin="0,0,12,0"/>
                                 <TextBlock Grid.Column="7" Text="HP" FontWeight="Bold"
                                            FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                            Margin="0,0,12,0"/>
-                                <TextBlock Grid.Column="8" Text="Status" FontWeight="Bold"
-                                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
-                                           Margin="0,0,12,0"/>
-                                <TextBlock Grid.Column="9" Text="Aksi" FontWeight="Bold"
+                                <TextBlock Grid.Column="8" Text="Status" FontWeight="Bold" TextAlignment="Center"
+                                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="9" Text="Aksi" FontWeight="Bold" TextAlignment="Center"
                                            FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
                         </Border>
@@ -267,7 +264,7 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Border BorderBrush="{DynamicResource BorderBrush}"
-                                            BorderThickness="0,0,0,1" Padding="0,7">
+                                            BorderThickness="0,0,0,1" Padding="0,8">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="130"/>
@@ -279,7 +276,7 @@
                                                 <ColumnDefinition Width="2*" MinWidth="140"/>
                                                 <ColumnDefinition Width="115"/>
                                                 <ColumnDefinition Width="95"/>
-                                                <ColumnDefinition Width="250"/>
+                                                <ColumnDefinition Width="230"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="{Binding NIK}"
                                                        VerticalAlignment="Top"/>
@@ -290,36 +287,67 @@
                                             <TextBlock Grid.Column="2" Text="{Binding NoKK}"
                                                        VerticalAlignment="Top" Margin="0,0,12,0"/>
                                             <TextBlock Grid.Column="3" Text="{Binding JenisKelaminRingkas}"
+                                                       TextAlignment="Center"
                                                        VerticalAlignment="Top" Margin="0,0,12,0"/>
                                             <TextBlock Grid.Column="4" Text="{Binding TTL}"
                                                        VerticalAlignment="Top" Margin="0,0,12,0"/>
                                             <TextBlock Grid.Column="5" Text="{Binding Umur}"
-                                                       VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                                       TextAlignment="Center"
+                                                       VerticalAlignment="Top"/>
                                             <TextBlock Grid.Column="6" Text="{Binding AlamatRingkas}"
                                                        TextWrapping="Wrap" VerticalAlignment="Top"
                                                        Margin="0,0,12,0" ToolTip="{Binding AlamatRingkas}"/>
                                             <TextBlock Grid.Column="7" Text="{Binding NomorHP}"
                                                        VerticalAlignment="Top" Margin="0,0,12,0"/>
-                                            <TextBlock Grid.Column="8" Text="{Binding StatusTampil}"
-                                                       VerticalAlignment="Top" Margin="0,0,12,0">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
+                                            <!-- Status sebagai pill berwarna (AKTIF aksen, BARU
+                                                 hijau, MENINGGAL merah, PINDAH kuning) supaya
+                                                 mutasi terlihat sekali lirik, bukan teks yang
+                                                 hanya berubah warna kadang-kadang. -->
+                                            <Border Grid.Column="8" HorizontalAlignment="Center" VerticalAlignment="Top"
+                                                    CornerRadius="9" Padding="8,2">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding StatusTampil}" Value="MENINGGAL">
-                                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                                <Setter Property="Background" Value="{DynamicResource ErrorSubtleBrush}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding StatusTampil}" Value="PINDAH">
-                                                                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                                <Setter Property="Background" Value="{DynamicResource WarningSubtleBrush}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding StatusTampil}" Value="BARU">
-                                                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                                <Setter Property="Background" Value="{DynamicResource SuccessSubtleBrush}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                            <StackPanel Grid.Column="9" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Button Content="Ubah" Padding="8,0" FontSize="11" Margin="0,0,6,0"
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding StatusTampil}" FontSize="11" FontWeight="SemiBold"
+                                                           TextAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding StatusTampil}" Value="MENINGGAL">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding StatusTampil}" Value="PINDAH">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding StatusTampil}" Value="BARU">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                            <!-- Aksi rapi satu tinggi (26 px): Ubah, combo mutasi,
+                                                 lalu Terapkan — semuanya tengah vertikal supaya
+                                                 deretannya sejajar antar baris. -->
+                                            <StackPanel Grid.Column="9" Orientation="Horizontal"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Top">
+                                                <Button Content="Ubah" Height="26" MinWidth="52" Padding="8,0" FontSize="11"
+                                                        VerticalAlignment="Center"
                                                         Command="{Binding DataContext.UbahCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource OutlineButton}"/>
@@ -327,10 +355,12 @@
                                                      baku aplikasi, lalu menekan Terapkan.
                                                      StatusSapuan dibaca code-behind lalu
                                                      diteruskan ke UbahStatusCommand. -->
-                                                <ComboBox Width="90" FontSize="11" Margin="0,0,6,0"
+                                                <ComboBox Width="80" Height="26" FontSize="11" Margin="0,0,4,0"
+                                                          VerticalAlignment="Center" VerticalContentAlignment="Center"
                                                           ItemsSource="{Binding DataContext.PilihanStatusForm, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                           SelectedItem="{Binding StatusSapuan, Mode=TwoWay}"/>
-                                                <Button Content="Terapkan" Padding="8,0" FontSize="11"
+                                                <Button Content="Terapkan" Height="26" Padding="8,0" FontSize="11"
+                                                        VerticalAlignment="Center"
                                                         Click="TerapkanStatus_Click"
                                                         ToolTip="Ubah status tinggal warga ini (mutasi)"
                                                         Style="{StaticResource OutlineButton}"/>

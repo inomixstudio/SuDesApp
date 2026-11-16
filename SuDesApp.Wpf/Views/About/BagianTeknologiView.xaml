@@ -12,9 +12,9 @@
     <!--
         Bagian "Teknologi".
 
-        Chip dikelompokkan (fondasi, data & dokumen, layanan Google, keamanan)
-        supaya terbaca sebagai susunan lapisan aplikasi, bukan satu kumpulan
-        nama tanpa urutan.
+        Chip dikelompokkan (fondasi, data & dokumen, layanan Google, keamanan,
+        sinkron Android) supaya terbaca sebagai susunan lapisan aplikasi, bukan
+        satu kumpulan nama tanpa urutan.
     -->
     <!-- Root menegaskan ulang DataContext ke VM halaman (lihat BagianDetailAplikasiView). -->
     <Grid DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=views:AboutView}}">
@@ -24,7 +24,7 @@
                     <Border Style="{StaticResource AccentSectionBar}"/>
                     <TextBlock Text="TEKNOLOGI" Style="{StaticResource SectionTitle}"/>
                 </StackPanel>
-                <TextBlock Text="Teknologi di balik SuDesApp, dari lapisan paling dasar sampai layanan yang dipanggilnya. Klik chip untuk membuka dokumentasi resminya."
+                <TextBlock Text="Teknologi di balik SuDesApp, dari lapisan paling dasar hingga layanan yang dipanggilnya. Klik chip untuk membuka dokumentasi resminya."
                            Style="{StaticResource SectionSubtitle}" Margin="0,0,0,16"/>
 
                 <ItemsControl ItemsSource="{Binding TeknologiKelompok}">

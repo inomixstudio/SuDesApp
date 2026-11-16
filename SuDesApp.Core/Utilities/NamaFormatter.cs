@@ -14,6 +14,55 @@ namespace SuDesApp.Utilities
     public static class NamaFormatter
     {
         /// <summary>
+        /// Nama dengan KAPITAL di awal tiap kata saja ("AHMAD SURYANA" → "Ahmad
+        /// Suryana", "ahmad suryana" → "Ahmad Suryana") supaya daftar terbaca
+        /// seragam walau penulisan di database bercampur. Kata bertitik dibiarkan
+        /// apa adanya (gelar singkat seperti "S.H." tidak berubah jadi "S.h."),
+        /// dan huruf setelah tanda hubung/apostrof ikut dikapitalkan
+        /// ("suryana-sholeh" → "Suryana-Sholeh", "d'jamal" → "D'Jamal").
+        /// </summary>
+        public static string KapitalTiapKata(string? nama)
+        {
+            if (string.IsNullOrWhiteSpace(nama))
+            {
+                return nama ?? string.Empty;
+            }
+
+            var kata = nama.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < kata.Length; i++)
+            {
+                // Gelar bertitik tetap apa adanya; kapitalisasi biasa justru
+                // merusaknya menjadi "S.h." / "M.m.".
+                kata[i] = kata[i].Contains('.') ? kata[i] : KapitalBagian(kata[i]);
+            }
+            return string.Join(" ", kata);
+        }
+
+        /// <summary>Kapital di awal kata dan setelah tanda hubung/apostrof, sisanya kecil.</summary>
+        private static string KapitalBagian(string kata)
+        {
+            var huruf = kata.ToCharArray();
+            bool kapitalBerikut = true;
+            for (int i = 0; i < huruf.Length; i++)
+            {
+                char c = huruf[i];
+                if (c == '-' || c == '\'')
+                {
+                    kapitalBerikut = true;
+                }
+                else if (kapitalBerikut)
+                {
+                    huruf[i] = char.ToUpperInvariant(c);
+                    kapitalBerikut = false;
+                }
+                else
+                {
+                    huruf[i] = char.ToLowerInvariant(c);
+                }
+            }
+            return new string(huruf);
+        }
+        /// <summary>
         /// Gelar/honorifik yang ditulis SEBELUM nama (tetap apa adanya):
         /// gelar akademik, keagamaan, kebangsawanan, dan kerohanian.
         /// </summary>

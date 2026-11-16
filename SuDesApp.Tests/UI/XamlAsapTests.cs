@@ -37,7 +37,8 @@ namespace SuDesApp.Tests.UI
                     // resolusi StaticResource). Satu halaman yang rusak tidak boleh
                     // hanya lolos karena bukan bagian dari daftar pendek.
                     var jenisHalaman = typeof(App).Assembly.GetTypes()
-                        .Where(t => t.Namespace == "SuDesApp.Wpf.Views"
+                        .Where(t => (t.Namespace == "SuDesApp.Wpf.Views"
+                                || t.Namespace == "SuDesApp.Wpf.Views.About")
                             && typeof(FrameworkElement).IsAssignableFrom(t)
                             && !t.IsAbstract
                             && t.GetConstructor(Type.EmptyTypes) is not null)

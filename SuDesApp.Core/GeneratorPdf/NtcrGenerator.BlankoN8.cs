@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
@@ -20,7 +20,9 @@ namespace SuDesApp.GeneratorPdf
         // =====================================================================
         private void ComposeN8(BadanSurat badan, SuratData suratData, DesaData desa, WargaData warga, NtcrData ntcr, string keteranganTextBox)
         {
-            badan.Blok(c => KopSurat.Gambar(c, desa, CariLogoPath()));
+            // Jarak kop–judul mengikuti kerapatan yang berlaku (pola SuratGeneratorBase)
+            // supaya judul/nomor tidak menempel pada garis kop ganda.
+            badan.Blok(c => KopSurat.Gambar(c.PaddingBottom(KerapatanSurat.Aktif.JarakKopJudul), desa, CariLogoPath()));
             badan.Blok(c => SuratRenderer.JudulDanNomor(c, "SURAT KETERANGAN NUMPANG NIKAH", HitungNomorSurat(suratData)));
 
             badan.Paragraf("Yang bertandatangan di bawah ini :", jarakBawah: 8);
@@ -33,7 +35,7 @@ namespace SuDesApp.GeneratorPdf
             badan.Paragraf("Dengan ini menerangkan bahwa :", jarakAtas: 10, jarakBawah: 8);
             TabelBaris(badan, new List<(string, string?)>
             {
-                ("Nama", NamaFormatter.ToUpperNama(warga.Nama)),
+                ("Nama", NamaAtauTitik(warga.Nama)),
                 ("Tempat, Tgl. Lahir", TempatTanggalLahir(warga.TempatLahir, warga.TanggalLahir)),
                 ("Jenis Kelamin", Isi(string.IsNullOrWhiteSpace(warga.JenisKelamin) ? "Laki-laki" : warga.JenisKelamin)),
                 ("Kewarganegaraan", Isi(warga.Kewarganegaraan ?? "WNI")),
@@ -57,7 +59,7 @@ namespace SuDesApp.GeneratorPdf
             badan.Paragraf("Dengan seorang perempuan :", jarakAtas: 10, jarakBawah: 6);
             TabelBaris(badan, new List<(string, string?)>
             {
-                ("Nama", NamaFormatter.ToUpperNama(ntcr.NamaIstri)),
+                ("Nama", NamaAtauTitik(ntcr.NamaIstri)),
                 ("Tempat, Tgl. Lahir", TempatTanggalLahir(ntcr.TempatLahirIstri, ntcr.TanggalLahirIstri)),
                 ("Alamat", Isi(ntcr.AlamatIstri)),
                 ("Kecamatan", Isi(ntcr.KecamatanIstri)),

@@ -108,6 +108,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -154,32 +155,69 @@
             </Grid>
         </Border>
 
+        <!-- Bilah saringan: kata kunci menimbulkan judul/keterangan/jalur berkas -->
+        <Border Grid.Row="2" Style="{StaticResource ToolbarCard}" Margin="0,10,0,0">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Bersihkan" Style="{StaticResource OutlineButton}"
+                        Padding="12,0" VerticalAlignment="Center" Margin="10,0,0,0"
+                        Command="{Binding BersihkanSaringanCommand}"
+                        Visibility="{Binding AdaSaringan, Converter={StaticResource BoolToVis}}"
+                        ToolTip="Tampilkan semua dokumen lagi"/>
+                <TextBlock DockPanel.Dock="Left" FontFamily="{StaticResource AppIconFont}"
+                           Text="{x:Static u:IkonMenu.Cari}" FontSize="14" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,9,0"/>
+                <TextBox Style="{StaticResource FormField}" VerticalContentAlignment="Center"
+                         AutomationProperties.Name="Cari dokumen"
+                         Text="{Binding TeksCari, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Cari dokumen menurut judul, penjelasan, atau nama berkas"/>
+            </DockPanel>
+        </Border>
+
         <!-- Daftar dokumen, dikelompokkan menurut jenisnya -->
-        <ScrollViewer Grid.Row="2" Margin="0,14,0,0"
-                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl ItemsSource="{Binding Kelompok}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Margin="0,0,0,6">
-                            <StackPanel Orientation="Horizontal" Margin="2,0,0,10">
-                                <Border Style="{StaticResource AccentSectionBar}"/>
-                                <TextBlock Text="{Binding Nama}" FontSize="14" FontWeight="Bold"
-                                           VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TextBrush}"/>
-                                <TextBlock Text="{Binding Keterangan}" FontSize="11" Margin="10,0,0,0"
-                                           VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="700"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <Grid Grid.Row="3" Margin="0,10,0,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding KelompokTampil}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal" Margin="2,0,0,10">
+                                    <Border Style="{StaticResource AccentSectionBar}"/>
+                                    <TextBlock Text="{Binding Nama}" FontSize="14" FontWeight="Bold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextBrush}"/>
+                                    <TextBlock Text="{Binding Keterangan}" FontSize="11" Margin="10,0,0,0"
+                                               VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="700"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </StackPanel>
+                                <ItemsControl ItemsSource="{Binding Dokumen}"
+                                              ItemTemplate="{StaticResource KartuDokumen}"/>
                             </StackPanel>
-                            <ItemsControl ItemsSource="{Binding Dokumen}"
-                                          ItemTemplate="{StaticResource KartuDokumen}"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Keadaan kosong: kata kunci tidak menemukan apa pun -->
+            <Border Background="{DynamicResource PanelBrush}" CornerRadius="10"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    Padding="24,22" Margin="0,0,0,2"
+                    Visibility="{Binding SaringanTanpaHasil, Converter={StaticResource BoolToVis}}">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="{x:Static u:IkonMenu.Cari}" FontFamily="{StaticResource AppIconFont}"
+                               FontSize="28" Opacity="0.55" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="Tidak ada dokumen yang cocok"
+                               FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,8,0,0"
+                               Foreground="{DynamicResource TextBrush}"/>
+                    <TextBlock Text="Coba kata lain — misalnya surat, penomoran, atau cadangan — atau tekan Bersihkan untuk melihat semua dokumen."
+                               FontSize="11" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="380" Margin="0,4,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
 
         <!-- Statusbar -->
-        <c:AppStatusBar Grid.Row="3" Margin="0,14,0,0"
+        <c:AppStatusBar Grid.Row="4" Margin="0,10,0,0"
                         StatusText="{Binding VersionFooter, FallbackValue='Dokumentasi'}"/>
     </Grid>
 </UserControl>

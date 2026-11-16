@@ -432,7 +432,8 @@ namespace SuDesApp.GeneratorPdf
                     // Jabatan mengikuti lembaga: “LURAH …” pada kelurahan.
                     column.Item().AlignCenter().Text($"{KopSurat.KataPejabat(desa)} {(desa.NamaDesa ?? string.Empty).ToUpperInvariant()}".ToUpperInvariant());
                     column.Item().Height(Landscape ? 30 : 55);
-                    column.Item().AlignCenter().Text((desa.KepalaDesa ?? "...........................").ToUpperInvariant()).Bold().Underline();
+                    // Gelar tetap apa adanya — hanya nama pokok yang kapital.
+                    column.Item().AlignCenter().Text(NamaFormatter.ToUpperNama(desa.KepalaDesa) ?? "...........................").Bold().Underline();
                     // NIP hanya untuk pejabat ASN kelurahan (Lurah).
                     string nipPejabat = KopSurat.IsKelurahan(desa)
                         ? (desa.NipKepalaDesa ?? string.Empty).Trim()

@@ -33,6 +33,9 @@ namespace SuDesApp.Services
         /// <summary>Format bawaan aplikasi (dari berkas konfigurasi bawaan).</summary>
         public string FormatBawaan { get; set; } = string.Empty;
 
+        /// <summary>Teks acuan nomor nyata untuk jenis ini (dari berkas konfigurasi); boleh kosong.</summary>
+        public string AcuanNomor { get; set; } = string.Empty;
+
         /// <summary>Awalan nomor yang sedang dipakai (bagian sebelum '/' pertama).</summary>
         public string Awalan { get; set; } = string.Empty;
 
@@ -583,6 +586,7 @@ namespace SuDesApp.Services
                         DisplayName = string.IsNullOrWhiteSpace(e.DisplayName) ? e.NamaJenis : e.DisplayName,
                         Format = e.NomorFormat,
                         FormatBawaan = e.NomorFormat,
+                        AcuanNomor = e.AcuanNomor,
                         IsSharedNumbering = e.IsSharedNumbering
                     });
                 }
@@ -609,6 +613,9 @@ namespace SuDesApp.Services
 
             [JsonPropertyName("NomorFormat")]
             public string NomorFormat { get; set; } = string.Empty;
+
+            [JsonPropertyName("AcuanNomor")]
+            public string AcuanNomor { get; set; } = string.Empty;
 
             [JsonPropertyName("IsSharedNumbering")]
             public bool IsSharedNumbering { get; set; }

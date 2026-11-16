@@ -33,7 +33,7 @@
                             <Border Style="{StaticResource AccentSectionBar}"/>
                             <TextBlock Text="FITUR UTAMA" Style="{StaticResource SectionTitle}"/>
                         </StackPanel>
-                        <TextBlock Text="Semua yang bisa dilakukan SuDesApp, disusun menurut pekerjaan yang dijalankan di kantor desa."
+                        <TextBlock Text="Seluruh kemampuan SuDesApp, dikelompokkan menurut pekerjaan sehari-hari di kantor desa."
                                    Style="{StaticResource SectionSubtitle}"/>
                     </StackPanel>
 

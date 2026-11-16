@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
+using SuDesApp.Utilities;
 
 namespace SuDesApp.GeneratorPdf
 {
@@ -157,7 +158,7 @@ namespace SuDesApp.GeneratorPdf
                         col.Item().AlignCenter().Text("Mengetahui,");
                         col.Item().AlignCenter().Text($"{KopSurat.KataPejabat(_desaInfo).ToUpperInvariant()} {_desaInfo.NamaDesa?.ToUpper()}");
                         col.Item().Height(50);
-                        col.Item().AlignCenter().Text((_desaInfo.KepalaDesa ?? "...........................").ToUpper()).Underline().SemiBold();
+                        col.Item().AlignCenter().Text(NamaFormatter.ToUpperNama(_desaInfo.KepalaDesa) ?? "...........................").Underline().SemiBold();
                         // NIP hanya untuk pejabat ASN kelurahan (Lurah).
                         string nipPejabat = KopSurat.IsKelurahan(_desaInfo)
                             ? (_desaInfo.NipKepalaDesa ?? string.Empty).Trim()
@@ -174,7 +175,7 @@ namespace SuDesApp.GeneratorPdf
                         col.Item().AlignCenter().Text(locationAndDate);
                         col.Item().AlignCenter().Text("SEKRETARIS DESA");
                         col.Item().Height(50);
-                        col.Item().AlignCenter().Text((_desaInfo.SekretarisDesa ?? "...........................").ToUpper()).Underline().SemiBold();
+                        col.Item().AlignCenter().Text(NamaFormatter.ToUpperNama(_desaInfo.SekretarisDesa) ?? "...........................").Underline().SemiBold();
                     });
                 });
             });

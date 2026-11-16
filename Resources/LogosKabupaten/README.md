@@ -22,6 +22,27 @@ Daftar yang **belum** tersedia selalu dibuat ulang oleh skrip
 [`LOGO_YANG_HILANG.txt`](LOGO_YANG_HILANG.txt) — saat ini kosong, dan bila
 sebuah kode masuk daftar itu lagi, uji cakupan akan gagal.
 
+## Kemasan instalasi: satu arsip, bukan 514 berkas
+
+Folder ini adalah **sumber kebenaran + asal-usul** di repo, tetapi yang ikut
+instalasi bukan berkas-berkas mentahnya — melainkan satu arsip
+[`../LambangKabupaten.zip`](../LambangKabupaten.zip) (±20 MB berisi seluruh
+lambang yang sudah dikecilkan: sisi maksimum 512 px, maksimum 256 warna).
+Alasannya: kop surat menggambar logo dalam kotak 60 pt (±250 px pada cetak
+300 dpi), jadi berkas ±1 MB tidak menambah mutu apa pun, dan 514 berkas
+mentah (±214 MB) membuat instalasi membengkak tanpa guna.
+
+- Runtime membaca arsip lewat `LogoKabupaten` (`SuDesApp.Core/Utilities/LogoKabupaten.cs`):
+  folder pengguna tetap dihormati lebih dulu, sisanya diekstrak sekali per
+  kode ke `%LocalAppData%\SuDesApp\cache-lambang` (folder cache, boleh dihapus).
+- Jalankan ulang `py -3 Tools/siapkan-lambang-kabupaten.py` SETIAP kali isi
+  folder ini berubah (tambahan/perbaikan lambang), lalu commit arsipnya —
+  arsip dibuat deterministik (penanda waktu tetap) supaya diff git hanya
+  muncul bila isinya benar-benar berubah.
+- Berkas mentah di folder ini tetap dikunci asal-usulnya oleh `sumber.json`
+  dan `Tools/verifikasi-logo-kabupaten.py` — proses pengecilan tidak
+  mengubah berkas sumber.
+
 ## Sumber & verifikasi (penting sebelum menambah berkas)
 
 Setiap berkas **wajib** punya entri di [`sumber.json`](sumber.json): nama

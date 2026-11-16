@@ -191,7 +191,7 @@
 
                         <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding MerekPengembang}" Style="{StaticResource MerekJudul}"/>
-                            <TextBlock Text="Software developer — pengembangan, pemeliharaan, dan dukungan teknis aplikasi desa."
+                            <TextBlock Text="Pengembang perangkat lunak — merancang, memelihara, dan mendukung penggunaan aplikasi desa."
                                        FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
 
@@ -207,12 +207,12 @@
                                     </StackPanel>
                                 </Border>
 
-                                <Border Tag="{Binding RepoUrl}" Style="{StaticResource TautanKartu}"
+                                <Border Tag="{Binding UrlWebsite}" Style="{StaticResource TautanKartu}"
                                         MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
-                                        ToolTip="{Binding RepoUrl}">
+                                        ToolTip="{Binding UrlWebsite}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{x:Static u:IkonMenu.Kode}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0" FontFamily="{StaticResource AppIconFont}"/>
-                                        <TextBlock Text="{Binding RepoTampil}" FontSize="13" FontWeight="SemiBold"
+                                        <TextBlock Text="{x:Static u:IkonMenu.Dunia}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0" FontFamily="{StaticResource AppIconFont}"/>
+                                        <TextBlock Text="{Binding WebsiteTampil}" FontSize="13" FontWeight="SemiBold"
                                                    VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
                                     </StackPanel>
                                 </Border>

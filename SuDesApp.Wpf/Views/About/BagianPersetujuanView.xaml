@@ -18,7 +18,7 @@
                     <Border Style="{StaticResource AccentSectionBar}"/>
                     <TextBlock Text="PERSETUJUAN DOKUMEN" Style="{StaticResource SectionTitle}"/>
                 </StackPanel>
-                <TextBlock Text="Versi Kebijakan Privasi dan Syarat &amp; Ketentuan yang Anda setujui di komputer ini. Persetujuan diminta saat aplikasi pertama kali dipakai atau diaktifkan, dan diminta ulang bila versi dokumennya diperbarui."
+                <TextBlock Text="Versi Kebijakan Privasi dan Syarat &amp; Ketentuan yang disetujui di komputer ini. Persetujuan diminta saat aplikasi pertama kali dipakai dan diminta ulang bila versi dokumennya diperbarui."
                            Style="{StaticResource SectionSubtitle}" Margin="0,0,0,14"/>
 
                 <!-- Ringkasan: kapan terakhir menyetujui / berapa dokumen tercatat -->

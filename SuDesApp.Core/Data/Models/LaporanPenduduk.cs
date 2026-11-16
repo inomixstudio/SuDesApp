@@ -20,7 +20,8 @@ namespace SuDesApp.Data.Models
         Rt = 5,
         StatusWarga = 6,
         KartuKeluarga = 7,
-        KepalaKeluarga = 8
+        KepalaKeluarga = 8,
+        Pekerjaan = 9
     }
 
     /// <summary>Satu tabel laporan: judul, catatan kaki, dan baris datanya.</summary>
@@ -74,6 +75,7 @@ namespace SuDesApp.Data.Models
             JenisTabelLaporan.KepalaKeluarga,
             JenisTabelLaporan.KelompokUsia,
             JenisTabelLaporan.Pendidikan,
+            JenisTabelLaporan.Pekerjaan,
             JenisTabelLaporan.Agama,
             JenisTabelLaporan.StatusPerkawinan,
             JenisTabelLaporan.Rt,
@@ -183,6 +185,11 @@ namespace SuDesApp.Data.Models
             JenisTabelLaporan.Pendidikan => TabelSederhana(
                 "Warga Menurut Pendidikan Terakhir", "Jenjang pendidikan", r.PerPendidikan, r.TotalSeluruh,
                 "Mencakup seluruh warga terdata, bukan hanya yang masih tinggal di desa."),
+            JenisTabelLaporan.Pekerjaan => TabelSederhana(
+                "Warga Menurut Pekerjaan", "Pekerjaan", r.PerPekerjaan, r.TotalSeluruh,
+                "Mencakup seluruh warga terdata, bukan hanya yang masih tinggal di desa. "
+                + "Pekerjaan adalah teks isian bebas; tulisan yang mirip belum disatukan. "
+                + "Warga tanpa pekerjaan tercatat pada baris \"(tidak diisi)\"."),
             JenisTabelLaporan.Agama => TabelSederhana(
                 "Warga Menurut Agama", "Agama", r.PerAgama, r.TotalSeluruh,
                 "Mencakup seluruh warga terdata, bukan hanya yang masih tinggal di desa."),

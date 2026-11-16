@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using SudesPdf.Core;
 using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
 using SuDesApp.Utilities;
@@ -28,6 +29,8 @@ namespace SuDesApp.GeneratorPdf
     /// kolom berkas "DATA PERANGKAT" (dikelompokkan agar mudah diisi), ditutup
     /// blok tanda tangan. Isian yang belum ada ditulis garis titik-titik supaya
     /// bentuk formulirnya tetap terlihat; kolom "Desa" sudah terisi nama desa.
+    ///
+    /// Hasilnya selalu SATU halaman, pada kertas A4 maupun F4.
     /// </summary>
     public class FormulirPerangkatGenerator
     {
@@ -57,8 +60,39 @@ namespace SuDesApp.GeneratorPdf
             // Nama wilayah dipakai di kop dan blok tanda tangan; pakai salinan
             // yang sudah bersih supaya "Desa null" tidak pernah tercetak.
             var desa = KopSurat.DesaBersih(data.Desa);
-            new FormulirPerangkatDocument(data, desa, _config).GeneratePdf(outputStream);
+
+            // Blanko ini sengaja SATU halaman. Susunan normal dipakai lebih dulu;
+            // bila belum muat (mis. alamat desa yang panjang membuat kop tambah
+            // baris), ulangi dengan jarak yang lebih rapat sampai muat. Yang
+            // diubah hanya jarak vertikal — ukuran huruf tetap sama, jadi bentuk
+            // blanko dan keterbacaannya tidak berubah di tingkat manapun.
+            byte[] hasil = Array.Empty<byte>();
+            foreach (float rapat in Kerapatan)
+            {
+                using var sementara = new MemoryStream();
+                new FormulirPerangkatDocument(data, desa, _config, rapat)
+                    .GeneratePdf(sementara, out int halaman);
+
+                hasil = sementara.ToArray();
+                if (halaman == 1)
+                {
+                    break;
+                }
+
+                _logger.LogDebug(
+                    "Formulir pendataan belum muat satu halaman (rapat {Rapat}, halaman {Halaman})",
+                    rapat, halaman);
+            }
+
+            outputStream.Write(hasil, 0, hasil.Length);
         }
+
+        /// <summary>
+        /// Tingkat kerapatan jarak vertikal yang dicoba berurutan: 1 = susunan
+        /// normal, makin kecil makin rapat. Tingkat terakhir selalu dipakai bila
+        /// yang lain belum muat, supaya pemanggil tetap menerima berkas PDF.
+        /// </summary>
+        private static readonly float[] Kerapatan = { 1.0f, 0.8f, 0.6f, 0.45f, 0.3f };
     }
 
     internal class FormulirPerangkatDocument : IDocument
@@ -71,12 +105,22 @@ namespace SuDesApp.GeneratorPdf
         private readonly AppConfig _config;
         private readonly CultureInfo _culture = new("id-ID");
 
-        public FormulirPerangkatDocument(FormulirPerangkatData data, DesaData desa, AppConfig config)
+        /// <summary>
+        /// Pengali jarak vertikal: 1 = susunan normal, lebih kecil = lebih rapat.
+        /// Hanya jarak yang diubah; ukuran huruf dan isi blanko tetap sama.
+        /// </summary>
+        private readonly float _rapat;
+
+        public FormulirPerangkatDocument(FormulirPerangkatData data, DesaData desa, AppConfig config, float rapat = 1f)
         {
             _data = data;
             _desa = desa;
             _config = config;
+            _rapat = rapat;
         }
+
+        /// <summary>Skala jarak vertikal supaya blanko tetap muat satu halaman.</summary>
+        private float J(float normal) => normal * _rapat;
 
         public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
 
@@ -92,9 +136,9 @@ namespace SuDesApp.GeneratorPdf
             container.Page(page =>
             {
                 page.Size(UkuranHalaman());
-                page.MarginTop(32, Unit.Point);
+                page.MarginTop(J(32), Unit.Point);
                 page.MarginRight(45, Unit.Point);
-                page.MarginBottom(24, Unit.Point);
+                page.MarginBottom(J(24), Unit.Point);
                 page.MarginLeft(45, Unit.Point);
                 page.DefaultTextStyle(x => x.FontFamily("Times New Roman").FontSize(10));
 
@@ -108,9 +152,9 @@ namespace SuDesApp.GeneratorPdf
             container.Column(column =>
             {
                 column.Item().Element(ComposeKopSurat);
-                column.Item().PaddingTop(12).AlignCenter()
+                column.Item().PaddingTop(J(12)).AlignCenter()
                     .Text(_data.Judul).FontSize(14).SemiBold().Underline();
-                column.Item().PaddingTop(2).AlignCenter()
+                column.Item().PaddingTop(J(2)).AlignCenter()
                     .Text("Isian mengikuti kolom berkas DATA PERANGKAT (18 kolom)")
                     .FontSize(9).FontColor(Colors.Grey.Darken1);
             });
@@ -127,9 +171,9 @@ namespace SuDesApp.GeneratorPdf
         {
             container.Column(column =>
             {
-                column.Item().PaddingTop(8).Element(ComposePetunjuk);
-                column.Item().PaddingTop(6).Element(ComposeIsian);
-                column.Item().PaddingTop(4).ShowEntire().Element(ComposeTandaTangan);
+                column.Item().PaddingTop(J(8)).Element(ComposePetunjuk);
+                column.Item().PaddingTop(J(6)).Element(ComposeIsian);
+                column.Item().PaddingTop(J(4)).ShowEntire().Element(ComposeTandaTangan);
             });
         }
 
@@ -137,17 +181,17 @@ namespace SuDesApp.GeneratorPdf
         private void ComposePetunjuk(IContainer container)
         {
             container.Border(0.75f).BorderColor(Colors.Grey.Darken1)
-                .Background(Colors.Grey.Lighten4).Padding(8)
+                .Background(Colors.Grey.Lighten4).Padding(J(8))
                 .Column(column =>
                 {
                     column.Item().Text("Petunjuk pengisian:").SemiBold().FontSize(9.5f);
-                    column.Item().PaddingTop(2).Text(
+                    column.Item().PaddingTop(J(2)).Text(
                         "1. Isi dengan huruf kapital dan tinta hitam; tanggal ditulis dd-mm-yyyy.\n" +
                         "2. Kolom yang belum ada diisi tanda \u201c-\u201d, jangan dikosongkan.\n" +
                         "3. Kolom JABATAN memakai nama jabatan resmi (mis. Sekretaris Desa, Kaur Keuangan, " +
                         "Kasi Pelayanan, Kadus).\n" +
                         "4. Lampirkan salinan KTP/KK, ijazah terakhir, serta rekomendasi/SK bila sudah ada.")
-                        .FontSize(8.5f).LineHeight(1.3f);
+                        .FontSize(8.5f).LineHeight(MathF.Max(1.05f, 1.3f * _rapat));
                 });
         }
 
@@ -198,9 +242,9 @@ namespace SuDesApp.GeneratorPdf
         /// <summary>Satu baris isian: label, titik dua, dan nilai (garis titik-titik bila kosong).</summary>
         private void Baris(TableDescriptor table, string label, string? nilai, string? petunjuk)
         {
-            table.Cell().Element(SelLabel).Text(label).FontSize(9.5f);
-            table.Cell().Element(SelLabel).AlignCenter().Text(":").FontSize(9.5f);
-            table.Cell().Element(SelNilai).Column(column =>
+            table.Cell().Element(c => SelLabel(c, _rapat)).Text(label).FontSize(9.5f);
+            table.Cell().Element(c => SelLabel(c, _rapat)).AlignCenter().Text(":").FontSize(9.5f);
+            table.Cell().Element(c => SelNilai(c, _rapat)).Column(column =>
             {
                 column.Item().Text(string.IsNullOrWhiteSpace(nilai) ? GarisIsian : nilai.Trim())
                     .FontSize(9.5f);
@@ -214,7 +258,7 @@ namespace SuDesApp.GeneratorPdf
         /// <summary>Judul kelompok isian — menutupi ketiga kolom tabel.</summary>
         private void Bagian(TableDescriptor table, string judul)
         {
-            table.Cell().ColumnSpan(3).PaddingTop(4).PaddingBottom(1)
+            table.Cell().ColumnSpan(3).PaddingTop(J(4)).PaddingBottom(J(1))
                 .BorderBottom(0.75f).BorderColor(Colors.Grey.Darken2)
                 .Text(judul).SemiBold().FontSize(9.5f);
         }
@@ -222,9 +266,9 @@ namespace SuDesApp.GeneratorPdf
         // Padding baris sengaja rapat: 18 baris isian + petunjuk + tanda tangan
         // harus muat pada SATU halaman portrait, jangan sampai tanda tangan
         // terlempar ke halaman kedua sendirian.
-        private static IContainer SelLabel(IContainer container) => container.PaddingVertical(1.5f);
+        private static IContainer SelLabel(IContainer container, float rapat) => container.PaddingVertical(1.5f * rapat);
 
-        private static IContainer SelNilai(IContainer container) => container.PaddingVertical(1.5f);
+        private static IContainer SelNilai(IContainer container, float rapat) => container.PaddingVertical(1.5f * rapat);
 
         private void ComposeTandaTangan(IContainer container)
         {
@@ -234,43 +278,88 @@ namespace SuDesApp.GeneratorPdf
                 : $"{namaDesa}, {TanggalIndo(_data.TanggalCetak)}";
             string kepalaDesa = (_desa.KepalaDesa ?? string.Empty).Trim();
 
-            container.PaddingTop(2).Row(row =>
+            // Dua blok tanda tangan disusun sebagai tabel berkolom sama: baris
+            // yang dipakai bersama membuat garis tanda tangan di kiri (pemberi
+            // data) dan di kanan (pejabat desa) otomatis sejajar, tanpa bergantung
+            // pada tinggi baris huruf. Seluruh isi blok rata tengah.
+            container.PaddingTop(J(2)).Table(table =>
             {
-                // Kiri: diisi dan ditandatangani orang yang memberi data.
-                row.RelativeItem().Column(kiri =>
+                table.ColumnsDefinition(columns =>
                 {
-                    kiri.Item().Text("Yang memberi data,").FontSize(10);
-                    kiri.Item().Height(40);
-                    kiri.Item().AlignCenter().Text(GarisIsian).FontSize(9);
-                    kiri.Item().AlignCenter().Text("Nama terang & tanda tangan")
-                        .FontSize(8).FontColor(Colors.Grey.Darken1);
+                    columns.RelativeColumn();
+                    columns.ConstantColumn(30);
+                    columns.RelativeColumn();
                 });
 
-                row.ConstantItem(30);
+                // Baris 1: label pemberi data sejajar dengan tempat & tanggal.
+                SelTengah(table, "Yang memberi data,");
+                table.Cell();
+                SelTengah(table, tempatTanggal);
 
-                // Kanan: blok tanda tangan pejabat desa/kelurahan (nama sudah terisi
-                // dari Pengaturan Desa). Jabatan & NIP mengikuti lembaga yang dipilih.
-                row.RelativeItem().Column(kanan =>
+                // Baris 2: jabatan pejabat di kanan; sel kiri dibiarkan kosong
+                // dengan tinggi baris yang sama.
+                table.Cell();
+                table.Cell();
+                SelTengah(table, $"{KopSurat.KataPejabat(_desa)} {namaDesa}".ToUpperInvariant().Trim(), tebal: true);
+
+                // Baris 3: ruang tanda tangan — tinggi yang sama di kedua kolom.
+                table.Cell().Height(J(40));
+                table.Cell();
+                table.Cell().Height(J(40));
+
+                // Baris 4: garis tanda tangan, kini setingkat di kedua belah pihak.
+                SelTengah(table, GarisIsian, ukuran: 9f);
+                table.Cell();
+                SelTengah(
+                    table,
+                    kepalaDesa.Length == 0 ? GarisIsian : NamaFormatter.ToUpperNama(kepalaDesa),
+                    tebal: true,
+                    garisBawah: true);
+
+                // Baris 5: keterangan. NIP hanya untuk pejabat ASN kelurahan (Lurah).
+                SelTengah(table, "Nama terang & tanda tangan", ukuran: 8f, warna: Colors.Grey.Darken1);
+                table.Cell();
+                string nipPejabat = KopSurat.IsKelurahan(_desa)
+                    ? (_desa.NipKepalaDesa ?? string.Empty).Trim()
+                    : string.Empty;
+                if (!string.IsNullOrWhiteSpace(nipPejabat))
                 {
-                    // Kolom pejabat berada di sisi kanan halaman; ISI bloknya
-                    // rata tengah, sesuai bentuk baku tanda tangan surat dinas.
-                    kanan.Item().AlignCenter().Text(tempatTanggal).FontSize(10);
-                    kanan.Item().AlignCenter()
-                        .Text($"{KopSurat.KataPejabat(_desa)} {namaDesa}".ToUpperInvariant().Trim())
-                        .SemiBold().FontSize(10);
-                    kanan.Item().Height(40);
-                    kanan.Item().AlignCenter()
-                        .Text(kepalaDesa.Length == 0 ? GarisIsian : kepalaDesa.ToUpperInvariant())
-                        .Bold().Underline().FontSize(10);
-                    // NIP hanya untuk pejabat ASN kelurahan (Lurah).
-                    string nipPejabat = KopSurat.IsKelurahan(_desa)
-                        ? (_desa.NipKepalaDesa ?? string.Empty).Trim()
-                        : string.Empty;
-                    if (!string.IsNullOrWhiteSpace(nipPejabat))
-                    {
-                        kanan.Item().AlignCenter().Text($"NIP {nipPejabat}").FontSize(9);
-                    }
-                });
+                    SelTengah(table, $"NIP {nipPejabat}", ukuran: 9f);
+                }
+                else
+                {
+                    table.Cell();
+                }
+            });
+        }
+
+        /// <summary>
+        /// Sel tabel berisi teks rata tengah — dipakai blok tanda tangan supaya
+        /// kolom kiri dan kanan berbagi tinggi baris yang sama.
+        /// </summary>
+        private static void SelTengah(
+            TableDescriptor table,
+            string teks,
+            float ukuran = 10f,
+            bool tebal = false,
+            bool garisBawah = false,
+            string? warna = null)
+        {
+            table.Cell().AlignCenter().Text(t =>
+            {
+                var span = t.Span(teks).FontSize(ukuran);
+                if (tebal)
+                {
+                    span.Bold();
+                }
+                if (garisBawah)
+                {
+                    span.Underline();
+                }
+                if (warna is not null)
+                {
+                    span.FontColor(warna);
+                }
             });
         }
 

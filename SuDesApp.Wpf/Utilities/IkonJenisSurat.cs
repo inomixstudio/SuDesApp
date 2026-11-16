@@ -15,7 +15,7 @@ namespace SuDesApp.Wpf.Utilities
             SuratConstants.SKD_UMUM => IkonMenu.Dokumen,
             SuratConstants.DOMISILI_WARGA or SuratConstants.INSTANSI or SuratConstants.IJIN_TINGGAL => IkonMenu.Beranda,
             SuratConstants.SKU or SuratConstants.GARAPAN_SAWAH or SuratConstants.IZIN_KERAMAIAN => IkonMenu.Perusahaan,
-            SuratConstants.SKTM => IkonMenu.Laporan,
+            SuratConstants.SKTM or SuratConstants.PENGHASILAN => IkonMenu.Laporan,
             SuratConstants.KEMATIAN => IkonMenu.Kalender,
             SuratConstants.KENAL_LAHIR => IkonMenu.Posyandu,
             SuratConstants.AHLI_WARIS => IkonMenu.Komentar,

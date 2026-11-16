@@ -36,6 +36,11 @@ sealed class BlokBadan {
         val indentKiri: Float = 0f,
         val jarakAtas: Float = 0f,
         val jarakBawah: Float = 0f,
+        /** True = hanya dicetak bila seluruh kuncinya terisi (generator
+         *  desktop mencetak blok semacam ini di cabang "if terisi"). */
+        val opsional: Boolean = false,
+        /** True = hanya dicetak bila kuncinya TIDAK terisi (cabang "else"). */
+        val hanyaKosong: Boolean = false,
     ) : BlokBadan()
 
     data class ParagrafCampur(
@@ -45,6 +50,8 @@ sealed class BlokBadan {
         val indentKiri: Float = 0f,
         val jarakAtas: Float = 0f,
         val jarakBawah: Float = 0f,
+        val opsional: Boolean = false,
+        val hanyaKosong: Boolean = false,
     ) : BlokBadan()
 
     data class Tabel(
@@ -53,6 +60,8 @@ sealed class BlokBadan {
         val jarakAtas: Float = 0f,
         val jarakBawah: Float = 0f,
         val tebalkanNama: Boolean = true,
+        val opsional: Boolean = false,
+        val hanyaKosong: Boolean = false,
     ) : BlokBadan()
 
     data class Daftar(
@@ -60,10 +69,14 @@ sealed class BlokBadan {
         val indentKiri: Float = 0f,
         val jarakAtas: Float = 0f,
         val jarakBawah: Float = 0f,
+        val opsional: Boolean = false,
+        val hanyaKosong: Boolean = false,
     ) : BlokBadan()
 
-    /** Blok yang tidak bisa dibuat generik; dicetak sebagai catatan. */
-    data class Kustom(val deskripsi: String) : BlokBadan()
+    /** Blok yang tidak bisa dibuat generik; dirender lewat id mesin
+     *  (lihat SuratPdf) bila skema menyebut [id], atau sebagai catatan bila
+     *  tidak dikenali. */
+    data class Kustom(val deskripsi: String, val id: String = "") : BlokBadan()
 }
 
 /** Skema formulir satu jenis surat. */
@@ -130,6 +143,11 @@ data class SkemaJenis(
                 val jarakBawah = b.optDouble("jarakBawah", 0.0).toFloat()
                 val indent = b.optDouble("indent", 0.0).toFloat()
                 val indentKiri = b.optDouble("indentKiri", 0.0).toFloat()
+                // Kondisi percabangan sama seperti generator desktop: blok
+                // "opsional" hanya dicetak bila seluruh kuncinya terisi, blok
+                // "hanyaKosong" hanya bila kuncinya kosong (cabang else).
+                val opsional = b.optBoolean("opsional", false)
+                val hanyaKosong = b.optBoolean("hanyaKosong", false)
 
                 val campur = b.optJSONArray("paragrafCampur")
                 val tabel = b.optJSONArray("tabel")
@@ -150,6 +168,8 @@ data class SkemaJenis(
                             indentKiri = indentKiri,
                             jarakAtas = jarakAtas,
                             jarakBawah = jarakBawah,
+                            opsional = opsional,
+                            hanyaKosong = hanyaKosong,
                         ))
                     }
 
@@ -165,6 +185,8 @@ data class SkemaJenis(
                             jarakAtas = jarakAtas,
                             jarakBawah = jarakBawah,
                             tebalkanNama = b.optBoolean("tebalkanNama", true),
+                            opsional = opsional,
+                            hanyaKosong = hanyaKosong,
                         ))
                     }
 
@@ -176,10 +198,15 @@ data class SkemaJenis(
                             indentKiri = indentKiri,
                             jarakAtas = jarakAtas,
                             jarakBawah = jarakBawah,
+                            opsional = opsional,
+                            hanyaKosong = hanyaKosong,
                         ))
                     }
 
-                    kustom.isNotBlank() -> hasil.add(BlokBadan.Kustom(kustom))
+                    kustom.isNotBlank() -> hasil.add(BlokBadan.Kustom(
+                        deskripsi = kustom,
+                        id = b.optString("kustumId", ""),
+                    ))
 
                     else -> hasil.add(BlokBadan.Paragraf(
                         teks = b.optString("paragraf", ""),
@@ -190,6 +217,8 @@ data class SkemaJenis(
                         indentKiri = indentKiri,
                         jarakAtas = jarakAtas,
                         jarakBawah = jarakBawah,
+                        opsional = opsional,
+                        hanyaKosong = hanyaKosong,
                     ))
                 }
             }
@@ -312,8 +341,14 @@ object SkemaLokal {
     }
 
     /** Jenis surat biasa (bukan NTCR), diurutkan untuk tampilan menu. */
+    /** Jenis surat biasa (bukan NTCR), diurutkan untuk tampilan menu.
+     *
+     * TEMPLATE_SURAT tidak ikut: di desktop jenis itu tidak ada di menu
+     * Buat Surat Baru (badannya datang dari payload template tersimpan),
+     * jadi Android tidak menawarkan jenis yang tidak bisa diisi di sini.
+     */
     fun suratBiasa(ctx: Context): List<SkemaJenis> =
-        muat(ctx).values.filter { !it.ntcr }.sortedBy { it.label }
+        muat(ctx).values.filter { !it.ntcr && !it.idJenis.equals("TEMPLATE_SURAT", true) }.sortedBy { it.label }
 
     /** Jenis NTCR (N1–N6, N8), diurutkan untuk tampilan menu. */
     fun ntcr(ctx: Context): List<SkemaJenis> =

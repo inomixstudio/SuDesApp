@@ -34,6 +34,7 @@ namespace SuDesApp.Data.Models
             new() { Label = "Pengantar SKCK", Jenis = SuratConstants.PENGANTAR_SKCK },
             new() { Label = "Izin Suami / Orang Tua", Jenis = SuratConstants.IZIN_ORTU },
             new() { Label = "SKTM", Jenis = SuratConstants.SKTM },
+            new() { Label = "Keterangan Penghasilan", Jenis = SuratConstants.PENGHASILAN },
             new() { Label = "Belum Terbit", Jenis = SuratConstants.SK_BELUM_TERBIT },
             new() { Label = "Garapan Sawah", Jenis = SuratConstants.GARAPAN_SAWAH },
             new() { Label = "Kematian", Jenis = SuratConstants.KEMATIAN },

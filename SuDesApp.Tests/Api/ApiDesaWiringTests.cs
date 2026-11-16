@@ -34,7 +34,7 @@ namespace SuDesApp.Tests.Api
     /// membuka HttpListener di port bebas — jalankan berurutan supaya port tidak
     /// saling tabrakan.
     /// </remarks>
-    [Collection("ApiListener")]
+    [Collection("PreferensiBersama")]
     public class ApiDesaWiringTests
     {
         [Fact]

@@ -17,7 +17,7 @@
                     <Border Style="{StaticResource AccentSectionBar}"/>
                     <TextBlock Text="DETAIL LENGKAP" Style="{StaticResource SectionTitle}"/>
                 </StackPanel>
-                <TextBlock Text="Gambaran lengkap SuDesApp — apa saja yang bisa dilakukan aplikasi ini."
+                <TextBlock Text="Gambaran lengkap SuDesApp beserta seluruh kemampuannya."
                            Style="{StaticResource SectionSubtitle}" Margin="0,0,0,14"/>
 
                 <!-- Kutipan ringkasan -->

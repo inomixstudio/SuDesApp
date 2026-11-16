@@ -135,7 +135,14 @@
 
                 <Grid Margin="0,10,0,0"
                       Visibility="{Binding PratinjauTerbuka, Converter={StaticResource BoolToVis}}">
-                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center">
+                    <!-- Lebar Viewbox ikut dibatasi pada acuan kertas (600 px) supaya
+                         isi tidak diperbesar melebihi lebar kertas; MaxHeight menjaga
+                         tinggi total (gambar kop + blok tanda tangan) tetap di sekitar
+                         300 px. Dua-duanya menjaga pratinjau tidak menggeser formulir
+                         ke bawah saat halaman disunting. -->
+                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center"
+                             Width="{Binding PratinjauLebarKertas}"
+                             MaxHeight="330">
                         <Border Background="{DynamicResource KertasBrush}" BorderBrush="{DynamicResource KertasTepiBrush}" BorderThickness="1"
                                 CornerRadius="3" Padding="0" Width="{Binding PratinjauLebarKertas}">
                             <StackPanel>
@@ -145,46 +152,47 @@
                                        Stretch="Uniform" HorizontalAlignment="Stretch"
                                        AutomationProperties.Name="Pratinjau kop surat"/>
 
-                                <StackPanel Margin="40,0,40,14">
-                                <TextBlock Text="Blok tanda tangan di bagian bawah surat" FontSize="10"
-                                           FontFamily="{DynamicResource AppFontFamily}" Margin="0,8,0,0" Foreground="{DynamicResource KertasTintaTersierBrush}"/>
+                                <StackPanel Margin="16,8,16,12">
+                                    <TextBlock Text="Blok tanda tangan di akhir surat" FontSize="10"
+                                               FontFamily="{DynamicResource AppFontFamily}" Margin="0,0,0,6"
+                                               Foreground="{DynamicResource KertasTintaTersierBrush}"/>
 
-                                <ItemsControl ItemsSource="{Binding PratinjauPejabat}" Margin="0,4,0,0">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="{Binding PratinjauKolomPejabat}"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Margin="0,0,16,0">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding Judul, Mode=OneWay}" FontSize="10"
-                                                               FontWeight="SemiBold" FontFamily="{DynamicResource AppFontFamily}"
-                                                               Foreground="{DynamicResource KertasTintaRedupBrush}"/>
-                                                    <Border CornerRadius="8" Padding="6,1" Margin="6,0,0,0"
-                                                            Background="{DynamicResource KertasCatatanBrush}"
-                                                            Visibility="{Binding Kosong, Converter={StaticResource BoolToVis}}">
-                                                        <TextBlock Text="belum diisi" FontSize="10"
-                                                                   FontFamily="{DynamicResource AppFontFamily}" Foreground="{DynamicResource KertasCatatanTintaBrush}"/>
-                                                    </Border>
+                                    <ItemsControl ItemsSource="{Binding PratinjauPejabat}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Columns="{Binding PratinjauKolomPejabat}"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="0,0,12,0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Judul, Mode=OneWay}" FontSize="10"
+                                                                   FontWeight="SemiBold" FontFamily="{DynamicResource AppFontFamily}"
+                                                                   Foreground="{DynamicResource KertasTintaRedupBrush}"/>
+                                                        <Border CornerRadius="8" Padding="6,1" Margin="6,0,0,0"
+                                                                Background="{DynamicResource KertasCatatanBrush}"
+                                                                Visibility="{Binding Kosong, Converter={StaticResource BoolToVis}}">
+                                                            <TextBlock Text="belum diisi" FontSize="10"
+                                                                       FontFamily="{DynamicResource AppFontFamily}" Foreground="{DynamicResource KertasCatatanTintaBrush}"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Jabatan, Mode=OneWay}" FontSize="11"
+                                                               Margin="0,3,0,0" TextWrapping="Wrap"
+                                                               FontFamily="Times New Roman"
+                                                               Foreground="{DynamicResource KertasTintaKuatBrush}"/>
+                                                    <TextBlock Text="{Binding Nama, Mode=OneWay}" FontSize="13"
+                                                               FontWeight="Bold" Margin="0,8,0,0"
+                                                               TextWrapping="Wrap" FontFamily="Times New Roman"
+                                                               Foreground="{DynamicResource KertasTintaBrush}"/>
+                                                    <TextBlock Text="{Binding BarisTambahan, Mode=OneWay}" FontSize="10"
+                                                               Margin="0,2,0,0" TextWrapping="Wrap"
+                                                               Foreground="{DynamicResource KertasTintaRedupBrush}"
+                                                               Visibility="{Binding AdaBarisTambahan, Converter={StaticResource BoolToVis}}"/>
                                                 </StackPanel>
-                                                <TextBlock Text="{Binding Jabatan, Mode=OneWay}" FontSize="11"
-                                                           Margin="0,3,0,0" TextWrapping="Wrap"
-                                                           FontFamily="Times New Roman"
-                                                           Foreground="{DynamicResource KertasTintaKuatBrush}"/>
-                                                <TextBlock Text="{Binding Nama, Mode=OneWay}" FontSize="13"
-                                                           FontWeight="Bold" Margin="0,8,0,0"
-                                                           TextWrapping="Wrap" FontFamily="Times New Roman"
-                                                           Foreground="{DynamicResource KertasTintaBrush}"/>
-                                                <TextBlock Text="{Binding BarisTambahan, Mode=OneWay}" FontSize="10"
-                                                           Margin="0,2,0,0" TextWrapping="Wrap"
-                                                           Foreground="{DynamicResource KertasTintaRedupBrush}"
-                                                           Visibility="{Binding AdaBarisTambahan, Converter={StaticResource BoolToVis}}"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -207,7 +215,7 @@
                                Visibility="{Binding AdaPratinjauCatatanBersih, Converter={StaticResource BoolToVis}}"/>
                     <TextBlock TextWrapping="Wrap" FontSize="11" Margin="0,3,0,0"
                                Foreground="{DynamicResource TextSecondaryBrush}"
-                               Text="Teks dalam [kurung siku] atau garis bawah berarti kolomnya belum diisi dan surat akan mencetak penanda itu. Perubahan tersimpan setelah Anda menekan Simpan."/>
+                               Text="[Kurung siku] dan garis bawah menandai kolom yang belum diisi. Perubahan tersimpan setelah menekan Simpan."/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -453,6 +461,11 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <!-- Baris 4: Jenis Lembaga. Dulu tidak terdefinisi,
+                                         sehingga WPF menjepit elemen Grid.Row="4" ke baris
+                                         terakhir — label & radio Jenis Lembaga menimpa
+                                         Jenis Wilayah di baris 3 (teks bertumpuk). -->
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 

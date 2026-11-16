@@ -42,9 +42,6 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Tautan repositori dari konfigurasi — sumber yang sama dengan pemeriksa pembaruan.</summary>
         public string RepoUrl { get; }
 
-        /// <summary>Tautan dukungan/donasi dari konfigurasi; kosong bila tidak diisi.</summary>
-        public string UrlDukungan { get; }
-
         /// <summary>Website resmi pengembang (Sumberjaya Dev); kosong bila tidak diisi.</summary>
         public string UrlWebsite { get; }
 
@@ -56,9 +53,6 @@ namespace SuDesApp.Wpf.ViewModels
 
         /// <summary>Teks website siap tampil.</summary>
         public string WebsiteTampil { get; }
-
-        /// <summary>Teks tautan dukungan siap tampil.</summary>
-        public string DukunganTampil { get; }
 
         /// <summary>Teks surel pengembang siap tampil.</summary>
         public string EmailPengembangTampil { get; }
@@ -184,16 +178,15 @@ namespace SuDesApp.Wpf.ViewModels
         /// lengkapnya tetap ada di bagian "Detail lengkap".
         /// </summary>
         public string Tagline { get; } =
-            "Administrasi dan surat-menyurat desa dalam satu aplikasi — surat resmi ber-PDF, " +
-            "register dan agenda digital, sampai pencadangan otomatis; datanya tetap di komputer desa.";
+            "Administrasi dan surat-menyurat desa dalam satu aplikasi: surat resmi ber-PDF, " +
+            "register dan agenda digital, serta pencadangan otomatis — datanya tetap di komputer desa.";
 
         /// <summary>Deskripsi satu kalimat untuk halaman utama.</summary>
         public string DeskripsiSingkat { get; } =
             "Aplikasi administrasi dan surat-menyurat desa: pembuatan surat resmi ber-PDF, " +
-            "register & agenda digital, pencadangan otomatis ke Google Drive, hingga ekspor " +
-            "Excel/CSV/JSON — semuanya tetap tersimpan " +
-            "di komputer desa sendiri. Aplikasi ini berlangganan (bulanan atau tahunan) untuk " +
-            "menopang pengembangannya tetap jalan.";
+            "register dan agenda digital, pencadangan otomatis ke Google Drive, serta ekspor " +
+            "Excel, CSV, dan JSON — semuanya tetap tersimpan di komputer desa sendiri. " +
+            "Berlangganan bulanan atau tahunan untuk menopang pengembangan aplikasi ini.";
 
         /// <summary>
         /// Seluruh fitur utama dalam satu daftar datar — dipakai untuk hitungan
@@ -251,11 +244,11 @@ namespace SuDesApp.Wpf.ViewModels
             "Data & arsip" =>
                 "Formulir, data kependudukan, agenda, buku SK/Perdes, serta arsip IDM dan APBDes — tercatat sekali, terbaca kapan saja.",
             "Perangkat desa & verifikasi" =>
-                "Struktur perangkat desa, SK untuk banyak nama sekaligus, dan pemeriksaan keaslian surat.",
+                "Struktur perangkat desa dan SK untuk banyak nama sekaligus.",
             "Layanan digital" =>
-                "API Desa untuk sistem lain: angka agregat, data perangkat desa, dan pemeriksaan keaslian surat.",
+                "API Desa untuk sistem lain serta sinkronisasi surat dari perangkat Android masuk register desktop.",
             "Keamanan & pencadangan" =>
-                "Database tersimpan lokal, kredensial terlindungi, dan cadangan otomatis ke Google Drive.",
+                "Basis data tersimpan lokal, kredensial terlindungi, dan pencadangan otomatis ke Google Drive.",
             "Pembaruan & antarmuka" =>
                 "Pembaruan diunduh di latar belakang, penomoran yang bisa diatur, " +
                 $"{JumlahTemaPilihan} tema, dan dokumentasi offline.",
@@ -336,7 +329,7 @@ namespace SuDesApp.Wpf.ViewModels
         public IReadOnlyList<TeknologiGrup> TeknologiKelompok { get; }
 
         /// <summary>
-        /// Daftar pihak yang berjasa pada bagian "Thanks to" (kelompok + butir) —
+        /// Daftar pihak yang berjasa pada bagian "Terima kasih" (kelompok + butir) —
         /// data-driven agar nama/pihak baru mudah ditambahkan tanpa menyentuh tampilan.
         /// </summary>
         public IReadOnlyList<UcapanTerimaKasihGrup> UcapanTerimaKasih { get; }

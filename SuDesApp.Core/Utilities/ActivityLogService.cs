@@ -311,10 +311,29 @@ namespace SuDesApp.Utilities
         private const int MaxRows = 20000; // batas penyimpanan; terpangkas saat melebihi
         private readonly string _connectionString;
         private readonly ILogger<ActivityLogService> _logger;
-        private readonly BlockingCollection<ActivityEntry> _queue = new(boundedCapacity: 5000);
+        private readonly BlockingCollection<AntreanAktivitas> _queue = new(boundedCapacity: 5000);
         private readonly CancellationTokenSource _cts = new();
+        private readonly SemaphoreSlim _tulisSink = new(1, 1);
         private Task? _writerTask;
         private bool _disposed;
+
+        /// <summary>
+        /// Satu item antrean penulis latar: entri riwayat plus nomor generasi
+        /// saat dicatat. Generasi dibubuhkan di sini (bukan saat dikeluarkan
+        /// dari antrean) supaya entri yang tertinggal saat riwayat dibersihkan
+        /// bisa dibuang tanpa ikut membuang entri yang dicatat setelah
+        /// penghapusan.
+        /// </summary>
+        private readonly record struct AntreanAktivitas(ActivityEntry Entri, long Generasi);
+
+        /// <summary>
+        /// Nomor generasi yang naik setiap kali riwayat dibersihkan. Setiap
+        /// entri dibubuhi generasinya saat dicatat; penulis latar membuang
+        /// entri yang generasinya sudah tertinggal, jadi antrean yang tertinggal
+        /// tidak menulis ulang baris yang sudah dihapus sementara entri yang
+        /// dicatat setelah penghapusan tetap ditulis.
+        /// </summary>
+        private long _generasiBersih;
 
         public ActivityLogService(AppConfig appConfig, ILogger<ActivityLogService> logger)
         {
@@ -343,7 +362,7 @@ namespace SuDesApp.Utilities
             };
             if (!_queue.IsAddingCompleted)
             {
-                try { _queue.TryAdd(entry); } catch { /* antrean penuh — abaikan */ }
+                try { _queue.TryAdd(new AntreanAktivitas(entry, Volatile.Read(ref _generasiBersih))); } catch { /* antrean penuh — abaikan */ }
             }
         }
 
@@ -363,14 +382,31 @@ namespace SuDesApp.Utilities
             return rows;
         }
 
-        /// <summary>Bersihkan seluruh riwayat.</summary>
+        /// <summary>
+        /// Bersihkan seluruh riwayat. Antrean penulis latar ikut dikosongkan dan
+        /// nomor generasi naik, jadi baris yang sedang menunggu ditulis tidak
+        /// muncul lagi setelah penghapusan.
+        /// </summary>
         public async Task ClearAsync()
         {
-            await EnsureTableAsync().ConfigureAwait(false);
-            await using var conn = new SqliteConnection(_connectionString);
-            await conn.OpenAsync().ConfigureAwait(false);
-            await conn.ExecuteAsync("DELETE FROM ActivityLog").ConfigureAwait(false);
-            _logger.LogInformation("Riwayat aktivitas dibersihkan");
+            await _tulisSink.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                Interlocked.Increment(ref _generasiBersih);
+
+                // Buang antrean yang belum sempat ditulis penulis latar.
+                while (_queue.TryTake(out _)) { }
+
+                await EnsureTableAsync().ConfigureAwait(false);
+                await using var conn = new SqliteConnection(_connectionString);
+                await conn.OpenAsync().ConfigureAwait(false);
+                await conn.ExecuteAsync("DELETE FROM ActivityLog").ConfigureAwait(false);
+                _logger.LogInformation("Riwayat aktivitas dibersihkan");
+            }
+            finally
+            {
+                _tulisSink.Release();
+            }
         }
 
         /// <summary>Antrean penulis latar belakang — batch insert efisien.</summary>
@@ -380,10 +416,10 @@ namespace SuDesApp.Utilities
             {
                 try
                 {
-                    if (!_queue.TryTake(out var entry, (int)TimeSpan.FromSeconds(1).TotalMilliseconds, _cts.Token))
+                    if (!_queue.TryTake(out var item, (int)TimeSpan.FromSeconds(1).TotalMilliseconds, _cts.Token))
                         continue;
 
-                    var batch = new List<ActivityEntry> { entry };
+                    var batch = new List<AntreanAktivitas> { item };
                     while (batch.Count < 50 && _queue.TryTake(out var more))
                         batch.Add(more);
 
@@ -398,14 +434,32 @@ namespace SuDesApp.Utilities
             }
         }
 
-        private async Task WriteBatchAsync(List<ActivityEntry> batch)
+        private async Task WriteBatchAsync(List<AntreanAktivitas> batch)
         {
-            await EnsureTableAsync().ConfigureAwait(false);
-            await using var conn = new SqliteConnection(_connectionString);
-            await conn.OpenAsync().ConfigureAwait(false);
-            await conn.ExecuteAsync(@"
+            await _tulisSink.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                // Buang entri yang dicatat SEBELUM riwayat dibersihkan; entri yang
+                // dicatat setelah penghapusan (generasinya sama) tetap ditulis.
+                var sekarang = Volatile.Read(ref _generasiBersih);
+                var valid = batch.Where(a => a.Generasi == sekarang).Select(a => a.Entri).ToList();
+                if (valid.Count == 0)
+                {
+                    _logger.LogInformation("Batch riwayat aktivitas dibuang karena riwayat dibersihkan.");
+                    return;
+                }
+
+                await EnsureTableAsync().ConfigureAwait(false);
+                await using var conn = new SqliteConnection(_connectionString);
+                await conn.OpenAsync().ConfigureAwait(false);
+                await conn.ExecuteAsync(@"
 INSERT OR IGNORE INTO ActivityLog (Waktu, Pengguna, Metode, JenisDokumen, Dokumen, Aksi, Detail)
-VALUES (@Waktu, @Pengguna, @Metode, @JenisDokumen, @Dokumen, @Aksi, @Detail)", batch).ConfigureAwait(false);
+VALUES (@Waktu, @Pengguna, @Metode, @JenisDokumen, @Dokumen, @Aksi, @Detail)", valid).ConfigureAwait(false);
+            }
+            finally
+            {
+                _tulisSink.Release();
+            }
         }
 
         /// <summary>Pangkas baris lama agar tabel tidak tumbuh tanpa batas.</summary>
@@ -454,6 +508,7 @@ DELETE FROM ActivityLog WHERE Id IN (
             catch (AggregateException) { /* pembatalan — diharapkan */ }
             _cts.Dispose();
             _queue.Dispose();
+            _tulisSink.Dispose();
         }
     }
 }

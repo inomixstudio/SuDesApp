@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -27,7 +27,12 @@ namespace SuDesApp.Tests.Surat;
 /// kapital, blok tanda tangan), bukan sekadar jumlah halamannya: tata letak
 /// bersama itu milik <see cref="SuratRenderer"/> dan <see cref="KopSurat"/>, dan
 /// pernah hilang dari hasil cetak tanpa membuat uji halaman gagal.
+///
+/// Koleksi "LambangKabupaten": uji ini membaca jalur lambang lewat static
+/// LogoKabupaten (PengaturanCetak.JalurLogoEfektif) yang juga di-timpa uji
+/// LogoKabupatenArsipTests — keduanya wajib bergantian, bukan paralel.
 /// </summary>
+[Collection("LambangKabupaten")]
 public sealed class CetakContohSuratTests : IDisposable
 {
     private readonly string _folderAkar;
@@ -43,6 +48,17 @@ public sealed class CetakContohSuratTests : IDisposable
     public void Dispose()
     {
         // Folder sampel sengaja TIDAK dihapus: dipakai inspeksi visual setelah uji.
+    }
+
+    /// <summary>Repositori desa yang mengembalikan data contoh utuh — dipakai uji Template Surat yang mengambil desa dari repositori, bukan dari SuratData.</summary>
+    private sealed class DesaRepoContoh : IDesaRepository
+    {
+        public Task InitializeAsync() => Task.CompletedTask;
+        public Task<DesaData> GetInfoDesaAsync(CancellationToken cancellationToken = default) => Task.FromResult(DesaContoh());
+        public Task UpdateInfoDesaAsync(DesaData desaData) => Task.CompletedTask;
+        public Task SaveInfoDesaAsync(DesaData desaData) => Task.CompletedTask;
+        public Task<DesaData> GetInfoDesaFromCacheAsync() => Task.FromResult(DesaContoh());
+        public Task InvalidateCacheAsync() => Task.CompletedTask;
     }
 
     // ===== Dua repositori palsu: generator meng-cetak dari SuratData yang
@@ -245,6 +261,9 @@ public sealed class CetakContohSuratTests : IDisposable
         }
     }
 
+
+
+
     [Fact]
     public async Task SKDUmumCetakSatuHalaman()
     {
@@ -305,6 +324,182 @@ public sealed class CetakContohSuratTests : IDisposable
         SimpanSampel("03-pengantar-skck", pdf);
         Assert.True(pdf.Length > 1000);
         Assert.Equal(1, HitungHalaman(pdf));
+    }
+
+    [Fact]
+    public async Task PengantarSkckBlankoPemohonTandaTitik()
+    {
+        // Blanko/draft tanpa nama pemohon tidak boleh kehilangan blok Pemohon:
+        // tempatnya tetap tercetak dengan titik isian sejajar blok pejabat.
+        var config = BuatConfig();
+        var gen = new SKCKGenerator(config, new FileService(NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<SKCKGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var data = SuratContoh(SuratConstants.PENGANTAR_SKCK);
+        // Formulir baru dibuka: Warga terbentuk dari binding kosong, bukan null —
+        // nama pemohon kosong itulah kasus pratinjau blanko yang nyata.
+        data.Warga = new WargaData();
+        byte[] pdf;
+        using (PratinjauIsian.Pakai())
+        {
+            pdf = await CetakAsync(gen, data);
+        }
+        SimpanSampel("03b-pengantar-skck-blanko", pdf);
+        var teks = BacaTeks(pdf, "03b-pengantar-skck-blanko");
+        PastikanTercetak(teks, "Pemohon :", PratinjauIsian.TitikKosong);
+    }
+
+    [Fact]
+    public async Task SuratIzinOrtuCetakSatuHalaman()
+    {
+        var config = BuatConfig();
+        var gen = new IzinOrtuGenerator(config, new FileService(NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<IzinOrtuGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var data = SuratContoh(SuratConstants.IZIN_ORTU,
+            keterangan: "Yang bertanda tangan dibawah ini, Kepala Keluarga dari Ahmad Fauzi, dengan ini memberikan izin " +
+                "kepada anak kami untuk bekerja sebagai Tenaga Kerja Indonesia (TKI) di luar negeri dengan negara tujuan " +
+                "MALAYSIA melalui PT. SINAR REZEKI ABADI sesuai kontrak kerja yang berlaku.");
+        data.IzinOrtu = new IzinOrtuData
+        {
+            ID_Surat = 1,
+            ID_Anak = 1,
+            NegaraTujuan = "MALAYSIA",
+            NamaPT = "PT SINAR REZEKI ABADI",
+            NamaAnak = "Ahmad Fauzi",
+            NIKAnak = "3216011203990001",
+            TempatLahirAnak = "Karawang",
+            TanggalLahirAnak = "1999-03-12",
+            JenisKelaminAnak = "Laki-laki",
+            AgamaAnak = "Islam",
+            StatusPerkawinanAnak = "Belum Kawin",
+            PekerjaanAnak = "Buruh",
+            AlamatAnak = "Dusun Sukamaju RT 003 RW 007"
+        };
+        var pdf = await CetakAsync(gen, data);
+        SimpanSampel("13-izin-ortu", pdf);
+        var teks = BacaTeks(pdf, "13-izin-ortu");
+        PastikanTercetak(teks, "Yang bertanda tangan dibawah ini", "Demikian surat izin ini");
+        Assert.True(pdf.Length > 1000);
+        Assert.Equal(1, HitungHalaman(pdf));
+    }
+
+    [Fact]
+    public async Task TemplateSuratJarakKopJudul()
+    {
+        // Judul & nomor surat dari template tidak boleh menempel pada garis kop:
+        // jaraknya mengikuti KerapatanSurat.Aktif.JarakKopJudul seperti surat
+        // generator khusus (regresi kop-surat-template terlalu rapat).
+        var config = BuatConfig();
+        var gen = new TemplateSuratGenerator(config, new DesaRepoContoh(),
+            NullLogger<TemplateSuratGenerator>.Instance);
+
+        var template = new TemplateSuratKustom
+        {
+            Nama = "Surat Uji Kop",
+            Judul = "SURAT KETERANGAN UJI KOP",
+            PakaiKop = true,
+            PakaiNomor = true,
+            PakaiTempatTanggal = true,
+            PakaiTandaTangan = true,
+            Kolom = new List<KolomTemplateSurat>
+            {
+                new() { Kunci = "nama", Label = "Nama", Tipe = TipeKolomTemplate.Teks }
+            }
+        };
+        var nilai = new Dictionary<string, string> { ["nama"] = "Budi Santoso" };
+        var pdf = await gen.BuatPdfAsync(template, nilai, "470/001/Ds/2026", new DateTime(2026, 8, 14));
+        SimpanSampel("14-template-kop", pdf);
+        var teks = BacaTeks(pdf, "14-template-kop");
+        PastikanTercetak(teks, "SURAT KETERANGAN UJI KOP", "Sukamaju, 14 Agustus 2026");
+        Assert.Equal(1, HitungHalaman(pdf));
+    }
+
+    [Fact]
+    public async Task KeteranganPenghasilanCetakSatuHalaman()
+    {
+        // Jenis surat baru (dulu contoh template): data diri pemohon lengkap,
+        // tabel penghasilan, dan blok tanda tangan dengan pemohon di kiri.
+        var config = BuatConfig();
+        var gen = new PenghasilanGenerator(config, new FileService(NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<PenghasilanGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var data = SuratContoh(SuratConstants.PENGHASILAN);
+        data.Penghasilan = new PenghasilanData
+        {
+            PekerjaanUsaha = "Petani sawah",
+            PenghasilanPerBulan = "Rp1.500.000",
+            JumlahTanggungan = "3"
+        };
+        var pdf = await CetakAsync(gen, data);
+        SimpanSampel("15-keterangan-penghasilan", pdf);
+        var teks = BacaTeks(pdf, "15-keterangan-penghasilan");
+        PastikanTercetak(teks,
+            "SURAT KETERANGAN PENGHASILAN",
+            "NOMOR : 470/001/Ds/2026",
+            "Penghasilan per Bulan",
+            "Rp1.500.000",
+            "Pemohon :",
+            "Demikian surat keterangan");
+        Assert.True(pdf.Length > 1000);
+        Assert.Equal(1, HitungHalaman(pdf));
+    }
+
+    [Fact]
+    public async Task GarapanCetakSatuHalaman()
+    {
+        var config = BuatConfig();
+        var gen = new GarapanGenerator(config, new FileService(NullLogger<FileService>.Instance),
+            new DesaRepoPalsu(), new SuratRepoPalsu(),
+            new SettingsManager(new DesaRepoPalsu(), config),
+            NullLogger<GarapanGenerator>.Instance, NullLoggerFactory.Instance);
+
+        var data = SuratContoh(SuratConstants.GARAPAN_SAWAH);
+        data.RincianGarapans = new List<GarapanData>
+        {
+            new()
+            {
+                Luas = 2500,
+                Lokasi = "Dusun Sukamaju Blok A",
+                NomorPersil = "0123",
+                PemilikTanah = "Budi Santoso",
+                KeteranganGarapan = "Garapan sendiri"
+            }
+        };
+        var pdf = await CetakAsync(gen, data);
+        SimpanSampel("16-garapan", pdf);
+        var teks = BacaTeks(pdf, "16-garapan");
+        PastikanTercetak(teks, "SURAT KETERANGAN GARAPAN", "menerangkan dengan sesungguhnya", "Jumlah");
+        Assert.True(pdf.Length > 1000);
+        Assert.Equal(1, HitungHalaman(pdf));
+    }
+
+    [Fact]
+    public void PenghasilanDataJsonBerputarKembali()
+    {
+        // Isian formulir disimpan sebagai JSON pada AdditionalData; pastikan
+        // siklus simpan-baca mempertahankan ketiga nilainya dan JSON rusak
+        // dibaca sebagai kosong, bukan galat keras.
+        var asal = new PenghasilanData
+        {
+            PekerjaanUsaha = "Petani sawah",
+            PenghasilanPerBulan = "Rp1.500.000",
+            JumlahTanggungan = "3"
+        };
+        var baca = PenghasilanData.DariJson(asal.KeJson());
+        Assert.NotNull(baca);
+        Assert.Equal(asal.PekerjaanUsaha, baca!.PekerjaanUsaha);
+        Assert.Equal(asal.PenghasilanPerBulan, baca.PenghasilanPerBulan);
+        Assert.Equal(asal.JumlahTanggungan, baca.JumlahTanggungan);
+
+        Assert.Null(PenghasilanData.DariJson("{ bukan json"));
+        Assert.Null(PenghasilanData.DariJson(null));
     }
 
     [Fact]

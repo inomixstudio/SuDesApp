@@ -133,7 +133,11 @@ namespace SuDesApp.GeneratorPdf
             // --- Kaki surat gaya formulir: hanya blok pejabat desa/kelurahan ---
             string tanggalTerformat = FormatTanggalUntukTampilan(suratData.TanggalSurat.ToString(DateFormatDb));
             string namaDesa = desa.NamaDesa ?? "[NAMA DESA]";
-            string namaKades = desa.KepalaDesa?.ToUpper() ?? "...............................";
+            // Nama Kades: hanya nama pokok yang kapital, gelar tetap apa adanya
+            // ("Dr. H. Ahmad Suryana, S.Si" tidak boleh jadi "DRS. H. AHMAD…, S.SI").
+            string namaKades = string.IsNullOrWhiteSpace(desa.KepalaDesa)
+                ? "..........................."
+                : NamaFormatter.ToUpperNama(desa.KepalaDesa);
 
             // Jabatan & NIP mengikuti lembaga: “LURAH …” + NIP untuk kelurahan,
             // “KEPALA DESA …” (non-ASN, tanpa NIP) untuk desa.

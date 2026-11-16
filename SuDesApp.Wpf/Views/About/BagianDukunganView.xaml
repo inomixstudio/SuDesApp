@@ -19,7 +19,7 @@
                         <Border Style="{StaticResource AccentSectionBar}"/>
                         <TextBlock Text="DUKUNG PENGEMBANGAN" Style="{StaticResource SectionTitle}"/>
                     </StackPanel>
-                    <TextBlock Text="SuDesApp berlangganan agar tetap dikembangkan dan terawat. Dukungan tambahan lewat tautan di bawah ini tetap berarti bagi kelanjutan aplikasinya."
+                    <TextBlock Text="SuDesApp berlangganan agar tetap dikembangkan dan terawat. Saluran komunikasi dengan pengembang tersedia melalui tautan di bawah ini."
                                Style="{StaticResource SectionSubtitle}" Margin="0,0,0,14"/>
 
                     <Grid>
@@ -41,9 +41,9 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{x:Static u:IkonMenu.Kode}" FontSize="15" VerticalAlignment="Center" Margin="0,0,9,0" FontFamily="{StaticResource AppIconFont}"/>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="GitHub Repository" FontSize="13" FontWeight="SemiBold"
+                                    <TextBlock Text="Repositori GitHub" FontSize="13" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextBrush}"/>
-                                    <TextBlock Text="Kode sumber &amp; rilis" FontSize="11"
+                                    <TextBlock Text="Kode sumber dan rilis" FontSize="11"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 </StackPanel>
                             </StackPanel>
@@ -63,21 +63,11 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Row="2" Grid.Column="0" Tag="{Binding UrlDukungan}"
-                                Style="{StaticResource TautanKartu}" MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
-                                ToolTip="{Binding UrlDukungan}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{x:Static u:IkonMenu.Dukungan}" FontSize="15" VerticalAlignment="Center" Margin="0,0,9,0" FontFamily="{StaticResource AppIconFont}"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Support Us" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextBrush}"/>
-                                    <TextBlock Text="{Binding DukunganTampil}" FontSize="11"
-                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Grid.Row="2" Grid.Column="2" Tag="{Binding EmailPengembang}"
+                        <!-- Surel pengembang memakai lebar penuh: kartu dukungan
+                             (Saweria) dihapus, jadi baris kedua cukup satu kartu.
+                             ColumnSpan 3 (dua kolom kartu + kolom spasi) supaya
+                             tepi kanannya sejajar dengan kartu Website di atas. -->
+                        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Tag="{Binding EmailPengembang}"
                                 Style="{StaticResource TautanKartu}" MouseLeftButtonUp="Tautan_MouseLeftButtonUp"
                                 ToolTip="{Binding EmailPengembangTampil}">
                             <StackPanel Orientation="Horizontal">
@@ -103,7 +93,7 @@
                         <TextBlock Text="KRITIK &amp; SARAN" FontWeight="Bold" FontSize="13"
                                    Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="Masukan Anda membantu aplikasi ini berkembang. Kirim langsung ke:"
+                    <TextBlock Text="Masukan Anda ikut mengembangkan aplikasi ini. Kirim ke:"
                                FontSize="11" Foreground="{DynamicResource AccentTextBrush}" TextWrapping="Wrap"/>
                     <Border Tag="{Binding EmailPengembang}" Margin="0,8,0,0" HorizontalAlignment="Left"
                             Style="{StaticResource TautanKartuSurface}"

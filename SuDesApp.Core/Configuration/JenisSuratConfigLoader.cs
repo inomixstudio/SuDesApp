@@ -24,6 +24,13 @@ namespace SuDesApp.Configuration
         [JsonPropertyName("NomorFormat")]
         public string NomorFormat { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Teks acuan nomor nyata (regulasi daerah/blanko resmi) untuk jenis ini —
+        /// diambil dari docs/referensi-penomoran-surat*.md; boleh kosong.
+        /// </summary>
+        [JsonPropertyName("AcuanNomor")]
+        public string AcuanNomor { get; set; } = string.Empty;
+
         [JsonPropertyName("IsSharedNumbering")]
         public bool IsSharedNumbering { get; set; }
 

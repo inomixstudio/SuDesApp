@@ -24,16 +24,56 @@ namespace SuDesApp.Wpf.ViewModels
                         }),
                         new CatatanRilisSubSection("Bersih dan Ringkas", new List<string>
                         {
-                            "Audit menyeluruh menghapus puluhan resource tampilan, converter, dan skrip yang sudah tidak terpakai — tampilan, laporan, dan data tidak berubah sama sekali."
+                            "Audit menyeluruh menghapus puluhan resource tampilan, converter, dan skrip yang sudah tidak terpakai — tampilan, laporan, dan data tidak berubah sama sekali.",
+                            "Putaran ulang menemukan 562 baris mati lagi (pemroses WhatsApp, method FileService tanpa pemanggil, kelas pengecualian, konstanta ikon) dan memperbaiki gerbang check-rilis yang salah mencari pembersih contoh."
                         }),
                         new CatatanRilisSubSection("Login Google Tetap Nyambung", new List<string>
                         {
-                            "Penyimpanan token login Google pindah ke serialisasi bawaan platform dengan uji kompatibilitas dua arah, sehingga sesi Google yang sudah ada tetap berlaku tanpa perlu login ulang."
+                            "Penyimpanan token login Google pindah ke serialisasi bawaan platform dengan uji kompatibilitas dua arah, sehingga sesi Google yang sudah ada tetap berlaku tanpa perlu login ulang.",
+                            "Kredensial OAuth kini tertanam pada paket rilis, sehingga login Google langsung aktif tanpa mengisi Client ID/Secret; halaman isian kredensial manual dihapus."
                         }),
                         new CatatanRilisSubSection("Uji dan Gerbang Rilis", new List<string>
                         {
                             "Uji baru menjaga daftar tema di pengaturan selalu cocok dengan berkas tema yang tersedia; gerbang uji E2E server lisensi diperbaiki agar bisa dijalankan berulang dan mengenal format token keamanan terbaru.",
                             "Audit kontras tema kini berjalan sebagai gerbang CI, dan enam uji baru menjaga daftar surat yang bisa diminta lewat API desa — daftar itu tidak bisa diam-diam berubah lagi."
+                        }),
+                        new CatatanRilisSubSection("Sinkron Android — Lebih Lengkap", new List<string>
+                        {
+                            "Tombol 'Buat Kode' kembali ke halaman Sinkron: selain memindai QR, operator bisa menerbitkan kode 4 angka yang diketik manual di aplikasi Android.",
+                            "Tombol 'Terbitkan ulang skema & kop' ditambahkan sehingga kop surat, pola nomor, dan formulir Android bisa diperbarui langsung tanpa menunggu timer di latar — dan apk tidak perlu ikut diperbarui untuk isi formulir baru.",
+                            "Keterangan Penghasilan (472) kini tersedia juga di Android: formulirnya sama dengan desktop dan suratnya masuk register dengan data penghasilan lengkap saat diimpor."
+                        }),
+                        new CatatanRilisSubSection("PDF Android Sama dengan Desktop", new List<string>
+                        {
+                            "Blanko NTCR (N1–N6, N8) cetak di Android sekarang termasuk blok kepala blanko (LAMPIRAN IV–X + Model N), blok kantor desa, judul + Nomor/Perihal permohonan, blok Diterima KUA, tanda tangan dua pihak, dan tanda tangan desa dengan NIP — dulu bagian ini hanya dicatat sebagai catatan miring.",
+                            "Surat Kematian (F-2.17), tabel rincian garapan 6 kolom, dan kepala surat Rekening Koran juga ikut disamakan; nama orang bergelar tidak lagi ikut tercetak kapital penuh."
+                        }),
+                        new CatatanRilisSubSection("Ahli Waris Tiga Halaman di Android", new List<string>
+                        {
+                            "Surat Keterangan Ahli Waris di Android kini tiga halaman berurutan seperti desktop: Surat Keterangan (berkop + kaki Camat/Kepala Desa), Surat Pernyataan Ahli Waris, dan Surat Kuasa — dulu hampir semuanya hanya catatan miring.",
+                            "Blok bersyarat patuh isian: tabel pasangan/anak hanya tampil bila terisi, dan halaman kuasa hanya muncul bila ada pasangan DAN anak; gelar tetap tidak ikut kapital."
+                        }),
+                        new CatatanRilisSubSection("Garapan — Bidang Tambahan Tabulasi", new List<string>
+                        {
+                            "Bidang tanah garapan ke-2 dst. kini masuk tabel PDF Android (letak, nomor persil, luas, keterangan) dan otomatis dijumlahkan ke baris Jumlah; dua baris kosong tetap tersedia seperti formulir desktop."
+                        }),
+                        new CatatanRilisSubSection("Formulir, Blanko, dan Lambang", new List<string>
+                        {
+                            "Keterangan Penghasilan (472) kini jenis surat biasa di desktop: formulir data diri + pekerjaan/usaha, penghasilan per bulan, dan jumlah tanggungan, dengan generator PDF sendiri.",
+                            "Formulir pendataan perangkat desa dijamin tepat satu halaman di A4 maupun F4, dan Surat Ijin Tinggal memakai satu sumber teks antara form dan hasil cetak.",
+                            "Lambang kabupaten kini dibungkus satu arsip LambangKabupaten.zip (±20 MB, 514 lambang) — installer tidak lagi menyalin ratusan berkas mentah, dan berkas pengguna tetap dihormati lebih dulu."
+                        }),
+                        new CatatanRilisSubSection("Alat Build Android", new List<string>
+                        {
+                            "Android menaikkan AGP ke 9.3 (built-in Kotlin), Gradle 9.8.2, dan compileSdk 37, lalu okhttp 5.5.1 dan pustaka Android lainnya; build dan uji unit tetap hijau."
+                        }),
+                        new CatatanRilisSubSection("Perbaikan di Halaman Lain", new List<string>
+                        {
+                            "Skeleton permanen di form Buat Surat Baru dihapus dan header accordion diberi nama aksesibilitas; animasi masuk berurutan di Beranda dihapus.",
+                            "Membatalkan login Google tidak lagi membuat tombol Masuk mati permanen; status berubah netral dan bisa mencoba lagi.",
+                            "Tombol pengaturan di Panduan Awal kini membuka halaman pengaturan yang benar dengan isian tersimpan; Laporan Penduduk menambah tabel pekerjaan; IDM merangkum pesannya jadi satu bilah dan cetak PDF bisa pilih tahun laporan.",
+                            "'Bersihkan Riwayat' pada Riwayat Aktivitas kini benar-benar mengosongkan tabel, dan aktivitas baru setelahnya tidak lagi hilang; halaman Pembaruan disusun dua kartu berdampingan.",
+                            "Dokumentasi bisa dicari dan NTCR blanko ber-nama kosong tercetak titik-titik sejajar pejabat seperti SKCK; halaman Langganan dan Tentang Aplikasi dirapikan."
                         })
                     }),
                 new CatatanRilisEntry(

@@ -10,7 +10,7 @@
     </UserControl.Resources>
 
     <!--
-        Bagian "Thanks to" (dulu "Ucapan terima kasih").
+        Bagian "Terima kasih" (dulu "Thanks to").
 
         Isinya tetap data-driven dari AboutViewModel.UcapanTerimaKasih: satu
         kartu per kelompok, dengan ikon kelompok di piring kecil dan butir
@@ -24,9 +24,9 @@
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                         <Border Style="{StaticResource AccentSectionBar}"/>
-                        <TextBlock Text="THANKS TO" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="TERIMA KASIH" Style="{StaticResource SectionTitle}"/>
                     </StackPanel>
-                    <TextBlock Text="SuDesApp tidak dibangun sendirian. Terima kasih kepada seluruh pihak yang menopang terbangunnya aplikasi ini — dari perangkat lunak yang dipakai gratis, masukan yang memperbaiki setiap rilis, hingga dukungan yang menjaga pengembangannya tetap berjalan."
+                    <TextBlock Text="Pengembangan SuDesApp melibatkan berbagai pihak: pencipta perangkat lunak yang menjadi fondasinya, penguji dan pemberi masukan, serta mitra yang menyediakan data dan sumber resmi. Bagian ini mengapresiasi kontribusi tersebut."
                                Style="{StaticResource SectionSubtitle}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
@@ -96,7 +96,7 @@
                         <TextBlock Text="UNDUH FORMULIR RESMI" FontWeight="Bold" FontSize="13"
                                    Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="Sebagai rasa terima kasih, formulir administrasi kependudukan dan blanko surat resmi desa untuk Kabupaten Karawang dapat diunduh gratis melalui INSAN Karawang (Info Sadar Adminduk Karawang):"
+                    <TextBlock Text="Formulir administrasi kependudukan dan blanko surat resmi Kabupaten Karawang dapat diunduh secara gratis melalui INSAN Karawang (Info Sadar Adminduk Karawang):"
                                FontSize="11" Foreground="{DynamicResource AccentTextBrush}" TextWrapping="Wrap"/>
                     <Border Tag="{Binding UrlFormulirKarawang}" Margin="0,8,0,0" HorizontalAlignment="Left"
                             Style="{StaticResource TautanKartuSurface}"
@@ -116,7 +116,7 @@
 
                     <TextBlock Text="Formulir kabupaten lain" FontSize="11" FontWeight="SemiBold"
                                Foreground="{DynamicResource AccentTextBrush}" Margin="0,12,0,2"/>
-                    <TextBlock Text="Formulir adminduk mengikuti Permendagri 109/2019, jadi isinya sama di seluruh kabupaten. Contoh sumber unduhan daerah lain:"
+                    <TextBlock Text="Formulir adminduk mengikuti Permendagri 109/2019 sehingga isinya sama di seluruh kabupaten. Contoh sumber unduhan daerah lain:"
                                FontSize="11" Foreground="{DynamicResource AccentTextBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
                     <ItemsControl ItemsSource="{Binding FormulirKabupatenLain}">
                         <ItemsControl.ItemTemplate>
@@ -149,9 +149,9 @@
                     BorderBrush="{DynamicResource AccentBrush}">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="{x:Static u:IkonMenu.Dukungan}" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,6" FontFamily="{StaticResource AppIconFont}"/>
-                    <TextBlock Text="THANK YOU" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center"
+                    <TextBlock Text="TERIMA KASIH" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center"
                                Foreground="{DynamicResource AccentTextBrush}"/>
-                    <TextBlock Text="Terima kasih telah menjadikan SuDesApp lebih baik — satu surat dan satu baris kode pada satu waktu."
+                    <TextBlock Text="Dukungan dan masukan dari seluruh pihak di atas terus menopang pengembangan SuDesApp. Setiap perbaikan yang dirilis merupakan hasil kolaborasi tersebut."
                                FontSize="11" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center"
                                Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
