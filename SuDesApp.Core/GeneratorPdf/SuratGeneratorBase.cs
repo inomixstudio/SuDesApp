@@ -355,13 +355,12 @@ namespace SuDesApp.GeneratorPdf
                     : "_______________________");
 
             bool tampilkanPemohon = ShowPemohonInFooter;
-            if (tampilkanPemohon && suratData.Warga == null)
-            {
-                _logger.LogWarning("ShowPemohonInFooter true tapi WargaData null, blok pemohon dilewati.");
-                tampilkanPemohon = false;
-            }
+            // Warga null (blanko/draft belum terisi) tidak lagi mematikan blok
+            // pemohon: renderer mencetak titik isian agar blok kiri tidak hilang
+            // mendadak dan pengguna tetap melihat tempat nama pemohon di PDF.
+            string? namaPemohon = suratData.Warga?.Nama;
 
-            return (tampilkanPemohon, suratData.Warga?.Nama, desa.NamaDesa ?? "NAMA DESA", tanggalTerformat, jabatan, namaPejabat, labelPemohon, nipPejabat);
+            return (tampilkanPemohon, namaPemohon, desa.NamaDesa ?? "NAMA DESA", tanggalTerformat, jabatan, namaPejabat, labelPemohon, nipPejabat);
         }
 
         /// <summary>

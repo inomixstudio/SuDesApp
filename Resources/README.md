@@ -5,7 +5,7 @@ Keduanya wajib punya penjagaan asal-usul:
 
 | Kelompok | Isi | Katalog asal-usul | Uji penjagaan |
 |---|---|---|---|
-| Lambang kabupaten/kota | `LogosKabupaten/` (514 kode) | `LogosKabupaten/sumber.json` | `LogoKabupatenSumberTests` |
+| Lambang kabupaten/kota | `LogosKabupaten/` (514 kode) — **yang terbuntel ke instalasi hanya hasil kemasannya**, satu arsip [`LambangKabupaten.zip`](LambangKabupaten.zip) ±20 MB (514 lambang ≤512 px, ≤256 warna) | `LogosKabupaten/sumber.json` | `py -3 Tools/verifikasi-logo-kabupaten.py` + `py -3 Tools/siapkan-lambang-kabupaten.py` |
 | Ikon & logo umum | ikon aplikasi, `logo.png`, `Qris-Pembayaran.png`, logo & ikon Sumberjaya Dev / Duta Publik | [`sumber-aset.json`](sumber-aset.json) | `SumberAsetGambarTests` |
 
 ## Kenapa penting

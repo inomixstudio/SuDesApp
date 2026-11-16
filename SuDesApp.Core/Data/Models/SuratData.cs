@@ -4,6 +4,7 @@ using SuDesApp.Data.Repositories;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace SuDesApp.Data.Models
@@ -127,6 +128,7 @@ namespace SuDesApp.Data.Models
         public KematianData? Kematian { get; set; }
         public SKUData? SKU { get; set; }
         public SKTMData? SKTM { get; set; } // BARU: Model SKTM terpisah
+        public PenghasilanData? Penghasilan { get; set; } // Terisi dari AdditionalData oleh formulir/penyimpan
         public IzinOrtuData? IzinOrtu { get; set; }
         public IjinTinggalData? IjinTinggal { get; set; } // BARU: Model IjinTinggal
 
@@ -854,6 +856,48 @@ public bool isForInstansi
         {
             return !string.IsNullOrWhiteSpace(KeteranganKemiskinan);
         }
+    }
+
+    // ==============================================
+    // PENGHASILAN DATA — surat keterangan penghasilan.
+    // Disimpan sebagai JSON pada kolom AdditionalData tabel Surat — kolom itu
+    // sudah ditulis otomatis oleh insert/update SuratRepository, jadi tanpa
+    // tabel dan handler baru.
+    // ==============================================
+    public class PenghasilanData
+    {
+        /// <summary>Pekerjaan atau usaha sumber penghasilan pemohon.</summary>
+        public string? PekerjaanUsaha { get; set; }
+
+        /// <summary>Perkiraan penghasilan per bulan (teks bebas, mis. "Rp1.500.000").</summary>
+        public string? PenghasilanPerBulan { get; set; }
+
+        /// <summary>Jumlah anggota keluarga yang ditanggung (teks bebas, mis. "3").</summary>
+        public string? JumlahTanggungan { get; set; }
+
+        public bool IsValid()
+        {
+            return !string.IsNullOrWhiteSpace(PekerjaanUsaha) &&
+                   !string.IsNullOrWhiteSpace(PenghasilanPerBulan);
+        }
+
+        public static PenghasilanData? DariJson(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return null;
+            try
+            {
+                return JsonSerializer.Deserialize<PenghasilanData>(json);
+            }
+            catch (JsonException)
+            {
+                // JSON rusak diperlakukan sebagai kosong, bukan galat keras —
+                // surat tetap harus bisa dibuka dan diperbaiki.
+                return null;
+            }
+        }
+
+        public string KeJson() => JsonSerializer.Serialize(this,
+            new JsonSerializerOptions { WriteIndented = false, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
     }
 
     // ==============================================

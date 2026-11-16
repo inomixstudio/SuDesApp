@@ -230,7 +230,7 @@ namespace SuDesApp.Wpf.ViewModels
                 PantauJudulHalaman(view);
             };
             ShowRegisterCommand = new AsyncRelayCommand(ShowRegisterSuratAsync);
-            ShowSettingsCommand = new AsyncRelayCommand(ShowSettingsAsync);
+            ShowSettingsCommand = new AsyncRelayCommand(() => ShowSettingsAsync());
             ShowFormulirCommand = new AsyncRelayCommand(ShowFormulirAsync);
             ShowAboutCommand = new AsyncRelayCommand(ShowAboutAsync);
             ShowCatatanRilisCommand = new AsyncRelayCommand(ShowCatatanRilisAsync);

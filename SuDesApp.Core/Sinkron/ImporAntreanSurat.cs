@@ -311,11 +311,11 @@ public sealed class ImporAntreanSurat
                 .AddSuratAsync(surat, null, ct)
                 .ConfigureAwait(false);
 
-            // AddSuratAsync menulis status lewat query InsertSurat yang TIDAK
-            // memuat kolom Status (definisi terakhir di SuratQueries.sql), jadi
-            // surat baru selalu mendarat sebagai 'Draft'. Surat hasil impor
-            // dianggap sudah terbit — naikkan statusnya di sini, bukan
-            // mengharap operator mengubahnya dari register.
+            // AddSuratAsync menulis status langsung dari @Status (InsertSurat
+            // memakai COALESCE(@Status, 'Draft')), dan Bangun() memasang
+            // "Active" — jadi surat impor mendarat aktif tanpa langkah kedua.
+            // Pembaruan status ini hanya jaring pengaman bila definisi query
+            // berubah lagi; tanpa itu surat impor bisa diam-diam jadi Draft.
             if (string.Equals(surat.Status, "Active", StringComparison.OrdinalIgnoreCase))
             {
                 await _unitOfWork.SuratRepository

@@ -378,6 +378,32 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public int TahunDipilih => _tahunDipilih;
 
+        /// <summary>Tahun yang bisa dipilih untuk cetak — tahun-tahun yang berhasil dimuat, terbaru dulu.</summary>
+        public IReadOnlyList<int> TahunCetakPilihan
+        {
+            get
+            {
+                if (_data is not { } data) return Array.Empty<int>();
+                return data.Seri.Tahun
+                    .Select(h => h.Ringkasan.Tahun)
+                    .Distinct()
+                    .OrderByDescending(t => t)
+                    .ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Tahun yang dicetak ke PDF — sama dengan tanggal_rincian yang tampil
+        /// (<see cref="TahunDipilih"/>). Mengubahnya lewat ComboBox di toolbar
+        /// memakai jalur <see cref="PilihTahun"/> sehingga rincian di layar dan
+        /// isi PDF tidak bisa berbeda.
+        /// </summary>
+        public int TahunCetakTerpilih
+        {
+            get => _tahunDipilih;
+            set => PilihTahun(value);
+        }
+
         /// <summary>
         /// Ganti tahun yang ditampilkan tanpa memuat ulang dari pusat: seluruh
         /// tahun sudah ada di memori, jadi cukup pindahkan pilihan lalu bangun
@@ -436,8 +462,9 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 if (Hasil != null)
                 {
-                    return "Cetak atau simpan ringkasan penilaian dan rincian indikator sebagai PDF "
-                           + "untuk dilampirkan pada laporan desa";
+                    return "Cetak atau simpan ringkasan penilaian dan rincian indikator TAHUN "
+                           + _tahunDipilih + " sebagai PDF — pilih di kotak 'Tahun laporan' bila ingin "
+                           + "tahun lain — untuk dilampirkan pada laporan desa";
                 }
 
                 if (_indeks2025 != null)

@@ -13,10 +13,13 @@ namespace SuDesApp.GeneratorPdf
     public static class KopSuratCetak
     {
         /// <summary>
-        /// Tinggi halaman mini (point): cukup untuk kop beserta margin atas/bawah,
-        /// jauh lebih pendek dari kertas penuh agar raster pratinjau murah.
+        /// Tinggi halaman longgar (point) tempat kop diukur. Halaman sengaja dibuat
+        /// jauh lebih tinggi dari kop terpanjang supaya kop tidak pernah terbelah ke
+        /// halaman kedua; <see cref="SuDesApp.Wpf.Services.KopSuratPratinjauService"/>
+        /// kemudian memangkas rasternya ke batas tinta, sehingga pratinjau tidak
+        /// menyisakan pita kertas kosong di bawah garis ganda.
         /// </summary>
-        private const float TinggiHalaman = 230f;
+        private const float TinggiHalaman = 400f;
 
         /// <summary>
         /// Bangun PDF satu halaman selebar kertas surat berisi kop saja — logo,

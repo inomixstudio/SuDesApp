@@ -87,7 +87,7 @@ namespace SuDesApp.GeneratorPdf
                 }
 
                 badan.Paragraf("Demikian surat keterangan pindah ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana keperluannya.",
-                    rata: Rata.Kiri,
+                    rata: Rata.Justify,
                     jarakBawah: 12);
             }
             catch (Exception ex)

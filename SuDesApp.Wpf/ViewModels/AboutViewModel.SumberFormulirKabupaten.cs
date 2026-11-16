@@ -17,7 +17,7 @@ namespace SuDesApp.Wpf.ViewModels
 {
 
     /// <summary>
-    /// Satu tautan sumber formulir kabupaten lain pada bagian "Thanks to".
+    /// Satu tautan sumber formulir kabupaten lain pada bagian "Terima kasih".
     /// Formulir adminduk berlaku nasional (Permendagri 109/2019), jadi tautan
     /// ini hanya memudahkan desa yang berbatasan dengan kabupaten lain.
     /// </summary>

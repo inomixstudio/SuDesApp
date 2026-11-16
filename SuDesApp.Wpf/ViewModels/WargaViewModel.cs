@@ -34,7 +34,13 @@ namespace SuDesApp.Wpf.ViewModels
 
         public int ID_Warga => Data.ID_Warga;
         public string NIK => Data.NIK ?? string.Empty;
-        public string Nama => Data.Nama ?? string.Empty;
+
+        /// <summary>
+        /// Nama siap tampil: kapital di awal tiap kata saja supaya penulisan
+        /// yang bercampur di database ("AHMAD SURYANA" / "ahmad suryana")
+        /// terbaca seragam "Ahmad Suryana" pada tabel dan cetak PDF.
+        /// </summary>
+        public string Nama => NamaFormatter.KapitalTiapKata(Data.Nama);
         public string NoKK => Data.NoKK ?? string.Empty;
         public string RT => Data.RT ?? string.Empty;
         public string RW => Data.RW ?? string.Empty;
@@ -53,7 +59,7 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        public string JenisKelaminRingkas => NormalisasiJenisKelamin(Data.JenisKelamin);
+        public string JenisKelaminRingkas => NormalisasiJenisKelaminPendek(Data.JenisKelamin);
 
         public string TTL
         {
@@ -85,6 +91,19 @@ namespace SuDesApp.Wpf.ViewModels
                 "L" or "LAKI-LAKI" or "LAKI LAKI" or "PRIA" => "Laki-laki",
                 "P" or "PEREMPUAN" or "WANITA" => "Perempuan",
                 _ => string.IsNullOrWhiteSpace(jk) ? "-" : jk!.Trim()
+            };
+
+        /// <summary>
+        /// Jenis kelamin satu huruf untuk tabel dan cetak daftar: kolom
+        /// L/P lebar kolomnya kecil, "Laki-laki"/"Perempuan" penuh justru
+        /// membuat baris tidak sejajar.
+        /// </summary>
+        public static string NormalisasiJenisKelaminPendek(string? jk) =>
+            NormalisasiJenisKelamin(jk) switch
+            {
+                "Laki-laki" => "L",
+                "Perempuan" => "P",
+                var lain => lain
             };
 
         public static string DeskripsiStatus(string? status) => StatusWargaTipe.Normalisasi(status) switch

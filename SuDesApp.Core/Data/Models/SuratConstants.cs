@@ -30,6 +30,12 @@ namespace SuDesApp.Data.Models
         public const string SKTM = "SKTM";
 
         /// <summary>
+        /// Jenis surat keterangan penghasilan — dulu contoh template, sekarang
+        /// jenis surat ber-formulir sendiri di menu Buat Surat Baru.
+        /// </summary>
+        public const string PENGHASILAN = "PENGHASILAN";
+
+        /// <summary>
         /// Surat Keterangan Belum Terbit / Sudah Terbit (<c>SD</c> tanpa kepanjangan
         /// "tidak mampu"). Dipakai para pengembangan (rekap KUR, beasiswa, bantuan)
         /// yang sekarang diminta menyebut kondisi administrasi, bukan kondisi

@@ -31,6 +31,64 @@ namespace SuDesApp.GeneratorPdf
         protected override string JudulSurat => "SURAT KETERANGAN IJIN TINGGAL SEMENTARA";
         protected override bool ShowPemohonInFooter => true;
 
+        // =================================================================
+        // Pembangun teks bersama: SATU sumber untuk bentuk alamat dan kalimat
+        // keterangan — dipakai generator PDF di bawah DAN ViewModel input form
+        // (IjinTinggalInputViewModel), supaya yang tampil di form persis sama
+        // dengan yang tercetak. Dulu keduanya membangun teks sendiri-sendiri
+        // dengan format berbeda (koma vs spasi, "Kec." vs "Kecamatan", dua baris
+        // vs satu), sehingga isian dan PDF tidak pernah persis sama.
+        // =================================================================
+
+        /// <summary>
+        /// Alamat asal satu baris: "Dusun X RT 001/RW 002, Desa Y, Kecamatan Z,
+        /// Kabupaten W" — bagian kosong dilewati (isian nyata bisa sebagian kosong).
+        /// </summary>
+        public static string AlamatAsalTeks(
+            string? dusun, string? rt, string? rw,
+            string? desa, string? kecamatan, string? kabupaten)
+        {
+            var bagian = new List<string>();
+
+            var depan = new List<string>();
+            if (!string.IsNullOrWhiteSpace(dusun)) depan.Add("Dusun " + dusun.Trim());
+            string rtRw = AlamatFormatter.FormatRtRw(rt, rw);
+            if (rtRw.Length > 0) depan.Add(rtRw);
+            if (depan.Count > 0) bagian.Add(string.Join(" ", depan));
+
+            if (!string.IsNullOrWhiteSpace(desa)) bagian.Add("Desa " + desa.Trim());
+            if (!string.IsNullOrWhiteSpace(kecamatan)) bagian.Add("Kecamatan " + kecamatan.Trim());
+            if (!string.IsNullOrWhiteSpace(kabupaten)) bagian.Add("Kabupaten " + kabupaten.Trim());
+
+            return string.Join(", ", bagian);
+        }
+
+        /// <summary>Alamat tujuan satu baris: "Dusun X, Desa Y, Kecamatan Z, Kabupaten W".</summary>
+        public static string AlamatTujuanTeks(
+            string? dusun, string? desa, string? kecamatan, string? kabupaten)
+        {
+            var bagian = new List<string>();
+            if (!string.IsNullOrWhiteSpace(dusun)) bagian.Add("Dusun " + dusun.Trim());
+            if (!string.IsNullOrWhiteSpace(desa)) bagian.Add("Desa " + desa.Trim());
+            if (!string.IsNullOrWhiteSpace(kecamatan)) bagian.Add("Kecamatan " + kecamatan.Trim());
+            if (!string.IsNullOrWhiteSpace(kabupaten)) bagian.Add("Kabupaten " + kabupaten.Trim());
+            return string.Join(", ", bagian);
+        }
+
+        /// <summary>
+        /// Kalimat keterangan baku — WORDING yang sama dipakai form (isian otomatis)
+        /// dan generator (cadangan bila keterangan kosong), jadi pratinjau isi form
+        /// tidak pernah berbeda dengan hasil cetak.
+        /// </summary>
+        public static string KeteranganTeks(
+            string? desaAsal, string? kecAsal, string? kabAsal, string alamatTujuan)
+        {
+            string asal = AlamatAsalTeks(null, null, null, desaAsal, kecAsal, kabAsal);
+            return $"Benar nama tersebut diatas adalah warga {asal}. "
+                   + "Menurut sepengetahuan kami nama tersebut diatas sampai saat ini "
+                   + $"bertempat tinggal sementara di {alamatTujuan}.";
+        }
+
         protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             try
@@ -120,7 +178,11 @@ namespace SuDesApp.GeneratorPdf
 
         private List<(string Label, string? Value)> CreatePemohonData(WargaData warga, string formattedTglLahir)
         {
-            string alamatFormatted = FormatAlamatAsalForDisplay(warga);
+            // Alamat asal memakai pembangun teks bersama — format yang sama dengan
+            // isian form, bukan format dua baris yang berbeda seperti dulu.
+            string alamatFormatted = AlamatAsalTeks(
+                warga.Dusun, warga.RT, warga.RW,
+                warga.Desa, warga.Kecamatan, warga.Kabupaten);
 
             return new List<(string, string?)>
             {
@@ -131,7 +193,7 @@ namespace SuDesApp.GeneratorPdf
                 ("Agama", warga.Agama ?? "[Agama]"),
                 ("Status Perkawinan", warga.StatusPerkawinan ?? "[Status]"),
                 ("Pekerjaan", warga.Pekerjaan ?? "[Pekerjaan]"),
-                ("Alamat", alamatFormatted)
+                ("Alamat", string.IsNullOrWhiteSpace(alamatFormatted) ? "[Alamat]" : alamatFormatted)
             };
         }
 
@@ -146,38 +208,6 @@ namespace SuDesApp.GeneratorPdf
                 ("Tanggal Lahir", string.IsNullOrWhiteSpace(formattedTglLahir) ? "[Tanggal Lahir]" : formattedTglLahir),
                 ("Pekerjaan", suratData.PekerjaanPenanggungJawab ?? "[Pekerjaan]")
             };
-        }
-
-        private string FormatAlamatAsalForDisplay(WargaData warga)
-        {
-            if (warga == null)
-                return "[Alamat]";
-
-            // Format alamat asal (alamat sebelumnya)
-            string dusun = !string.IsNullOrWhiteSpace(warga.Dusun)
-                ? $"{warga.Dusun}"
-                : string.Empty;
-
-            string desa = !string.IsNullOrWhiteSpace(warga.Desa)
-                ? $"Desa {warga.Desa}"
-                : "[Desa]";
-
-            string kecamatan = !string.IsNullOrWhiteSpace(warga.Kecamatan)
-                ? $"Kecamatan {warga.Kecamatan}"
-                : "[Kecamatan]";
-
-            string kabupaten = !string.IsNullOrWhiteSpace(warga.Kabupaten)
-                ? $"Kabupaten {warga.Kabupaten}"
-                : "[Kabupaten]";
-
-            // Build address string, omit dusun if empty
-            var rtRw = AlamatFormatter.FormatRtRw(warga.RT, warga.RW);
-            string alamatLine1 = string.IsNullOrWhiteSpace(dusun)
-                ? desa
-                : (rtRw.Length > 0 ? $"{dusun} {rtRw} {desa}" : $"{dusun} {desa}");
-            string alamatLine2 = $"{kecamatan} {kabupaten}";
-
-            return $"{alamatLine1}\n {alamatLine2}";
         }
 
         private string GetKeteranganFinal(string? keteranganTextBox, SuratData suratData)
@@ -206,41 +236,37 @@ namespace SuDesApp.GeneratorPdf
                     return "Keterangan tidak dapat dimuat: data desa tidak valid";
                 }
 
-                // --- ALAMAT ASAL (prioritas: warga ? desa ? placeholder) ---
+                // --- ALAMAT ASAL (prioritas: warga → desa → placeholder) ---
                 string desaAsal = !string.IsNullOrWhiteSpace(warga.Desa)
                     ? warga.Desa
-                    : (!string.IsNullOrWhiteSpace(desa.NamaDesa) ? desa.NamaDesa : "[Desa]");
+                    : (!string.IsNullOrWhiteSpace(desa.NamaDesa) ? desa.NamaDesa : string.Empty);
                 string kecAsal = !string.IsNullOrWhiteSpace(warga.Kecamatan)
                     ? warga.Kecamatan
-                    : (!string.IsNullOrWhiteSpace(desa.Kecamatan) ? desa.Kecamatan : "[Kecamatan]");
+                    : (!string.IsNullOrWhiteSpace(desa.Kecamatan) ? desa.Kecamatan : string.Empty);
                 string kabAsal = !string.IsNullOrWhiteSpace(warga.Kabupaten)
                     ? warga.Kabupaten
-                    : (!string.IsNullOrWhiteSpace(desa.Kabupaten) ? desa.Kabupaten : "[Kabupaten]");
+                    : (!string.IsNullOrWhiteSpace(desa.Kabupaten) ? desa.Kabupaten : string.Empty);
 
-                // --- ALAMAT TUJUAN (prioritas: suratData ? desa ? placeholder) ---
+                // --- ALAMAT TUJUAN (prioritas: suratData → desa) ---
                 string dusunTujuan = !string.IsNullOrWhiteSpace(suratData.DusunTujuan) ? suratData.DusunTujuan : string.Empty;
                 string desaTujuan = !string.IsNullOrWhiteSpace(suratData.DesaTujuan)
                     ? suratData.DesaTujuan
-                    : (!string.IsNullOrWhiteSpace(desa.NamaDesa) ? desa.NamaDesa : "[Desa]");
+                    : (!string.IsNullOrWhiteSpace(desa.NamaDesa) ? desa.NamaDesa : string.Empty);
                 string kecTujuan = !string.IsNullOrWhiteSpace(suratData.KecTujuan)
                     ? suratData.KecTujuan
-                    : (!string.IsNullOrWhiteSpace(desa.Kecamatan) ? desa.Kecamatan : "[Kecamatan]");
+                    : (!string.IsNullOrWhiteSpace(desa.Kecamatan) ? desa.Kecamatan : string.Empty);
                 string kabTujuan = !string.IsNullOrWhiteSpace(suratData.KabTujuan)
                     ? suratData.KabTujuan
-                    : (!string.IsNullOrWhiteSpace(desa.Kabupaten) ? desa.Kabupaten : "[Kabupaten]");
+                    : (!string.IsNullOrWhiteSpace(desa.Kabupaten) ? desa.Kabupaten : string.Empty);
 
                 _logger.LogDebug(
                     "Data keterangan: Asal={DesaAsal}, {KecAsal}, {KabAsal}; Tujuan={DusunTujuan}, {DesaTujuan}, {KecTujuan}, {KabTujuan}",
                     desaAsal, kecAsal, kabAsal, dusunTujuan, desaTujuan, kecTujuan, kabTujuan);
 
-                // Build the destination address string
-                string alamatTujuan = string.IsNullOrWhiteSpace(dusunTujuan)
-                    ? $"Desa {desaTujuan} Kecamatan {kecTujuan} Kabupaten {kabTujuan}"
-                    : $"{dusunTujuan} Desa {desaTujuan} Kecamatan {kecTujuan} Kabupaten {kabTujuan}";
-
-                return $"Benar nama tersebut diatas adalah warga Desa {desaAsal} Kec. {kecAsal} Kab. {kabAsal}. " +
-                       $"Menurut sepengetahuan kami nama tersebut diatas sampai saat ini " +
-                       $"bertempat tinggal sementara di {alamatTujuan}.";
+                // Kalimat baku dari pembangun bersama — identik dengan isian otomatis
+                // pada form, jadi pratinjau tidak pernah berbeda dengan hasil cetak.
+                string alamatTujuan = AlamatTujuanTeks(dusunTujuan, desaTujuan, kecTujuan, kabTujuan);
+                return KeteranganTeks(desaAsal, kecAsal, kabAsal, alamatTujuan);
             }
             catch (Exception ex)
             {
@@ -262,7 +288,7 @@ namespace SuDesApp.GeneratorPdf
         private void AddPenutupParagraph(BadanSurat badan)
         {
             badan.Paragraf("Demikian surat keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.",
-                rata: Rata.Kiri,
+                rata: Rata.Justify,
                 jarakAtas: 10);
         }
     }

@@ -5,6 +5,7 @@
     "TemplateName": "SKD_UMUM",
     "DisplayName": "SKD Belum Menikah (KUA)",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 470 — contoh lampiran 8.a Perbup Karawang 74/2020 & Perbup Bekasi 215/2022 (SK umum).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -14,6 +15,7 @@
     "TemplateName": "DOMISILI_WARGA",
     "DisplayName": "Domisili Warga",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -23,6 +25,7 @@
     "TemplateName": "INSTANSI",
     "DisplayName": "Domisili Instansi/Lembaga",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -32,6 +35,7 @@
     "TemplateName": "SKU",
     "DisplayName": "SKU (Surat Ket. Usaha)",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Nyata di sebagian daerah: 510 (SK usaha); lampiran Perbup tidak menetapkannya.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -41,6 +45,7 @@
     "TemplateName": "PENGANTAR_SKCK",
     "DisplayName": "Pengantar SKCK",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Nyata di sebagian daerah: 474 (pengantar SKCK); tidak diatur lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -50,6 +55,7 @@
     "TemplateName": "IZIN_ORTU",
     "DisplayName": "Izin Suami/Orang Tua",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Nyata di sebagian daerah: 474.4 (izin suami/orang tua).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -59,6 +65,7 @@
     "TemplateName": "GARAPAN_SAWAH",
     "DisplayName": "Ket. Garapan Sawah",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Nyata di sebagian daerah: 593.2 (ket. garapan sawah).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -68,6 +75,7 @@
     "TemplateName": "KEMATIAN",
     "DisplayName": "Surat Kematian",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 470 — lampiran 8.c Perbup Karawang 74/2020 & Bekasi 215/2022 (SK kematian); sebagian daerah memakai 570.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -81,11 +89,22 @@
     "IsKeteranganDesa": true
   },
   {
+    "NamaJenis": "PENGHASILAN",
+    "KodeJenis": "472",
+    "TemplateName": "PENGHASILAN",
+    "DisplayName": "Keterangan Penghasilan",
+    "NomorFormat": "472/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; contoh bawaan memakai 472 — tidak diatur khusus dalam lampiran Perbup.",
+    "IsSharedNumbering": false,
+    "IsKeteranganDesa": true
+  },
+  {
     "NamaJenis": "SK_BELUM_TERBIT",
     "KodeJenis": "SK_BELUM_TERBIT",
     "TemplateName": "SK_BELUM_TERBIT",
     "DisplayName": "Ket. Belum Terbit / Sudah Terbit",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -95,6 +114,7 @@
     "TemplateName": "BEDANAMA",
     "DisplayName": "Surat Beda Data",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -104,6 +124,7 @@
     "TemplateName": "KENAL_LAHIR",
     "DisplayName": "Surat Kenal Lahir",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 470 — lampiran 8.b Perbup Karawang 74/2020 (SK kelahiran); sebagian daerah memakai 474.2.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -113,6 +134,7 @@
     "TemplateName": "AHLI_WARIS",
     "DisplayName": "Keterangan Ahli Waris",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 470 — lampiran 8.e Perbup Karawang 74/2020 (SK ahli waris); sebagian daerah memakai 474.2.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -122,6 +144,7 @@
     "TemplateName": "IJIN_TINGGAL",
     "DisplayName": "Surat Ijin Tinggal Sementara",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -131,6 +154,7 @@
     "TemplateName": "REKENING_KORAN",
     "DisplayName": "Permohonan Rekening Koran",
     "NomorFormat": "130/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 130 — surat keluar desa ke bank; di luar skop surat keterangan.",
     "IsSharedNumbering": false,
     "IsKeteranganDesa": false
   },
@@ -140,6 +164,7 @@
     "TemplateName": "TEMPLATE_SURAT",
     "DisplayName": "Surat dari Template Surat",
     "NomorFormat": "TMPL/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "TMPL — penanda internal aplikasi; awalan bebas diubah per template.",
     "IsSharedNumbering": false,
     "IsKeteranganDesa": false
   },
@@ -149,6 +174,7 @@
     "TemplateName": "NTCR_N1",
     "DisplayName": "Surat Pengantar Nikah (N1)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 474.3 — Lampiran Kepdirjen Bimas Islam No. 473/2020 (blanko N1).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -158,6 +184,7 @@
     "TemplateName": "NTCR_N2",
     "DisplayName": "Permohonan Kehendak Nikah (N2)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 474.3 — Lampiran Kepdirjen Bimas Islam No. 473/2020 (blanko N2).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -167,6 +194,7 @@
     "TemplateName": "NTCR_N3",
     "DisplayName": "Permohonan Pencatatan Isbat (N3)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 474.3 — Lampiran Kepdirjen Bimas Islam No. 473/2020 (blanko N3).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -176,6 +204,7 @@
     "TemplateName": "NTCR_N4",
     "DisplayName": "Persetujuan Calon Pengantin (N4)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 474.3 — Lampiran Kepdirjen Bimas Islam No. 473/2020 (blanko N4).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -185,6 +214,7 @@
     "TemplateName": "NTCR_N5",
     "DisplayName": "Surat Izin Orang Tua (N5)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 474.3 — Lampiran Kepdirjen Bimas Islam No. 473/2020 (blanko N5).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -194,6 +224,7 @@
     "TemplateName": "NTCR_N6",
     "DisplayName": "Keterangan Kematian Suami/Istri (N6)",
     "NomorFormat": "474.3/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 474.3 — Lampiran Kepdirjen Bimas Islam No. 473/2020 (blanko N6).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -203,6 +234,7 @@
     "TemplateName": "NTCR_N8",
     "DisplayName": "Surat Keterangan Numpang Nikah (N8)",
     "NomorFormat": "474.2/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Acuan nyata: 474.2 — blanko SK Numpang Nikah (N8); deret tersendiri.",
     "IsSharedNumbering": false,
     "IsKeteranganDesa": true
   },
@@ -212,6 +244,7 @@
     "TemplateName": "PENGANTAR_ADMINDUK",
     "DisplayName": "Pengantar Adminduk",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -221,6 +254,7 @@
     "TemplateName": "SK_PINDAH",
     "DisplayName": "Surat Keterangan Pindah",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -230,6 +264,7 @@
     "TemplateName": "SK_TIDAK_PUNYA_RUMAH",
     "DisplayName": "SK Tidak Punya Rumah",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -239,6 +274,7 @@
     "TemplateName": "IZIN_KERAMAIAN",
     "DisplayName": "Izin Keramaian",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   }

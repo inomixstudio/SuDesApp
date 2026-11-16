@@ -238,7 +238,18 @@
                             <Button Content="Dokumentasi sumber 2025" Command="{Binding BukaDokumentasiIndeksDesaCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="10,2,0,2"
                                     ToolTip="Baca sumber dan catatan data Indeks Desa 2025 di dokumentasi Markdown dalam aplikasi"/>
-                            <!-- Cetak/ekspor: ringkasan + rincian indikator yang sedang tampil
+                            <!-- Pemilih tahun cetak: rincian yang dicetak ikut tahun yang
+                                 dipilih pada chip riwayat — bukan selalu tahun terbaru. -->
+                            <StackPanel Orientation="Horizontal" Margin="10,2,0,2" VerticalAlignment="Center"
+                                        Visibility="{Binding AdaDataIdm, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="Tahun laporan:" VerticalAlignment="Center" Margin="0,0,6,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <ComboBox ItemsSource="{Binding TahunCetakPilihan}"
+                                          SelectedItem="{Binding TahunCetakTerpilih, Mode=TwoWay}"
+                                          MinWidth="84" VerticalAlignment="Center"
+                                          ToolTip="Pilih tahun penilaian yang dicetak ke PDF — daftarnya adalah tahun yang berhasil dimuat"/>
+                            </StackPanel>
+                            <!-- Cetak/ekspor: ringkasan + rincian indikator TAHUN TERPILIH
                                  dirender ke PDF, lalu dibuka di pratinjau PDF (tombol Cetak dan
                                  Ekspor ada di sana). Nonaktif selama belum ada data. -->
                             <Button Content="Cetak / PDF" Command="{Binding CetakCommand}"
@@ -247,26 +258,24 @@
                                     ToolTip="{Binding TooltipCetak}"/>
                         </WrapPanel>
 
-                        <TextBlock Text="{Binding PesanStatus}" Margin="0,8,0,0" TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   Visibility="{Binding AdaPesanStatus, Converter={StaticResource BoolToVis}}"/>
-
-                        <!-- Hanya saat halaman SUDAH berisi data (mis. muat ulang gagal):
-                             tanpa data, pesannya dibawa kartu keadaan di bawah supaya
-                             kalimat yang sama tidak muncul dua kali. -->
-                        <TextBlock Text="{Binding PesanGalat}" Foreground="{DynamicResource ErrorTextBrush}"
-                                   TextWrapping="Wrap" Margin="0,10,0,0"
-                                   Visibility="{Binding AdaGalatDiToolbar, Converter={StaticResource BoolToVis}}"/>
-
-                        <!-- Internet mati: data terakhir yang berhasil dimuat tetap tampil,
-                             dan baris ini memberi tahu tanggal pengambilannya. -->
-                        <TextBlock Text="{Binding PesanCadangan}" Foreground="{DynamicResource WarningTextBrush}"
-                                   TextWrapping="Wrap" Margin="0,10,0,0"
-                                   Visibility="{Binding AdaPesanCadangan, Converter={StaticResource BoolToVis}}"/>
-
-                        <TextBlock Text="{Binding PeringatanSumber}" Foreground="{DynamicResource WarningTextBrush}"
-                                   TextWrapping="Wrap" Margin="0,8,0,0"
-                                   Visibility="{Binding AdaPeringatanSumber, Converter={StaticResource BoolToVis}}"/>
+                        <!-- SATU bilah pesan: galat / cadangan / peringatan sumber / status
+                             dipilih yang paling relevan — dulu empat baris serentak. -->
+                        <TextBlock Text="{Binding PesanBilah}" TextWrapping="Wrap" Margin="0,10,0,0"
+                                   Visibility="{Binding AdaPesanBilah, Converter={StaticResource BoolToVis}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding PesanBilahAdalahGalat}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding PesanBilahAdalahPeringatan}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
 
                         <!-- Kartu tahun yang belum terbit: bila ada tahun yang tidak bisa
                              ditampilkan, kartu ini menjelaskan alasan + sumber resmi baru,
@@ -279,8 +288,6 @@
                                 <TextBlock Text="Tahun yang belum ditampilkan" FontWeight="SemiBold" FontSize="14"/>
                                 <TextBlock Text="{Binding PesanTahun}" TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <TextBlock Text="{Binding PesanCadangan}" TextWrapping="Wrap" FontSize="11" Margin="0,4,0,0"
-                                           Foreground="{DynamicResource WarningTextBrush}"/>
                             </StackPanel>
                         </Border>
 

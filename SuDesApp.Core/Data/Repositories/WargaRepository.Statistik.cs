@@ -36,9 +36,9 @@ namespace SuDesApp.Data.Repositories
                 var baris = await _connection.QueryAsync<(
                     string? Status, string? Jk, string? Rt, string? NoKk,
                     string? TanggalLahir, string? Pendidikan, string? Agama, string? StatusPerkawin,
-                    string? StatusKeluarga)>(
+                    string? StatusKeluarga, string? Pekerjaan)>(
                     @"SELECT COALESCE(NULLIF(StatusWarga,''), 'AKTIF'), JenisKelamin, RT, NoKK,
-                             TanggalLahir, Pendidikan, Agama, StatusPerkawinan, StatusKeluarga
+                             TanggalLahir, Pendidikan, Agama, StatusPerkawinan, StatusKeluarga, Pekerjaan
                       FROM Warga WHERE " + SyaratBukanDummy,
                     commandTimeout: 30);
 
@@ -47,6 +47,7 @@ namespace SuDesApp.Data.Repositories
                 var perAgama = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 var perPerkawinan = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 var perKelompokUsia = new Dictionary<string, int>(StringComparer.Ordinal);
+                var perPekerjaan = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 var kkUnik = new HashSet<string>(StringComparer.Ordinal);
                 int tanpaKk = 0;
 
@@ -88,7 +89,7 @@ namespace SuDesApp.Data.Repositories
                          .Select(g => g.Key),
                     StringComparer.Ordinal);
 
-                foreach (var (status, jk, rt, noKk, tanggalLahir, pendidikan, agama, perkawinan, statusKeluarga) in baris)
+                foreach (var (status, jk, rt, noKk, tanggalLahir, pendidikan, agama, perkawinan, statusKeluarga, pekerjaan) in baris)
                 {
                     var statusRapi = StatusWargaTipe.Normalisasi(status);
                     // Jenis kelamin menerima bentuk lengkap maupun singkat (L/P)
@@ -177,6 +178,14 @@ namespace SuDesApp.Data.Repositories
 
                     var kantong = KantongUsia(tanggalLahir);
                     perKelompokUsia[kantong] = perKelompokUsia.GetValueOrDefault(kantong) + 1;
+
+                    // Pekerjaan: teks bebas dari operator, jadi disatukan dengan
+                    // membuang spasi ganda lalu dipelihara apa adanya — kantong
+                    // "(tidak diisi)" menjaga baris tetap jumlah dengan total.
+                    var kunciPekerjaan = string.IsNullOrWhiteSpace(pekerjaan)
+                        ? "(tidak diisi)"
+                        : System.Text.RegularExpressions.Regex.Replace(pekerjaan!.Trim(), @"\s+", " ");
+                    perPekerjaan[kunciPekerjaan] = perPekerjaan.GetValueOrDefault(kunciPekerjaan) + 1;
                 }
 
                 // Kantong "(tidak diketahui)" SELALU ada — walau kosong — supaya
@@ -202,6 +211,15 @@ namespace SuDesApp.Data.Repositories
                 hasil.PerStatusPerkawinan = perPerkawinan
                     .Select(kv => new WargaStatistikBaris { Kunci = kv.Key, Jumlah = kv.Value })
                     .OrderBy(b => b.Kunci, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                // Pekerjaan diurut jumlah terbanyak dulu (baris "(tidak diisi)"
+                // selalu di akhir) — pekerjaan dominan desa langsung terlihat.
+                hasil.PerPekerjaan = perPekerjaan
+                    .Select(kv => new WargaStatistikBaris { Kunci = kv.Key, Jumlah = kv.Value })
+                    .OrderByDescending(b => b.Kunci == "(tidak diisi)" ? 0 : 1)
+                    .ThenBy(b => b.Kunci == "(tidak diisi)" ? int.MaxValue : -b.Jumlah)
+                    .ThenBy(b => b.Kunci, StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
                 // Kantong usia diurutkan numerik; kantong tak diketahui selalu

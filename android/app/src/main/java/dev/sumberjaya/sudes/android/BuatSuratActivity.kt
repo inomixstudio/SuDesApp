@@ -523,6 +523,84 @@ class BuatSuratActivity : AppCompatActivity() {
                 ""
             }
 
+        // Rincian garapan tambahan (bidang ke-2 dst.): setiap baris list
+        // rincianTambahan Dipetakan ke kunci garapanTambahan[i].* yang dibaca
+        // blok tabel PDF ("garapan.tabel"), nomor melanjutkan bidang pertama.
+        fields.optJSONArray("rincianTambahan")?.let { arrayTambahan ->
+            for (j in 0 until arrayTambahan.length()) {
+                val baris = arrayTambahan.optJSONObject(j) ?: continue
+                val awalanBaris = "garapanTambahan[${j + 2}]."
+                for (kunci in listOf("lokasi", "nomorPersil", "keteranganGarapan")) {
+                    nilai[awalanBaris + kunci] = baris.optString(kunci, "")
+                }
+                nilai[awalanBaris + "luas"] = baris.opt("luas")?.toString() ?: ""
+            }
+        }
+
+        // Surat Ahli Waris: kunci turunan yang di generator desktop dihitung
+        // dari objek AhliWarisData/KematianData — Android menghitung dari
+        // isian formulir dengan bentuk teks yang sama.
+        if (jenis.idJenis.equals("AHLI_WARIS", ignoreCase = true)) {
+            val namaAlmarhum = teksBidang("nama").ifBlank { "..." }
+            val almarhumPerempuan = teksBidang("jenisKelamin")
+                .contains("Perempuan", ignoreCase = true)
+            // Gelar tidak ikut kapital — sama seperti NamaFormatter desktop.
+            val namaKapital = NamaFormatter.kapitalTiapKata(namaAlmarhum)
+            nilai["ahliwaris.almarhumNama"] =
+                (if (almarhumPerempuan) "Almarhumah" else "Almarhum") + " " + namaKapital
+            val rtRw = AlamatSusun.formatRtRw(
+                nilai["warga.rt"]?.ifBlank { null }, nilai["warga.rw"]?.ifBlank { null },
+            )
+            nilai["ahliwaris.almarhumAlamat"] = listOf(
+                (nilai["warga.dusun"] ?: ""),
+                rtRw,
+                "Desa " + (nilai["warga.desa"] ?: ""),
+                "Kecamatan " + (nilai["warga.kecamatan"] ?: ""),
+                "Kabupaten " + (nilai["warga.kabupaten"] ?: ""),
+            ).filter { it.isNotBlank() }.joinToString(" ")
+
+            val namaPasangan = teksBidang("namaPasangan")
+            if (namaPasangan.isNotBlank()) {
+                nilai["ahliwaris.pasangan.nama"] = NamaFormatter.kapitalTiapKata(namaPasangan)
+                nilai["ahliwaris.pasangan.tempatTanggalLahir"] = listOf(
+                    teksBidang("tempatLahirPasangan").ifBlank { "...." },
+                    tanggalPanjangIndo(teksBidang("tanggalLahirPasangan")).ifBlank { "...." },
+                ).joinToString(", ")
+                nilai["ahliwaris.pasangan.jenisKelamin"] = teksBidang("jenisKelaminPasangan")
+                nilai["ahliwaris.pasangan.alamat"] = teksBidang("alamatPasangan")
+            }
+            // Sebutan kata pasangan menyesuaikan jenis kelamin yang dipilih.
+            nilai["ahliwaris.jenisKelaminPasanganKata"] =
+                if (teksBidang("jenisKelaminPasangan").contains("Perempuan", true)) "perempuan"
+                else "laku-laki".let { "laki-laki" }
+
+            val barisAnak = daftarBaris["anak"].orEmpty()
+            val anakTerisi = barisAnak.filter { isiBaris(it, "nama").isNotBlank() }
+            for ((idx, anak) in anakTerisi.withIndex()) {
+                val awalan = "ahliwaris.anak[$idx]."
+                nilai[awalan + "nama"] = NamaFormatter.kapitalTiapKata(isiBaris(anak, "nama"))
+                nilai[awalan + "tempatTanggalLahir"] = listOf(
+                    isiBaris(anak, "tempatLahir").ifBlank { "...." },
+                    tanggalPanjangIndo(isiBaris(anak, "tanggalLahir")).ifBlank { "...." },
+                ).joinToString(", ")
+                nilai[awalan + "jenisKelamin"] = isiBaris(anak, "jenisKelamin")
+                nilai[awalan + "alamat"] = isiBaris(anak, "alamat")
+            }
+            if (anakTerisi.isNotEmpty()) {
+                nilai["ahliwaris.jumlahAnak"] = anakTerisi.size.toString()
+                nilai["ahliwaris.jumlahAnakTerbilang"] = terbilangIndo(anakTerisi.size)
+            }
+            // Penanda tangan pernyataan & pemberi kuasa: pasangan lalu tiap anak.
+            val penandatangan = buildList {
+                if (namaPasangan.isNotBlank()) add(NamaFormatter.kapitalTiapKata(namaPasangan))
+                for (anak in anakTerisi) {
+                    val nama = isiBaris(anak, "nama").trim()
+                    if (nama.isNotBlank()) add(NamaFormatter.kapitalTiapKata(nama))
+                }
+            }
+            nilai["ahliwaris.penandatangan"] = penandatangan.joinToString("\n")
+        }
+
         val tahunTarik = PengaturanSinkron.tahunTarik(this@BuatSuratActivity)
         val tahun = tahunTarik
 
@@ -626,6 +704,40 @@ class BuatSuratActivity : AppCompatActivity() {
     private fun teksBidang(key: String): String = nilaiBidang(key).let { if (it is String) it else "" }
 
     /** Umur tahun dari tanggal lahir (ISO yyyy-MM-dd); kosong bila tak terbaca. */
+    /** Isi satu anak pada baris list ("anak") sebagai teks. */
+    private fun isiBaris(baris: BarisDaftar, kunci: String): String {
+        val v = baris.bidang[kunci] ?: return ""
+        return when (v) {
+            is EditText -> v.text.toString().trim()
+            is MaterialAutoCompleteTextView -> v.text?.toString()?.trim().orEmpty()
+            else -> ""
+        }
+    }
+
+    /** Tanggal panjang Indonesia ("17 September 2026") dari tanggal bebas. */
+    private fun tanggalPanjangIndo(iso: String): String {
+        val cal = uraikanTanggal(iso) ?: return ""
+        return java.text.SimpleDateFormat("dd MMMM yyyy", java.util.Locale("id", "ID")).format(cal.time)
+    }
+
+    /** Angka ke kata Indonesia untuk jumlah anak kecil (1..99). */
+    private fun terbilangIndo(n: Int): String {
+        val satuan = listOf("", "satu", "dua", "tiga", "empat", "lima",
+            "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas")
+        return when {
+            n < 0 || n > 99 -> n.toString()
+            n < 12 -> satuan[n]
+            n == 12 -> "dua belas"
+            n < 20 -> satuan[n - 10] + " belas"
+            else -> {
+                val puluh = n / 10
+                val sisa = n % 10
+                (if (puluh == 1) "sepuluh" else satuan[puluh]) + " puluh" +
+                    (if (sisa > 0) " " + satuan[sisa] else "")
+            }
+        }
+    }
+
     private fun umurDari(iso: String): String {
         val lahir = uraikanTanggal(iso) ?: return ""
         val sekarang = Calendar.getInstance()

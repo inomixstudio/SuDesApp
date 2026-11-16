@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Application x:Class="SuDesApp.Wpf.App"
               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -27,7 +27,7 @@
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
             <!-- Logo Google "G" resmi (4 warna) sebagai vektor — dipakai bersama
-                 di LoginWindow, GoogleLoginView, GoogleDriveView. Viewbox menskalakan
+                 di LoginWindow, GoogleDriveView. Viewbox menskalakan
                  komposisi 48x48 SECARA UTUH; jangan beri Stretch per-Path. -->
             <DataTemplate x:Key="GoogleGLogo">
                 <Viewbox Stretch="Uniform">
@@ -107,9 +107,6 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:ExImdbViewModel}">
                 <views:ExImdbView/>
-            </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:GoogleLoginViewModel}">
-                <views:GoogleLoginView/>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:GoogleDriveViewModel}">
                 <views:GoogleDriveView/>

@@ -224,6 +224,9 @@ namespace SuDesApp.Data.Models
         public IReadOnlyList<WargaStatistikBaris> PerAgama { get; set; } = Array.Empty<WargaStatistikBaris>();
         public IReadOnlyList<WargaStatistikBaris> PerKelompokUsia { get; set; } = Array.Empty<WargaStatistikBaris>();
 
+        /// <summary>Rekap warga menurut isi kolom Pekerjaan; kosong masuk kantong "(tidak diisi)".</summary>
+        public IReadOnlyList<WargaStatistikBaris> PerPekerjaan { get; set; } = Array.Empty<WargaStatistikBaris>();
+
         /// <summary>
         /// Pendidikan terkelompok ke jenjang baku BPS supaya tabel laporan tidak
         /// berderet banyak baris "SD/SMP/SMA/…" yang isinya sama. Baris berlabel

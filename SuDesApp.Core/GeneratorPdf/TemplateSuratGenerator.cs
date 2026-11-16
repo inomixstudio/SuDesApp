@@ -150,7 +150,10 @@ namespace SuDesApp.GeneratorPdf
             if (template.PakaiKop)
             {
                 string? logoPath = PengaturanCetak.JalurLogoEfektif(_config.LogoPath);
-                badan.Blok(c => KopSurat.Gambar(c, desa, logoPath));
+                // Jarak kop–judul mengikuti kerapatan yang berlaku (pola yang sama
+                // dengan SuratGeneratorBase) supaya judul/nomor tidak menempel ke
+                // garis kop ganda pada kerapatan rapat sekalipun.
+                badan.Blok(c => KopSurat.Gambar(c.PaddingBottom(KerapatanSurat.Aktif.JarakKopJudul), desa, logoPath));
             }
 
             // 2. Judul + nomor (opsional).

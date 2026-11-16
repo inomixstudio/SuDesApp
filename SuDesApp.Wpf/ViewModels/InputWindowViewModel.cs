@@ -278,6 +278,7 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 baseVm.SetEditMode(false);
                 _tugasInisialisasi = InitializeAsync(baseVm);
+                BeriTahuTombolSetelahInisialisasi();
             }
 
             // Peringatan data desa contoh muncul sendiri saat form dibuka, supaya
@@ -325,6 +326,33 @@ namespace SuDesApp.Wpf.ViewModels
             }
 
             await PeriksaPeringatanDataContohAsync();
+        }
+
+        /// <summary>
+        /// Tombol Simpan menjadikan <see cref="_tugasInisialisasi"/> sebagai syarat
+        /// CanExecute-nya, tetapi AsyncRelayCommand di sini TIDAK memakai
+        /// CommandManager.RequerySuggested — CanExecute hanya ditinjau ulang saat
+        /// RaiseCanExecuteChanged dipanggil. Tanpa laporan ini, CanExecute dinilai
+        /// sekali di awal (tugas masih jalan → disabled) dan tombol Simpan tetap
+        /// mati walau isian sudah siap di semua jenis surat.
+        /// </summary>
+        private void BeriTahuTombolSetelahInisialisasi()
+        {
+            var tugas = _tugasInisialisasi;
+            if (tugas == null) return;
+
+            // Lanjutan dijalankan di thread UI bila ada (aplikasi WPF); pada uji
+            // tanpa SynchronizationContext cukup thread pool. Lanjutan berjalan
+            // juga saat tugas gagal — tombol tetap menyala agar pengguna bisa
+            // mencoba Simpan (galatnya dicatat di log oleh SaveAsync).
+            var scheduler = SynchronizationContext.Current != null
+                ? TaskScheduler.FromCurrentSynchronizationContext()
+                : TaskScheduler.Current;
+            tugas.ContinueWith(
+                _ => ((AsyncRelayCommand)SaveCommand).RaiseCanExecuteChanged(),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                scheduler);
         }
 
         /// <summary>Inisialisasi form lalu isi nomor surat otomatis (paritas WinForms).</summary>

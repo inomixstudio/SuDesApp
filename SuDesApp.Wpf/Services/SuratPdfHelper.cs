@@ -57,6 +57,7 @@ namespace SuDesApp.Wpf.Services
                 SuratConstants.SKU => services.GetService<SuDesApp.GeneratorPdf.SKUGenerator>(),
                 SuratConstants.PENGANTAR_SKCK => services.GetService<SuDesApp.GeneratorPdf.SKCKGenerator>(),
                 SuratConstants.SKTM => services.GetService<SuDesApp.GeneratorPdf.SKTMGenerator>(),
+                SuratConstants.PENGHASILAN => services.GetService<SuDesApp.GeneratorPdf.PenghasilanGenerator>(),
                 SuratConstants.SK_BELUM_TERBIT => services.GetService<SuDesApp.GeneratorPdf.KeteranganTerbitGenerator>(),
                 SuratConstants.KEMATIAN => services.GetService<SuDesApp.GeneratorPdf.KematianGenerator>(),
                 SuratConstants.BEDANAMA => services.GetService<SuDesApp.GeneratorPdf.BedaNamaGenerator>(),

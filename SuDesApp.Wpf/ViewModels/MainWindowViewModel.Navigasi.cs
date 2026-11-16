@@ -179,7 +179,8 @@ namespace SuDesApp.Wpf.ViewModels
             return route switch
             {
                 "beranda" => () => _ = ShowBerandaAsync(),
-                "google-login" => () => _ = ShowGoogleLoginAsync(),
+                "google-drive" => () => _ = ShowGoogleDriveAsync(),
+                "google-login" => () => _ = ShowGoogleDriveAsync(), // rute lama diarahkan ke halaman gabungan
                 "register-surat" => () => _ = ShowRegisterSuratAsync(),
                 "rekening-koran" => () => _ = ShowRekeningKoranAsync(),
                 "template-surat" => () => _ = ShowTemplateSuratAsync(),
@@ -230,6 +231,18 @@ namespace SuDesApp.Wpf.ViewModels
                 _logger.LogError(ex, "Gagal membuka Beranda");
                 await _messageService.ShowErrorAsync("Gagal membuka Beranda: " + ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Pasang callback navigasi Panduan Awal ke halaman pengaturan ASLI. Tanpa
+        /// ini tombol langkah hanya bisa membangun instance VM sendiri yang
+        /// kosong (form tidak termuat) — dulu itulah sumber "klik langkah tidak
+        /// ke halaman pengaturan + galat".
+        /// </summary>
+        private void PasangNavigasiPanduan(PanduanAwalViewModel vm)
+        {
+            vm.BukaPengaturanSurat = bagian => BukaPengaturanSuratAsync(bagian);
+            vm.BukaPenomoranSurat = BukaPenomoranSuratAsync;
         }
 
         /// <summary>Teruskan aksi cepat dari Beranda ke halaman yang bersangkutan.</summary>
@@ -355,7 +368,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// ini scope halamannya ikut dikelola NavigationService — code-behind
         /// view tidak boleh membuat scope sendiri.
         /// </summary>
-        public Task ShowGoogleLoginPublicAsync() => ShowGoogleLoginAsync();
+        public Task ShowGoogleLoginPublicAsync() => ShowGoogleDriveAsync();
 
         /// <summary>
         /// Buka halaman Langganan dari luar ViewModel (mis. popup startup yang
@@ -751,7 +764,7 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        private async Task ShowSettingsAsync()
+        private async Task ShowSettingsAsync(int? bagian = null)
         {
             try
             {
@@ -769,6 +782,14 @@ namespace SuDesApp.Wpf.ViewModels
                     NavigasiHalaman<Views.SetelanView>(_setelanViewModel);
                     await _setelanViewModel.DibukaAsync();
                 }
+
+                // Panduan Awal membuka bagian tertentu (Data Desa, Pejabat, Cetak &
+                // Logo) — dipanggil SETELAH data termuat supaya urutan bagian tidak
+                // ditimpa oleh TampilkanBagian(0) di konstruktor.
+                if (bagian is { } nomorBagian)
+                {
+                    _setelanViewModel.TampilkanBagian(nomorBagian);
+                }
             }
             catch (Exception ex)
             {
@@ -776,6 +797,17 @@ namespace SuDesApp.Wpf.ViewModels
                 await _messageService.ShowErrorAsync("Gagal membuka Pengaturan: " + ex.Message);
             }
         }
+
+        /// <summary>
+        /// Buka Pengaturan Surat langsung pada bagian tertentu (0 = Data Desa, 1 =
+        /// Pejabat Desa, 3 = Cetak &amp; Logo). Dipakai tombol langkah Panduan Awal —
+        /// jalurnya sama dengan menu Pengaturan Surat (VM bertahan + view cache),
+        /// bukan instance baru yang formnya kosong.
+        /// </summary>
+        public Task BukaPengaturanSuratAsync(int bagian) => ShowSettingsAsync(bagian);
+
+        /// <summary>Buka Pengaturan Nomor Surat — jalur sama dengan menunya (dipakai Panduan Awal).</summary>
+        public Task BukaPenomoranSuratAsync() => ShowPengaturanNomorSuratAsync();
 
         private async Task ShowFormulirAsync()
         {
@@ -900,26 +932,30 @@ namespace SuDesApp.Wpf.ViewModels
             }
         }
 
-        private async Task ShowGoogleLoginAsync()
+        /// <summary>
+        /// Buka halaman Google Drive yang sudah MENGGABUNGKAN login akun Google dan
+        /// arsip: kartu Akun Google di atas, penjelajah berkas di bawah — satu
+        /// halaman ringkas, tidak ada lagi halaman Login Google terpisah.
+        /// </summary>
+        private async Task ShowGoogleDriveAsync()
         {
             try
             {
                 var sp = BuatScopeHalaman();
-                var vm = sp.GetRequiredService<GoogleLoginViewModel>();
-                vm.OnLoggedIn = email => { _ = RefreshGoogleBadgeAsync(); };
+                var vm = sp.GetRequiredService<GoogleDriveViewModel>();
+                vm.SetelahLoginTerverifikasi = email => { _ = RefreshGoogleBadgeAsync(); };
 
-                // Bagian sinkron InitializeAsync (set state awal: belum dikonfigurasi /
-                // belum login / "Menghubungkan…") berjalan seketika, tapi navigasi TIDAK
-                // menunggu validasi token ke server Google — halaman tampil instan dan
-                // status ter-update menyusul di background.
+                // Bagian sinkron InitializeAsync (set status awal) berjalan seketika,
+                // tapi navigasi TIDAK menunggu validasi token ke server Google —
+                // halaman tampil instan dan status ter-update menyusul di background.
                 var initTask = vm.InitializeAsync();
                 _navigation.Navigate(vm);
                 await initTask;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gagal membuka Login dengan Google");
-                await _messageService.ShowErrorAsync("Gagal membuka Login dengan Google: " + ex.Message);
+                _logger.LogError(ex, "Gagal membuka Google Drive & Arsip");
+                await _messageService.ShowErrorAsync("Gagal membuka Google Drive: " + ex.Message);
             }
         }
 
@@ -969,6 +1005,7 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 var sp = BuatScopeHalaman();
                 var vm = sp.GetRequiredService<PanduanAwalViewModel>();
+                PasangNavigasiPanduan(vm);
                 vm.PanduanDitutup += BukaBeranda;
                 await vm.PeriksaAsync();
                 _featureNavigation.TandaiPanduanAwal();
@@ -982,12 +1019,12 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// Dipanggil sekali setelah pengguna masuk: bila data desa/pejabat belum beres
-        /// dan pengguna belum pernah menutup panduan, halaman Panduan Awal dibuka
-        /// menggantikan Beranda. Kalau datanya sudah beres, panduan hanya ditandai
-        /// selesai dan tidak pernah muncul mengganggu.
+        /// Dipanggil sekali setelah pengguna masuk. Bila data desa/pejabat masih
+        /// contoh, halaman pertama adalah Panduan Awal — pengguna diarahkan
+        /// melengkapi data sebelum surat pertama dicetak. Bila datanya sudah
+        /// beres, Beranda yang dibuka.
         /// </summary>
-        /// <returns>True bila panduan benar-benar dibuka (pemanggil tidak perlu membuka Beranda).</returns>
+        /// <returns>True bila halaman pembuka sudah dibuka (pemanggil tidak perlu membuka Beranda).</returns>
         public async Task<bool> TampilkanPanduanAwalJikaPerluAsync()
         {
             try
@@ -996,16 +1033,19 @@ namespace SuDesApp.Wpf.ViewModels
                 var vm = sp.GetRequiredService<PanduanAwalViewModel>();
                 await vm.PeriksaAsync();
 
-                if (!vm.PerluDitampilkanSaatMulai)
+                // Data desa/pejabat masih contoh: halaman pertama adalah Panduan
+                // Awal supaya pengguna diarahkan melengkapi data desanya.
+                if (!vm.DataDesaMasihContoh)
                 {
-                    _logger.LogInformation("Panduan awal tidak perlu ditampilkan (data sudah beres atau sudah ditutup).");
+                    _logger.LogInformation("Data desa sudah beres — Beranda yang dibuka.");
                     return false;
                 }
 
                 vm.PanduanDitutup += BukaBeranda;
+                PasangNavigasiPanduan(vm);
                 _featureNavigation.TandaiPanduanAwal();
                 _navigation.Navigate(vm);
-                _logger.LogInformation("Panduan awal dibuka otomatis: data desa/pejabat belum lengkap.");
+                _logger.LogInformation("Data desa masih contoh — buka Panduan Awal sebagai halaman pertama.");
                 return true;
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
@@ -51,8 +51,8 @@ namespace SuDesApp.GeneratorPdf
                 badan,
                 desa,
                 suratData,
-                ("Ayah/wali/pengampu", NamaFormatter.ToUpperNama(ayah.Nama)),
-                ("Ibu/wali/pengampu", NamaFormatter.ToUpperNama(ibu.Nama)));
+                ("Ayah/wali/pengampu", NamaAtauTitik(ayah.Nama)),
+                ("Ibu/wali/pengampu", NamaAtauTitik(ibu.Nama)));
         }
 
         // =====================================================================
@@ -69,7 +69,7 @@ namespace SuDesApp.GeneratorPdf
 
             var almarhum = new List<(string Label, string? Nilai)>
             {
-                ("1. Nama lengkap dan alias", NamaFormatter.ToUpperNama(suamiMeninggal ? warga.Nama : ntcr.NamaIstri)),
+                ("1. Nama lengkap dan alias", NamaAtauTitik(suamiMeninggal ? warga.Nama : ntcr.NamaIstri)),
                 ("2. Bin/Binti", Isi(NamaFormatter.ToUpperNama(suamiMeninggal ? ntcr.AyahCalonSuami?.Nama : ntcr.AyahCalonIstri?.Nama))),
                 ("3. Nomor Induk Kependudukan", Isi(suamiMeninggal ? warga.NIK : ntcr.NikIstri)),
                 ("4. Tempat dan tanggal lahir", TempatTanggalLahir(
@@ -92,7 +92,7 @@ namespace SuDesApp.GeneratorPdf
 
             var ahli = new List<(string Label, string? Nilai)>
             {
-                ("1. Nama lengkap dan alias", NamaFormatter.ToUpperNama(suamiMeninggal ? ntcr.NamaIstri : warga.Nama)),
+                ("1. Nama lengkap dan alias", NamaAtauTitik(suamiMeninggal ? ntcr.NamaIstri : warga.Nama)),
                 ("2. Bin/Binti", Isi(NamaFormatter.ToUpperNama(suamiMeninggal ? ntcr.AyahCalonIstri?.Nama : ntcr.AyahCalonSuami?.Nama))),
                 ("3. Nomor Induk Kependudukan", Isi(suamiMeninggal ? ntcr.NikIstri : warga.NIK)),
                 ("4. Tempat dan tanggal lahir", TempatTanggalLahir(

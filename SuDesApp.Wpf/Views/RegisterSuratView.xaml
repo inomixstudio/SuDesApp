@@ -532,6 +532,7 @@
                         <Border Style="{StaticResource TabelKepalaPita}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="126"/>
                                     <ColumnDefinition Width="50"/>
                                     <ColumnDefinition Width="100"/>
                                     <ColumnDefinition Width="1.6*" MinWidth="150"/>
@@ -543,9 +544,8 @@
                                     <ColumnDefinition Width="1.8*" MinWidth="150"/>
                                     <ColumnDefinition Width="105"/>
                                     <ColumnDefinition Width="130"/>
-                                    <ColumnDefinition Width="126"/>
                                 </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
+                                <Button Grid.Column="1" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
                                         Command="{Binding SortCommand}" CommandParameter="ID_Surat">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="No"/>
@@ -560,7 +560,7 @@
                                         </TextBlock>
                                     </StackPanel>
                                 </Button>
-                                <Button Grid.Column="1" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
+                                <Button Grid.Column="2" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
                                         Command="{Binding SortCommand}" CommandParameter="TanggalSurat">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Tanggal" TextWrapping="Wrap"/>
@@ -575,7 +575,7 @@
                                         </TextBlock>
                                     </StackPanel>
                                 </Button>
-                                <Button Grid.Column="2" Style="{StaticResource TabelKepala}"
+                                <Button Grid.Column="3" Style="{StaticResource TabelKepala}"
                                         Command="{Binding SortCommand}" CommandParameter="NomorSurat">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Nomor Surat" TextWrapping="Wrap"/>
@@ -590,7 +590,7 @@
                                         </TextBlock>
                                     </StackPanel>
                                 </Button>
-                                <Button Grid.Column="3" Style="{StaticResource TabelKepala}"
+                                <Button Grid.Column="4" Style="{StaticResource TabelKepala}"
                                         Command="{Binding SortCommand}" CommandParameter="NamaDisplay">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Nama Pemohon / Instansi"/>
@@ -605,15 +605,15 @@
                                         </TextBlock>
                                     </StackPanel>
                                 </Button>
-                                <TextBlock Grid.Column="4" Text="Tempat/Tgl Lahir" VerticalAlignment="Center" TextWrapping="Wrap"
+                                <TextBlock Grid.Column="5" Text="Tempat/Tgl Lahir" VerticalAlignment="Center" TextWrapping="Wrap"
                                            FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <TextBlock Grid.Column="5" Text="JK" TextAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
+                                <TextBlock Grid.Column="6" Text="JK" TextAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
                                            FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <TextBlock Grid.Column="6" Text="Alamat" VerticalAlignment="Center" TextWrapping="Wrap"
+                                <TextBlock Grid.Column="7" Text="Alamat" VerticalAlignment="Center" TextWrapping="Wrap"
                                            FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <TextBlock Grid.Column="7" Text="Keperluan" VerticalAlignment="Center" TextWrapping="Wrap"
+                                <TextBlock Grid.Column="8" Text="Keperluan" VerticalAlignment="Center" TextWrapping="Wrap"
                                            FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <Button Grid.Column="8" Style="{StaticResource TabelKepala}"
+                                <Button Grid.Column="9" Style="{StaticResource TabelKepala}"
                                         Command="{Binding SortCommand}" CommandParameter="NamaJenis">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Jenis Surat" TextWrapping="Wrap"/>
@@ -628,7 +628,7 @@
                                         </TextBlock>
                                     </StackPanel>
                                 </Button>
-                                <Button Grid.Column="9" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
+                                <Button Grid.Column="10" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
                                         Command="{Binding SortCommand}" CommandParameter="Status">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Status"/>
@@ -643,7 +643,7 @@
                                         </TextBlock>
                                     </StackPanel>
                                 </Button>
-                                <Button Grid.Column="10" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
+                                <Button Grid.Column="11" Style="{StaticResource TabelKepala}" HorizontalContentAlignment="Center"
                                         Command="{Binding SortCommand}" CommandParameter="CreatedAt">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Dibuat"/>
@@ -658,7 +658,7 @@
                                         </TextBlock>
                                     </StackPanel>
                                 </Button>
-                                <TextBlock Grid.Column="11" Text="Aksi" TextAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
+                                <TextBlock Grid.Column="0" Text="Aksi" TextAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
                                            FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
                         </Border>
@@ -689,6 +689,7 @@
                                     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,7">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="126"/>
                                                 <ColumnDefinition Width="50"/>
                                                 <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="1.6*" MinWidth="150"/>
@@ -700,40 +701,39 @@
                                                 <ColumnDefinition Width="1.8*" MinWidth="150"/>
                                                 <ColumnDefinition Width="105"/>
                                                 <ColumnDefinition Width="130"/>
-                                                <ColumnDefinition Width="126"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding ID_Surat}" TextAlignment="Center"
-                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding TanggalSurat, StringFormat='dd-MM-yyyy'}"
-                                                       TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
-                                            <TextBlock Grid.Column="2" Text="{Binding NomorSurat}" FontWeight="Medium"
-                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
-                                                       ToolTip="{Binding NomorSurat}"/>
-                                            <TextBlock Grid.Column="3" Text="{Binding NamaDisplay}" FontWeight="SemiBold"
-                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
-                                                       ToolTip="{Binding NamaDisplay}"/>
-                                            <TextBlock Grid.Column="4" Text="{Binding TTLDisplay}"
-                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
-                                                       ToolTip="{Binding TTLDisplay}"/>
-                                            <TextBlock Grid.Column="5" Text="{Binding JenisKelaminDisplay}" TextAlignment="Center"
-                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
-                                            <TextBlock Grid.Column="6" Text="{Binding AlamatDisplay}"
-                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
-                                                       ToolTip="{Binding AlamatDisplay}"/>
-                                            <TextBlock Grid.Column="7" Text="{Binding Keperluan}"
-                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
-                                                       ToolTip="{Binding Keperluan}"/>
-                                            <TextBlock Grid.Column="8" Text="{Binding JenisSuratLabel}"
-                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
-                                                       ToolTip="{Binding JenisSuratLabel}"/>
-                                            <ContentControl Grid.Column="9" Content="{Binding}"
-                                                            ContentTemplate="{StaticResource StatusCellTemplate}"
-                                                            VerticalAlignment="Top" Margin="0,0,12,0"/>
-                                            <TextBlock Grid.Column="10" Text="{Binding CreatedAt, StringFormat='dd-MM-yyyy HH:mm'}"
-                                                       TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
-                                            <ContentControl Grid.Column="11" Content="{Binding}"
+                                            <ContentControl Grid.Column="0" Content="{Binding}"
                                                             ContentTemplate="{StaticResource ActionCellTemplate}"
                                                             VerticalAlignment="Top"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding ID_Surat}" TextAlignment="Center"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding TanggalSurat, StringFormat='dd-MM-yyyy'}"
+                                                       TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding NomorSurat}" FontWeight="Medium"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding NomorSurat}"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding NamaDisplay}" FontWeight="SemiBold"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding NamaDisplay}"/>
+                                            <TextBlock Grid.Column="5" Text="{Binding TTLDisplay}"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding TTLDisplay}"/>
+                                            <TextBlock Grid.Column="6" Text="{Binding JenisKelaminDisplay}" TextAlignment="Center"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="7" Text="{Binding AlamatDisplay}"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding AlamatDisplay}"/>
+                                            <TextBlock Grid.Column="8" Text="{Binding Keperluan}"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding Keperluan}"/>
+                                            <TextBlock Grid.Column="9" Text="{Binding JenisSuratLabel}"
+                                                       TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"
+                                                       ToolTip="{Binding JenisSuratLabel}"/>
+                                            <ContentControl Grid.Column="10" Content="{Binding}"
+                                                            ContentTemplate="{StaticResource StatusCellTemplate}"
+                                                            VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="11" Text="{Binding CreatedAt, StringFormat='dd-MM-yyyy HH:mm'}"
+                                                       TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,0,12,0"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

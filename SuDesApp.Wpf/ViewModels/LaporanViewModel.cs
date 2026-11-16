@@ -239,6 +239,12 @@ namespace SuDesApp.Wpf.ViewModels
             },
             new LaporanTabelPilihan
             {
+                Jenis = JenisTabelLaporan.Pekerjaan,
+                Judul = "Pekerjaan",
+                Keterangan = "Jumlah warga per pekerjaan, terbanyak di atas"
+            },
+            new LaporanTabelPilihan
+            {
                 Jenis = JenisTabelLaporan.Agama,
                 Judul = "Agama",
                 Keterangan = "Agama warga"

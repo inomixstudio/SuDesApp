@@ -146,7 +146,6 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         private async Task MuatIntiAsync()
         {
-            if (IsBusy) return;
             IsBusy = true;
             try
             {

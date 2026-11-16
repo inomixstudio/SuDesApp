@@ -10,3 +10,10 @@
 
 # Dokumentasi folder aset: dirujuk README.md, bukan csproj maupun kode.
 Resources/README.md
+
+# Sumber lambang kabupaten/kota: TIDAK lagi diterbangkan ke instalasi
+# (digantikan arsip tunggal Resources/LambangKabupaten.zip yang dirujuk
+# csproj). Folder ini tetap sumber kebenaran + asal-usul (sumber.json),
+# dijaga Tools/verifikasi-logo-kabupaten.py dan siapkan-lambang-kabupaten.py.
+Resources/LogosKabupaten/*
+Resources/LogosKabupaten/sumber.json

@@ -395,7 +395,9 @@ object DaftarHadirPdf {
             val desa = pengaturan.namaDesa
             val namaJudul = if (desa.isBlank()) "" else titleCase(desa.lowercase())
             val tanggal = tanggalDariHariTanggal(data.hariTanggal) ?: Date()
-            val tanggalTeks = SimpleDateFormat("dd/MM/yyyy", Locale("id", "ID")).format(tanggal)
+            // Desktop memakai format panjang bahasa Indonesia (TanggalIndo):
+            // "17 September 2026", bukan dd/MM/yyyy.
+            val tanggalTeks = SimpleDateFormat("d MMMM yyyy", Locale("id", "ID")).format(tanggal)
             val tempatTanggal = if (namaJudul.isBlank()) tanggalTeks else "$namaJudul, $tanggalTeks"
             val jabatan = Kop.jabatan(pengaturan, "Kepala Desa")
             val namaPejabat = pengaturan.kepalaDesa.ifBlank { "..........................." }
@@ -412,9 +414,12 @@ object DaftarHadirPdf {
             for (b in jabatan.split('\n')) tengah(b.uppercase(Locale("id", "ID")))
             y += if (landscape) 30f else 55f - ukuran * 1.2f
             val paintTebal = font.paint(ukuran, tebal = true)
-            val wNama = paintTebal.measureText(namaPejabat.uppercase(Locale("id", "ID")))
+            // Desktop: gelar tetap apa adanya — hanya NAMA POKOK yang kapital
+            // (NamaFormatter.ToUpperNama), bukan uppercase seluruhnya.
+            val teksNama = NamaFormatter.namaAtauTitik(pengaturan.kepalaDesa)
+            val wNama = paintTebal.measureText(teksNama)
             val xx = xKiri + (lebarBlok - wNama) / 2f
-            kanvas.drawText(namaPejabat.uppercase(Locale("id", "ID")), xx, y + ukuran, paintTebal)
+            kanvas.drawText(teksNama, xx, y + ukuran, paintTebal)
             garis(xx, xx + wNama, y + ukuran + 2f, 1f)
             y += ukuran * 1.2f
             if (pengaturan.jenisLembaga.equals("Kelurahan", ignoreCase = true) &&

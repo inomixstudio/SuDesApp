@@ -143,16 +143,14 @@ namespace SuDesApp.Wpf.Input
 
             // Sub-model IjinTinggal dibuat otomatis oleh SuratData dan tetap
             // divalidasi oleh SuratDataValidator; isi alamat asal & tujuan agar valid.
+            // Bentuk teks dari pembangun bersama generator (SATU sumber format),
+            // sehingga yang tersimpan sama persis dengan yang tercetak. Bagian kosong
+            // dilewati — dulu dusun kosong justru mencetak kata "Dusun" telanjang.
             suratData.IjinTinggal ??= new IjinTinggalData();
-            var alamatAsal = $"Dusun {Dusun.Trim()}".TrimEnd();
-            var rtRw = FormatRtRw();
-            if (rtRw.Length > 0) alamatAsal += " " + rtRw;
-            suratData.IjinTinggal.AlamatAsal = $"{alamatAsal}, Desa {Desa.Trim()}, Kecamatan {Kecamatan.Trim()}, Kabupaten {Kabupaten.Trim()}";
-            string dusunTujuanAlamat = string.IsNullOrWhiteSpace(DusunTujuan.Trim())
-                ? string.Empty
-                : $"Dusun {DusunTujuan.Trim()}, ";
-            suratData.IjinTinggal.TujuanTinggal =
-                $"{dusunTujuanAlamat}Desa {DesaTujuan.Trim()}, Kecamatan {KecamatanTujuan.Trim()}, Kabupaten {KabupatenTujuan.Trim()}";
+            suratData.IjinTinggal.AlamatAsal = GeneratorPdf.IjinTinggalGenerator.AlamatAsalTeks(
+                Dusun, Rt, Rw, Desa, Kecamatan, Kabupaten);
+            suratData.IjinTinggal.TujuanTinggal = GeneratorPdf.IjinTinggalGenerator.AlamatTujuanTeks(
+                DusunTujuan, DesaTujuan, KecamatanTujuan, KabupatenTujuan);
 
             if (suratData.Warga != null)
             {
@@ -239,13 +237,12 @@ namespace SuDesApp.Wpf.Input
                     kabTujuan = KabupatenTujuan ?? string.Empty;
                 }
 
-                string alamatTujuan = string.IsNullOrWhiteSpace(dusunTujuan)
-                    ? $"Desa {desaTujuan} Kecamatan {kecTujuan} Kabupaten {kabTujuan}"
-                    : $"{dusunTujuan} Desa {desaTujuan} Kecamatan {kecTujuan} Kabupaten {kabTujuan}";
+                string alamatTujuan = GeneratorPdf.IjinTinggalGenerator.AlamatTujuanTeks(
+                    dusunTujuan, desaTujuan, kecTujuan, kabTujuan);
 
-                return $"Benar nama tersebut diatas adalah warga Desa {desaAsal} Kecamatan {kecAsal} Kabupaten {kabAsal}. " +
-                       $"Menurut sepengetahuan kami nama tersebut diatas sampai saat ini " +
-                       $"bertempat tinggal sementara di {alamatTujuan}.";
+                // Kalimat baku dari pembangun bersama generator — persis sama dengan
+                // cadangan cetak, jadi isian otomatis form = hasil PDF.
+                return GeneratorPdf.IjinTinggalGenerator.KeteranganTeks(desaAsal, kecAsal, kabAsal, alamatTujuan);
             }
             catch (Exception ex)
             {

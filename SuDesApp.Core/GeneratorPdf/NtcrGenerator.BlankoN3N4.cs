@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
@@ -69,8 +69,8 @@ namespace SuDesApp.GeneratorPdf
                 badan,
                 desa,
                 suratData,
-                ("Calon Suami", NamaFormatter.ToUpperNama(warga.Nama)),
-                ("Calon Istri", NamaFormatter.ToUpperNama(ntcr.NamaIstri)));
+                ("Calon Suami", NamaAtauTitik(warga.Nama)),
+                ("Calon Istri", NamaAtauTitik(ntcr.NamaIstri)));
         }
 
 

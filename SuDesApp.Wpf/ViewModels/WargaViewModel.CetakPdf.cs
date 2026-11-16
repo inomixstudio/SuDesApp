@@ -100,7 +100,8 @@ namespace SuDesApp.Wpf.ViewModels
                 {
                     Nomor = nomor++,
                     Nik = string.IsNullOrWhiteSpace(w.NIK) ? "-" : w.NIK!.Trim(),
-                    Nama = string.IsNullOrWhiteSpace(w.Nama) ? "-" : w.Nama!.Trim(),
+                    // Nama ikut penulisan seragam tabel: kapital di awal tiap kata.
+                    Nama = string.IsNullOrWhiteSpace(tampil.Nama) ? "-" : tampil.Nama,
                     NoKk = string.IsNullOrWhiteSpace(w.NoKK) ? "-" : w.NoKK!.Trim(),
                     JenisKelamin = tampil.JenisKelaminRingkas,
                     Ttl = tampil.TTL,

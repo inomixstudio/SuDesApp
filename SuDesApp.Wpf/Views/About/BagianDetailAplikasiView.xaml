@@ -34,7 +34,7 @@
                     <Border Style="{StaticResource AccentSectionBar}"/>
                     <TextBlock Text="IDENTITAS APLIKASI" Style="{StaticResource SectionTitle}"/>
                 </StackPanel>
-                <TextBlock Text="Dibaca langsung dari metadata rilis, jadi selalu sama dengan yang terpasang."
+                <TextBlock Text="Diambil langsung dari metadata rilis, sehingga selalu sesuai versi yang terpasang."
                            Style="{StaticResource SectionSubtitle}" Margin="0,0,0,16"/>
 
                 <Grid>
@@ -44,8 +44,6 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -81,34 +79,14 @@
                     <TextBlock Grid.Row="3" Grid.Column="1" Text="Pengembang" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
                     <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding AssemblyCompany}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
 
-                    <!-- Perusahaan induk — ditulis di sini sekaligus sebagai penunjuk
-                         ke bagian "Perusahaan" yang memuat logo & penjelasannya. -->
+                    <!-- Copyright — baris Perusahaan induk & Repositori sengaja
+                         tidak ditampilkan: kedua topik sudah dibahas di bagian
+                         Perusahaan dan tidak perlu diulang di sini. -->
                     <Border Grid.Row="4" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="{x:Static u:IkonMenu.Perusahaan}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
-                    </Border>
-                    <TextBlock Grid.Row="4" Grid.Column="1" Text="Perusahaan induk" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
-                    <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding PerusahaanInduk}"
-                               Style="{StaticResource DetailNilai}" Margin="0,4,0,12"
-                               ToolTip="Pengembang aplikasi ini, Sumberjaya Dev, berada di bawah naungan perusahaan ini. Lihat bagian Perusahaan untuk logo dan penjelasan lengkapnya."/>
-
-                    <!-- Copyright -->
-                    <Border Grid.Row="5" Grid.Column="0" Style="{StaticResource DetailIkon}">
                         <TextBlock Text="{x:Static u:IkonMenu.Info}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
                     </Border>
-                    <TextBlock Grid.Row="5" Grid.Column="1" Text="Copyright" Style="{StaticResource DetailLabel}" Margin="0,4,0,12"/>
-                    <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding AssemblyCopyright}" Style="{StaticResource DetailNilai}" Margin="0,4,0,12"/>
-
-                    <!-- Repository -->
-                    <Border Grid.Row="6" Grid.Column="0" Style="{StaticResource DetailIkon}">
-                        <TextBlock Text="{x:Static u:IkonMenu.Kode}" Style="{StaticResource DetailIkonText}" FontFamily="{StaticResource AppIconFont}"/>
-                    </Border>
-                    <TextBlock Grid.Row="6" Grid.Column="1" Text="Repository" Style="{StaticResource DetailLabel}" Margin="0,4,0,0"/>
-                    <Button Grid.Row="6" Grid.Column="2" Content="{Binding RepoTampil}"
-                            Command="{Binding OpenUrlCommand}"
-                            CommandParameter="{Binding RepoUrl}"
-                            ToolTip="{Binding RepoUrl}"
-                            Style="{StaticResource LinkButton}" HorizontalAlignment="Left"
-                            Padding="0" Margin="0,0,0,0" Background="Transparent" BorderThickness="0"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1" Text="Copyright" Style="{StaticResource DetailLabel}" Margin="0,4,0,0"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding AssemblyCopyright}" Style="{StaticResource DetailNilai}" Margin="0,4,0,0"/>
                 </Grid>
             </StackPanel>
         </Border>
@@ -120,7 +98,7 @@
                     <Border Style="{StaticResource AccentSectionBar}"/>
                     <TextBlock Text="INSTALASI INI" Style="{StaticResource SectionTitle}"/>
                 </StackPanel>
-                <TextBlock Text="Keadaan aplikasi di komputer ini — tidak ikut tersalin bila folder aplikasi dicadangkan."
+                <TextBlock Text="Keadaan aplikasi di komputer ini; tidak ikut terkopi saat folder aplikasi dicadangkan."
                            Style="{StaticResource SectionSubtitle}" Margin="0,0,0,16"/>
 
                 <Grid>
@@ -181,7 +159,7 @@
                                    Foreground="{DynamicResource AccentTextBrush}"/>
                         <TextBlock Margin="0,3,0,0" FontSize="11" TextWrapping="Wrap"
                                    Foreground="{DynamicResource AccentTextBrush}"
-                                   Text="Berkas desa.db dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa. Folder di atas adalah lokasi bawaannya."/>
+                                   Text="Berkas desa.db dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa. Folder di atas adalah lokasi bawaan."/>
                     </StackPanel>
                 </Border>
             </StackPanel>

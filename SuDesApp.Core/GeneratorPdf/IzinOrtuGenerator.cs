@@ -118,9 +118,11 @@ namespace SuDesApp.GeneratorPdf
                 _logger.LogDebug("Memakai keterangan Izin Ortu untuk ID_Surat={ID_Surat}", suratData.ID_Surat);
             }
 
+            // Alinea resmi: baris pertama menjorok 50pt seperti surat lain,
+            // baris lanjutan kembali rata kiri — bukan blok menjorok penuh.
             badan.Paragraf(narasiIzin,
                 rata: Rata.Justify,
-                indentKiri: 30,
+                indentBarisPertama: 50,
                 jarakAtas: MARGIN_PARAGRAF_BESAR,
                 jarakBawah: MARGIN_PARAGRAF_KECIL);
 

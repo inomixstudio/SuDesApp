@@ -28,6 +28,14 @@ namespace SuDesApp.GeneratorPdf
         public const float TinggiBaris = UkuranTeks * 1.2f;
 
         /// <summary>
+        /// Tinggi satu baris teks paragraf sesuai kerapatan yang berlaku — untuk
+        /// pemisah/pemberat baris yang harus sejajar dengan baris teks nyata.
+        /// TinggiBaris (konstanta) meleset pada kerapatan rapat karena leading teks
+        /// mengecil sedangkan konstantanya tidak.
+        /// </summary>
+        public static float TinggiBarisTeks => UkuranTeks * KerapatanSurat.Aktif.FaktorLeadingTeks;
+
+        /// <summary>
         /// Ruang kosong untuk tanda tangan di atas nama penandatangan. Ikut menyesuaikan
         /// kerapatan supaya blok tanda tangan tetap muat di halaman yang sama.
         /// </summary>
@@ -294,19 +302,30 @@ namespace SuDesApp.GeneratorPdf
 
                 table.Cell().Element(cell =>
                 {
-                    if (!tampilkanPemohon || string.IsNullOrWhiteSpace(namaPemohon))
+                    if (!tampilkanPemohon)
                     {
                         return;
                     }
+
+                    // Nama pemohon kosong (pratinjau blanko/draft belum terisi) tidak
+                    // boleh menghilangkan blok Pemohon — titik isian mencetak agar
+                    // kolom kiri tetap lengkap dan sejajar dengan blok pejabat.
+                    bool adaNama = !string.IsNullOrWhiteSpace(namaPemohon);
+                    string teksNama = adaNama ? NamaFormatter.ToUpperNama(namaPemohon) : PratinjauIsian.TitikKosong;
 
                     cell.Column(kolom =>
                     {
                         kolom.Item().Element(item => Teks(item, labelPemohon, rata: Rata.Tengah));
 
                         // Ruang tanda tangan + satu baris penyeimbang, supaya nama pemohon
-                        // duduk SEJAJAR dengan nama Kepala Desa di kolom kanan.
-                        kolom.Item().Height(RuangTandaTangan + TinggiBaris);
-                        kolom.Item().Element(item => Teks(item, NamaFormatter.ToUpperNama(namaPemohon), tebal: true, rata: Rata.Tengah));
+                        // duduk SEJAJAR dengan nama Kepala Desa di kolom kanan. Pembanding
+                        // kolom kanan adalah DUA baris teks (tempat/tanggal + jabatan), jadi
+                        // di sini satu baris teks + satu tinggi ruang. Tinggi baris teksnya
+                        // mengikuti kerapatan yang berlaku (UkuranTeks × leading) — memakai
+                        // TinggiBaris tetap (faktor 1,20) membuat nama pemohon naik ±1 pt
+                        // pada kerapatan Rapat/SangatRapat (leading 1,12/1,07).
+                        kolom.Item().Height(RuangTandaTangan + UkuranTeks * LeadingParagraf);
+                        kolom.Item().Element(item => Teks(item, teksNama, tebal: adaNama, rata: Rata.Tengah));
                     });
                 });
 

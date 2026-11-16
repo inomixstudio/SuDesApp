@@ -30,40 +30,53 @@ namespace SuDesApp.Wpf.ViewModels
             AssemblyDescription =
                 "SuDesApp adalah aplikasi administrasi dan surat-menyurat desa yang membantu " +
                 "pemerintah desa menyusun surat resmi secara cepat, akurat, dan konsisten. " +
-                "Dilengkapi pembuatan surat otomatis berformat PDF — termasuk blanko persyaratan " +
-                "pernikahan (NTCR N1–N6) yang dapat dibuat sekali isi lalu dicetak sebagai satu " +
-                "berkas gabungan siap cetak — surat keterangan numpang nikah, dan Template Surat " +
-                "untuk menyusun sendiri jenis surat yang belum tersedia, lengkap dengan contoh " +
-                "siap pakai yang tinggal dipasang.\n\n" +
-                "Manajemen formulir administrasi kependudukan, register surat desa " +
-                "dan register NTCR yang terpisah, arsip dan agenda digital (buku agenda surat " +
-                "masuk/keluar dengan lampiran PDF/gambar), serta buku SK/Perdes/Perkades dengan " +
-                "lampiran. API Desa membuka layanan HTTP lokal bagi sistem lain untuk membaca " +
-                "angka agregat, membaca data perangkat desa, dan memverifikasi " +
-                "keaslian surat terbit lewat kode verifikasinya.\n\n" +
-                "Pencadangan data otomatis ke Google Drive serta ekspor ke Excel, CSV, dan JSON. " +
-                "Koneksi akun Google aktif otomatis dari installer (tanpa isian kredensial), dan berkas database desa.db " +
-                "tetap berada di komputer desa tanpa pernah dikirim ke mana pun.\n\n" +
-                "Pembaruan aplikasi diperiksa dan diunduh dari GitHub Releases di latar belakang, " +
-                "dengan verifikasi SHA-256 bila rilis menyertakan sidik jarinya. Setelah unduhan siap, lonceng notifikasi menawarkan " +
-                "pemasangan sekarang atau saat aplikasi ditutup; perbaikan kecil dipasang sebagai " +
-                "tambalan yang hanya mengganti berkas yang berubah (data dan pengaturan pengguna " +
-                "tidak tersentuh), sedangkan perubahan besar memakai installer penuh yang pada " +
-                "rilis resmi ditandatangani Authenticode. Pemasangan berjalan tanpa halaman konfirmasi — " +
-                "hanya jendela kemajuan yang terlihat.\n\n" +
-                "SuDesApp berlangganan bulanan atau tahunan. Yang diurus langganan hanyalah masa " +
-                "aktif aplikasinya — semua data surat, warga, dan formulir tetap tersimpan " +
-                "di komputer desa masing-masing, tidak pernah dikirim ke server. " +
-                "Pembayaran QRIS/VA melalui Midtrans Snap (juga bisa dari halaman web untuk " +
-                "perangkat lain), dan status langganan diverifikasi dari token bertanda tangan " +
-                "ECDSA P-256 sehingga tetap bisa diperiksa penuh saat internet sedang mati. " +
-                "Akun pusat dapat membuka Pusat Administrasi dari halaman Langganan untuk " +
-                "mengelola masa aktif desa; pada mode lokal, server lisensinya menyala bersama " +
-                "aplikasi dan berhenti saat aplikasi ditutup. " +
-                "Internet putus tidak langsung memblokir kerja desa: masih ada masa tenggang 7 " +
-                "hari setelah jatuh tempo, dan bila langganan memang berakhir aplikasi menjadi " +
-                "baca-saja — data tetap bisa dibaca, dicari, dan dicadangkan, tetapi membuat " +
-                "surat baru ditolak sampai langganan diperpanjang.";
+                "Aplikasi menyediakan pembuatan surat otomatis berformat PDF dari jenis surat " +
+                "bawaan maupun jenis yang dibuat sendiri, termasuk blanko persyaratan " +
+                "pernikahan (NTCR N1–N6) yang diisi sekali lalu dicetak sebagai satu berkas " +
+                "gabungan siap cetak, surat keterangan numpang nikah (N8), serta jenis surat " +
+                "khusus seperti Keterangan Penghasilan dengan formulir isian dan format " +
+                "penomorannya sendiri. Template Surat memungkinkan penyusunan jenis surat " +
+                "baru lengkap dengan contoh siap pakai yang dapat dipasang sekali klik.\n\n" +
+                "Manajemen formulir administrasi kependudukan, register surat desa dan " +
+                "register NTCR yang terpisah, arsip dan agenda digital (buku agenda surat " +
+                "masuk/keluar dengan lampiran PDF atau gambar), serta buku SK/Perdes/Perkades " +
+                "beserta lampirannya. Halaman Laporan Penduduk menyusun tabel statistik — " +
+                "kelompok usia, pendidikan, pekerjaan, agama, status perkawinan, dan sebagainya " +
+                "— yang dipilih sebelum dicetak ke PDF atau diekspor Excel dari angka yang " +
+                "sama. API Desa menyediakan layanan HTTP lokal bagi sistem lain untuk membaca " +
+                "statistik agregat dan data perangkat desa, serta memverifikasi keaslian " +
+                "surat terbit melalui kode verifikasinya. Surat juga dapat dibuat di lapangan " +
+                "dari aplikasi Android milik desa: hasilnya diantarkan lewat antrean aman " +
+                "Supabase, diberi nomor resmi satu kali oleh desktop saat diimpor, dan masuk " +
+                "register yang sama tanpa mengetik ulang — sinkron otomatis berjalan di latar " +
+                "belakang tanpa perlu membuka halaman Sinkron Android.\n\n" +
+                "Pencadangan data otomatis ke Google Drive serta ekspor ke Excel, CSV, dan " +
+                "JSON. Koneksi akun Google aktif otomatis dari installer tanpa isian " +
+                "kredensial, dan berkas basis data desa.db tetap berada di komputer desa " +
+                "serta tidak dikirim ke server mana pun. Halaman Cadangkan & Pulihkan " +
+                "menyediakan cadangan sekali klik, riwayat cadangan bertanggal, dan " +
+                "pemulihan dengan salinan keamanan otomatis sebelum database diganti.\n\n" +
+                "Pembaruan diperiksa dan diunduh dari GitHub Releases di latar belakang, " +
+                "dengan verifikasi SHA-256 bila rilis menyertakan sidik jarinya. Setelah " +
+                "unduhan selesai, lonceng notifikasi menawarkan pemasangan sekarang atau " +
+                "saat aplikasi ditutup. Perbaikan kecil dipasang sebagai tambalan yang hanya " +
+                "mengganti berkas yang berubah sehingga data dan pengaturan pengguna tidak " +
+                "tersentuh; perubahan besar memakai installer penuh yang ditandatangani " +
+                "Authenticode pada rilis resmi. Pemasangan berlangsung tanpa halaman " +
+                "konfirmasi, hanya dengan jendela kemajuan.\n\n" +
+                "SuDesApp berlangganan bulanan atau tahunan; langganan mengatur masa aktif " +
+                "aplikasi semata. Seluruh data surat, warga, dan formulir tersimpan di " +
+                "komputer desa masing-masing dan tidak dikirim ke server mana pun. Pembayaran " +
+                "QRIS/VA memakai Midtrans Snap dan dapat pula dilakukan lewat halaman web " +
+                "dari perangkat lain. Status langganan diverifikasi dari token bertanda " +
+                "tangan ECDSA P-256 sehingga dapat diperiksa sepenuhnya saat koneksi " +
+                "terputus. Akun pusat dapat membuka Pusat Administrasi dari halaman " +
+                "Langganan untuk mengelola masa aktif desa; pada mode lokal, server lisensi " +
+                "menyala bersama aplikasi dan berhenti saat aplikasi ditutup. Koneksi " +
+                "terputus tidak menghambat pekerjaan desa: tersedia masa tenggang 7 hari " +
+                "setelah jatuh tempo. Bila langganan tetap berakhir, aplikasi menjadi " +
+                "baca-saja — data masih dapat dibaca, dicari, dan dicadangkan, sementara " +
+                "pembuatan surat baru ditolak sampai langganan diperpanjang.";
 
             // Setiap butir membawa nama kelompoknya di depan; urutan tampil kelompok
             // ditentukan UrutanKelompokFitur, bukan urutan butir di daftar ini.
@@ -71,39 +84,41 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 ("Surat & cetak", "Pembuatan surat resmi desa dengan PDF otomatis dari template terstandar"),
                 ("Surat & cetak", "Mesin PDF sendiri (SudesPdf.Core): menyusun, membaca, menggambar, dan mengekstrak teks surat tanpa pustaka PDF pihak ketiga"),
-                ("Surat & cetak", "Blanko persyaratan pernikahan NTCR (N1–N6): sekali isi data satu pasangan, seluruh blanko tersimpan sekaligus dan tercetak dalam satu PDF gabungan siap cetak"),
+                ("Surat & cetak", "Blanko persyaratan pernikahan NTCR (N1–N6): data satu pasangan diisi sekali, seluruh blanko tersimpan sekaligus, dan tercetak sebagai satu PDF gabungan siap cetak"),
                 ("Surat & cetak", "Surat keterangan numpang nikah (N8) beserta register NTCR yang terpisah dari register surat desa umum"),
                 ("Surat & cetak", "Template Surat: menyusun sendiri jenis surat baru lewat wizard (kop, judul, nomor, teks bebas, kolom isian dengan grid, tanda tangan, dan teks kaki), lengkap dengan pratinjau dan penomoran otomatis per template"),
-                ("Surat & cetak", "Surat dari Template Surat tercatat otomatis di Register Surat — dapat dicari (nomor, nama penerima, NIK, atau isi surat), dibuka lagi untuk diperbaiki, dan dicetak ulang kapan saja"),
+                ("Surat & cetak", "Surat dari Template Surat tercatat otomatis di Register Surat dan dapat dicari berdasarkan nomor, nama penerima, NIK, atau isi surat; dapat dibuka kembali untuk diperbaiki dan dicetak ulang"),
                 ("Surat & cetak", "Contoh Template Surat siap pakai (pengantar RT/RW, domisili usaha, izin keramaian, keterangan penghasilan, belum menikah, undangan rapat, surat kuasa, surat tugas, dan pengumuman warga) yang dapat dipasang sekali klik, dijadikan dasar template baru, atau dicetak sebagai contoh"),
-                ("Surat & cetak", "Daftar hadir rapat/kegiatan dicetak lengkap dengan kop surat desa, dan isian terakhir tetap terbuka selama aplikasi berjalan"),
-                ("Data & arsip", "Manajemen formulir administrasi kependudukan (\u2265 20 formulir resmi desa)"),
+                ("Surat & cetak", "Daftar hadir rapat dicetak lengkap dengan kop surat desa, dan isian terakhir tetap tersimpan selama aplikasi berjalan"),
+                ("Data & arsip", "Manajemen formulir administrasi kependudukan — bawaan, tambahan sendiri, maupun unduhan resmi"),
                 ("Data & arsip", "Manajemen data kependudukan dan arsip digital register surat"),
                 ("Data & arsip", "Buku agenda surat masuk dan keluar dengan lampiran berkas PDF atau gambar pada tiap surat"),
                 ("Data & arsip", "Buku SK, Perdes, dan Perkades beserta lampiran Word/PDF"),
-                ("Data & arsip", "Halaman Indeks Desa & IDM: skor IDM, status desa, IKS/IKE/IKL, tren antar tahun, dan tabel indikator lengkap per dimensi — bisa dicetak atau disimpan sebagai PDF"),
-                ("Data & arsip", "Arsip dokumen APBDes per tahun anggaran dan per tahapan (Rancangan, Awal, Perubahan, Pertanggungjawaban/LPJ, DPA/DPPA/DPAL, Laporan Realisasi, dan Lainnya): isi dokumen dibaca, disunting, dan disimpan kembali, sementara angka resmi tetap dibuat di Siskeudes"),
-                ("Data & arsip", "Tutup Buku Tahunan: periksa keutuhan penomoran satu tahun, tutup atau buka bukunya, lalu cetak arsip register"),
+                ("Data & arsip", "Halaman Indeks Desa & IDM: skor IDM, status desa, IKS/IKE/IKL, tren antar tahun, dan seluruh indikator per dimensi; dapat dicetak atau disimpan sebagai PDF"),
+                ("Data & arsip", "Arsip dokumen APBDes per tahun anggaran dan per tahapan (Rancangan, Awal, Perubahan, Pertanggungjawaban/LPJ, DPA/DPPA/DPAL, Laporan Realisasi, dan Lainnya): isi dokumen dapat dibaca, disunting, dan disimpan kembali, sementara angka resmi tetap dibuat di Siskeudes"),
+                ("Data & arsip", "Tutup Buku Tahunan: memeriksa keutuhan penomoran satu tahun, menutup atau membuka kembali buku, lalu mencetak arsip register"),
                 ("Keamanan & pencadangan", "Pencadangan database dan formulir otomatis ke Google Drive"),
                 ("Keamanan & pencadangan", "Koneksi akun Google aktif otomatis dari installer; kredensial OAuth tidak diisi manual dan tidak ditulis sebagai teks biasa di appsettings.json"),
                 ("Keamanan & pencadangan", "Kata sandi pengguna disimpan sebagai PBKDF2 bersalt, percobaan masuk dibatasi, dan akun pusat dipisahkan dari akun desa"),
-                ("Keamanan & pencadangan", "Basis data desa.db tersimpan sebagai SQLite lokal tanpa enkripsi; database dari versi lama yang masih terenkripsi tetap dibuka bila berkas kuncinya tersedia di komputer ini; lokasi berkas database dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa"),
-                ("Layanan digital", "API Desa: layanan HTTP lokal dengan kunci API ber-cakupan (Agregat/Penuh) untuk membaca statistik & data perangkat, dan memverifikasi surat lewat kode verifikasinya"),
+                ("Keamanan & pencadangan", "Basis data desa.db tersimpan sebagai SQLite lokal; basis data versi lama yang terenkripsi tetap dapat dibuka bila berkas kuncinya tersedia, dan lokasinya dapat dipindahkan lewat Pengaturan Aplikasi → Database Desa"),
+                ("Layanan digital", "API Desa: layanan HTTP lokal dengan kunci API ber-cakupan (Agregat/Penuh) untuk membaca statistik dan data perangkat, serta memverifikasi surat melalui kode verifikasinya"),
+                ("Layanan digital", "Sinkron Android: surat yang dibuat di aplikasi Android milik desa masuk register desktop secara otomatis — antaran lewat antrean aman Supabase (maks. 10 surat per desa), diberi nomor resmi satu kali oleh desktop sehingga tidak mungkin dobel, lalu diimpor tanpa klik bila sinkron otomatis aktif"),
+                ("Layanan digital", "Pemasangan perangkat Android sekali pindai: QR atau kode 4 angka berumur 10 menit yang ditukar menjadi akun perangkat, dengan kop surat, pola nomor, dan skema formulir yang selalu diperbarui dari desktop"),
                 ("Pembaruan & antarmuka", "Pembaruan otomatis: rilis diperiksa dan diunduh di latar belakang, lalu lonceng menawarkan Instal Sekarang atau Instal Saat Keluar. Perbaikan kecil dipasang sebagai tambalan (hanya berkas yang berubah), perubahan besar memakai installer penuh; keduanya diverifikasi SHA-256 bila rilis menyertakan sidik jarinya, dan installer/executable rilis resmi ditandatangani Authenticode"),
                 ("Data & arsip", "Ekspor data ke Excel, CSV, dan JSON"),
-                ("Pembaruan & antarmuka", "Pengaturan aplikasi bernavigasi antar bagian, termasuk pengaturan penomoran surat: awalan nomor tiap jenis surat dapat diganti sendiri (mis. SKD 470 → 471) dan langsung berlaku tanpa menutup aplikasi"),
+                ("Pembaruan & antarmuka", "Pengaturan penomoran surat: awalan nomor tiap jenis surat dapat diubah sendiri (mis. SKD 470 → 471) dan langsung berlaku tanpa menutup aplikasi"),
                 ("Pembaruan & antarmuka", $"{TemaPilihanTeks()} — termasuk Kontras Tinggi (hitam-kuning, WCAG 2.1 AAA untuk pengguna low vision) — plus mode Otomatis yang mengikuti mode gelap Windows"),
                 ("Data & arsip", "Manajemen status surat dan riwayat aktivitas terpusat"),
                 ("Perangkat desa & verifikasi", "Verifikasi surat: keaslian surat terbit dapat diperiksa dari kode verifikasinya"),
                 ("Perangkat desa & verifikasi", "Lampiran tabel daftar nama pada SK perangkat desa: satu SK untuk banyak orang sekaligus, kolom data pribadi diambil dari data Warga lewat NIK dan dikelompokkan per unit (mis. Posyandu)"),
                 ("Perangkat desa & verifikasi", "Data perangkat desa per kelompok jabatan lengkap dengan SK bawaan per kelompok"),
-                ("Langganan", "Langganan aplikasi (mulai Rp150.000 per bulan; pilihan 6 bulan Rp750.000 dan tahunan Rp1.200.000 lebih hemat per hari, plus trial 30 hari) lewat menu Langganan yang berdiri sendiri di navigasi utama — pembayaran QRIS/VA, dan jumlah hari yang tersisa selalu terbaca jelas"),
-                ("Langganan", "Status langganan dapat diperiksa penuh saat internet mati: token bertanda tangan ECDSA P-256 diverifikasi lokal, dengan masa tenggang 7 hari setelah jatuh tempo sehingga internet putus tidak memblokir kerja desa"),
+                ("Langganan", "Langganan bulanan Rp150.000, 6 bulan Rp750.000, atau tahunan Rp1.200.000, dengan trial 30 hari; dikelola dari menu Langganan dan pembayaran QRIS/VA"),
+                ("Langganan", "Status langganan tetap dapat diperiksa saat koneksi terputus: token bertanda tangan ECDSA P-256 diverifikasi secara lokal, dengan masa tenggang 7 hari setelah jatuh tempo"),
                 ("Langganan", "Pusat Administrasi untuk akun pusat: masa aktif, tagihan, pengumuman, dan audit desa dikelola lewat halaman server lisensi yang dibuka dari menu Langganan. Pada mode lokal, server lisensi menyala bersama aplikasi dan berhenti saat aplikasi ditutup"),
-                ("Langganan", "Bila langganan benar-benar berakhir, aplikasi menjadi baca-saja — data tetap bisa dibaca, dicari, diekspor, dan dicadangkan; membuat surat baru dan mencetak ditolak sampai langganan diperpanjang"),
+                ("Langganan", "Bila langganan berakhir, aplikasi menjadi baca-saja: data masih dapat dibaca, dicari, diekspor, dan dicadangkan, sementara pembuatan dan pencetakan surat baru ditolak sampai langganan diperpanjang"),
                 ("Pembaruan & antarmuka", "Dokumentasi bawaan aplikasi dapat dibuka tanpa koneksi internet"),
                 ("Pembaruan & antarmuka", "Panduan awal interaktif dengan pelacakan kemajuan dan kiat pemakaian aplikasi"),
-                ("Data & arsip", "Form Tambah Warga mengikuti tema aplikasi: kolom Alamat (Jalan/Kampung) tidak diisi terpisah karena sudah diwakili Dusun/RT/RW, sedangkan desa, kecamatan, dan kabupaten terisi otomatis dari Pengaturan Desa")
+                ("Data & arsip", "Form Tambah Warga: Dusun dan RT/RW diisi sekali, desa, kecamatan, dan kabupaten mengikuti Pengaturan Desa, serta alamat ringkas disusun otomatis")
             };
 
             Features = fitur.Select(f => f.Teks).ToList();
@@ -123,7 +138,6 @@ namespace SuDesApp.Wpf.ViewModels
             RepoUrl = string.IsNullOrWhiteSpace(repo)
                 ? string.Empty
                 : "https://github.com/" + repo;
-            UrlDukungan = "https://saweria.co/arieino";
             UrlWebsite = "https://sumberjaya.freedev.app";
             EmailPengembang = "mailto:sumberjayadev@gmail.com";
 
@@ -147,7 +161,6 @@ namespace SuDesApp.Wpf.ViewModels
             RepoTampil = string.IsNullOrWhiteSpace(repo) ? "-" : repo;
             WebsiteTampil = "sumberjaya.freedev.app";
             FormulirKarawangTampil = "infosadaradmindukkarawang.id";
-            DukunganTampil = "saweria.co/arieino";
             EmailPengembangTampil = "sumberjayadev@gmail.com";
 
             // Bagian "Perusahaan": SuDesApp dikembangkan Sumberjaya Dev, unit
@@ -170,13 +183,14 @@ namespace SuDesApp.Wpf.ViewModels
             DeskripsiPengembang =
                 "Sumberjaya Dev adalah unit pengembangan perangkat lunak di bawah naungan " +
                 "PT Duta Publik. Di sinilah SuDesApp dirancang, dibangun, dan dirawat — dari " +
-                "surat resmi ber-PDF, register dan agenda digital, sampai pembaruan dan " +
-                "dukungan teknis bagi desa yang memakainya. " +
-                "Kritik, saran, dan laporan gangguan aplikasi ini juga bermuara di Sumberjaya Dev.";
+                "surat resmi ber-PDF, register dan agenda digital, hingga pembaruan dan " +
+                "dukungan teknis bagi desa pengguna. Kritik, saran, dan laporan gangguan " +
+                "aplikasi ditangani melalui saluran resminya; informasi terbaru tersedia di " +
+                "website sumberjaya.freedev.app.";
 
             Teknologi = new List<TeknologiItem>
             {
-                new("\U0001F5A5", "WPF (.NET 10)", "Desktop Windows", "https://dotnet.microsoft.com/apps/wpf", "Fondasi aplikasi"),
+                new("\U0001F5A5", "WPF (.NET 11)", "Desktop Windows", "https://dotnet.microsoft.com/apps/wpf", "Fondasi aplikasi"),
                 new("\u2699", "MVVM + Layanan", "DI & logging .NET", "https://learn.microsoft.com/dotnet/core/extensions/dependency-injection", "Fondasi aplikasi"),
                 new("\U0001F5C4", "SQLite", "Basis data lokal", "https://sqlite.org", "Data & dokumen"),
                 new("\u26A1", "Dapper", "Akses data", "https://github.com/DapperLib/Dapper", "Data & dokumen"),
@@ -186,6 +200,11 @@ namespace SuDesApp.Wpf.ViewModels
                 new("\U0001F4C1", "Google Drive API", "Cadangan & arsip", "https://developers.google.com/drive", "Layanan Google"),
                 new("\U0001F4E6", "Newtonsoft.Json", "Serialisasi", "https://www.newtonsoft.com/json", "Data & dokumen"),
                 new("\U0001F510", "DPAPI", "Kredensial aman", "https://learn.microsoft.com/dotnet/api/system.security.cryptography.protecteddata", "Keamanan"),
+                // Kelompok Sinkron Android: antrean surat dari perangkat desa di
+                // lapangan — koneksi langsung PostgreSQL melalui pooler Supabase.
+                new("\U0001F310", "Supabase", "Antrean & auth perangkat Android", "https://supabase.com", "Sinkron Android"),
+                new("\U0001F5DB", "Npgsql", "Driver PostgreSQL", "https://www.npgsql.org", "Sinkron Android"),
+                new("\U0001F4F1", "QRCoder", "Kode QR pasang perangkat & kaki surat", "https://github.com/codebude/QRCoder", "Sinkron Android"),
             };
 
             // Kelompok mengikuti urutan kemunculan pertama, jadi urutan daftar di atas
@@ -204,34 +223,33 @@ namespace SuDesApp.Wpf.ViewModels
                     "Microsoft — .NET dan WPF yang menjadi fondasi aplikasi ini, beserta Microsoft.Extensions (dependency injection, logging, konfigurasi) yang dipakai di seluruh lapisan kode.",
                     "Dapper — akses data yang ringan untuk seluruh data desa, surat, dan arsip.",
                     "SudesPdf.Core dan SudesPdf — mesin PDF yang ditulis sendiri untuk aplikasi ini: penyusunan, pembacaan, render, ekstraksi teks, pratinjau, dan cetak. Pratinjau surat, laporan, blanko, dan register tidak bergantung pada pustaka PDF pihak ketiga.",
-                    "SQLite — basis data desa.db yang menampung seluruh data desa; tanpanya aplikasi tidak dapat bekerja sama sekali.",
+                    "SQLite — basis data desa.db yang menampung seluruh data desa; tanpa SQLite aplikasi tidak dapat berjalan.",
                     "Pustaka klien Google API (Drive) dan Newtonsoft.Json — integrasi login Google dan pencadangan Drive.",
-                    "QRCoder untuk QR pada kaki surat, Inno Setup untuk pemasang, dan GitHub Actions yang merilis pembaruan secara otomatis."
+                    "QRCoder untuk kode QR pada kaki surat dan pemasangan perangkat Android, Npgsql dan Supabase untuk antrean sinkron Android, Inno Setup untuk pemasangan, dan GitHub Actions untuk merilis pembaruan otomatis."
                 }),
                 new("\U0001F9EA", "Penguji dan pemberi masukan", new List<string>
                 {
-                    "Operator dan staf administrasi desa yang membuka aplikasi setiap hari, menguji tiap halaman baru, dan melaporkan temuan — banyak perbaikan pada Catatan Rilis lahir dari masukan mereka.",
-                    "Penguji awal yang memastikan aplikasi tetap berjalan di komputer kantor desa bermacam-macam, dari layar 1366×768 hingga 4K dan dari tema terang hingga kontras tinggi."
+                    "Operator dan staf administrasi desa yang membuka aplikasi setiap hari, menguji setiap halaman baru, dan melaporkan temuan — banyak perbaikan pada Catatan Rilis lahir dari masukan mereka.",
+                    "Penguji awal yang memastikan aplikasi tetap berjalan di beragam komputer kantor desa, dari layar 1366×768 hingga 4K dan dari tema terang hingga kontras tinggi."
                 }),
                 new("\U0001F3E0", "Pengguna dan mitra", new List<string>
                 {
-                    "Pemerintah Desa Sumberjaya dan seluruh warganya — pengguna yang menjadikan SuDesApp alat kerja nyata setiap hari.",
+                    "Pemerintah Desa Sumberjaya dan seluruh warganya, yang menjadikan SuDesApp alat kerja sehari-hari.",
                     "Sistem dan mitra eksternal yang terhubung lewat API Desa — dashboard kecamatan, website desa, dan instansi yang memeriksa keaslian surat.",
-                    "Situs INSAN Karawang (infosadaradmindukkarawang.id) — tempat mengunduh formulir administrasi kependudukan dan blanko surat resmi khusus Kabupaten Karawang secara gratis; terima kasih atas ketersediaan formulir bagi seluruh desa.",
-                    "Donatur yang ikut menopang pengembangan lewat tautan Dukungan — terima kasih atas dukungannya."
+                    "Situs INSAN Karawang (infosadaradmindukkarawang.id) — sumber pengunduhan formulir administrasi kependudukan dan blanko surat resmi Kabupaten Karawang secara gratis."
                 }),
             };
 
             Bagian = new List<AboutBagianViewModel>
             {
-                new("DetailAplikasi", "\u2139", "Detail aplikasi", "Identitas resmi aplikasi dan informasi instalasi pada komputer ini."),
+                new("DetailAplikasi", "\u2139", "Detail aplikasi", "Identitas resmi aplikasi dan keadaan instalasi pada komputer ini."),
                 new("Perusahaan", "\U0001F3E2", "Perusahaan", "Sumberjaya Dev, unit pengembangan perangkat lunak di bawah naungan PT Duta Publik."),
                 new("Persetujuan", "\U0001F512", "Persetujuan dokumen", "Versi Kebijakan Privasi dan Syarat & Ketentuan yang disetujui di komputer ini."),
                 new("DetailLengkap", "\U0001F4C4", "Detail lengkap", "Deskripsi lengkap SuDesApp dari metadata rilis."),
                 new("Fitur", "\u2B50", "Fitur utama", "Fitur utama yang tersedia di SuDesApp."),
-                new("Teknologi", "\U0001F9E9", "Teknologi", "Teknologi di balik SuDesApp — klik chip untuk membuka dokumentasinya."),
-                new("TerimaKasih", "\U0001F64F", "Thanks to", "Terima kasih kepada mereka yang menopang terbangunnya SuDesApp."),
-                new("Dukungan", "\u2764\uFE0F", "Dukungan", "Dukungan pengembangan, kritik, dan saran."),
+                new("Teknologi", "\U0001F9E9", "Teknologi", "Teknologi di balik SuDesApp; klik chip untuk membuka dokumentasinya."),
+                new("TerimaKasih", "\U0001F64F", "Terima kasih", "Para pihak yang menopang pengembangan SuDesApp."),
+                new("Dukungan", "\u2764\uFE0F", "Dukungan", "Kritik, saran, dan saluran kontak dengan pengembang."),
             };
             _bagianAktif = Bagian[0];
             Bagian[0].IsTerpilih = true;

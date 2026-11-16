@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -86,7 +86,13 @@ namespace SuDesApp.Wpf.ViewModels
             get => _peringatanSumber;
             private set
             {
-                if (SetProperty(ref _peringatanSumber, value)) OnPropertyChanged(nameof(AdaPeringatanSumber));
+                if (SetProperty(ref _peringatanSumber, value))
+                {
+                    OnPropertyChanged(nameof(AdaPeringatanSumber));
+                    OnPropertyChanged(nameof(PesanBilah));
+                    OnPropertyChanged(nameof(AdaPesanBilah));
+                    OnPropertyChanged(nameof(PesanBilahAdalahPeringatan));
+                }
             }
         }
 

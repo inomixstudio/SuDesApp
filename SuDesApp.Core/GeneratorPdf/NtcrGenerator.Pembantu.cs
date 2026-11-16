@@ -67,13 +67,16 @@ namespace SuDesApp.GeneratorPdf
         // Blok kepala surat
         // =====================================================================
 
-        /// <summary>Kepala blanko desa: "KANTOR DESA/KELURAHAN : …" (N1 &amp; N6).</summary>
+        /// <summary>Kepala blanko desa: "KANTOR DESA/KELURAHAN : …" (N1 &amp; N6).
+        /// Jarak antar baris dan jarak ke judul sengaja rapat — kepala tiga baris
+        /// ini tidak boleh memakan tinggi yang berlebihan sebelum judul + nomor.
+        /// </summary>
         private static void ComposeKepalaDesa(BadanSurat badan, DesaData desa)
         {
-            badan.Blok(c => c.PaddingBottom(12f).Column(kolom =>
+            badan.Blok(c => c.PaddingBottom(4f).Column(kolom =>
             {
-                BarisLabel(kolom, "KANTOR DESA/KELURAHAN", desa.NamaDesa?.ToUpperInvariant() ?? "[NAMA DESA]", 6f);
-                BarisLabel(kolom, "KECAMATAN", desa.Kecamatan?.ToUpperInvariant() ?? "[KECAMATAN]", 6f);
+                BarisLabel(kolom, "KANTOR DESA/KELURAHAN", desa.NamaDesa?.ToUpperInvariant() ?? "[NAMA DESA]", 3f);
+                BarisLabel(kolom, "KECAMATAN", desa.Kecamatan?.ToUpperInvariant() ?? "[KECAMATAN]", 3f);
                 BarisLabel(kolom, "KABUPATEN/KOTA", desa.Kabupaten?.ToUpperInvariant() ?? "[KABUPATEN]", 0f);
             }));
         }
@@ -241,13 +244,18 @@ namespace SuDesApp.GeneratorPdf
                     cols.RelativeColumn(1);
                 });
 
-                // Kiri: jabatan di atas, lalu nama setelah ruang tanda tangan.
+                // Kolom kiri: jabatan di atas, lalu nama setelah ruang tanda tangan.
+                // Pemisah SATU baris supaya jabatan kiri sejajar dengan baris
+                // tempat/tanggal kanan — pemisah dua baris membuat jabatan kiri
+                // turun satu baris dan nama kiri tidak sejajar nama kanan.
                 table.Cell().Element(sel => sel.Column(kolom =>
                 {
-                    kolom.Item().Height(SuratRenderer.TinggiBaris * 2);
+                    kolom.Item().Height(SuratRenderer.TinggiBarisTeks);
                     kolom.Item().Element(c2 => SuratRenderer.Teks(c2, kiri.Jabatan, rata: Rata.Tengah));
                     kolom.Item().Height(SuratRenderer.RuangTandaTangan);
-                    kolom.Item().Element(c2 => SuratRenderer.Teks(c2, NamaFormatter.ToUpperNama(kiri.Nama), tebal: true, rata: Rata.Tengah));
+                    // Nama belum diisi → titik-titik seperti blanko resmi, bukan
+                    // ruang kosong yang membuat area tanda tangan tampak hilang.
+                    kolom.Item().Element(c2 => SuratRenderer.Teks(c2, NamaAtauTitik(kiri.Nama), tebal: true, rata: Rata.Tengah));
                 }));
 
                 // Kanan: tempat & tanggal, jabatan, nama.
@@ -256,7 +264,7 @@ namespace SuDesApp.GeneratorPdf
                     kolom.Item().Element(c2 => SuratRenderer.Teks(c2, tempatTanggal, rata: Rata.Tengah));
                     kolom.Item().Element(c2 => SuratRenderer.Teks(c2, kanan.Jabatan, rata: Rata.Tengah));
                     kolom.Item().Height(SuratRenderer.RuangTandaTangan);
-                    kolom.Item().Element(c2 => SuratRenderer.Teks(c2, NamaFormatter.ToUpperNama(kanan.Nama), tebal: true, rata: Rata.Tengah));
+                    kolom.Item().Element(c2 => SuratRenderer.Teks(c2, NamaAtauTitik(kanan.Nama), tebal: true, rata: Rata.Tengah));
                 }));
             }));
         }
@@ -287,11 +295,18 @@ namespace SuDesApp.GeneratorPdf
 
                 table.Cell().Element(sel => sel.Column(kolom =>
                 {
-                    kolom.Item().Height(SuratRenderer.TinggiBaris * 3);
+                    // Pemisah SATU baris: kolom kiri menulis tiga baris teks sebelum
+                    // ruang tanda tangan, jadi kolom kanan (dua baris teks) butuh
+                    // tepat satu baris pemisah agar KEDUA nama duduk di baseline
+                    // yang sama — pemisah tiga baris membuat nama pemohon naik
+                    // dua baris di atas Kepala KUA.
+                    kolom.Item().Height(SuratRenderer.TinggiBarisTeks);
                     kolom.Item().Element(c2 => SuratRenderer.Teks(c2, "Wassalam,", rata: Rata.Tengah));
                     kolom.Item().Element(c2 => SuratRenderer.Teks(c2, "Pemohon", rata: Rata.Tengah));
                     kolom.Item().Height(SuratRenderer.RuangTandaTangan);
-                    kolom.Item().Element(c2 => SuratRenderer.Teks(c2, NamaFormatter.ToUpperNama(warga.Nama), tebal: true, rata: Rata.Tengah));
+                    // Nama pemohon kosong (blanko) → titik-titik, bukan ruang kosong;
+                    // sejajar dengan kolom Kepala KUA yang memang selalu bertitik.
+                    kolom.Item().Element(c2 => SuratRenderer.Teks(c2, NamaAtauTitik(warga.Nama), tebal: true, rata: Rata.Tengah));
                 }));
             }));
         }
@@ -307,7 +322,7 @@ namespace SuDesApp.GeneratorPdf
 
             return new List<(string, string?)>
             {
-                ("1. Nama lengkap dan alias", NamaFormatter.ToUpperNama(istri ? ntcr.NamaIstri : warga.Nama)),
+                ("1. Nama lengkap dan alias", NamaAtauTitik(istri ? ntcr.NamaIstri : warga.Nama)),
                 ($"2. {(istri ? "Binti" : "Bin")}", Isi(NamaFormatter.ToUpperNama(orangTuaAyah?.Nama))),
                 ("3. Nomor Induk Kependudukan", Isi(istri ? ntcr.NikIstri : warga.NIK)),
                 ("4. Tempat dan tanggal lahir", TempatTanggalLahir(istri ? ntcr.TempatLahirIstri : warga.TempatLahir,
@@ -327,7 +342,7 @@ namespace SuDesApp.GeneratorPdf
             var baris = new List<(string, string?)>();
             if (pakaiBin)
             {
-                baris.Add(("1. Nama lengkap dan alias", NamaFormatter.ToUpperNama(orangTua.Nama)));
+                baris.Add(("1. Nama lengkap dan alias", NamaAtauTitik(orangTua.Nama)));
                 baris.Add(("2. Bin/Binti", Isi(NamaFormatter.ToUpperNama(orangTua.BinBinti))));
                 baris.Add(("3. Nomor Induk Kependudukan", Isi(orangTua.Nik)));
                 baris.Add(("4. Tempat dan tanggal lahir", TempatTanggalLahir(orangTua.TempatLahir, orangTua.TanggalLahir)));
@@ -338,7 +353,7 @@ namespace SuDesApp.GeneratorPdf
             }
             else
             {
-                baris.Add(("Nama Lengkap dan alias", NamaFormatter.ToUpperNama(orangTua.Nama)));
+                baris.Add(("Nama Lengkap dan alias", NamaAtauTitik(orangTua.Nama)));
                 baris.Add(("Nomor Induk Kependudukan (NIK)", Isi(orangTua.Nik)));
                 baris.Add(("Tempat dan tanggal lahir", TempatTanggalLahir(orangTua.TempatLahir, orangTua.TanggalLahir)));
                 baris.Add(("Kewarganegaraan", Isi(orangTua.Kewarganegaraan)));

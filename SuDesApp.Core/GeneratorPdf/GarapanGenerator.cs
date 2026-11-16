@@ -71,7 +71,7 @@ namespace SuDesApp.GeneratorPdf
             badan.Paragraf(
                 $"Yang bertanda tangan dibawah ini {KopSurat.KataPejabat(desa)} {desa.NamaDesa ?? "[Nama Desa]"} Kecamatan {desa.Kecamatan ?? "[Kecamatan]"} {kataKabupaten} {namaKabupaten}, menerangkan dengan sesungguhnya bahwa :",
                 rata: Rata.Justify,
-                indentKiri: 30,
+                indentBarisPertama: 50,
                 jarakAtas: 10,
                 jarakBawah: 10);
 
@@ -94,7 +94,7 @@ namespace SuDesApp.GeneratorPdf
             badan.Paragraf(
                 $"Nama tersebut diatas adalah Penggarap tanah sawah di Desa {desa.NamaDesa ?? "[Nama Desa]"} Kecamatan {desa.Kecamatan ?? "[Kecamatan]"} {kataKabupaten} {namaKabupaten} dengan rinci:",
                 rata: Rata.Justify,
-                indentKiri: 30,
+                indentBarisPertama: 50,
                 jarakAtas: 10,
                 jarakBawah: 10);
 
@@ -171,7 +171,7 @@ namespace SuDesApp.GeneratorPdf
 
             badan.Paragraf(paragrafPenutup,
                 rata: Rata.Justify,
-                indentKiri: 30,
+                indentBarisPertama: 50,
                 jarakAtas: 10,
                 jarakBawah: 10);
         }

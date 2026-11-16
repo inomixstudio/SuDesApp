@@ -20,7 +20,7 @@ namespace SuDesApp.Tests.Api
     /// mengalihkan lokasi kunci API dan preferensi yang bersifat statis proses,
     /// jadi tidak boleh berjalan bersamaan.
     /// </remarks>
-    [Collection("ApiListener")]
+    [Collection("PreferensiBersama")]
     public sealed class ApiListenerSesiTests : IDisposable
     {
         private readonly ApiUjiLingkungan _lingkungan = new();

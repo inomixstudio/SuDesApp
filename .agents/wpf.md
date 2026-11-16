@@ -5,3 +5,7 @@
 
 ## HTTP Listener
 - `HttpListener` prefix `/sudes/api/v1/` tidak cocok dengan permintaan ke `/sudes/api/v1` tanpa segmen rute — endpoint uji koneksi harus mengarah ke `/status`, bukan alamat prefix.
+
+## Viewbox
+- `Viewbox` di dalam `ScrollViewer` (ruang tinggi tak terbatas) berskala memenuhi `MaxHeight`, dan `StretchDirection="DownOnly"` **tidak** mencegah pembesaran: isi yang lebih pendek dari `MaxHeight` justru diperbesar, sehingga elemen melebar melebihi lebar yang diharapkan. Ikat juga `Width` Viewbox pada lebar acuan supaya rasio lebar tidak pernah > 1.
+- `MaxHeight` pada `Viewbox` tidak memotong: anak yang diskalakan bisa meluber di luar batas.

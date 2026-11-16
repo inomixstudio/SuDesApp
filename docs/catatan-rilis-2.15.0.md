@@ -1,8 +1,46 @@
 # SuDesApp 2.15.0 — 11 November 2026
 
-Rilis pemeliharaan: migrasi ke .NET 11, pembersihan kode mati hasil audit menyeluruh, token login Google memakai serialisasi bawaan platform, dan gerbang uji E2E server lisensi diperbaiki.
+Rilis pemeliharaan: migrasi ke .NET 11, pembersihan kode mati hasil audit menyeluruh, token login Google memakai serialisasi bawaan platform, login Google aktif otomatis dari installer, gerbang uji E2E server lisensi diperbaiki, dan Android menaikkan alat build ke AGP 9 / Gradle 9.8 / compileSdk 37.
 
 Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah tersimpan, dan arsip surat lama dipakai apa adanya.
+
+## Apa yang Baru
+
+- **Login Google aktif otomatis** — kredensial OAuth kini tertanam pada paket rilis, sehingga pengguna tidak lagi mengisi Client ID/Secret manual; halaman isian kredensial manual dan halaman masuk terpisah dihapus, dan halaman Google Drive yang menangani akun.
+- **Umpan balik tekan halus** — tombol mengecil sedikit (skala 0,97) saat ditekan dan mendarat lembut saat dilepas; toast notifikasi kritis masuk dari kanan dengan fade singkat. Keduanya hanya menganimasikan `RenderTransform`/`Opacity` di lapisan komposisi dan dilewati bila animasi dimatikan pada Windows.
+- **Keterangan Penghasilan (472)** — formulir desktop baru (data diri + pekerjaan/usaha, penghasilan per bulan, jumlah tanggungan), generator PDF sendiri, skema Android, dan impor desktop yang memetakan `penghasilan.*` sehingga surat dari Android masuk register lengkap.
+- **Lambang kabupaten tertanam** — satu arsip `LambangKabupaten.zip` (±20 MB, 514 lambang ≤512 px) dipakai bersama; installer tidak lagi menyalin 514 berkas mentah (±214 MB) ke folder instalasi. Berkas pengguna di `%LocalAppData%` tetap dihormati lebih dulu.
+- **Formulir pendataan perangkat desa selalu satu halaman** — di A4 maupun F4; bila kop tambah baris (alamat panjang/surel), jarak vertikal dicoba berurutan lebih rapat sampai muat, ukuran huruf tidak berubah.
+- **Teks bersama Surat Ijin Tinggal** — alamat dan kalimat keterangan kini dibangun dari satu sumber (`IjinTinggalGenerator`) yang dipakai bersama generator PDF dan form isian, jadi isian selalu persis sama dengan hasil cetak.
+- **Laporan Penduduk: tabel Pekerjaan** — statistik pekerjaan seperti tabel lainnya; dapat dicetak ke PDF dan diekspor.
+- **IDM: pilihan tahun laporan** — combobox “Tahun laporan” membuat cetak PDF mengikuti tahun yang dipilih, bukan selalu tahun layar.
+- **Dokumentasi bisa dicari** — saringan judul/keterangan/jalur per kelompok dengan tombol bersihkan dan keadaan “Tidak ada dokumen yang cocok”.
+- **Android: PDF menyamai desktop** — blanko NTCR (N1–N6, N8), Ahli Waris tiga halaman, rincian garapan bertabel, dan penulisan nama bergelar.
+- **Android: alat build baru** — AGP 9.3 (built-in Kotlin), Gradle 9.8.2, compileSdk 37, okhttp 5.5.1.
+
+## Apa yang Ditingkatkan
+
+- **Platform .NET 11** — seluruh proyek `net11.0`, paket `Microsoft.Extensions.*`/`Sqlite.Core`/`AspNetCore.OpenApi` 11.0.0, SDK dikunci 11.0.100 stabil, runtime Docker `aspnet:11.0`.
+- **Kode mati dibersihkan** — 30 resource XAML, 2 converter, sisa metode mati di Core/Server/Wpf/SudesPdf.Core, 3 skrip alat, paket `System.Security.Cryptography.Xml`, dan 562 baris lanjutan (seluruh pemroses WhatsApp di `FormatPermintaan`, 5 method `FileService`, 2 kelas pengecualian, `PdfObjects` kosong, 5 konstanta ikon).
+- **Disiplin peringatan disamakan** — `TreatWarningsAsErrors` berlaku juga di `SudesPdf.Core`, `SudesExPlus`, `SuDesApp.Api`, `UjiTrialServerE2E`, dan `healthcheck`.
+- **Token Google** — serialisasi pindah ke `System.Text.Json` dengan konverter setia pada bentuk JSON Google; token lama tetap terbaca dan pengguna tidak perlu login ulang.
+- **Gerbang CI** — audit kontras tema WCAG jalan di setiap push; GitHub Actions dinaikkan (checkout 7.0.1, setup-dotnet 6.1.0, setup-java 6.2.0, setup-gradle 6.4.1) dan tetap dikunci commit SHA; `gitleaks-action` dipin ke SHA.
+- **Uji** — penjaga katalog surat daring (6 uji) dan keselarasan catatan rilis (3 uji); `MidtransService` menerima `serverKey` eksplisit; `Microsoft.NET.Test.Sdk` 18.12.0.
+- **Tampilan** — halaman Pembaruan disusun dua kartu berdampingan; Langganan dipangkas mati; Tentang Aplikasi diperbarui; pratinjau kop dibatasi tinggi/lebar acuan kertas.
+- **Dokumentasi** — README, Dockerfile, `.agents/*`, `.vscode/launch.json`, dan catatan rilis diperbaiki agar tidak lagi menyebut .NET 10 / SDK prarilis.
+
+## Apa yang Diperbaiki
+
+- **Skeleton permanen di form Buat Surat Baru** dihapus — placeholder kini hanya muncul saat memuat; header accordion diberi nama UI Automation agar terbaca pembaca layar.
+- **Animasi masuk berurutan di Beranda** dihapus — isi halaman tampil langsung penuh, gerakan yang tersisa hanya umpan balik.
+- **Batal login Google** tidak lagi membuat tombol Masuk mati permanen; kunci OAuth diberi tenggang 10 menit.
+- **Panduan Awal** membuka halaman pengaturan yang asli (instance berisi data), bukan form kosong yang melempar galat render.
+- **Riwayat Aktivitas** — “Bersihkan Riwayat” kini benar-benar mengosongkan tabel; antrean latar tidak lagi menulis ulang baris yang sudah dihapus, dan aktivitas baru yang dicatat setelah dibersihkan tidak lagi hilang.
+- **Uji tidak lagi flaky** — uji API dan uji yang menimpa preferensi statis lain dijalankan berurutan dalam satu koleksi, sehingga suite penuh lolos konsisten di setiap putaran.
+- **Gerbang `check-rilis`** diperbaiki — pembersih contoh kini dicari di seluruh `DatabaseInitializer*.cs`, bukan satu berkas.
+- **Nama orang bergelar** tidak lagi ikut kapital penuh (desktop maupun Android).
+- **NTCR** — nama pemohon/pejabat/orang tua yang kosong tercetak titik-titik sejajar blok pejabat.
+- **Uji flaky Midtrans** — `Notifikasi_lunas_tercatat_sebagai_diterima` tidak lagi gagal 403 saat suite penuh.
 
 ## Platform — .NET 11
 
@@ -13,6 +51,7 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 ## Kualitas Kode — Hasil Audit Menyeluruh
 
 - **Kode mati dihapus**: 30 resource XAML tak terpakai (token tema di sebelas berkas tema dihapus seragam, palet mockup, token padding/radius, gaya view), 2 converter beserta resource-nya, sisa metode mati di Core/Server/Wpf/SudesPdf.Core, 3 skrip alat yang tidak terpakai, dan paket `System.Security.Cryptography.Xml` yang tidak pernah dirujuk. Build tetap 0 peringatan, 0 galat.
+- **Kode mati lanjutan**: 562 baris lagi dihapus pada putaran ulang — seluruh pemroses pesan WhatsApp di `FormatPermintaan` (kanal itu sudah tidak ada), 5 method `FileService` tanpa pemanggil, `PdfObjects` kosong, 2 kelas pengecualian tanpa rujukan, dan 5 konstanta ikon; katalog surat daring dipindah ke `KatalogSuratDaring` di tempat pemakainya.
 - **Disiplin peringatan disamakan**: `TreatWarningsAsErrors` kini berlaku juga di `SudesPdf.Core`, `SudesExPlus`, dan `SuDesApp.Api`.
 - **Login Google**: serialisasi token OAuth pindah ke `System.Text.Json` dengan konverter yang setia pada bentuk JSON bawaan Google — token lama tetap terbaca dan pengguna **tidak perlu login ulang**; disertai 5 uji kompatibilitas dua arah (termasuk skenario kembali ke versi lama).
 
@@ -20,6 +59,8 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 
 - **Uji tema baru** `SetiapTemaDiLayanan_PunyaBerkasDanSebaliknya` menjaga katalog tema di `ThemeCatalog` selalu cocok dengan berkas `*Theme.xaml` — tema tanpa berkas atau berkas tanpa katalog kini membuat build gagal, bukan diam-diam jatuh ke tema bawaan.
 - **Gerbang uji E2E trial server diperbaiki**: penyimpanan server kini per-putaran sehingga uji bisa dijalankan berulang (idempoten), dan harness mengenal format token `v2.<kid>.<payload>.<sig>` yang sebelumnya membuat pemeriksaan token meleset sejak key id disertakan.
+- **Penjaga katalog surat daring** (6 uji) memastikan nama jenis yang dijanjikan dikenal sistem, daftar pengecualian tidak bocor, NTCR tidak pernah ditawarkan daring, dan setiap entri punya kata kunci.
+- **Penjaga keselarasan catatan rilis** (3 uji) memastikan kartu teratas di aplikasi cocok dengan `AssemblyVersion` dan setiap dokumen rilis punya kartu.
 - **Audit kontras tema kini berjalan di CI**: job *Audit kontras tema (WCAG)* menjalankan `Tools/check-kontras-wcag.ps1` pada setiap push, jadi tema baru yang melanggar paritas kunci atau kontras AA gagal build.
 - **Dokumentasi**: `docs/backend-web.md` kini memuat tabel keputusan kapan memakai `ApiListener` (desktop), `SuDesApp.Api` (mobile/browser), atau `SuDesApp.Server` (lisensi) beserta status penerbitannya.
 
@@ -27,9 +68,58 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 
 - Versi diselaraskan dengan desktop (`versionCode 21500` / `versionName 2.15.0`) tanpa perubahan kode.
 
+## Android — Alat Build
+
+- **AGP 8.7.3 → 9.3.0** dengan built-in Kotlin: plugin `org.jetbrains.kotlin.android` dan blok `kotlinOptions` dihapus (`jvmTarget` mengikuti `compileOptions.targetCompatibility`).
+- **Gradle wrapper 8.11.1 → 9.8.2**; `gradlew`, `gradlew.bat`, dan wrapper jar dibangkitkan ulang memakai biner 9.8.2.
+- **`compileSdk` 35 → 37** (`targetSdk` tetap 35), plugin Kotlin 2.0.21 → 2.2.10, `okhttp` 4.12.0 → 5.5.1, `kotlinx-coroutines-android` 1.8.1 → 1.11.0, `recyclerview` 1.3.2 → 1.4.0, `security-crypto` 1.1.0-alpha06 → 1.1.0.
+- Kenaikan ini tidak bisa sebagian: coroutines 1.11.0 memaksa naikkan plugin Kotlin lebih dulu, dan okhttp 5.5.1 menuntut `compileSdk` 37 yang hanya didukung AGP 9.1+.
+
+## Sinkron Android — Menu Baru dan Informasi Lebih Jelas
+
+- **Tombol "Buat Kode" kembali ke halaman Sinkron Android**: selain Buat QR, operator kini bisa menerbitkan kode 4 angka yang diketik manual di aplikasi Android tanpa memindai QR; ikon tombol "Muat ulang" diganti ke ikon segar-ulang yang benar (dulu identik dengan "Impor ulang arsip gagal").
+- **Tombol "Terbitkan ulang skema & kop"** ditambahkan di kartu Pengaturan Android — pemeriksaan ulang penerbitan skema formulir + kop surat ke Supabase tanpa menunggu timer latar 60 detik; status "sedang sinkron" kini menonaktifkan tombolnya dengan benar.
+- Fitur Sinkron Android kini tercantum di menu Tentang: dua butir di kelompok "Layanan digital", kalimat pembuka kelompok diperluas, tiga kalimat di deskripsi Detail Lengkap, satu kelompok teknologi baru (Supabase, Npgsql, QRCoder), dan apresiasi open-source yang sesuai.
+- Harga sambungan tetap sama: QR/kode memuat URL dan kode saja, surel dan kata sandi perangkat tidak pernah tampil di layar.
+
+## Formulir, Blanko, dan Lambang
+
+- **Keterangan Penghasilan (472)**: `PenghasilanInputViewModel` + `PenghasilanInputView` mengikuti pola SKTM (data pemohon lengkap + keterangan + penandatangan) ditambah kartu Data Penghasilan; rincian disimpan sebagai JSON pada `SuratData.AdditionalData` sehingga isian tetap muncul saat diedit. `PenghasilanGenerator` mencetak bentuk sama dengan SKTM (kop, judul + nomor, tabel pejabat, tabel pemohon, tabel penghasilan, alinea keterangan, tanda tangan pemohon di kolom kiri).
+- **Formulir pendataan perangkat desa** (`FormulirPerangkatGenerator`) kini berjamin satu halaman: susunan normal dipakai lebih dulu, bila belum muat diulang dengan jarak vertikal lebih rapat (1,0 → 0,8 → 0,6 → 0,45 → 0,3) sampai `PageCount == 1`; ukuran huruf tetap sama. Dijaga uji pada A4 maupun F4, termasuk kop yang tambah baris.
+- **Surat Ijin Tinggal Sementara** memakai satu sumber teks (`IjinTinggalGenerator`) untuk bentuk alamat dan kalimat keterangan, dipakai bersama generator PDF dan ViewModel form — dulu keduanya membangun teks sendiri dengan format berbeda.
+- **Lambang kabupaten**: `LogoKabupaten` kini membaca berkas pengguna lebih dulu, lalu arsip `LambangKabupaten.zip` (±20 MB, 514 lambang ≤512 px) yang diekstrak sekali per kode ke folder cache pengguna; penelepon tetap menerima jalur berkas seperti pola lama, jadi kop/pratinjau/UI tidak berubah.
+
+## Halaman Lain — Hasil Audit
+
+- **Laporan Penduduk** menambah tabel statistik **Pekerjaan** (urutan antara Pendidikan dan Agama): teks bebas dirapikan spasinya, tidak diisi masuk kantong "(tidak diisi)", urutan baris dari jumlah terbanyak; dapat dicetak ke PDF dan diekspor seperti tabel lainnya.
+- **IDM**: empat baris pesan (galat/cadangan/peringatan/status) disatukan menjadi satu bilah pesan prioritas; combobox "Tahun laporan" baru membuat cetak PDF mengikuti tahun yang dipilih, bukan selalu tahun layar.
+- **Dokumentasi**: pencarian judul/keterangan/jalur per kelompok dengan tombol bersihkan dan keadaan "Tidak ada dokumen yang cocok"; ikon kepala emoji Panduan Awal diganti ikon aplikasi.
+- **Tombol pengaturan di Panduan Awal** kini membuka halaman pengaturan yang ASLI (instance yang sudah berisi data) dan menampilkan bagian yang tepat — dulu membuka form kosong dan melempar galat render.
+- **Halaman Langganan** dipangkas mati (±350 baris XAML panel yang tak pernah tampil): hanya Status → Aktivasi Manual → Server Lisensi, dengan isian 36px yang seragam dan gaya label bersama.
+- **Halaman Pembaruan** disusun sebagai dua kartu berdampingan (status & tindakan di kiri, rincian pembaruan di kanan) dengan gulir per kartu, bukan satu kartu sempit di tengah halaman.
+- **Perbaikan batal login Google**: membatalkan di tab browser atau tombol Batal tidak lagi membuat tab Masuk mati permanen; status berubah netral "Login dibatalkan." dan tombol Masuk bisa dipakai lagi. Kunci OAuth diberi tenggang 10 menit sehingga tab yang ditutup tidak menggantung koneksi selamanya.
+- **Riwayat Aktivitas**: “Bersihkan Riwayat” kini mengosongkan tabel seketika — penjaga `IsBusy` pada pemuat inti yang membuat muat ulang langsung kembali dilepaskan, dan antrean latar tidak lagi menulis ulang baris yang sudah dihapus.
+- **NTCR**: nama pemohon/pejabat/orang tua yang kosong tercetak titik-titik sejajar blok pejabat pada seluruh blanko (N1–N6, N8) — sama seperti SKCK.
+- **Tentang Aplikasi**: kartu Saweria dan butir donatur dihapus (tiga saluran komunikasi pengembang), deskripsi detail menyebut fitur terbaru, baris "Perusahaan induk"/"Repositori" disembunyikan, kartu pengembang menunjuk website sumberjaya.freedev.app.
+- **Pratinjau kop di Pengaturan Surat** dibatasi tingginya (330 px) dan lebarnya mengikuti acuan kertas (600 px) supaya tidak menggeser formulir ke bawah.
+
+## Android — Surat Kembali Sama dengan Desktop
+
+- **Menu Buat Surat Android kini memuat semua jenis 2.15.0, termasuk Keterangan Penghasilan (472)**: skema desktop diperluas dengan jenis PENGHASILAN (form data diri + pekerjaan/usaha, penghasilan per bulan, jumlah tanggungan), dan impor desktop memetakan `penghasilan.*` sehingga surat dari Android masuk register lengkap.
+- **Generator PDF Android menyamai generator desktop**: blok-blok bespoke yang dulu hanya dicetak sebagai catatan kini dirender sungguhan — kepala blanko NTCR (LAMPIRAN IV/VI/VII/VIII/IX/X + Model N), blok KANTOR DESA/KELURAHAN, judul + Nomor/Perihal permohonan (N2/N3), blok Diterima KUA ↔ Wassalam/Pemohon, tanda tangan dua pihak (N4/N5), tanda tangan desa (N1/N6/N8), kotak "Kode : F-2.17" kematian, tabel rincian garapan 6 kolom berbingkai + baris Jumlah, serta Nomor/Perihal ↔ tujuan Bank/KCP Rekening Koran. Angka kerapatan menyusul `KerapatanSurat` termasuk ukuran font lampiran.
+- **Nama orang bergelar**: gelar (Dr., Hj., S.H., …) tidak lagi ikut tercetak kapital — Android kini memakai perilaku `NamaFormatter.ToUpperNama` yang sama dengan desktop, di halaman surat maupun Daftar Hadir; disertai 4 uji unit.
+- **Footer Daftar Hadir** memakai tanggal panjang bahasa Indonesia ("17 September 2026") seperti desktop.
+- **Surat Keterangan Ahli Waris kini tiga halaman berurutan di Android** seperti desktop: Surat Keterangan (berkop, kaki Camat ↔ Kepala Desa), Surat Pernyataan Ahli Waris (daftar penanda tangan pasangan + tiap anak), dan Surat Kuasa (penerima kuasa = anak pertama, blok kaki Kepala Desa ↔ Camat). Page break antar halaman ikut salinan: halaman kuasa hanya muncul bila ada pasangan DAN anak, dan blok pasangan/anak hanya tercetak bila terisi (cabang `opsional`/`hanyaKosong` skema).
+- **Rincian garapan bidang ke-2 dst. kini ditabulasi**: skema `rincianTambahan` menjadi daftar (letak, nomor persil, luas, keterangan), tiap baris masuk tabel PDF Android, jumlah luas otomatis menghitung semua bidang, dua baris kosong tetap ada seperti desktop.
+- Uji unit Android diperluas menjadi 38 kasus.
+
 ## Verifikasi
 
 - `dotnet build SuDesApp.slnx -c Release` — 0 galat, 0 peringatan.
-- `dotnet test SuDesApp.Tests` — **449/449 lolos** (termasuk 6 uji baru).
-- `Tools/uji-e2e-trial-server.sh` — SEMUA LULUS, terverifikasi pada dua putaran berturut.
+- `dotnet test SuDesApp.Tests` — **501/501 lolos** (termasuk 6 uji gerbang rilis, 3 uji keselarasan catatan rilis, dan 2 uji skema Penghasilan baru).
+- `gradlew testDebugUnitTest` (Android) — **38/38 lolos**.
+- `Tools/check-rilis.ps1 -TanpaGitHub` — 9 lulus, 0 gagal, 4 dilewati.
+- `Tools/check-resources.ps1 -FailOnOrphan` — 0 galat, 0 peringatan.
 - `Tools/check-kontras-wcag.ps1` — semua pemeriksaan lolos (sebelas tema × 60 kunci konsisten).
+- `Tools/uji-e2e-trial-server.sh` — SEMUA LULUS, terverifikasi pada dua putaran berturut.
+- Skema Android (aset APK) identik dengan `Configuration/SkemaFormulir.json` yang diterbitkan desktop; jenis baru terbawa tanpa APK baru lewat penerbitan skema.

@@ -106,12 +106,17 @@
          disalin ke folder keluaran: sumber pembaruan memakai updateCheckUrl HTTPS
          publik. Jangan tambahkan kembali baris CopyToOutput untuk berkas kunci. -->
     <!-- Lambang kabupaten/kota untuk pilihan logo kop surat (Pengaturan Surat →
-         Cetak & Logo → Sumber logo). Pengguna menaruh berkas bernama kode
-         Kemendagri kabupaten (mis. 32.15.png); README ikut tersalin supaya
-         petunjuk penamaan selalu tersedia di folder instalasi. Isinya milik
-         pengguna setelah terpasang — tambalan pembaruan tidak menggantinya
-         (awalan 'resources/logoskabupaten/' ada di daftar dilindungi). -->
-    <None Include="..\Resources\LogosKabupaten\**" Link="Resources\LogosKabupaten\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+         Cetak & Logo → Sumber logo). Sumber gambarnya tetap folder repo
+         Resources/LogosKabupaten (asal-usul di sumber.json di sana), tetapi yang
+         DITERBANGKAN hanya SATU arsip LambangKabupaten.zip (±20 MB berisi 514
+         lambang ≤512 px) — versi lama menyalin 514 berkas mentah ±214 MB ke
+         folder instalasi. Lambang diambil runtime dari arsip; pengguna tetap
+         bisa menaruh berkas sendiri bernama kode Kemendagri (mis. 32.15.png) di
+         %LocalAppData%\SuDesApp\LogosKabupaten — folder itu yang dihormati
+         lebih dulu dan tetap dilindungi dari tambalan pembaruan
+         (resources/logoskabupaten/ di daftar dilindungi).
+         Arsipnya dibuat ulang dengan: py -3 Tools/siapkan-lambang-kabupaten.py -->
+    <None Include="..\Resources\LambangKabupaten.zip" Link="Resources\LambangKabupaten.zip" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\Resources\Fonts\**" Link="Resources\Fonts\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <!--
          Dokumen bawaan aplikasi (folder docs): kebijakan privasi & syarat

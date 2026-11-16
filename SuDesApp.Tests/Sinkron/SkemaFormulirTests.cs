@@ -43,9 +43,12 @@ public sealed class SkemaFormulirTests
     public void Skema_memuat_seluruh_jenis_surat()
     {
         var skema = Muat();
-        Assert.Equal(27, skema.IdJenis.Count);
+        // 27 jenis bawaan + PENGHASILAN (Keterangan Penghasilan, kode 472) yang
+        // kini tersedia di desktop form dan di menu Buat Surat Android.
+        Assert.Equal(28, skema.IdJenis.Count);
         Assert.NotNull(skema.Cari("SKTM"));
         Assert.NotNull(skema.Cari("NTCR_N1"));
+        Assert.NotNull(skema.Cari("PENGHASILAN"));
         Assert.NotNull(skema.Cari("TEMPLATE_SURAT"));
     }
 

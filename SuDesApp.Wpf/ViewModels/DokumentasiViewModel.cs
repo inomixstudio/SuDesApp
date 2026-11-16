@@ -261,6 +261,8 @@ namespace SuDesApp.Wpf.ViewModels
             BukaCommand = new RelayCommand<DokumentasiItem>(Buka);
             BukaFolderCommand = new RelayCommand(BukaFolder);
             BukaTautanCommand = new RelayCommand<DokumentasiItem>(BukaTautan);
+            BersihkanSaringanCommand = new RelayCommand(BersihkanSaringan);
+            PerbaruiKelompokTampil();
 
             _logger.LogInformation(
                 "Halaman Dokumentasi dibuka: {Tersedia} dari {Total} dokumen ditemukan",
@@ -372,6 +374,7 @@ namespace SuDesApp.Wpf.ViewModels
             OnPropertyChanged(nameof(JumlahTotal));
             OnPropertyChanged(nameof(JumlahTautan));
             OnPropertyChanged(nameof(RingkasanText));
+            PerbaruiKelompokTampil();
         }
 
         private static bool RegulasiKarawangCocok(string kabupaten, string? jenisKabupaten)
@@ -413,6 +416,59 @@ namespace SuDesApp.Wpf.ViewModels
         public string VersionFooter => IdentitasAplikasi.FooterVersi;
 
         public IReadOnlyList<KelompokDokumentasi> Kelompok { get; private set; }
+
+        private string _teksCari = string.Empty;
+
+        /// <summary>
+        /// Kata kunci saringan dokumen. Kosong berarti semua kelompok tampil;
+        /// isi kata hanya kelompok yang punya dokumen cocok (judul, keterangan,
+        /// atau jalur berkas) yang tampil — daftar regulasi/panduan cepat sekali
+        /// memanjang, sehingga saringan kata lebih cepat daripada menggulir.
+        /// </summary>
+        public string TeksCari
+        {
+            get => _teksCari;
+            set
+            {
+                if (SetProperty(ref _teksCari, value))
+                {
+                    PerbaruiKelompokTampil();
+                    OnPropertyChanged(nameof(AdaSaringan));
+                }
+            }
+        }
+
+        /// <summary>Kelompok yang benar-benar tampil — hasil penyaringan <see cref="TeksCari"/>.</summary>
+        public IReadOnlyList<KelompokDokumentasi> KelompokTampil { get; private set; } = Array.Empty<KelompokDokumentasi>();
+
+        /// <summary>Benar bila saringan aktif tetapi tidak ada dokumen yang cocok.</summary>
+        public bool SaringanTanpaHasil => TeksCari.Trim().Length > 0 && KelompokTampil.Count == 0;
+
+        private void PerbaruiKelompokTampil()
+        {
+            var kata = TeksCari.Trim();
+            if (kata.Length == 0)
+            {
+                KelompokTampil = Kelompok;
+            }
+            else
+            {
+                KelompokTampil = Kelompok
+                    .Select(k => new KelompokDokumentasi(
+                        k.Nama,
+                        k.Keterangan,
+                        k.Dokumen
+                            .Where(d => d.Judul.Contains(kata, StringComparison.OrdinalIgnoreCase)
+                                || d.Keterangan.Contains(kata, StringComparison.OrdinalIgnoreCase)
+                                || d.JalurRelatif.Contains(kata, StringComparison.OrdinalIgnoreCase))
+                            .ToList()))
+                    .Where(k => k.Dokumen.Count > 0)
+                    .ToList();
+            }
+
+            OnPropertyChanged(nameof(KelompokTampil));
+            OnPropertyChanged(nameof(SaringanTanpaHasil));
+        }
 
         private int _jumlahTersedia;
 
@@ -470,6 +526,17 @@ namespace SuDesApp.Wpf.ViewModels
                     OnPropertyChanged(nameof(AdaPesan));
                 }
             }
+        }
+
+        /// <summary>Bersihkan saringan dokumen — sama dengan mengosongkan kotak pencarian.</summary>
+        public RelayCommand BersihkanSaringanCommand { get; }
+
+        /// <summary>Benar bila kotak pencarian berisi sesuatu (untuk tampilnya tombol Bersihkan).</summary>
+        public bool AdaSaringan => TeksCari.Trim().Length > 0;
+
+        private void BersihkanSaringan()
+        {
+            TeksCari = string.Empty;
         }
 
         /// <summary>True bila <see cref="PesanStatus"/> punya isi (untuk Visibility).</summary>

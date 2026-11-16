@@ -200,6 +200,20 @@
                         </StackPanel>
                         <TextBlock Style="{StaticResource KeteranganKpi}"
                                    Text="Kop surat, pola nomor, dan skema formulir ditarik perangkat dari desktop."/>
+                        <!-- Cadangan penerbitan: latar menerbitkan otomatis (mulai
+                             aplikasi, pengaturan desa disimpan, skema berubah),
+                             tombol ini untuk memeriksa ulang tanpa menunggu 60 detik. -->
+                        <Button Command="{Binding TerbitkanSkemaCommand}"
+                                Style="{StaticResource OutlineButton}" Margin="0,10,0,0"
+                                HorizontalAlignment="Left" Padding="10,4"
+                                ToolTip="Terbitkan ulang skema formulir + kop surat dan pola nomor ke Supabase sekarang — Android mengambilnya pada sinkron berikutnya.">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{x:Static u:IkonMenu.MuatUlang}"
+                                           FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Terbitkan ulang skema &amp; kop" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -245,7 +259,7 @@
                             </Button>
                             <Button Command="{Binding MuatUlangCommand}" Style="{StaticResource OutlineButton}">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{x:Static u:IkonMenu.Riwayat}"
+                                    <TextBlock Text="{x:Static u:IkonMenu.MuatUlang}"
                                                FontFamily="{StaticResource AppIconFont}" FontSize="13"
                                                VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="Muat ulang" VerticalAlignment="Center"/>
@@ -322,14 +336,34 @@
 
                         <StackPanel Grid.Column="0" Margin="0,0,18,0">
                             <TextBlock Text="Pasang perangkat baru" Style="{StaticResource FieldLabel}"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                <Button Content="Buat QR" Command="{Binding BuatQrCommand}"
+                            <!-- Dua jalur pemasangan: QR (pindai kamera) atau kode
+                                 4 angka (diketik) — keduanya dari command yang sudah
+                                 ada di ViewModel; dulu tombol kode hilang dari view. -->
+                            <WrapPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Button Command="{Binding BuatQrCommand}"
                                         Style="{StaticResource PrimaryButton}"
-                                        ToolTip="Buat QR + kode: pindai dari aplikasi Android."/>
-                            </StackPanel>
+                                        ToolTip="Buat QR + kode: pindai dari aplikasi Android.">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{x:Static u:IkonMenu.Kode}"
+                                                   FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                                   VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Buat QR" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding BuatKodeCommand}"
+                                        Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                                        ToolTip="Buat kode 4 angka saja — diketik manual di aplikasi Android, tanpa memindai QR.">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{x:Static u:IkonMenu.KataSandi}"
+                                                   FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                                   VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Buat Kode" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </WrapPanel>
                             <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                       Text="Nama perangkat dibuat otomatis — tanpa mengisi apa pun. Tekan Buat QR, lalu scan QR atau ketik kode di Android."/>
+                                       Text="Nama perangkat dibuat otomatis — tanpa mengisi apa pun. Tekan Buat QR untuk dipindai, atau Buat Kode untuk diketik di Android."/>
 
                             <TextBlock Text="PERANGKAT TERPASANG" Style="{StaticResource FieldLabel}"
                                        Margin="0,14,0,4"/>
@@ -344,9 +378,17 @@
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        Visibility="{Binding AdaPerangkat, Converter={StaticResource InverseBoolToVis}}"/>
 
-                            <Button Content="Cabut perangkat terpilih" Command="{Binding CabutCommand}"
+                            <Button Command="{Binding CabutCommand}"
                                     Style="{StaticResource OutlineButton}" Margin="0,12,0,0"
-                                    HorizontalAlignment="Left"/>
+                                    HorizontalAlignment="Left"
+                                    ToolTip="Hapus perangkat beserta akun Supabase-nya; antrean yang belum tersinkron ikut terhapus.">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{x:Static u:IkonMenu.Keluar}"
+                                               FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Cabut perangkat terpilih" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
 
                         <!-- Panel kode: QR + kode 4 angka setelah perangkat dibuat -->

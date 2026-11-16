@@ -223,11 +223,10 @@ public sealed class FeatureNavigationViewModel
         TambahTombol("Cadangkan & Pulihkan", IkonMenu.Cadangkan, "cadangkan-pulihkan");
         var sinkronAndroid = TambahTombol("Sinkron Android", IkonMenu.Sinkron, "sinkron-android");
         sinkronAndroid.Description = "Tarik surat dari antrean Supabase dan pasang perangkat Android (QR).";
-        // Koneksi akun Google adalah pelengkap cadangan (pencadangan database ke
-        // Drive), jadi menempel di seksi ini — bukan menyelingi antara Beranda
-        // dan seksi BUAT SURAT tanpa judul seperti sebelumnya.
-        Google = TambahTombol("Login dengan Google", IkonMenu.AkunGoogle, "google-login");
-        Google.Description = "Sambungkan akun Google untuk pencadangan database ke Google Drive.";
+        // Login akun Google dan arsip/cadangan Drive sudah DIgabung menjadi satu
+        // halaman ringkas — satu tombol menu, satu rute.
+        Google = TambahTombol("Google Drive & Arsip", IkonMenu.AkunGoogle, "google-drive");
+        Google.Description = "Login akun Google, arsip surat, dan cadangan database — semuanya satu halaman.";
 
         Header("AKTIVASI LISENSI");
         Langganan = TambahTombol("Aktivasi Lisensi", IkonMenu.Langganan, "langganan");

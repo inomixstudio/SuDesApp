@@ -40,6 +40,9 @@ namespace SuDesApp.Wpf.Input
                 case SuratConstants.SKTM:
                     return CreateView<SktmInputViewModel, Views.SktmInputView>();
 
+                case SuratConstants.PENGHASILAN:
+                    return CreateView<PenghasilanInputViewModel, Views.PenghasilanInputView>();
+
                 // Satu set isian dengan SKTM, beda varian (Belum Terbit / Sudah Terbit).
                 case SuratConstants.SK_BELUM_TERBIT:
                     return CreateView<KeteranganTerbitInputViewModel, Views.KeteranganTerbitInputView>();

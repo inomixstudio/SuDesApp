@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Threading;
 using System.Windows;
@@ -401,7 +401,6 @@ namespace SuDesApp.Wpf
             services.AddTransient<KeputusanViewModel>();
             services.AddTransient<DaftarHadirViewModel>();
             services.AddTransient<ExImdbViewModel>();
-            services.AddTransient<GoogleLoginViewModel>();
             services.AddTransient<GoogleDriveViewModel>();
             services.AddTransient<PembaruanViewModel>();
             services.AddTransient<CatatanRilisViewModel>();
@@ -544,6 +543,7 @@ namespace SuDesApp.Wpf
             services.AddTransient<SkckInputViewModel>();
             services.AddTransient<SkuInputViewModel>();
             services.AddTransient<SktmInputViewModel>();
+            services.AddTransient<PenghasilanInputViewModel>();
             services.AddTransient<KeteranganTerbitInputViewModel>();
             services.AddTransient<DomisiliWargaInputViewModel>();
             services.AddTransient<DomisiliInstansiInputViewModel>();
@@ -569,6 +569,7 @@ namespace SuDesApp.Wpf
             services.AddTransient<SKUGenerator>();
             services.AddTransient<SKCKGenerator>();
             services.AddTransient<SKTMGenerator>();
+            services.AddTransient<SuDesApp.GeneratorPdf.PenghasilanGenerator>();
             services.AddTransient<KeteranganTerbitGenerator>();
             services.AddTransient<KematianGenerator>();
             services.AddTransient<BedaNamaGenerator>();

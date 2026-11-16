@@ -34,6 +34,11 @@ public sealed record AntreanSuratBaris(
     DateTime DiubahPada,
     Guid? ClientUuid = null)
 {
+    // Satu dokumen kosong bersama: Fields dipanggil sekali per impor, tapi
+    // JsonDocument.Parse tanpa Dispose tiap kali tetap membebani finalizer.
+    private static readonly JsonElement FieldsKosong =
+        JsonDocument.Parse("{}").RootElement;
+
     /// <summary>Tanggal surat dari payload, atau tanggal baris dibuat bila absen/rusak.</summary>
     public DateTime TanggalSurat
     {
@@ -58,7 +63,7 @@ public sealed record AntreanSuratBaris(
         DataJson.TryGetProperty("fields", out var f) &&
         f.ValueKind == JsonValueKind.Object
             ? f
-            : JsonDocument.Parse("{}").RootElement;
+            : FieldsKosong;
 }
 
 /// <summary>Hasil satu putaran sinkron — dipakai tampilan dan log.</summary>

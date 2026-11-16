@@ -196,6 +196,20 @@ public sealed class SkemaFormulir
                 continue;
             }
 
+            if (target.StartsWith("penghasilan.", StringComparison.Ordinal))
+            {
+                // Penghasilan disimpan sebagai objek navigasi SuratData.Penghasilan
+                // (Keterangan Penghasilan, kode 472). Generator desktop membaca
+                // properti ini lebih dulu; tanpa penyemaian di sini, jalur
+                // refleksi "penghasilan.xxx" gagal karena navigasinya masih null.
+                surat.Penghasilan ??= new PenghasilanData();
+                if (Terapkan(surat.Penghasilan, target["penghasilan.".Length..], nilai))
+                {
+                    diterapkan++;
+                }
+                continue;
+            }
+
             if (target.StartsWith("rincianGarapans[0].", StringComparison.Ordinal))
             {
                 if (garapan.Count == 0) garapan.Add(new GarapanData());

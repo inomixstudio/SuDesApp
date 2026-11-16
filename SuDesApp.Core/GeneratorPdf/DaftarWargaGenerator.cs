@@ -280,7 +280,8 @@ namespace SuDesApp.GeneratorPdf
                         .Text($"{KopSurat.KataPejabat(_desa)} {namaDesa}".ToUpperInvariant().Trim())
                         .SemiBold();
                     column.Item().Height(40);
-                    column.Item().AlignCenter().Text(kepalaDesa.ToUpperInvariant()).Bold().Underline();
+                    // Gelar tetap apa adanya — hanya nama pokok yang kapital.
+                    column.Item().AlignCenter().Text(NamaFormatter.ToUpperNama(kepalaDesa)).Bold().Underline();
                     string nipPejabat = KopSurat.IsKelurahan(_desa)
                         ? (_desa.NipKepalaDesa ?? string.Empty).Trim()
                         : string.Empty;

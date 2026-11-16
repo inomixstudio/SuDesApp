@@ -133,7 +133,8 @@ namespace SuDesApp.GeneratorPdf
                     {
                         Judul = "Pejabat Kecamatan",
                         Jabatan = $"Camat {(kecamatan.Length == 0 ? GarisKecamatanKosong : kecamatan)}",
-                        Nama = namaCamat.Length == 0 ? GarisNamaKosong : namaCamat.ToUpperInvariant(),
+                        // Gelar tetap apa adanya — hanya nama pokok yang kapital.
+                        Nama = namaCamat.Length == 0 ? GarisNamaKosong : NamaFormatter.ToUpperNama(namaCamat),
                         BarisTambahan = barisTambahanCamat,
                         Terisi = namaCamat.Length > 0
                     }

@@ -164,15 +164,14 @@ namespace SuDesApp.Wpf.ViewModels
             PratinjauInfoKertas = $"Kertas {PengaturanCetak.LabelUkuranKertas(_ukuranKertas)} · {asalLogo}";
 
             PratinjauInfoCamat = kop.Camat == null
-                ? "Pejabat Kecamatan dikosongkan — blok camat tidak dicetak pada surat."
-                : "Pejabat Kecamatan terisi — blok camat ikut dicetak pada surat yang memintanya.";
+                ? "Pejabat Kecamatan kosong — blok camat tidak dicetak."
+                : "Pejabat Kecamatan terisi — blok camat dicetak bila surat memintanya.";
 
             // Surel bersifat opsional: keterangannya menjelaskan kedua keadaan, bukan
             // menyuruh pengguna mengisinya.
             PratinjauInfoSurel = kop.Surel.Length == 0
-                ? "Email desa belum diisi — kop dicetak tanpa email (kolom ini opsional)."
-                : $"Email {kop.Surel} dicetak berwarna biru pada baris sendiri di bawah nama kabupaten; " +
-                  "kosongkan kolomnya bila kantor desa tidak memakai email surat.";
+                ? "Email belum diisi — kop dicetak tanpa baris email."
+                : $"Email {kop.Surel} dicetak biru di bawah nama kabupaten.";
 
             PratinjauCatatanBersih = CatatanBersih(desa);
             PratinjauSesuaiTersimpan = !HasChanges;
@@ -250,8 +249,8 @@ namespace SuDesApp.Wpf.ViewModels
 
             return kolom.Count == 0
                 ? string.Empty
-                : $"Kata pengulang pada {string.Join(", ", kolom)} otomatis dibuang di kop dan tanda tangan " +
-                  "(mis. kolom Kecamatan tetap dicetak sebagai “KECAMATAN ...”, tanpa kata ganda).";
+                : $"Kata ganda pada {string.Join(", ", kolom)} dibuang otomatis " +
+                  "(mis. “Kecamatan Tempuran” menjadi “KECAMATAN TEMPURAN”).";
         }
 
         private static bool AdaKataPengulang(string? nilai, string kataPengulang, string? singkatan = null)

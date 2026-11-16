@@ -158,9 +158,10 @@ namespace SuDesApp.GeneratorPdf
                 kolom.Item().Element(c => SuratRenderer.Teks(c, $"Camat {desa.Kecamatan ?? UnknownValue}", rata: Rata.Tengah));
                 kolom.Item().Height(SuratRenderer.TinggiBaris * 3f);
 
+                // Gelar tetap apa adanya — hanya nama pokok yang kapital.
                 string namaCamatDisplay = string.IsNullOrWhiteSpace(desa.NamaCamat)
                     ? "_______________________"
-                    : desa.NamaCamat.ToUpper();
+                    : NamaFormatter.ToUpperNama(desa.NamaCamat);
 
                 kolom.Item().Element(c => SuratRenderer.Teks(c, namaCamatDisplay, tebal: true, rata: Rata.Tengah));
 

@@ -87,6 +87,13 @@ namespace SuDesApp.Wpf.ViewModels
             ? "Berbagi urutan nomor dengan SKD dan surat keterangan lain"
             : "Urutan nomor tersendiri";
 
+        /// <summary>
+        /// Teks acuan nomor nyata (regulasi daerah/blanko resmi) untuk jenis ini —
+        /// diisi dari JenisSuratConfig.json yang didokumentasikan di
+        /// docs/referensi-penomoran-surat.md; boleh kosong.
+        /// </summary>
+        public string AcuanNomor { get; }
+
         public RelayCommand KembalikanBawaanCommand { get; }
 
         public PenomoranBarisVM(SuDesApp.Services.PenomoranSuratEntri entri)
@@ -96,6 +103,7 @@ namespace SuDesApp.Wpf.ViewModels
             KodeJenis = entri.KodeJenis;
             IsSharedNumbering = entri.IsSharedNumbering;
             FormatBawaan = entri.FormatBawaan;
+            AcuanNomor = entri.AcuanNomor;
             AwalanBawaan = entri.AwalanBawaan;
             _format = entri.Format;
             FormatTersimpan = entri.Format;

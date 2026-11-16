@@ -86,7 +86,7 @@ namespace SuDesApp.GeneratorPdf
                     jarakBawah: 12);
 
                 badan.Paragraf("Demikian izin ini diberikan untuk dipergunakan sebagaimana mestinya.",
-                    rata: Rata.Kiri,
+                    rata: Rata.Justify,
                     jarakBawah: 12);
             }
             catch (Exception ex)

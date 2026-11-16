@@ -1,5 +1,6 @@
 using SudesPdf.Core.Layout;
 using SuDesApp.Data.Models;
+using SuDesApp.Utilities;
 using System.Globalization;
 
 namespace SuDesApp.GeneratorPdf
@@ -172,7 +173,8 @@ namespace SuDesApp.GeneratorPdf
                         col.Item().AlignCenter().Text(locationAndDate);
                         col.Item().AlignCenter().Text("SEKRETARIS DESA");
                         col.Item().Height(50);
-                        col.Item().AlignCenter().Text((_desaInfo.SekretarisDesa ?? "...........................").ToUpper()).Underline().SemiBold();
+                        // Gelar tetap apa adanya — hanya nama pokok yang kapital.
+                        col.Item().AlignCenter().Text(NamaFormatter.ToUpperNama(_desaInfo.SekretarisDesa) ?? "...........................").Underline().SemiBold();
                     });
                 });
             });

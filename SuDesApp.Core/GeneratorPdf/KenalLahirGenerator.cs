@@ -96,7 +96,7 @@ namespace SuDesApp.GeneratorPdf
 
             // Paragraf Penutup
             badan.Paragraf("Demikian surat keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.",
-                rata: Rata.Kiri,
+                rata: Rata.Justify,
                 jarakAtas: 10);
 
             _logger.LogDebug("Dokumen Kenal Lahir selesai dibuat.");

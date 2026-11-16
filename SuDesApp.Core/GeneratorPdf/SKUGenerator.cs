@@ -115,7 +115,7 @@ namespace SuDesApp.GeneratorPdf
                 ]);
 
                 badan.Paragraf("Demikian surat keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana perlunya.",
-                    rata: Rata.Kiri,
+                    rata: Rata.Justify,
                     jarakAtas: 10,
                     jarakBawah: 12);
             }

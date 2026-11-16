@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.ControlSurat;
 using SuDesApp.Data.Models;
@@ -28,7 +28,7 @@ namespace SuDesApp.GeneratorPdf
 
             var baris = new List<(string Label, string? Nilai)>
             {
-                ("1. Nama", NamaFormatter.ToUpperNama(istriDiterangkan ? ntcr.NamaIstri : warga.Nama)),
+                ("1. Nama", NamaAtauTitik(istriDiterangkan ? ntcr.NamaIstri : warga.Nama)),
                 ("2. Nomor Induk Kependudukan (NIK)", Isi(istriDiterangkan ? ntcr.NikIstri : warga.NIK)),
                 ("3. Jenis Kelamin", Isi(istriDiterangkan ? "Perempuan" : (string.IsNullOrWhiteSpace(warga.JenisKelamin) ? "Laki-laki" : warga.JenisKelamin))),
                 ("4. Tempat dan tanggal lahir", TempatTanggalLahir(
@@ -78,8 +78,10 @@ namespace SuDesApp.GeneratorPdf
 
             TabelBaris(badan, new List<(string, string?)>
             {
-                ("Calon suami", NamaFormatter.ToUpperNama(warga.Nama)),
-                ("Calon istri", NamaFormatter.ToUpperNama(ntcr.NamaIstri)),
+                // Nama kosong → titik-titik seperti blanko resmi; isian lain
+                // memakai Isi() yang perilakunya sama.
+                ("Calon suami", NamaAtauTitik(warga.Nama)),
+                ("Calon istri", NamaAtauTitik(ntcr.NamaIstri)),
                 ("Hari/Tanggal/Jam", Isi(ntcr.HariTanggalJamAkad)),
                 ("Tempat akad nikah", Isi(ntcr.TempatAkad))
             });
