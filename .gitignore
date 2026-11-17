@@ -110,3 +110,7 @@ android/local.properties
 
 # Kunci publik Supabase per mesin (bukan rahasia, tapi jangan di-commit)
 android/supabase.properties
+
+# Pratinjau ikon dihasilkan Tools/generate-app-icon.ps1 tiap kali ikon dibangun;
+# sumber aplikasinya Resources/AppIcon.ico, jadi PNG preview tidak perlu dilacak.
+Tools/icon-preview/*.png
