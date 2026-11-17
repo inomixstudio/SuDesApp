@@ -2562,7 +2562,7 @@
         "children": [
           {
             "key": "lokasi",
-            "label": "Letak",
+            "label": "Lokasi Tanah",
             "type": "text"
           },
           {
