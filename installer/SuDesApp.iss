@@ -91,9 +91,16 @@ Name: "desktopicon"; Description: "Buat ikon Desktop"; GroupDescription: "Ikon:"
 ; berikutnya: setelah pemasangan pertama folder itu milik pengguna (petugas
 ; mengedit template surat di sana), jadi upgrade tidak boleh menimpanya dengan
 ; contoh bawaan.
+;
+; Pengecualian basis data memakai "desa*.db" dan "desa*.db-*" (berkas samping
+; -wal/-shm/-journal), BUKAN "desa.db*": pola lama itu juga menelan
+; desa.db.sql — berkas SKEMA yang dibaca DatabaseInitializer untuk membuat
+; seluruh tabel. Instalasi dari paket dengan pola lama selalu berakhir tanpa
+; desa.db.sql, jadi database baru hanya punya segelintir tabel dan startup
+; melapor "no such table: main.Surat". Penjaga: InstallerSkemaDatabaseTests.
 Source: "..\artifacts\publish\*"; DestDir: "{app}"; \
   Flags: ignoreversion recursesubdirs createallsubdirs; \
-  Excludes: "*.pdb,Templates\*,Templates\*\*,desa.db*,desa_backup*.db"
+  Excludes: "*.pdb,Templates\*,Templates\*\*,desa*.db,desa*.db-*,desa_backup*.db"
 
 ; Template formulir awal. Dulu berkas ini disalin lewat [Code] dari
 ; {src}\..\artifacts\publish\Templates — jalur folder BUILD yang tidak pernah

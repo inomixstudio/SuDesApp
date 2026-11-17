@@ -137,6 +137,14 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **Penjaga baru**: `Tools/turunkan-grup.py` ikut menerbitkan `Configuration/BidangFormDesktop.json` (kolom yang benar-benar ber-binding di XAML desktop) dan mode `--audit`; uji `SkemaTidakMenambahKolomDiLuarFormDesktop` menolak kolom asing, `PolaTanggalLahirAndroidSamaDenganGeneratorDesktop` mengikat pola tanggal ke generator aslinya, dan `TanggalLahirPolaTest` mengujinya di Android. Penjaga lama `Skema_jenis_ber_NIK_memuat_field_warga_lengkap` dilepas dari `statusPerkawinan` karena itulah yang memaksa kolom asing masuk skema.
 - Uji unit Android diperluas menjadi 52 kasus.
 
+## Instalasi Baru — Skema Database Tidak Ikut Terpasang
+
+`desa.db.sql` adalah satu-satunya sumber skema yang dibaca `DatabaseInitializer` untuk membuat seluruh tabel. Pengecualian Inno `desa.db*` — yang maksudnya menahan basis data pengguna agar tidak tertimpa isi paket — juga menelan berkas skema itu, karena pola tersebut cocok dengan semua nama yang diawali `desa.db`.
+
+Akibatnya pada setiap instalasi dari paket: `DatabaseInitializer` mencatat *"File schema SQL tidak ditemukan"*, database baru hanya berisi 8 tabel buatan kode (`Warga`, `JenisSurat`, `InfoDesa`, `Pengguna`, …), dan startup melapor `no such table: main.Surat` serta rentetan galat `no such table: IjinTinggal` dari `EnsureRequiredTableColumnsAsync`.
+
+Pola kini dipecah menjadi `desa*.db` dan `desa*.db-*` (mencakup berkas samping `-wal`/`-shm`/`-journal` dan `desa_backup*.db`), jadi data desa tetap tidak pernah tertimpa sementara skema kembali ikut terpasang. Diperbaiki dengan `installer/SuDesApp.iss` + uji baru `SuDesApp.Tests/Configuration/InstallerSkemaDatabaseTests.cs` (8 uji) yang mengunci dua arah: menolak bila `desa.db.sql` tersaring, menolak bila `desa.db`/`desa.db-wal`/`desa_backup*.db` justru terpasang, memastikan csproj menyalin skema ke output, dan memeriksa `desa.db.sql` memuat seluruh tabel surat. Merah–hijau diverifikasi: dengan pola lama satu uji gagal, dengan pola baru semuanya lolos.
+
 ## Verifikasi
 
 - `dotnet build SuDesApp.slnx -c Release` — 0 galat, 0 peringatan.

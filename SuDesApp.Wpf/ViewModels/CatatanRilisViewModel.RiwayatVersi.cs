@@ -110,7 +110,8 @@ namespace SuDesApp.Wpf.ViewModels
                         new CatatanRilisSubSection("Installer — Penuh lewat Inno Setup", new List<string>
                         {
                             "Proyek installer WPF lama dihapus; pemasangan kini sepenuhnya lewat Inno Setup dengan wizard berbahasa Indonesia dan aset gambar wizard.",
-                            "Aset wizard dapat dibuat ulang konsisten lewat skrip Tools/buat-aset-wizard.ps1 tanpa editor gambar manual."
+                            "Aset wizard dapat dibuat ulang konsisten lewat skrip Tools/buat-aset-wizard.ps1 tanpa editor gambar manual.",
+                            "Pengecualian berkas basis data pada installer sempat ikut menelan desa.db.sql sehingga instalasi baru tidak punya tabel surat dan startup melapor 'no such table: main.Surat'; pola dipersempit (desa*.db dan desa*.db-*) dan dijaga uji dua arah InstallerSkemaDatabaseTests."
                         }),
                         new CatatanRilisSubSection("Android — Peringatan Versi dan Kop Perbaikan", new List<string>
                         {
