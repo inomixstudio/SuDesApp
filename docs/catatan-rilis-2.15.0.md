@@ -132,13 +132,16 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **Rincian garapan bidang ke-2 dst. kini ditabulasi**: skema `rincianTambahan` menjadi daftar (letak, nomor persil, luas, keterangan), tiap baris masuk tabel PDF Android, jumlah luas otomatis menghitung semua bidang, dua baris kosong tetap ada seperti desktop.
 - **Isian turunan dihitung Android, tidak digantungkan ke skema**: umur (`"<n> Tahun"`), tanggal cetak `dd MMMM yyyy` locale id-ID, dan pemetaan orang tua NTCR (`binBinti`, ayah/ibu calon suami-istri) dibangun `BuatSuratActivity` persis seperti generator C# desktop.
 - **Impor desktop menahan bentuk data Android**: `SkemaFormulir` membuat objek antara yang null (mis. `wargaKK`) saat memasang target bertingkat, melepas tanda kutip JSON pada nilai string, dan menormalkan tanggal ke ISO `yyyy-MM-dd` — berkas properti `string` tanggal di database tetap satu bentuk untuk semua generator PDF.
-- Uji unit Android diperluas menjadi 48 kasus.
+- **Kolom yang tidak ada di desktop dihapus dari Garapan Sawah**: skema memuat `statusPerkawinan` padahal `GarapanInputView` tidak punya barisnya dan `GarapanGenerator` tidak mencetaknya — operator Android melihat satu dropdown yang desktop tidak pernah minta.
+- **Tanggal lahir dicetak seperti desktop**: `GarapanGenerator` dan `IzinOrtuGenerator` memakai `dd-MM-yyyy` (bukan `dd MMMM yyyy` seperti surat lain), sedangkan pemilih tanggal Android menghasilkan `dd/MM/yyyy`. `BuatSuratActivity` kini menormalkan semua kunci tanggal lahir dengan `TanggalIndonesia.polaTanggalLahir(idJenis)`, jadi baris "Tempat Tgl lahir" Garapan dan Izin Orang Tua — dan baris tempat/tanggal surat lain — tidak lagi berbentuk garis miring.
+- **Penjaga baru**: `Tools/turunkan-grup.py` ikut menerbitkan `Configuration/BidangFormDesktop.json` (kolom yang benar-benar ber-binding di XAML desktop) dan mode `--audit`; uji `SkemaTidakMenambahKolomDiLuarFormDesktop` menolak kolom asing, `PolaTanggalLahirAndroidSamaDenganGeneratorDesktop` mengikat pola tanggal ke generator aslinya, dan `TanggalLahirPolaTest` mengujinya di Android. Penjaga lama `Skema_jenis_ber_NIK_memuat_field_warga_lengkap` dilepas dari `statusPerkawinan` karena itulah yang memaksa kolom asing masuk skema.
+- Uji unit Android diperluas menjadi 52 kasus.
 
 ## Verifikasi
 
 - `dotnet build SuDesApp.slnx -c Release` — 0 galat, 0 peringatan.
-- `dotnet test SuDesApp.Tests` — **518 uji: 516 lolos**; 2 uji pemulihan basis data (`PemulihanDatabaseOtomatisTests`) bergantung pada lingkungan dan lolos begitu `desa.db` terpakai di folder instalasi disingkirkan sementara. Termasuk 6 uji gerbang rilis, 3 uji keselarasan catatan rilis, 152 uji berfilter `Licensing`, dan penjaga paritas Buat Surat Android ↔ desktop.
-- `gradlew testDebugUnitTest` (Android) — **48/48 lolos**.
+- `dotnet test SuDesApp.Tests` — **520 uji: 518 lolos**; 2 uji pemulihan basis data (`PemulihanDatabaseOtomatisTests`) bergantung pada lingkungan dan lolos begitu `desa.db` terpakai di folder instalasi disingkirkan sementara. Termasuk 6 uji gerbang rilis, 3 uji keselarasan catatan rilis, 152 uji berfilter `Licensing`, dan 9 uji paritas Buat Surat Android ↔ desktop.
+- `gradlew testDebugUnitTest` (Android) — **52/52 lolos**.
 - `Tools/check-rilis.ps1 -TanpaGitHub` — 9 lulus, 0 gagal, 4 dilewati.
 - `Tools/check-resources.ps1 -FailOnOrphan` — 0 galat, 0 peringatan.
 - `Tools/check-kontras-wcag.ps1` — semua pemeriksaan lolos (sebelas tema × 60 kunci konsisten).

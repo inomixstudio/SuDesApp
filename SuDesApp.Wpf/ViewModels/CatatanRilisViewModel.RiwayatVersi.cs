@@ -79,6 +79,12 @@ namespace SuDesApp.Wpf.ViewModels
                             "Tombol Hubungkan menunggu server lisensi lokal benar-benar siap sebelum menanyakan katalog dan hanya memakai satu bentuk alamat loopback, sehingga gejala 'lisensi server tidak terhubung' hilang.",
                             "Perilaku ini dikunci uji kontrak khusus dan berkas-berkas terkait ditandai terkunci agar tidak rusak oleh perubahan berikutnya."
                         }),
+                        new CatatanRilisSubSection("Garapan Sawah Disamakan Dengan Form Desktop", new List<string>
+                        {
+                            "Kolom Status Perkawinan dihapus dari formulir Android: halaman desktop tidak punya baris itu dan hasil cetakan PDF-nya juga tidak mencetaknya, jadi operator tidak lagi disuruh mengisi kolom yang tidak ada gunanya.",
+                            "Tanggal lahir pada surat Garapan Sawah dan Izin Orang Tua kini dicetak dd-MM-yyyy seperti generator desktop; surat lain tetap memakai bentuk panjang (17 November 1990). Sebelumnya Android menampilkan bentuk 17/11/1990 hasil pemilih tanggal.",
+                            "Penjaga baru menolak kolom asing: setiap kolom skema harus terbukti punya isian di form desktop atau memang tercetak di PDF, dan pola tanggal Android diuji terhadap generator aslinya."
+                        }),
                         new CatatanRilisSubSection("Alat Build Android", new List<string>
                         {
                             "Android menaikkan AGP ke 9.3 (built-in Kotlin), Gradle 9.8.2, dan compileSdk 37, lalu okhttp 5.5.1 dan pustaka Android lainnya; build dan uji unit tetap hijau."
