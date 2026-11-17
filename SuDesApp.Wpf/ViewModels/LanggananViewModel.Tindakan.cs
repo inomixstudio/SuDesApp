@@ -276,6 +276,15 @@ namespace SuDesApp.Wpf.ViewModels
         /// bila tersedia & belum berjalan, lalu coba sambung berulang sampai
         /// server menjawab atau percobaan habis (5×, jeda 2 detik).
         /// Setelah terhubung, status langganan langsung diperiksa.
+        ///
+        /// ╔═ TERKUNCI ═══════════════════════════════════════════════════════╗
+        /// ║ Alur di bawah ini adalah hasil penyelidikan panjang gejala       ║
+        /// ║ "server lisensi selalu tidak terhubung setelah pengeditan".      ║
+        /// ║ Jangan mengedit blok ini. Perilaku dijaga oleh tes               ║
+        /// ║ SuDesApp.Tests/Licensing/KontrakHubunganServerLisensiTests.cs —  ║
+        /// ║ bila suatu perubahan memang WAJIB, jalankan seluruh filter        ║
+        /// ║ "FullyQualifiedName~Licensing" dan tulis alasannya di commit.     ║
+        /// ╚═══════════════════════════════════════════════════════════════════╝
         /// </summary>
         private async Task HubungkanAsync()
         {
@@ -289,12 +298,33 @@ namespace SuDesApp.Wpf.ViewModels
                 return;
             }
 
+            // Alamat loopback berarti server uji/lokal. Nyalakan dan tunggu
+            // sampai /healthz benar-benar menjawab SEBELUM menguji katalog;
+            // memulai lewat setter ServerLokalAktif sebelumnya berjalan
+            // fire-and-forget, sehingga permintaan katalog pertama dikirim ke
+            // server yang belum siap (atau ke port loopback yang keliru).
+            if (TampilServerLokal && uri.IsLoopback && _serverLokal is not null)
+            {
+                StatusMessage = "Menyalakan server lisensi lokal…";
+                if (!await _serverLokal.NyalakanDanPakaiAsync(_lisensi))
+                {
+                    Beritahu(3, _serverLokal.GalatTerakhir ?? "Server lisensi lokal tidak bisa dinyalakan.");
+                    StatusMessage = "Server lisensi lokal gagal dinyalakan.";
+                    return;
+                }
+
+                url = _lisensi.UrlServer.TrimEnd('/');
+                AppPreferenceStore.SetServerLisensiLokalAktif(true);
+                OnPropertyChanged(nameof(ServerLokalAktif));
+                SegarkanStatusServerLokal();
+            }
+
             if (_lisensi.UrlServerTerkunci
                 && !string.Equals(url, PenentuAlamatLisensi.Rapikan(_lisensi.UrlServer), StringComparison.Ordinal))
             {
                 Beritahu(3, "Alamat server dikunci oleh konfigurasi aplikasi; Hubungkan memakai alamat produksi tersebut.");
             }
-            else if (!_lisensi.UrlServerTerkunci)
+            else if (!_lisensi.UrlServerTerkunci && !uri.IsLoopback)
             {
                 AppPreferenceStore.SetUrlServerLisensi(url);
             }
@@ -303,14 +333,6 @@ namespace SuDesApp.Wpf.ViewModels
             UrlServer = url;
             _angkaDariSumberIni = false;
             StatusMessage = "Menghubungkan ke server " + url + " …";
-
-            // Nyalakan server lokal otomatis bila build mendukungnya dan
-            // server belum berjalan — tanpa ini alamat localhost tidak akan
-            // pernah menjawab walau dicoba berulang.
-            if (TampilServerLokal && _serverLokal is { Berjalan: false })
-            {
-                ServerLokalAktif = true;
-            }
 
             const int maksPercobaan = 6;
             for (var percobaan = 1; percobaan <= maksPercobaan; percobaan++)
