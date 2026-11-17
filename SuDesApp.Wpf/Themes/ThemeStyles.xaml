@@ -947,21 +947,31 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
-                    <StackPanel Orientation="Horizontal" Background="Transparent">
-                        <Border x:Name="box" Width="17" Height="17" CornerRadius="3"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                VerticalAlignment="Center">
-                            <Path x:Name="check" Data="M 2 6.5 L 6 10.5 L 12 2"
-                                  Width="12" Height="12" Stretch="Uniform"
-                                  Stroke="{DynamicResource OnAccentTextBrush}" StrokeThickness="2.4"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                  Visibility="Collapsed"
-                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ContentPresenter x:Name="content" Margin="7,0,0,0" VerticalAlignment="Center"
+                    <!-- BulletDecorator, BUKAN StackPanel Horizontal: StackPanel mengukur
+                         anaknya tanpa batas lebar, jadi TextWrapping="Wrap" di dalam label
+                         tidak pernah aktif — teks panjang (mis. kalimat persetujuan pada
+                         dialog Kebijakan Privasi) keluar ke kanan dan terpotong, sementara
+                         tinggi jendela sudah terlanjur dihitung untuk satu baris.
+                         BulletDecorator memberi sisa lebar ke kontennya, sama seperti
+                         template RadioButton di bawah. -->
+                    <BulletDecorator Background="Transparent">
+                        <BulletDecorator.Bullet>
+                            <Border x:Name="box" Width="17" Height="17" CornerRadius="3"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    BorderBrush="{DynamicResource TextSecondaryBrush}" BorderThickness="1.5"
+                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                                <Path x:Name="check" Data="M 2 6.5 L 6 10.5 L 12 2"
+                                      Width="12" Height="12" Stretch="Uniform"
+                                      Stroke="{DynamicResource OnAccentTextBrush}" StrokeThickness="2.4"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      Visibility="Collapsed"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </BulletDecorator.Bullet>
+                        <ContentPresenter x:Name="content" Margin="7,0,0,0"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                           RecognizesAccessKey="True"/>
-                    </StackPanel>
+                    </BulletDecorator>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="box" Property="Background" Value="{DynamicResource AccentBrush}"/>
