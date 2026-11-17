@@ -175,6 +175,26 @@ Skema lokal itu yang membuat perubahan formulir di desktop berlaku tanpa APK
 baru; bila belum pernah ditarik (atau salinannya rusak), Android memakai
 `assets/skema-formulir.json` yang ikut di APK.
 
+### Pengelompokan isian jadi kartu (`grup` / `grupUrutan`)
+
+Halaman Buat Surat Android tidak menampilkan seluruh kolom sebagai satu daftar
+panjang — isian dipecah ke kartu berjudul, sama seperti section kartu pada form
+desktop. Judul dan urutannya bukan diketik dua kali, melainkan diturunkan dari
+XAML desktop oleh `Tools/turunkan-grup.py` (perhatikan `<DataGrid>`: binding di
+dalamnya dihitung terhadap objek baris, jadi tidak boleh diklaim kolom tingkat
+atas):
+
+```bash
+python Tools/turunkan-grup.py            # ringkasan kartu per jenis surat
+python Tools/turunan-grup.py --tulis     # tulis ke kedua salinan skema
+```
+
+Per jenis surat skema menyimpan `grupUrutan` (daftar judul kartu) dan per bidang
+`grup` (kartu pemiliknya). `SkemaFormulir.grupkan()` di Android membaca keduanya;
+skema lama tanpa `grup` (mis. cache server yang belum disegarkan) tetap tampil
+datar seperti dulu, tidak sampai kehilangan kolom. Penjaga: tes `SkemaGrupTest`
+(Android) dan `Skema_MengandungGrupKartu_SepertiSectionDesktop` (desktop).
+
 ## Implikasi privasi
 
 Antrean Supabase memuat data penduduk (NIK, nama, alamat). Pernyataan "data

@@ -13,6 +13,8 @@ namespace SuDesApp.Sinkron;
 /// <param name="Required">Wajib diisi operator.</param>
 /// <param name="Options">Pilihan untuk type=select.</param>
 /// <param name="Otomatis">True bila dihitung desktop, bukan diminta dari Android.</param>
+/// <param name="Grup">Judul kartu tempat bidang ini tampil — sama dengan judul
+/// section di form desktop. Kosong = tanpa kartu (skema lama).</param>
 public sealed record SkemaBidang(
     string Key,
     string Label,
@@ -20,10 +22,18 @@ public sealed record SkemaBidang(
     string Target,
     bool Required = false,
     string[]? Options = null,
-    bool Otomatis = false);
+    bool Otomatis = false,
+    string? Grup = null);
 
 /// <summary>Skema formulir satu jenis surat.</summary>
-public sealed record SkemaJenis(string IdJenis, string Label, List<SkemaBidang> Fields, string KeteranganBawaan = "");
+/// <param name="GrupUrutan">Urutan kartu seperti di form desktop; setiap
+/// <see cref="SkemaBidang.Grup"/> harus ada di daftar ini.</param>
+public sealed record SkemaJenis(
+    string IdJenis,
+    string Label,
+    List<SkemaBidang> Fields,
+    string KeteranganBawaan = "",
+    List<string>? GrupUrutan = null);
 
 /// <summary>
 /// Skema formulir surat yang dibagikan desktop → Android.
@@ -82,6 +92,7 @@ public sealed class SkemaFormulir
             {
                 var label = jenis.Name;
                 var keteranganBawaan = string.Empty;
+                List<string>? grupUrutan = null;
                 var fields = new List<SkemaBidang>();
 
                 if (jenis.Value.ValueKind == JsonValueKind.Object)
@@ -92,11 +103,18 @@ public sealed class SkemaFormulir
                     if (jenis.Value.TryGetProperty("keteranganBawaan", out var kb) && kb.ValueKind == JsonValueKind.String)
                         keteranganBawaan = kb.GetString() ?? string.Empty;
 
+                    if (jenis.Value.TryGetProperty("grupUrutan", out var gu) && gu.ValueKind == JsonValueKind.Array)
+                        grupUrutan = gu.EnumerateArray()
+                            .Where(x => x.ValueKind == JsonValueKind.String)
+                            .Select(x => x.GetString()!)
+                            .ToList();
+
                     if (jenis.Value.TryGetProperty("fields", out var f) && f.ValueKind == JsonValueKind.Array)
                     {
                         foreach (var bidang in f.EnumerateArray())
                         {
                             if (bidang.ValueKind != JsonValueKind.Object) continue;
+                            var grup = AmbilString(bidang, "grup");
 
                             var key = AmbilString(bidang, "key");
                             if (string.IsNullOrWhiteSpace(key)) continue;
@@ -113,12 +131,13 @@ public sealed class SkemaFormulir
                                 target,
                                 bidang.TryGetProperty("required", out var r) && r.ValueKind == JsonValueKind.True,
                                 options,
-                                bidang.TryGetProperty("otomatis", out var ot) && ot.ValueKind == JsonValueKind.True));
+                                bidang.TryGetProperty("otomatis", out var ot) && ot.ValueKind == JsonValueKind.True,
+                                grup));
                         }
                     }
                 }
 
-                skema._jenis[jenis.Name] = new SkemaJenis(jenis.Name, label, fields, keteranganBawaan);
+                skema._jenis[jenis.Name] = new SkemaJenis(jenis.Name, label, fields, keteranganBawaan, grupUrutan);
             }
         }
         catch
@@ -203,7 +222,7 @@ public sealed class SkemaFormulir
                 // properti ini lebih dulu; tanpa penyemaian di sini, jalur
                 // refleksi "penghasilan.xxx" gagal karena navigasinya masih null.
                 surat.Penghasilan ??= new PenghasilanData();
-                if (Terapkan(surat.Penghasilan, target["penghasilan.".Length..], nilai))
+                if (Terapkan(surat.Penghasilan, target["penghasilan.".Length..], nilai, bidang.Type))
                 {
                     diterapkan++;
                 }
@@ -254,7 +273,7 @@ public sealed class SkemaFormulir
                 continue;
             }
 
-            if (Terapkan(surat, target, nilai))
+            if (Terapkan(surat, target, nilai, bidang.Type))
             {
                 diterapkan++;
             }
@@ -290,6 +309,14 @@ public sealed class SkemaFormulir
 
         return surat;
     }
+
+    /// <summary>Teks JSON menjadi string polos; angka/boolean menjadi teksnya.</summary>
+    private static string? NilaiTeks(JsonElement nilai) => nilai.ValueKind switch
+    {
+        JsonValueKind.String => nilai.GetString(),
+        JsonValueKind.Null or JsonValueKind.Undefined => null,
+        _ => nilai.ToString(),
+    };
 
     /// <summary>Ubah JsonElement menjadi nilai CLR agar bisa diserialisasi ulang.</summary>
     private static object? NilaiUntukJson(JsonElement nilai) => nilai.ValueKind switch
@@ -333,7 +360,7 @@ public sealed class SkemaFormulir
     /// "sku.sejakTahun", ...). Mengembalikan false bila path tidak dikenal —
     /// pemanggil tidak perlu tahu mana yang gagal.
     /// </summary>
-    internal static bool Terapkan(object akar, string jalur, JsonElement nilai)
+    internal static bool Terapkan(object akar, string jalur, JsonElement nilai, string? tipeBidang = null)
     {
         var bagian = jalur.Split('.', StringSplitOptions.RemoveEmptyEntries);
         if (bagian.Length == 0) return false;
@@ -346,7 +373,25 @@ public sealed class SkemaFormulir
                 BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
             if (prop is null) return false;
 
-            saatIni = prop.GetValue(saatIni);
+            var berikutnya = prop.GetValue(saatIni);
+
+            // Objek antara dibuat bila masih null. TANPA ini, path bertingkat
+            // dari antrean Android (wargaKK.nama, kenalLahir.anak.nama,
+            // kenalLahir.ibu.nik) hilang diam-diam saat impor karena properti
+            // navigasinya null — persis gejala "isian Android tidak terbawa
+            // ke surat desktop". Hanya kelas tanpa-argumen yang dibuat; string
+            // dan tipe nilai dibiarkan (menulis ke sana tetap gagal seperti
+            // sebelumnya, bukan menghasilkan data karangan).
+            if (berikutnya is null && prop.CanWrite
+                && prop.PropertyType.IsClass
+                && prop.PropertyType != typeof(string)
+                && prop.PropertyType.GetConstructor(Type.EmptyTypes) is not null)
+            {
+                berikutnya = Activator.CreateInstance(prop.PropertyType);
+                prop.SetValue(saatIni, berikutnya);
+            }
+
+            saatIni = berikutnya;
         }
 
         if (saatIni is null) return false;
@@ -368,7 +413,11 @@ public sealed class SkemaFormulir
 
         object? konversi = tipeDasar.Name switch
         {
-            "String" => nilai.ValueKind == JsonValueKind.String ? nilai.GetString() : nilai.ToString(),
+            // Nilai string ditulis APA ADANYA. `nilai.ToString()` pada JsonElement
+            // mengembalikan teks JSON TERMASUK tanda kutip ("Budi" menjadi
+            // \"Budi\") — bug yang membuat setiap teks Android tersimpan dengan
+            // kutip di register desktop.
+            "String" => NormalisasiTeksTersimpan(NilaiTeks(nilai), tipeBidang, bagian[^1]),
             "Int32" => nilai.TryGetInt32(out var i) ? i : 0,
             "Int64" => nilai.TryGetInt64(out var l) ? l : 0L,
             "Double" => nilai.TryGetDouble(out var d) ? d : 0d,
@@ -393,6 +442,37 @@ public sealed class SkemaFormulir
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Teks yang akan disimpan ke properti string. Field bertipe `date` dari
+    /// pemilih tanggal Android ("dd/MM/yyyy") — dan properti yang memang
+    /// menyimpan tanggal sebagai teks (TanggalLahir*, TanggalKematian,
+    /// UmurPelapor yang berisi tanggal lahir pelapor) — dinormalkan ke ISO
+    /// yyyy-MM-dd supaya generator yang memakai DateFormatDb bisa membacanya.
+    /// </summary>
+    private static string? NormalisasiTeksTersimpan(string? teks, string? tipeBidang, string namaProperti)
+    {
+        if (teks is null) return null;
+        bool tanggal = tipeBidang == "date" ||
+                       namaProperti.Contains("TanggalLahir", StringComparison.OrdinalIgnoreCase) ||
+                       namaProperti.Contains("TanggalKematian", StringComparison.OrdinalIgnoreCase) ||
+                       namaProperti.Equals("UmurPelapor", StringComparison.OrdinalIgnoreCase);
+        return tanggal ? NormalisasiTanggal(teks) : teks;
+    }
+
+    /// <summary>
+    /// Tanggal isian Android ("dd/MM/yyyy" dari pemilih tanggal, atau bentuk
+    /// lain) menjadi ISO yyyy-MM-dd — format yang generator desktop baca
+    /// (DateFormatDb). Tanpa normalisasi, "05/11/2020" lolos simpan tetapi
+    /// gagal parse di PDF sehingga tanggal tercetak mentah/kosong.
+    /// </summary>
+    private static string? NormalisasiTanggal(string? teks)
+    {
+        if (string.IsNullOrWhiteSpace(teks)) return teks;
+        return SuDesApp.Data.Models.TemplateSuratNilai.TryParseTanggal(teks, out var terbaca)
+            ? terbaca.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+            : teks;
     }
 
     private static string? AmbilString(JsonElement el, string nama) =>

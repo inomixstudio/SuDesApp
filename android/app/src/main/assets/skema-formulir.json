@@ -8,7 +8,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nik",
@@ -16,7 +17,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nama",
@@ -24,7 +26,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tempatLahir",
@@ -32,7 +35,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalLahir",
@@ -40,7 +44,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKelamin",
@@ -52,7 +57,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "agama",
@@ -68,7 +74,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "statusPerkawinan",
@@ -82,7 +89,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pekerjaan",
@@ -90,7 +98,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "dusun",
@@ -98,7 +107,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rt",
@@ -106,7 +116,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rw",
@@ -114,7 +125,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "desa",
@@ -122,7 +134,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kecamatan",
@@ -130,7 +143,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kabupaten",
@@ -138,7 +152,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keterangan",
@@ -146,7 +161,8 @@
         "type": "text",
         "target": "keterangan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -154,7 +170,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -166,7 +183,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN DESA",
@@ -241,7 +259,13 @@
         "jarakBawah": 12
       }
     ],
-    "keteranganBawaan": "Adalah benar warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan sampai saat ini masih berdomisili di desa kami dan belum menikah."
+    "keteranganBawaan": "Adalah benar warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan sampai saat ini masih berdomisili di desa kami dan belum menikah.",
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "DOMISILI_WARGA": {
     "label": "Domisili Warga",
@@ -252,7 +276,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nik",
@@ -260,7 +285,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nama",
@@ -268,7 +294,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tempatLahir",
@@ -276,7 +303,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalLahir",
@@ -284,7 +312,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKelamin",
@@ -296,7 +325,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "agama",
@@ -312,7 +342,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "statusPerkawinan",
@@ -326,7 +357,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pekerjaan",
@@ -334,7 +366,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "dusun",
@@ -342,7 +375,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rt",
@@ -350,7 +384,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rw",
@@ -358,7 +393,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "desa",
@@ -366,7 +402,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kecamatan",
@@ -374,7 +411,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kabupaten",
@@ -382,7 +420,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keterangan",
@@ -390,7 +429,8 @@
         "type": "text",
         "target": "keterangan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -398,7 +438,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -410,7 +451,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN DOMISILI",
@@ -486,7 +528,13 @@
         "jarakBawah": 12
       }
     ],
-    "keteranganBawaan": "Benar bahwa nama tersebut di atas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan sampai saat ini masih berdomisili di desa kami."
+    "keteranganBawaan": "Benar bahwa nama tersebut di atas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan sampai saat ini masih berdomisili di desa kami.",
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "INSTANSI": {
     "label": "Domisili Instansi",
@@ -497,7 +545,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA INSTANSI"
       },
       {
         "key": "namaInstansi",
@@ -505,7 +554,8 @@
         "type": "text",
         "target": "instansi.namaInstansi",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA INSTANSI"
       },
       {
         "key": "alamatInstansi",
@@ -513,7 +563,8 @@
         "type": "text",
         "target": "instansi.alamatInstansi",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA INSTANSI"
       },
       {
         "key": "nomorSkIzinUsaha",
@@ -521,7 +572,8 @@
         "type": "text",
         "target": "instansi.nomorSkIzinUsaha",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA INSTANSI"
       },
       {
         "key": "pimpinanInstansi",
@@ -529,7 +581,8 @@
         "type": "text",
         "target": "instansi.pimpinanInstansi",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA INSTANSI"
       },
       {
         "key": "nikPimpinan",
@@ -537,7 +590,8 @@
         "type": "number",
         "target": "instansi.nikPimpinan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA INSTANSI"
       },
       {
         "key": "keterangan",
@@ -545,7 +599,8 @@
         "type": "text",
         "target": "keterangan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -553,7 +608,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -565,7 +621,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN DOMISILI",
@@ -630,6 +687,12 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
+    ],
+    "grupUrutan": [
+      "DATA INSTANSI",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "SKU": {
@@ -641,7 +704,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nik",
@@ -649,7 +713,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nama",
@@ -657,7 +722,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tempatLahir",
@@ -665,7 +731,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalLahir",
@@ -673,7 +740,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKelamin",
@@ -685,7 +753,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "agama",
@@ -701,7 +770,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "statusPerkawinan",
@@ -715,7 +785,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pekerjaan",
@@ -723,7 +794,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "dusun",
@@ -731,7 +803,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rt",
@@ -739,7 +812,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rw",
@@ -747,7 +821,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "desa",
@@ -755,7 +830,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kecamatan",
@@ -763,7 +839,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kabupaten",
@@ -771,7 +848,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "bidangUsaha",
@@ -779,7 +857,8 @@
         "type": "text",
         "target": "sku.bidangUsaha",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "USAHA"
       },
       {
         "key": "sejakTahun",
@@ -787,7 +866,8 @@
         "type": "number",
         "target": "sku.sejakTahun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "USAHA"
       },
       {
         "key": "lokasiUsaha",
@@ -795,7 +875,8 @@
         "type": "text",
         "target": "sku.lokasiUsaha",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keterangan",
@@ -803,7 +884,8 @@
         "type": "text",
         "target": "keterangan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -811,7 +893,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -823,7 +906,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN USAHA",
@@ -911,7 +995,14 @@
         "jarakBawah": 12
       }
     ],
-    "keteranganBawaan": "Adalah benar warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan menurut sepengetahuan kami orang tersebut mempunyai usaha:"
+    "keteranganBawaan": "Adalah benar warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan menurut sepengetahuan kami orang tersebut mempunyai usaha:",
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "USAHA",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "PENGANTAR_SKCK": {
     "label": "Pengantar SKCK",
@@ -922,7 +1013,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nik",
@@ -930,7 +1022,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nama",
@@ -938,7 +1031,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tempatLahir",
@@ -946,7 +1040,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalLahir",
@@ -954,7 +1049,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKelamin",
@@ -966,7 +1062,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "agama",
@@ -982,7 +1079,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "statusPerkawinan",
@@ -996,7 +1094,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pekerjaan",
@@ -1004,7 +1103,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pendidikan",
@@ -1012,7 +1112,8 @@
         "type": "text",
         "target": "warga.pendidikan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kewarganegaraan",
@@ -1024,7 +1125,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "dusun",
@@ -1032,7 +1134,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rt",
@@ -1040,7 +1143,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rw",
@@ -1048,7 +1152,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "desa",
@@ -1056,7 +1161,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kecamatan",
@@ -1064,7 +1170,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kabupaten",
@@ -1072,7 +1179,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keterangan",
@@ -1080,7 +1188,8 @@
         "type": "text",
         "target": "keterangan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KETERANGAN / MAKSUD"
       },
       {
         "key": "keperluan",
@@ -1088,7 +1197,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -1100,7 +1210,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN PENGANTAR PEMBUATAN SURAT KETERANGAN CATATAN KEPOLISIAN (SKCK)",
@@ -1194,7 +1305,13 @@
         "jarakBawah": 10
       }
     ],
-    "keteranganBawaan": "MELAMAR PEKERJAAN"
+    "keteranganBawaan": "MELAMAR PEKERJAAN",
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "KETERANGAN / MAKSUD",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "IZIN_ORTU": {
     "label": "Izin Suami / Orang Tua",
@@ -1205,7 +1322,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "nik",
@@ -1213,7 +1331,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "nama",
@@ -1221,7 +1340,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "tempatLahir",
@@ -1229,7 +1349,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "tanggalLahir",
@@ -1237,7 +1358,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "jenisKelamin",
@@ -1249,7 +1371,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "agama",
@@ -1265,7 +1388,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "statusPerkawinan",
@@ -1279,7 +1403,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "pekerjaan",
@@ -1287,7 +1412,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "dusun",
@@ -1295,7 +1421,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "rt",
@@ -1303,7 +1430,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "rw",
@@ -1311,7 +1439,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "desa",
@@ -1319,7 +1448,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "kecamatan",
@@ -1327,7 +1457,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "kabupaten",
@@ -1335,7 +1466,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG MEMBERI IZIN"
       },
       {
         "key": "nikAnak",
@@ -1343,7 +1475,8 @@
         "type": "number",
         "target": "izinortu.nikAnak",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "namaAnak",
@@ -1351,7 +1484,8 @@
         "type": "text",
         "target": "izinortu.namaAnak",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "tempatLahirAnak",
@@ -1359,7 +1493,8 @@
         "type": "text",
         "target": "izinortu.tempatLahirAnak",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "tanggalLahirAnak",
@@ -1367,7 +1502,8 @@
         "type": "date",
         "target": "izinortu.tanggalLahirAnak",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "jenisKelaminAnak",
@@ -1379,7 +1515,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "agamaAnak",
@@ -1395,7 +1532,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "statusPerkawinanAnak",
@@ -1409,7 +1547,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "pekerjaanAnak",
@@ -1417,7 +1556,8 @@
         "type": "text",
         "target": "izinortu.pekerjaanAnak",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "dusunAnak",
@@ -1425,7 +1565,8 @@
         "type": "text",
         "target": "izinortu.alamatAnak",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "desaAnak",
@@ -1433,7 +1574,8 @@
         "type": "text",
         "target": "izinortu.alamatAnak",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "kecamatanAnak",
@@ -1441,7 +1583,8 @@
         "type": "text",
         "target": "izinortu.alamatAnak",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "kabupatenAnak",
@@ -1449,7 +1592,8 @@
         "type": "text",
         "target": "izinortu.alamatAnak",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "YANG DIBERI IZIN (ANAK)"
       },
       {
         "key": "negaraTujuan",
@@ -1457,7 +1601,8 @@
         "type": "text",
         "target": "izinortu.negaraTujuan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "INFORMASI KEBERANGKATAN"
       },
       {
         "key": "namaPT",
@@ -1465,7 +1610,8 @@
         "type": "text",
         "target": "izinortu.namaPT",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "INFORMASI KEBERANGKATAN"
       },
       {
         "key": "keperluan",
@@ -1473,7 +1619,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "keterangan",
@@ -1481,7 +1628,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -1493,7 +1641,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT IZIN SUAMI / ORANG TUA",
@@ -1586,6 +1735,14 @@
         "jarakAtas": 5,
         "jarakBawah": 15
       }
+    ],
+    "grupUrutan": [
+      "YANG MEMBERI IZIN",
+      "YANG DIBERI IZIN (ANAK)",
+      "INFORMASI KEBERANGKATAN",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "SKTM": {
@@ -1597,7 +1754,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nik",
@@ -1605,7 +1763,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nama",
@@ -1613,7 +1772,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tempatLahir",
@@ -1621,7 +1781,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalLahir",
@@ -1629,7 +1790,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKelamin",
@@ -1641,7 +1803,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "agama",
@@ -1657,7 +1820,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "statusPerkawinan",
@@ -1671,7 +1835,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pekerjaan",
@@ -1679,7 +1844,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "dusun",
@@ -1687,7 +1853,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rt",
@@ -1695,7 +1862,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rw",
@@ -1703,7 +1871,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "desa",
@@ -1711,7 +1880,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kecamatan",
@@ -1719,7 +1889,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kabupaten",
@@ -1727,7 +1898,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keterangan",
@@ -1735,7 +1907,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -1743,7 +1916,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -1755,7 +1929,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN TIDAK MAMPU",
@@ -1829,7 +2004,13 @@
         "jarakBawah": 12
       }
     ],
-    "keteranganBawaan": "Benar nama tersebut di atas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan menurut sepengetahuan kami orang tersebut di atas tergolong keluarga ekonomi tidak mampu."
+    "keteranganBawaan": "Benar nama tersebut di atas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan menurut sepengetahuan kami orang tersebut di atas tergolong keluarga ekonomi tidak mampu.",
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "PENGHASILAN": {
     "label": "Keterangan Penghasilan",
@@ -1844,7 +2025,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nik",
@@ -1852,7 +2034,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nama",
@@ -1860,7 +2043,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tempatLahir",
@@ -1868,7 +2052,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalLahir",
@@ -1876,7 +2061,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKelamin",
@@ -1888,7 +2074,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "agama",
@@ -1904,7 +2091,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "statusPerkawinan",
@@ -1918,7 +2106,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pekerjaan",
@@ -1926,7 +2115,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "dusun",
@@ -1934,7 +2124,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rt",
@@ -1942,7 +2133,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rw",
@@ -1950,7 +2142,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "desa",
@@ -1958,7 +2151,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kecamatan",
@@ -1966,7 +2160,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kabupaten",
@@ -1974,7 +2169,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keterangan",
@@ -1982,7 +2178,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -1990,7 +2187,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -2002,7 +2200,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       },
       {
         "key": "pekerjaanUsaha",
@@ -2010,7 +2209,8 @@
         "type": "text",
         "target": "penghasilan.pekerjaanUsaha",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGHASILAN"
       },
       {
         "key": "penghasilanPerBulan",
@@ -2018,7 +2218,8 @@
         "type": "text",
         "target": "penghasilan.penghasilanPerBulan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGHASILAN"
       },
       {
         "key": "jumlahTanggungan",
@@ -2026,7 +2227,8 @@
         "type": "text",
         "target": "penghasilan.jumlahTanggungan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGHASILAN"
       }
     ],
     "badan": [
@@ -2117,6 +2319,13 @@
         "paragraf": "Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.",
         "jarakBawah": 12
       }
+    ],
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "DATA PENGHASILAN",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "SK_BELUM_TERBIT": {
@@ -2128,7 +2337,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nik",
@@ -2136,7 +2346,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nama",
@@ -2144,7 +2355,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tempatLahir",
@@ -2152,7 +2364,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalLahir",
@@ -2160,7 +2373,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKelamin",
@@ -2172,7 +2386,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "agama",
@@ -2188,7 +2403,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "statusPerkawinan",
@@ -2202,7 +2418,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pekerjaan",
@@ -2210,7 +2427,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "dusun",
@@ -2218,7 +2436,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rt",
@@ -2226,7 +2445,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rw",
@@ -2234,7 +2454,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "desa",
@@ -2242,7 +2463,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kecamatan",
@@ -2250,7 +2472,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kabupaten",
@@ -2258,7 +2481,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKeterangan",
@@ -2270,7 +2494,8 @@
         "options": [
           "BELUM TERBIT",
           "SUDAH TERBIT"
-        ]
+        ],
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keterangan",
@@ -2278,7 +2503,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -2290,7 +2516,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN BELUM TERBIT",
@@ -2364,6 +2591,11 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
+    ],
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "KETERANGAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "GARAPAN_SAWAH": {
@@ -2375,7 +2607,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "nik",
@@ -2383,7 +2616,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "nama",
@@ -2391,7 +2625,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "tempatLahir",
@@ -2399,7 +2634,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "tanggalLahir",
@@ -2407,7 +2643,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "jenisKelamin",
@@ -2419,7 +2656,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "agama",
@@ -2435,7 +2673,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "statusPerkawinan",
@@ -2449,7 +2688,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "pekerjaan",
@@ -2457,7 +2697,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "dusun",
@@ -2465,7 +2706,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "rt",
@@ -2473,7 +2715,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "rw",
@@ -2481,7 +2724,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "desa",
@@ -2489,7 +2733,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "kecamatan",
@@ -2497,7 +2742,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "kabupaten",
@@ -2505,7 +2751,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PENGGARAP"
       },
       {
         "key": "lokasi",
@@ -2513,7 +2760,8 @@
         "type": "text",
         "target": "rincianGarapans[0].lokasi",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DETAIL TANAH GARAPAN"
       },
       {
         "key": "nomorPersil",
@@ -2521,7 +2769,8 @@
         "type": "text",
         "target": "rincianGarapans[0].nomorPersil",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DETAIL TANAH GARAPAN"
       },
       {
         "key": "luas",
@@ -2529,7 +2778,8 @@
         "type": "number",
         "target": "rincianGarapans[0].luas",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DETAIL TANAH GARAPAN"
       },
       {
         "key": "keteranganGarapan",
@@ -2542,7 +2792,8 @@
           "Garap",
           "Sewa",
           "Hak Milik"
-        ]
+        ],
+        "grup": "DETAIL TANAH GARAPAN"
       },
       {
         "key": "keperluan",
@@ -2550,7 +2801,8 @@
         "type": "text",
         "target": "keperluan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "rincianTambahan",
@@ -2579,9 +2831,14 @@
             "key": "keteranganGarapan",
             "label": "Keterangan",
             "type": "select",
-            "options": ["Garap", "Sewa", "Hak Milik"]
+            "options": [
+              "Garap",
+              "Sewa",
+              "Hak Milik"
+            ]
           }
-        ]
+        ],
+        "grup": "TANAH GARAPAN TAMBAHAN (BIDANG KE-2 DST.)"
       },
       {
         "key": "keterangan",
@@ -2589,7 +2846,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -2601,7 +2859,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN GARAPAN",
@@ -2662,6 +2921,14 @@
         "jarakAtas": 10,
         "jarakBawah": 10
       }
+    ],
+    "grupUrutan": [
+      "DATA PENGGARAP",
+      "DETAIL TANAH GARAPAN",
+      "TANAH GARAPAN TAMBAHAN (BIDANG KE-2 DST.)",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "KEMATIAN": {
@@ -2673,7 +2940,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "nik",
@@ -2681,7 +2949,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "nama",
@@ -2689,7 +2958,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "tempatLahir",
@@ -2697,7 +2967,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "tanggalLahir",
@@ -2705,7 +2976,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "jenisKelamin",
@@ -2717,7 +2989,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "agama",
@@ -2733,7 +3006,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "statusPerkawinan",
@@ -2747,7 +3021,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "pekerjaan",
@@ -2755,7 +3030,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "dusun",
@@ -2763,7 +3039,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "rt",
@@ -2771,7 +3048,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "rw",
@@ -2779,7 +3057,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "desa",
@@ -2787,7 +3066,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "kecamatan",
@@ -2795,7 +3075,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "kabupaten",
@@ -2803,7 +3084,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA JENAZAH (PEMOHON)"
       },
       {
         "key": "tanggalKematian",
@@ -2811,7 +3093,8 @@
         "type": "date",
         "target": "kematian.tanggalKematian",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA KEMATIAN"
       },
       {
         "key": "hariKematian",
@@ -2819,7 +3102,8 @@
         "type": "text",
         "target": "kematian.hariKematian",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "DATA KEMATIAN"
       },
       {
         "key": "pukulKematian",
@@ -2827,7 +3111,8 @@
         "type": "text",
         "target": "kematian.pukulKematian",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA KEMATIAN"
       },
       {
         "key": "penyebabKematian",
@@ -2847,7 +3132,8 @@
           "Kebakaran",
           "Akibat Bencana Alam",
           "Lainnya"
-        ]
+        ],
+        "grup": "DATA KEMATIAN"
       },
       {
         "key": "nikPelapor",
@@ -2855,7 +3141,8 @@
         "type": "number",
         "target": "kematian.nikPelapor",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "namaPelapor",
@@ -2863,7 +3150,8 @@
         "type": "text",
         "target": "kematian.namaPelapor",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "umurPelapor",
@@ -2871,7 +3159,8 @@
         "type": "date",
         "target": "kematian.umurPelapor",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "agamaPelapor",
@@ -2887,7 +3176,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "pekerjaanPelapor",
@@ -2895,7 +3185,8 @@
         "type": "text",
         "target": "kematian.pekerjaanPelapor",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "hubunganPelapor",
@@ -2918,7 +3209,8 @@
           "Keluarga Lainnya",
           "Tetangga",
           "Lainnya"
-        ]
+        ],
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "dusunPelapor",
@@ -2926,7 +3218,8 @@
         "type": "text",
         "target": "kematian.alamatPelapor",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "desaPelapor",
@@ -2934,7 +3227,8 @@
         "type": "text",
         "target": "kematian.alamatPelapor",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "kecPelapor",
@@ -2942,7 +3236,8 @@
         "type": "text",
         "target": "kematian.alamatPelapor",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "kabPelapor",
@@ -2950,7 +3245,8 @@
         "type": "text",
         "target": "kematian.alamatPelapor",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PELAPOR"
       },
       {
         "key": "keterangan",
@@ -2958,7 +3254,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -2966,7 +3263,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -2977,7 +3275,8 @@
         "otomatis": true,
         "options": [
           "Kepala Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN KEMATIAN",
@@ -3064,11 +3363,11 @@
           ],
           [
             "Pukul",
-            "$kematian.pukul WIB"
+            "$kematian.pukulKematian WIB"
           ],
           [
             "Penyebab Kematian",
-            "$kematian.penyebab"
+            "$kematian.penyebabKematian"
           ]
         ],
         "gaya": "tabelFormulir"
@@ -3099,7 +3398,7 @@
           ],
           [
             "Umur",
-            "$kematian.umurPelapor"
+            "$kematian.umurPelaporTampil"
           ],
           [
             "Pekerjaan",
@@ -3107,7 +3406,7 @@
           ],
           [
             "Alamat",
-            "Dusun : $kematian.dusunPelapor\nDesa : $kematian.desaPelapor\nKecamatan : $kematian.kecamatanPelapor"
+            "$kematian.alamatPelaporTampil"
           ]
         ],
         "gaya": "tabelFormulir"
@@ -3123,7 +3422,15 @@
         "kustumId": "kematian.ttd"
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "grupUrutan": [
+      "DATA JENAZAH (PEMOHON)",
+      "DATA PELAPOR",
+      "DATA KEMATIAN",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "BEDANAMA": {
     "label": "Beda Nama",
@@ -3134,7 +3441,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "nik",
@@ -3142,7 +3450,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "nama",
@@ -3150,7 +3459,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "tempatLahir",
@@ -3158,7 +3468,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "tanggalLahir",
@@ -3166,7 +3477,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "jenisKelamin",
@@ -3178,7 +3490,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "agama",
@@ -3194,7 +3507,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "statusPerkawinan",
@@ -3208,7 +3522,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "pekerjaan",
@@ -3216,7 +3531,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "dusun",
@@ -3224,7 +3540,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "rt",
@@ -3232,7 +3549,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "rw",
@@ -3240,7 +3558,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "desa",
@@ -3248,7 +3567,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "kecamatan",
@@ -3256,7 +3576,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "kabupaten",
@@ -3264,7 +3585,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "data1",
@@ -3272,7 +3594,8 @@
         "type": "text",
         "target": "dataSource1",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA PERTAMA"
       },
       {
         "key": "data2",
@@ -3280,7 +3603,8 @@
         "type": "text",
         "target": "dataSource2",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "nik2",
@@ -3288,7 +3612,8 @@
         "type": "number",
         "target": "wargaKK.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "nama2",
@@ -3296,7 +3621,8 @@
         "type": "text",
         "target": "wargaKK.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "tempatLahir2",
@@ -3304,7 +3630,8 @@
         "type": "text",
         "target": "wargaKK.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "tanggalLahir2",
@@ -3312,7 +3639,8 @@
         "type": "date",
         "target": "wargaKK.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "jenisKelamin2",
@@ -3324,7 +3652,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "dusun2",
@@ -3332,7 +3661,8 @@
         "type": "text",
         "target": "wargaKK.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "desa2",
@@ -3340,7 +3670,8 @@
         "type": "text",
         "target": "wargaKK.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "kecamatan2",
@@ -3348,7 +3679,8 @@
         "type": "text",
         "target": "wargaKK.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "kabupaten2",
@@ -3356,7 +3688,8 @@
         "type": "text",
         "target": "wargaKK.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA WARGA KEDUA (PERBANDINGAN)"
       },
       {
         "key": "keperluan",
@@ -3364,7 +3697,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -3376,7 +3710,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN BEDA DATA",
@@ -3404,7 +3739,7 @@
         "jarakBawah": 10
       },
       {
-        "paragraf": "Data di: $surat.dataSource1",
+        "paragraf": "Data di: $dataSource1",
         "jarakBawah": 5
       },
       {
@@ -3432,7 +3767,7 @@
         ]
       },
       {
-        "paragraf": "Data di: $surat.dataSource2",
+        "paragraf": "Data di: $dataSource2",
         "jarakAtas": 10,
         "jarakBawah": 5
       },
@@ -3471,6 +3806,12 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
+    ],
+    "grupUrutan": [
+      "DATA WARGA PERTAMA",
+      "DATA WARGA KEDUA (PERBANDINGAN)",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "KENAL_LAHIR": {
@@ -3482,7 +3823,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "nik",
@@ -3490,7 +3832,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "nama",
@@ -3498,7 +3841,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "tempatLahir",
@@ -3506,7 +3850,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "tanggalLahir",
@@ -3514,7 +3859,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "agama",
@@ -3530,7 +3876,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA AYAH"
       },
       {
         "key": "statusPerkawinan",
@@ -3544,7 +3891,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA AYAH"
       },
       {
         "key": "pekerjaan",
@@ -3552,7 +3900,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "dusun",
@@ -3560,7 +3909,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "rt",
@@ -3568,7 +3918,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "rw",
@@ -3576,7 +3927,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "desa",
@@ -3584,7 +3936,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "kecamatan",
@@ -3592,7 +3945,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "kabupaten",
@@ -3600,45 +3954,50 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA AYAH"
       },
       {
         "key": "ibuNik",
         "label": "NIK Ibu",
         "type": "number",
-        "target": "kenallahir.ibu.nik",
+        "target": "kenalLahir.ibu.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA IBU"
       },
       {
         "key": "ibuNama",
         "label": "Nama Ibu",
         "type": "text",
-        "target": "kenallahir.ibu.nama",
+        "target": "kenalLahir.ibu.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA IBU"
       },
       {
         "key": "ibuTempatLahir",
         "label": "Tempat Lahir Ibu",
         "type": "text",
-        "target": "kenallahir.ibu.tempatLahir",
+        "target": "kenalLahir.ibu.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA IBU"
       },
       {
         "key": "ibuTanggalLahir",
         "label": "Tgl. Lahir Ibu",
         "type": "date",
-        "target": "kenallahir.ibu.tanggalLahir",
+        "target": "kenalLahir.ibu.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA IBU"
       },
       {
         "key": "ibuAgama",
         "label": "Agama Ibu",
         "type": "select",
-        "target": "kenallahir.ibu.agama",
+        "target": "kenalLahir.ibu.agama",
         "required": true,
         "otomatis": false,
         "options": [
@@ -3648,119 +4007,134 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA IBU"
       },
       {
         "key": "ibuPekerjaan",
         "label": "Pekerjaan Ibu",
         "type": "text",
-        "target": "kenallahir.ibu.pekerjaan",
+        "target": "kenalLahir.ibu.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA IBU"
       },
       {
         "key": "ibuDusun",
         "label": "Alamat (Dusun) Ibu",
         "type": "text",
-        "target": "kenallahir.ibu.dusun",
+        "target": "kenalLahir.ibu.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA IBU"
       },
       {
         "key": "ibuDesa",
         "label": "Desa Ibu",
         "type": "text",
-        "target": "kenallahir.ibu.desa",
+        "target": "kenalLahir.ibu.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA IBU"
       },
       {
         "key": "ibuKecamatan",
         "label": "Kecamatan Ibu",
         "type": "text",
-        "target": "kenallahir.ibu.kecamatan",
+        "target": "kenalLahir.ibu.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA IBU"
       },
       {
         "key": "ibuKabupaten",
         "label": "Kabupaten Ibu",
         "type": "text",
-        "target": "kenallahir.ibu.kabupaten",
+        "target": "kenalLahir.ibu.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA IBU"
       },
       {
         "key": "namaAnak",
         "label": "Nama Anak",
         "type": "text",
-        "target": "kenallahir.namaAnak",
+        "target": "kenalLahir.anak.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ANAK"
       },
       {
         "key": "tempatLahirAnak",
         "label": "Tempat Lahir Anak",
         "type": "text",
-        "target": "kenallahir.tempatLahirAnak",
+        "target": "kenalLahir.anak.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ANAK"
       },
       {
         "key": "tanggalLahirAnak",
         "label": "Tgl. Lahir Anak",
         "type": "date",
-        "target": "kenallahir.tanggalLahirAnak",
+        "target": "kenalLahir.anak.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ANAK"
       },
       {
         "key": "anakKe",
         "label": "Anak Ke",
         "type": "number",
-        "target": "kenallahir.anakKe",
+        "target": "kenalLahir.anak.anakKe",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ANAK"
       },
       {
         "key": "lahirDi",
         "label": "Dilahirkan di",
         "type": "text",
-        "target": "kenallahir.lahirDi",
+        "target": "kenalLahir.anak.lahirDi",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ANAK"
       },
       {
         "key": "dusunAnak",
         "label": "Alamat (Dusun) Anak",
         "type": "text",
-        "target": "kenallahir.alamatLengkapAnak",
+        "target": "kenalLahir.anak.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ANAK"
       },
       {
         "key": "desaAnak",
         "label": "Desa Anak",
         "type": "text",
-        "target": "kenalahir.alamatLengkapAnak",
+        "target": "kenalLahir.anak.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ANAK"
       },
       {
         "key": "kecamatanAnak",
         "label": "Kecamatan Anak",
         "type": "text",
-        "target": "kenallahir.alamatLengkapAnak",
+        "target": "kenalLahir.anak.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ANAK"
       },
       {
         "key": "kabupatenAnak",
         "label": "Kabupaten Anak",
         "type": "text",
-        "target": "kenallahir.alamatLengkapAnak",
+        "target": "kenalLahir.anak.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ANAK"
       },
       {
         "key": "keperluan",
@@ -3768,7 +4142,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "keterangan",
@@ -3776,7 +4151,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -3787,7 +4163,8 @@
         "otomatis": true,
         "options": [
           "Kepala Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN KENAL LAHIR",
@@ -3914,6 +4291,14 @@
         "rata": "kiri",
         "jarakAtas": 10
       }
+    ],
+    "grupUrutan": [
+      "DATA AYAH",
+      "DATA IBU",
+      "DATA ANAK",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "IJIN_TINGGAL": {
@@ -3925,7 +4310,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "nik",
@@ -3933,7 +4319,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "nama",
@@ -3941,7 +4328,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "tempatLahir",
@@ -3949,7 +4337,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "tanggalLahir",
@@ -3957,7 +4346,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "jenisKelamin",
@@ -3969,7 +4359,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "agama",
@@ -3985,7 +4376,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "statusPerkawinan",
@@ -3999,7 +4391,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "pekerjaan",
@@ -4007,7 +4400,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "dusun",
@@ -4015,7 +4409,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "rt",
@@ -4023,7 +4418,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "rw",
@@ -4031,7 +4427,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "desa",
@@ -4039,7 +4436,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "kecamatan",
@@ -4047,7 +4445,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "kabupaten",
@@ -4055,7 +4454,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ASAL)"
       },
       {
         "key": "dusunTujuan",
@@ -4063,7 +4463,8 @@
         "type": "text",
         "target": "dusunTujuan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TINGGAL TUJUAN"
       },
       {
         "key": "desaTujuan",
@@ -4071,7 +4472,8 @@
         "type": "text",
         "target": "desaTujuan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TINGGAL TUJUAN"
       },
       {
         "key": "kecamatanTujuan",
@@ -4079,7 +4481,8 @@
         "type": "text",
         "target": "kecTujuan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TINGGAL TUJUAN"
       },
       {
         "key": "kabupatenTujuan",
@@ -4087,7 +4490,8 @@
         "type": "text",
         "target": "kabTujuan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TINGGAL TUJUAN"
       },
       {
         "key": "nikPenanggungJawab",
@@ -4095,7 +4499,8 @@
         "type": "number",
         "target": "nikPenanggungJawab",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TINGGAL TUJUAN"
       },
       {
         "key": "namaPenanggungJawab",
@@ -4103,7 +4508,8 @@
         "type": "text",
         "target": "namaPenanggungJawab",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TINGGAL TUJUAN"
       },
       {
         "key": "tglLahirPenanggungJawab",
@@ -4111,7 +4517,8 @@
         "type": "date",
         "target": "tglLahirPenanggungJawab",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TINGGAL TUJUAN"
       },
       {
         "key": "pekerjaanPenanggungJawab",
@@ -4119,7 +4526,8 @@
         "type": "text",
         "target": "pekerjaanPenanggungJawab",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TINGGAL TUJUAN"
       },
       {
         "key": "keterangan",
@@ -4127,7 +4535,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -4135,7 +4544,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -4147,7 +4557,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN IJIN TINGGAL SEMENTARA",
@@ -4249,6 +4660,13 @@
         "rata": "kiri",
         "jarakAtas": 10
       }
+    ],
+    "grupUrutan": [
+      "DATA PEMOHON (ASAL)",
+      "ALAMAT TINGGAL TUJUAN",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "AHLI_WARIS": {
@@ -4260,7 +4678,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "nik",
@@ -4268,7 +4687,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "nama",
@@ -4276,7 +4696,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "tempatLahir",
@@ -4284,7 +4705,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "tanggalLahir",
@@ -4292,7 +4714,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "jenisKelamin",
@@ -4304,7 +4727,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "agama",
@@ -4320,7 +4744,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "statusPerkawinan",
@@ -4334,7 +4759,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "dusun",
@@ -4342,7 +4768,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "rt",
@@ -4350,7 +4777,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "rw",
@@ -4358,7 +4786,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "desa",
@@ -4366,7 +4795,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "kecamatan",
@@ -4374,7 +4804,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "kabupaten",
@@ -4382,7 +4813,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "tanggalKematian",
@@ -4390,7 +4822,8 @@
         "type": "date",
         "target": "kematian.tanggalKematian",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "hariKematian",
@@ -4398,7 +4831,8 @@
         "type": "text",
         "target": "kematian.hariKematian",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "DATA ALMARHUM/AH"
       },
       {
         "key": "namaPasangan",
@@ -4406,7 +4840,8 @@
         "type": "text",
         "target": "ahliwarisdata.namaPasangan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PASANGAN"
       },
       {
         "key": "tempatLahirPasangan",
@@ -4414,7 +4849,8 @@
         "type": "text",
         "target": "ahliwarisdata.tempatLahirPasangan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PASANGAN"
       },
       {
         "key": "tanggalLahirPasangan",
@@ -4422,7 +4858,8 @@
         "type": "date",
         "target": "ahliwarisdata.tanggalLahirPasangan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PASANGAN"
       },
       {
         "key": "jenisKelaminPasangan",
@@ -4434,7 +4871,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PASANGAN"
       },
       {
         "key": "alamatPasangan",
@@ -4442,7 +4880,8 @@
         "type": "text",
         "target": "ahliwarisdata.alamatPasangan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PASANGAN"
       },
       {
         "key": "anak",
@@ -4486,7 +4925,8 @@
             "label": "NIK",
             "type": "number"
           }
-        ]
+        ],
+        "grup": "DATA ANAK (AHLI WARIS)"
       },
       {
         "key": "namaPenerimaKuasa",
@@ -4494,7 +4934,8 @@
         "type": "text",
         "target": "ahliwarisdata.namaPenerimaKuasa",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "PENERIMA KUASA"
       },
       {
         "key": "tempatLahirPenerimaKuasa",
@@ -4502,7 +4943,8 @@
         "type": "text",
         "target": "ahliwarisdata.tempatLahirPenerimaKuasa",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "PENERIMA KUASA"
       },
       {
         "key": "tanggalLahirPenerimaKuasa",
@@ -4510,7 +4952,8 @@
         "type": "date",
         "target": "ahliwarisdata.tanggalLahirPenerimaKuasa",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "PENERIMA KUASA"
       },
       {
         "key": "jenisKelaminPenerimaKuasa",
@@ -4522,7 +4965,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "PENERIMA KUASA"
       },
       {
         "key": "alamatPenerimaKuasa",
@@ -4530,7 +4974,8 @@
         "type": "text",
         "target": "ahliwarisdata.alamatPenerimaKuasa",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "PENERIMA KUASA"
       },
       {
         "key": "keperluan",
@@ -4538,7 +4983,8 @@
         "type": "text",
         "target": "keperluan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "keterangan",
@@ -4546,7 +4992,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -4558,7 +5005,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN AHLI WARIS",
@@ -4925,7 +5373,15 @@
       }
     ],
     "halamanPenuh": true,
-    "keteranganBawaan": "Menyatakan bahwa nama tersebut di atas telah meninggal dunia dan memiliki ahli waris seperti tercantum di dalam Surat Keterangan Ahli Waris Desa {namaDesa}"
+    "keteranganBawaan": "Menyatakan bahwa nama tersebut di atas telah meninggal dunia dan memiliki ahli waris seperti tercantum di dalam Surat Keterangan Ahli Waris Desa {namaDesa}",
+    "grupUrutan": [
+      "DATA ALMARHUM/AH",
+      "DATA PASANGAN",
+      "DATA ANAK (AHLI WARIS)",
+      "PENERIMA KUASA",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "PENGANTAR_ADMINDUK": {
     "label": "Pengantar Adminduk",
@@ -4936,7 +5392,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nik",
@@ -4944,7 +5401,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nama",
@@ -4952,7 +5410,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tempatLahir",
@@ -4960,7 +5419,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalLahir",
@@ -4968,7 +5428,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKelamin",
@@ -4980,7 +5441,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "agama",
@@ -4996,7 +5458,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "statusPerkawinan",
@@ -5010,7 +5473,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pekerjaan",
@@ -5018,7 +5482,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "dusun",
@@ -5026,7 +5491,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rt",
@@ -5034,7 +5500,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rw",
@@ -5042,7 +5509,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "desa",
@@ -5050,7 +5518,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kecamatan",
@@ -5058,7 +5527,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kabupaten",
@@ -5066,7 +5536,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keterangan",
@@ -5074,7 +5545,8 @@
         "type": "text",
         "target": "keterangan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -5082,7 +5554,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -5094,7 +5567,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT PENGANTAR ADMINISTRASI KEPENDUDUKAN",
@@ -5169,7 +5643,13 @@
         "jarakBawah": 12
       }
     ],
-    "keteranganBawaan": "Adalah benar nama tersebut diatas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan yang bersangkutan akan mengurus dokumen administrasi kependudukan (KTP-elektronik, Kartu Keluarga, Akta Kelahiran, dan dokumen adminduk lainnya) di Dinas Kependudukan dan Pencatatan Sipil."
+    "keteranganBawaan": "Adalah benar nama tersebut diatas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan yang bersangkutan akan mengurus dokumen administrasi kependudukan (KTP-elektronik, Kartu Keluarga, Akta Kelahiran, dan dokumen adminduk lainnya) di Dinas Kependudukan dan Pencatatan Sipil.",
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "SK_PINDAH": {
     "label": "Surat Keterangan Pindah",
@@ -5180,7 +5660,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "nik",
@@ -5188,7 +5669,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "nama",
@@ -5196,7 +5678,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "tempatLahir",
@@ -5204,7 +5687,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "tanggalLahir",
@@ -5212,7 +5696,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "jenisKelamin",
@@ -5224,7 +5709,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "agama",
@@ -5240,7 +5726,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "statusPerkawinan",
@@ -5254,7 +5741,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "pekerjaan",
@@ -5262,7 +5750,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "dusun",
@@ -5270,7 +5759,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "rt",
@@ -5278,7 +5768,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "rw",
@@ -5286,7 +5777,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "desa",
@@ -5294,7 +5786,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "kecamatan",
@@ -5302,7 +5795,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "kabupaten",
@@ -5310,7 +5804,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (ALAMAT ASAL)"
       },
       {
         "key": "alamatTujuanPindah",
@@ -5318,7 +5813,8 @@
         "type": "text",
         "target": "alamatTujuanPindah",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TUJUAN PINDAH"
       },
       {
         "key": "alasanPindah",
@@ -5326,7 +5822,8 @@
         "type": "text",
         "target": "alasanPindah",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "ALAMAT TUJUAN PINDAH"
       },
       {
         "key": "keterangan",
@@ -5334,7 +5831,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -5342,7 +5840,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -5354,7 +5853,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN PINDAH",
@@ -5419,11 +5919,11 @@
         "tabel": [
           [
             "Alamat Tujuan Pindah",
-            "$pindah.alamatTujuan"
+            "$alamatTujuanPindah"
           ],
           [
             "Alasan Pindah",
-            "$pindah.alasan"
+            "$alasanPindah"
           ]
         ],
         "jarakBawah": 8,
@@ -5434,6 +5934,13 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
+    ],
+    "grupUrutan": [
+      "DATA PEMOHON (ALAMAT ASAL)",
+      "ALAMAT TUJUAN PINDAH",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "SK_TIDAK_PUNYA_RUMAH": {
@@ -5445,7 +5952,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nik",
@@ -5453,7 +5961,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nama",
@@ -5461,7 +5970,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tempatLahir",
@@ -5469,7 +5979,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalLahir",
@@ -5477,7 +5988,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jenisKelamin",
@@ -5489,7 +6001,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "agama",
@@ -5505,7 +6018,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "statusPerkawinan",
@@ -5519,7 +6033,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "pekerjaan",
@@ -5527,7 +6042,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "dusun",
@@ -5535,7 +6051,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rt",
@@ -5543,7 +6060,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "rw",
@@ -5551,7 +6069,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "desa",
@@ -5559,7 +6078,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kecamatan",
@@ -5567,7 +6087,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kabupaten",
@@ -5575,7 +6096,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keterangan",
@@ -5583,7 +6105,8 @@
         "type": "text",
         "target": "keterangan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -5591,7 +6114,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -5603,7 +6127,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN TIDAK PUNYA RUMAH",
@@ -5678,7 +6203,13 @@
         "jarakBawah": 12
       }
     ],
-    "keteranganBawaan": "Adalah benar nama tersebut diatas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan yang bersangkutan saat ini tidak memiliki rumah atau tempat tinggal tetap di wilayah desa kami."
+    "keteranganBawaan": "Adalah benar nama tersebut diatas adalah warga Desa $desa.nama Kecamatan $desa.kecamatan Kabupaten $desa.kabupaten dan yang bersangkutan saat ini tidak memiliki rumah atau tempat tinggal tetap di wilayah desa kami.",
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "IZIN_KERAMAIAN": {
     "label": "Izin Keramaian",
@@ -5689,7 +6220,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "nik",
@@ -5697,7 +6229,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "nama",
@@ -5705,7 +6238,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "tempatLahir",
@@ -5713,7 +6247,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "tanggalLahir",
@@ -5721,7 +6256,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "jenisKelamin",
@@ -5733,7 +6269,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "agama",
@@ -5749,7 +6286,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "statusPerkawinan",
@@ -5763,7 +6301,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "pekerjaan",
@@ -5771,7 +6310,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "dusun",
@@ -5779,7 +6319,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "rt",
@@ -5787,7 +6328,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "rw",
@@ -5795,7 +6337,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "desa",
@@ -5803,7 +6346,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "kecamatan",
@@ -5811,7 +6355,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "kabupaten",
@@ -5819,7 +6364,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON (PENANGGUNG JAWAB)"
       },
       {
         "key": "jenisKegiatan",
@@ -5827,7 +6373,8 @@
         "type": "text",
         "target": "jenisKegiatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KEGIATAN"
       },
       {
         "key": "tanggalKegiatan",
@@ -5835,7 +6382,8 @@
         "type": "date",
         "target": "tanggalKegiatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KEGIATAN"
       },
       {
         "key": "lokasiKegiatan",
@@ -5843,7 +6391,8 @@
         "type": "text",
         "target": "lokasiKegiatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KEGIATAN"
       },
       {
         "key": "keterangan",
@@ -5851,7 +6400,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -5859,7 +6409,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -5871,7 +6422,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT IZIN KERAMAIAN",
@@ -5934,15 +6486,15 @@
         "tabel": [
           [
             "Jenis Kegiatan",
-            "$keramaian.jenisKegiatan"
+            "$jenisKegiatan"
           ],
           [
             "Tanggal",
-            "$keramaian.tanggalKegiatan"
+            "$tanggalKegiatan"
           ],
           [
             "Tempat",
-            "$keramaian.lokasiKegiatan"
+            "$lokasiKegiatan"
           ]
         ],
         "labelTebal": [
@@ -5960,6 +6512,13 @@
         "rata": "kiri",
         "jarakBawah": 12
       }
+    ],
+    "grupUrutan": [
+      "DATA PEMOHON (PENANGGUNG JAWAB)",
+      "KEGIATAN",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
     ]
   },
   "REKENING_KORAN": {
@@ -5971,7 +6530,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "namaKades",
@@ -5979,7 +6539,8 @@
         "type": "text",
         "target": "additionalData.namaPejabat",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "jabatan",
@@ -5987,7 +6548,8 @@
         "type": "text",
         "target": "additionalData.jabatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "alamatDusun",
@@ -5995,7 +6557,8 @@
         "type": "text",
         "target": "additionalData.alamatDusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "alamatRt",
@@ -6003,7 +6566,8 @@
         "type": "text",
         "target": "additionalData.alamatRt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "alamatRw",
@@ -6011,7 +6575,8 @@
         "type": "text",
         "target": "additionalData.alamatRw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "alamatDesa",
@@ -6019,7 +6584,8 @@
         "type": "text",
         "target": "additionalData.alamatDesa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "alamatKecamatan",
@@ -6027,7 +6593,8 @@
         "type": "text",
         "target": "additionalData.alamatKecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "alamatKabupaten",
@@ -6035,7 +6602,8 @@
         "type": "text",
         "target": "additionalData.alamatKabupaten",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "namaRekening",
@@ -6043,7 +6611,8 @@
         "type": "text",
         "target": "additionalData.namaPemegangRekening",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "nomorRekening",
@@ -6051,7 +6620,8 @@
         "type": "number",
         "target": "additionalData.nomorRekening",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "bank",
@@ -6059,7 +6629,8 @@
         "type": "text",
         "target": "additionalData.bank",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "kcp",
@@ -6067,7 +6638,8 @@
         "type": "text",
         "target": "additionalData.kcp",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA REKENING"
       },
       {
         "key": "tanggalMulai",
@@ -6075,7 +6647,8 @@
         "type": "date",
         "target": "additionalData.periodeRekening",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalSelesai",
@@ -6083,7 +6656,8 @@
         "type": "date",
         "target": "additionalData.periodeRekening",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalSurat",
@@ -6091,7 +6665,8 @@
         "type": "date",
         "target": "tanggalSurat",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keperluan",
@@ -6099,7 +6674,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "keterangan",
@@ -6107,7 +6683,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       }
     ],
     "judul": "PERMOHONAN PRINT OUT REKENING KORAN",
@@ -6188,7 +6765,13 @@
         "kustumId": "rk.ttd"
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "DATA REKENING",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT"
+    ]
   },
   "TEMPLATE_SURAT": {
     "label": "Template Surat",
@@ -6199,7 +6782,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "tanggalSurat",
@@ -6207,7 +6791,8 @@
         "type": "date",
         "target": "tanggalSurat",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "namaPejabat",
@@ -6215,7 +6800,8 @@
         "type": "text",
         "target": "additionalData.namaPejabat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "kolom_<kunci>",
@@ -6223,7 +6809,8 @@
         "type": "text",
         "target": "additionalData.nilai[<kunci>]",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA PEMOHON"
       },
       {
         "key": "keterangan",
@@ -6231,7 +6818,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -6239,7 +6827,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       }
     ],
     "judul": "",
@@ -6249,6 +6838,11 @@
       {
         "kustom": "Badan surat sepenuhnya datang dari payload template tersimpan (TemplateSuratKustom + isian pada AdditionalData). Susunan dicetak sesuai urutan BagianEfektif: (1) kop surat bila template.PakaiKop, (2) judul + baris \"NOMOR : {nomor}\" bila template.PakaiNomor, dilanjut sub-judul tebal rata tengah bila ada, (3) \"{namaDesa}, {tanggal}\" rata kanan bila template.PakaiTempatTanggal, (4) tiap bagian template: paragraf teks bebas (rata kiri/tengah/kanan/justify, tebal/miring pilihan), blok Data Diri (TabelFormulir, indentKiri 20, jarakAtas 3, jarakBawah 6, nama ditebalkan), atau kelompok kolom isian (TabelFormulir tanpa menebalkan nama, atau tabel bergaris abu-abu 150pt bila Grid), (5) blok tanda tangan pejabat (tampilkanPemohon = false), (6) teks kaki (paragraf, jarakAtas 12) bila template.PakaiTeksKaki. Tidak ada tata letak tetap yang bisa dipindah ke sini."
       }
+    ],
+    "grupUrutan": [
+      "DATA PEMOHON",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT"
     ]
   },
   "NTCR_N1": {
@@ -6260,7 +6854,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nik",
@@ -6268,7 +6863,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nama",
@@ -6276,7 +6872,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tempatLahir",
@@ -6284,7 +6881,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tanggalLahir",
@@ -6292,7 +6890,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "jenisKelamin",
@@ -6304,7 +6903,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "agama",
@@ -6320,7 +6920,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "statusPerkawinan",
@@ -6334,7 +6935,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "pekerjaan",
@@ -6342,7 +6944,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "dusun",
@@ -6350,7 +6953,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rt",
@@ -6358,7 +6962,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rw",
@@ -6366,7 +6971,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "desa",
@@ -6374,7 +6980,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kecamatan",
@@ -6382,7 +6989,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kabupaten",
@@ -6390,7 +6998,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "nikIstri",
@@ -6398,7 +7007,8 @@
         "type": "number",
         "target": "ntcr.nikIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "namaIstri",
@@ -6406,7 +7016,8 @@
         "type": "text",
         "target": "ntcr.namaIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tempatLahirIstri",
@@ -6414,7 +7025,8 @@
         "type": "text",
         "target": "ntcr.tempatLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tanggalLahirIstri",
@@ -6422,7 +7034,8 @@
         "type": "date",
         "target": "ntcr.tanggalLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "kewarganegaraanIstri",
@@ -6434,7 +7047,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "agamaIstri",
@@ -6450,7 +7064,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pekerjaanIstri",
@@ -6458,7 +7073,8 @@
         "type": "text",
         "target": "ntcr.pekerjaanIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "statusPerkawinanIstri",
@@ -6472,7 +7088,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "alamatIstri",
@@ -6480,7 +7097,8 @@
         "type": "text",
         "target": "ntcr.alamatIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pihakDiterangkanN1",
@@ -6492,7 +7110,8 @@
         "options": [
           "Suami",
           "Istri"
-        ]
+        ],
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "ayahCalonNama",
@@ -6500,7 +7119,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonBinBinti",
@@ -6508,7 +7128,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.binBinti",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonNik",
@@ -6516,7 +7137,8 @@
         "type": "number",
         "target": "ntcr.AyahCalonSuami.nik",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonTempatLahir",
@@ -6524,7 +7146,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.tempatLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonTanggalLahir",
@@ -6532,7 +7155,8 @@
         "type": "date",
         "target": "ntcr.AyahCalonSuami.tanggalLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonKewarganegaraan",
@@ -6544,7 +7168,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonAgama",
@@ -6560,7 +7185,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonPekerjaan",
@@ -6568,7 +7194,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonAlamat",
@@ -6576,7 +7203,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.alamat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonNama",
@@ -6584,7 +7212,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonBinBinti",
@@ -6592,7 +7221,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.binBinti",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonNik",
@@ -6600,7 +7230,8 @@
         "type": "number",
         "target": "ntcr.IbuCalonSuami.nik",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonTempatLahir",
@@ -6608,7 +7239,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.tempatLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonTanggalLahir",
@@ -6616,7 +7248,8 @@
         "type": "date",
         "target": "ntcr.IbuCalonSuami.tanggalLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonKewarganegaraan",
@@ -6628,7 +7261,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonAgama",
@@ -6644,7 +7278,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonPekerjaan",
@@ -6652,7 +7287,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonAlamat",
@@ -6660,7 +7296,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.alamat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriNama",
@@ -6668,7 +7305,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriBinBinti",
@@ -6676,7 +7314,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.binBinti",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriNik",
@@ -6684,7 +7323,8 @@
         "type": "number",
         "target": "ntcr.AyahCalonIstri.nik",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriTempatLahir",
@@ -6692,7 +7332,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.tempatLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriTanggalLahir",
@@ -6700,7 +7341,8 @@
         "type": "date",
         "target": "ntcr.AyahCalonIstri.tanggalLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriKewarganegaraan",
@@ -6712,7 +7354,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriAgama",
@@ -6728,7 +7371,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriPekerjaan",
@@ -6736,7 +7380,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriAlamat",
@@ -6744,7 +7389,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.alamat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriNama",
@@ -6752,7 +7398,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriBinBinti",
@@ -6760,7 +7407,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.binBinti",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriNik",
@@ -6768,7 +7416,8 @@
         "type": "number",
         "target": "ntcr.IbuCalonIstri.nik",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriTempatLahir",
@@ -6776,7 +7425,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.tempatLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriTanggalLahir",
@@ -6784,7 +7434,8 @@
         "type": "date",
         "target": "ntcr.IbuCalonIstri.tanggalLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriKewarganegaraan",
@@ -6796,7 +7447,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriAgama",
@@ -6812,7 +7464,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriPekerjaan",
@@ -6820,7 +7473,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriAlamat",
@@ -6828,7 +7482,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.alamat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "keterangan",
@@ -6836,7 +7491,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -6844,7 +7500,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -6856,7 +7513,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "FORMULIR PENGANTAR NIKAH",
@@ -7036,7 +7694,16 @@
         "kustumId": "ntcr.ttdKanan"
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "grupUrutan": [
+      "CALON MEMPELAI PRIA (PEMOHON)",
+      "CALON MEMPELAI WANITA",
+      "KOLOM KHUSUS BLANKO TERPILIH",
+      "DATA ORANG TUA / WALI",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "NTCR_N2": {
     "label": "N2 — Permohonan Kehendak Nikah",
@@ -7047,7 +7714,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nik",
@@ -7055,7 +7723,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nama",
@@ -7063,7 +7732,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tempatLahir",
@@ -7071,7 +7741,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tanggalLahir",
@@ -7079,7 +7750,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "jenisKelamin",
@@ -7091,7 +7763,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "agama",
@@ -7107,7 +7780,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "statusPerkawinan",
@@ -7121,7 +7795,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "pekerjaan",
@@ -7129,7 +7804,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "dusun",
@@ -7137,7 +7813,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rt",
@@ -7145,7 +7822,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rw",
@@ -7153,7 +7831,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "desa",
@@ -7161,7 +7840,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kecamatan",
@@ -7169,7 +7849,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kabupaten",
@@ -7177,7 +7858,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "nikIstri",
@@ -7185,7 +7867,8 @@
         "type": "number",
         "target": "ntcr.nikIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "namaIstri",
@@ -7193,7 +7876,8 @@
         "type": "text",
         "target": "ntcr.namaIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tempatLahirIstri",
@@ -7201,7 +7885,8 @@
         "type": "text",
         "target": "ntcr.tempatLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tanggalLahirIstri",
@@ -7209,7 +7894,8 @@
         "type": "date",
         "target": "ntcr.tanggalLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "kewarganegaraanIstri",
@@ -7221,7 +7907,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "agamaIstri",
@@ -7237,7 +7924,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pekerjaanIstri",
@@ -7245,7 +7933,8 @@
         "type": "text",
         "target": "ntcr.pekerjaanIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "statusPerkawinanIstri",
@@ -7259,7 +7948,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "alamatIstri",
@@ -7267,7 +7957,8 @@
         "type": "text",
         "target": "ntcr.alamatIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tujuanKua",
@@ -7275,7 +7966,8 @@
         "type": "text",
         "target": "ntcr.tujuanKua",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "hariTanggalJamAkad",
@@ -7283,7 +7975,8 @@
         "type": "text",
         "target": "ntcr.hariTanggalJamAkad",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "tempatAkad",
@@ -7291,7 +7984,8 @@
         "type": "text",
         "target": "ntcr.tempatAkad",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "tanggalDiterima",
@@ -7299,7 +7993,8 @@
         "type": "date",
         "target": "ntcr.tanggalDiterima",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "keterangan",
@@ -7307,7 +8002,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -7315,7 +8011,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       }
     ],
     "judul": "FORMULIR PERMOHONAN KEHENDAK NIKAH",
@@ -7412,7 +8109,14 @@
         "kustumId": "ntcr.ttdKua"
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "grupUrutan": [
+      "CALON MEMPELAI PRIA (PEMOHON)",
+      "CALON MEMPELAI WANITA",
+      "KOLOM KHUSUS BLANKO TERPILIH",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT"
+    ]
   },
   "NTCR_N3": {
     "label": "N3 — Permohonan Pencatatan Isbat",
@@ -7423,7 +8127,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nik",
@@ -7431,7 +8136,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nama",
@@ -7439,7 +8145,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tempatLahir",
@@ -7447,7 +8154,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tanggalLahir",
@@ -7455,7 +8163,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "jenisKelamin",
@@ -7467,7 +8176,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "agama",
@@ -7483,7 +8193,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "statusPerkawinan",
@@ -7497,7 +8208,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "pekerjaan",
@@ -7505,7 +8217,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "dusun",
@@ -7513,7 +8226,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rt",
@@ -7521,7 +8235,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rw",
@@ -7529,7 +8244,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "desa",
@@ -7537,7 +8253,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kecamatan",
@@ -7545,7 +8262,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kabupaten",
@@ -7553,7 +8271,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "nikIstri",
@@ -7561,7 +8280,8 @@
         "type": "number",
         "target": "ntcr.nikIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "namaIstri",
@@ -7569,7 +8289,8 @@
         "type": "text",
         "target": "ntcr.namaIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tempatLahirIstri",
@@ -7577,7 +8298,8 @@
         "type": "text",
         "target": "ntcr.tempatLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tanggalLahirIstri",
@@ -7585,7 +8307,8 @@
         "type": "date",
         "target": "ntcr.tanggalLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "kewarganegaraanIstri",
@@ -7597,7 +8320,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "agamaIstri",
@@ -7613,7 +8337,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pekerjaanIstri",
@@ -7621,7 +8346,8 @@
         "type": "text",
         "target": "ntcr.pekerjaanIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "statusPerkawinanIstri",
@@ -7635,7 +8361,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "alamatIstri",
@@ -7643,7 +8370,8 @@
         "type": "text",
         "target": "ntcr.alamatIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tujuanKua",
@@ -7651,7 +8379,8 @@
         "type": "text",
         "target": "ntcr.tujuanKua",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "tanggalPenetapanIsbat",
@@ -7659,7 +8388,8 @@
         "type": "date",
         "target": "ntcr.tanggalPenetapanIsbat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "pengadilanAgama",
@@ -7667,7 +8397,8 @@
         "type": "text",
         "target": "ntcr.pengadilanAgama",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "tanggalDiterima",
@@ -7675,7 +8406,8 @@
         "type": "date",
         "target": "ntcr.tanggalDiterima",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "keterangan",
@@ -7683,7 +8415,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -7691,7 +8424,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       }
     ],
     "judul": "FORMULIR PERMOHONAN PENCATATAN ISBAT",
@@ -7786,7 +8520,14 @@
         "kustumId": "ntcr.ttdKua"
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "grupUrutan": [
+      "CALON MEMPELAI PRIA (PEMOHON)",
+      "CALON MEMPELAI WANITA",
+      "KOLOM KHUSUS BLANKO TERPILIH",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT"
+    ]
   },
   "NTCR_N4": {
     "label": "N4 — Persetujuan Calon Pengantin",
@@ -7797,7 +8538,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nik",
@@ -7805,7 +8547,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nama",
@@ -7813,7 +8556,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tempatLahir",
@@ -7821,7 +8565,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tanggalLahir",
@@ -7829,7 +8574,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "jenisKelamin",
@@ -7841,7 +8587,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "agama",
@@ -7857,7 +8604,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "statusPerkawinan",
@@ -7871,7 +8619,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "pekerjaan",
@@ -7879,7 +8628,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "dusun",
@@ -7887,7 +8637,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rt",
@@ -7895,7 +8646,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rw",
@@ -7903,7 +8655,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "desa",
@@ -7911,7 +8664,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kecamatan",
@@ -7919,7 +8673,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kabupaten",
@@ -7927,7 +8682,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "nikIstri",
@@ -7935,7 +8691,8 @@
         "type": "number",
         "target": "ntcr.nikIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "namaIstri",
@@ -7943,7 +8700,8 @@
         "type": "text",
         "target": "ntcr.namaIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tempatLahirIstri",
@@ -7951,7 +8709,8 @@
         "type": "text",
         "target": "ntcr.tempatLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tanggalLahirIstri",
@@ -7959,7 +8718,8 @@
         "type": "date",
         "target": "ntcr.tanggalLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "kewarganegaraanIstri",
@@ -7971,7 +8731,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "agamaIstri",
@@ -7987,7 +8748,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pekerjaanIstri",
@@ -7995,7 +8757,8 @@
         "type": "text",
         "target": "ntcr.pekerjaanIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "statusPerkawinanIstri",
@@ -8009,7 +8772,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "alamatIstri",
@@ -8017,7 +8781,8 @@
         "type": "text",
         "target": "ntcr.alamatIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "keterangan",
@@ -8025,7 +8790,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -8033,7 +8799,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       }
     ],
     "judul": "SURAT PERSETUJUAN PENGANTIN",
@@ -8165,7 +8932,14 @@
         "kustumId": "ntcr.ttdDuaPihak"
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "grupUrutan": [
+      "CALON MEMPELAI PRIA (PEMOHON)",
+      "CALON MEMPELAI WANITA",
+      "KOLOM KHUSUS BLANKO TERPILIH",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT"
+    ]
   },
   "NTCR_N5": {
     "label": "N5 — Surat Izin Orang Tua",
@@ -8176,7 +8950,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nik",
@@ -8184,7 +8959,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nama",
@@ -8192,7 +8968,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tempatLahir",
@@ -8200,7 +8977,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tanggalLahir",
@@ -8208,7 +8986,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "jenisKelamin",
@@ -8220,7 +8999,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "agama",
@@ -8236,7 +9016,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "statusPerkawinan",
@@ -8250,7 +9031,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "pekerjaan",
@@ -8258,7 +9040,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "dusun",
@@ -8266,7 +9049,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rt",
@@ -8274,7 +9058,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rw",
@@ -8282,7 +9067,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "desa",
@@ -8290,7 +9076,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kecamatan",
@@ -8298,7 +9085,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kabupaten",
@@ -8306,7 +9094,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "nikIstri",
@@ -8314,7 +9103,8 @@
         "type": "number",
         "target": "ntcr.nikIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "namaIstri",
@@ -8322,7 +9112,8 @@
         "type": "text",
         "target": "ntcr.namaIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tempatLahirIstri",
@@ -8330,7 +9121,8 @@
         "type": "text",
         "target": "ntcr.tempatLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tanggalLahirIstri",
@@ -8338,7 +9130,8 @@
         "type": "date",
         "target": "ntcr.tanggalLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "kewarganegaraanIstri",
@@ -8350,7 +9143,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "agamaIstri",
@@ -8366,7 +9160,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pekerjaanIstri",
@@ -8374,7 +9169,8 @@
         "type": "text",
         "target": "ntcr.pekerjaanIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "statusPerkawinanIstri",
@@ -8388,7 +9184,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "alamatIstri",
@@ -8396,7 +9193,8 @@
         "type": "text",
         "target": "ntcr.alamatIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pihakAnakIzinOrtu",
@@ -8408,7 +9206,8 @@
         "options": [
           "Suami",
           "Istri"
-        ]
+        ],
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "ayahCalonNama",
@@ -8416,7 +9215,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonBinBinti",
@@ -8424,7 +9224,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.binBinti",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonNik",
@@ -8432,7 +9233,8 @@
         "type": "number",
         "target": "ntcr.AyahCalonSuami.nik",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonTempatLahir",
@@ -8440,7 +9242,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.tempatLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonTanggalLahir",
@@ -8448,7 +9251,8 @@
         "type": "date",
         "target": "ntcr.AyahCalonSuami.tanggalLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonKewarganegaraan",
@@ -8460,7 +9264,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonAgama",
@@ -8476,7 +9281,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonPekerjaan",
@@ -8484,7 +9290,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonAlamat",
@@ -8492,7 +9299,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonSuami.alamat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonNama",
@@ -8500,7 +9308,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonBinBinti",
@@ -8508,7 +9317,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.binBinti",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonNik",
@@ -8516,7 +9326,8 @@
         "type": "number",
         "target": "ntcr.IbuCalonSuami.nik",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonTempatLahir",
@@ -8524,7 +9335,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.tempatLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonTanggalLahir",
@@ -8532,7 +9344,8 @@
         "type": "date",
         "target": "ntcr.IbuCalonSuami.tanggalLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonKewarganegaraan",
@@ -8544,7 +9357,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonAgama",
@@ -8560,7 +9374,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonPekerjaan",
@@ -8568,7 +9383,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonAlamat",
@@ -8576,7 +9392,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonSuami.alamat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriNama",
@@ -8584,7 +9401,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriBinBinti",
@@ -8592,7 +9410,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.binBinti",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriNik",
@@ -8600,7 +9419,8 @@
         "type": "number",
         "target": "ntcr.AyahCalonIstri.nik",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriTempatLahir",
@@ -8608,7 +9428,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.tempatLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriTanggalLahir",
@@ -8616,7 +9437,8 @@
         "type": "date",
         "target": "ntcr.AyahCalonIstri.tanggalLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriKewarganegaraan",
@@ -8628,7 +9450,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriAgama",
@@ -8644,7 +9467,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriPekerjaan",
@@ -8652,7 +9476,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ayahCalonIstriAlamat",
@@ -8660,7 +9485,8 @@
         "type": "text",
         "target": "ntcr.AyahCalonIstri.alamat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriNama",
@@ -8668,7 +9494,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriBinBinti",
@@ -8676,7 +9503,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.binBinti",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriNik",
@@ -8684,7 +9512,8 @@
         "type": "number",
         "target": "ntcr.IbuCalonIstri.nik",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriTempatLahir",
@@ -8692,7 +9521,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.tempatLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriTanggalLahir",
@@ -8700,7 +9530,8 @@
         "type": "date",
         "target": "ntcr.IbuCalonIstri.tanggalLahir",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriKewarganegaraan",
@@ -8712,7 +9543,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriAgama",
@@ -8728,7 +9560,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriPekerjaan",
@@ -8736,7 +9569,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.pekerjaan",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "ibuCalonIstriAlamat",
@@ -8744,7 +9578,8 @@
         "type": "text",
         "target": "ntcr.IbuCalonIstri.alamat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "DATA ORANG TUA / WALI"
       },
       {
         "key": "keterangan",
@@ -8752,7 +9587,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -8760,7 +9596,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       }
     ],
     "judul": "SURAT IZIN ORANG TUA",
@@ -8977,7 +9814,15 @@
         "kustumId": "ntcr.ttdDuaPihak"
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "grupUrutan": [
+      "CALON MEMPELAI PRIA (PEMOHON)",
+      "CALON MEMPELAI WANITA",
+      "KOLOM KHUSUS BLANKO TERPILIH",
+      "DATA ORANG TUA / WALI",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT"
+    ]
   },
   "NTCR_N6": {
     "label": "N6 — Keterangan Kematian Suami/Istri",
@@ -8988,7 +9833,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nik",
@@ -8996,7 +9842,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nama",
@@ -9004,7 +9851,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tempatLahir",
@@ -9012,7 +9860,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tanggalLahir",
@@ -9020,7 +9869,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "jenisKelamin",
@@ -9032,7 +9882,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "agama",
@@ -9048,7 +9899,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "statusPerkawinan",
@@ -9062,7 +9914,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "pekerjaan",
@@ -9070,7 +9923,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "dusun",
@@ -9078,7 +9932,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rt",
@@ -9086,7 +9941,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rw",
@@ -9094,7 +9950,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "desa",
@@ -9102,7 +9959,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kecamatan",
@@ -9110,7 +9968,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kabupaten",
@@ -9118,7 +9977,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "nikIstri",
@@ -9126,7 +9986,8 @@
         "type": "number",
         "target": "ntcr.nikIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "namaIstri",
@@ -9134,7 +9995,8 @@
         "type": "text",
         "target": "ntcr.namaIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tempatLahirIstri",
@@ -9142,7 +10004,8 @@
         "type": "text",
         "target": "ntcr.tempatLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tanggalLahirIstri",
@@ -9150,7 +10013,8 @@
         "type": "date",
         "target": "ntcr.tanggalLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "kewarganegaraanIstri",
@@ -9162,7 +10026,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "agamaIstri",
@@ -9178,7 +10043,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pekerjaanIstri",
@@ -9186,7 +10052,8 @@
         "type": "text",
         "target": "ntcr.pekerjaanIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "statusPerkawinanIstri",
@@ -9200,7 +10067,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "alamatIstri",
@@ -9208,7 +10076,8 @@
         "type": "text",
         "target": "ntcr.alamatIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pihakMeninggal",
@@ -9220,7 +10089,8 @@
         "options": [
           "Suami",
           "Istri"
-        ]
+        ],
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "tanggalMeninggal",
@@ -9228,7 +10098,8 @@
         "type": "date",
         "target": "ntcr.tanggalMeninggal",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "tempatMeninggal",
@@ -9236,7 +10107,8 @@
         "type": "text",
         "target": "ntcr.tempatMeninggal",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "keterangan",
@@ -9244,7 +10116,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -9252,7 +10125,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -9264,7 +10138,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN KEMATIAN SUAMI/ISTRI",
@@ -9409,7 +10284,15 @@
         "kustumId": "ntcr.ttdKanan"
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "grupUrutan": [
+      "CALON MEMPELAI PRIA (PEMOHON)",
+      "CALON MEMPELAI WANITA",
+      "KOLOM KHUSUS BLANKO TERPILIH",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   },
   "NTCR_N8": {
     "label": "N8 — Surat Numpang Nikah (Numpang Kawin)",
@@ -9420,7 +10303,8 @@
         "type": "text",
         "target": "nomorSurat",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nik",
@@ -9428,7 +10312,8 @@
         "type": "number",
         "target": "warga.nik",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "nama",
@@ -9436,7 +10321,8 @@
         "type": "text",
         "target": "warga.nama",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tempatLahir",
@@ -9444,7 +10330,8 @@
         "type": "text",
         "target": "warga.tempatLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "tanggalLahir",
@@ -9452,7 +10339,8 @@
         "type": "date",
         "target": "warga.tanggalLahir",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "jenisKelamin",
@@ -9464,7 +10352,8 @@
         "options": [
           "Laki-laki",
           "Perempuan"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "agama",
@@ -9480,7 +10369,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "statusPerkawinan",
@@ -9494,7 +10384,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "pekerjaan",
@@ -9502,7 +10393,8 @@
         "type": "text",
         "target": "warga.pekerjaan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "dusun",
@@ -9510,7 +10402,8 @@
         "type": "text",
         "target": "warga.dusun",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rt",
@@ -9518,7 +10411,8 @@
         "type": "text",
         "target": "warga.rt",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "rw",
@@ -9526,7 +10420,8 @@
         "type": "text",
         "target": "warga.rw",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "desa",
@@ -9534,7 +10429,8 @@
         "type": "text",
         "target": "warga.desa",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kecamatan",
@@ -9542,7 +10438,8 @@
         "type": "text",
         "target": "warga.kecamatan",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI PRIA (PEMOHON)"
       },
       {
         "key": "kabupaten",
@@ -9550,7 +10447,8 @@
         "type": "text",
         "target": "warga.kabupaten",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "nikIstri",
@@ -9558,7 +10456,8 @@
         "type": "number",
         "target": "ntcr.nikIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "namaIstri",
@@ -9566,7 +10465,8 @@
         "type": "text",
         "target": "ntcr.namaIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tempatLahirIstri",
@@ -9574,7 +10474,8 @@
         "type": "text",
         "target": "ntcr.tempatLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "tanggalLahirIstri",
@@ -9582,7 +10483,8 @@
         "type": "date",
         "target": "ntcr.tanggalLahirIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "kewarganegaraanIstri",
@@ -9594,7 +10496,8 @@
         "options": [
           "WNI",
           "WNA"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "agamaIstri",
@@ -9610,7 +10513,8 @@
           "Hindu",
           "Buddha",
           "Konghucu"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "pekerjaanIstri",
@@ -9618,7 +10522,8 @@
         "type": "text",
         "target": "ntcr.pekerjaanIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "statusPerkawinanIstri",
@@ -9632,7 +10537,8 @@
           "Kawin",
           "Cerai Hidup",
           "Cerai Mati"
-        ]
+        ],
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "alamatIstri",
@@ -9640,7 +10546,8 @@
         "type": "text",
         "target": "ntcr.alamatIstri",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "CALON MEMPELAI WANITA"
       },
       {
         "key": "desaNumpang",
@@ -9648,7 +10555,8 @@
         "type": "text",
         "target": "ntcr.desaNumpang",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "kecamatanNumpang",
@@ -9656,7 +10564,8 @@
         "type": "text",
         "target": "ntcr.kecamatanNumpang",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "kabupatenNumpang",
@@ -9664,7 +10573,8 @@
         "type": "text",
         "target": "ntcr.kabupatenNumpang",
         "required": true,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "kecamatanIstri",
@@ -9672,7 +10582,8 @@
         "type": "text",
         "target": "ntcr.kecamatanIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "kabupatenIstri",
@@ -9680,7 +10591,8 @@
         "type": "text",
         "target": "ntcr.kabupatenIstri",
         "required": false,
-        "otomatis": false
+        "otomatis": false,
+        "grup": "KOLOM KHUSUS BLANKO TERPILIH"
       },
       {
         "key": "keterangan",
@@ -9688,7 +10600,8 @@
         "type": "text",
         "target": "keterangan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KETERANGAN SURAT"
       },
       {
         "key": "keperluan",
@@ -9696,7 +10609,8 @@
         "type": "text",
         "target": "keperluan",
         "required": false,
-        "otomatis": true
+        "otomatis": true,
+        "grup": "KEPERLUAN SURAT"
       },
       {
         "key": "pejabatPenandatangan",
@@ -9708,7 +10622,8 @@
         "options": [
           "Kepala Desa",
           "Sekretaris Desa"
-        ]
+        ],
+        "grup": "PEJABAT PENANDATANGAN"
       }
     ],
     "judul": "SURAT KETERANGAN NUMPANG NIKAH",
@@ -9858,6 +10773,14 @@
         "kustumId": "ntcr.ttdKanan"
       }
     ],
-    "halamanPenuh": true
+    "halamanPenuh": true,
+    "grupUrutan": [
+      "CALON MEMPELAI PRIA (PEMOHON)",
+      "CALON MEMPELAI WANITA",
+      "KOLOM KHUSUS BLANKO TERPILIH",
+      "KETERANGAN SURAT",
+      "KEPERLUAN SURAT",
+      "PEJABAT PENANDATANGAN"
+    ]
   }
 }

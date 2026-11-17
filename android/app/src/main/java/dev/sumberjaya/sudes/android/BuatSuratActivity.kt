@@ -2,7 +2,9 @@ package dev.sumberjaya.sudes.android
 
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.graphics.Typeface
 import android.text.InputType
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -28,6 +30,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 /**
  * Buat Surat: formulir dinamis dari skema yang dibawa APK.
@@ -49,7 +52,7 @@ class BuatSuratActivity : AppCompatActivity() {
     private lateinit var judulHalaman: TextView
     private lateinit var wadahPilih: View
     private lateinit var wadahKartuJenis: LinearLayout
-    private lateinit var kartuForm: MaterialCardView
+    private lateinit var kartuForm: View
     private lateinit var tombolKirim: Button
     private lateinit var wadahForm: LinearLayout
     private lateinit var progres: View
@@ -236,67 +239,127 @@ class BuatSuratActivity : AppCompatActivity() {
         wadahBaris.clear()
         if (jenis == null) return
 
-        for (b in jenis.fieldsInput) {
-            // Nomor surat dibuat aplikasi, bukan diketik operator.
-            if (b.key.equals("nomorSurat", ignoreCase = true)) continue
+        // Nomor surat dibuat aplikasi, bukan diketik operator.
+        val input = jenis.fieldsInput.filterNot { it.key.equals("nomorSurat", ignoreCase = true) }
 
-            when (b.type) {
-                "select" -> {
-                    val wadahPilih = bidangPilih(b.label + wajib(b.required), b.options)
-                    pilihan[b.key] = wadahPilih.editText as MaterialAutoCompleteTextView
-                    wadahForm.addView(wadahPilih)
-                }
-
-                "list" -> {
-                    val wadah = LinearLayout(this).apply {
-                        orientation = LinearLayout.VERTICAL
-                        layoutParams = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 12) }
+        // Satu kartu per grup skema — judul dan urutannya sama dengan section
+        // kartu pada form desktop. Grup kosong (skema lama dari cache server)
+        // berarti satu wadah datar seperti sebelumnya, jadi perangkat yang
+        // belum tersinkron tidak kehilangan isian.
+        for ((judul, anggota) in jenis.grupkan(input)) {
+            val wadahGrup = if (judul.isBlank()) wadahForm else kartuGrup(judul)
+            for (b in anggota) {
+                when (b.type) {
+                    "select" -> {
+                        val wadahPilih = bidangPilih(b.label + wajib(b.required), b.options)
+                        pilihan[b.key] = wadahPilih.editText as MaterialAutoCompleteTextView
+                        wadahGrup.addView(wadahPilih)
                     }
-                    val barisList = mutableListOf<BarisDaftar>()
-                    daftarBaris[b.key] = barisList
-                    wadahBaris[b.key] = wadah
 
-                    // Tombol dan petunjuk memakai bentuk singkat seperti di
-                    // desktop ("Tambah Bidang" / "Tambah Anak"), bukan judul
-                    // blok skema yang panjang.
-                    val (tombolTambah, petunjuk) = when (b.key) {
-                        "rincianTambahan" -> "Tambah Bidang" to
-                            "Kosongkan bila garapan hanya satu. Baris kosong otomatis dilewati saat disimpan:"
-                        "anak" -> "Tambah Anak" to
-                            "Baris tanpa data otomatis dilewati saat disimpan:"
-                        else -> "Tambah ${b.label}" to ""
-                    }
-                    if (petunjuk.isNotEmpty()) {
-                        wadah.addView(TextView(this).apply {
-                            text = petunjuk
-                            textSize = 12f
-                            setTextColor(
-                                ContextCompat.getColor(this@BuatSuratActivity, R.color.teks_redup)
-                            )
-                            setPadding(
-                                Ui.dp(this@BuatSuratActivity, 2),
-                                Ui.dp(this@BuatSuratActivity, 4),
-                                Ui.dp(this@BuatSuratActivity, 2),
-                                Ui.dp(this@BuatSuratActivity, 2),
-                            )
-                        })
-                    }
-                    wadah.addView(tombolKecil(tombolTambah) { buatBarisList(b, wadah, barisList) })
-                    wadahForm.addView(wadah)
-                }
+                    "list" -> {
+                        val wadah = LinearLayout(this).apply {
+                            orientation = LinearLayout.VERTICAL
+                            layoutParams = LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 12) }
+                        }
+                        val barisList = mutableListOf<BarisDaftar>()
+                        daftarBaris[b.key] = barisList
+                        wadahBaris[b.key] = wadah
 
-                else -> {
-                    val wadahTeks = bidangTeks(b.label + wajib(b.required), b.type)
-                    val isian = wadahTeks.editText as EditText
-                    bidang[b.key] = isian
-                    praisiWilayah(b.key, isian)
-                    wadahForm.addView(wadahTeks)
+                        // Tombol dan petunjuk memakai bentuk singkat seperti di
+                        // desktop ("Tambah Bidang" / "Tambah Anak"), bukan judul
+                        // blok skema yang panjang.
+                        val (tombolTambah, petunjuk) = when (b.key) {
+                            "rincianTambahan" -> "Tambah Bidang" to
+                                "Kosongkan bila garapan hanya satu. Baris kosong otomatis dilewati saat disimpan:"
+                            "anak" -> "Tambah Anak" to
+                                "Baris tanpa data otomatis dilewati saat disimpan:"
+                            else -> "Tambah ${b.label}" to ""
+                        }
+                        if (petunjuk.isNotEmpty()) {
+                            wadah.addView(TextView(this).apply {
+                                text = petunjuk
+                                textSize = 12f
+                                setTextColor(
+                                    ContextCompat.getColor(this@BuatSuratActivity, R.color.teks_redup)
+                                )
+                                setPadding(
+                                    Ui.dp(this@BuatSuratActivity, 2),
+                                    Ui.dp(this@BuatSuratActivity, 4),
+                                    Ui.dp(this@BuatSuratActivity, 2),
+                                    Ui.dp(this@BuatSuratActivity, 2),
+                                )
+                            })
+                        }
+                        wadah.addView(tombolKecil(tombolTambah) { buatBarisList(b, wadah, barisList) })
+                        wadahGrup.addView(wadah)
+                    }
+
+                    else -> {
+                        val wadahTeks = bidangTeks(b.label + wajib(b.required), b.type)
+                        val isian = wadahTeks.editText as EditText
+                        bidang[b.key] = isian
+                        praisiWilayah(b.key, isian)
+                        wadahGrup.addView(wadahTeks)
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Kartu satu grup isian dengan kepala bergaya sama seperti desktop
+     * (bar aksen hijau + judul kapital). Mengembalikan wadah tempat bidang
+     * ditambahkan.
+     */
+    private fun kartuGrup(judul: String): LinearLayout {
+        val kartu = MaterialCardView(this).apply {
+            radius = Ui.dp(this@BuatSuratActivity, 18).toFloat()
+            strokeWidth = Ui.dp(this@BuatSuratActivity, 1)
+            strokeColor = ContextCompat.getColor(this@BuatSuratActivity, R.color.garis)
+            setCardBackgroundColor(ContextCompat.getColor(this@BuatSuratActivity, R.color.surface))
+            cardElevation = 0f
+            isClickable = false
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 12) }
+        }
+        val isi = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(
+                Ui.dp(this@BuatSuratActivity, 16),
+                Ui.dp(this@BuatSuratActivity, 14),
+                Ui.dp(this@BuatSuratActivity, 16),
+                Ui.dp(this@BuatSuratActivity, 14),
+            )
+        }
+
+        val kepala = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        kepala.addView(View(this).apply {
+            setBackgroundColor(ContextCompat.getColor(this@BuatSuratActivity, R.color.accent))
+            layoutParams = LinearLayout.LayoutParams(
+                Ui.dp(this@BuatSuratActivity, 4),
+                Ui.dp(this@BuatSuratActivity, 15),
+            ).apply { marginEnd = Ui.dp(this@BuatSuratActivity, 8) }
+        })
+        kepala.addView(TextView(this).apply {
+            text = judul.uppercase(Locale.getDefault())
+            textSize = 12f
+            letterSpacing = 0.06f
+            setTypeface(typeface, Typeface.BOLD)
+            setTextColor(ContextCompat.getColor(this@BuatSuratActivity, R.color.accent_dark))
+        })
+        isi.addView(kepala)
+
+        kartu.addView(isi)
+        wadahForm.addView(kartu)
+        return isi
     }
 
     /**
@@ -573,7 +636,7 @@ class BuatSuratActivity : AppCompatActivity() {
             nilai["warga.rt"]?.ifBlank { null }, nilai["warga.rw"]?.ifBlank { null },
         )
         nilai["kematian.hari"] = hariDariTanggal(teksBidang("tanggalKematian"))
-        nilai["kematian.tanggal"] = tanggalPanjang(teksBidang("tanggalKematian"))
+        nilai["kematian.tanggal"] = tanggalPanjangIndo(teksBidang("tanggalKematian"))
         nilai["warga.statusPerkawinanSebutan"] =
             sebutanStatus(perempuan = false, nilai["warga.statusPerkawinan"])
         nilai["ntcr.statusPerkawinanIstriSebutan"] =
@@ -704,6 +767,201 @@ class BuatSuratActivity : AppCompatActivity() {
                 tanggalPanjangIndo(teksBidang("tanggalMulai")),
                 tanggalPanjangIndo(teksBidang("tanggalSelesai")),
             ).filter { it.isNotBlank() }.joinToString(" s/d ").ifBlank { "N/A" }
+        }
+
+        // Blanko NTCR: desktop membaca objek orang tua (`NtcrOrangTua`) dan
+        // memformat selnya lewat Isi()/NamaAtauTitik()/TempatTanggalLahir().
+        // Skema menuliskan target dengan huruf besar di depan
+        // ("ntcr.AyahCalonSuami.nama") sementara badan memakai ejaan properti
+        // C# ("ntcr.ayahCalonSuami.nama") — tanpa jembatan ini seluas blok
+        // orang tua tercetak kosong di Android walau desktopnya terisi penuh.
+        val titikNtcR = "................................"
+        fun isianNtcR(kunci: String) {
+            val v = nilai[kunci]
+            nilai[kunci] = if (v.isNullOrBlank()) titikNtcR else v.trim()
+        }
+        if ("N1" in jenis.idJenis.uppercase() || "N2" in jenis.idJenis.uppercase() ||
+            "N4" in jenis.idJenis.uppercase() || "N6" in jenis.idJenis.uppercase()
+        ) {
+            for ((prop, prefiks) in listOf(
+                    "AyahCalonSuami" to "ayahCalonSuami", "IbuCalonSuami" to "ibuCalonSuami",
+                    "AyahCalonIstri" to "ayahCalonIstri", "IbuCalonIstri" to "ibuCalonIstri",
+                )) {
+                val akar = "ntcr.$prop."
+                for (anak in listOf("nama", "nik", "tempatLahir", "tanggalLahir", "kewarganegaraan",
+                                    "agama", "pekerjaan", "alamat", "binBinti")) {
+                    val v = nilai[akar + anak]
+                    if (!v.isNullOrBlank()) nilai["ntcr.$prefiks.$anak"] = v
+                }
+            }
+            // Gaya blanko desktop (BarisOrangTua): nama kapital + titik, leaf
+            // kosong menjadi titik, TTL digabung "dd MMMM yyyy".
+            for (prefiks in listOf("ayahCalonSuami", "ibuCalonSuami", "ayahCalonIstri", "ibuCalonIstri")) {
+                for (kosong in listOf("nik", "kewarganegaraan", "agama", "pekerjaan", "alamat", "binBinti"))
+                    isianNtcR("ntcr.$prefiks.$kosong")
+                nilai["ntcr.$prefiks.nama"] =
+                    if (nilai["ntcr.$prefiks.nama"].isNullOrBlank()) titikNtcR
+                    else NamaFormatter.kapitalTiapKata(nilai["ntcr.$prefiks.nama"]!!)
+                nilai["ntcr.$prefiks.tempatTanggalLahir"] = ntcRTempatTanggal(
+                    nilai["ntcr.$prefiks.tempatLahir"], nilai["ntcr.$prefiks.tanggalLahir"],
+                )
+            }
+        }
+        if (jenis.idJenis.uppercase().startsWith("NTCR_N5")) {
+            // Baris orang tua pada N5 dipilih dari pihakAnakIzinOrtu; leaf yang
+            // tidak punya kolom (nik/agama/pekerjaan/binBinti orang tua calon)
+            // tercetak titik seperti Isi(null) di desktop.
+            val (propAyah, propIbu) = if (nilai["ntcr.pihakAnakIzinOrtu"]
+                    .equals("Istri", ignoreCase = true)
+            ) "AyahCalonIstri" to "IbuCalonIstri" else "AyahCalonSuami" to "IbuCalonSuami"
+            for ((prefiks, prop) in listOf("ayah" to propAyah, "ibu" to propIbu)) {
+                for (anak in listOf("nama", "alamat", "tempatLahir", "tanggalLahir", "kewarganegaraan",
+                                    "binBinti", "nik", "agama", "pekerjaan")) {
+                    val v = nilai["ntcr.$prop.$anak"]
+                    if (!v.isNullOrBlank()) nilai["ntcr.$prefiks.$anak"] = v
+                }
+                for (kosong in listOf("binBinti", "nik", "agama", "pekerjaan", "kewarganegaraan", "alamat"))
+                    isianNtcR("ntcr.$prefiks.$kosong")
+                nilai["ntcr.$prefiks.nama"] =
+                    if (nilai["ntcr.$prefiks.nama"].isNullOrBlank()) titikNtcR
+                    else NamaFormatter.kapitalTiapKata(nilai["ntcr.$prefiks.nama"]!!)
+                nilai["ntcr.$prefiks.tempatTanggalLahir"] = ntcRTempatTanggal(
+                    nilai["ntcr.$prefiks.tempatLahir"], nilai["ntcr.$prefiks.tanggalLahir"],
+                )
+                // BarisOrangTua(pakaiBin=true): Bin/Binti = nama ayah kandung,
+                // kapital ala NamaAtauTitik — kolomnya bukan orang tua ini.
+                val binAsal = nilai["ntcr.$prop.nama"]
+                nilai["ntcr.$prefiks.binBinti"] =
+                    if (binAsal.isNullOrBlank()) titikNtcR else NamaFormatter.kapitalTiapKata(binAsal)
+            }
+            // Baris identitas calon = BarisIdentitasCalon desktop: anak dari
+            // warga (pihak = Suami) atau dari istri (pihak = Istri), pasangan
+            // adalah kebalikannya. Kunci badan memakai ejaan turunan sendiri.
+            val anakIstri = nilai["ntcr.pihakAnakIzinOrtu"].equals("Istri", ignoreCase = true)
+            val namaAnakKey = if (anakIstri) "ntcr.namaIstri" else "warga.nama"
+            val ayahAnakKey = if (anakIstri) "ntcr.ayahCalonIstri.nama" else "ntcr.ayahCalonSuami.nama"
+            val namaPasanganKey = if (anakIstri) "warga.nama" else "ntcr.namaIstri"
+            val ayahPasanganKey = if (anakIstri) "ntcr.ayahCalonSuami.nama" else "ntcr.ayahCalonIstri.nama"
+            val ttlAnak = if (anakIstri)
+                ntcRTempatTanggal(nilai["ntcr.tempatLahirIstri"], nilai["ntcr.tanggalLahirIstri"])
+            else ntcRTempatTanggal(nilai["warga.tempatLahir"], nilai["warga.tanggalLahir"])
+            val ttlPasangan = if (anakIstri)
+                ntcRTempatTanggal(nilai["warga.tempatLahir"], nilai["warga.tanggalLahir"])
+            else ntcRTempatTanggal(nilai["ntcr.tempatLahirIstri"], nilai["ntcr.tanggalLahirIstri"])
+            fun blanko(v: String?) = if (v.isNullOrBlank()) titikNtcR else NamaFormatter.kapitalTiapKata(v)
+            nilai["ntcr.namaAnak"] = blanko(nilai[namaAnakKey])
+            nilai["ntcr.ayahCalonAnak.nama"] = blanko(nilai[ayahAnakKey])
+            nilai["ntcr.nikAnak"] = if (anakIstri) nilai["ntcr.nikIstri"] ?: "" else nilai["warga.nik"] ?: ""
+            nilai["ntcr.tempatTanggalLahirAnak"] = ttlAnak
+            nilai["ntcr.kewarganegaraanAnak"] =
+                (if (anakIstri) nilai["ntcr.kewarganegaraanIstri"] else nilai["warga.kewarganegaraan"])
+                    ?.ifBlank { null } ?: "WNI"
+            nilai["ntcr.agamaAnak"] = if (anakIstri) nilai["ntcr.agamaIstri"] ?: "" else nilai["warga.agama"] ?: ""
+            nilai["ntcr.pekerjaanAnak"] = if (anakIstri) nilai["ntcr.pekerjaanIstri"] ?: "" else nilai["warga.pekerjaan"] ?: ""
+            nilai["ntcr.alamatAnak"] = if (anakIstri) nilai["ntcr.alamatIstri"] ?: "" else nilai["warga.alamat"] ?: ""
+            nilai["ntcr.namaPasanganAnak"] = blanko(nilai[namaPasanganKey])
+            nilai["ntcr.ayahCalonPasangan.nama"] = blanko(nilai[ayahPasanganKey])
+            nilai["ntcr.nikPasanganAnak"] = if (anakIstri) nilai["warga.nik"] ?: "" else nilai["ntcr.nikIstri"] ?: ""
+            nilai["ntcr.tempatTanggalLahirPasanganAnak"] = ttlPasangan
+            nilai["ntcr.kewarganegaraanPasanganAnak"] =
+                (if (anakIstri) nilai["warga.kewarganegaraan"] else nilai["ntcr.kewarganegaraanIstri"])
+                    ?.ifBlank { null } ?: "WNI"
+            nilai["ntcr.agamaPasanganAnak"] = if (anakIstri) nilai["warga.agama"] ?: "" else nilai["ntcr.agamaIstri"] ?: ""
+            nilai["ntcr.pekerjaanPasanganAnak"] = if (anakIstri) nilai["warga.pekerjaan"] ?: "" else nilai["ntcr.pekerjaanIstri"] ?: ""
+            nilai["ntcr.alamatPasanganAnak"] = if (anakIstri) nilai["warga.alamat"] ?: "" else nilai["ntcr.alamatIstri"] ?: ""
+        }
+        // Identitas calon perempuan (blanko N1/N2/N4/N5/N6) dicetak gaya
+        // blanko: kapital + titik bila kosong — sama seperti NamaAtauTitik().
+        nilai["ntcr.namaIstri"] =
+            if (nilai["ntcr.namaIstri"].isNullOrBlank()) titikNtcR
+            else NamaFormatter.kapitalTiapKata(nilai["ntcr.namaIstri"]!!)
+        nilai["ntcr.tempatTanggalLahirIstri"] = ntcRTempatTanggal(
+            nilai["ntcr.tempatLahirIstri"], nilai["ntcr.tanggalLahirIstri"],
+        )
+
+        // KUNCI BADAN DILAPORKAN lewat `nilai` yang dibaca SuratPdf. Dulu
+        // badan SKEMA memakai ejaan "kenallahir."/"surat.dataSource" yang tidak
+        // pernah ditulis siapa pun, sehingga selnya tercetak KOSONG walau
+        // desktop mencetak isinya. Skema sekarang memakai kunci yang dihitung
+        // di bawah — rumus "N Tahun"/"dd MMMM yyyy" sama dengan
+        // KematianGenerator/BedaNamaGenerator/KenalLahirGenerator desktop.
+        val tanggalHariIni = java.text.SimpleDateFormat("yyyy-MM-dd",
+            java.util.Locale.US).format(java.util.Date())
+        if (jenis.idJenis.equals("KEMATIAN", ignoreCase = true)) {
+            nilai["kematian.umurTampil"] = umurPada(
+                teksBidang("tanggalLahir"), teksBidang("tanggalKematian"),
+            )
+            // Baris "Umur" jenazah pada blanko = umur PADA tanggal kematian
+            // (HitungUmurPadaTanggal desktop), bukan umur hari ini.
+            nilai["warga.umur"] = nilai["kematian.umurTampil"]!!
+            nilai["kematian.umurPelaporTampil"] = umurPada(
+                teksBidang("umurPelapor"), tanggalHariIni,
+            )
+            nilai["kematian.alamatPelaporTampil"] =
+                alamatPelaporTampil(nilai["kematian.alamatPelapor"].orEmpty())
+        }
+
+        if (jenis.idJenis.equals("BEDANAMA", ignoreCase = true)) {
+            nilai["wargaKk.nama"] = NamaFormatter.kapitalTiapKata(teksBidang("nama2"))
+            nilai["wargaKk.tempatTanggalLahir"] = gabungTempatTanggal(
+                teksBidang("tempatLahir2"), tanggalPanjangIndo(teksBidang("tanggalLahir2")),
+            )
+            nilai["wargaKk.alamat"] = AlamatSusun.susun(
+                dusunJalan = teksBidang("dusun2"),
+                desa = teksBidang("desa2"),
+                kecamatan = teksBidang("kecamatan2"),
+                kabupaten = teksBidang("kabupaten2"),
+                fallback = "[Alamat Warga]",
+            )
+        }
+
+        if (jenis.idJenis.equals("KENAL_LAHIR", ignoreCase = true)) {
+            // Desktop: kartu pertama adalah AYAH sekaligus PEMOHON (warga.*),
+            // jadi data ayah di Android dibaca dari kolom warga — persis
+            // pemetaan KenalLahirInputViewModel. Ibu memakai kolom sendiri.
+            nilai["ayah.nama"] = teksBidang("nama")
+            nilai["ayah.nik"] = teksBidang("nik")
+            nilai["ayah.tempatLahir"] = teksBidang("tempatLahir")
+            nilai["ayah.tanggalLahir"] = teksBidang("tanggalLahir")
+            nilai["ayah.agama"] = teksBidang("agama")
+            nilai["ayah.pekerjaan"] = teksBidang("pekerjaan")
+            nilai["ayah.tempatTanggalLahir"] = gabungTempatTanggal(
+                teksBidang("tempatLahir"), tanggalPanjangIndo(teksBidang("tanggalLahir")),
+            )
+            nilai["ayah.alamat"] = nilai["warga.alamat"].orEmpty()
+            nilai["ibu.tempatTanggalLahir"] = gabungTempatTanggal(
+                teksBidang("ibuTempatLahir"), tanggalPanjangIndo(teksBidang("ibuTanggalLahir")),
+            )
+            nilai["ibu.alamat"] = AlamatSusun.susun(
+                dusunJalan = teksBidang("ibuDusun"),
+                desa = teksBidang("ibuDesa"),
+                kecamatan = teksBidang("ibuKecamatan"),
+                kabupaten = teksBidang("ibuKabupaten"),
+                fallback = "[Alamat]",
+            )
+            nilai["anak.tempatTanggalLahir"] = gabungTempatTanggal(
+                teksBidang("tempatLahirAnak"), tanggalPanjangIndo(teksBidang("tanggalLahirAnak")),
+            )
+            nilai["anak.ke"] = teksBidang("anakKe")
+            nilai["anak.keTerbilang"] = anakKeTerbilang(teksBidang("anakKe"))
+            nilai["anak.alamat"] = AlamatSusun.susun(
+                dusunJalan = teksBidang("dusunAnak"),
+                desa = teksBidang("desaAnak"),
+                kecamatan = teksBidang("kecamatanAnak"),
+                kabupaten = teksBidang("kabupatenAnak"),
+                fallback = "[Alamat]",
+            )
+        }
+
+        if (jenis.idJenis.equals("IJIN_TINGGAL", ignoreCase = true)) {
+            nilai["penanggungjawab.nama"] = NamaFormatter.kapitalTiapKata(teksBidang("namaPenanggungJawab"))
+            nilai["penanggungjawab.tanggalLahir"] = tanggalPanjangIndo(teksBidang("tglLahirPenanggungJawab"))
+        }
+
+        // Ahli Waris: tanggal kematian dalam kata — rumus FormatTanggalTerbilang
+        // desktop: "<terbilang hari> bulan <nama bulan> tahun <terbilang tahun>".
+        if (jenis.idJenis.equals("AHLI_WARIS", ignoreCase = true)) {
+            nilai["kematian.tanggalTerbilang"] = tanggalKematianTerbilang(teksBidang("tanggalKematian"))
         }
 
         val tahunTarik = PengaturanSinkron.tahunTarik(this@BuatSuratActivity)
@@ -865,11 +1123,89 @@ class BuatSuratActivity : AppCompatActivity() {
         return java.text.SimpleDateFormat("EEEE", java.util.Locale("id", "ID")).format(cal.time)
     }
 
-    /** Tanggal panjang ("08/11/2026") dari tanggal ISO; kosong bila tak terbaca. */
-    private fun tanggalPanjang(iso: String): String {
-        val cal = uraikanTanggal(iso) ?: return ""
-        return java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale("id", "ID")).format(cal.time)
+    /**
+     * Umur pada tanggal referensi — rumus HitungUmurPadaTanggal desktop:
+     * `"<n> Tahun"`, titik-titik bila salah satu tanggal kosong, dan teks galat
+     * khusus bila tanggal lahir menyusul referensi.
+     */
+    private fun umurPada(tanggalLahir: String, tanggalReferensi: String): String {
+        val lahir = uraikanTanggal(tanggalLahir)
+        val referensi = uraikanTanggal(tanggalReferensi)
+        if (lahir == null || referensi == null) return "..............................."
+        if (lahir.timeInMillis > referensi.timeInMillis) return "(Data Tanggal Tidak Valid)"
+        var tahun = referensi.get(Calendar.YEAR) - lahir.get(Calendar.YEAR)
+        if (lahir.get(Calendar.MONTH) > referensi.get(Calendar.MONTH) ||
+            (lahir.get(Calendar.MONTH) == referensi.get(Calendar.MONTH) &&
+                lahir.get(Calendar.DAY_OF_MONTH) > referensi.get(Calendar.DAY_OF_MONTH))
+        ) tahun -= 1
+        if (tahun < 0) tahun = 0
+        return "$tahun Tahun"
     }
+
+    /** "Tempat, 08 November 2026"; kosong hanya bila keduanya kosong. */
+    private fun gabungTempatTanggal(tempat: String, tanggal: String): String {
+        if (tempat.isBlank() && tanggal.isBlank()) return ""
+        val t = tempat.ifBlank { "[Tempat Lahir]" }
+        val g = tanggal.ifBlank { "[Tanggal Lahir]" }
+        return "$t, $g"
+    }
+
+    /** Alamat pelapor kematian: "Dusun : x\nDesa : y\nKecamatan : z" gaya desktop. */
+    private fun alamatPelaporTampil(alamatLengkap: String): String {
+        if (alamatLengkap.isBlank()) return ""
+        val bagian = alamatLengkap.split("Desa", "Kec.", "Kab.")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        if (bagian.size < 3) return alamatLengkap
+        fun titik(v: String) = if (v.isBlank()) "................" else v
+        return "Dusun : ${titik(bagian[0])}\nDesa : ${titik(bagian[1])}\nKecamatan : ${titik(bagian[2])}"
+    }
+
+    /** "Tempat, 08 November 1990" ala TempatTanggalLahir() desktop: titik bila
+     *  keduanya kosong, komponen yang ada saja yang tercetak selain itu. */
+    private fun ntcRTempatTanggal(tempat: String?, tanggal: String?): String {
+        val t = tempat?.trim().orEmpty()
+        val g = tanggal?.let { tanggalPanjangIndo(it).ifBlank { it.trim() } }.orEmpty()
+        val titik = "................................"
+        return when {
+            t.isEmpty() && g.isEmpty() -> titik
+            t.isEmpty() -> g.ifBlank { titik }
+            g.isEmpty() -> t
+            else -> "$t, $g"
+        }
+    }
+
+    /** "Keempat" dari nomor urut — tabel ConvertAnakKeToText desktop. */
+    private fun anakKeTerbilang(nilai: String): String {
+        val n = nilai.trim().toIntOrNull() ?: return ""
+        return when (n) {
+            1 -> "Kesatu"; 2 -> "Kedua"; 3 -> "Ketiga"; 4 -> "Keempat"; 5 -> "Kelima"
+            6 -> "Keenam"; 7 -> "Ketujuh"; 8 -> "Kedelapan"; 9 -> "Kesembilan"
+            10 -> "Kesepuluh"; 11 -> "Kesebelas"; 12 -> "Kedua Belas"; 13 -> "Ketiga Belas"
+            14 -> "Keempat Belas"; 15 -> "Kelima Belas"; 16 -> "Keenam Belas"
+            17 -> "Ketujuh Belas"; 18 -> "Kedelapan Belas"; 19 -> "Kesembilan Belas"
+            else -> if (n in 20..30) "Ke$n" else n.toString()
+        }
+    }
+
+    /**
+     * "delapan bulan November tahun dua ribu dua puluh enam" — rumus
+     * FormatTanggalTerbilang desktop (AhliWarisGenerator), termasuk terbilang
+     * kapital-pertama untuk hari dan tahun.
+     */
+    private fun tanggalKematianTerbilang(iso: String): String {
+        val bersih = iso.trim()
+        if (bersih.isEmpty()) return "-"
+        val cal = uraikanTanggal(bersih) ?: return bersih
+        val budaya = java.util.Locale("id", "ID")
+        val bulan = java.text.SimpleDateFormat("MMMM", budaya).format(cal.time).lowercase()
+        return "${terbilangBesar(cal.get(Calendar.DAY_OF_MONTH))} bulan $bulan tahun " +
+            terbilangBesar(cal.get(Calendar.YEAR))
+    }
+
+    private fun terbilangBesar(n: Int): String =
+        terbilangIndo(n).replaceFirstChar { it.uppercaseChar() }
+
 
     /** Uraikan ISO yyyy-MM-dd (atau dd/MM/yyyy lama) menjadi Calendar. */
     private fun uraikanTanggal(teks: String): Calendar? {
@@ -952,9 +1288,9 @@ class BuatSuratActivity : AppCompatActivity() {
         private val ALIAS_KUNCI = mapOf(
             "wargaKk" to "wargaKK",
             "ahliwaris" to "ahliwarisdata",
-            "ayah" to "kenalahir.ayah",
-            "ibu" to "kenalahir.ibu",
-            "anak" to "kenallahir.anak",
+            "ayah" to "kenalLahir.ayah",
+            "ibu" to "kenalLahir.ibu",
+            "anak" to "kenalLahir.anak",
             "rekeningkoran" to "additionalData",
         )
 
@@ -965,6 +1301,12 @@ class BuatSuratActivity : AppCompatActivity() {
             "instansi.nomorSk" to "instansi.nomorSkIzinUsaha",
             "instansi.pimpinan" to "instansi.pimpinanInstansi",
             "instansi.nikPimpinan" to "instansi.nikPimpinan",
+            // Penanggung jawab Tinggal Sementara: target skema datar, badan
+            // menyebutnya berprefiks — sama seperti Instansi di atas.
+            "penanggungjawab.nik" to "nikPenanggungJawab",
+            "penanggungjawab.nama" to "namaPenanggungJawab",
+            "penanggungjawab.pekerjaan" to "pekerjaanPenanggungJawab",
+            "penanggungjawab.tanggalLahir" to "tglLahirPenanggungJawab",
         )
     }
 }
