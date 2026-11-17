@@ -594,10 +594,10 @@ class BuatSuratActivity : AppCompatActivity() {
         nilai["desa.lembaga"] = p.jenisLembaga
         nilai["desa.kodepos"] = p.kodepos
 
-        // Tanggal surat (dipakai sebagian templat badan).
-        nilai["surat.tanggal"] = java.text.SimpleDateFormat(
-            "dd/MM/yyyy", java.util.Locale("id", "ID"),
-        ).format(java.util.Date())
+        // Tanggal surat (dipakai sebagian templat badan). Bentuk sama dengan
+        // desktop (SuratGeneratorBase): "dd MMMM yyyy" bahasa Indonesia,
+        // mis. "01 Januari 1990" — bukan dd/MM/yyyy.
+        nilai["surat.tanggal"] = TanggalIndonesia.panjang()
 
         // Baru sekarang keterangan disusun: isian operator menang, kalau kosong
         // pakai bawaan jenis surat. Harus SETELAH $desa.* terisi.

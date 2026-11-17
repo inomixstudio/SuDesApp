@@ -1,6 +1,8 @@
 package dev.sumberjaya.sudes.android
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -46,5 +48,17 @@ class SuratPdfTest {
     @Test
     fun urai_dollarSendiriDicetakApaAdanya() {
         assertEquals("harga $ saja", SuratPdf.urai("harga \$ saja", emptyMap()))
+    }
+
+    @Test
+    fun tanggalIndonesia_panjangMemakaiNamaBulan() {
+        // Baris tempat/tanggal di atas blok Kepala Desa: "Sumberjaya, 01 Januari 1990".
+        assertEquals("01 Januari 1990", TanggalIndonesia.dari("1990-01-01"))
+    }
+
+    @Test
+    fun tanggalIndonesia_panjangTidakPakaiStrip() {
+        assertFalse(TanggalIndonesia.panjang().contains('/'))
+        assertTrue(TanggalIndonesia.panjang().matches(Regex("^\\d{2} \\p{L}+ \\d{4}$")))
     }
 }
