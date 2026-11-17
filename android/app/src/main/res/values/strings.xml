@@ -49,6 +49,7 @@
     <string name="pengaturan_sinkronkan">Sinkronkan sekarang</string>
     <string name="pengaturan_sinkron_awal">Belum disinkronkan.</string>
     <string name="versi_tidak_sama">Versi aplikasi Android berbeda dengan desktop (%1$s vs %2$s). Perbarui APK ke versi yang sama.</string>
+    <string name="versi_sinkron_ditolak">Versi Android %2$s belum sama dengan versi desktop %1$s. Singkronisasi tidak bisa dilanjutkan — perbarui aplikasi Android ke versi terbaru (%1$s) lalu coba lagi.</string>
     <string name="pengaturan_sinkron_proses">Menarik pengaturan dari desktop…</string>
     <string name="pengaturan_sinkron_berhasil">Pengaturan kop &amp; pola nomor diperbarui dari desktop.</string>
     <string name="pengaturan_sinkron_gagal">Tidak bisa menarik pengaturan. Periksa koneksi dan coba lagi.</string>

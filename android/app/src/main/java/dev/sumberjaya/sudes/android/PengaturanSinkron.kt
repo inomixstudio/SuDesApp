@@ -49,6 +49,17 @@ object PengaturanSinkron {
         ctx.getSharedPreferences("sudes_versi", Context.MODE_PRIVATE)
             .getString("desktop", "") ?: ""
 
+    /**
+     * Aturan inti penolak sinkron: versi desktop yang belum diketahui tidak
+     * memblokir (tidak ada dasar untuk menolak), selain itu harus sama persis.
+     */
+    internal fun versiCocok(versiDesktop: String, versiAndroid: String): Boolean =
+        versiDesktop.isBlank() || versiDesktop == versiAndroid
+
+    /** True bila versi Android dan desktop sama (atau versi desktop belum diketahui). */
+    fun versiCocok(ctx: Context): Boolean =
+        versiCocok(versiDesktop(ctx), BuildConfig.VERSION_NAME)
+
     /** True bila kop/skema belum ditarik dalam [batasMs] milidetik terakhir. */
     fun perluTarikUlang(ctx: Context, batasMs: Long = 5 * 60_000L): Boolean {
         val terakhir = ctx.getSharedPreferences("tarikan_terakhir", Context.MODE_PRIVATE)

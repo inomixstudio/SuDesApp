@@ -38,13 +38,6 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Sudah tersambung? Langsung ke menu.
-        if (SupabaseSesi.ambil(this).masuk) {
-            bukaMenu()
-            return
-        }
-
         setContentView(R.layout.activity_login)
         Ui.insetAtas(findViewById(R.id.kepala))
         Ui.insetBawah(findViewById(R.id.versi_aplikasi))
@@ -59,6 +52,21 @@ class LoginActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btn_pindai).setOnClickListener { mulaiPindai() }
         tombolKode.setOnClickListener { hubungkanKodeManual() }
+
+        // Sudah tersambung? Langsung ke menu — tetapi hanya selama versinya
+        // masih sama dengan desktop; versi lain ditahan di layar ini.
+        if (SupabaseSesi.ambil(this).masuk) {
+            if (PengaturanSinkron.versiCocok(this)) bukaMenu() else tampilkanBlokirVersi()
+        }
+    }
+
+    /** Pesan penolak sinkron: versi Android belum sama dengan versi desktop. */
+    private fun tampilkanBlokirVersi() {
+        status.text = getString(
+            R.string.versi_sinkron_ditolak,
+            PengaturanSinkron.versiDesktop(this),
+            BuildConfig.VERSION_NAME,
+        )
     }
 
     private fun mulaiPindai() {
@@ -145,6 +153,15 @@ class LoginActivity : AppCompatActivity() {
                     } catch (e: Exception) {
                         // Gagal menarik tidak membatalkan pemasangan; dicoba lagi
                         // saat menu dibuka.
+                    }
+
+                    // Versi Android yang belum sama dengan desktop menahan
+                    // sinkron: operator diminta memperbarui aplikasinya dulu.
+                    if (!PengaturanSinkron.versiCocok(this@LoginActivity)) {
+                        tampilkanBlokirVersi()
+                        sedangMenghubungkan = false
+                        tombolKode.isEnabled = true
+                        return@launch
                     }
 
                     // Kabari desktop bahwa perangkat sudah tersambung supaya
