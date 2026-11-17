@@ -46,41 +46,47 @@
         android:paddingEnd="20dp"
         android:paddingBottom="12dp">
 
-        <com.google.android.material.card.MaterialCardView
-            style="@style/KartuStatis">
+        <!-- Langkah 1: semua jenis surat ditawarkan sebagai kartu. -->
+        <LinearLayout
+            android:id="@+id/wadah_pilih"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginStart="2dp"
+                android:layout_marginBottom="10dp"
+                android:text="@string/pilih_jenis"
+                android:textColor="@color/teks_redup"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
-                <TextView
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:fillViewport="true"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/wadah_kartu_jenis"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginBottom="8dp"
-                    android:text="@string/label_jenis_surat"
-                    android:textColor="@color/teks_redup"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical" />
+            </ScrollView>
+        </LinearLayout>
 
-                <Spinner
-                    android:id="@+id/spinner_jenis"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_input"
-                    android:minHeight="52dp"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
+        <!-- Langkah 2: formulir milik jenis yang dipilih. -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/kartu_form"
             style="@style/KartuStatis"
             android:layout_height="0dp"
             android:layout_marginTop="12dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:visibility="gone">
 
             <ScrollView
                 android:layout_width="match_parent"
@@ -101,7 +107,8 @@
             android:id="@+id/btn_kirim"
             style="@style/TombolUtama"
             android:layout_marginTop="12dp"
-            android:text="@string/kirim_ke_antrean" />
+            android:text="@string/kirim_ke_antrean"
+            android:visibility="gone" />
 
         <ProgressBar
             android:id="@+id/progres"
