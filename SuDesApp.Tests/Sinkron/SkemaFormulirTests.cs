@@ -207,7 +207,11 @@ public sealed class SkemaFormulirTests
     public void Skema_jenis_ber_NIK_memuat_field_warga_lengkap()
     {
         var skema = Muat();
-        var wajib = new[] { "warga.nik", "warga.nama", "warga.tempatLahir", "warga.tanggalLahir", "warga.agama", "warga.statusPerkawinan" };
+        // Identitas inti yang selalu ikut tercetak. Status perkawinan SENGAJA tidak
+        // diminta di sini: form desktop tidak memakainya untuk semua surat (Garapan
+        // Sawah tidak punya barisnya sama sekali), dan kolom yang tidak ada di
+        // desktop kini dijaga oleh SkemaTidakMenambahKolomDiLuarFormDesktop.
+        var wajib = new[] { "warga.nik", "warga.nama", "warga.tempatLahir", "warga.tanggalLahir", "warga.agama" };
 
         foreach (var jenis in skema.IdJenis)
         {

@@ -1432,7 +1432,22 @@ object TanggalIndonesia {
     fun panjang(): String = SimpleDateFormat("dd MMMM yyyy", budaya).format(Date())
 
     /** Nilai isian Android menjadi "dd MMMM yyyy"; pola tak dikenal disalin apa adanya. */
-    fun dari(nilai: String): String {
+    fun dari(nilai: String): String = dari(nilai, "dd MMMM yyyy")
+
+    /**
+     * Pola tampilan tanggal LAHIR yang dipakai generator desktop untuk jenis surat
+     * ini. Desktop tidak seragam: GarapanGenerator dan IzinOrtuGenerator mencetaknya
+     * lewat ParseTanggalToUiFormat yang berpola "dd-MM-yyyy", sedangkan
+     * SuratGeneratorBase dan sisanya memakai "dd MMMM yyyy" (id-ID).
+     */
+    fun polaTanggalLahir(idJenis: String): String = when {
+        idJenis.equals("GARAPAN_SAWAH", ignoreCase = true) -> "dd-MM-yyyy"
+        idJenis.equals("IZIN_ORTU", ignoreCase = true) -> "dd-MM-yyyy"
+        else -> "dd MMMM yyyy"
+    }
+
+    /** Nilai isian Android (ISO / dd-MM-yyyy / dd/MM/yyyy) ke pola tampilan desktop. */
+    fun dari(nilai: String, polaTampil: String): String {
         val teks = nilai.trim()
         val pola = listOf("yyyy-MM-dd", "dd-MM-yyyy", "dd/MM/yyyy", "d/M/yyyy")
         for (polaTeks in pola) {
@@ -1440,7 +1455,7 @@ object TanggalIndonesia {
                 val parser = SimpleDateFormat(polaTeks, Locale.US)
                 parser.isLenient = false
                 val terbaca = parser.parse(teks)
-                if (terbaca != null) return SimpleDateFormat("dd MMMM yyyy", budaya).format(terbaca)
+                if (terbaca != null) return SimpleDateFormat(polaTampil, budaya).format(terbaca)
             } catch (_: Exception) {
                 // pola berikutnya
             }

@@ -385,4 +385,130 @@ public sealed class ParitasBuatSuratAndroidDesktopTests
         Assert.Contains("kartuGrup", aktivitas, StringComparison.Ordinal);
         Assert.Contains("grupkan(", aktivitas, StringComparison.Ordinal);
     }
+
+    // ---------------------------------------------------------------- 5. kolom asing & pola tanggal
+
+    /// <summary>
+    /// Kolom yang form desktop memang tidak ketik karena warganya sudah ada di
+    /// kartu warga (desktop tinggal pilih NIK), sedangkan Android mengetiknya
+    /// supaya data masuk database. Tiap butir butuh alasan; bila kolom lain
+    /// muncul tanpa masuk daftar ini, tes menolak — itulah gejala "Android
+    /// menampilkan kolom yang desktop tidak punya" (Status Perkawinan pada
+    /// Garapan Sawah pernah lolos tanpa sengaja).
+    /// </summary>
+    /// <summary>Kolom yang tidak ada di XAML mana pun: nomor dibangkitkan
+    /// aplikasi, keterangan/keperluan diambil dari bilah bawah desktop.</summary>
+    private static readonly HashSet<string> Umum = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "nomorSurat", "keterangan", "keperluan",
+    };
+
+    private static readonly HashSet<(string Jenis, string Kunci)> Dikecualikan = new()
+    {
+        ("SKU", "lokasiUsaha"),
+        ("KEMATIAN", "statusPerkawinan"),
+        ("BEDANAMA", "agama"),
+        ("BEDANAMA", "pekerjaan"),
+        ("BEDANAMA", "statusPerkawinan"),
+        ("KENAL_LAHIR", "statusPerkawinan"),
+        ("AHLI_WARIS", "tempatLahir"),
+        ("AHLI_WARIS", "tanggalLahir"),
+        ("AHLI_WARIS", "agama"),
+        ("AHLI_WARIS", "statusPerkawinan"),
+        // Kabupaten pemohon pada blanko NTCR: desktop membacanya dari kartu
+        // warga, Android mengetiknya bersama alamat.
+        ("NTCR_N1", "kabupaten"), ("NTCR_N2", "kabupaten"), ("NTCR_N3", "kabupaten"),
+        ("NTCR_N4", "kabupaten"), ("NTCR_N5", "kabupaten"), ("NTCR_N6", "kabupaten"),
+        ("NTCR_N8", "kabupaten"),
+    };
+
+    [Fact]
+    public void SkemaTidakMenambahKolomDiLuarFormDesktop()
+    {
+        var manifestJalur = Path.Combine(AkarRepo, "SuDesApp.Core", "Configuration", "BidangFormDesktop.json");
+        Assert.True(File.Exists(manifestJalur),
+            "BidangFormDesktop.json hilang — jalankan 'python Tools/turunkan-grup.py --tulis' " +
+            "(manifest ini yang membuktikan tiap kolom skema benar-benar ada di form desktop).");
+
+        var manifest = Baca(manifestJalur);
+        var skema = SkemaFormulir.Muat(SkemaDesktop);
+        var gagal = new List<string>();
+
+        foreach (var idJenis in skema.IdJenis.OrderBy(x => x, StringComparer.Ordinal))
+        {
+            if (!manifest.TryGetProperty(idJenis, out var entri)) continue;
+            var terikat = new HashSet<string>(
+                entri.GetProperty("bidang").EnumerateArray().Select(e => e.GetString() ?? ""),
+                StringComparer.OrdinalIgnoreCase);
+            if (terikat.Count == 0) continue;
+
+            foreach (var f in skema.Cari(idJenis)!.Fields)
+            {
+                if (f.Otomatis || Umum.Contains(f.Key)) continue;
+                if (terikat.Contains(f.Key)) continue;
+                if (TercetakDiBadan(idJenis, f)) continue;
+                if (Dikecualikan.Contains((idJenis, f.Key))) continue;
+                gagal.Add($"{idJenis}.{f.Key} ({f.Label}) — tidak ada di {entri.GetProperty("view").GetString()}, " +
+                          "tidak tercetak di PDF desktop");
+            }
+        }
+
+        Assert.True(gagal.Count == 0, string.Join(Environment.NewLine, gagal));
+    }
+
+    /// <summary>Pola tanggal lahir Android harus sama dengan generator desktop.</summary>
+    [Fact]
+    public void PolaTanggalLahirAndroidSamaDenganGeneratorDesktop()
+    {
+        // Generator yang memakai ParseTanggalToUiFormat mencetak tanggal lahir
+        // numerik (dd-MM-yyyy); yang lain mengikuti SuratGeneratorBase (dd MMMM yyyy).
+        var helper = File.ReadAllText(Path.Combine(AkarRepo, "SuDesApp.Wpf", "Services", "SuratPdfHelper.cs"));
+        var pemetaan = Regex.Matches(helper,
+            @"SuratConstants\.(?<jenis>[A-Z0-9_]+)\s*=>\s*services\.GetService<SuDesApp\.GeneratorPdf\.(?<gen>[A-Za-z0-9]+)>\(");
+
+        var folderGen = Path.Combine(AkarRepo, "SuDesApp.Core", "GeneratorPdf");
+        var numerikDesktop = new HashSet<string>(StringComparer.Ordinal);
+        foreach (Match m in pemetaan)
+        {
+            var berkas = Path.Combine(folderGen, m.Groups["gen"].Value + ".cs");
+            if (!File.Exists(berkas)) continue;
+            if (File.ReadAllText(berkas).Contains("ParseTanggalToUiFormat(", StringComparison.Ordinal))
+                numerikDesktop.Add(m.Groups["jenis"].Value);
+        }
+
+        Assert.Contains("GARAPAN_SAWAH", numerikDesktop);
+        Assert.Contains("IZIN_ORTU", numerikDesktop);
+
+        var pdf = File.ReadAllText(PdfAndroid);
+        var pola = Regex.Match(pdf, @"fun polaTanggalLahir[^}]*\}", RegexOptions.Singleline);
+        Assert.True(pola.Success, "TanggalIndonesia.polaTanggalLahir tidak ditemukan di SuratPdf.kt.");
+        var numerikAndroid = Regex.Matches(pola.Value,
+                "equals\\(\"(?<jenis>[A-Z0-9_]+)\".*?-> \"dd-MM-yyyy\"")
+            .Select(m => m.Groups["jenis"].Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Equal(
+            string.Join(", ", numerikDesktop.OrderBy(x => x, StringComparer.Ordinal)),
+            string.Join(", ", numerikAndroid.OrderBy(x => x, StringComparer.Ordinal)));
+    }
+
+    /// <summary>True bila kunci (atau target) kolom ini dipakai templat badan jenis itu.</summary>
+    private static bool TercetakDiBadan(string idJenis, SkemaBidang bidang)
+    {
+        var teks = BadanJenis(idJenis);
+        return teks.Contains("$" + bidang.Key, StringComparison.OrdinalIgnoreCase)
+               || (!string.IsNullOrWhiteSpace(bidang.Target) && teks.Contains("$" + bidang.Target, StringComparison.Ordinal));
+    }
+
+    private static readonly Dictionary<string, string> BadanCache = new();
+
+    private static string BadanJenis(string idJenis)
+    {
+        if (BadanCache.TryGetValue(idJenis, out var siap)) return siap;
+        var akar = Baca(SkemaDesktop);
+        var isi = akar.TryGetProperty(idJenis, out var v) && v.TryGetProperty("badan", out var b)
+            ? b.GetRawText() : "";
+        BadanCache[idJenis] = isi;
+        return isi;
+    }
 }
