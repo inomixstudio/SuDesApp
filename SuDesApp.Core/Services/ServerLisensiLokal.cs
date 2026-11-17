@@ -61,6 +61,16 @@ namespace SuDesApp.Services
         private long _ukuranLog = -1;
 
         /// <summary>
+        /// Beberapa baris terakhir keluaran server. Dijaga supaya alasan server
+        /// menolak start (mis. "ServerKey Midtrans belum diatur…") ikut terbaca
+        /// di halaman Langganan, bukan terkubur di server.log.
+        /// </summary>
+        private readonly Queue<string> _barisTerakhir = new();
+
+        /// <summary>Jumlah baris keluaran server yang ikut dilaporkan saat gagal.</summary>
+        internal const int MaksBarisTerakhir = 10;
+
+        /// <summary>
         /// Gerbang menyalakan: dua permintaan yang berdekatan (mis. operator
         /// mengklik ulang kotak centang saat server masih menyala) tidak boleh
         /// menjalankan dua proses yang berebut port yang sama.
@@ -176,6 +186,9 @@ namespace SuDesApp.Services
             }
 
             Directory.CreateDirectory(_opsi.FolderData);
+
+            // Baris percobaan lama bukan penjelasan untuk kegagalan sekarang.
+            lock (_kunciLog) _barisTerakhir.Clear();
 
             try
             {
@@ -502,8 +515,10 @@ namespace SuDesApp.Services
 
                 if (proses.HasExited)
                 {
+                    var sebab = BarisTerakhirServer();
                     GalatTerakhir =
                         $"Server lisensi lokal berhenti sendiri (kode {proses.ExitCode}) tanpa sempat melayani. " +
+                        (sebab.Length > 0 ? $"Alasan dari server: {sebab} " : string.Empty) +
                         $"Periksa log: {JalurLog}";
                     _logger.LogError("Server lisensi lokal keluar dengan kode {Kode}. Log: {Log}", proses.ExitCode, JalurLog);
                     return false;
@@ -529,8 +544,11 @@ namespace SuDesApp.Services
                 }
             }
 
+            var sebabTimeout = BarisTerakhirServer();
             GalatTerakhir =
-                $"Server lisensi lokal tidak menjawab di {url} dalam {BatasTungguSiapDetik} detik. Periksa log: {JalurLog}";
+                $"Server lisensi lokal tidak menjawab di {url} dalam {BatasTungguSiapDetik} detik. " +
+                (sebabTimeout.Length > 0 ? $"Alasan terakhir dari server: {sebabTimeout} " : string.Empty) +
+                $"Periksa log: {JalurLog}";
             _logger.LogError("Server lisensi lokal tidak siap setelah {Detik} detik", BatasTungguSiapDetik);
             return false;
         }
@@ -562,12 +580,38 @@ namespace SuDesApp.Services
                     }
 
                     _ukuranLog = new FileInfo(JalurLog).Length;
+
+                    if (baris.Trim().Length > 0)
+                    {
+                        _barisTerakhir.Enqueue(baris.Trim());
+                        while (_barisTerakhir.Count > MaksBarisTerakhir) _barisTerakhir.Dequeue();
+                    }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogDebug(ex, "Baris log server lisensi lokal tidak bisa ditulis");
                 }
             }
+        }
+
+        /// <summary>
+        /// Rangkum baris log terakhir jadi satu baris pendek untuk pesan galat.
+        /// Baris paling baru disebut lebih dulu karena itulah yang biasanya
+        /// menjelaskan kegagalan.
+        /// </summary>
+        internal static string RangkumBarisTerakhir(IEnumerable<string> baris, int maksPanjang = 400)
+        {
+            var teks = string.Join(" \u22ee ", baris
+                .Where(b => !string.IsNullOrWhiteSpace(b))
+                .Select(b => b.Trim())
+                .Reverse());
+            return teks.Length <= maksPanjang ? teks : teks.Substring(0, maksPanjang - 1) + "\u2026";
+        }
+
+        /// <summary>Baris keluaran server terakhir, terbaru lebih dulu (kosong bila belum ada).</summary>
+        private string BarisTerakhirServer()
+        {
+            lock (_kunciLog) return RangkumBarisTerakhir(_barisTerakhir);
         }
 
         /// <summary>
