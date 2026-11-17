@@ -1,6 +1,6 @@
 # SuDesApp 2.15.0 — 11 November 2026
 
-Rilis pemeliharaan: migrasi ke .NET 11, pembersihan kode mati hasil audit menyeluruh, token login Google memakai serialisasi bawaan platform, login Google aktif otomatis dari installer, gerbang uji E2E server lisensi diperbaiki, dan Android menaikkan alat build ke AGP 9 / Gradle 9.8 / compileSdk 37.
+Rilis pemeliharaan: migrasi ke .NET 11, pembersihan kode mati hasil audit menyeluruh, token login Google memakai serialisasi bawaan platform, login Google aktif otomatis dari installer, gerbang uji E2E server lisensi diperbaiki, Android menaikkan alat build ke AGP 9 / Gradle 9.8 / compileSdk 37, isian Buat Surat Android dipecah per kartu mengikuti formulir desktop, dan tombol Hubungkan di halaman Langganan dibuat tetap tersambung ke server lisensi lokal.
 
 Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah tersimpan, dan arsip surat lama dipakai apa adanya.
 
@@ -16,6 +16,8 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **IDM: pilihan tahun laporan** — combobox “Tahun laporan” membuat cetak PDF mengikuti tahun yang dipilih, bukan selalu tahun layar.
 - **Dokumentasi bisa dicari** — saringan judul/keterangan/jalur per kelompok dengan tombol bersihkan dan keadaan “Tidak ada dokumen yang cocok”.
 - **Android: PDF menyamai desktop** — blanko NTCR (N1–N6, N8), Ahli Waris tiga halaman, rincian garapan bertabel, dan penulisan nama bergelar.
+- **Android: isian Buat Surat per kartu** — formulir tidak lagi satu daftar panjang; kolom dikelompokkan ke kartu berjudul sama seperti section di desktop, dan judul serta urutannya diturunkan otomatis dari XAML desktop.
+- **Sinkron Android bergerbang versi** — perangkat dengan `versionName` berbeda dari desktop menahan sinkron (QR, kode, maupun muat ulang menu) dan meminta aplikasi diperbarui lebih dulu, supaya skema dan pola nomor tidak dipakai silang antar versi.
 - **Android: alat build baru** — AGP 9.3 (built-in Kotlin), Gradle 9.8.2, compileSdk 37, okhttp 5.5.1.
 
 ## Apa yang Ditingkatkan
@@ -41,6 +43,8 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **Nama orang bergelar** tidak lagi ikut kapital penuh (desktop maupun Android).
 - **NTCR** — nama pemohon/pejabat/orang tua yang kosong tercetak titik-titik sejajar blok pejabat.
 - **Uji flaky Midtrans** — `Notifikasi_lunas_tercatat_sebagai_diterima` tidak lagi gagal 403 saat suite penuh.
+- **Tombol Hubungkan di halaman Langganan** — setelah server lisensi lokal dinyalakan, katalog tidak lagi ditanya ke alamat yang berbeda (`localhost` vs `127.0.0.1`) sebelum server siap; gejala "lisensi server tidak terhubung" hilang dan perilkunya dikunci uji kontrak.
+- **Sel kosong di PDF Android** — kunci `$kunci` di blok `badan` skema yang salah eja (mis. `$kematian.pukul`, `$ntcr.AyahCalonSuami`) dibetulkan sehingga kolom umur, tanggal, dan bin/binti orang tua NTCR terisi sama seperti cetakan desktop.
 
 ## Platform — .NET 11
 
@@ -80,6 +84,7 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **Tombol "Buat Kode" kembali ke halaman Sinkron Android**: selain Buat QR, operator kini bisa menerbitkan kode 4 angka yang diketik manual di aplikasi Android tanpa memindai QR; ikon tombol "Muat ulang" diganti ke ikon segar-ulang yang benar (dulu identik dengan "Impor ulang arsip gagal").
 - **Tombol "Terbitkan ulang skema & kop"** ditambahkan di kartu Pengaturan Android — pemeriksaan ulang penerbitan skema formulir + kop surat ke Supabase tanpa menunggu timer latar 60 detik; status "sedang sinkron" kini menonaktifkan tombolnya dengan benar.
 - Fitur Sinkron Android kini tercantum di menu Tentang: dua butir di kelompok "Layanan digital", kalimat pembuka kelompok diperluas, tiga kalimat di deskripsi Detail Lengkap, satu kelompok teknologi baru (Supabase, Npgsql, QRCoder), dan apresiasi open-source yang sesuai.
+- **Gerbang versi saat sinkron**: desktop menerbitkan versinya bersama kop dan pola nomor (`pengaturan_desa`), dan Android menolak menarik data selama `BuildConfig.VERSION_NAME` berbeda — pesan muncul di layar masuk (menahan masuk ulang) dan sekali toast di menu utama. Versi desktop yang belum diketahui tidak memblokir, jadi perangkat lama tetap bisa bekerja sampai data pertama tiba; dijaga `PengaturanSinkronTest`.
 - Harga sambungan tetap sama: QR/kode memuat URL dan kode saja, surel dan kata sandi perangkat tidak pernah tampil di layar.
 
 ## Formulir, Blanko, dan Lambang
@@ -103,6 +108,20 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **Tentang Aplikasi**: kartu Saweria dan butir donatur dihapus (tiga saluran komunikasi pengembang), deskripsi detail menyebut fitur terbaru, baris "Perusahaan induk"/"Repositori" disembunyikan, kartu pengembang menunjuk website sumberjaya.freedev.app.
 - **Pratinjau kop di Pengaturan Surat** dibatasi tingginya (330 px) dan lebarnya mengikuti acuan kertas (600 px) supaya tidak menggeser formulir ke bawah.
 
+## Android — Isian Dipecah per Kartu Seperti Desktop
+
+- **Satu kartu per section, bukan satu daftar panjang**: halaman Buat Surat kini merender kartu berjudul (mis. KEMATIAN → DATA JENAZAH (PEMOHON), DATA PELAPOR, DATA KEMATIAN, KETERANGAN SURAT, KEPERLUAN SURAT, PEJABAT PENANDATANGAN; KENAL_LAHIR → DATA AYAH, DATA IBU, DATA ANAK; NTCR N1 → CALON MEMPELAI PRIA/WANITA, KOLOM KHUSUS BLANKO TERPILIH, DATA ORANG TUA / WALI), dengan kepala kartu bergaya sama seperti desktop (bar aksen hijau + judul kapital).
+- **Judul dan urutan kartu tidak diketik dua kali**: `Tools/turunkan-grup.py` membaca section XAML desktop (`SuDesApp.Wpf/Views/*InputView.xaml` + `FormSectionTitle`) lalu menulisnya ke skema formulir sebagai `grupUrutan` per jenis dan `grup` per bidang; karena skema ikut diterbitkan ke Supabase, perubahan kartu di desktop tidak menuntut APK baru. Binding di dalam `<DataGrid>` diperhitungkan terhadap objek baris, sehingga kolom daftar anak tidak lagi merebut kolom tingkat atas.
+- **Skema lama tetap aman**: cache `skema-cache.json` yang belum memuat `grup` dirender datar seperti sebelumnya (`SkemaJenis.grupkan()`), jadi perangkat yang belum tersinkron tidak kehilangan kolom.
+- **Penjaga**: `SkemaGrupTest` (Android, urutan grup, grup asing, skema lama) dan uji paritas `Skema_MengandungGrupKartu_SepertiSectionDesktop` serta `Android_MembacaDanMerenderGrupSkema` (desktop) — keduanya menolak bila pengelompokan hilang atau berhenti dipakai.
+
+## Langganan — Hubungan Server Lisensi
+
+- **Tombol Hubungkan menunggu server siap**: `HubungkanAsync` menyalakan server lisensi lokal lebih dulu (sinkron), baru menanyakan katalog; sebelumnya permintaan katalog bisa berangkat mendahului server yang masih naik sehingga tombol tampak gagal padahal server sehat.
+
+- **Satu bentuk alamat loopback**: server lokal dan `Lisensi:UrlServer` memakai `http://127.0.0.1:5110`. `PenentuAlamatLisensi` hanya mengunci alamat untuk HTTPS non-loopback, jadi konfigurasi loopback tidak bisa mengunci aplikasi ke alamat yang salah.
+- **Dikunci supaya tidak rusak lagi**: `SuDesApp.Tests/Licensing/KontrakHubunganServerLisensiTests.cs` mengikat perilkaku (siapa menang antara konfigurasi, environment, dan server lokal), Berkas kritis diberi penanda "TERKUNCI" + read-only + `git update-index --assume-unchanged`, dan aturannya dicatat di `AGENTS.md`.
+
 ## Android — Surat Kembali Sama dengan Desktop
 
 - **Menu Buat Surat Android kini memuat semua jenis 2.15.0, termasuk Keterangan Penghasilan (472)**: skema desktop diperluas dengan jenis PENGHASILAN (form data diri + pekerjaan/usaha, penghasilan per bulan, jumlah tanggungan), dan impor desktop memetakan `penghasilan.*` sehingga surat dari Android masuk register lengkap.
@@ -111,13 +130,15 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **Footer Daftar Hadir** memakai tanggal panjang bahasa Indonesia ("17 September 2026") seperti desktop.
 - **Surat Keterangan Ahli Waris kini tiga halaman berurutan di Android** seperti desktop: Surat Keterangan (berkop, kaki Camat ↔ Kepala Desa), Surat Pernyataan Ahli Waris (daftar penanda tangan pasangan + tiap anak), dan Surat Kuasa (penerima kuasa = anak pertama, blok kaki Kepala Desa ↔ Camat). Page break antar halaman ikut salinan: halaman kuasa hanya muncul bila ada pasangan DAN anak, dan blok pasangan/anak hanya tercetak bila terisi (cabang `opsional`/`hanyaKosong` skema).
 - **Rincian garapan bidang ke-2 dst. kini ditabulasi**: skema `rincianTambahan` menjadi daftar (letak, nomor persil, luas, keterangan), tiap baris masuk tabel PDF Android, jumlah luas otomatis menghitung semua bidang, dua baris kosong tetap ada seperti desktop.
-- Uji unit Android diperluas menjadi 38 kasus.
+- **Isian turunan dihitung Android, tidak digantungkan ke skema**: umur (`"<n> Tahun"`), tanggal cetak `dd MMMM yyyy` locale id-ID, dan pemetaan orang tua NTCR (`binBinti`, ayah/ibu calon suami-istri) dibangun `BuatSuratActivity` persis seperti generator C# desktop.
+- **Impor desktop menahan bentuk data Android**: `SkemaFormulir` membuat objek antara yang null (mis. `wargaKK`) saat memasang target bertingkat, melepas tanda kutip JSON pada nilai string, dan menormalkan tanggal ke ISO `yyyy-MM-dd` — berkas properti `string` tanggal di database tetap satu bentuk untuk semua generator PDF.
+- Uji unit Android diperluas menjadi 48 kasus.
 
 ## Verifikasi
 
 - `dotnet build SuDesApp.slnx -c Release` — 0 galat, 0 peringatan.
-- `dotnet test SuDesApp.Tests` — **501/501 lolos** (termasuk 6 uji gerbang rilis, 3 uji keselarasan catatan rilis, dan 2 uji skema Penghasilan baru).
-- `gradlew testDebugUnitTest` (Android) — **38/38 lolos**.
+- `dotnet test SuDesApp.Tests` — **518 uji: 516 lolos**; 2 uji pemulihan basis data (`PemulihanDatabaseOtomatisTests`) bergantung pada lingkungan dan lolos begitu `desa.db` terpakai di folder instalasi disingkirkan sementara. Termasuk 6 uji gerbang rilis, 3 uji keselarasan catatan rilis, 152 uji berfilter `Licensing`, dan penjaga paritas Buat Surat Android ↔ desktop.
+- `gradlew testDebugUnitTest` (Android) — **48/48 lolos**.
 - `Tools/check-rilis.ps1 -TanpaGitHub` — 9 lulus, 0 gagal, 4 dilewati.
 - `Tools/check-resources.ps1 -FailOnOrphan` — 0 galat, 0 peringatan.
 - `Tools/check-kontras-wcag.ps1` — semua pemeriksaan lolos (sebelas tema × 60 kunci konsisten).
