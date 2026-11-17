@@ -148,10 +148,20 @@ Akibatnya pada setiap instalasi dari paket: `DatabaseInitializer` mencatat *"Fil
 
 Pola kini dipecah menjadi `desa*.db` dan `desa*.db-*` (mencakup berkas samping `-wal`/`-shm`/`-journal` dan `desa_backup*.db`), jadi data desa tetap tidak pernah tertimpa sementara skema kembali ikut terpasang. Diperbaiki dengan `installer/SuDesApp.iss` + uji baru `SuDesApp.Tests/Configuration/InstallerSkemaDatabaseTests.cs` (8 uji) yang mengunci dua arah: menolak bila `desa.db.sql` tersaring, menolak bila `desa.db`/`desa.db-wal`/`desa_backup*.db` justru terpasang, memastikan csproj menyalin skema ke output, dan memeriksa `desa.db.sql` memuat seluruh tabel surat. Merah–hijau diverifikasi: dengan pola lama satu uji gagal, dengan pola baru semuanya lolos.
 
+## Dialog Persetujuan Dokumen — Teks Terpotong dan Tombol Hilang
+
+Dialog Kebijakan Privasi & Syarat dan Ketentuan yang muncul saat aplikasi pertama dibuka (dan setiap kali versi dokumen naik) memotong kalimat persetujuannya di tepi kanan, dan baris kedua beserta tombol "Keluar" / "Setuju & Lanjutkan" tidak pernah tampil.
+
+Penyebabnya bukan dialog itu sendiri, melainkan template `CheckBox` di `ThemeStyles.xaml`: akarnya `StackPanel Orientation="Horizontal"`. StackPanel mengukur anak pertamanya dengan lebar **tak hingga**, jadi `TextWrapping="Wrap"` di dalam label tidak pernah aktif. Label diukur satu baris panjang, tinggi jendela (`SizeToContent="Height"`) dihitung dari ukuran itu, lalu saat disusun pada lebar 660 DIP teksnya meluap ke kanan dan baris keduanya terpotong keluar jendela — persis gejala "tulisan terpotong, checkbox tidak kelihatan".
+
+Template kini memakai `BulletDecorator` (sama seperti template `RadioButton` di berkas yang sama) sehingga kontennya menerima sisa lebar dan membungkus; kotak centang juga dibuat lebih kontras (garis `TextSecondaryBrush` 1,5 px) dan keduanya menghormati `VerticalContentAlignment`, jadi kotak sejajar baris pertama label yang panjang. Diverifikasi dengan menangkap jendela dialog sungguhan: sebelum = kalimat terputus dan tombol di luar layar; sesudah = kalimat lengkap dua baris, kotak terbaca, tombol tampil.
+
+Penjaga: `SuDesApp.Tests/UI/KotakCentangMembungkusTests.cs` (3 uji) melarang akar `StackPanel Horizontal` kembali ke template `CheckBox`, menuntut `BulletDecorator` + `TemplateBinding VerticalContentAlignment`, dan memastikan dialog tidak memasang tinggi tetap. 46 pemakaian `CheckBox` di seluruh aplikasi ikut pulih dari cacat yang sama.
+
 ## Verifikasi
 
 - `dotnet build SuDesApp.slnx -c Release` — 0 galat, 0 peringatan.
-- `dotnet test SuDesApp.Tests` — **520 uji: 518 lolos**; 2 uji pemulihan basis data (`PemulihanDatabaseOtomatisTests`) bergantung pada lingkungan dan lolos begitu `desa.db` terpakai di folder instalasi disingkirkan sementara. Termasuk 6 uji gerbang rilis, 3 uji keselarasan catatan rilis, 152 uji berfilter `Licensing`, dan 9 uji paritas Buat Surat Android ↔ desktop.
+- `dotnet test SuDesApp.Tests` — **542 uji, semuanya lolos**. Termasuk 6 uji gerbang rilis, 3 uji keselarasan catatan rilis, 163 uji berfilter `Licensing`, 9 uji paritas Buat Surat Android ↔ desktop, 8 uji `InstallerSkemaDatabaseTests` (skema harus ikut terpasang, basis data pengguna tidak boleh), dan 3 uji `KotakCentangMembungkusTests` (label checkbox wajib membungkus). Dua uji `PemulihanDatabaseOtomatisTests` yang sebelumnya bergantung lingkungan kini lolos lagi karena folder instalasi lama yang menyimpan `desa.db` sudah tidak ada.
 - `gradlew testDebugUnitTest` (Android) — **52/52 lolos**.
 - `Tools/check-rilis.ps1 -TanpaGitHub` — 9 lulus, 0 gagal, 4 dilewati.
 - `Tools/check-resources.ps1 -FailOnOrphan` — 0 galat, 0 peringatan.

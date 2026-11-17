@@ -80,6 +80,10 @@ namespace SuDesApp.Wpf.ViewModels
                             "Server lisensi lokal kini wajib dinyalakan setiap alamat yang dipakai menunjuk komputer sendiri, bukan lagi bergantung pada berkas preferensi yang bisa hilang; alasan penolakan start server (mis. ServerKey Midtrans belum diisi) ikut ditampilkan di halaman Langganan alih-alih hanya tercatat di server.log.",
                             "Perilaku ini dikunci uji kontrak khusus dan berkas-berkas terkait ditandai terkunci agar tidak rusak oleh perubahan berikutnya."
                         }),
+                        new CatatanRilisSubSection("Dialog Persetujuan Dokumen Tidak Terpotong", new List<string>
+                        {
+                            "Kalimat 'Saya telah membaca dan menyetujui Kebijakan Privasi serta Syarat dan Ketentuan...' tidak lagi terpotong di tepi kanan dialog dan tombol tidak lagi hilang di bawah: template CheckBox tema memakai StackPanel horizontal yang mengukur labelnya tanpa batas lebar, sehingga TextWrapping tidak pernah aktif dan tinggi jendela dihitung untuk satu baris."
+                        }),
                         new CatatanRilisSubSection("Garapan Sawah Disamakan Dengan Form Desktop", new List<string>
                         {
                             "Kolom Status Perkawinan dihapus dari formulir Android: halaman desktop tidak punya baris itu dan hasil cetakan PDF-nya juga tidak mencetaknya, jadi operator tidak lagi disuruh mengisi kolom yang tidak ada gunanya.",
