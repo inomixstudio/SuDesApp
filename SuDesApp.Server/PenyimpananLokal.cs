@@ -277,10 +277,7 @@ public sealed class PenyimpananLokal : IRepositoryLangganan, IPengumumanStore, I
     public Task<HasilTrial> MulaiTrialAsync(string pelangganId, int hari, DateTime sekarang) =>
         TulisAsync(() => _langganan.MulaiTrialAsync(pelangganId, hari, sekarang));
 
-    public Task<IReadOnlyList<TagihanBelumDibayar>> DaftarTagihanBelumDibayarAsync(
-        int batas, DateTime? lebihTuaDari = null, DateTime? lebihBaruDari = null, CancellationToken ct = default) =>
-        _langganan.DaftarTagihanBelumDibayarAsync(batas, lebihTuaDari, lebihBaruDari, ct);
-
+    
     // ----------------------------------------------------------- pengumuman
 
     public Task<List<PengumumanServer>> BacaPengumumanAsync() => _pengumuman.BacaPengumumanAsync();

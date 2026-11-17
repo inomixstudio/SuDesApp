@@ -2,7 +2,7 @@ using Npgsql;
 
 namespace SuDesApp.Server;
 
-/// <summary>Hasil perpanjangan langganan dari satu webhook pembayaran.</summary>
+/// <summary>Hasil perpanjangan langganan dari satu pembayaran yang dicatat.</summary>
 /// <param name="Diterima">True bila dana dipakai untuk memperpanjang.</param>
 /// <param name="Duplikat">True bila order ini sudah pernah diproses sebelumnya.</param>
 /// <param name="PelangganId">Id desa bila ditemukan.</param>
@@ -56,7 +56,7 @@ public sealed record AdminAuditEntry(
 /// sama. Tanpa GUC, predicate-nya NULL → nol baris: gagal tertutup.
 ///
 /// Empat pencarian yang memang lintas-tenant (kode aktivasi → desa,
-/// order_id → tagihan, daftar tagihan belum dibayar untuk rekonsiliasi, dan
+/// order_id → tagihan, dan
 /// daftar semua desa untuk "pusat administer") TIDAK memakai GUC: semuanya
 /// lewat fungsi <c>SECURITY DEFINER</c> yang hanya bisa dipanggil role server
 /// dan hanya mengembalikan kolom yang diperlukan. Operasi tulis pusat

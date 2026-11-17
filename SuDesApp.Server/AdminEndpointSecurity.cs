@@ -28,20 +28,26 @@ public static class AdminPermissions
     public const string PaymentsRead = "payments.read";
     public const string PaymentsRecord = "payments.record";
     public const string PaymentsExport = "payments.export";
-    /// <summary>
-    /// Uji pembayaran: membuat transaksi sungguhan di akun merchant.
-    /// Izin ini TERPISAH dari <see cref="PaymentsRecord"/> karena yang satu
-    /// menambah hak akses dari pembukuan manual, sedangkan yang ini
-    /// membuat transaksi NYATA (uang sungguhan) — jadi tidak boleh ikut
-    /// dibuka ke operator yang cuma berhak mencatat pembayaran.
-    /// </summary>
-    public const string PaymentsTest = "payments.test";
-    public const string ReconciliationRun = "payments.reconcile";
     public const string AnnouncementsRead = "announcements.read";
     public const string AnnouncementsManage = "announcements.manage";
 
     public static IReadOnlySet<string> All { get; } = new HashSet<string>(
         AdminEndpointCatalog.Routes.Values, StringComparer.Ordinal);
+
+    /// <summary>
+    /// Izin yang endpoint-nya sudah dihapus bersama gateway pembayaran, tetapi
+    /// TETAP dikenali supaya konfigurasi operator lama tidak membuat server
+    /// menolak start. Izin ini tidak memberi akses apa pun — tidak ada lagi
+    /// rute yang memintanya.
+    /// </summary>
+    public static IReadOnlySet<string> Warisan { get; } = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "payments.reconcile",
+        "payments.test"
+    };
+
+    /// <summary>Nama izin yang boleh tertulis di konfigurasi (aktif maupun warisan).</summary>
+    public static bool Dikenal(string izin) => All.Contains(izin) || Warisan.Contains(izin);
 }
 
 /// <summary>Single declaration of each protected endpoint and its required permission.</summary>
@@ -67,11 +73,6 @@ public static class AdminEndpointCatalog
             [("POST", "/admin/pelanggan/{kode}/tandai-lunas")] = AdminPermissions.PaymentsRecord,
             [("GET", "/admin/ekspor/desa.csv")] = AdminPermissions.CustomersExport,
             [("GET", "/admin/ekspor/pembayaran/{kode}.csv")] = AdminPermissions.PaymentsExport,
-            [("POST", "/admin/rekonsiliasi")] = AdminPermissions.ReconciliationRun,
-            [("GET", "/admin/uji-pembayaran")] = AdminPermissions.PaymentsTest,
-            [("POST", "/admin/uji-pembayaran")] = AdminPermissions.PaymentsTest,
-            [("GET", "/admin/uji-pembayaran/{orderId}")] = AdminPermissions.PaymentsTest,
-            [("GET", "/admin/uji-pembayaran/notifikasi")] = AdminPermissions.PaymentsTest,
             [("GET", "/admin/pengumuman")] = AdminPermissions.AnnouncementsRead,
             [("POST", "/admin/pengumuman")] = AdminPermissions.AnnouncementsManage,
             [("DELETE", "/admin/pengumuman/{id}")] = AdminPermissions.AnnouncementsManage
@@ -88,6 +89,14 @@ public sealed class AdminOperatorRegistry
 {
     private sealed record Operator(string Id, string Name, byte[] TokenDigest, IReadOnlySet<string> Permissions);
     private readonly Dictionary<string, Operator> _operators;
+    private readonly List<string> _izinWarisan = new();
+
+    /// <summary>
+    /// Izin warisan (payments.reconcile / payments.test) yang masih tertulis di
+    /// konfigurasi. Tidak memberi akses apa apa lagi; dipakai untuk memperingatkan
+    /// operator bahwa baris konfigurasinya sudah mati.
+    /// </summary>
+    public IReadOnlyList<string> IzinWarisan => _izinWarisan;
 
     public AdminOperatorRegistry(IConfiguration configuration)
     {
@@ -108,10 +117,15 @@ public sealed class AdminOperatorRegistry
                 .Select(item => item.Value?.Trim() ?? string.Empty)
                 .Where(item => item.Length > 0)
                 .ToHashSet(StringComparer.Ordinal);
-            var tidakDikenal = permissions.Where(item => !AdminPermissions.All.Contains(item)).ToArray();
+            var tidakDikenal = permissions.Where(item => !AdminPermissions.Dikenal(item)).ToArray();
             if (tidakDikenal.Length > 0)
                 throw new InvalidOperationException(
                     $"Operator '{id}' memiliki izin admin yang tidak dikenal: {string.Join(", ", tidakDikenal)}.");
+
+            // Izin warisan dicatat supaya operator tahu baris konfigurasinya
+            // sudah tidak berarti apa-apa (bukan supaya diam-diam diterima).
+            foreach (var warisan in permissions.Where(AdminPermissions.Warisan.Contains))
+                if (!_izinWarisan.Contains(warisan)) _izinWarisan.Add(warisan);
 
             var tokenDigest = SHA256.HashData(Encoding.UTF8.GetBytes(token));
             if (tokenDigests.Any(existing => CryptographicOperations.FixedTimeEquals(existing, tokenDigest)))

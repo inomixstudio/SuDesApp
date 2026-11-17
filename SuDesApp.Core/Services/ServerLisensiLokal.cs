@@ -62,8 +62,8 @@ namespace SuDesApp.Services
 
         /// <summary>
         /// Beberapa baris terakhir keluaran server. Dijaga supaya alasan server
-        /// menolak start (mis. "ServerKey Midtrans belum diatur…") ikut terbaca
-        /// di halaman Langganan, bukan terkubur di server.log.
+        /// menolak start (mis. kunci penandatangan tidak ditemukan, port terpakai)
+        /// ikut terbaca di halaman Langganan, bukan terkubur di server.log.
         /// </summary>
         private readonly Queue<string> _barisTerakhir = new();
 

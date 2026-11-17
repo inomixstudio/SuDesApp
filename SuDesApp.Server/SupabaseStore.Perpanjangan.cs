@@ -47,7 +47,7 @@ public partial class SupabaseStore : IRepositoryLangganan, IAdminAuditStore, IPe
         // order ini sudah pernah diproses → jangan perpanjang lagi.
         int barisBaru;
         // catatan = referensi bukti bayar dari pembukuan operator; NULL pada
-        // pembayaran gateway. Kolomnya nullable dan ditambah lewat ALTER di
+        // pembayaran yang dicatat operator. Kolomnya nullable dan ditambah lewat ALTER di
         // schema.sql, jadi instalasi lama tidak perlu migrasi terpisah.
         await using (var catat = new NpgsqlCommand("""
             INSERT INTO pembayaran (order_id, pelanggan_id, tenant_id, nominal, status, catatan,
@@ -77,7 +77,7 @@ public partial class SupabaseStore : IRepositoryLangganan, IAdminAuditStore, IPe
         if (barisBaru == 0)
         {
             await tx.CommitAsync();
-            ServerLog.WebhookDuplikat(_logger, orderId);
+            ServerLog.PembayaranDuplikat(_logger, orderId);
             return new HasilPerpanjang(true, true, pelangganId);
         }
 
@@ -107,7 +107,7 @@ public partial class SupabaseStore : IRepositoryLangganan, IAdminAuditStore, IPe
     /// dibaca bila benar-benar milik desa itu.
     ///
     /// <c>null</c> untuk desa/order yang tidak ada ATAU pembayaran tanpa
-    /// lampiran (jalur gateway) — pemanggil tidak perlu membedakannya: keduanya
+    /// tanpa lampiran — pemanggil tidak perlu membedakannya: keduanya
     /// sama-sama "tidak ada gambar untuk disajikan".
     /// </summary>
     public async Task<BuktiBayar?> AmbilBuktiAsync(string kodeAktivasi, string orderId)
@@ -143,53 +143,6 @@ public partial class SupabaseStore : IRepositoryLangganan, IAdminAuditStore, IPe
         return isi is null ? null : new BuktiBayar(isi, tipe ?? BuktiTransfer.TipeGambar(isi) ?? "application/octet-stream", nama);
     }
 
-    /// <summary>
-    /// Daftar tagihan yang belum punya baris pembayaran — dipakai
-    /// rekonsiliasi. Lintas-tenant secara sah karena serverlah yang
-    /// menjalankannya (bukan satu desa): ia perlu mengetahui order mana saja
-    /// yang masih menunggu, lalu menanyakan statusnya ke Midtrans.
-    ///
-    /// Fungsi di schema.sql hanya mengembalikan kolom tagihan (order, paket,
-    /// nominal, hari, waktu) — tidak ada kontak maupun data desa lain.
-    /// </summary>
-    public async Task<IReadOnlyList<TagihanBelumDibayar>> DaftarTagihanBelumDibayarAsync(
-        int batas, DateTime? lebihTuaDari = null, DateTime? lebihBaruDari = null, CancellationToken ct = default)
-    {
-        var hasil = new List<TagihanBelumDibayar>();
-        if (batas <= 0) return hasil;
-
-        await using var conn = await BukaAsync();
-        await using var cmd = new NpgsqlCommand(
-            "SELECT * FROM dir_tagihan_belum_dibayar(@batas, @tua, @baru)", conn);
-
-        // Tipe parameter ditulis eksplisit: tanpa itu, parameter bertipe NULL
-        // membuat Postgres tidak bisa memilih fungsi pada pemanggilan pertama
-        // (dan DateTimeKind.Unspecified akan dicocokkan ke `timestamp`, bukan
-        // `timestamptz`).
-        cmd.Parameters.Add(new NpgsqlParameter("batas", NpgsqlTypes.NpgsqlDbType.Integer) { Value = batas });
-        cmd.Parameters.Add(new NpgsqlParameter("tua", NpgsqlTypes.NpgsqlDbType.TimestampTz)
-        {
-            Value = UtcAtauNull(lebihTuaDari)
-        });
-        cmd.Parameters.Add(new NpgsqlParameter("baru", NpgsqlTypes.NpgsqlDbType.TimestampTz)
-        {
-            Value = UtcAtauNull(lebihBaruDari)
-        });
-
-        await using var r = await cmd.ExecuteReaderAsync(ct);
-        while (await r.ReadAsync(ct))
-        {
-            hasil.Add(new TagihanBelumDibayar(
-                r.GetString(0),
-                r.GetString(1),
-                r.GetString(2),
-                r.GetInt64(3),
-                r.GetInt32(4),
-                r.GetDateTime(5).ToUniversalTime()));
-        }
-
-        return hasil;
-    }
-
+    
     }
 }

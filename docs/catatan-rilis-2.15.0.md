@@ -27,7 +27,7 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **Disiplin peringatan disamakan** — `TreatWarningsAsErrors` berlaku juga di `SudesPdf.Core`, `SudesExPlus`, `SuDesApp.Api`, `UjiTrialServerE2E`, dan `healthcheck`.
 - **Token Google** — serialisasi pindah ke `System.Text.Json` dengan konverter setia pada bentuk JSON Google; token lama tetap terbaca dan pengguna tidak perlu login ulang.
 - **Gerbang CI** — audit kontras tema WCAG jalan di setiap push; GitHub Actions dinaikkan (checkout 7.0.1, setup-dotnet 6.1.0, setup-java 6.2.0, setup-gradle 6.4.1) dan tetap dikunci commit SHA; `gitleaks-action` dipin ke SHA.
-- **Uji** — penjaga katalog surat daring (6 uji) dan keselarasan catatan rilis (3 uji); `MidtransService` menerima `serverKey` eksplisit; `Microsoft.NET.Test.Sdk` 18.12.0.
+- **Uji** — penjaga katalog surat daring (6 uji) dan keselarasan catatan rilis (3 uji); `Microsoft.NET.Test.Sdk` 18.12.0.
 - **Tampilan** — halaman Pembaruan disusun dua kartu berdampingan; Langganan dipangkas mati; Tentang Aplikasi diperbarui; pratinjau kop dibatasi tinggi/lebar acuan kertas.
 - **Dokumentasi** — README, Dockerfile, `.agents/*`, `.vscode/launch.json`, dan catatan rilis diperbaiki agar tidak lagi menyebut .NET 10 / SDK prarilis.
 
@@ -42,7 +42,6 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **Gerbang `check-rilis`** diperbaiki — pembersih contoh kini dicari di seluruh `DatabaseInitializer*.cs`, bukan satu berkas.
 - **Nama orang bergelar** tidak lagi ikut kapital penuh (desktop maupun Android).
 - **NTCR** — nama pemohon/pejabat/orang tua yang kosong tercetak titik-titik sejajar blok pejabat.
-- **Uji flaky Midtrans** — `Notifikasi_lunas_tercatat_sebagai_diterima` tidak lagi gagal 403 saat suite penuh.
 - **Tombol Hubungkan di halaman Langganan** — setelah server lisensi lokal dinyalakan, katalog tidak lagi ditanya ke alamat yang berbeda (`localhost` vs `127.0.0.1`) sebelum server siap; gejala "lisensi server tidak terhubung" hilang dan perilkunya dikunci uji kontrak.
 - **Sel kosong di PDF Android** — kunci `$kunci` di blok `badan` skema yang salah eja (mis. `$kematian.pukul`, `$ntcr.AyahCalonSuami`) dibetulkan sehingga kolom umur, tanggal, dan bin/binti orang tua NTCR terisi sama seperti cetakan desktop.
 
@@ -122,7 +121,7 @@ Tidak ada perubahan format data: `desa.db`, `Templates`, token Google yang sudah
 - **Satu bentuk alamat loopback**: server lokal dan `Lisensi:UrlServer` memakai `http://127.0.0.1:5110`. `PenentuAlamatLisensi` hanya mengunci alamat untuk HTTPS non-loopback, jadi konfigurasi loopback tidak bisa mengunci aplikasi ke alamat yang salah.
 - **Dikunci supaya tidak rusak lagi**: `SuDesApp.Tests/Licensing/KontrakHubunganServerLisensiTests.cs` mengikat perilkaku (siapa menang antara konfigurasi, environment, dan server lokal), Berkas kritis diberi penanda "TERKUNCI" + read-only + `git update-index --assume-unchanged`, dan aturannya dicatat di `AGENTS.md`.
 - **Server lisensi lokal wajib nyala kalau alamatnya loopback**: `App.Startup.MulaiServerLisensiLokal` sebelumnya hanya menurut preferensi `serverLisensiLokal`. Berkas preferensi (`%LOCALAPPDATA%\SuDesApp\login_prefs.json`) bisa hilang — profil baru, bersih-bersih, instalasi ulang — dan setelah itu aplikasi berhenti menyalakan servernya sendiri tanpa satu pun pesan: yang tersisa hanya chip "Belum terjangkau" dan tombol **Ubah alamat** yang menghilang. Keputusan kini diambil `PenentuAlamatLisensi.ServerLokalDibutuhkan(alamat, terkunci)`: alamat loopback yang tidak dikunci konfigurasi produksi selalu menyalakan server lokal, dan preferensinya dipulihkan otomatis.
-- **Alasan kegagalan server terbaca di layar**: `ServerLisensiLokal` menyimpan beberapa baris keluaran server terakhir dan menempelkannya ke `GalatTerakhir`. Penolakan start seperti "ServerKey Midtrans belum diatur dan aplikasi tidak berjalan dalam mode Development" sekarang muncul di halaman Langganan, bukan terkubur di `server-lisensi\server.log` dengan pesan kosong "berhenti sendiri (kode 0)".
+- **Alasan kegagalan server terbaca di layar**: `ServerLisensiLokal` menyimpan beberapa baris keluaran server terakhir dan menempelkannya ke `GalatTerakhir`. Penolakan start server (kunci penandatangan tidak ditemukan, port terpakai, kredensial ditolak) sekarang muncul di halaman Langganan, bukan terkubur di `server-lisensi\server.log` dengan pesan kosong "berhenti sendiri (kode 0)".
 - **"Tombol Ubah hilang = server tidak menjawab" kini resmi**: tombol itu memang hanya tampil selama alamat terkunci oleh koneksi yang terbukti. Hubungan dua arah ini tidak lagi cuma kebetulan — dijaga `TombolUbahAlamatMunculSesudahServerMenjawab_DanHilangSesudahDibukaKunci`.
 
 ## Android — Surat Kembali Sama dengan Desktop
@@ -157,6 +156,17 @@ Penyebabnya bukan dialog itu sendiri, melainkan template `CheckBox` di `ThemeSty
 Template kini memakai `BulletDecorator` (sama seperti template `RadioButton` di berkas yang sama) sehingga kontennya menerima sisa lebar dan membungkus; kotak centang juga dibuat lebih kontras (garis `TextSecondaryBrush` 1,5 px) dan keduanya menghormati `VerticalContentAlignment`, jadi kotak sejajar baris pertama label yang panjang. Diverifikasi dengan menangkap jendela dialog sungguhan: sebelum = kalimat terputus dan tombol di luar layar; sesudah = kalimat lengkap dua baris, kotak terbaca, tombol tampil.
 
 Penjaga: `SuDesApp.Tests/UI/KotakCentangMembungkusTests.cs` (3 uji) melarang akar `StackPanel Horizontal` kembali ke template `CheckBox`, menuntut `BulletDecorator` + `TemplateBinding VerticalContentAlignment`, dan memastikan dialog tidak memasang tinggi tetap. 46 pemakaian `CheckBox` di seluruh aplikasi ikut pulih dari cacat yang sama.
+
+## Pembayaran — Gateway Midtrans Dihapus
+
+Pembayaran otomatis lewat Midtrans Snap tidak dipakai lagi, jadi seluruh jalurnya dibuang dari server maupun aplikasi. Yang tersisa satu jalan: desa membayar lewat QRIS statis atau transfer bank, lalu administrator membukukannya di Pusat Administrasi.
+
+- **Server**: `MidtransService`, `KonfigurasiMidtrans`, `PembuatTagihan`, `LayananWebhook`, `PelacakWebhook`, `LayananRekonsiliasi`, `RekonsiliasiLatar`, `LayananUjiPembayaran`, `StatusPembayaran`, dan halaman `wwwroot/checkout.html` + `checkout-uji.html` dihapus. Endpoint `/checkout`, `/checkout-uji`, `/webhook-pembayaran`, `/admin/rekonsiliasi`, serta empat `/admin/uji-pembayaran*` tidak ada lagi; kebijakan pembatas laju `webhook` ikut hilang.
+- **Penjaga "ServerKey wajib diisi" dihapus**: dulu server menolak start tanpa kredensial gateway karena notifikasi tak bertanda tangan bisa memalsukan perpanjangan. Sekarang tidak ada lagi notifikasi otomatis — yang memberi hak akses hanya endpoint bertoken admin — sehingga server boleh melayani tanpa kredensial pembayaran apa pun.
+- **`/buat-tagihan` tetap ada dan tetap mencatat tagihan** (`orderId`, nominal, hari, `kode_aktivasi` untuk desa baru); hanya medan gateway (`token`, `link_pembayaran`, `mode`) yang hilang. Halaman Aktivasi Lisensi di desktop tidak berubah bentuk: tombol Bayar tetap ada, hanya pesannya kini jujur — tagihan tercatat, bayar manual, langganan aktif setelah administrator menandai lunas.
+- **Pembukuan manual tidak berubah**: `/admin/pelanggan/{kode}/tandai-lunas` (QRIS statis/transfer, lampiran bukti, kuitansi, ekspor CSV) tetap satu-satunya jalan memperpanjang, memakai `PerpanjangAsync` yang sama seperti sebelumnya.
+- **Izin lama tidak mematikan server**: `payments.reconcile` dan `payments.test` tidak lagi dipakai endpoint mana pun, tetapi konfigurasi operator yang masih menyebutnya tetap diterima (server mencatat bahwa izin itu diabaikan) supaya deployment lama tidak gagal start.
+- **Skema basis data tidak disentuh**: tabel dan kolom tagihan/pembayaran tetap ada, sehingga riwayat pembayaran desa tidak hilang dan tidak perlu migrasi.
 
 ## Verifikasi
 

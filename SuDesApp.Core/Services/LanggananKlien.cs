@@ -96,7 +96,7 @@ namespace SuDesApp.Services
         {
             // Tiga paket berbayar, urut dari yang paling pendek. TRIAL 30 hari
             // tidak ada di sini karena gratis — ia tombol terpisah yang tidak
-            // pernah melewati tagihan Midtrans (LanggananKlien.MulaiTrialAsync).
+            // pernah melewati tagihan (LanggananKlien.MulaiTrialAsync).
             //
             // Angka di kartu tetap dikonfirmasi server (GET /paket); teks di
             // bawah ini hanya agar kartu tidak kosong saat server belum
@@ -249,14 +249,14 @@ namespace SuDesApp.Services
     /// Tagihan yang baru dibuat server. Semua angkanya dari server — klien tidak
     /// pernah menentukan nominal.
     /// </summary>
-    public sealed record TagihanLangganan(string? OrderId, long? Nominal, int? Hari, string? LinkPembayaran)
+    public sealed record TagihanLangganan(string? OrderId, long? Nominal, int? Hari)
     {
         /// <summary>Ringkasan untuk pesan status, mis. "Rp150.000 / 30 hari".</summary>
         public string RingkasanTampil => $"{Rupiah.Format(Nominal)} / {Hari} hari";
     }
 
     /// <summary>
-    /// Hasil panggilan POST /buat-tagihan: tagihannya, atau tanpa tagihan +
+    /// Hasil panggilan POST /buat-tagihan: catatan tagihannya, atau tanpa tagihan +
     /// status HTTP penolakan server. Kegagalan jaringan tidak sampai ke sini —
     /// ia dilempar sebagai pengecualian supaya pemanggil bisa menampilkan
     /// pesannya sendiri.
@@ -273,7 +273,7 @@ namespace SuDesApp.Services
 
     /// <summary>
     /// Klien endpoint langganan publik di server lisensi: katalog harga
-    /// (<c>GET /paket</c>) dan pembuatan tagihan (<c>POST /buat-tagihan</c>).
+    /// (<c>GET /paket</c>) dan pencatatan tagihan (<c>POST /buat-tagihan</c>).
     ///
     /// Kenapa dipisah dari halaman Langganan: urusan server (alamat, bentuk JSON,
     /// jeda coba ulang, salinan katalog di disk) bukan urusan tampilan. Halaman
@@ -445,7 +445,6 @@ namespace SuDesApp.Services
             var root = doc.RootElement;
 
             var orderId = root.TryGetProperty("orderId", out var oi) ? oi.GetString() : null;
-            var link = root.TryGetProperty("link_pembayaran", out var lp) ? lp.GetString() : null;
             long? nominal = root.TryGetProperty("nominal", out var nm) && nm.ValueKind == JsonValueKind.Number
                 ? nm.GetInt64()
                 : null;
@@ -458,7 +457,7 @@ namespace SuDesApp.Services
                     : null;
 
             return new HasilTagihan(
-                new TagihanLangganan(orderId, nominal, hari, link), (int)resp.StatusCode, kodeBaru);
+                new TagihanLangganan(orderId, nominal, hari), (int)resp.StatusCode, kodeBaru);
         }
 
         /// <summary>

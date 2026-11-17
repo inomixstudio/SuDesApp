@@ -14,5 +14,5 @@
 
 ## Uji
 - Perintah `dotnet test ... -v q` ala README menyembunyikan keluaran `ITestOutputHelper`; tambahkan `--logger "console;verbosity=detailed"` lalu saring dengan grep bila butuh angka dari tes.
-- Uji xunit berjalan PARALEL dalam satu proses, jadi `Environment.SetEnvironmentVariable` di satu uji mengganggu uji lain yang membaca env yang sama. `MidtransService` menerima parameter `serverKey` eksplisit (konstruktor 4 argumen) supaya uji signature tidak bergantung pada env global — pakai itu, jangan andalkan `Midtrans:ServerKey` dari config. Akar flaky `JejakWebhookTests.Notifikasi_lunas_tercatat_sebagai_diterima` (dulu 403 saat suite penuh, lolos sendirian) adalah ini.
-- `JejakWebhookTests` dan `LayananUjiPembayaranTests` keduanya memakai kunci uji `kunci-uji-midtrans`.
+- Uji xunit berjalan PARALEL dalam satu proses, jadi `Environment.SetEnvironmentVariable` di satu uji mengganggu uji lain yang membaca env yang sama — jangan pakai env global untuk kredensial dalam tes; teruskan nilai lewat konstruktor/parameter seperti yang dilakukan `UjiSertifikatTestServer` dan `AdminOperatorRegistry` (builder in-memory).
+- Gateway pembayaran (Midtrans) sudah dihapus dan dijaga tetap pergi oleh `TanpaGatewayPembayaranTests` (berkas, endpoint, kunci config, medan JSON `token`/`link_pembayaran`/`mode`). Jangan menambahkan jalur pembayaran otomatis baru tanpa mengubah uji itu lebih dulu; jalan satu-satunya memberi hak akses adalah `POST /admin/pelanggan/{kode}/tandai-lunas` (dijaga `KontrakHubunganServerLisensiTests` lewat `AdminEndpointCatalog`).

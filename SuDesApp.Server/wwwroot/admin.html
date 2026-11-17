@@ -260,8 +260,8 @@
         Tombol <strong>Buat kode otomatis</strong>: server membuat kode unik
         berbentuk <code>SUDES-XXXX-XXXX</code> (tanpa huruf yang mudah tertukar
         saat dibacakan) — cukup isi nama desa. Mengetik kode sendiri tetap bisa.
-        Langganan baru AKTIF setelah pembayaran pertama masuk (lewat webhook
-        Midtrans, atau ditandai lewat <strong>Aktivasi Manual</strong> di atas).
+        Langganan baru AKTIF setelah pembayaran pertama dibukukan lewat
+        <strong>Tandai Lunas</strong> pada desa yang bersangkutan.
         Kode yang sudah ada tidak didaftarkan ulang.
       </p>
     </details>
@@ -332,7 +332,6 @@
         </select>
         <button class="netral kecil" id="tombol-csv-desa">Unduh CSV desa</button>
         <button class="netral kecil" id="tombol-muat">Muat ulang</button>
-        <button class="netral kecil" id="tombol-rekon">Rekonsiliasi pembayaran</button>
         <button class="netral kecil" id="tombol-keluar">Keluar</button>
       </div>
       <div class="bungkus-tabel">
@@ -462,8 +461,8 @@
 
 <footer>
   Halaman ini untuk operator SuDesApp: mendaftarkan, mengubah &amp; menghapus desa,
-  mengelola perangkat, melihat riwayat pembayaran, serta menjalankan
-  rekonsiliasi. Data desa (surat, warga) tidak pernah lewat halaman ini.
+  mengelola perangkat, dan melihat serta membukukan riwayat pembayaran.
+  Data desa (surat, warga) tidak pernah lewat halaman ini.
   Jalankan server di HTTPS sebelum dipakai sungguhan.
 </footer>
 
@@ -1061,19 +1060,6 @@ async function hapusDesa(kode) {
   }
 }
 
-async function rekonsiliasi() {
-  if (!window.confirm("Jalankan rekonsiliasi pembayaran sekarang?")) return;
-  tampilPesan("Menjalankan rekonsiliasi…", false);
-  try {
-    var h = await panggil("POST", "/admin/rekonsiliasi");
-    tampilPesan("Rekonsiliasi: diperiksa " + h.diperiksa + ", diselesaikan " + h.diselesaikan +
-      ", sudah " + h.sudahDiselesaikan + ", belum bayar " + h.belumBayar +
-      ", perlu diperiksa " + h.perluDiperiksa + ", tidak pasti " + h.tidakPasti + ".", false);
-  } catch (e) {
-    tampilPesan(e.message, true);
-  }
-}
-
 // ---- pendaftaran desa ----
 async function daftarDesaBaru() {
   var kode = document.getElementById("daf-kode").value.trim();
@@ -1519,7 +1505,6 @@ document.getElementById("tombol-muat").addEventListener("click", function () {
   bersihkanPesan();
   mulai();
 });
-document.getElementById("tombol-rekon").addEventListener("click", rekonsiliasi);
 document.getElementById("cari").addEventListener("input", renderDesa);
 document.getElementById("tombol-tutup-detail").addEventListener("click", function () {
   desaTerbuka = null;

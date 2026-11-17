@@ -24,7 +24,7 @@ public sealed record HasilAktivasi(
 
 /// <summary>
 /// Aturan aktivasi lisensi — dipindahkan keluar dari <c>Program.cs</c> supaya
-/// bisa diuji seperti aturan pembayaran lainnya (webhook &amp; rekonsiliasi).
+/// bisa diuji seperti aturan pembayaran lainnya (pembukuan manual).
 ///
 /// Urutan pemeriksaannya penting dan tidak boleh dibalik:
 /// 1. kode aktivasi wajib ada        — kode itu sendiri kredensialnya
@@ -44,7 +44,7 @@ public sealed record HasilAktivasi(
 public sealed class LayananAktivasi
 {
     /// <summary>
-    /// Masa percobaan bawaan (hari). Trial TIDAK pernah melewati Midtrans:
+    /// Masa percobaan bawaan (hari). Trial TIDAK pernah ditagihkan:
     /// harganya 0, dan karena itu ia TIDAK masuk katalog tagihan
     /// (<see cref="KatalogPaket"/>) — yang masuk katalog hanya paket berbayar.
     /// </summary>

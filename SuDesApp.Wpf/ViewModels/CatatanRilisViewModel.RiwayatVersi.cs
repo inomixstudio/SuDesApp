@@ -77,8 +77,15 @@ namespace SuDesApp.Wpf.ViewModels
                         new CatatanRilisSubSection("Langganan — Tombol Hubungkan", new List<string>
                         {
                             "Tombol Hubungkan menunggu server lisensi lokal benar-benar siap sebelum menanyakan katalog dan hanya memakai satu bentuk alamat loopback, sehingga gejala 'lisensi server tidak terhubung' hilang.",
-                            "Server lisensi lokal kini wajib dinyalakan setiap alamat yang dipakai menunjuk komputer sendiri, bukan lagi bergantung pada berkas preferensi yang bisa hilang; alasan penolakan start server (mis. ServerKey Midtrans belum diisi) ikut ditampilkan di halaman Langganan alih-alih hanya tercatat di server.log.",
+                            "Server lisensi lokal kini wajib dinyalakan setiap alamat yang dipakai menunjuk komputer sendiri, bukan lagi bergantung pada berkas preferensi yang bisa hilang; alasan penolakan start server ikut ditampilkan di halaman Langganan alih-alih hanya tercatat di server.log.",
                             "Perilaku ini dikunci uji kontrak khusus dan berkas-berkas terkait ditandai terkunci agar tidak rusak oleh perubahan berikutnya."
+                        }),
+                        new CatatanRilisSubSection("Langganan — Pembayaran Tanpa Gateway", new List<string>
+                        {
+                            "Jalur pembayaran otomatis Midtrans Snap dibuang seluruhnya dari server maupun aplikasi: tanpa webhook, halaman checkout, rekonsiliasi, maupun kredensial gateway; server lisensi kini boleh melayani tanpa satu pun kunci pembayaran.",
+                            "Yang tetap ada hanya satu jalan: desa membayar lewat QRIS statis atau transfer, lalu administrator membukukannya lewat 'Tandai lunas' di Pusat Administrasi.",
+                            "Tombol Bayar di halaman Langganan tidak berubah bentuk dan halaman Aktivasi tetap seperti sebelumnya; yang berubah hanya pesannya — tagihan tercatat, hak akses menyusul setelah pembayaran dibukukan.",
+                            "Riwayat pembayaran dan skema basis data lama tidak disentuh, dan konfigurasi operator yang masih mencantumkan izin lama tetap diterima server."
                         }),
                         new CatatanRilisSubSection("Dialog Persetujuan Dokumen Tidak Terpotong", new List<string>
                         {

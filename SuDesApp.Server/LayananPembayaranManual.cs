@@ -26,16 +26,16 @@ public sealed record HasilTandaiLunas(
 }
 
 /// <summary>
-/// Pembukuan pembayaran MANUAL: uang sudah diterima operator (QRIS statis di
-/// layar pembayaran aplikasi desa, atau transfer), bukan lewat gateway.
+/// Pembukuan pembayaran: uang sudah diterima operator (QRIS statis di
+/// layar pembayaran aplikasi desa, atau transfer bank) di luar aplikasi.
 ///
-/// Kenapa dipisah dari <see cref="LayananWebhook"/>: webhook MEMVERIFIKASI
-/// sesuatu (signature Midtrans, lalu status &amp; nominal), sedangkan di sini
-/// tidak ada apa pun untuk diverifikasi — yang ada adalah keputusan operator
-/// yang memegang bukti transfer. Yang TIDAK dipisah adalah akibatnya: kelas ini
-/// memanggil <see cref="IRepositoryLangganan.PerpanjangAsync"/> yang sama
-/// dengan webhook, jadi idempotensi (satu order = satu perpanjangan) dan
-/// perpanjangan dari <c>max(berlaku_sampai, now())</c> tetap satu aturan.
+/// Inilah SATU-SATUNYA jalan memberi/memperpanjang hak akses dari pembayaran:
+/// tidak ada sistem pembayaran otomatis yang bisa mengonfirmasi apa pun, jadi
+/// yang menjadi dasar adalah keputusan operator yang memegang bukti transfer.
+/// Aturannya tetap satu salinan karena kelas ini memanggil
+/// <see cref="IRepositoryLangganan.PerpanjangAsync"/> — idempotensi (satu order
+/// = satu perpanjangan) dan perpanjangan dari <c>max(berlaku_sampai, now())</c>
+/// tidak punya salinan kedua.
 ///
 /// Aturan yang dijaga di sini:
 /// <list type="number">
@@ -47,7 +47,7 @@ public sealed record HasilTandaiLunas(
 /// benar-benar masuk, tetapi harus lebih dari nol dan perbedaannya dicatat di
 /// log supaya bisa ditelusuri;</item>
 /// <item>order id berawalan <see cref="AwalanOrder"/> sehingga riwayat
-/// pembayaran membedakan pembayaran gateway dari pembukuan operator;</item>
+/// pembayaran membedakan jalur otomatis dulu dari pembukuan operator;</item>
 /// <item>lampiran bukti transfer boleh ada atau tidak, tetapi bila ada ia harus
 /// lolos <see cref="BuktiTransfer"/> — dan lampiran yang ditolak membatalkan
 /// SELURUH penandaan lunas, bukan hanya lampirannya. Kalau tidak begitu,
@@ -173,7 +173,7 @@ public sealed class LayananPembayaranManual
     /// <summary>
     /// Order id pembukuan manual: <c>MANUAL-&lt;8 huruf id desa&gt;-&lt;yyyyMMdd&gt;-&lt;6 heksa acak&gt;</c>.
     /// Bentuknya mengikuti order id tagihan supaya enak dibaca, dengan awalan
-    /// berbeda supaya jelas bukan transaksi gateway. Bagian acak bisa
+    /// berbeda supaya jelas bukan order tagihan biasa. Bagian acak bisa
     /// disuntikkan pada uji agar hasilnya dapat diprediksi.
     /// </summary>
     public static string BuatOrderId(string pelangganId, DateTime waktuUtc, string? acak = null)

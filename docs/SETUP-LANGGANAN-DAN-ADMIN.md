@@ -1,4 +1,4 @@
-# Setup Menu Langganan dan Pusat Administrasi dengan Supabase
+﻿# Setup Menu Langganan dan Pusat Administrasi dengan Supabase
 
 Dokumen ini menjelaskan bagaimana menu Langganan dan Pusat Administrasi di SuDesApp terhubung langsung ke database Supabase untuk mengelola lisensi dan administrasi perangkat.
 
@@ -69,10 +69,6 @@ Edit atau buat file `SuDesApp.Server/appsettings.lokal.json`:
     "SslMode": "Require",
     "MigrateUser": "postgres.jotnrhjzyslyaozzawwq",          // Untuk menerapkan schema (opsional)
     "MigratePassword": "PASSWORD_ROLE_POSTGRES"
-  },
-  "Midtrans": {
-    "ServerKey": "Mid-server-XXXXXX",
-    "UseSandbox": true
   },
   "Lisensi": {
     "AdminToken": "TOKEN_ADMIN_ACAK_MINIMAL_32_BYTE"
@@ -169,7 +165,6 @@ SUPABASE_DB_USER=sudes_server.jotnrhjzyslyaozzawwq \
 SUPABASE_DB_PASSWORD=<password-role> \
 SUPABASE_MIGRATE_PASSWORD=PASSWORD_POSTGRES \
 SUPABASE_SSLMODE=Require \
-MIDTRANS_SERVER_KEY=<midtrans-server-key> \
 SUDES_ADMIN_OPERATORS__0__ID=operator1 \
 SUDES_ADMIN_OPERATORS__0__NAME="Nama Operator" \
 SUDES_ADMIN_OPERATORS__0__TOKEN="TOKEN_ACAK" \
@@ -186,7 +181,7 @@ dotnet run --project SuDesApp.Server
 |---|---|---|---|
 | `/aktivasi` | POST | Aktivasi desa dengan kode | Kode Aktivasi |
 | `/aktifkan-trial` | POST | Mulai trial 30 hari | Kode Aktivasi |
-| `/buat-tagihan` | POST | Buat tagihan Midtrans — **berlangganan awal** (`kodeAktivasi` kosong + `namaDesa` → desa terdaftar & kode baru terbit, balasan memuat `kode_aktivasi`) atau **perpanjangan** (kode harus dikenal) | Berlangganan awal tanpa kode; perpanjangan dengan Kode Aktivasi |
+| `/buat-tagihan` | POST | Catat tagihan (pembayaran dilakukan manual di luar aplikasi; tidak ada gateway) — **berlangganan awal** (`kodeAktivasi` kosong + `namaDesa` → desa terdaftar & kode baru terbit, balasan memuat `kode_aktivasi`) atau **perpanjangan** (kode harus dikenal) | Berlangganan awal tanpa kode; perpanjangan dengan Kode Aktivasi |
 | `/paket` | GET | Daftar paket & harga | Publik |
 | `/pengumuman` | GET | Pengumuman broadcast | Publik |
 
@@ -204,7 +199,6 @@ dotnet run --project SuDesApp.Server
 | `/admin/pelanggan/{kode}/tandai-lunas` | POST | Catat pembayaran manual |
 | `/admin/pelanggan/{kode}/batas` | POST | Ubah batas perangkat |
 | `/admin/pengumuman` | GET/POST | Kelola pengumuman |
-| `/admin/rekonsiliasi` | POST | Jalankan rekonsiliasi pembayaran |
 
 Semua endpoint admin memerlukan header `Authorization: Bearer TOKEN_OPERATOR`.
 
@@ -218,22 +212,20 @@ Dua jalur pembayaran di menu Langganan berbeda sesuai kepemilikan kode aktivasi 
 | Isian pengguna | Nama desa (otomatis dari Pengaturan Surat) | Kode aktivasi |
 | Hasil `POST /buat-tagihan` | Desa terdaftar + **kode baru diterbitkan otomatis** + tagihan dibuat | Tagihan dibuat atas kode yang sudah dikenal |
 | Balasan server | Medan `kode_aktivasi` berisi kode baru (`null` pada perpanjangan) | `kode_aktivasi: null` |
-| Setelah pembayaran lunas | Langganan desa baru aktif (webhook/rekonsiliasi) | Langganan berlanjut |
+| Setelah operator membukukan pembayaran | Langganan desa baru aktif | Langganan berlanjut |
 
 ### Berlangganan awal (belum punya kode)
 
 1. Pengguna menekan **Bayar** tanpa mengisi kode. Aplikasi mengambil nama desa dari profil (Pengaturan Surat) lalu mengirim `POST /buat-tagihan` dengan `kodeAktivasi: ""`, `namaDesa` terisi (maksimum 120 karakter), dan `paket` pilihan.
 2. Server mendaftarkan desa baru lewat `DaftarkanDenganKodeBaruAsync`, menerbitkan kode aktivasi unik `SUDES-XXXX-XXXX` (dicek ke database, dengan pembatasan percobaan), mencatat log `TagihanBerlanggananAwal` (Warning), lalu membuat tagihan. Harga & durasi tetap dari katalog server — klien tidak pernah menentukan nominal.
-3. Pengguna melihat kode barunya di dua tempat:
-   - Halaman checkout publik menampilkannya menonjol: **"KODE AKTIVASI ANDA (baru diterbitkan)"** dengan perintah menyimpannya.
-   - Aplikasi WPF menyimpannya langsung ke preferensi lokal dan menampilkannya di kotak Kode Aktivasi dengan banner bahwa kode aktif setelah pembayaran lunas.
-4. **Pendaftaran tidak memberi akses**: langganan desa baru masih kosong dan hanya menyala setelah pembayaran lunas lewat webhook/rekonsiliasi — kode bisa terbit lebih dulu tanpa celah akses gratis.
+3. Pengguna melihat kode barunya di aplikasi WPF: kode disimpan ke preferensi lokal dan ditampilkan di kotak Kode Aktivasi, dengan pesan bahwa akses baru aktif setelah pembayaran dibukukan administrator.
+4. **Pendaftaran tidak memberi akses**: langganan desa baru masih kosong dan baru menyala setelah operator membukukan pembayarannya di Pusat Administrasi — kode bisa terbit lebih dulu tanpa celah akses gratis.
 
 ### Perpanjangan (sudah punya kode)
 
 1. Pengguna mengisi kode aktivasi yang sudah dimiliki lalu menekan Bayar (`kodeAktivasi` terisi).
-2. Kode harus dikenal server; bila tidak → **404** `"Kode aktivasi tidak dikenal."` dan gateway pembayaran tidak dipanggil.
-3. Setelah lunas, langganan lama diperpanjang lewat `PerpanjangAsync` yang sama dengan webhook — aturan idempotensi & perpanjangan tetap satu salinan.
+2. Kode harus dikenal server; bila tidak → **404** `"Kode aktivasi tidak dikenal."` dan tagihan tidak dibuat.
+3. Setelah operator menandai lunas, langganan lama diperpanjang lewat `PerpanjangAsync` — aturan idempotensi (satu order = satu perpanjangan) dan perhitungan dari `max(berlaku_sampai, now())` hanya punya satu salinan.
 
 ### Galat & log
 
@@ -348,5 +340,5 @@ Untuk operator Pusat Administrasi: desa hasil berlangganan awal langsung terliha
 - **RLS (Row Level Security)**: Setiap desa (tenant) hanya melihat datanya sendiri melalui `app.tenant_id` GUC
 - **Role Terbatas**: Aplikasi memakai role `sudes_server` (bukan superuser), dengan RLS aktif
 - **Token Operator**: Admin harus provide token pribadi di header `Authorization: Bearer`
-- **Idempotensi Pembayaran**: Order ID unik mencegah duplikasi pembayaran di webhook
+- **Idempotensi Pembayaran**: satu order id hanya memperpanjang sekali, sehingga pembukuan yang diulang tidak menambah hari
 - **HTTPS Wajib**: Semua komunikasi lokal & cloud harus encrypted

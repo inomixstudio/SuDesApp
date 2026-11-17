@@ -32,12 +32,17 @@ Bagian ini menjelaskan keputusan yang sudah diambil, supaya laporan Anda
 menjumpai jawaban yang sudah benar, sehingga Anda bisa fokus pada celah
 yang belum tertutup.
 
-### Verifikasi tanda tangan — selalu gagal tertutup
+### Tidak ada lagi notifikasi pembayaran otomatis
 
-- **Webhook Midtrans** (`SuDesApp.Server/Services/MidtransService.cs`)
-  merekonstruksi `SHA512(order_id + status_code + gross_amount + ServerKey)`
-  dan membandingkannya dengan waktu-tetap. Tanpa `ServerKey`, server
-  **menolak start** di luar mode Development.
+- Gateway pembayaran (Midtrans Snap) dan endpoint notifikasinya (`/webhook-pembayaran`,
+  `/checkout`, `/admin/rekonsiliasi`, `/admin/uji-pembayaran*`) **sudah dihapus**.
+  Satu-satunya jalan memperpanjang langganan adalah pembukuan manual oleh operator
+  bertoken (`POST /admin/pelanggan/{kode}/tandai-lunas`), sehingga tidak ada lagi
+  permintaan masuk yang bisa mengklaim "transaksi ini sudah lunas" tanpa kredensial.
+- Penjaga lama "server menolak start bila `ServerKey` kosong" tidak diperlukan lagi:
+  ancaman yang dijaganya (notifikasi tak bertanda tangan yang memperpanjang langganan
+  gratis) tidak punya jalan masuk lagi. Jangan menambah endpoint pembayaran otomatis
+  tanpa mengembalikan penjaga setaranya.
 
 ### Kunci lisensi
 
