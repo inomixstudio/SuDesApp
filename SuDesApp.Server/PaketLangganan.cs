@@ -20,9 +20,9 @@ public sealed record PaketLangganan(string Kode, string Nama, long Harga, int Ha
 /// Dua tempat memakainya, dan keduanya wajib konsisten:
 ///  - <c>/buat-tagihan</c> — saat membuat tagihan, harga paket disimpan ke
 ///    tabel <c>tagihan</c>.
-///  - <c>/webhook-pembayaran</c> — saat dana masuk, nominal yang ditandatangani
-///    dibandingkan terhadap harga yang tersimpan di <c>tagihan</c>, dan
-///    perpanjangan memakai jumlah hari dari paket yang sama.
+///  - <c>/admin/pelanggan/{kode}/tandai-lunas</c> — saat operator membukukan
+///    dana masuk, nominal yang dicatat dibandingkan terhadap harga yang
+///    tersimpan di <c>tagihan</c>, dan perpanjangan memakai jumlah hari paket.
 /// </summary>
 public sealed class KatalogPaket
 {

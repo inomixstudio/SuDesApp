@@ -7,10 +7,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using SuDesApp.Server;
 
-// Batas ukuran payload webhook Midtrans. Notifikasi aslinya 1-2 KB, jadi 64 KB
-// memberi kelonggaran besar tanpa membuka jalur "kirim 30 MB".
-const long BatasUkuranWebhook = 64 * 1024;
-
 // Batas body untuk SATU endpoint yang menerima gambar: POST tandai-lunas dengan
 // lampiran bukti transfer. Batas gambar yang disimpan 2 MB (BuktiTransfer), dan
 // base64 membengkakkan 4/3, jadi 4 MB memberi ruang untuk teks + sampul JSON.
@@ -155,27 +151,15 @@ var signing = new SigningService(
 builder.Services.AddSingleton(signing);
 builder.Services.AddSingleton(audit);
 builder.Services.AddSingleton(pengumuman);
-// Daftarkan lewat interface: LayananWebhook bergantung pada IRepositoryLangganan
-// supaya aturan pembayaran bisa diuji dengan LanggananMemori tanpa database.
+// Daftarkan lewat interface: layanan pembayaran bergantung pada
+// IRepositoryLangganan supaya aturannya bisa diuji dengan LanggananMemori
+// tanpa database.
 builder.Services.AddSingleton(repo);
-
-var midtrans = new MidtransService(builder.Configuration, logs.CreateLogger<MidtransService>());
-builder.Services.AddSingleton(midtrans);
-builder.Services.AddSingleton<IPenyediaStatusPembayaran>(midtrans);
-builder.Services.AddSingleton<IPembuatTagihan>(midtrans);
-builder.Services.AddSingleton<LayananWebhook>();
-
-// === Pelacak notifikasi webhook (jejak di memori) ===
-// Didaftarkan SEBELUM LayananWebhook supaya pelacaknya ikut terinjeksi ke
-// sana: notifikasi yang masuk dicatat sebagai buktinya, supaya operator
-// bisa melihat "notifikasi sungguhan datang atau tidak" tanpa menggali log.
-// Jejak ini di MEMORI saja (bertahan selama server hidup) — bukan arsip.
-builder.Services.AddSingleton<PelacakWebhook>();
 
 // === Aturan endpoint yang memberi hak akses ===
 // Dipindahkan dari lambda endpoint ke kelas sendiri supaya bisa diuji tanpa
 // HTTP: batas perangkat, kedaluwarsa, dan pemilihan harga adalah aturan yang
-// paling mahal kalau salah, sama seperti aturan webhook.
+// paling mahal kalau salah.
 builder.Services.AddSingleton(sp => new LayananAktivasi(
     sp.GetRequiredService<IRepositoryLangganan>(),
     signing,
@@ -183,7 +167,6 @@ builder.Services.AddSingleton(sp => new LayananAktivasi(
 builder.Services.AddSingleton(sp => new LayananTagihan(
     sp.GetRequiredService<IRepositoryLangganan>(),
     katalog,
-    sp.GetRequiredService<IPembuatTagihan>(),
     sp.GetRequiredService<ILogger<LayananTagihan>>(),
     pendaftarDesa: sp.GetRequiredService<LayananAdmin>()));
 
@@ -195,80 +178,18 @@ builder.Services.AddSingleton(sp => new LayananAdmin(
     sp.GetRequiredService<ILogger<LayananAdmin>>()));
 
 // === Pembukuan pembayaran manual (QRIS statis / transfer bank) ===
-// Uang sudah diterima operator, jadi jalur ini MENAMBAH hak akses tanpa
-// gateway. Ia memakai PerpanjangAsync yang SAMA dengan webhook supaya aturan
-// idempotensi & perpanjangan tetap satu salinan; pemanggilnya WAJIB endpoint
-// bertoken admin (lihat /admin/pelanggan/{kode}/tandai-lunas).
+// SATU-SATUNYA jalan memperpanjang langganan: uang diterima operator di luar
+// aplikasi, dicatat lewat endpoint bertoken admin. Aturan idempotensi dan
+// perpanjangan tinggal di PerpanjangAsync repository, jadi tidak ada salinan
+// kedua yang bisa menyimpang (lihat /admin/pelanggan/{kode}/tandai-lunas).
 builder.Services.AddSingleton(sp => new LayananPembayaranManual(
     sp.GetRequiredService<IRepositoryLangganan>(),
     katalog,
     sp.GetRequiredService<ILogger<LayananPembayaranManual>>()));
 
-// === Uji pembayaran sungguhan (alur checkout uji) ===
-// Alur operator: buat transaksi Snap NYATA (production bila servernya
-// production), bayar lewat halaman Midtrans, lalu lihat notifikasi aslinya
-// sampai server membalas dan perpanjangan langganan terjadi.
-//
-// Harga & durasi tetap dari katalog server, tagihan tetap dicatat sebelum
-// gateway dipanggil, dan perpanjangan tetap lewat PerpanjangAsync yang sama
-// dengan webhook — jadi jalur uji ini tidak punya aturan uangnya sendiri.
-// Yang membedakannya hanya satu: notifikasi transaksi uji boleh diarahkan ke
-// URL khusus lewat header X-Override-Notification, supaya operator bisa
-// membuktikan alurnya di server yang sedang diuji.
-var opsiUji = OpsiUjiPembayaran.DariKonfigurasi(builder.Configuration);
-builder.Services.AddSingleton(opsiUji);
-builder.Services.AddSingleton(sp => new LayananUjiPembayaran(
-    sp.GetRequiredService<IRepositoryLangganan>(),
-    katalog,
-    sp.GetRequiredService<IPembuatTagihan>(),
-    sp.GetRequiredService<IPenyediaStatusPembayaran>(),
-    sp.GetRequiredService<PelacakWebhook>(),
-    sp.GetRequiredService<LayananAdmin>(),
-    opsiUji,
-    sp.GetRequiredService<ILogger<LayananUjiPembayaran>>()));
-
-// === Rekonsiliasi pembayaran (backstop webhook) ===
-// Webhook tetap jalur utama; rekonsiliasi menutup kasus notifikasi yang tidak
-// pernah sampai. Ia memakai LayananWebhook yang SAMA, jadi batas nominal,
-// daftar status berduit, pemeriksaan fraud, dan penjaga idempotensi tidak
-// punya salinan kedua yang bisa menyimpang dari jalur utama.
-var opsiRekonsiliasi = OpsiRekonsiliasi.DariKonfigurasi(builder.Configuration);
-builder.Services.AddSingleton(opsiRekonsiliasi);
-builder.Services.AddSingleton(sp => new LayananRekonsiliasi(
-    sp.GetRequiredService<IRepositoryLangganan>(),
-    sp.GetRequiredService<IPenyediaStatusPembayaran>(),
-    sp.GetRequiredService<LayananWebhook>(),
-    sp.GetRequiredService<ILogger<LayananRekonsiliasi>>(),
-    opsiRekonsiliasi));
-
-if (opsiRekonsiliasi.Terjadwal && midtrans.Aktif)
-{
-    builder.Services.AddHostedService<RekonsiliasiLatar>();
-}
-else
-{
-    // Alasan dimatikan harus terbaca di log start: backstop yang tidak jalan
-    // tanpa penjelasan lebih sulit ditemukan daripada yang mati berisik.
-    Console.WriteLine(!opsiRekonsiliasi.Terjadwal
-        ? "[rekonsiliasi] Penjadwalan latar dimatikan (interval 0 menit) — endpoint /admin/rekonsiliasi tetap bisa dipanggil manual."
-        : "[rekonsiliasi] Penjadwalan latar dimatikan: ServerKey Midtrans belum diisi, status transaksi tidak bisa ditanyakan.");
-}
-
-// Mode pengembangan: hanya menyala lewat ASPNETCORE_ENVIRONMENT=Development.
-// Di produksi webhook TIDAK BOLEH menerima notifikasi tanpa tanda tangan —
-// tanpa ServerKey berarti siapa pun bisa memalsukan pembayaran.
-var dev = builder.Environment.IsDevelopment();
-if (!midtrans.Aktif && !dev)
-{
-    Console.Error.WriteLine(
-        "ServerKey Midtrans belum diatur dan aplikasi tidak berjalan dalam mode Development. " +
-        "Server refuses start: accepting unsigned webhooks would let anyone extend a " +
-        "subscription for free. Set MIDTRANS_SERVER_KEY, or run with " +
-        "ASPNETCORE_ENVIRONMENT=Development for local testing only.");
-    return;
-}
-if (!midtrans.Aktif)
-    Console.WriteLine("[midtrans] ServerKey belum di-set — Development: tagihan memakai link demo.");
+// Pembayaran otomatis lewat gateway sudah dihapus: tidak ada lagi kredensial
+// gateway yang harus diisi sebelum server boleh melayani. Server nyala dengan
+// konfigurasi apa pun selama kunci penandatangan token ada.
 
 // Pembatas laju memakai IP ASLI klien. Di belakang reverse proxy (Railway,
 // Render, Caddy, nginx — lihat docs/deploy-server.md), RemoteIpAddress tanpa
@@ -281,7 +202,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddRateLimiter(options =>
 {
     // Pembatas per-IP untuk endpoint sensitif: mencegah enumerasi kode aktivasi
-    // dan spam pembuatan tagihan yang menguras kuota Midtrans merchant.
+    // dan spam pembuatan tagihan yang memenuhi tabel catatan.
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
     // Pengaman cadangan untuk semua endpoint: setiap kebijakan di atas hanya
@@ -317,7 +238,7 @@ builder.Services.AddRateLimiter(options =>
             }));
     // Endpoint pusat administer. Terpisah dari "tagihan" karena operator boleh
     // memeriksa lalu menghapus beberapa kali saat menolong satu pelanggan, dan
-    // pembuatan tagihan tetap harus ketat (kuota Midtrans). 30/menit cukup
+    // pembuatan tagihan tetap harus ketat (memenuhi tabel catatan bila dibanjiri). 30/menit cukup
     // lapang untuk satu operator, tetap membatasi enumerasi massal.
     options.AddPolicy("admin", ctx =>
         RateLimitPartition.GetFixedWindowLimiter(
@@ -328,23 +249,10 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
-    // Webhook Midtrans datang dari banyak IP resmi dan TAK BOLEH terlalu ketat
-    // (notifikasi bisa datang dari IP berbeda dalam hitungan detik), tapi
-    // endpoint ini tetap perlu pembatas: tanpa ini siapa pun bisa mengirim
-    // body 30 MB terus-menerus.
-    options.AddPolicy("webhook", ctx =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            ctx.Connection.RemoteIpAddress?.ToString() ?? "tidak-diketahui",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 600,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0
-            }));
 });
 
 // Batas ukuran body default berlaku di semua endpoint. 128 KB jauh di atas
-// payload webhook Midtrans (~1-2 KB) tapi menutup jalur "kirim 30 MB" yang
+// payload notifikasi pembayaran (~1-2 KB) tapi menutup jalur "kirim 30 MB" yang
 // sebelumnya terbuka karena Kestrel default 30 MB.
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -367,7 +275,7 @@ app.UseForwardedHeaders();
 // perubahan pembayaran. Hanya health probe yang boleh diakses lewat HTTP;
 // Development tetap mendukung loopback agar pengujian lokal tidak perlu TLS.
 // X-Forwarded-Proto hanya dipercaya dari proxy yang dikonfigurasi di atas.
-app.UseTransportSecurity(dev);
+app.UseTransportSecurity(builder.Environment.IsDevelopment());
 
 // WAJIB: AddRateLimiter() hanya mendaftarkan layanan DI. Tanpa pemanggilan
 // middleware ini, seluruh kebijakan di atas adalah no-op — RejectionStatusCode
@@ -377,7 +285,7 @@ app.UseRateLimiter();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-// Sajikan halaman checkout statis (wwwroot) — sama-origin, jadi tanpa CORS.
+// Sajikan halaman statis (wwwroot: pusat administer) — sama-origin, jadi tanpa CORS.
 app.UseStaticFiles();
 
 // Batas 128 KB di bawah berlaku untuk SEMUA request, tetapi satu endpoint
@@ -386,7 +294,7 @@ app.UseStaticFiles();
 // sempat dinilai — jadi tidak ada gambar yang bisa tersimpan sama sekali.
 //
 // Pengecualiannya sengaja sempit: hanya POST ke jalur tandai-lunas, bukan
-// seluruh /admin/*. Endpoint lain (webhook, tagihan, pengumuman) tetap 128 KB.
+// seluruh /admin/*. Endpoint lain (tagihan, pengumuman) tetap 128 KB.
 // Dinaikkan lewat fitur HTTP (bukan konfigurasi Kestrel global) karena batas
 // global itulah yang menjaga jalur "kirim 30 MB" tetap tertutup.
 app.Use(async (context, next) =>
@@ -409,14 +317,6 @@ app.MapGet("/healthz", () => Results.Ok(new { status = "sehat" }))
 
 app.MapGet("/", () => Results.Ok(new { status = "SuDesApp lisensi server", waktu = DateTime.UtcNow }));
 
-// GET /checkout — halaman web untuk memilih paket & membuat tagihan pembayaran
-// (dibuka pembeli di peramban). Halaman hanya memakai endpoint publik
-// (/paket, /buat-tagihan), jadi tidak ada rahasia (ServerKey/admin) di sana.
-app.MapGet("/checkout", () =>
-{
-    var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
-    return Results.File(Path.Combine(webRoot, "checkout.html"), "text/html; charset=utf-8");
-});
 
 // GET /admin — halaman web "pusat administer" (operator). Halaman ini SENDIRI
 // statis dan tanpa rahasia: kredensial operator diketik di peramban dan dikirim
@@ -428,17 +328,6 @@ app.MapGet("/admin", () =>
     return Results.File(Path.Combine(webRoot, "admin.html"), "text/html; charset=utf-8");
 });
 
-// GET /checkout-uji — halaman web untuk UJI PEMBAYARAN (operator).
-// Sengaja DI LUAR /admin: halaman ini statis dan tanpa rahasia (kredensial
-// operator diketik di peramban lalu dikirim sebagai header tiap panggilan),
-// sedangkan pengaman operator untuk /admin/* bekerja pada PERMINTAAN dengan
-// header — yang tidak bisa dibawa navigasi halaman biasa. Halaman /admin
-// sendiri dikecualikan karena alasan yang sama.
-app.MapGet("/checkout-uji", () =>
-{
-    var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
-    return Results.File(Path.Combine(webRoot, "checkout-uji.html"), "text/html; charset=utf-8");
-});
 
 // GET /kunci-publik — kunci publik penandatangan. Client memverifikasi tanda
 // tangan token dengan kunci ini secara LOKAL, jadi verifikasi tetap mungkin
@@ -509,18 +398,15 @@ app.MapPost("/aktifkan-trial", async (AktivasiRequest req, LayananAktivasi layan
 })
 .RequireRateLimiting("aktivasi");
 
-// POST /buat-tagihan — tagihan via Midtrans Snap (QRIS/VA).
+// POST /buat-tagihan — catat tagihan untuk pembayaran manual (QRIS statis / transfer).
 // Paket dipilih pengguna ("bulanan" / "tahunan"), tetapi HARGA tetap dari
 // katalog server: klien tidak pernah menentukan nominal.
 // Aturannya (kode dikenal → paket & HARGA dari katalog server → order id →
-// tagihan dicatat → gateway) ada di LayananTagihan. Lambda ini hanya memetakan
+// tagihan dicatat) ada di LayananTagihan. Lambda ini hanya memetakan
 // hasilnya ke bentuk JSON yang sudah dipakai klien.
 app.MapPost("/buat-tagihan", async (BuatTagihanRequest req, LayananTagihan layanan, CancellationToken ct) =>
 {
     var hasil = await layanan.BuatAsync(req, ct);
-
-    if (hasil.GagalGateway)
-        return Results.Problem(title: "Midtrans gagal", detail: hasil.Pesan);
 
     if (hasil.Status != 200)
         return hasil.Status switch
@@ -531,39 +417,24 @@ app.MapPost("/buat-tagihan", async (BuatTagihanRequest req, LayananTagihan layan
 
     var paket = hasil.Paket!;
 
-    // Dua bentuk balasan dipertahankan PERSIS seperti sebelum aturannya pindah:
-    // mode demo tidak mengirim medan "token" sama sekali (bukan token null),
-    // dan mode midtrans mengirim token + tautan Snap. Klien lama membaca bentuk
-    // ini apa adanya, jadi mempersatukannya menjadi satu objek berisi
-    // "token": null adalah perubahan format yang tidak perlu.
+    // Bentuk balasan sengaja dipertahankan untuk medan yang masih ada: klien lama
+    // membaca orderId/nominal/hari/kode_aktivasi apa adanya. Yang hilang hanya
+    // medan jalan pembayaran otomatis (token, tautan bayar, penanda mode) karena
+    // gateway sudah tidak ada — pembayaran lewat QRIS statis/transfer, lalu
+    // dibukukan operator di /admin/pelanggan/{kode}/tandai-lunas.
     //
-    // kode_aktivasi: hanya jalur BERLANGGANAN AWAL (desa baru) yang
-    // menerbitkan kode — null pada perpanjangan, sehingga klien dapat
-    // menyimpan kode itu saat pertama kali dibayar.
-    return hasil.Mode == "demo"
-        ? Results.Ok(new
-        {
-            orderId = hasil.OrderId,
-            paket = paket.Kode,
-            paketNama = paket.Nama,
-            nominal = paket.Harga,
-            hari = paket.Hari,
-            kode_aktivasi = hasil.KodeAktivasi,
-            link_pembayaran = hasil.LinkPembayaran,
-            mode = "demo"
-        })
-        : Results.Ok(new
-        {
-            orderId = hasil.OrderId,
-            paket = paket.Kode,
-            paketNama = paket.Nama,
-            nominal = paket.Harga,
-            hari = paket.Hari,
-            token = hasil.Token,
-            kode_aktivasi = hasil.KodeAktivasi,
-            link_pembayaran = hasil.LinkPembayaran,
-            mode = "midtrans"
-        });
+    // kode_aktivasi: hanya jalur BERLANGGANAN AWAL (desa baru) yang menerbitkan
+    // kode — null pada perpanjangan, sehingga klien dapat menyimpan kode itu saat
+    // pertama kali dibayar.
+    return Results.Ok(new
+    {
+        orderId = hasil.OrderId,
+        paket = paket.Kode,
+        paketNama = paket.Nama,
+        nominal = paket.Harga,
+        hari = paket.Hari,
+        kode_aktivasi = hasil.KodeAktivasi
+    });
 })
 .RequireRateLimiting("tagihan");
 
@@ -603,53 +474,18 @@ app.MapGet("/pengumuman", async () =>
     }));
 });
 
-// POST /webhook-pembayaran — notifikasi Midtrans.
-//
-// Seluruh aturan ada di LayananWebhook, yang bisa diuji tanpa HTTP server dan
-// tanpa database. Endpoint ini hanya adaptasi HTTP → hasil. Mengilogika
-// pembayaran di dalam lambda di sini membuatnya mustahil diuji, padahal ini
-// justru lapisan yang memberi hak akses.
-app.MapPost("/webhook-pembayaran", async (HttpContext ctx) =>
-{
-    // Batas ukuran ditegakkan SEBELUM membaca body. Sebelumnya body dibaca
-    // penuh tanpa batas apa pun (Kestrel default 30 MB) lalu signature
-    // diverifikasi belakangan — jadi penyerang bisa mengirim 30 MB × N kali
-    // sebelum kemudian ditolak.
-    if (ctx.Request.ContentLength is > BatasUkuranWebhook)
-        return Results.Json(new { ditolak = true, pesan = "Body webhook terlalu besar." },
-            statusCode: StatusCodes.Status413PayloadTooLarge);
 
-    var body = await new StreamReader(ctx.Request.Body).ReadToEndAsync(ctx.RequestAborted);
-    if (Encoding.UTF8.GetByteCount(body) > BatasUkuranWebhook)
-        return Results.Json(new { ditolak = true, pesan = "Body webhook terlalu besar." },
-            statusCode: StatusCodes.Status413PayloadTooLarge);
-
-    var webhook = ctx.RequestServices.GetRequiredService<LayananWebhook>();
-    var hasil = await webhook.ProsesAsync(
-        body,
-        ctx.Connection.RemoteIpAddress?.ToString(),
-        ctx.Request.Headers.UserAgent.ToString());
-
-    if (hasil.Status == 200)
-    {
-        return Results.Ok(new
-        {
-            diterima = true,
-            pesan = hasil.Pesan,
-            paket = hasil.Paket,
-            hariDitambah = hasil.HariDitambah,
-            duplikat = hasil.Duplikat
-        });
-    }
-
-    return Results.Json(new { ditolak = true, pesan = hasil.Pesan },
-        statusCode: hasil.Status);
-})
-.RequireRateLimiting("webhook");
 
 // Tiap operator memakai token pribadi dan izin eksplisit; rahasia token hanya
 // disimpan dalam konfigurasi deployment, sedangkan registry hanya menyimpan hash.
 var adminOperators = new AdminOperatorRegistry(builder.Configuration);
+if (adminOperators.IzinWarisan.Count > 0)
+{
+    // Konfigurasi lama masih menyebut izin gateway. Server sengaja TETAP jalan
+    // (menolak start karena baris konfigurasi yang tidak lagi berarti akan
+    // memutus layanan desa), tetapi kondisi ini harus terlihat di log.
+    Console.WriteLine($"[admin] Izin warisan diabaikan (endpoint-nya sudah dihapus bersama gateway pembayaran): {string.Join(", ", adminOperators.IzinWarisan)}");
+}
 app.UseAdminOperatorSecurity(adminOperators);
 
 app.MapGet("/admin/sesi", (HttpContext context) =>
@@ -678,7 +514,7 @@ app.MapPost("/admin/pelanggan", async (HttpRequest req, DaftarkanPelangganReques
             p.NamaDesa,
             p.MaxPerangkat,
             belumBayar = true,
-            catatan = "Langganan aktif setelah pembayaran pertama masuk lewat webhook."
+            catatan = "Langganan aktif setelah operator membukukan pembayaran pertama (tandai lunas)."
         });
     }
     catch (ArgumentException ex)
@@ -705,8 +541,8 @@ app.MapPost("/admin/kode-aktivasi", async (BuatKodeAktivasiRequest body, Layanan
             p.NamaDesa,
             p.MaxPerangkat,
             belumBayar = true,
-            catatan = "Kode dibuat otomatis. Langganan aktif setelah pembayaran pertama masuk " +
-                      "lewat webhook, atau ditandai manual lewat Aktivasi Manual di halaman ini."
+            catatan = "Kode dibuat otomatis. Langganan aktif setelah pembayaran pertama " +
+                      "dibukukan operator lewat Tandai Lunas di halaman ini."
         });
     }
     catch (ArgumentException ex)
@@ -720,41 +556,18 @@ app.MapPost("/admin/kode-aktivasi", async (BuatKodeAktivasiRequest body, Layanan
 })
 .RequireRateLimiting("admin");
 
-// POST /admin/rekonsiliasi — jalankan satu putaran rekonsiliasi SEKARANG.
-//
-// Dipakai operator setelah kejadian yang membuat webhook tidak dipercaya
-// (URL webhook berubah, server sempat mati, Midtrans terlambat mengirim).
-// Membutuhkan izin payments.reconcile: endpoint ini membaca daftar tagihan
-// SEMUA desa, jadi tidak boleh terbuka untuk operator tanpa tugas tersebut.
-app.MapPost("/admin/rekonsiliasi", async (HttpRequest req, CancellationToken ct) =>
-{
 
-    var layanan = req.HttpContext.RequestServices.GetRequiredService<LayananRekonsiliasi>();
-    var ringkas = await layanan.JalankanAsync(ct);
-
-    return Results.Ok(new
-    {
-        diperiksa = ringkas.Diperiksa,
-        diselesaikan = ringkas.Diselesaikan,
-        sudahDiselesaikan = ringkas.SudahDiselesaikan,
-        belumBayar = ringkas.BelumBayar,
-        perluDiperiksa = ringkas.PerluDiperiksa,
-        tidakPasti = ringkas.TidakPasti,
-        catatan = ringkas.Catatan
-    });
-})
-.RequireRateLimiting("tagihan");
 
 // POST /admin/pelanggan/{kode}/tandai-lunas — pembukuan pembayaran MANUAL.
 //
 // Dipakai untuk QRIS statis yang ditampilkan di layar pembayaran aplikasi desa
-// (juga transfer bank): uangnya masuk ke rekening operator, bukan lewat gateway,
-// jadi tidak ada signature maupun status Midtrans yang bisa diperiksa. Karena
-// itu ia HANYA boleh dipanggil endpoint bertoken admin — ia memberi hak akses.
+// (juga transfer bank): uangnya masuk ke rekening operator, tidak lewat sistem
+// pembayaran apa pun, jadi tidak ada status otomatis yang bisa diperiksa —
+// operator yang memastikan uangnya datang. Karena itu ia HANYA boleh dipanggil
+// endpoint bertoken admin: ia memberi hak akses, dan setelah gateway pembayaran
+// dihapus inilah SATU-SATUNYA jalan memperpanjang langganan.
 // Aturannya (paket → hari, nominal yang dicatat, idempotensi, perpanjangan dari
-// sisa masa aktif) ada di LayananPembayaranManual, memakai PerpanjangAsync yang
-// sama dengan webhook sehingga tidak ada salinan aturan kedua yang bisa
-// menyimpang.
+// sisa masa aktif) ada di LayananPembayaranManual dan hanya ada satu salinan.
 app.MapPost("/admin/pelanggan/{kode}/tandai-lunas",
     async (string kode, HttpRequest req, TandaiLunasRequest body, LayananPembayaranManual manual) =>
 {
@@ -958,7 +771,7 @@ app.MapGet("/admin/pelanggan/{kode}/pembayaran", async (string kode, HttpRequest
             status = p.Status,
             dicatat = p.Dicatat.ToString("O"),
             paket = p.Paket,
-            // Referensi bukti bayar dari pembukuan manual; null untuk gateway.
+            // Referensi bukti bayar dari pembukuan manual; null bila tanpa catatan.
             catatan = p.Catatan,
             // Lampiran bukti transfer: hanya keterangan jenis & ukurannya di
             // daftar ini. Gambarnya diambil satu per satu lewat endpoint
@@ -1206,163 +1019,6 @@ app.MapPost("/admin/pelanggan/{kode}/batas",
         return Results.NotFound(new { pesan = $"Kode aktivasi '{kode}' tidak dikenal." });
 
     return Results.Ok(new { kode, maxPerangkat = body.Batas });
-})
-.RequireRateLimiting("admin");
-
-// =====================================================================
-// UJI PEMBAYARAN — transaksi Snap sungguhan + bukti notifikasi nyata
-// =====================================================================
-//
-// Alur lengkapnya ada di halaman /checkout-uji: buat transaksi Snap NYATA
-// (production kalau servernya production), bayar di halaman Midtrans, lalu
-// lihat notifikasi aslinya sampai server membalas dan akses desanya bertambah.
-//
-// Endpoint di bawah hanya adaptasi HTTP → hasil. Aturannya (harga dari
-// katalog server, tagihan dicatat sebelum gateway dipanggil, perpanjangan
-// idempoten lewat PerpanjangAsync yang sama dengan webhook) ada di
-// LayananUjiPembayaran, yang memakai layanan yang SAMA dengan jalur
-// pembayaran pelanggan — jadi tidak ada salinan aturan uang di jalur uji.
-//
-// Semuanya di bawah /admin/*, jadi hanya terbuka untuk operator dengan izin
-// payments.test: endpoint POST ini MEMBUAT transaksi sungguhan di akun
-// merchant, dan membukanya untuk semua operator akan consumes kuota API.
-
-// GET /admin/uji-pembayaran — keadaan jalur uji (lingkungan gateway, apakah
-// notifikasi bisa diarahkan ke server ini) supaya halaman uji bisa
-// menampilkan peringatan yang tepat sebelum operator menekan tombol.
-app.MapGet("/admin/uji-pembayaran", async (HttpRequest req) =>
-{
-    var layanan = req.HttpContext.RequestServices.GetRequiredService<LayananUjiPembayaran>();
-    var midtrans = req.HttpContext.RequestServices.GetRequiredService<MidtransService>();
-
-    return Results.Ok(new
-    {
-        lingkungan = layanan.Lingkungan,
-        urlNotifikasi = layanan.UrlNotifikasi ?? "(URL dashboard akun Midtrans)",
-        notifikasiDialihkan = layanan.UrlNotifikasi is not null,
-        gatewayAktif = midtrans.Aktif
-    });
-})
-.RequireRateLimiting("admin");
-
-// POST /admin/uji-pembayaran — buat transaksi uji untuk satu desa uji.
-app.MapPost("/admin/uji-pembayaran",
-    async (HttpRequest req, PermintaanTagihanUji body, LayananUjiPembayaran layanan) =>
-{
-    var hasil = await layanan.BuatTagihanAsync(body, req.HttpContext.RequestAborted);
-    if (hasil.Status != 200)
-        return Results.Json(new { pesan = hasil.Pesan }, statusCode: hasil.Status);
-
-    return Results.Ok(new
-    {
-        orderId = hasil.OrderId,
-        kodeAktivasi = hasil.KodeAktivasi,
-        namaDesa = hasil.NamaDesa,
-        paket = hasil.PaketKode,
-        paketNama = hasil.PaketNama,
-        nominal = hasil.Nominal,
-        hari = hasil.Hari,
-        token = hasil.Token,
-        linkPembayaran = hasil.LinkPembayaran,
-        lingkungan = hasil.Lingkungan,
-        urlNotifikasi = hasil.UrlNotifikasi,
-        notifikasiDialihkan = hasil.NotifikasiDialihkan,
-        desaBaru = hasil.DesaBaru,
-        pesan = hasil.Pesan
-    });
-})
-.RequireRateLimiting("tagihan");
-
-// GET /admin/uji-pembayaran/{orderId} — keadaan satu transaksi uji: apa yang
-// said gateway, notifikasi apa saja yang masuk, dan akibatnya pada langganan
-// desanya.
-app.MapGet("/admin/uji-pembayaran/{orderId}", async (string orderId, HttpRequest req) =>
-{
-    var layanan = req.HttpContext.RequestServices.GetRequiredService<LayananUjiPembayaran>();
-    var status = await layanan.AmbilStatusAsync(orderId, req.HttpContext.RequestAborted);
-    if (status is null)
-        return Results.NotFound(new { pesan = $"Order '{orderId}' tidak dikenal server." });
-
-    return Results.Ok(new
-    {
-        orderId = status.OrderId,
-        kodeAktivasi = status.KodeAktivasi,
-        namaDesa = status.NamaDesa,
-        paket = status.PaketKode,
-        paketNama = status.PaketNama,
-        nominal = status.Nominal,
-        hari = status.Hari,
-        berlakuSampai = status.BerlakuSampai?.ToString("O"),
-        lingkungan = status.Lingkungan,
-        urlNotifikasi = status.UrlNotifikasi,
-        gateway = new
-        {
-            ditemukan = status.GatewayDitemukan,
-            transactionStatus = status.TransactionStatus,
-            grossAmount = status.GrossGateway,
-            fraudStatus = status.FraudGateway,
-            catatan = status.CatatanGateway
-        },
-        webhookMasuk = status.WebhookMasuk,
-        webhookDiterima = status.WebhookDiterima,
-        notifikasi = status.Notifikasi.Select(n => new
-        {
-            waktu = n.Waktu.ToString("O"),
-            orderId = n.OrderId,
-            transactionStatus = n.TransactionStatus,
-            grossAmount = n.GrossAmount,
-            fraudStatus = n.FraudStatus,
-            paymentType = n.PaymentType,
-            signatureValid = n.SignatureValid,
-            statusBalasan = n.StatusBalasan,
-            diterima = n.Diterima,
-            duplikat = n.Duplikat,
-            hariDitambah = n.HariDitambah,
-            pesan = n.Pesan,
-            alamatIp = n.AlamatIp,
-            userAgent = n.UserAgent
-        }),
-        pembayaran = status.Pembayaran.Select(p => new
-        {
-            orderId = p.OrderId,
-            nominal = p.Nominal,
-            status = p.Status,
-            dicatat = p.Dicatat.ToString("O"),
-            paket = p.Paket
-        })
-    });
-})
-.RequireRateLimiting("admin");
-
-// GET /admin/uji-pembayaran/notifikasi — notifikasi webhook terakhir yang
-// masuk (memori server), untuk semua order. Dipakai halaman uji saat
-// operator sedang menunggu notifikasi tanpa order id di tangan.
-app.MapGet("/admin/uji-pembayaran/notifikasi", async (HttpRequest req) =>
-{
-    var pelacak = req.HttpContext.RequestServices.GetRequiredService<PelacakWebhook>();
-    var semua = pelacak.Semua();
-
-    return Results.Ok(new
-    {
-        jumlah = semua.Count,
-        notifikasi = semua.Select(n => new
-        {
-            waktu = n.Waktu.ToString("O"),
-            orderId = n.OrderId,
-            transactionStatus = n.TransactionStatus,
-            grossAmount = n.GrossAmount,
-            fraudStatus = n.FraudStatus,
-            paymentType = n.PaymentType,
-            signatureValid = n.SignatureValid,
-            statusBalasan = n.StatusBalasan,
-            diterima = n.Diterima,
-            duplikat = n.Duplikat,
-            hariDitambah = n.HariDitambah,
-            pesan = n.Pesan,
-            alamatIp = n.AlamatIp,
-            userAgent = n.UserAgent
-        })
-    });
 })
 .RequireRateLimiting("admin");
 

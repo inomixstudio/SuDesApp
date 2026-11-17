@@ -67,8 +67,8 @@ public static class CsvLaporan
     /// Riwayat pembayaran sebagai teks CSV (dengan baris header). Kolom
     /// <c>bukti</c> ada di PALING AKHIR dan harus sama urutannya dengan
     /// <c>csvPembayaran</c> di <c>admin.html</c>: laporan dari CLI dan dari
-    /// peramban tidak boleh berbeda bentuk. <c>catatan</c> kosong pada pembayaran
-    /// gateway (yang buktinya notifikasi Midtrans), terisi pada pembukuan manual;
+    /// peramban tidak boleh berbeda bentuk. <c>catatan</c> terisi pada pembayaran
+    /// yang dibukukan operator (referensi bukti transfer/QRIS);
     /// <c>bukti</c> hanya terisi bila operator melampirkan gambar bukti transfer —
     /// gambarnya sendiri tidak ikut ke CSV, hanya keterangan jenis &amp; ukurannya
     /// (mis. "JPEG · 240 KB") supaya terlihat baris mana yang punya lampiran.

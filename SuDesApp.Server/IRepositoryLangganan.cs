@@ -15,7 +15,7 @@ public interface IPengumumanStore
 
 /// <summary>
 /// Penyimpanan data langganan. Dipisah dari <see cref="SupabaseStore"/> supaya
-/// logika yang uang (webhook pembayaran) bisa diuji tanpa
+/// logika yang memberi uang (pembukuan pembayaran) bisa diuji tanpa
 /// database sungguhan — bagian paling rawan kerusakannya justru bagian yang
 /// tak boleh bergantung pada koneksi.
 /// </summary>
@@ -99,22 +99,22 @@ public interface IRepositoryLangganan
     /// <param name="catatan">
     /// Referensi bukti bayar, hanya diisi jalur pembukuan operator
     /// (<see cref="LayananPembayaranManual"/>): mis. "QRIS 17/10 21:04".
-    /// Webhook &amp; rekonsiliasi membiarkannya null karena buktinya adalah
-    /// notifikasi/status gateway itu sendiri. Ikut tersimpan di kolom
+    /// Jalur lain membiarkannya null karena uangnya sudah dipastikan operator
+    /// sendiri. Ikut tersimpan di kolom
     /// <c>pembayaran.catatan</c> sehingga tampil di riwayat &amp; ekspor CSV.
     /// </param>
     /// <param name="bukti">
     /// Lampiran gambar bukti transfer, hanya dari pembukuan operator. Disimpan
     /// di kolom <c>pembayaran.bukti_*</c> dan disajikan kembali lewat
-    /// <see cref="AmbilBuktiAsync"/>; webhook &amp; rekonsiliasi membiarkannya
-    /// null karena buktinya adalah notifikasi gateway.
+    /// <see cref="AmbilBuktiAsync"/>; jalur lain membiarkannya null karena
+    /// pembayaran itu memang tanpa lampiran.
     /// </param>
     Task<HasilPerpanjang> PerpanjangAsync(
         string orderId, int hari, string status, string? catatan = null, BuktiBayar? bukti = null);
 
     /// <summary>
     /// Lampiran bukti transfer satu pembayaran; <c>null</c> bila desa/ordernya
-    /// tidak ada atau pembayaran itu memang tanpa lampiran (jalur gateway).
+    /// tidak ada atau pembayaran itu memang tanpa lampiran.
     /// Desa ditentukan lebih dulu dari kode aktivasi, lalu isinya dibatasi ke
     /// pelanggan itu — gambar bukti tidak bisa dibaca lintas desa.
     /// </summary>
@@ -132,36 +132,8 @@ public interface IRepositoryLangganan
     /// </summary>
     Task<HasilTrial> MulaiTrialAsync(string pelangganId, int hari, DateTime sekarang);
 
-    /// <summary>
-    /// Tagihan yang sudah terbit tetapi belum punya baris <c>pembayaran</c> —
-    /// bahan bakar rekonsiliasi: inilah order yang statusnya perlu ditanyakan
-    /// langsung ke gateway ketika webhook tidak pernah masuk.
-    /// </summary>
-    /// <param name="batas">Jumlah maksimum yang dikembalikan (0 = tidak ada).</param>
-    /// <param name="lebihTuaDari">
-    /// Cutoff (UTC): hanya tagihan yang dibuat SEBELUM waktu ini ikut diperiksa.
-    /// Dipakai agar tagihan yang baru saja dibuat tidak langsung ditanyakan ke
-    /// gateway (pembeli masih di halaman pembayaran). Null = tanpa batas umur.
-    /// </param>
-    /// <param name="lebihBaruDari">
-    /// Batas bawah (UTC): tagihan yang LEBIH TUA dari ini diabaikan karena sudah
-    /// mati (transaksi Midtrans kedaluwarsa jauh lebih cepat). Ini bukan sekadar
-    /// kerapian: daftar diambil urut waktu terbit lalu dipotong <paramref name="batas"/>,
-    /// jadi tagihan mati yang tak pernah dibayar akan MENGHABISKAN kuota batch
-    /// selamanya dan membuat tagihan baru tidak pernah ikut diperiksa.
-    /// </param>
-    Task<IReadOnlyList<TagihanBelumDibayar>> DaftarTagihanBelumDibayarAsync(
-        int batas, DateTime? lebihTuaDari = null, DateTime? lebihBaruDari = null,
-        CancellationToken ct = default);
 }
 
-/// <summary>
-/// Satu tagihan yang belum tercatat lunas. Hanya kolom yang dibutuhkan
-/// rekonsiliasi — bukan data desa — supaya pembacaan lintas-tenant ini tetap
-/// sesempit mungkin.
-/// </summary>
-public sealed record TagihanBelumDibayar(
-    string OrderId, string PelangganId, string Paket, long Nominal, int Hari, DateTime Dibuat);
 
 /// <summary>
 /// Hasil permintaan aktivasi trial. <see cref="Pesan"/> keterangan saat ditolak;
@@ -427,32 +399,6 @@ public sealed class LanggananMemori : IRepositoryLangganan
         return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Meniru semantik penting SupabaseStore: yang dikembalikan hanya tagihan
-    /// yang BELUM punya baris pembayaran, paling tua lebih dulu, dipotong
-    /// <paramref name="batas"/>.
-    /// </summary>
-    public Task<IReadOnlyList<TagihanBelumDibayar>> DaftarTagihanBelumDibayarAsync(
-        int batas, DateTime? lebihTuaDari = null, DateTime? lebihBaruDari = null, CancellationToken ct = default)
-    {
-        var hasil = new List<TagihanBelumDibayar>();
-        if (batas <= 0) return Task.FromResult<IReadOnlyList<TagihanBelumDibayar>>(hasil);
-
-        foreach (var order in _urutanTagihan)
-        {
-            if (_dibayar.Contains(order)) continue;
-            if (!_tagihan.TryGetValue(order, out var t)) continue;
-
-            var dibuat = _dibuat.TryGetValue(order, out var d) ? d : DateTime.UtcNow;
-            if (lebihTuaDari is not null && dibuat > lebihTuaDari.Value) continue;
-            if (lebihBaruDari is not null && dibuat < lebihBaruDari.Value) continue;
-
-            hasil.Add(new TagihanBelumDibayar(order, t.PelangganId, t.Paket, t.Nominal, t.Hari, dibuat));
-            if (hasil.Count >= batas) break;
-        }
-
-        return Task.FromResult<IReadOnlyList<TagihanBelumDibayar>>(hasil);
-    }
 
     public Task<(string PelangganId, string Paket, long Nominal, int Hari)?> CariTagihanAsync(string orderId)
     {

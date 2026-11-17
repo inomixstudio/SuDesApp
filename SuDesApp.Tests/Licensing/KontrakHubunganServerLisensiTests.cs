@@ -189,10 +189,10 @@ public sealed class KontrakHubunganServerLisensiTests
         var rangkum = ServerLisensiLokal.RangkumBarisTerakhir(new[]
         {
             "info: mulai",
-            "ServerKey Midtrans belum diatur dan aplikasi tidak berjalan dalam mode Development.",
+            "Kunci penandatangan lisensi tidak ditemukan — server menolak melayani.",
             "   "
         });
-        Assert.StartsWith("ServerKey Midtrans belum diatur", rangkum, StringComparison.Ordinal);
+        Assert.StartsWith("Kunci penandatangan lisensi tidak ditemukan", rangkum, StringComparison.Ordinal);
         Assert.Contains("info: mulai", rangkum, StringComparison.Ordinal);
         Assert.DoesNotContain("  ", rangkum, StringComparison.Ordinal);
     }
@@ -211,7 +211,7 @@ public sealed class KontrakHubunganServerLisensiTests
     {
         // Tanpa alasan dari keluaran server, pesan "berhenti sendiri (kode 0)"
         // membuat operator mengira bug koneksi, padahal server menolak start
-        // dengan pesan yang jelas (mis. ServerKey Midtrans belum diisi).
+        // dengan pesan yang jelas (mis. kunci penandatangan tidak ditemukan).
         var tubuh = TubuhMetode("SuDesApp.Core/Services", "ServerLisensiLokal.cs", "private async Task<bool> TungguSiapAsync");
         Assert.Contains("BarisTerakhirServer()", tubuh, StringComparison.Ordinal);
         Assert.Contains("Alasan dari server", tubuh, StringComparison.Ordinal);

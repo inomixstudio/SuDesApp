@@ -29,8 +29,8 @@ public class Pelanggan
 }
 
 /// <summary>
-/// Status langganan aktif. Diperbarui HANYA dari webhook pembayaran yang
-/// tanda tangannya sudah diverifikasi — bukan dari permintaan klien mana pun.
+/// Status langganan aktif. Diperbarui HANYA lewat pembukuan operator di
+/// <c>/admin/pelanggan/{kode}/tandai-lunas</c> — bukan dari permintaan klien mana pun.
 /// </summary>
 public class Langganan
 {
@@ -69,8 +69,8 @@ public sealed record InfoPerangkat(string IdPerangkat, DateTime TerakhirLihat);
 /// pusat administer. <c>Paket</c> diambil dari tagihan terkait; <c>null</c> bila
 /// tagihannya sudah tidak ada (mis. dibersihkan) sehingga paketnya tak diketahui.
 /// <c>Catatan</c> adalah referensi bukti bayar yang diketik operator pada
-/// pembukuan manual ("QRIS 17/10 21:04"); <c>null</c> untuk pembayaran gateway,
-/// yang buktinya adalah notifikasi/status Midtrans itu sendiri.
+/// pembukuan manual ("QRIS 17/10 21:04"); <c>null</c> bila pembayaran dicatat
+/// tanpa referensi bukti.
 ///
 /// <c>AdaBukti</c>/<c>TipeBukti</c>/<c>UkuranBukti</c> adalah LAMPIRAN gambar
 /// bukti transfer yang diunggah operator (lihat <see cref="BuktiTransfer"/>).

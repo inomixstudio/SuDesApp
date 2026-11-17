@@ -24,7 +24,6 @@
 #    ./Tools/Admin-Lisensi.ps1 -Aksi hapus-paksa -Kode SUDES-0001 -Konfirmasi SUDES-0001
 #    ./Tools/Admin-Lisensi.ps1 -Aksi ekspor-desa
 #    ./Tools/Admin-Lisensi.ps1 -Aksi ekspor-bayar -Kode SUDES-0001
-#    ./Tools/Admin-Lisensi.ps1 -Aksi rekonsiliasi
 # ============================================================================
 
 [CmdletBinding()]
@@ -33,8 +32,7 @@ param(
     [string]$OperatorId = $env:SUDES_ADMIN_OPERATOR_ID,
     [string]$Token = $env:SUDES_ADMIN_OPERATOR_TOKEN,
     [ValidateSet('pelanggan', 'perangkat', 'hapus', 'reset', 'batas', 'pembayaran',
-        'daftar', 'ubah', 'hapus-desa', 'hapus-paksa', 'ekspor-desa', 'ekspor-bayar',
-        'rekonsiliasi')]
+        'daftar', 'ubah', 'hapus-desa', 'hapus-paksa', 'ekspor-desa', 'ekspor-bayar')]
     [string]$Aksi = 'pelanggan',
     [string]$Kode,
     [string]$Perangkat,
@@ -232,12 +230,6 @@ switch ($Aksi) {
             exit 1
         }
         Unduh-Csv "/admin/ekspor/pembayaran/$kodeAman.csv" ("pembayaran-{0}.csv" -f $Kode)
-    }
-    'rekonsiliasi' {
-        $hasil = Panggil 'POST' '/admin/rekonsiliasi'
-        Write-Host ("Rekonsiliasi: diperiksa {0}, diselesaikan {1}, sudah {2}, belum bayar {3}, perlu diperiksa {4}, tidak pasti {5}" -f `
-            $hasil.diperiksa, $hasil.diselesaikan, $hasil.sudahDiselesaikan, `
-            $hasil.belumBayar, $hasil.perluDiperiksa, $hasil.tidakPasti) -ForegroundColor Green
     }
 }
 

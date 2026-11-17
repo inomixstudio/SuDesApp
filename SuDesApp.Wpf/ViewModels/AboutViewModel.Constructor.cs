@@ -67,8 +67,8 @@ namespace SuDesApp.Wpf.ViewModels
                 "SuDesApp berlangganan bulanan atau tahunan; langganan mengatur masa aktif " +
                 "aplikasi semata. Seluruh data surat, warga, dan formulir tersimpan di " +
                 "komputer desa masing-masing dan tidak dikirim ke server mana pun. Pembayaran " +
-                "QRIS/VA memakai Midtrans Snap dan dapat pula dilakukan lewat halaman web " +
-                "dari perangkat lain. Status langganan diverifikasi dari token bertanda " +
+                "dilakukan lewat QRIS statis atau transfer bank ke rekening pengelola, lalu " +
+                "dibukukan administrator di Pusat Administrasi. Status langganan diverifikasi dari token bertanda " +
                 "tangan ECDSA P-256 sehingga dapat diperiksa sepenuhnya saat koneksi " +
                 "terputus. Akun pusat dapat membuka Pusat Administrasi dari halaman " +
                 "Langganan untuk mengelola masa aktif desa; pada mode lokal, server lisensi " +
@@ -112,7 +112,7 @@ namespace SuDesApp.Wpf.ViewModels
                 ("Perangkat desa & verifikasi", "Verifikasi surat: keaslian surat terbit dapat diperiksa dari kode verifikasinya"),
                 ("Perangkat desa & verifikasi", "Lampiran tabel daftar nama pada SK perangkat desa: satu SK untuk banyak orang sekaligus, kolom data pribadi diambil dari data Warga lewat NIK dan dikelompokkan per unit (mis. Posyandu)"),
                 ("Perangkat desa & verifikasi", "Data perangkat desa per kelompok jabatan lengkap dengan SK bawaan per kelompok"),
-                ("Langganan", "Langganan bulanan Rp150.000, 6 bulan Rp750.000, atau tahunan Rp1.200.000, dengan trial 30 hari; dikelola dari menu Langganan dan pembayaran QRIS/VA"),
+                ("Langganan", "Langganan bulanan Rp150.000, 6 bulan Rp750.000, atau tahunan Rp1.200.000, dengan trial 30 hari; dikelola dari menu Langganan, pembayaran lewat QRIS statis atau transfer yang dibukukan administrator"),
                 ("Langganan", "Status langganan tetap dapat diperiksa saat koneksi terputus: token bertanda tangan ECDSA P-256 diverifikasi secara lokal, dengan masa tenggang 7 hari setelah jatuh tempo"),
                 ("Langganan", "Pusat Administrasi untuk akun pusat: masa aktif, tagihan, pengumuman, dan audit desa dikelola lewat halaman server lisensi yang dibuka dari menu Langganan. Pada mode lokal, server lisensi menyala bersama aplikasi dan berhenti saat aplikasi ditutup"),
                 ("Langganan", "Bila langganan berakhir, aplikasi menjadi baca-saja: data masih dapat dibaca, dicari, diekspor, dan dicadangkan, sementara pembuatan dan pencetakan surat baru ditolak sampai langganan diperpanjang"),

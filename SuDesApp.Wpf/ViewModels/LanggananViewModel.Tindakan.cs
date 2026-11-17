@@ -495,23 +495,12 @@ namespace SuDesApp.Wpf.ViewModels
                 // Tampilkan angka dari server: yang dicetak di sini adalah yang
                 // benar-benar akan ditagihkan, bukan perkiraan lokal.
                 var ringkas = tagihan.RingkasanTampil;
-                if (!string.IsNullOrWhiteSpace(tagihan.LinkPembayaran) &&
-                    Uri.TryCreate(tagihan.LinkPembayaran, UriKind.Absolute, out var uri))
-                {
-                    bool terbuka = CobaBukaPeramban(uri);
-                    Beritahu(2, terbuka
-                        ? $"Tagihan {ringkas} ({tagihan.OrderId}) dibuat — selesaikan pembayaran QRIS/VA di peramban, lalu tekan Cek Status."
-                        : $"Tagihan {ringkas} ({tagihan.OrderId}) SUDAH dibuat di server, tetapi peramban tidak bisa dibuka otomatis. " +
-                          $"Buka link ini di peramban lalu tekan Cek Status: {uri}");
-                    StatusMessage = terbuka
-                        ? "Tagihan dibuat — lanjutkan pembayaran di peramban."
-                        : "Tagihan dibuat; peramban tidak bisa dibuka otomatis.";
-                }
-                else
-                {
-                    Beritahu(2, $"Tagihan {ringkas} ({tagihan.OrderId}) dibuat. Link pembayaran belum tersedia — hubungi admin.");
-                    StatusMessage = "Tagihan dibuat tanpa link pembayaran.";
-                }
+                Beritahu(2,
+                    $"Tagihan {ringkas} ({tagihan.OrderId}) tercatat. Bayar lewat QRIS statis atau transfer " +
+                    "ke rekening pengelola sesuai arahan administrator, lalu tekan Cek Status setelah " +
+                    "pembayaran dibukukan — langganan aktif saat administrator menandai lunas, bukan saat " +
+                    "tagihan dibuat.");
+                StatusMessage = "Tagihan tercatat — menunggu pembayaran dan pembukuan administrator.";
             }
             catch (Exception ex)
             {
@@ -542,30 +531,6 @@ namespace SuDesApp.Wpf.ViewModels
             {
                 _logger.LogWarning(ex, "Profil desa tidak bisa dibaca untuk berlangganan awal");
                 return string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// Buka link pembayaran di peramban bawaan. Dipisah supaya kegagalannya
-        /// tidak pernah terbaca sebagai "gagal membuat tagihan": saat ini terjadi
-        /// tagihannya SUDAH tercatat di server, dan pesan yang salah membuat desa
-        /// membuat tagihan kedua — lalu mungkin membayar dua kali.
-        /// </summary>
-        private bool CobaBukaPeramban(Uri alamat)
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = alamat.ToString(),
-                    UseShellExecute = true
-                });
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Gagal membuka peramban untuk link pembayaran {Alamat}", alamat);
-                return false;
             }
         }
 

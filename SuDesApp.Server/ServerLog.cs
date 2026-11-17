@@ -56,10 +56,6 @@ internal static string Samarkan(string? nilai) =>
 
     [LoggerMessage(15, LogLevel.Warning, "Admin menandai LUNAS desa '{Kode}' ({Nama}): paket {Paket} Rp{Uang}, {Hari} hari, order {Order}{Catatan}{Lampiran}.")]
     internal static partial void PembayaranManualLunas(ILogger logger, string kode, string nama, string paket, long uang, int hari, string order, string catatan, string lampiran);
-
-    [LoggerMessage(16, LogLevel.Error, "Gateway gagal membuat tagihan {Order} ({Paket} Rp{Harga}) — tagihan tetap tercatat dan rekonsiliasi akan menyusul bila pembayarannya ternyata masuk.")]
-    internal static partial void TagihanGatewayGagal(ILogger logger, string order, string paket, long harga);
-
     [LoggerMessage(42, LogLevel.Warning, "Berlangganan awal: desa '{Kode}' ({Nama}) didaftarkan dari jalur buat-tagihan — kode aktif setelah pembayaran lunas.")]
     internal static partial void TagihanBerlanggananAwal(ILogger logger, string kode, string nama);
 
@@ -84,39 +80,14 @@ internal static string Samarkan(string? nilai) =>
     [LoggerMessage(22, LogLevel.Warning, "Pelanggan {Id} menolak perangkat baru ({Jumlah} tercatat, batas {Batas}) — tidak dicatat.")]
     internal static partial void PerangkatBaruDitolak(ILogger logger, string id, int jumlah, int batas);
 
-    [LoggerMessage(23, LogLevel.Information, "Webhook duplikat untuk order {Order} diabaikan (sudah pernah diproses).")]
-    internal static partial void WebhookDuplikat(ILogger logger, string order);
+    [LoggerMessage(23, LogLevel.Information, "Pembayaran duplikat untuk order {Order} diabaikan (sudah pernah diproses).")]
+    internal static partial void PembayaranDuplikat(ILogger logger, string order);
 
     [LoggerMessage(24, LogLevel.Information, "Langganan {Id} diperpanjang {Hari} hari lewat order {Order}.")]
     internal static partial void LanggananDiperpanjang(ILogger logger, string id, int hari, string order);
 
     [LoggerMessage(25, LogLevel.Information, "Tabel pengumuman belum ada di Supabase (schema.sql belum dijalankan ulang); klien akan menerima daftar kosong.")]
     internal static partial void TabelPengumumanBelumAda(ILogger logger);
-
-    [LoggerMessage(26, LogLevel.Warning, "Midtrans:EnabledPayments bukan array JSON valid: {V}")]
-    internal static partial void MidtransEnabledPaymentsInvalid(ILogger logger, Exception exception, string v);
-
-    [LoggerMessage(27, LogLevel.Error, "Midtrans Snap gagal (HTTP {S}): {B}")]
-    internal static partial void MidtransSnapGagal(ILogger logger, int s, string b);
-
-    [LoggerMessage(28, LogLevel.Warning, "Status Midtrans untuk {Order} gagal (HTTP {S}): {B}")]
-    internal static partial void MidtransStatusGagal(ILogger logger, string order, int s, string b);
-
-    [LoggerMessage(29, LogLevel.Warning, "Gagal menanyakan status Midtrans untuk {Order}.")]
-    internal static partial void MidtransQueryGagal(ILogger logger, Exception exception, string order);
-
-    [LoggerMessage(30, LogLevel.Warning, "Webhook ditolak: signature tidak valid untuk order {Order}.")]
-    internal static partial void WebhookSignatureDitolak(ILogger logger, string order);
-
-    [LoggerMessage(31, LogLevel.Warning, "[{Asal}] Order tak dikenal: {Order}")]
-    internal static partial void WebhookOrderTakDikenal(ILogger logger, string asal, string order);
-
-    [LoggerMessage(32, LogLevel.Warning, "[{Asal}] Nominal {Diterima} tidak cocok dengan tagihan {Diharapkan} (order {Order}).")]
-    internal static partial void WebhookNominalTidakCocok(ILogger logger, string asal, string diterima, long diharapkan, string order);
-
-    [LoggerMessage(33, LogLevel.Warning, "[{Asal}] Order {Order} status '{Status}' tetapi fraud_status '{Fraud}' — tidak memperpanjang.")]
-    internal static partial void WebhookFraudBelumAman(ILogger logger, string asal, string order, string status, string fraud);
-
     [LoggerMessage(34, LogLevel.Information, "Kunci penandatangan lisensi dimuat dari {Path}")]
     internal static partial void KunciLisensiDimuat(ILogger logger, string path);
 
@@ -125,49 +96,8 @@ internal static string Samarkan(string? nilai) =>
 
     [LoggerMessage(36, LogLevel.Warning, "Verifikasi token lisensi gagal (token rusak atau format salah)")]
     internal static partial void VerifikasiTokenGagal(ILogger logger, Exception exception);
-
-    [LoggerMessage(37, LogLevel.Information, "Rekonsiliasi latar dimatikan (interval 0 menit).")]
-    internal static partial void RekonsiliasiLatarMati(ILogger logger);
-
-    [LoggerMessage(38, LogLevel.Information, "Rekonsiliasi latar aktif: tiap {Interval:N0} menit, umur tagihan {UmurMin:N0} menit sampai {UmurMaks:N0} hari, maksimum {Batas} per putaran.")]
-    internal static partial void RekonsiliasiLatarAktif(ILogger logger, double interval, double umurMin, double umurMaks, int batas);
-
-    [LoggerMessage(39, LogLevel.Error, "Putaran rekonsiliasi gagal; putaran berikutnya tetap dijadwalkan.")]
-    internal static partial void RekonsiliasiPutaranGagal(ILogger logger, Exception exception);
-
-    [LoggerMessage(40, LogLevel.Information, "Rekonsiliasi dilewati: ServerKey Midtrans belum diisi, status pembayaran tidak bisa ditanyakan.")]
-    internal static partial void RekonsiliasiTanpaServerKey(ILogger logger);
-
-    [LoggerMessage(41, LogLevel.Error, "Rekonsiliasi tidak bisa mengambil daftar tagihan.")]
-    internal static partial void RekonsiliasiDaftarGagal(ILogger logger, Exception exception);
-
-    [LoggerMessage(42, LogLevel.Debug, "Rekonsiliasi: tidak ada tagihan menunggu pembayaran.")]
-    internal static partial void RekonsiliasiTanpaTagihan(ILogger logger);
-
-    [LoggerMessage(43, LogLevel.Information, "Rekonsiliasi: status order {Order} belum bisa dipastikan ({Pesan}).")]
-    internal static partial void RekonsiliasiStatusBelumPasti(ILogger logger, string order, string? pesan);
-
-    [LoggerMessage(44, LogLevel.Error, "Rekonsiliasi order {Order} gagal diproses.")]
-    internal static partial void RekonsiliasiOrderGagal(ILogger logger, Exception exception, string order);
-
-    [LoggerMessage(45, LogLevel.Information, "Rekonsiliasi selesai: {Diperiksa} diperiksa, {Diselesaikan} diselesaikan, {Sudah} sudah pernah diproses, {Belum} belum bayar, {Perlu} perlu diperiksa, {TidakPasti} tidak pasti.")]
-    internal static partial void RekonsiliasiSelesai(ILogger logger, int diperiksa, int diselesaikan, int sudah, int belum, int perlu, int tidakPasti);
-
     [LoggerMessage(46, LogLevel.Error, "Gagal menyiapkan skema/isolasi RLS.")]
     internal static partial void PersiapanSkemaGagal(ILogger logger, Exception exception);
-
-    [LoggerMessage(47, LogLevel.Warning, "Uji pembayaran: MIDTRANS_NOTIFICATION_URL belum diisi — notifikasi transaksi uji {Order} mengikuti 'Payment Notification URL' di dashboard akun Midtrans, bukan server ini.")]
-    internal static partial void UjiTanpaUrlNotifikasi(ILogger logger, string order);
-
-    [LoggerMessage(48, LogLevel.Information, "Uji pembayaran: transaksi {Order} dibuat untuk desa '{Kode}' (Rp{Nominal}, {Lingkungan}) — notifikasi ke {Url}.")]
-    internal static partial void UjiTagihanDibuat(ILogger logger, string order, string kode, long nominal, string lingkungan, string? url);
-
-    [LoggerMessage(49, LogLevel.Warning, "Uji pembayaran: URL notifikasi '{Url}' tidak bisa dipakai untuk order {Order} — header X-Override-Notification tidak dikirim, notifikasi mengikuti dashboard akun.")]
-    internal static partial void MidtransNotifikasiUjiTidakValid(ILogger logger, string order, string url);
-
-    [LoggerMessage(50, LogLevel.Information, "Notifikasi pembayaran masuk: order {Order}, status {StatusTransaksi}, signature {Signature}, HTTP {StatusBalasan} — {Pesan}")]
-    internal static partial void WebhookMasuk(ILogger logger, string order, string? statusTransaksi, string signature, int statusBalasan, string? pesan);
-
     [LoggerMessage(51, LogLevel.Information, "Penyimpanan lokal belum ada — berkas baru akan dibuat di {Jalur}.")]
     internal static partial void PenyimpananLokalBaru(ILogger logger, string jalur);
 

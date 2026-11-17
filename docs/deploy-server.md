@@ -1,4 +1,4 @@
-# Deploy server lisensi SuDesApp
+﻿# Deploy server lisensi SuDesApp
 
 Server lisensi hanya menjadi tempat pembayaran/langganan — data desa tetap di
 SQLite lokal di komputer desa. Server bisa dihosting di layanan murah (Railway,
@@ -6,9 +6,9 @@ Render, Fly.io) atau VPS. Prasyarat mutlak: **HTTPS**.
 
 ## Apa yang di-deploy
 
-`SuDesApp.Server` (minimal API .NET 10) + Supabase Postgres + Midtrans Snap.
+`SuDesApp.Server` (minimal API .NET 10) + Supabase Postgres.
 Tidak ada file statis aplikasi desktop di sini; hanya endpoint API + halaman
-`/checkout`.
+admin `/admin`.
 
 ## Kredensial yang wajib disiapkan
 
@@ -16,7 +16,6 @@ Tidak ada file statis aplikasi desktop di sini; hanya endpoint API + halaman
 |---|---|---|
 | `SUPABASE_HOST` + `SUPABASE_DB_USER` (`sudes_server.<project-ref>`) + `SUPABASE_DB_PASSWORD` | Role dibuat oleh `schema.sql`; kata sandinya Anda setel sekali (`ALTER ROLE ...`) | Koneksi aplikasi — **RLS berlaku di sini** |
 | `SUPABASE_MIGRATE_PASSWORD` (opsional) | Project settings → Database → Connection string | Hanya untuk menerapkan `schema.sql` saat start |
-| `MIDTRANS_SERVER_KEY` | Dashboard Midtrans → Settings → Access Keys | Membuat Snap, verifikasi webhook, & menanyakan status transaksi (rekonsiliasi) |
 | `SUDES_ADMIN_OPERATORS__0__ID/NAME/TOKEN` | ID dan nama operator; token acak pribadi minimal 32 byte | Kredensial operator pertama; `TOKEN` disetel sebagai rahasia |
 | `SUDES_ADMIN_OPERATORS__0__PERMISSIONS__0` | Satu izin per indeks | Izin operator, mis. `customers.read`; tambah operator dengan indeks `1`, `2`, dan seterusnya |
 | `LISENSI_KEY_PATH` | Di-generate server saat pertama start | Kunci penandatangan token lisensi |
@@ -102,10 +101,9 @@ ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5110 \
   dotnet run --project SuDesApp.Server --no-launch-profile
 ```
 
-`Development` wajib di sini: tanpa `MIDTRANS_SERVER_KEY`, server sengaja
-menolak start di luar Development. Di mode itu tagihan dibuat dengan tautan
-contoh, tetapi **aktivasi, trial, katalog /paket, dan pengumuman tetap
-berjalan sungguhan** terhadap database.
+`Development` tidak lagi wajib di sini: sejak gateway pembayaran dihapus, server
+melayan tanpa kredensial pembayaran apa pun. Aktivasi, trial, katalog `/paket`,
+dan pengumuman berjalan sungguhan terhadap database.
 
 Uji cepat dari terminal — kedua baris ini harus menjawab sebelum aplikasi
 desktop dibuka:
@@ -118,8 +116,8 @@ curl http://127.0.0.1:5110/paket   # [{"kode":"bulanan", ...}]
 Bila `/` menjawab tetapi `/paket` tidak, masalahnya di sisi server (bukan di
 aplikasi). Bila keduanya kosong, server belum berjalan: periksa log startup —
 di luar Development server sengaja berhenti, bukan diam-diam melayani, bila
-kredensial Supabase kosong, RLS tidak terverifikasi, atau ServerKey Midtrans
-kosong. Di aplikasi, buka **Langganan → Server Lisensi**, isi
+kredensial Supabase kosong atau RLS tidak terverifikasi. Di aplikasi, buka
+**Langganan → Server Lisensi**, isi
 `http://127.0.0.1:5110`, tekan **Simpan & Uji** sampai chip berbunyi
 **Terhubung**.
 
@@ -137,9 +135,6 @@ Semua nilai environment **menang atas** `appsettings*.json`. Kosongkan
 | `SUPABASE_MIGRATE_USER` | tidak | `postgres.jotnrhjzyslyaozzawwq` (default `postgres`) |
 | `SUPABASE_MIGRATE_PASSWORD` | tidak | (kata sandi role `postgres`) — hanya bila server boleh menerapkan skema |
 | `SUPABASE_SSLMODE` | tidak | `Require` (default) |
-| `MIDTRANS_SERVER_KEY` | ya di produksi | lihat dashboard Midtrans |
-| `MIDTRANS_SANDBOX` | ya | `false` untuk produksi, `true` saat uji |
-| `MIDTRANS_NOTIFICATION_URL` | tidak | URL **publik** server yang menerima notifikasi transaksi uji (header `X-Override-Notification`); boleh ditulis `https://host` atau `https://host/webhook-pembayaran` |
 | `SUDES_ADMIN_OPERATORS__0__ID` | ya untuk admin | ID stabil, mis. `operator-utama` |
 | `SUDES_ADMIN_OPERATORS__0__NAME` | ya untuk admin | Nama operator yang tampil dan dicatat di audit |
 | `SUDES_ADMIN_OPERATORS__0__TOKEN` | ya untuk admin | Token pribadi acak minimal 32 byte; simpan sebagai secret deployment |
@@ -191,146 +186,33 @@ tekan **Buka Pusat Administrasi** di halaman Langganan, yang membuka alamat yang
 sama di dalam aplikasi. Aplikasi desa yang menunjuk `http://127.0.0.1:5110` akan
 melihat chip **Terhubung**.
 
-Tanpa `MIDTRANS_SERVER_KEY` di luar mode Development, server **menolak start** —
-webhook tanpa verifikasi signature akan membiarkan siapa pun memperpanjang
-langganan gratis.
-
 Tanpa `SUPABASE_MIGRATE_PASSWORD`, server tidak mengubah skema sama sekali;
 jalankan `schema.sql` sekali di SQL Editor (lihat bagian berikut).
 
-### Rekonsiliasi pembayaran (backstop webhook)
-
-Webhook tetap jalur utama. Rekonsiliasi adalah jaring pengaman bila notifikasi
-Midtrans tidak pernah sampai (URL webhook berubah, server sempat mati, kiriman
-hilang): server menanyakan status order yang belum lunas langsung ke Midtrans,
-lalu menyelesaikannya memakai **aturan yang sama persis** dengan webhook.
-
-| Variabel | Bawaan | Arti |
-|---|---|---|
-| `REKONSILIASI_INTERVAL_MENIT` | `15` | Jarak antar putaran. `0` = penjadwalan latar mati (endpoint manual tetap bisa dipakai). |
-| `REKONSILIASI_JEDA_AWAL_MENIT` | `1` | Tunggu sebelum putaran pertama. |
-| `REKONSILIASI_BATAS` | `25` | Maksimum tagihan diperiksa per putaran. |
-| `REKONSILIASI_MINIMAL_UMUR_MENIT` | `10` | Tagihan yang lebih baru dari ini dilewati (pembeli masih di halaman pembayaran). |
-| `REKONSILIASI_MAKSIMAL_UMUR_HARI` | `30` | Tagihan yang lebih tua dari ini diabaikan — sudah mati, dan bila ikut diperiksa ia akan menghabiskan kuota batch sehingga tagihan baru tidak pernah dicek. |
-
-Penjadwalan latar **hanya menyala bila `MIDTRANS_SERVER_KEY` terisi**: tanpa
-kunci itu status transaksi tidak bisa ditanyakan, jadi server mencatat alasannya
-di log start dan tidak menjadwalkan apa pun.
-
-Jalankan sekali secara manual (mis. setelah memperbaiki URL webhook):
-
-```bash
-curl -X POST https://<host>/admin/rekonsiliasi \
-     -H "Authorization: Bearer $SUDES_ADMIN_OPERATOR_TOKEN" \
-     -H "X-Admin-Operator: $SUDES_ADMIN_OPERATOR_ID"
-```
-
-Balasannya berisi hitungan `diperiksa`, `diselesaikan`, `sudahDiselesaikan`,
-`belumBayar`, `perluDiperiksa`, `tidakPasti`, plus catatan per order. Website
-Midtrans TIDAK perlu diubah untuk ini — endpoint status memakai kredensial
-server yang sama seperti pembuatan tagihan.
+### Pusat Administrasi (kuota perangkat & riwayat pembayaran)
 
 Untuk membebaskan kuota perangkat desa (aktivasi ditolak karena penuh — mis.
 pelanggan mengganti komputer), buka **`https://<host>/admin`** di peramban
-(masukkan ID dan token pribadi operator sekali per tab). Halaman itu juga bisa mendaftarkan,
-mengubah, dan menghapus desa, serta menampilkan riwayat pembayaran per desa
-(dapat diunduh CSV). Setara lewat `/admin/pelanggan*`, `/admin/ekspor/*.csv`,
-atau `Tools/Admin-Lisensi.ps1`. Lihat
+(masukkan ID dan token pribadi operator sekali per tab). Halaman itu juga bisa
+mendaftarkan, mengubah, dan menghapus desa, mencatat pembayaran manual
+(QRIS statis/transfer) beserta lampiran bukti transfernya, menampilkan riwayat
+pembayaran per desa (dapat diunduh CSV), dan mencetak kuitansi. Setara lewat
+`/admin/pelanggan*`, `/admin/ekspor/*.csv`, atau `Tools/Admin-Lisensi.ps1`. Lihat
 [langganan-dan-lisensi.md](langganan-dan-lisensi.md#pusat-administer-kelola-desa--perangkat).
 
-### Midtrans di produksi (hasil uji 2026-10-22)
-
-Server lisensi memakai **hanya `MIDTRANS_SERVER_KEY`**. `ClientKey` dan
-`Merchant ID` tidak dipakai server sama sekali: Snap dibuka lewat
-`redirect_url` di peramban, bukan lewat widget JavaScript di dalam aplikasi —
-jadi menambahkannya ke konfigurasi tidak ada efek apa pun, dan menambahkannya
-ke repo berarti membocorkan kredensial merchant tanpa alasan.
-
-| Kunci | Environment | Arti |
-|---|---|---|
-| `SB-Mid-server-…` | sandbox | `MIDTRANS_SANDBOX=true` (atau kosongkan → bawaan sandbox) |
-| `Mid-server-…` | production | `MIDTRANS_SANDBOX=false` **wajib** — kunci sandbox ditolak host production, dan sebaliknya |
-
-`MIDTRANS_SANDBOX` yang bernilai **kosong** dianggap "belum diisi", bukan
-"production": platform deploy kerap menyuntik variabel ada tetapi kosong, dan
-tanpa aturan itu server diam-diam bertanya status ke host sandbox sehingga
-tidak ada pembayaran produksi yang pernah cocok.
-
-Dua hasil yang tidak terduga dari uji langsung ke Midtrans production:
-
-1. **Order Snap yang belum dibuka pembeli tidak muncul di Core API.**
-   `GET https://api.midtrans.com/v2/{order_id}/status` membalas
-   `{"status_code":"404","status_message":"Transaction doesn't exist."}`
-   untuk order Snap yang masih freshly dibuat — dan balasannya **HTTP 200**,
-   bukan 404. Halaman pembayarannya sendiri membalas 200 (order-nya
-   benar-benar ada di akun merchant), hanya belum punya catatan pembayaran.
-   Karena itu server membaca `transaction_status` di dalam body: jawaban
-   tanpa field itu berarti "tidak bisa dipastikan" (bukan "transaksi
-   ditemukan"), dan rekonsiliasi menghitungnya `tidakPasti` (gagal tertutup),
-   **bukan** "pembeli gagal bayar". Tagihan seperti itu baru bisa dipastikan
-   setelah pembeli benar-benar memilih metode pembayaran, jadi satu putaran
-   rekonsiliasi terlalu dini tidak akan pernah menyelesaikannya.
-2. **Notifikasi Midtrans memakai `gross_amount` bertulis `"150000.00"`.**
-   Verifikasi signature memakai string itu **persis seperti dikirim** —
-   `SHA512(order_id + status_code + gross_amount + server_key)` — bukan
-   angka yang di-parse ulang ke format lain.
-
-Verifikasi signature tetap menolak hal yang harus ditolak: tanpa signature →
-403, signature sah tapi order tak dikenal → 404, signature sah tapi nominal
-tidak cocok → 400, dan webhook berulang → `duplikat` tanpa tambahan hari.
-
-### Halaman uji pembayaran (`/checkout-uji`)
-
-Halaman operator untuk **membuktikan alur pembayaran dari ujung ke ujung**:
-buat transaksi Snap NYATA di akun merchant yang sedang dipakai, bayar di
-halaman Midtrans, lalu lihat notifikasi aslinya masuk ke server ini —
-signature-nya sah, server membalas 200, dan masa akses desa bertambah.
-
-| Endpoint | Kegunaan |
-|---|---|
-| `GET /checkout-uji` | Halaman web (statis; tidak ada kredensial tertanam di HTML) |
-| `GET /admin/uji-pembayaran` | Keadaan jalur uji: lingkungan gateway, arah notifikasi, ServerKey terisi? |
-| `POST /admin/uji-pembayaran` | Buat transaksi uji untuk satu desa uji |
-| `GET /admin/uji-pembayaran/{orderId}` | Keadaan satu transaksi: status di gateway + jejak notifikasi |
-| `GET /admin/uji-pembayaran/notifikasi` | Notifikasi webhook terakhir yang masuk (jejak di memori server) |
-
-Semuanya di bawah `/admin/*`, jadi butuh operator dengan izin
-**`payments.test`**. Izin itu **terpisah** dari `payments.record`:
-`payments.record` menambah hak mencatat pembayaran manual, sedangkan
-`payments.test` MEMBUAT transaksi sungguhan di akun merchant — jadi tidak
-boleh ikut dibuka ke operator yang cuma berhak mencatat pembayaran.
-
-Dua hal yang wajib disiapkan supaya notifikasi benar-benar tertangkap:
-
-1. **Server harus bisa dijangkau Midtrans** lewat HTTPS publik. Untuk uji di
-   komputer sendiri, tunnel (mis. `cloudflared`) cukup — tunnel meneruskan
-   ke `http://127.0.0.1:<port>` lokal.
-2. **`MIDTRANS_NOTIFICATION_URL`** diisi dengan URL publik itu. Transaksi uji
-   lalu memakai header `X-Override-Notification`, jadi notifikasinya dikirim
-   ke server tempat operator membuktikan alurnya — **tanpa mengubah
-   "Payment Notification URL" di dashboard akun** (yang berlaku untuk semua
-   transaksi, termasuk pelanggan sungguhan). Env itu boleh ditulis
-   `https://host` maupun `https://host/webhook-pembayaran`; path webhook
-   otomatis ditambahkan.
-
-Bila env itu kosong, notifikasi transaksi uji mengikuti URL dashboard akun.
-Halaman uji menunjukkannya sebagai peringatan, supaya operator tahu kenapa
-notifikasinya tidak pernah masuk.
-
-> **Uji di production memakai uang sungguhan.** Halaman ini membuat
-> transaksi Snap di akun merchant yang aktif. Pilih paket terkecil, pakai
-> desa uji, lalu **hapus desa uji** setelah selesai (tombol "Hapus desa uji"
-> di halaman, atau `DELETE /admin/pelanggan/{kode}?konfirmasi={kode}`) supaya
-> tagihan & pembayarannya tidak tertinggal di database.
+Pembayaran TIDAK berjalan sendiri: tidak ada notifikasi otomatis dari gateway
+mana pun. Hak akses hanya bertambah kalau operator menekan "Tandai lunas" di
+halaman itu, jadi alur deploy tidak perlu lagi mendaftarkan URL callback ke
+penyedia pembayaran apa pun.
 
 ### Verifikasi menyeluruh setelah deploy
 
-Setelah server hidup dengan Supabase & Midtrans sungguhan,
+Setelah server hidup dengan Supabase sungguhan,
 `Tools/uji-e2e-server-lisensi.sh` menjalankan seluruh pemeriksaan lewat HTTP —
 endpoint publik, gerbang token & izin admin, data desa, aktivasi + tanda tangan
-token, batas perangkat, pembukuan manual & bukti transfer, transaksi Snap
-**nyata**, semua pintu penolakan webhook, rekonsiliasi, ekspor, pengumuman —
-lalu menghapus jejak ujinya (desa uji dan pengumuman uji).
+token, batas perangkat, `/buat-tagihan` (dipastikan tidak lagi menghasilkan medan
+gateway), pembukuan manual & bukti transfer, ekspor, pengumuman — lalu menghapus
+jejak ujinya (desa uji dan pengumuman uji).
 
 ```bash
 BASE_URL=https://lisensi.example.com OPERATOR_TOKEN=... \
@@ -339,9 +221,8 @@ BASE_URL=https://lisensi.example.com OPERATOR_TOKEN=... \
 
 Skrip itu **idempoten**: kode desa ujinya tetap, sisa run sebelumnya dibersihkan
 lebih dulu, pembersihan akhir berjalan walau uji gagal, dan jumlah desa setelah
-putaran kembali seperti semula. Yang tetap tinggal hanya order Snap **belum
-dibayar** di dashboard Midtrans (tidak ada API publik untuk menghapusnya) —
-skrip mencetak order id-nya. Butuh izin operator yang lengkap; lihat header
+putaran kembali seperti semula. Tagihan dan pembayaran yang dibuat uji ikut
+terhapus bersama desanya. Butuh izin operator yang lengkap; lihat header
 berkasnya.
 
 ## Isolasi antar-desa (tenant_id + RLS)
@@ -382,8 +263,8 @@ apa pun di repo):
    `SUPABASE_DB_PASSWORD=<kata sandi tadi>`.
 3. **Hanya dua pencarian yang lintas-tenant**, keduanya by credential:
 `dir_cari_pelanggan(kode)` (kode aktivasi itu sendiri kredensialnya) dan
-`dir_cari_tagihan(order_id)` (dipanggil webhook hanya setelah signature SHA512
-Midtrans sah). Keduanya `SECURITY DEFINER`, `EXECUTE`-nya dicabut dari PUBLIC
+`dir_cari_tagihan(order_id)` (dipakai pembukuan manual operator untuk mengaitkan
+order dengan desa). Keduanya `SECURITY DEFINER`, `EXECUTE`-nya dicabut dari PUBLIC
 dan hanya diberikan ke `sudes_server`.
 
 ## Kunci penandatangan (paling penting untuk diingat)

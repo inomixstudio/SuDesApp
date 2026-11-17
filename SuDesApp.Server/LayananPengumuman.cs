@@ -48,7 +48,7 @@ namespace SuDesApp.Server
     /// <summary>
     /// Aturan endpoint pengumuman: mana yang aktif dan bentuk JSON yang dikirim
     /// klien. Dipisah dari lambda endpoint supaya bisa diuji unit tanpa HTTP
-    /// maupun Postgres — pola yang sama dengan LayananWebhook/LayananAdmin.
+    /// maupun Postgres — pola yang sama dengan LayananAdmin/LayananAktivasi.
     /// </summary>
     public static class LayananPengumuman
     {

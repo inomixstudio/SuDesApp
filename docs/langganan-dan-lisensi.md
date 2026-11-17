@@ -1,4 +1,4 @@
-# Langganan & Lisensi (hibris + lisensi server)
+﻿# Langganan & Lisensi (hibris + lisensi server)
 
 Keputusan arsitektur untuk menjadikan SuDesApp aplikasi berbayar berlangganan
 bulanan dengan target banyak desa (multi-tenant).
@@ -11,9 +11,9 @@ Status langganan dicek lewat server lisensi pusat:
 ```
 SuDesApp.WPF ── HTTPS ──> SuDesApp.Server (minimal API)
                               ├─ data pelanggan & langganan (Supabase Postgres)
-                              ├─ tagihan QRIS/VA (Midtrans Snap)
+                              ├─ tagihan (catatan nominal; bayar QRIS statis/transfer)
                               ├─ token lisensi BERTANDATANGAN (ECDSA P-256)
-                              └─ webhook pembayaran → perpanjang akses +31 hari
+                              └─ pembukuan operator → perpanjang akses
 ```
 
 - **Bukan Supabase penuh untuk data desa**:rombakan besar tidak dilakukan;
@@ -65,7 +65,7 @@ Sejak Oktober 2026 ada **tiga paket berbayar** plus satu masa percobaan gratis:
 
 | Mode | Harga | Masa aktif | Per hari | Jalur |
 |---|---|---|---|---|
-| **Trial** | gratis | 30 hari | — | `POST /aktifkan-trial` — TIDAK lewat Midtrans |
+| **Trial** | gratis | 30 hari | — | `POST /aktifkan-trial` — TIDAK pernah ditagihkan |
 | **Bulanan** | Rp150.000 | 30 hari | Rp5.000 | tagihan QRIS/VA (`POST /buat-tagihan`) |
 | **6 Bulan** | Rp750.000 | 180 hari | Rp4.167 (hemat ±17%) | tagihan QRIS/VA |
 | **Tahunan** | Rp1.200.000 | 365 hari | Rp3.288 (hemat ±34%) | tagihan QRIS/VA |
@@ -115,9 +115,8 @@ tagihan berarti tagihan Rp0 yang bisa dikali ulang. Karena itu uji
 tetap `null`.
 
 Ketiga paket itu adalah **bawaan katalog** (`KatalogPaket`), jadi server yang
-baru dipasang tanpa `appsettings` tetap menawarkan ketiganya — aplikasi desa,
-halaman `/checkout`, dan formulir *Tandai lunas* di `/admin` membaca daftar yang
-sama dari `GET /paket`, sehingga tidak ada tempat yang perlu diubah terpisah.
+baru dipasang tanpa `appsettings` tetap menawarkan ketiganya — aplikasi desa
+dan formulir *Tandai lunas* di `/admin` membaca daftar yang sama dari `GET /paket`, sehingga tidak ada tempat yang perlu diubah terpisah.
 Tagihan lama yang belum dibayar tetap sah walau harga berubah — harga & durasi
 dibaca dari tabel `tagihan`, bukan katalog.
 
@@ -133,14 +132,14 @@ sama):
 ```
 
 Tambah paket (mis. `tahunan` 2 tahun) cukup menambah satu blok — server,
-UI, dan webhook otomatis menyesuaikan.
+UI halaman Langganan, dan formulir pembukuan operator otomatis menyesuaikan.
 
 ### Durasi diambil dari tagihan, bukan dari konfigurasi global
 
-Tabel `tagihan` menyimpan `paket` + `nominal` + `hari` saat tagihan dibuat.
-Webhook membacanya dari sana. Kalau harga paket berubah setelah tagihan
-terbit, yang dipakai adalah harga yang benar-benar **ditagihkan** ke
-pengguna — bukan harga yang berlaku saat webhook tiba.
+Tabel `tagihan` menyimpan `paket` + `nominal` + `hari` saat tagihan dibuat, dan
+pembukuan operator membacanya dari sana. Kalau harga paket berubah setelah
+tagihan terbit, yang dipakai adalah harga yang benar-benar **ditagihkan** ke
+pengguna — bukan harga katalog yang berlaku saat operator mencatat uangnya.
 
 ## Alur
 
@@ -155,43 +154,58 @@ pengguna — bukan harga yang berlaku saat webhook tiba.
    jumlah perangkat desa melewati batas untuk selamanya dan aktivasi dari
    komputer yang sah pun ditolak — pelanggan yang sudah bayar kehilangan
    akses karena satu percobaan dari komputer lain.
-4. Belum aktif / jatuh tempo → `POST /buat-tagihan` → QRIS/VA.
-5. Bayar → webhook `POST /webhook-pembayaran` → server memperpanjang
-   `berlaku_sampai` +31 hari.
+4. Belum aktif / jatuh tempo → `POST /buat-tagihan` → tagihan tercatat sebagai
+   nominal yang harus dibayar lewat QRIS statis atau transfer bank.
+5. Operator menerima uangnya, membukunya di Pusat Administrasi
+   (`POST /admin/pelanggan/{kode}/tandai-lunas`) → server memperpanjang
+   `berlaku_sampai` sesuai jumlah hari paket.
 6. Aplikasi cek via `LisensiManager.MasihSah()` → tetap jalan selama sah.
 
-### Dua pintu masuk pembayaran
+### Satu pintu pembayaran: tagihan lalu pembukuan manual
 
-Langkah 4 bisa ditempuh dari **dua sisi**, keduanya memakai endpoint publik
-yang sama (`/paket` + `/buat-tagihan`) — tidak ada yang menentukan harga di
-sisi pembeli:
+Langkah 4 hanya MEMCATAT tagihan. Tidak ada gerbang pembayaran otomatis:
+`POST /buat-tagihan` menghitung nominal dari katalog server, menyimpan baris
+`tagihan`, dan membalas `orderId`/`nominal`/`hari`/`kode_aktivasi`. Desa
+membayar angka itu lewat QRIS statis atau transfer bank, lalu administrator
+membukukannya (langkah 5).
 
-- **Aplikasi desktop** — tombol Bayar di menu Langganan membuat tagihan lalu
-  membuka halaman pembayaran Midtrans di peramban bawaan.
-- **Halaman web `/checkout`** — dibuat untuk pembayaran dari telepon atau
-  komputer lain tanpa membuka aplikasi: pilih paket, isi kode aktivasi,
-  tekan Buat tagihan. Lihat `SuDesApp.Server/wwwroot/checkout.html`.
+- **Aplikasi desktop** — tombol Bayar di menu Langganan membuat tagihan dan
+  menampilkan rincian pembayaran manual; status baru berubah setelah operator
+  membukukan, bukan saat tombol ditekan.
+- **Pusat Administrasi `/admin`** — tempat uang dibukukan (dengan lampiran
+  bukti transfer bila perlu). Halaman web `/checkout` dan medan `token` /
+  `link_pembayaran` / `mode` tidak ada lagi; klien lama yang masih membaca
+  medan itu hanya mendapat `null`.
 
-Dari dalam aplikasi, menu Langganan tetap membuka pembayaran langsung; tautan
-halaman web tetap tersedia untuk yang ingin membayar dari perangkat lain
-(bagikan `https://<host>/checkout`).
+Uji `TanpaGatewayPembayaranTests` menolak kalau medan gateway itu muncul
+kembali di balasan `/buat-tagihan`.
 
-### QRIS statis + "Tandai lunas" (pintu ketiga, tanpa gateway)
+### QRIS statis + "Tandai lunas" (jalur utama pembayaran)
 
-Tombol **Tampilkan QRIS** di kartu paket menampilkan QRIS merchant langsung di
-layar aplikasi, jadi desa bisa membayar tanpa membuka peramban dan tanpa
-menunggu tagihan Midtrans. Alurnya berbeda kelas dari dua pintu di atas dan itu
-disengaja:
+Jalur inilah yang tinggal sekarang: gateway pembayaran sudah dihapus, jadi tidak
+ada tautan bayar otomatis dan tidak ada notifikasi yang bisa memberi tahu server
+bahwa uang masuk.
 
-| Aspek | Tagihan gateway | QRIS statis (manual) |
-|---|---|---|
-| Nominal | Diteguhkan server di tabel `tagihan` | Ditampilkan dari katalog; pembeli mengetiknya sendiri di aplikasi bank |
-| Deteksi bayar | Webhook/rekonsiliasi Midtrans | Operator melihat dana masuk, lalu menekan **Tandai lunas** |
-| Jejak | `pembayaran` berisi `settlement`, order `SUDES-…` | `pembayaran` berisi `manual`, order `MANUAL-…` |
-| Kecepatan aktif | Otomatis | Menunggu operator (biasanya saat itu juga) |
+> **Status halaman saat ini.** Aturan QRIS statis masih utuh di ViewModel dan
+diuji (`TampilQris`, `TampilkanQrisCommand`, `QrisGambar`, `QrisPenerima` —
+dijaga `MulaiTrialLanggananTests` dan `QrisPembayaranTests`), tetapi panel yang
+memakai perintah itu tidak lagi terpasang di `LanggananView.xaml`. Artinya
+desa belum bisa membuka gambar QR dari dalam aplikasi; instruksi pembayaran
+datangnya dari pengelola. Mengembalikan tombolnya hanya perlu satu blok `Button`
++ `Image` di XAML — sengaja tidak dilakukan di sini karena halaman Langganan
+dipertahankan apa adanya.
 
-Kenapa harus manual: QRIS statis tidak membawa nomor tagihan maupun nominal,
-jadi gateway tidak punya apa pun untuk diberitahukan. Karena itu gambar QR
+Yang tercatat di server adalah dua benda berbeda — dan hanya yang kedua memberi
+hak akses:
+
+| Benda | Dibuat oleh | Order id | Akibatnya |
+|---|---|---|---|
+| Baris `tagihan` | `POST /buat-tagihan` dari aplikasi desa | `SUDES-<id desa>-<yyyyMMdd>-<6 heks>` | mencatat nominal & hari; TIDAK mengubah `berlaku_sampai` |
+| Baris `pembayaran` | operator menekan **Tandai lunas** di `/admin` | `MANUAL-<id desa>-<yyyyMMdd>-<6 heks>` | memanggil `PerpanjangAsync` — inilah yang mengaktifkan langganan |
+
+Kenapa pembukuannya manual: QRIS statis tidak membawa nomor tagihan maupun
+nominal, jadi tidak ada sistem apa pun yang bisa memberi tahu server bahwa
+uang sudah masuk. Karena itu gambar QR
 ditanam di rakitan aplikasi (`Resources/Qris-Pembayaran.png`, `<Resource>` di
 csproj), **bukan** berkas di folder instalasi — gambar yang bisa ditukar dari
 disk berarti pembayaran desa bisa dialihkan ke rekening lain tanpa jejak.
@@ -243,9 +257,9 @@ curl -X POST http://localhost:5000/admin/pelanggan/SUDES-0001/tandai-lunas \
 Aturannya (`LayananPembayaranManual`): paket tak dikenal → paket bawaan katalog
 (bukan gratis), `nominal` yang dicatat adalah **uang yang benar-benar diterima**
 (boleh berbeda dari katalog; selisihnya masuk log), dan perpanjangan memakai
-`PerpanjangAsync` yang sama dengan webhook — jadi idempoten dan dihitung dari
+`PerpanjangAsync` yang sama dengan perpanjangan lain — jadi idempoten dan dihitung dari
 `max(berlaku_sampai, now())`. Order manual tidak pernah muncul sebagai tagihan
-menunggu, sehingga rekonsiliasi tidak menanyakan transaksi ini ke Midtrans.
+menunggu, sehingga tidak ada pekerja latar yang menanyakannya ke mana-mana.
 
 `catatan` **tersimpan** di kolom `pembayaran.catatan` (kolomnya nullable,
 ditambah lewat `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` di `schema.sql`
@@ -254,7 +268,7 @@ sehingga instalasi lama ikut termigrasi). Isinya muncul sebagai kolom
 `GET /admin/pelanggan/{kode}/pembayaran`, dan sebagai kolom (`catatan`) pada
 CSV pembayaran — baik unduhan dari peramban maupun
 `GET /admin/ekspor/pembayaran/{kode}.csv`. Pembayaran gateway membiarkannya
-kosong: buktinya notifikasi Midtrans, bukan ketikan operator. Spasi di tepi
+kosong bila pembayaran dicatat tanpa referensi bukti transfer. Spasi di tepi
 dibuang dan catatan berisi spasi saja diperlakukan kosong (NULL), jadi laporan
 tidak pernah "terisi" tanpa isi.
 
@@ -370,97 +384,6 @@ tanpa membuka ulang halaman. Untuk pengembangan lokal aplikasi menunjuk
 `http://127.0.0.1:5110` — port yang sama dengan server lokal yang dinyalakan
 aplikasi (lihat *Server lisensi lokal yang dijalankan aplikasi*).
 
-## Keamanan webhook
-
-`/webhook-pembayaran` adalah pintu masuk yang menambah hak akses, jadi:
-
-- **Fail closed.** Signature Midtrans (SHA512) wajib valid. Server **menolak
-  start** bila `MIDTRANS_SERVER_KEY` kosong di luar mode Development —
-  tanpa itu siapa pun bisa POST order palsu dan mendapat akses gratis.
-- **Nominal divalidasi.** `gross_amount` harus sama dengan harga paket di
-  server. Menutup jalur "bayar Rp1".
-- **Idempoten.** `pembayaran.order_id` jadi PRIMARY KEY; insert dan
-  perpanjangan dalam satu transaksi. Midtrans mengirim ulang webhook saat
-  tidak menerima jawaban dalam 24 jam — tanpa proteksi ini satu transfer
-  bisa menambah 31 hari berulang kali.
-- **Harga ditentukan server.** `BuatTagihanRequest` sengaja tidak punya medan
-  nominal.
-
-## Rekonsiliasi pembayaran (backstop webhook)
-
-Webhook adalah jalur utama, tapi ia bisa tidak pernah sampai: URL notifikasi
-berubah, server sempat mati, atau kiriman Midtrans hilang. Pembeli yang uangnya
-sudah masuk tetapi hak aksesnya tidak bertambah akan menelepon desa — dan tanpa
-backstop, satu-satunya obatnya adalah memperbaiki data manual.
-
-`LayananRekonsiliasi` menutup itu: ia mengambil daftar tagihan yang **belum punya
-baris `pembayaran`**, menanyakan status tiap order langsung ke Midtrans
-(`GET {api}/v2/{order_id}/status`, Basic auth ServerKey), lalu menyerahkan
-hasilnya ke **`LayananWebhook.SelesaikanAsync` — fungsi yang sama** yang dipakai
-webhook setelah signature diverifikasi.
-
-Yang dijaga sama, tanpa salinan kedua:
-
-| Aspek | Bagaimana |
-|---|---|
-| Aturan penyelesaian | Tagihan harus ada, nominal harus cocok, status harus `settlement`/`capture`, `fraud_status` kartu harus `accept` — satu fungsi untuk dua jalur |
-| Idempotensi | `PRIMARY KEY pembayaran.order_id`. Order yang sudah diproses webhook tidak menambah hari saat rekonsiliasi menjumpainya lagi; urutan sebaliknya juga sama |
-| Gagal tertutup | Status yang tidak bisa dipastikan (404 / HTTP gagal / jaringan mati) **tidak** dianggap lunas — dihitung `tidakPasti` dan dibiarkan |
-
-Perbedaan proseduralnya cuma satu: di jalur ini tidak ada signature yang perlu
-diverifikasi, karena statusnya diminta sendiri oleh server memakai ServerKey.
-
-Penjadwalan: `RekonsiliasiLatar` (pekerja latar) menjalankan satu putaran tiap
-`REKONSILIASI_INTERVAL_MENIT` menit (bawaan 15), dan `POST /admin/rekonsiliasi`
-(operator berizin) menjalankannya saat itu juga. Tanpa `MIDTRANS_SERVER_KEY`
-penjadwalan dimatikan dan alasannya tercatat di log — di mode pengembangan ini
-keadaan normal, bukan galat. Pengaturan lengkapnya ada di
-[deploy-server.md](deploy-server.md).
-
-Satu catatan operasional: daftar tagihan diambil urut waktu terbit lalu dipotong
-jumlahnya, jadi tagihan yang sudah mati (tidak akan pernah dibayar) ikut disaring
-oleh batas umur maksimal — kalau tidak, ia akan menghabiskan kuota batch
-selamanya dan tagihan baru tidak pernah ikut diperiksa.
-
-## Uji pembayaran nyata: halaman `/checkout-uji`
-
-Halaman `/checkout` melayani **pembeli**. Halaman `/checkout-uji` melayani
-**operator**: tujuannya bukan menjual, tapi membuktikan bahwa alur "bayar →
-notifikasi Midtrans → akses bertambah" benar-benar bekerja di akun merchant
-yang sedang dipakai — termasuk di production.
-
-| | `/checkout` | `/checkout-uji` |
-|---|---|---|
-| Siapa | Pembeli desa | Operator (izin `payments.test`) |
-| Kode aktivasi | Milik desa yang membayar | Desa uji (didaftarkan otomatis, lalu dihapus) |
-| Harta | Tagihan Snap sungguhan | Tagihan Snap sungguhan — **uang sungguhan** |
-| Notifikasi | Ke "Payment Notification URL" di dashboard akun | Ke server ini lewat header `X-Override-Notification` (`MIDTRANS_NOTIFICATION_URL`) |
-| Bukti | — | Jejak notifikasi: waktu, order, status, kanal, sah/tidaknya signature, HTTP balasan, hari yang bertambah |
-
-Alurnya di halaman: masuk dengan ID + token operator → **Buat transaksi uji**
-→ buka tautan Midtrans → **bayar sungguhan** → halaman menyegarkan diri tiap
-5 detik dan menampilkan notifikasi yang masuk → **Hapus desa uji** untuk
-membersihkan sisa jejak.
-
-Yang dijaga di server (`LayananUjiPembayaran`), bukan di halaman:
-
-- **Harga & durasi selalu dari katalog server.** Halaman hanya memilih nama
-  paket; nominal tidak pernah dikirim klien — kalau boleh, orang bisa bayar
-  Rp1 untuk sebulan akses.
-- **Tagihan dicatat sebelum gateway dipanggil**, sama seperti jalur pembayaran
-  pelanggan — jadi order id yang dipakai Midtrans selalu punya padanan di
-  tabel `tagihan`, dan webhook tidak pernah menabrak order tak dikenal.
-- **Tanpa ServerKey, endpoint menolak (503)** — bukan membuat tagihan tiruan
-  yang mengaku transaksi sungguhan.
-- **Perpanjangan tetap lewat `PeranjangAsync` yang sama** dengan webhook,
-  jadi menguji jalur uji tidak melewati aturan idempotensi: notifikasi
-  berulang tidak menambah hari dua kali.
-
-Jejak notifikasi disimpan **di memori server saja** (`PelacakWebhook`, maksimum
-100 catatan) dan hilang saat server restart. Yang permanence tetap satu: tabel
-`pembayaran`. Jejak di memori sengaja tidak diarsipkan supaya server tidak
-jadi gudang data pembayaran yang tak pernah dibersihkan.
-
 ## Komponen
 
 | Berkas | Isi |
@@ -469,28 +392,18 @@ jadi gudang data pembayaran yang tak pernah dibersihkan.
 | [SuDesApp.Server/PaketLangganan.cs](../SuDesApp.Server/PaketLangganan.cs) | Katalog paket: harga & durasi |
 | [SuDesApp.Server/SigningService.cs](../SuDesApp.Server/SigningService.cs) | Penandatangan & kunci publik (ECDSA P-256) |
 | [SuDesApp.Server/SupabaseStore.cs](../SuDesApp.Server/SupabaseStore.cs) | Pelanggan, langganan, tagihan, pembayaran, perangkat |
-| [SuDesApp.Server/MidtransService.cs](../SuDesApp.Server/MidtransService.cs) | Snap, verifikasi signature, & query status transaksi (Core API) |
-| [SuDesApp.Server/LayananWebhook.cs](../SuDesApp.Server/LayananWebhook.cs) | Aturan webhook (signature → tagihan → nominal → status → idempoten), terpisah agar bisa diuji |
 | [SuDesApp.Server/LayananAktivasi.cs](../SuDesApp.Server/LayananAktivasi.cs) | Aturan `/aktivasi`: kode → batas perangkat → kedaluwarsa → token |
 | [SuDesApp.Server/LayananAdmin.cs](../SuDesApp.Server/LayananAdmin.cs) | Aturan pusat administer: daftar/pendaftaran desa, daftar/hapus perangkat, ubah batas, & riwayat pembayaran |
-| [SuDesApp.Server/LayananTagihan.cs](../SuDesApp.Server/LayananTagihan.cs) | Aturan `/buat-tagihan`: kode → paket & harga dari katalog server → order id → tagihan dicatat → gateway |
-| [SuDesApp.Server/PembuatTagihan.cs](../SuDesApp.Server/PembuatTagihan.cs) | Antarmuka pembuat tagihan gateway (`IPembuatTagihan`) supaya jalur gagal bisa dipalsukan di uji |
-| [SuDesApp.Server/LayananRekonsiliasi.cs](../SuDesApp.Server/LayananRekonsiliasi.cs) | Rekonsiliasi: selesaikan tagihan belum lunas lewat status gateway, memakai aturan webhook |
-| [SuDesApp.Server/RekonsiliasiLatar.cs](../SuDesApp.Server/RekonsiliasiLatar.cs) | Penjadwal pekerja latar untuk rekonsiliasi |
-| [SuDesApp.Server/StatusPembayaran.cs](../SuDesApp.Server/StatusPembayaran.cs) | Antarmuka sumber status pembayaran (bisa dipalsukan di uji) + model hasilnya |
+| [SuDesApp.Server/LayananTagihan.cs](../SuDesApp.Server/LayananTagihan.cs) | Aturan `/buat-tagihan`: kode → paket & harga dari katalog server → order id → tagihan dicatat (tanpa gateway) |
+| [SuDesApp.Server/LayananPembayaranManual.cs](../SuDesApp.Server/LayananPembayaranManual.cs) | Satu-satunya jalan memberi hak akses: operator membukukan dana masuk (QRIS statis/transfer), memanggil `PerpanjangAsync` |
 | [SuDesApp.Server/IRepositoryLangganan.cs](../SuDesApp.Server/IRepositoryLangganan.cs) | Antarmuka penyimpanan + `LanggananMemori` untuk uji tanpa database |
 | [SuDesApp.Server/PenyimpananLokal.cs](../SuDesApp.Server/PenyimpananLokal.cs) | Penyimpanan berkas server lokal (desa, tagihan, pembayaran, pengumuman, audit) — menetap setelah server berhenti, tulis atomik |
 | [SuDesApp.Core/Services/ServerLisensiLokal.cs](../SuDesApp.Core/Services/ServerLisensiLokal.cs) | Siklus hidup server lokal: nyalakan + tunggu `/healthz`, jadikan alamat lisensi, matikan seluruh pohon proses, bersihkan sisa proses (pid + waktu mulai) |
 | [SuDesApp.Server/schema.sql](../SuDesApp.Server/schema.sql) | Skema (bisa dijalankan dari SQL Editor) |
-| [SuDesApp.Server/wwwroot/checkout.html](../SuDesApp.Server/wwwroot/checkout.html) | Halaman web `/checkout`: pilih paket → buat tagihan → bayar |
 | [SuDesApp.Server/wwwroot/admin.html](../SuDesApp.Server/wwwroot/admin.html) | Halaman web `/admin`: pusat administer — daftar/ubah/hapus desa, kelola perangkat, riwayat pembayaran + CSV (token di `sessionStorage`, bukan di HTML) |
-| [SuDesApp.Server/wwwroot/checkout-uji.html](../SuDesApp.Server/wwwroot/checkout-uji.html) | Halaman web `/checkout-uji`: buat transaksi uji → bayar di Midtrans → pantau notifikasi webhook yang masuk (token di `sessionStorage`, bukan di HTML) |
-| [SuDesApp.Server/LayananUjiPembayaran.cs](../SuDesApp.Server/LayananUjiPembayaran.cs) | Aturan jalur uji: transaksi Snap sungguhan untuk desa uji, arahkan notifikasi, status gateway + jejak webhook |
-| [SuDesApp.Server/PelacakWebhook.cs](../SuDesApp.Server/PelacakWebhook.cs) | Jejak notifikasi webhook di memori (maks. 100) untuk halaman uji |
-| [SuDesApp.Server/KonfigurasiMidtrans.cs](../SuDesApp.Server/KonfigurasiMidtrans.cs) | Satu tempat membaca `MIDTRANS_SERVER_KEY` / `MIDTRANS_SANDBOX` / `MIDTRANS_NOTIFICATION_URL` (env menang atas appsettings; kosong = belum diisi) |
 | [SuDesApp.Server/CsvLaporan.cs](../SuDesApp.Server/CsvLaporan.cs) | Pembentuk CSV laporan (desa & pembayaran) — satu aturan untuk peramban maupun CLI |
 | [Dockerfile](../Dockerfile) | Image container untuk deploy server |
-| [docs/deploy-server.md](deploy-server.md) | Panduan deploy (Railway/Render/VPS) + env vars + konfigurasi Midtrans |
+| [docs/deploy-server.md](deploy-server.md) | Panduan deploy (Railway/Render/VPS) + env vars |
 | [SuDesApp.Core/Services/VerifikasiLisensi.cs](../SuDesApp.Core/Services/VerifikasiLisensi.cs) | Verifikasi tanda tangan di klien |
 | [SuDesApp.Core/Services/LisensiManager.cs](../SuDesApp.Core/Services/LisensiManager.cs) | Klien lisensi + cache token |
 | [SuDesApp.Core/Services/PenjagaLisensi.cs](../SuDesApp.Core/Services/PenjagaLisensi.cs) | Gerbang fitur + chip status: Demo / Trial / Full Service / Baca-saja |
@@ -749,8 +662,8 @@ tidak punya dua salinan yang bisa menyimpang.
 dotnet test SuDesApp.Tests/SuDesApp.Tests.csproj
 ```
 
-639 uji dalam beberapa kelompok (lisensi, katalog paket, klien langganan,
-tampilan halaman Langganan, webhook, aktivasi, tagihan, penggatingan, serta uji
+Seluruh uji dalam beberapa kelompok (lisensi, katalog paket, klien langganan,
+tampilan halaman Langganan, pembukuan manual, aktivasi, tagihan, penggatingan, serta uji
 unit lainnya di seluruh aplikasi):
 
 **`LisensiKeamananTests`** — `Token_Server_DapatDiverifikasi_OlehVerifikatorKlien`
@@ -804,13 +717,22 @@ mengembalikan kata sandi yang sudah diganti, akun pusat **tidak pernah** dibuat
 ke tabel `Pengguna` (service palsu mencatat bila ada upaya), dan menu pusat
 tertutup untuk sesi akun biasa maupun akun database bernama sama.
 
-**`LayananWebhookTests`** — aturan pemberi hak akses diuji tanpa HTTP dan
-tanpa database lewat `LanggananMemori`: signature salah ditolak 403 (termasuk
-saat `ServerKey` kosong — gagal tertutup, bukan terbuka), order tak dikenal
-404, nominal tidak cocok 400, status bukan-dana-masuk tidak memperpanjang,
-webhook yang dikirim berulang hanya menambah masa aktif **sekali** (idempoten),
-durasi mengikuti paket yang ditagihkan, dan masa aktif baru menumpuk dari sisa
-tanpa menghapus hari yang belum terpakai.
+**`LayananPembayaranManualTests`** — aturan pemberi hak akses (satu-satunya
+yang tersisa) diuji tanpa HTTP dan tanpa database lewat `LanggananMemori`: order
+id pembukuan selalu berawalan `MANUAL`, nominal yang memperpanjang dibaca dari
+baris `tagihan` yang baru ditulis (bukan dari katalog saat itu), pembukuan
+berulang untuk order yang sama hanya menambah masa aktif **sekali** (idempoten),
+durasi mengikuti paket yang ditagihkan, lampiran bukti yang bukan gambar
+membatalkan seluruh penandaan, dan masa aktif baru menumpuk dari sisa tanpa
+menghapus hari yang belum terpakai.
+
+**`TanpaGatewayPembayaranTests`** — penjaga penghapusan gateway: berkas
+`MidtransService`/`LayananWebhook`/`LayananRekonsiliasi`/… tidak boleh kembali,
+endpoint `/checkout`, `/webhook-pembayaran`, `/admin/rekonsiliasi`,
+`/admin/uji-pembayaran` tidak boleh terdaftar lagi, balasan `/buat-tagihan`
+tidak boleh memuat `token`/`link_pembayaran`/`mode`, klien desktop tidak boleh
+membaca tautan pembayaran, dan izin warisan (`payments.reconcile`,
+`payments.test`) tetap diterima konfigurasi lama tanpa memberi akses apa pun.
 
 **`AktivasiTests`** — aturan `/aktivasi` diuji tanpa HTTP dan tanpa database:
 batas perangkat (perangkat ke-2 di atas batas ditolak 403 tanpa token,
@@ -820,13 +742,11 @@ kedaluwarsa (belum pernah bayar / sudah berakhir / jatuh tempo tepat sekarang
 tidak menerbitkan token; klaim `exp`, `iat`, `cek` token diverifikasi ulang),
 dan kode aktivasi sebagai kredensial (kosong 400, tak dikenal 404).
 
-**`BuatTagihanTests`** — aturan `/buat-tagihan` diuji dengan gateway palsu:
-harga & durasi selalu dari katalog server (kode tak dikenal jatuh ke paket
-bawaan, bukan gratis), angka yang tersimpan di tabel tagihan sama dengan yang
-ditagihkan ke gateway, tagihan sudah tercatat **sebelum** gateway dipanggil,
-format order id (termasuk id desa pendek dan tanggal tanpa `Kind`),
-mode demo tanpa token, dan gateway gagal → 500 sementara tagihannya tetap
-tercatat supaya rekonsiliasi bisa menyusul. Satu aturan yang justru wajib:
+**`BuatTagihanTests`** — aturan `/buat-tagihan`: harga & durasi selalu dari
+katalog server (kode tak dikenal jatuh ke paket bawaan, bukan gratis), angka
+yang tersimpan di tabel tagihan sama dengan yang kelak dibukukan operator, dan
+format order id (termasuk id desa pendek dan tanggal tanpa `Kind`) dijaga.
+Satu aturan yang justru wajib:
 desa yang belum membayar tetap boleh membuat tagihan — itu jalan keluarnya.
 
 **`PenjagaLisensiTests`** — aturan alur uji coba 30 hari: `HitungKeadaan` statis tetap mengenal `Demo`
@@ -852,19 +772,11 @@ Langganan ditekan tanpa kode aktivasi saat server mati: trial lokal aktif,
 tombol hilang, banner berbunyi “Trial 30 hari aktif”, dan lencana keadaan
 menjadi Trial — bukan “Tidak aktif” atau “Full Service”.
 
-**`StatusMidtransTests`** — pembacaan status transaksi dari Core API, diuji
-dengan HTTP palsu (tanpa jaringan): jawaban "order belum ada" — yang
-sebenarnya dibalas Midtrans sebagai **HTTP 200** dengan
-`{"status_code":"404","status_message":"Transaction doesn't exist."}` — harus
-berarti "tidak bisa dipastikan", **bukan** "transaksi ditemukan"; jawaban
-yang benar-benar memuat status diteruskan apa adanya, dengan `gross_amount`
-tetap TEKS asli (`"150000.00"`, bukan `150000`).
-
 ### Uji end-to-end trial server (permanen, sebelum rilis)
 
 `Tools/uji-e2e-trial-server.sh` adalah pemeriksaan E2E yang ringan dan
 **idempoten**: skrip membangun lalu menyalakan server lisensi lokal dalam mode
-Development dengan penyimpanan **memori** (tanpa Supabase/Midtrans), kemudian
+Development dengan penyimpanan **memori** (tanpa Supabase), kemudian
 harness `Tools/UjiTrialServerE2E` memakai klien lisensi yang SAMA dengan
 aplikasi untuk membuktikan:
 
@@ -887,43 +799,38 @@ repo maupun cache lisensi pengguna. Jalankan ini sebelum rilis karena
 perubahan pada kebijakan trial, tanda tangan, atau chip status langsung
 terlihat di sini.
 
-### Uji end-to-end ke Supabase & Midtrans sungguhan
+### Uji end-to-end ke Supabase sungguhan
 
 `Tools/uji-e2e-server-lisensi.sh` menjalankan **seluruh** pemeriksaan server
-lisensi lewat HTTP terhadap Supabase dan akun Midtrans yang **sungguhan**
-(production atau sandbox, mengikuti konfigurasi server), lalu membersihkan
+lisensi lewat HTTP terhadap Supabase yang **sungguhan**, lalu membersihkan
 jejaknya:
 
 ```bash
-# server harus sudah berjalan (Supabase + MIDTRANS_SERVER_KEY terisi)
-OPERATOR_TOKEN=... TUNEL_PUBLIK=https://tunnel.example \
-  Tools/uji-e2e-server-lisensi.sh
+# server harus sudah berjalan (Supabase terisi)
+OPERATOR_TOKEN=... Tools/uji-e2e-server-lisensi.sh
 ```
 
-Yang diperiksa: endpoint publik & ketiga halaman, gerbang token/izin admin
+Yang diperiksa: endpoint publik & halaman admin, gerbang token/izin admin
 (401/403), pendaftaran & perubahan data desa, aktivasi + trial + **verifikasi
 tanda tangan ES256 token terhadap `/kunci-publik`**, batas perangkat
-(perangkat yang ditolak tidak mengunci kuota), pembukuan manual + lampiran
-bukti transfer (yang sah tersimpan, yang ditolak membatalkan seluruh
-penandaan), transaksi Snap **nyata**, semua pintu penolakan webhook (tanpa
-signature, kunci salah, signature tidak cocok dengan isi body, nominal Rp1,
-order tak dikenal, bukan JSON), perpanjangan idempoten, rekonsiliasi, ekspor
-CSV, siklus pengumuman, serta penghapusan desa (409 selama ada jejak uang,
-lalu hapus paksa).
+(perangkat yang ditolak tidak mengunci kuota), `/buat-tagihan` (mencatat
+tagihan dan **pasti tidak** mengembalikan `token`/`link_pembayaran`/`mode`),
+pembukuan manual + lampiran bukti transfer (yang sah tersimpan, yang ditolak
+membatalkan seluruh penandaan), notifikasi pembayaran otomatis yang dibalas
+404 karena endpointnya tidak ada lagi, ekspor CSV, siklus pengumuman, serta
+penghapusan desa (409 selama ada jejak uang, lalu hapus paksa).
 
 **Idempoten:** kode desa uji tetap (`UJI-E2E-SERVER`, bisa diganti lewat
 `KODE_UJI`); sisa run yang terputus dihapus lebih dulu, pembersihan akhir
-berjalan lewat `trap` walau uji gagal di tengah, dan jumlah desa setelah
-putaran sama dengan sebelumnya. Satu hal yang tidak bisa dibersihkan: order
-Snap yang dibuat tetap tercatat sebagai transaksi **belum dibayar** di
-dashboard Midtrans — skrip mencetak order id-nya untuk dihapus manual.
+berjalan lewat `trap` walau uji gagal di tengah, jumlah desa setelah putaran
+sama dengan sebelumnya, dan tagihan/pembayaran uji ikut musnah bersama
+desanya — tidak ada lagi jejak di akun penyedia pembayaran yang harus
+dibersihkan manual.
 
-Dua pemeriksaan butuh konfigurasi tambahan dan **dilewati** (bukan gagal) bila
+Satu pemeriksaan butuh konfigurasi tambahan dan **dilewati** (bukan gagal) bila
 tidak ada: 403 izin (setel `OPERATOR_ID_TERBATAS` + `OPERATOR_TOKEN_TERBATAS`
-untuk operator berizin terbatas) dan tagihan uji ikut direkonsiliasi (server
-memakai umur minimum bawaan 10 menit; setel `REKONSILIASI_MINIMAL_UMUR_MENIT=0`).
-Skrip ini tidak menyalakan server sendiri — header berkasnya memuat contoh
-environment variable operator, Supabase, dan Midtrans.
+untuk operator berizin terbatas). Skrip ini tidak menyalakan server sendiri —
+header berkasnya memuat contoh environment variable operator dan Supabase.
 
 ## Konfigurasi
 
@@ -932,8 +839,6 @@ Server (`SuDesApp.Server/appsettings.lokal.json`, di luar git):
 | Kunci | Kegunaan |
 |---|---|
 | `Supabase:Host`, `Supabase:DbPassword` | Koneksi Postgres |
-| `Midtrans:ServerKey` | ServerKey Snap (wajib di produksi) |
-| `Midtrans:UseSandbox` | `true` saat uji |
 | `Langganan:Paket:<kode>:Nama/Harga/Hari` | Katalog paket (mis. `bulanan` 50000/31, `tahunan` 500000/365) |
 | `Lisensi:KeyPath` | Lokasi kunci privat (default `keys/lisensi-signing.key`) |
 | `Lisensi:AdminOperators:<indeks>` | Operator bernama (`Id`, `Name`, `Token`, `Permissions`); token unik minimal 32 byte |
@@ -960,8 +865,8 @@ dilayani di sini. Setiap permintaan memakai token pribadi dan ID operator
 |---|---|
 | `customers.read`, `customers.create`, `customers.update`, `customers.delete`, `customers.export` | Membaca, mendaftarkan, mengubah, menghapus, dan mengekspor data desa |
 | `devices.read`, `devices.manage` | Membaca dan mengelola perangkat desa |
-| `payments.read`, `payments.record`, `payments.export`, `payments.reconcile` | Membaca, mencatat, mengekspor pembayaran, dan menjalankan rekonsiliasi |
-| `payments.test` | Jalur uji pembayaran nyata (halaman `/checkout-uji`) — **terpisah** dari `payments.record`, karena endpoint-nya membuat transaksi sungguhan di akun merchant |
+| `payments.read`, `payments.record`, `payments.export` | Membaca, mencatat (pembukuan manual), dan mengekspor pembayaran |
+| `payments.reconcile`, `payments.test` | **Warisan** — dulu dipakai rekonsiliasi dan jalur uji pembayaran gateway. Keduanya masih diterima konfigurasi (biar deployment lama tidak gagal start) tetapi tidak memberi akses ke endpoint mana pun |
 | `announcements.read`, `announcements.manage` | Membaca dan mengelola pengumuman |
 
 Endpoint sesi hanya mengembalikan identitas operator yang sedang login dan
@@ -994,7 +899,7 @@ dan **status langganan** + penyaring bertanggal), **mengubah atau menghapus
 desa**, membuka perangkat satu desa, menghapus satu/semua perangkat, mengubah
 batas, melihat **riwayat pembayaran** (beserta tombol **unduh CSV**, tautan
 **Kuitansi**, dan tautan **Lihat bukti** untuk pembayaran yang punya lampiran
-gambar), dan menjalankan rekonsiliasi.
+gambar), serta menandai lunas lewat formulir pembukuan.
 
 ### Ekspor CSV: peramban vs CLI
 
@@ -1241,8 +1146,12 @@ seluruh isolasi dilewati tanpa peringatan. Karena itu server memakai
 belum aktif. Pencarian yang memang lintas-tenant semuanya lewat fungsi
 `SECURITY DEFINER` yang hanya bisa dipanggil role server dan hanya
 mengembalikan kolom yang diperlukan: `dir_cari_pelanggan(kode)`,
-`dir_cari_tagihan(order_id)`, `dir_tagihan_belum_dibayar(...)` (rekonsiliasi),
-dan `dir_daftar_pelanggan()` (pusat administer). Operasi tulis pusat administer
+`dir_cari_tagihan(order_id)` (dipakai pembukuan manual untuk mengaitkan order
+dengan desa), dan `dir_daftar_pelanggan()` (pusat administer).
+`dir_tagihan_belum_dibayar(...)` masih ada di skema tetapi tidak dipanggil lagi
+— penjadwal rekonsiliasi gateway sudah dihapus; fungsinya dibiarkan karena
+menurunkannya berarti migrasi yang menghapus riwayat, dan `EXECUTE`-nya tetap
+hanya untuk role server. Operasi tulis pusat administer
 tidak menambah fungsi baru: setelah desa ditentukan dari kode aktivasi, baris
 yang disentuh dibatasi RLS seperti transaksi biasa.
 
@@ -1336,6 +1245,10 @@ lewat Postgres langsung dan PostgREST.
 
 ### Uji 2026-10-22 — Midtrans production sungguhan (bukan sandbox)
 
+> **Catatan historis.** Jalur gateway yang diuji di bawah ini SUDAH DIHAPUS
+> dari server (lihat bagian "Satu pintu pembayaran"). Tabel hasilnya dibiarkan
+> apa adanya sebagai rekaman pengujian saat jalur itu masih ada.
+
 Server yang sama (Supabase sungguhan) dijalankan dengan kredensial merchant
 Midtrans **production** (`Mid-server-…`, `UseSandbox=false`). Server lisensi
 tidak pernah memakai `ClientKey`/`Merchant ID`: Snap dibuka lewat
@@ -1368,7 +1281,7 @@ Dua hal yang perlu diketahui operator:
   merchant. Dana tidak masuk karena tidak pernah dibayar; hapus manual dari
   dasbor Midtrans bila tidak diinginkan.
 
-### Uji 2026-10-22 — halaman uji pembayaran (`/checkout-uji`) di production
+### Uji 2026-10-22 — halaman uji pembayaran (`/checkout-uji`) di production *(historis; halaman dan endpointnya sudah dihapus)*
 
 Server yang sama dijalankan dengan `MIDTRANS_NOTIFICATION_URL` menunjuk URL
 publik tunnel, lalu operator memakai halaman `/checkout-uji` (izin
@@ -1544,7 +1457,7 @@ berakhir tetap terkunci.
 4. **Rotasi kunci** belum ada alur operasional. Menghapus berkas kunci
    membuat semua token lama tidak valid — wajar saat kunci dicurigakan bocor.
 
-Halaman web `/checkout` sudah ada dan hanya memakai endpoint publik
+Halaman web pembayaran publik `/checkout` sudah dihapus bersama gateway; yang tersisa endpoint publik `/paket` dan `/buat-tagihan`
 (`/paket`, `/buat-tagihan`), tetapi masih bergantung pada server yang berjalan
 di HTTPS nyata.
 
@@ -1555,7 +1468,7 @@ di HTTPS nyata.
 - Pusat administer sudah lengkap di halaman `/admin`: daftar desa, daftarkan
   desa, ubah (nama/kontak), hapus, kelola perangkat, ubah batas, riwayat
   pembayaran + ekspor CSV, status langganan & saringan bertanggal, serta
-  rekonsiliasi — semuanya setara penuh lewat CLI (`Tools/Admin-Lisensi.ps1`).
+  dan pembukuan manual — semuanya setara penuh lewat CLI (`Tools/Admin-Lisensi.ps1`).
   Yang belum: menghapus desa yang sudah punya tagihan/pembayaran (sengaja
   ditolak `409`; bila benar-benar perlu, membereskan jejak itu dulu lewat
   basis data).

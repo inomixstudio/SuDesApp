@@ -108,9 +108,9 @@ public partial class SupabaseStore : IRepositoryLangganan, IAdminAuditStore, IPe
     }
 
     /// <summary>
-    /// Ambil tagihan by order id — dipakai webhook untuk tahu paket &amp; durasi.
+    /// Ambil tagihan by order id — dipakai pembukuan untuk tahu paket &amp; durasi.
     /// Order id tidak bisa ditebak dan dipanggil hanya setelah signature
-    /// Midtrans diverifikasi, jadi pencariannya lintas-tenant secara sah.
+    /// order id diterbitkan server, jadi pencariannya lintas-tenant secara sah.
     /// </summary>
     public async Task<(string PelangganId, string Paket, long Nominal, int Hari)?> CariTagihanAsync(string orderId)
     {
@@ -135,7 +135,7 @@ public partial class SupabaseStore : IRepositoryLangganan, IAdminAuditStore, IPe
     /// <b>Idempotensi</b>: keunikan dijamin oleh <c>pembayaran.order_id</c>
     /// sebagai PRIMARY KEY di dalam transaksi yang sama — bila order sudah
     /// pernah tercatat, baris tidak ter-insert dan perpanjangan dilewati.
-    /// Webhook berulang (yang memang terjadi) karena itu tidak menambah hari.
+    /// Permintaan pembukuan berulang (yang memang terjadi) tidak menambah hari.
     ///
     /// <para><paramref name="hari"/> diambil dari tabel <c>tagihan</c>, bukan
     /// dari nilai tetap server: paket bulanan menambah 31 hari, tahunan 365
@@ -148,8 +148,8 @@ public partial class SupabaseStore : IRepositoryLangganan, IAdminAuditStore, IPe
     /// sehingga seluruh tulisan berikutnya dibatasi RLS ke desa itu.</para>
     ///
     /// <para><paramref name="catatan"/> diteruskan ke kolom
-    /// <c>pembayaran.catatan</c> — hanya diisi jalur pembukuan manual; webhook
-    /// dan rekonsiliasi memanggilnya tanpa catatan.</para>
+    /// <c>pembayaran.catatan</c> — hanya diisi jalur pembukuan manual; jalur
+    /// lain memanggilnya tanpa catatan.</para>
     ///
     /// <para><paramref name="bukti"/> adalah lampiran gambar bukti transfer dari
     /// pembukuan operator, disimpan di kolom <c>pembayaran.bukti_*</c> di dalam
