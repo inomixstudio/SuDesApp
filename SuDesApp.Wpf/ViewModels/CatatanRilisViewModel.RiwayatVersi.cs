@@ -77,6 +77,7 @@ namespace SuDesApp.Wpf.ViewModels
                         new CatatanRilisSubSection("Langganan — Tombol Hubungkan", new List<string>
                         {
                             "Tombol Hubungkan menunggu server lisensi lokal benar-benar siap sebelum menanyakan katalog dan hanya memakai satu bentuk alamat loopback, sehingga gejala 'lisensi server tidak terhubung' hilang.",
+                            "Server lisensi lokal kini wajib dinyalakan setiap alamat yang dipakai menunjuk komputer sendiri, bukan lagi bergantung pada berkas preferensi yang bisa hilang; alasan penolakan start server (mis. ServerKey Midtrans belum diisi) ikut ditampilkan di halaman Langganan alih-alih hanya tercatat di server.log.",
                             "Perilaku ini dikunci uji kontrak khusus dan berkas-berkas terkait ditandai terkunci agar tidak rusak oleh perubahan berikutnya."
                         }),
                         new CatatanRilisSubSection("Garapan Sawah Disamakan Dengan Form Desktop", new List<string>

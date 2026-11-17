@@ -86,4 +86,16 @@ public static class PenentuAlamatLisensi
             && Uri.TryCreate(Rapikan(alamat), UriKind.Absolute, out var uri)
             && uri.Scheme == Uri.UriSchemeHttps;
     }
+
+    /// <summary>
+    /// True bila proses ini WAJIB punya server lisensi lokal yang menyala: alamat
+    /// yang sedang dipakai menunjuk komputer sendiri dan tidak dikunci konfigurasi
+    /// produksi. Kalau alamatnya loopback, tidak ada server lain yang bisa
+    /// menjawab — jadi mendelegasikan keputusan ini ke preferensi operator saja
+    /// membuat aplikasi diam-diam berhenti menyalakan servernya sendiri begitu
+    /// berkas preferensi hilang (gejala: chip "Belum terjangkau" dan tombol Ubah
+    /// alamat tidak muncul).
+    /// </summary>
+    public static bool ServerLokalDibutuhkan(string? alamat, bool terkunci)
+        => !terkunci && AlamatLoopback(alamat);
 }

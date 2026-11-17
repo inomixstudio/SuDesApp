@@ -1,8 +1,15 @@
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using SuDesApp.Services;
+using SuDesApp.Utilities;
+using SuDesApp.Wpf.ViewModels;
 using Xunit;
 
 namespace SuDesApp.Tests.Licensing;
@@ -27,6 +34,11 @@ namespace SuDesApp.Tests.Licensing;
 ///    preferensi lama tidak boleh menimpanya. Sebaliknya, alamat loopback dari
 ///    konfigurasi tidak pernah mengunci, supaya tombol Hubungkan bisa menyalakan
 ///    dan memakai server lokal.
+/// 4. Server lisensi lokal WAJIB dinyalakan bila alamat proses ini loopback,
+///    meski preferensi belum tersimpan — berkas preferensi bisa hilang, dan
+///    alamat loopback tanpa server lokal berarti tidak ada yang menjawab.
+/// 5. Alasan kegagalan menyalakan harus ikut terbaca di GalatTerakhir (baris
+///    keluaran server terakhir), bukan hanya "berhenti sendiri" di log.
 /// </summary>
 public sealed class KontrakHubunganServerLisensiTests
 {
@@ -128,6 +140,165 @@ public sealed class KontrakHubunganServerLisensiTests
         Assert.False(await server.NyalakanDanPakaiAsync(lisensi));
         Assert.False(string.IsNullOrEmpty(server.GalatTerakhir));
         Assert.Equal("http://localhost:5000", lisensi.UrlServer);
+    }
+
+    // ------------------------------------------------ 4. kapan server lokal WAJIB nyala
+
+    [Fact]
+    public void AlamatLoopbackTidakTerkunci_MenuntutServerLokalDinyalakan()
+    {
+        // Berkas preferensi (login_prefs.json) bisa hilang: profil baru,
+        // bersih-bersih, instalasi ulang. Kalau keputusan menyalakan server hanya
+        // bersumber pada preferensi itu, aplikasi berhenti menyalakan servernya
+        // sendiri dan pengguna hanya melihat chip "Belum terjangkau" — persis
+        // gejala "tombol Ubah alamat hilang, server lisensi mati".
+        Assert.True(PenentuAlamatLisensi.ServerLokalDibutuhkan("http://127.0.0.1:5110", terkunci: false));
+        Assert.True(PenentuAlamatLisensi.ServerLokalDibutuhkan("http://localhost:5000", terkunci: false));
+    }
+
+    [Theory]
+    [InlineData("https://lisensi.contoh.go.id", true)]  // produksi terkunci: server lokal tidak boleh nyala
+    [InlineData("https://lisensi.contoh.go.id", false)] // produksi tanpa kunci: tetap bukan server lokal
+    [InlineData("http://lisensi.contoh.go.id", false)]  // server tetangga
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void ServerLokalTidakDibutuhkan_UntukAlamatSelainKomputerSendiri(string? alamat, bool terkunci)
+    {
+        Assert.False(PenentuAlamatLisensi.ServerLokalDibutuhkan(alamat, terkunci));
+    }
+
+    [Fact]
+    public void AppStartupMenyalakanServerLokalKarenaAlamatnya_LoopbackBukanHanyaPreferensi()
+    {
+        // Kontrak sumber: selama App.Startup memutuskan sendiri lewat
+        // IsServerLisensiLokalAktif(), hilangnya berkas preferensi membuat
+        // server lisensi tidak pernah nyala. Perluasan ke ServerLokalDibutuhkan
+        // adalah satu-satunya jalan keluar — jangan dihapus.
+        var tubuh = TubuhMetode("SuDesApp.Wpf", "App.Startup.cs", "private void MulaiServerLisensiLokal()");
+        Assert.Contains("ServerLokalDibutuhkan", tubuh, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (!AppPreferenceStore.IsServerLisensiLokalAktif()) return;", tubuh, StringComparison.Ordinal);
+        // Alamat yang dikunci konfigurasi produksi tetap harus ditolak.
+        Assert.Contains("UrlServerTerkunci", tubuh, StringComparison.Ordinal);
+    }
+
+    // ------------------------------------------------ 5. alasan kegagalan harus terbaca
+
+    [Fact]
+    public void RangkumBarisTerakhir_MenyebutBarisTerbaruLebihDulu()
+    {
+        var rangkum = ServerLisensiLokal.RangkumBarisTerakhir(new[]
+        {
+            "info: mulai",
+            "ServerKey Midtrans belum diatur dan aplikasi tidak berjalan dalam mode Development.",
+            "   "
+        });
+        Assert.StartsWith("ServerKey Midtrans belum diatur", rangkum, StringComparison.Ordinal);
+        Assert.Contains("info: mulai", rangkum, StringComparison.Ordinal);
+        Assert.DoesNotContain("  ", rangkum, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RangkumBarisTerakhirDipotongSaatTerlaluPanjang()
+    {
+        var rangkum = ServerLisensiLokal.RangkumBarisTerakhir(
+            new[] { new string('x', 900) }, maksPanjang: 400);
+        Assert.Equal(400, rangkum.Length);
+        Assert.EndsWith("\u2026", rangkum, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GalatSaatServerBerhentiSendiriMemuatAlasanDariLog()
+    {
+        // Tanpa alasan dari keluaran server, pesan "berhenti sendiri (kode 0)"
+        // membuat operator mengira bug koneksi, padahal server menolak start
+        // dengan pesan yang jelas (mis. ServerKey Midtrans belum diisi).
+        var tubuh = TubuhMetode("SuDesApp.Core/Services", "ServerLisensiLokal.cs", "private async Task<bool> TungguSiapAsync");
+        Assert.Contains("BarisTerakhirServer()", tubuh, StringComparison.Ordinal);
+        Assert.Contains("Alasan dari server", tubuh, StringComparison.Ordinal);
+    }
+
+    // ------------------------------------------------ 6. ciri yang dibaca pengguna:
+    // tombol "Ubah alamat" hanya ada selama server terbukti menjawab
+
+    private sealed class ServerPaket : HttpMessageHandler
+    {
+        private readonly int _tundaDetik;
+        public ServerPaket(int tundaDetik = 150) => _tundaDetik = tundaDetik;
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            // Kontruktor VM langsung memanggil katalog; jeda kecil membuat
+            // keadaan "belum terhubung" sempat diperiksa lebih dulu.
+            await Task.Delay(_tundaDetik, cancellationToken).ConfigureAwait(false);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    "[{\"kode\":\"bulanan\",\"nama\":\"Bulanan\",\"harga\":150000,\"hari\":30}]",
+                    Encoding.UTF8, "application/json")
+            };
+        }
+    }
+
+    [Fact]
+    public async Task TombolUbahAlamatMunculSesudahServerMenjawab_DanHilangSesudahDibukaKunci()
+    {
+        // Operator memakai satu gejala untuk mengenali server lisensi mati:
+        // tombol "Ubah alamat" hilang. Tombol itu memang hanya tampil saat
+        // alamat terkunci OLEH KONEKSI YANG TERBUKTI — jadi uji ini mengunci
+        // hubungan dua arah itu supaya "ciri" tadi tidak berubah jadi dusta.
+        var lisensi = new LisensiManager(NullLogger<LisensiManager>.Instance, new HttpClient(new ServerPaket()))
+        {
+            UrlServer = "http://127.0.0.1:5110"
+        };
+        var klien = new LanggananKlien(lisensi, new HttpClient(new ServerPaket()), NullLogger<LanggananKlien>.Instance);
+        var penjaga = new PenjagaLisensi(lisensi, new TrialLokal(), NullLogger<PenjagaLisensi>.Instance, klien);
+
+        var vm = new LanggananViewModel(
+            NullLogger<LanggananViewModel>.Instance, lisensi, penjaga, klien,
+            new SambunganServerLisensi());
+
+        Assert.False(vm.TampilBukaKunciServer);
+        Assert.True(vm.UrlServerDapatDiubah);
+
+        var batas = DateTime.UtcNow.AddSeconds(5);
+        while (vm.ServerChipTeks != "Terhubung" && DateTime.UtcNow < batas)
+        {
+            await Task.Delay(25);
+        }
+
+        Assert.Equal("Terhubung", vm.ServerChipTeks);
+        Assert.False(vm.ServerBelumTersambung);
+        Assert.True(vm.UrlServerTerkunci);
+        Assert.True(vm.TampilBukaKunciServer);
+        Assert.False(vm.UrlServerDapatDiubah);
+
+        // Setelah dibuka secara sadar, tombolnya hilang lagi dan kotak alamat
+        // bisa diketik — kalau tidak, pengguna tidak bisa mengganti alamat sama sekali.
+        vm.BukaKunciServerCommand.Execute(null);
+        Assert.False(vm.TampilBukaKunciServer);
+        Assert.True(vm.UrlServerDapatDiubah);
+    }
+
+    /// <summary>Potong badan satu metode dari berkas sumber, untuk uji kontrak.</summary>
+    private static string TubuhMetode(string folder, string berkas, string penanda)
+    {
+        var teks = File.ReadAllText(Path.Combine(CariAkarRepositori(), folder.Replace('/', Path.DirectorySeparatorChar), berkas));
+        var mulai = teks.IndexOf(penanda, StringComparison.Ordinal);
+        Assert.True(mulai >= 0, $"{penanda} tidak ditemukan di {berkas} — jangan ganti namanya tanpa memperbarui uji kontrak ini.");
+
+        var kurung = teks.IndexOf('{', mulai);
+        int dalam = 0;
+        for (var i = kurung; i < teks.Length; i++)
+        {
+            if (teks[i] == '{') dalam++;
+            else if (teks[i] == '}')
+            {
+                dalam--;
+                if (dalam == 0) return teks.Substring(mulai, i - mulai + 1);
+            }
+        }
+        return teks.Substring(mulai);
     }
 
     private static string CariAkarRepositori()

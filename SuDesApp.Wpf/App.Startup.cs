@@ -894,9 +894,28 @@ namespace SuDesApp.Wpf
         /// </summary>
         private void MulaiServerLisensiLokal()
         {
-            if (!AppPreferenceStore.IsServerLisensiLokalAktif()) return;
-
             var lisensi = _serviceProvider!.GetRequiredService<SuDesApp.Services.LisensiManager>();
+
+            // Dua jalan boleh menyalakan server lokal: operator memang
+            // mengaktifkannya (preferensi), ATAU alamat server aplikasi ini
+            // menunjuk komputer sendiri sehingga tanpa server lokal tidak ada
+            // satu pun yang bisa menjawab. Jalan kedua ini penting: berkas
+            // preferensi (%LOCALAPPDATA%\SuDesApp\login_prefs.json) bisa hilang
+            // — profil baru, bersih-bersih, instalasi ulang — dan kalau hanya
+            // preferensi yang memutuskan, aplikasi berhenti menyalakan servernya
+            // sendiri tanpa pesan apa pun.
+            bool olehPreferensi = AppPreferenceStore.IsServerLisensiLokalAktif();
+            bool dibutuhkan = SuDesApp.Services.PenentuAlamatLisensi.ServerLokalDibutuhkan(
+                lisensi.UrlServer, lisensi.UrlServerTerkunci);
+
+            if (dibutuhkan && !olehPreferensi)
+            {
+                AppPreferenceStore.SetServerLisensiLokalAktif(true);
+                olehPreferensi = true;
+            }
+
+            if (!olehPreferensi) return;
+
             if (lisensi.UrlServerTerkunci)
             {
                 // Rilis yang terkunci pada server produksi tidak boleh diarahkan
