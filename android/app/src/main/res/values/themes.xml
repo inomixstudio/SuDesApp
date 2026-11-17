@@ -39,8 +39,41 @@
         <item name="android:forceDarkAllowed">false</item>
     </style>
 
-    <!-- ================= Tipografi ================= -->
+    <!--
+      Penampil PDF selalu terang: kertas putih dan bilah bawahnya tidak ikut
+      mode gelap sistem supaya hasil cetak mudah diperiksa. Warna dipakai
+      langsung (bukan @color) karena @color ikut berganti di values-night.
+    -->
+    <style name="Theme.SuDesAndroid.Terang" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">#15803D</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#DCFCE7</item>
+        <item name="colorOnPrimaryContainer">#14532D</item>
+        <item name="colorSecondary">#14532D</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">#DCFCE7</item>
+        <item name="colorOnSecondaryContainer">#14532D</item>
 
+        <item name="android:colorBackground">#FFFFFF</item>
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorOnSurface">#052E16</item>
+        <item name="colorSurfaceVariant">#E7F9EE</item>
+        <item name="colorOnSurfaceVariant">#3F614E</item>
+        <item name="colorOutline">#C8EED6</item>
+        <item name="colorOutlineVariant">#C8EED6</item>
+
+        <item name="android:windowBackground">#FFFFFF</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:textColorPrimary">#052E16</item>
+        <item name="android:textColorSecondary">#3F614E</item>
+        <item name="android:textColorHint">#3F614E</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+
+    <!-- ================= Tipografi ================= -->
     <style name="JudulHalaman">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
