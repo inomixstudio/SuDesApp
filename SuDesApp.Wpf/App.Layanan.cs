@@ -453,7 +453,17 @@ namespace SuDesApp.Wpf
             // pengaturan desa disimpan, dan saat SkemaFormulir.json berubah.
             services.AddSingleton<SuDesApp.Wpf.Services.PenerbitanSinkronLatar>();
             services.AddTransient<SuDesApp.Sinkron.PenerbitSkemaFormulir>();
-            services.AddTransient<SuDesApp.Sinkron.PenerbitPengaturanDesa>();
+            // Versi yang diterbitkan diambil dari IdentitasAplikasi (atribut
+            // assembly SuDesApp.Wpf) supaya persis sama dengan versi yang
+            // ditampilkan aplikasi, bukan versi assembly Core.
+            services.AddTransient<SuDesApp.Sinkron.PenerbitPengaturanDesa>(sp =>
+                new SuDesApp.Sinkron.PenerbitPengaturanDesa(
+                    sp.GetRequiredService<SuDesApp.Supabase.SupabasePengaturan>(),
+                    sp.GetRequiredService<SuDesApp.Data.Repositories.IDesaRepository>(),
+                    sp.GetRequiredService<SuDesApp.Data.Repositories.ISuratRepository>(),
+                    sp.GetRequiredService<SuDesApp.AppConfig>(),
+                    sp.GetRequiredService<ILogger<SuDesApp.Sinkron.PenerbitPengaturanDesa>>(),
+                    () => SuDesApp.Wpf.Utilities.IdentitasAplikasi.VersiSingkat));
             services.AddTransient<SinkronViewModel>();
 
             // Pusat dokumen (Dokumentasi) + pembaca dokumen. Pembaca selalu dibuka

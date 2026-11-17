@@ -26,6 +26,7 @@ public sealed class PenerbitPengaturanDesa
     private readonly ISuratRepository _suratRepository;
     private readonly AppConfig _appConfig;
     private readonly ILogger<PenerbitPengaturanDesa> _logger;
+    private readonly Func<string> _versiAplikasi;
 
     /// <summary>Batas ukuran logo yang ikut diterbitkan (byte), ~650 KB.</summary>
     private const long BatasUkuranLogo = 900_000;
@@ -35,13 +36,21 @@ public sealed class PenerbitPengaturanDesa
         IDesaRepository desaRepository,
         ISuratRepository suratRepository,
         AppConfig appConfig,
-        ILogger<PenerbitPengaturanDesa> logger)
+        ILogger<PenerbitPengaturanDesa> logger,
+        Func<string>? versiAplikasi = null)
     {
         _pengaturan = pengaturan ?? throw new System.ArgumentNullException(nameof(pengaturan));
         _desaRepository = desaRepository ?? throw new System.ArgumentNullException(nameof(desaRepository));
         _suratRepository = suratRepository ?? throw new System.ArgumentNullException(nameof(suratRepository));
         _appConfig = appConfig ?? throw new System.ArgumentNullException(nameof(appConfig));
         _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
+        // Versi aplikasi desktop ikut diterbitkan supaya Android bisa menolak
+        // sinkron ketika versinya belum sama. Bawaan membaca assembly depan
+        // (pola yang sama dengan PatchUpdateService) bila pemanggil tidak
+        // menentukkan.
+        _versiAplikasi = versiAplikasi ?? (() =>
+            (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0))
+                .ToString(3));
     }
 
     /// <summary>
@@ -70,6 +79,9 @@ public sealed class PenerbitPengaturanDesa
                 ["sekretarisDesa"] = desa?.SekretarisDesa ?? string.Empty,
                 ["nipKepalaDesa"] = desa?.NipKepalaDesa ?? string.Empty,
                 ["ukuranKertas"] = PengaturanCetak.GetUkuranKertas() == UkuranKertasSurat.F4 ? "F4" : "A4",
+                // Versi desktop — Android membandingkannya dengan versinya
+                // sendiri dan menolak sinkron bila belum sama.
+                ["versiAplikasi"] = _versiAplikasi(),
             };
 
             await TambahkanLogoAsync(kop, ct).ConfigureAwait(false);

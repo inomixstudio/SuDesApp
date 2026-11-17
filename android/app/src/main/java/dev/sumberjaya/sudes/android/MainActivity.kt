@@ -26,6 +26,9 @@ import kotlinx.coroutines.launch
  */
 class MainActivity : AppCompatActivity() {
 
+    /** Peringatan versi tampil sekali per jalalan, tidak berulang terus. */
+    private var versiSudahDiingatkan = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -47,6 +50,14 @@ class MainActivity : AppCompatActivity() {
         // Identitas kop dan pola nomor diambil dari desktop, bukan diketik di
         // sini. Penarikan hanya jalan bila perangkat sudah dipasang.
         lifecycleScope.launch {
+            // Versi Android yang belum sama dengan desktop menahan sinkron:
+            // aplikasi diminta diperbarui dulu, bukan melanjutkan dengan
+            // skema dan pola nomor yang bisa berbeda.
+            if (!PengaturanSinkron.versiCocok(this@MainActivity)) {
+                beriTahuVersiTakSama()
+                return@launch
+            }
+
             val hasil = try {
                 PengaturanSinkron.tarik(this@MainActivity)
             } catch (e: Exception) {
@@ -82,12 +93,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Peringatan sekali per jalalan: versi belum sama sehingga sinkron ditahan.
+     * Toast dipilih karena layar utama tetap bisa dipakai membuat draf.
+     */
+    private fun beriTahuVersiTakSama() {
+        if (versiSudahDiingatkan) return
+        versiSudahDiingatkan = true
+        Toast.makeText(
+            this,
+            getString(
+                R.string.versi_sinkron_ditolak,
+                PengaturanSinkron.versiDesktop(this),
+                BuildConfig.VERSION_NAME,
+            ),
+            Toast.LENGTH_LONG,
+        ).show()
+    }
+
+    /**
      * Tarik kop/skema lagi bila sudah lama (>5 menit) — supaya perubahan di
      * desktop terlihat tanpa operator menekan tombol sinkron di Pengaturan.
      * Tarikan pertama tetap di onCreate.
      */
     private fun tarikBilaLama() {
         if (!SupabaseSesi.ambil(this).masuk) return
+        // Versi berbeda = sinkron ditahan sampai aplikasi diperbarui.
+        if (!PengaturanSinkron.versiCocok(this)) return
         if (!PengaturanSinkron.perluTarikUlang(this)) return
         lifecycleScope.launch {
             try {
