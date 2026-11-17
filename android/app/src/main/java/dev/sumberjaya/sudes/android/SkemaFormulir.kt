@@ -16,6 +16,8 @@ data class SkemaBidang(
     val otomatis: Boolean,
     /** Hanya untuk type="list": bidang penyusun tiap baris. */
     val children: List<SkemaBidang>,
+    /** Judul kartu tempat bidang ini tampil — sama dengan section form desktop. */
+    val grup: String = "",
 )
 
 /** Perataan paragraf/blok pada badan surat (kawan Rata di desktop). */
@@ -101,9 +103,37 @@ data class SkemaJenis(
      * menambahkan judul lagi — itu akan terduplikasi.
      */
     val halamanPenuh: Boolean = false,
+    /**
+     * Urutan kartu seperti yang dilihat operator di desktop. Skema lama (cache
+     * server sebelum grup diterbitkan) list kosong → formulir tetap datar.
+     */
+    val grupUrutan: List<String> = emptyList(),
 ) {
     /** Field yang diisi operator, berurutan; field otomatis dilewati. */
     val fieldsInput: List<SkemaBidang> get() = fields.filter { !it.otomatis }
+
+    /**
+     * Bagi bidang menjadi kartu-kartu (judul, bidang) mengikuti [grupUrutan];
+     * bidang tanpa grup terkumpul di kelompok terakhir berjudul kosong sehingga
+     * tidak ada isian yang hilang. Judul kosong = satu kelompok datar.
+     */
+    fun grupkan(input: List<SkemaBidang>): List<Pair<String, List<SkemaBidang>>> {
+        if (input.isEmpty()) return emptyList()
+        if (grupUrutan.isEmpty() && input.none { it.grup.isNotBlank() }) {
+            return listOf("" to input)
+        }
+        val hasil = mutableListOf<Pair<String, MutableList<SkemaBidang>>>()
+        for (judul in grupUrutan) {
+            val anggota = input.filter { it.grup == judul }
+            if (anggota.isNotEmpty()) hasil += judul to anggota.toMutableList()
+        }
+        val terpakai = hasil.flatMap { it.second }.toSet()
+        for (b in input.filterNot { terpakai.contains(it) }) {
+            val idx = hasil.indexOfFirst { it.first == b.grup }
+            if (idx >= 0) hasil[idx].second.add(b) else hasil += b.grup to mutableListOf(b)
+        }
+        return hasil.map { it.first to it.second.toList() }
+    }
 
     /** Judul yang dicetak; jatuh ke label bila skema tidak menyebutkannya. */
     val judulCetak: String get() = judul.ifBlank { label }
@@ -119,6 +149,14 @@ data class SkemaJenis(
             for (i in 0 until arr.length()) {
                 daftar.add(BidangDariJson(arr.getJSONObject(i)))
             }
+            val urutanArr = json.optJSONArray("grupUrutan")
+            val urutan = mutableListOf<String>()
+            if (urutanArr != null) {
+                for (i in 0 until urutanArr.length()) {
+                    val teks = urutanArr.optString(i)
+                    if (teks.isNotBlank()) urutan.add(teks)
+                }
+            }
             return SkemaJenis(
                 idJenis = idJenis,
                 label = label,
@@ -130,6 +168,7 @@ data class SkemaJenis(
                 catatan = json.optString("catatan", ""),
                 keteranganBawaan = json.optString("keteranganBawaan", ""),
                 halamanPenuh = json.optBoolean("halamanPenuh", false),
+                grupUrutan = urutan,
             )
         }
 
@@ -255,6 +294,7 @@ data class SkemaJenis(
                 options = opsi,
                 otomatis = b.optBoolean("otomatis", false),
                 children = anak,
+                grup = b.optString("grup", ""),
             )
         }
     }
