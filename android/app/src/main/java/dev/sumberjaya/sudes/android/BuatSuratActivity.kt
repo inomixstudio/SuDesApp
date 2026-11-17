@@ -614,6 +614,18 @@ class BuatSuratActivity : AppCompatActivity() {
             nilai[dibaca]?.let { nilai[ditulis] = it }
         }
 
+        // Desktop mencetak tanggal LAHIR dengan pola tetap per jenis surat
+        // (lihat TanggalIndonesia.polaTanggalLahir). Pemilih tanggal Android
+        // menghasilkan dd/MM/yyyy, bentuk yang tidak pernah muncul di PDF
+        // desktop, jadi semua kunci tanggal lahir dinormalkan lebih dulu.
+        val polaLahir = TanggalIndonesia.polaTanggalLahir(jenis.idJenis)
+        for ((k, v) in nilai.toList()) {
+            val ekor = k.substringAfterLast('.').lowercase(Locale.getDefault())
+            if (ekor.contains("tanggallahir") || ekor.contains("tgllahir")) {
+                nilai[k] = TanggalIndonesia.dari(v, polaLahir)
+            }
+        }
+
         // Keterangan: isian operator bila ada, kalau kosong pakai keterangan
         // bawaan jenis surat — sama seperti desktop saat form dibuka.
         val isianKeterangan = listOf("keperluan", "keterangan", "keteranganTambahan")
@@ -621,7 +633,7 @@ class BuatSuratActivity : AppCompatActivity() {
 
         nilai["warga.tempatTanggalLahir"] = listOf(
             teksBidang("tempatLahir").ifBlank { "...." },
-            teksBidang("tanggalLahir").ifBlank { "...." },
+            TanggalIndonesia.dari(teksBidang("tanggalLahir"), polaLahir).ifBlank { "...." },
         ).joinToString(", ")
 
         nilai["warga.alamat"] = AlamatSusun.susun(nilai)
@@ -922,7 +934,7 @@ class BuatSuratActivity : AppCompatActivity() {
             nilai["ayah.nama"] = teksBidang("nama")
             nilai["ayah.nik"] = teksBidang("nik")
             nilai["ayah.tempatLahir"] = teksBidang("tempatLahir")
-            nilai["ayah.tanggalLahir"] = teksBidang("tanggalLahir")
+            nilai["ayah.tanggalLahir"] = TanggalIndonesia.dari(teksBidang("tanggalLahir"), polaLahir)
             nilai["ayah.agama"] = teksBidang("agama")
             nilai["ayah.pekerjaan"] = teksBidang("pekerjaan")
             nilai["ayah.tempatTanggalLahir"] = gabungTempatTanggal(

@@ -2677,21 +2677,6 @@
         "grup": "DATA PENGGARAP"
       },
       {
-        "key": "statusPerkawinan",
-        "label": "Status Perkawinan",
-        "type": "select",
-        "target": "warga.statusPerkawinan",
-        "required": false,
-        "otomatis": false,
-        "options": [
-          "Belum Kawin",
-          "Kawin",
-          "Cerai Hidup",
-          "Cerai Mati"
-        ],
-        "grup": "DATA PENGGARAP"
-      },
-      {
         "key": "pekerjaan",
         "label": "Pekerjaan",
         "type": "text",
