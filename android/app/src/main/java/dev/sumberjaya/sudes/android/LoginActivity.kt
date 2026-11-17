@@ -47,11 +47,15 @@ class LoginActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_login)
         Ui.insetAtas(findViewById(R.id.kepala))
-        Ui.insetBawah(findViewById(R.id.konten))
+        Ui.insetBawah(findViewById(R.id.versi_aplikasi))
         Ui.statusBarIkutGulir(this, findViewById(R.id.gulir), findViewById(R.id.kepala))
         status = findViewById(R.id.status_text)
         kode = findViewById(R.id.kode_manual)
         tombolKode = findViewById(R.id.btn_kode)
+
+        // Versi selalu dari BuildConfig supaya tidak pernah tertinggal.
+        findViewById<TextView>(R.id.versi_aplikasi).text =
+            getString(R.string.versi_aplikasi, BuildConfig.VERSION_NAME)
 
         findViewById<Button>(R.id.btn_pindai).setOnClickListener { mulaiPindai() }
         tombolKode.setOnClickListener { hubungkanKodeManual() }

@@ -34,8 +34,12 @@ class MainActivity : AppCompatActivity() {
         PengirimWorker.jadwalkan(this)
 
         Ui.insetAtas(findViewById(R.id.kepala))
-        Ui.insetBawah(findViewById(R.id.konten))
+        Ui.insetBawah(findViewById(R.id.versi_aplikasi))
         Ui.statusBarIkutGulir(this, findViewById(R.id.gulir), findViewById(R.id.kepala))
+
+        // Versi selalu dari BuildConfig supaya tidak pernah tertinggal.
+        findViewById<TextView>(R.id.versi_aplikasi).text =
+            getString(R.string.versi_aplikasi, BuildConfig.VERSION_NAME)
 
         isiMenu()
         tampilkanIdentitas()
