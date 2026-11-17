@@ -387,14 +387,21 @@ class SupabaseKlien(
      * berhenti berfungsi setelah itu dan operator harus memasang ulang
      * perangkat — tidak bisa dibiarkan pada aplikasi yang dipakai sehari-hari.
      */
+    /** Sebab gagalnya penyegaran token — menentukan apakah sesi dikeluarkan. */
+    private enum class GagalSegar { JARINGAN, DITOLAK }
+
     private suspend fun pastikanTokenSegar() {
         if (!tokenKedaluwarsa()) return
 
-        // Token sudah tidak layak pakai dan tidak bisa disegarkan: kirim galat
-        // yang jelas, jangan lanjut dengan token mati (hasilnya 401 yang
-        // tertelan menjadi "data kosong").
-        if (!muatUlangToken() && tokenKedaluwarsa()) {
-            throw SesiKedaluwarsa()
+        when (muatUlangToken()) {
+            null -> return
+
+            GagalSegar.DITOLAK -> throw SesiKedaluwarsa()
+
+            // Tidak terjangkau: jangan keluarkan operator. Token lama tetap
+            // dipakai dan permintaan berikutnya gagal sebagai "offline";
+            // pemasangan ulang hanya diminta bila server benar-benar menolak.
+            GagalSegar.JARINGAN -> return
         }
     }
 
@@ -417,9 +424,13 @@ class SupabaseKlien(
         }
     }
 
-    /** Tukar refresh token dengan access token baru. False bila gagal. */
-    private suspend fun muatUlangToken(): Boolean {
-        if (sesi.refreshToken.isBlank()) return false
+    /**
+     * Tukar refresh token dengan access token baru. Null bila berhasil;
+     * [GagalSegar] bila gagal — supaya kegagalan jaringan tidak dianggap
+     * sesi kedaluwarsa dan mengeluarkan perangkat yang sesinya masih sah.
+     */
+    private suspend fun muatUlangToken(): GagalSegar? {
+        if (sesi.refreshToken.isBlank()) return GagalSegar.DITOLAK
         val bodi = JSONObject()
             .put("refresh_token", sesi.refreshToken)
             .toString()
@@ -433,21 +444,21 @@ class SupabaseKlien(
 
         return try {
             http.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return false
+                if (!resp.isSuccessful) return GagalSegar.DITOLAK
                 val json = JSONObject(resp.body?.string().orEmpty())
                 val akses = json.optString("access_token")
                 val segarkan = json.optString("refresh_token")
-                if (akses.isBlank()) return false
+                if (akses.isBlank()) return GagalSegar.DITOLAK
 
                 sesi = sesi.copy(
                     accessToken = akses,
                     refreshToken = if (segarkan.isBlank()) sesi.refreshToken else segarkan,
                 )
                 onSesiDiperbarui?.invoke(sesi)
-                true
+                null
             }
         } catch (e: Exception) {
-            false
+            GagalSegar.JARINGAN
         }
     }
 
