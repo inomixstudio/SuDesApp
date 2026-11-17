@@ -14,6 +14,14 @@ namespace SuDesApp.Services
     /// Server lisensi yang dijalankan DI KOMPUTER INI untuk administrasi lokal
     /// (pusat administrasi + data langganan yang menetap).
     ///
+    /// ╔═ TERKUNCI ═══════════════════════════════════════════════════════╗
+    /// ║ Kelas ini menetapkan Alamat (127.0.0.1 + port) dan siklus        ║
+    /// ║ hidup server yang dipakai tombol Hubungkan. Mengubah bentuk host ║
+    /// ║ (localhost vs 127.0.0.1) atau port di sini adalah akar gejala    ║
+    /// ║ "lisensi server tidak terhubung". Jangan mengedit tanpa menjalankan ║
+    /// ║ SuDesApp.Tests/Licensing/KontrakHubunganServerLisensiTests.cs.   ║
+    /// ╚═══════════════════════════════════════════════════════════════════╝
+    ///
     /// Siapa yang memiliki siklus hidupnya: APLIKASI. Sebelumnya server ini
     /// dinyalakan skrip bantu (<c>Tools/SiapkanServerLisensi.ps1</c>) dan
     /// dibiarkan hidup, sehingga proses server tertinggal setelah aplikasi

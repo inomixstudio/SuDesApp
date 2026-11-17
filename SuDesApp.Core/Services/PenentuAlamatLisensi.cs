@@ -29,6 +29,14 @@ public readonly record struct AlamatLisensi(string Url, bool Terkunci);
 ///    menang. Ini yang membuat server uji lokal bisa diarahkan dari halaman
 ///    Langganan tanpa merilis ulang aplikasi.
 /// 3. Bila keduanya tidak sah, pakai alamat loopback bawaan.
+///
+/// ╔═ TERKUNCI ═══════════════════════════════════════════════════════╗
+/// ║ Aturan di atas adalah satu-satunya penjelas "alamat mana yang   ║
+/// ║ menang". Mengubah urutan/kunci di sini membuat halaman Langganan ║
+/// ║ menunjuk server yang salah — gejala yang selalu terlihat sebagai  ║
+/// ║ "tidak terhubung". Dijaga KontrakHubunganServerLisensiTests.cs;   ║
+/// ║ jangan diedit tanpa menjalankan filter "FullyQualifiedName~Licensing". ║
+/// ╚═══════════════════════════════════════════════════════════════════╝
 /// </summary>
 public static class PenentuAlamatLisensi
 {
