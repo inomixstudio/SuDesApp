@@ -1,8 +1,6 @@
 package dev.sumberjaya.sudes.android
 
 import android.content.Intent
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.os.Bundle
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -10,7 +8,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.launch
@@ -28,8 +25,6 @@ import kotlinx.coroutines.launch
  * dikirim saat menu ini dibuka lagi.
  */
 class MainActivity : AppCompatActivity() {
-
-    private enum class GayaKartu { BIASA, UTAMA, LEMBUT }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,7 +124,6 @@ class MainActivity : AppCompatActivity() {
             R.drawable.ic_surat,
             R.string.menu_buat_surat,
             R.string.ket_buat_surat,
-            GayaKartu.UTAMA,
         ) {
             startActivity(
                 Intent(this, BuatSuratActivity::class.java)
@@ -151,7 +145,6 @@ class MainActivity : AppCompatActivity() {
             R.drawable.ic_ntcr,
             R.string.menu_buat_ntcr,
             R.string.ket_buat_ntcr,
-            GayaKartu.LEMBUT,
         ) {
             startActivity(
                 Intent(this, BuatSuratActivity::class.java)
@@ -183,52 +176,21 @@ class MainActivity : AppCompatActivity() {
         ikon: Int,
         judul: Int,
         keterangan: Int,
-        gaya: GayaKartu = GayaKartu.BIASA,
         aksi: () -> Unit,
     ) {
         val wadah = findViewById<LinearLayout>(wadahId)
         val kartu = layoutInflater.inflate(R.layout.item_menu, wadah, false) as MaterialCardView
-        val wadahIkon = kartu.findViewById<FrameLayout>(R.id.wadah_ikon)
         val gambar = kartu.findViewById<ImageView>(R.id.ikon)
         val teksJudul = kartu.findViewById<TextView>(R.id.judul)
         val teksKet = kartu.findViewById<TextView>(R.id.ket)
-        val panah = kartu.findViewById<ImageView>(R.id.panah)
 
         gambar.setImageResource(ikon)
         teksJudul.setText(judul)
         teksKet.setText(keterangan)
 
-        when (gaya) {
-            GayaKartu.UTAMA -> {
-                kartu.setCardBackgroundColor(warna(R.color.accent))
-                kartu.strokeWidth = 0
-                kartu.rippleColor = ColorStateList.valueOf(Color.argb(46, 255, 255, 255))
-                wadahIkon.backgroundTintList = ColorStateList.valueOf(Color.argb(41, 255, 255, 255))
-                gambar.imageTintList = ColorStateList.valueOf(Color.WHITE)
-                teksJudul.setTextColor(Color.WHITE)
-                teksKet.setTextColor(Color.argb(204, 255, 255, 255))
-                panah.imageTintList = ColorStateList.valueOf(Color.argb(191, 255, 255, 255))
-            }
-
-            GayaKartu.LEMBUT -> {
-                kartu.setCardBackgroundColor(warna(R.color.accent_muda))
-                kartu.strokeWidth = 0
-                wadahIkon.backgroundTintList = warna(R.color.surface)
-                gambar.imageTintList = warna(R.color.accent)
-                teksJudul.setTextColor(warna(R.color.accent_dark))
-                teksKet.setTextColor(warna(R.color.teks_redup))
-                panah.imageTintList = warna(R.color.accent_dark)
-            }
-
-            GayaKartu.BIASA -> Unit
-        }
-
         kartu.setOnClickListener { aksi() }
         wadah.addView(kartu)
     }
-
-    private fun warna(id: Int): ColorStateList =
-        ColorStateList.valueOf(ContextCompat.getColor(this, id))
 
     /**
      * Surat yang sempat gagal terkirim dicoba lagi setiap menu dibuka, jadi
