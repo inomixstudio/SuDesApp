@@ -46,7 +46,8 @@ namespace SuDesApp.Wpf.ViewModels
                         new CatatanRilisSubSection("PDF Android Sama dengan Desktop", new List<string>
                         {
                             "Blanko NTCR (N1–N6, N8) cetak di Android sekarang termasuk blok kepala blanko (LAMPIRAN IV–X + Model N), blok kantor desa, judul + Nomor/Perihal permohonan, blok Diterima KUA, tanda tangan dua pihak, dan tanda tangan desa dengan NIP — dulu bagian ini hanya dicatat sebagai catatan miring.",
-                            "Surat Kematian (F-2.17), tabel rincian garapan 6 kolom, dan kepala surat Rekening Koran juga ikut disamakan; nama orang bergelar tidak lagi ikut tercetak kapital penuh."
+                            "Surat Kematian (F-2.17), tabel rincian garapan 6 kolom, dan kepala surat Rekening Koran juga ikut disamakan; nama orang bergelar tidak lagi ikut tercetak kapital penuh.",
+                            "Sejumlah kolom yang selama ini tercetak kosong di Android kini terisi: ejaan kunci skema dibetulkan dan umur, tanggal panjang Indonesia, serta bin/binti orang tua NTCR dihitung Android dengan aturan yang sama persis seperti generator desktop."
                         }),
                         new CatatanRilisSubSection("Ahli Waris Tiga Halaman di Android", new List<string>
                         {
@@ -62,6 +63,21 @@ namespace SuDesApp.Wpf.ViewModels
                             "Keterangan Penghasilan (472) kini jenis surat biasa di desktop: formulir data diri + pekerjaan/usaha, penghasilan per bulan, dan jumlah tanggungan, dengan generator PDF sendiri.",
                             "Formulir pendataan perangkat desa dijamin tepat satu halaman di A4 maupun F4, dan Surat Ijin Tinggal memakai satu sumber teks antara form dan hasil cetak.",
                             "Lambang kabupaten kini dibungkus satu arsip LambangKabupaten.zip (±20 MB, 514 lambang) — installer tidak lagi menyalin ratusan berkas mentah, dan berkas pengguna tetap dihormati lebih dulu."
+                        }),
+                        new CatatanRilisSubSection("Isian Surat Android Dipecah per Kartu", new List<string>
+                        {
+                            "Halaman Buat Surat tidak lagi menampilkan seluruh kolom sebagai satu daftar panjang: isian disusun dalam kartu-kartu berjudul (DATA PEMOHON, DATA KEMATIAN, DATA ANAK, PEJABAT PENANDATANGAN, dan seterusnya) persis seperti section pada formulir desktop.",
+                            "Judul dan urutan kartu diturunkan otomatis dari tampilan desktop ke skema formulir lewat Tools/turunkan-grup.py, jadi keduanya tidak bisa berbeda diam-diam dan apk lama tetap ikut berubah setelah sinkron. Skema lama tanpa informasi kartu tampil datar seperti sebelumnya."
+                        }),
+                        new CatatanRilisSubSection("Sinkron Android Hanya Antarversi yang Sama", new List<string>
+                        {
+                            "Desktop ikut menerbitkan versinya bersama kop dan pola nomor; aplikasi Android yang versinya belum sama menahan sinkron dan meminta diperbarui lebih dulu, supaya tidak ada surat yang dibuat dengan formulir versi lain.",
+                            "Perangkat yang belum pernah menerima informasi versi tetap berjalan normal — pemblokiran baru aktif begitu data desktop tiba."
+                        }),
+                        new CatatanRilisSubSection("Langganan — Tombol Hubungkan", new List<string>
+                        {
+                            "Tombol Hubungkan menunggu server lisensi lokal benar-benar siap sebelum menanyakan katalog dan hanya memakai satu bentuk alamat loopback, sehingga gejala 'lisensi server tidak terhubung' hilang.",
+                            "Perilaku ini dikunci uji kontrak khusus dan berkas-berkas terkait ditandai terkunci agar tidak rusak oleh perubahan berikutnya."
                         }),
                         new CatatanRilisSubSection("Alat Build Android", new List<string>
                         {
