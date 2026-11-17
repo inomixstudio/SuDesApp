@@ -8,10 +8,11 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -45,13 +46,18 @@ class BuatSuratActivity : AppCompatActivity() {
     /** Satu baris pada bidang type="list" beserta field penyusunnya. */
     private data class BarisDaftar(val wadah: View, val bidang: Map<String, View>)
 
-    private lateinit var spinnerJenis: Spinner
+    private lateinit var judulHalaman: TextView
+    private lateinit var wadahPilih: View
+    private lateinit var wadahKartuJenis: LinearLayout
+    private lateinit var kartuForm: MaterialCardView
+    private lateinit var tombolKirim: Button
     private lateinit var wadahForm: LinearLayout
     private lateinit var progres: View
 
     private var daftar: List<SkemaJenis> = emptyList()
     private var terpilih: SkemaJenis? = null
     private var modeEdit = false
+    private var ntcrGrup = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,14 +66,14 @@ class BuatSuratActivity : AppCompatActivity() {
         Ui.insetBawah(findViewById(R.id.konten))
 
         val grup = intent.getStringExtra(EXTRA_GROUPS) ?: GROUP_SURAT
-        daftar = if (grup == GROUP_NTCR) SkemaLokal.ntcr(this) else SkemaLokal.suratBiasa(this)
+        ntcrGrup = grup == GROUP_NTCR
+        daftar = if (ntcrGrup) SkemaLokal.ntcr(this) else SkemaLokal.suratBiasa(this)
 
-        title = if (grup == GROUP_NTCR) getString(R.string.label_buat_ntcr) else getString(R.string.label_buat_surat)
-        findViewById<TextView>(R.id.subjudul_halaman).text = getString(
-            if (grup == GROUP_NTCR) R.string.ket_buat_ntcr else R.string.ket_buat_surat
-        )
-
-        spinnerJenis = findViewById(R.id.spinner_jenis)
+        judulHalaman = findViewById(R.id.judul_halaman)
+        wadahPilih = findViewById(R.id.wadah_pilih)
+        wadahKartuJenis = findViewById(R.id.wadah_kartu_jenis)
+        kartuForm = findViewById(R.id.kartu_form)
+        tombolKirim = findViewById(R.id.btn_kirim)
         wadahForm = findViewById(R.id.wadah_form)
         progres = findViewById(R.id.progres)
 
@@ -84,7 +90,6 @@ class BuatSuratActivity : AppCompatActivity() {
                 finish()
                 return
             }
-            title = getString(R.string.edit_surat_judul, daftar.first().label)
         }
         if (daftar.isEmpty()) {
             Toast.makeText(this, R.string.register_kosong, Toast.LENGTH_LONG).show()
@@ -92,49 +97,85 @@ class BuatSuratActivity : AppCompatActivity() {
             return
         }
 
-        if (modeEdit) spinnerJenis.isEnabled = false
-
-        spinnerJenis.adapter = object : ArrayAdapter<String>(
-            this,
-            R.layout.item_pilihan,
-            daftar.map { it.idJenis },
-        ) {
-            override fun getView(pos: Int, convert: View?, parent: android.view.ViewGroup): View {
-                val t = super.getView(pos, convert, parent) as TextView
-                t.text = daftar[pos].label
-                return t
-            }
-
-            override fun getDropDownView(pos: Int, convert: View?, parent: android.view.ViewGroup): View {
-                val t = super.getDropDownView(pos, convert, parent) as TextView
-                t.text = daftar[pos].label
-                return t
-            }
-        }.also { it.setDropDownViewResource(R.layout.item_pilihan_dropdown) }
-
-        spinnerJenis.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p: android.widget.AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                // Mode edit mengunci jenis; membangun ulang menimpa isian
-                // praisi (Spinner mengirim peristiwa pilih lewat antrean pesan).
-                if (modeEdit) return
-                bangunForm(daftar.getOrNull(pos))
-            }
-
-            override fun onNothingSelected(p: android.widget.AdapterView<*>?) = Unit
-        }
-
-        val tombolKirim = findViewById<Button>(R.id.btn_kirim)
         tombolKirim.setOnClickListener {
             // Cegah dobel klik: satu pembuatan = satu PDF + satu antrean.
             tombolKirim.isEnabled = false
             buatPdf { tombolKirim.isEnabled = true }
         }
 
-        bangunForm(daftar.firstOrNull())
+        // Di langkah formulir, tombol kembali dipakai memilih jenis lain.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (!modeEdit && kartuForm.visibility == View.VISIBLE) {
+                    kembaliKePilihan()
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
 
         if (modeEdit) {
+            title = getString(R.string.edit_surat_judul, daftar.first().label)
+            aturKepala(daftar.first().label, daftar.first().ntcr)
+            tampilkanForm(daftar.first())
             intent.getStringExtra(EXTRA_EDIT_FIELDS)?.let { json -> isiDariEdit(json) }
+        } else {
+            val judul = if (ntcrGrup) getString(R.string.label_buat_ntcr)
+            else getString(R.string.label_buat_surat)
+            title = judul
+            aturKepala(judul, ntcrGrup)
+            bangunPilihan()
         }
+    }
+
+    /**
+     * Langkah pertama: semua jenis surat ditawarkan sebagai kartu. Memilih
+     * satu kartu langsung membuka formulirnya, jadi operator tidak perlu
+     * membaca daftar dropdown.
+     */
+    private fun bangunPilihan() {
+        wadahKartuJenis.removeAllViews()
+        for (jenis in daftar) {
+            val kartu = layoutInflater.inflate(R.layout.item_menu, wadahKartuJenis, false)
+                as MaterialCardView
+            kartu.findViewById<ImageView>(R.id.ikon).setImageResource(
+                if (jenis.ntcr) R.drawable.ic_ntcr else R.drawable.ic_surat,
+            )
+            kartu.findViewById<TextView>(R.id.judul).text = jenis.label
+            kartu.findViewById<TextView>(R.id.ket).text = jenis.idJenis
+            kartu.setOnClickListener { tampilkanForm(jenis) }
+            wadahKartuJenis.addView(kartu)
+        }
+    }
+
+    /** Langkah kedua: pilihan disembunyikan, formulir jenis terpilih tampil. */
+    private fun tampilkanForm(jenis: SkemaJenis) {
+        wadahPilih.visibility = View.GONE
+        kartuForm.visibility = View.VISIBLE
+        tombolKirim.visibility = View.VISIBLE
+        title = jenis.label
+        aturKepala(jenis.label, jenis.ntcr)
+        bangunForm(jenis)
+    }
+
+    /** Kembali ke daftar kartu; isian formulir dibuang karena jenis berubah. */
+    private fun kembaliKePilihan() {
+        bangunForm(null)
+        kartuForm.visibility = View.GONE
+        tombolKirim.visibility = View.GONE
+        wadahPilih.visibility = View.VISIBLE
+        val judul = if (ntcrGrup) getString(R.string.label_buat_ntcr)
+        else getString(R.string.label_buat_surat)
+        title = judul
+        aturKepala(judul, ntcrGrup)
+    }
+
+    /** Judul halaman mengikuti langkah: kelompok saat memilih, jenis saat mengisi. */
+    private fun aturKepala(judul: String, ntcr: Boolean) {
+        judulHalaman.text = judul
+        findViewById<TextView>(R.id.subjudul_halaman).text =
+            getString(if (ntcr) R.string.ket_buat_ntcr else R.string.ket_buat_surat)
     }
 
     /**
