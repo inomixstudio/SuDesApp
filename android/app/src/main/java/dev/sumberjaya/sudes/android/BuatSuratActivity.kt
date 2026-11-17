@@ -218,7 +218,32 @@ class BuatSuratActivity : AppCompatActivity() {
                     daftarBaris[b.key] = barisList
                     wadahBaris[b.key] = wadah
 
-                    wadah.addView(tombolKecil("Tambah ${b.label}") { buatBarisList(b, wadah, barisList) })
+                    // Tombol dan petunjuk memakai bentuk singkat seperti di
+                    // desktop ("Tambah Bidang" / "Tambah Anak"), bukan judul
+                    // blok skema yang panjang.
+                    val (tombolTambah, petunjuk) = when (b.key) {
+                        "rincianTambahan" -> "Tambah Bidang" to
+                            "Kosongkan bila garapan hanya satu. Baris kosong otomatis dilewati saat disimpan:"
+                        "anak" -> "Tambah Anak" to
+                            "Baris tanpa data otomatis dilewati saat disimpan:"
+                        else -> "Tambah ${b.label}" to ""
+                    }
+                    if (petunjuk.isNotEmpty()) {
+                        wadah.addView(TextView(this).apply {
+                            text = petunjuk
+                            textSize = 12f
+                            setTextColor(
+                                ContextCompat.getColor(this@BuatSuratActivity, R.color.teks_redup)
+                            )
+                            setPadding(
+                                Ui.dp(this@BuatSuratActivity, 2),
+                                Ui.dp(this@BuatSuratActivity, 4),
+                                Ui.dp(this@BuatSuratActivity, 2),
+                                Ui.dp(this@BuatSuratActivity, 2),
+                            )
+                        })
+                    }
+                    wadah.addView(tombolKecil(tombolTambah) { buatBarisList(b, wadah, barisList) })
                     wadahForm.addView(wadah)
                 }
 
