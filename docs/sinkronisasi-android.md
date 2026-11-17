@@ -186,7 +186,8 @@ atas):
 
 ```bash
 python Tools/turunkan-grup.py            # ringkasan kartu per jenis surat
-python Tools/turunan-grup.py --tulis     # tulis ke kedua salinan skema
+python Tools/turunkan-grup.py --tulis     # tulis skema (2 salinan) + BidangFormDesktop.json
+python Tools/turunkan-grup.py --audit     # kolom skema yang tidak ada di form desktop
 ```
 
 Per jenis surat skema menyimpan `grupUrutan` (daftar judul kartu) dan per bidang
@@ -194,6 +195,23 @@ Per jenis surat skema menyimpan `grupUrutan` (daftar judul kartu) dan per bidang
 skema lama tanpa `grup` (mis. cache server yang belum disegarkan) tetap tampil
 datar seperti dulu, tidak sampai kehilangan kolom. Penjaga: tes `SkemaGrupTest`
 (Android) dan `Skema_MengandungGrupKartu_SepertiSectionDesktop` (desktop).
+`--tulis` sekaligus menerbitkan `SuDesApp.Core/Configuration/BidangFormDesktop.json`:
+daftar kolom yang benar-benar punya binding di XAML desktop. Uji
+`SkemaTidakMenambahKolomDiLuarFormDesktop` memakainya untuk menolak kolom asing —
+gejala yang dilaporkan operator: Android menampilkan "Status Perkawinan" pada
+Garapan Sawah padahal form desktop tidak pernah punya baris itu dan PDF-nya tidak
+mencetaknya. Kolom identitas yang desktop baca dari kartu warga tetapi Android
+harus mengetiknya didaftar eksplisit di tes itu, bukan dibiarkan diam-diam.
+
+### Pola tanggal lahir
+
+Desktop tidak seragam: `GarapanGenerator` dan `IzinOrtuGenerator` mencetak tanggal
+lahir `dd-MM-yyyy` (`ParseTanggalToUiFormat`), sisanya `dd MMMM yyyy`
+(`SuratGeneratorBase`). Pemilih tanggal Android menghasilkan `dd/MM/yyyy` — bentuk
+yang tidak pernah muncul di PDF desktop — sehingga `BuatSuratActivity` menormalkan
+semua kunci tanggal lahir lewat `TanggalIndonesia.polaTanggalLahir(idJenis)`.
+Dijaga `PolaTanggalLahirAndroidSamaDenganGeneratorDesktop` (desktop) dan
+`TanggalLahirPolaTest` (Android).
 
 ## Implikasi privasi
 
