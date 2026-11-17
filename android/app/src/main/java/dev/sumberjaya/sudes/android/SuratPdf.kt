@@ -167,9 +167,6 @@ object SuratPdf {
             pejabat: String,
             logo: Bitmap?,
         ) {
-            // Tanggal untuk baris tempat/tanggal; desktop memakai dd/MM/yyyy.
-            val tanggal = SimpleDateFormat("dd/MM/yyyy", Locale("id", "ID")).format(Date())
-
             // KEPALA halaman: kop surat desa. Jenis halaman-penuh (blanko NTCR,
             // Kematian, Ahli Waris, Rekening Koran) TIDAK memakai kop desktop —
             // yang memang perlu kop meminta lewat kustomId "surat.kop" di badan,
@@ -204,7 +201,7 @@ object SuratPdf {
                         // Blok bespoke generator desktop dirender lewat id mesin;
                         // id yang belum ada penrendernya tetap dicetak sebagai
                         // catatan supaya operator melihat ada blok yang hilang.
-                        val kelola = kustum(blok.id, jenis, nilai, nomor, pengaturan, pejabat, tanggal, logo)
+                        val kelola = kustum(blok.id, jenis, nilai, nomor, pengaturan, pejabat, logo)
                         if (!kelola) {
                             paragraf(
                                 BlokBadan.Paragraf(
@@ -224,7 +221,7 @@ object SuratPdf {
             // Jenis halaman-penuh sudah menyertakannya di 'badan'.
             if (!jenis.halamanPenuh) {
                 lewati(10f * kerapatan.faktorJarakBlok)
-                tandaTangan(jenis, nilai, pengaturan, pejabat, tanggal)
+                tandaTangan(jenis, nilai, pengaturan, pejabat)
             }
         }
 
@@ -543,7 +540,6 @@ object SuratPdf {
             nilai: Map<String, String>,
             p: PengaturanSurat,
             pejabat: String,
-            tanggal: String,
         ) {
             val namaDesa = p.namaDesa.ifBlank { "...." }
             val jabatan = Kop.jabatan(p, pejabat)
@@ -573,7 +569,9 @@ object SuratPdf {
             // Kolom kanan dulu di yAwal: letakkan tempat+tanggal, jabatan,
             // ruang tanda tangan, nama, NIP — catat posisi nama supaya
             // setelah itu kolom kiri disejajarkan.
-            teksTengah("$namaDesa, $tanggal", paint, xKanan, lebarKolom)
+            // Bentuk tanggal sama dengan desktop (SuratGeneratorBase):
+            // "dd MMMM yyyy" bahasa Indonesia, mis. "01 Januari 1990".
+            teksTengah("${namaDesa}, ${TanggalIndonesia.panjang()}", paint, xKanan, lebarKolom)
             for (baris in jabatan.split('\n')) teksTengah(baris, paint, xKanan, lebarKolom)
             lewati(TINGGI_BARIS * kerapatan.barisRuangTandaTangan)
             teksTengah(namaPejabat, paintTebal, xKanan, lebarKolom)
@@ -614,7 +612,6 @@ object SuratPdf {
             nomor: String,
             p: PengaturanSurat,
             pejabat: String,
-            tanggal: String,
             logo: Bitmap?,
         ): Boolean = when (id) {
             "ntcr.lampiran" -> { blokLampiran(jenis); true }
