@@ -72,6 +72,7 @@
     <string name="kode_manual_petunjuk">Ketik kode yang tampil di halaman Sinkron Android pada komputer desa. Memindai kode QR tetap cara tercepat.</string>
     <string name="kode_manual_hint">Kode 4 angka</string>
     <string name="hubungkan_kode">Hubungkan</string>
+    <string name="versi_aplikasi">SuDesApp v%1$s</string>
     <string name="status_kode_tidak_valid">Kode harus terdiri dari 4 angka.</string>
     <string name="status_mengambil_pengaturan">Terhubung. Mengambil pengaturan desa dari desktop…</string>
 

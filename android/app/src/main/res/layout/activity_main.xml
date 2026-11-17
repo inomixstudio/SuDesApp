@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/gulir"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/page"
-    android:clipToPadding="false"
-    android:fillViewport="true">
+    android:orientation="vertical">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/gulir"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -140,6 +146,19 @@
                 android:textColor="@color/teks_redup"
                 android:textSize="11sp" />
 
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Versi menempel di dasar layar, di luar ScrollView. -->
+    <TextView
+        android:id="@+id/versi_aplikasi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="10dp"
+        android:paddingBottom="12dp"
+        android:textColor="@color/teks_redup"
+        android:textSize="14sp" />
+
+</LinearLayout>
