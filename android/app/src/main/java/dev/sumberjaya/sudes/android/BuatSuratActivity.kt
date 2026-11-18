@@ -2,6 +2,7 @@ package dev.sumberjaya.sudes.android
 
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.os.SystemClock
 import android.graphics.Typeface
 import android.text.InputType
 import android.view.Gravity
@@ -48,6 +49,29 @@ class BuatSuratActivity : AppCompatActivity() {
 
     /** Satu baris pada bidang type="list" beserta field penyusunnya. */
     private data class BarisDaftar(val wadah: View, val bidang: Map<String, View>)
+
+    // --- biaya bangun formulir -------------------------------------------------
+    // Membuat satu TextInputLayout + isinya itu mahal (terukur ±33-40 ms saat
+    // panas, jauh lebih lama saat kelas Material pertama kali dimuat). Semua
+    // bidang dibangun sekaligus membuat layar surat membeku 1-3 s, jadi bidang
+    // dibangun bertahap: sebagian kecil langsung, sisanya per giliran antrean.
+    // Susunan akhir kartu dan bidangnya tetap sama persis seperti form desktop.
+    private var generasiForm = 0
+
+    /** Kepala kartu (bidang null) lalu bidang-bidangnya, urut seperti tampilan. */
+    private val antreanLangkah = ArrayDeque<Pair<String, SkemaBidang?>>()
+    private var wadahGrupAktif: LinearLayout? = null
+    private var menjadwalkanAktif = false
+
+    /** Bagian pertama formulir dibangun segera, sepanjang masih di bawah kuota ini. */
+    private val kuotaAwalMs = 45L
+
+    /** Sisa bidang dibangun per giliran antrean, tidak lebih lama dari kuota ini. */
+    private val kuotaGiliranMs = 12L
+
+    /** Warna dan adapter dropdown sama untuk banyak bidang — cukup dibuat sekali. */
+    private val cacheWarna = HashMap<Int, ColorStateList>()
+    private val cacheAdapter = HashMap<String, ArrayAdapter<String>>()
 
     private lateinit var judulHalaman: TextView
     private lateinit var wadahPilih: View
@@ -187,6 +211,9 @@ class BuatSuratActivity : AppCompatActivity() {
      * list diisi ulang baris per baris dari array tersimpan.
      */
     private fun isiDariEdit(json: String) {
+        // Mode edit menulis nilai per kunci: semua kartu harus sudah ada,
+        // termasuk yang masih antre untuk giliran berikutnya.
+        pastikanSemuaBidangTerbangun()
         try {
             val fields = JSONObject(json)
             val jenis = terpilih ?: return
@@ -231,6 +258,12 @@ class BuatSuratActivity : AppCompatActivity() {
     }
 
     private fun bangunForm(jenis: SkemaJenis?) {
+        // Form baru = antrean lama dibuang. Generasi ditandai supaya callback yang
+        // sudah terlanjur terjadwal tidak menambah bidang ke form lain.
+        generasiForm += 1
+        antreanLangkah.clear()
+        wadahGrupAktif = null
+        menjadwalkanAktif = false
         terpilih = jenis
         wadahForm.removeAllViews()
         bidang.clear()
@@ -245,66 +278,121 @@ class BuatSuratActivity : AppCompatActivity() {
         // Satu kartu per grup skema — judul dan urutannya sama dengan section
         // kartu pada form desktop. Grup kosong (skema lama dari cache server)
         // berarti satu wadah datar seperti sebelumnya, jadi perangkat yang
-        // belum tersinkron tidak kehilangan isian.
+        // belum tersinkron tidak kehilangan isian. Antreannya per bidang, bukan
+        // per kartu: kartu pertama surat Kematian saja bisa memakan hampir 2 s
+        // untuk dibuat, jadi kartu pertama pun harus tampil bertahap.
         for ((judul, anggota) in jenis.grupkan(input)) {
-            val wadahGrup = if (judul.isBlank()) wadahForm else kartuGrup(judul)
-            for (b in anggota) {
-                when (b.type) {
-                    "select" -> {
-                        val wadahPilih = bidangPilih(b.label + wajib(b.required), b.options)
-                        pilihan[b.key] = wadahPilih.editText as MaterialAutoCompleteTextView
-                        wadahGrup.addView(wadahPilih)
-                    }
+            antreanLangkah.addLast(judul to null)
+            for (b in anggota) antreanLangkah.addLast(judul to b)
+        }
+        bangunDalamKuota(kuotaAwalMs, minimal = 3)
+        if (antreanLangkah.isNotEmpty()) jadwalkanLangkahTertunda()
+    }
 
-                    "list" -> {
-                        val wadah = LinearLayout(this).apply {
-                            orientation = LinearLayout.VERTICAL
-                            layoutParams = LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 12) }
-                        }
-                        val barisList = mutableListOf<BarisDaftar>()
-                        daftarBaris[b.key] = barisList
-                        wadahBaris[b.key] = wadah
+    /**
+     * Ambil bidang dari antrean selama belum melewati kuota waktu. [minimal]
+     * langkah pertama selalu dikerjakan supaya formulir tidak sempat tampil
+     * kosong saat pertama kali digambar.
+     */
+    private fun bangunDalamKuota(kuotaMs: Long, minimal: Int) {
+        val batas = SystemClock.uptimeMillis() + kuotaMs
+        var dilakukan = 0
+        while (antreanLangkah.isNotEmpty()) {
+            bangunLangkah(antreanLangkah.removeFirst())
+            dilakukan += 1
+            if (dilakukan >= minimal && SystemClock.uptimeMillis() >= batas) break
+        }
+    }
 
-                        // Tombol dan petunjuk memakai bentuk singkat seperti di
-                        // desktop ("Tambah Bidang" / "Tambah Anak"), bukan judul
-                        // blok skema yang panjang.
-                        val (tombolTambah, petunjuk) = when (b.key) {
-                            "rincianTambahan" -> "Tambah Bidang" to
-                                "Kosongkan bila garapan hanya satu. Baris kosong otomatis dilewati saat disimpan:"
-                            "anak" -> "Tambah Anak" to
-                                "Baris tanpa data otomatis dilewati saat disimpan:"
-                            else -> "Tambah ${b.label}" to ""
-                        }
-                        if (petunjuk.isNotEmpty()) {
-                            wadah.addView(TextView(this).apply {
-                                text = petunjuk
-                                textSize = 12f
-                                setTextColor(
-                                    ContextCompat.getColor(this@BuatSuratActivity, R.color.teks_redup)
-                                )
-                                setPadding(
-                                    Ui.dp(this@BuatSuratActivity, 2),
-                                    Ui.dp(this@BuatSuratActivity, 4),
-                                    Ui.dp(this@BuatSuratActivity, 2),
-                                    Ui.dp(this@BuatSuratActivity, 2),
-                                )
-                            })
-                        }
-                        wadah.addView(tombolKecil(tombolTambah) { buatBarisList(b, wadah, barisList) })
-                        wadahGrup.addView(wadah)
-                    }
+    /**
+     * Sisa bidang dibangun pada giliran berikutnya di antrean utama. Tidak ada
+     * nilai yang tertunda di sini: bidang baru hanya ditambah, isian yang sudah
+     * diketik tidak pernah ditulis ulang, dan sebelum nilai dibaca semua bidang
+     * dipaksa selesai. Ditunda lewat [View.post] (bukan postOnAnimation) supaya
+     * tidak ada jeda satu frame antar bidang — formulir penuh jauh lebih cepat,
+     * sementara ketukan dan gulir tetap dapat giliran di antaranya.
+     */
+    private fun jadwalkanLangkahTertunda() {
+        if (menjadwalkanAktif || antreanLangkah.isEmpty()) return
+        menjadwalkanAktif = true
+        val generasi = generasiForm
+        wadahForm.post {
+            menjadwalkanAktif = false
+            if (generasi != generasiForm) return@post
+            bangunDalamKuota(kuotaGiliranMs, minimal = 1)
+            if (antreanLangkah.isNotEmpty()) jadwalkanLangkahTertunda()
+        }
+    }
 
-                    else -> {
-                        val wadahTeks = bidangTeks(b.label + wajib(b.required), b.type)
-                        val isian = wadahTeks.editText as EditText
-                        bidang[b.key] = isian
-                        praisiWilayah(b.key, isian)
-                        wadahGrup.addView(wadahTeks)
-                    }
+    /**
+     * Paksa semua bidang selesai dibangun. Dipanggil sebelum nilai dibaca
+     * (validasi wajib + PDF) dan sebelum tangkapan edit ditulis, supaya bidang
+     * yang masih antre tidak dianggap kosong.
+     */
+    private fun pastikanSemuaBidangTerbangun() {
+        while (antreanLangkah.isNotEmpty()) bangunLangkah(antreanLangkah.removeFirst())
+    }
+
+    /** Satu langkah antrean: kepala kartu (bidang null) atau satu bidang. */
+    private fun bangunLangkah(langkah: Pair<String, SkemaBidang?>) {
+        val (judul, b) = langkah
+        if (b == null) {
+            wadahGrupAktif = if (judul.isBlank()) wadahForm else kartuGrup(judul)
+            return
+        }
+        val wadahGrup = wadahGrupAktif ?: wadahForm.also { wadahGrupAktif = it }
+        when (b.type) {
+            "select" -> {
+                val wadahPilih = bidangPilih(b.label + wajib(b.required), b.options)
+                pilihan[b.key] = wadahPilih.editText as MaterialAutoCompleteTextView
+                wadahGrup.addView(wadahPilih)
+            }
+
+            "list" -> {
+                val wadah = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ).apply { topMargin = Ui.dp(this@BuatSuratActivity, 12) }
                 }
+                val barisList = mutableListOf<BarisDaftar>()
+                daftarBaris[b.key] = barisList
+                wadahBaris[b.key] = wadah
+
+                // Tombol dan petunjuk memakai bentuk singkat seperti di
+                // desktop ("Tambah Bidang" / "Tambah Anak"), bukan judul
+                // blok skema yang panjang.
+                val (tombolTambah, petunjuk) = when (b.key) {
+                    "rincianTambahan" -> "Tambah Bidang" to
+                        "Kosongkan bila garapan hanya satu. Baris kosong otomatis dilewati saat disimpan:"
+                    "anak" -> "Tambah Anak" to
+                        "Baris tanpa data otomatis dilewati saat disimpan:"
+                    else -> "Tambah ${b.label}" to ""
+                }
+                if (petunjuk.isNotEmpty()) {
+                    wadah.addView(TextView(this).apply {
+                        text = petunjuk
+                        textSize = 12f
+                        setTextColor(ContextCompat.getColor(this@BuatSuratActivity, R.color.teks_redup))
+                        setPadding(
+                            Ui.dp(this@BuatSuratActivity, 2),
+                            Ui.dp(this@BuatSuratActivity, 4),
+                            Ui.dp(this@BuatSuratActivity, 2),
+                            Ui.dp(this@BuatSuratActivity, 2),
+                        )
+                    })
+                }
+                wadah.addView(tombolKecil(tombolTambah) { buatBarisList(b, wadah, barisList) })
+                wadahGrup.addView(wadah)
+            }
+
+            else -> {
+                val wadahTeks = bidangTeks(b.label + wajib(b.required), b.type)
+                val isian = wadahTeks.editText as EditText
+                bidang[b.key] = isian
+                praisiWilayah(b.key, isian)
+                wadahGrup.addView(wadahTeks)
             }
         }
     }
@@ -495,13 +583,7 @@ class BuatSuratActivity : AppCompatActivity() {
             inputType = InputType.TYPE_NULL
             threshold = 0
             textSize = 15f
-            setAdapter(
-                ArrayAdapter(
-                    this@BuatSuratActivity,
-                    R.layout.item_pilihan,
-                    opsi,
-                ).also { it.setDropDownViewResource(R.layout.item_pilihan_dropdown) }
-            )
+            setAdapter(adapterPilihan(opsi))
             setText(opsi.first(), false)
         }
         return bidangLayout(label).apply {
@@ -561,10 +643,27 @@ class BuatSuratActivity : AppCompatActivity() {
         }
 
     private fun warna(id: Int): ColorStateList =
-        ColorStateList.valueOf(ContextCompat.getColor(this, id))
+        cacheWarna.getOrPut(id) { ColorStateList.valueOf(ContextCompat.getColor(this, id)) }
+
+    /**
+     * Satu adapter per daftar opsi yang identik. Banyak bidang memakai opsi yang
+     * sama (jenis kelamin, status perkawinan, dan sebagainya) dan dropdown hanya
+     * dibaca — tidak pernah diubah — jadi dipakai bersama aman.
+     */
+    private fun adapterPilihan(opsi: List<String>): ArrayAdapter<String> =
+        cacheAdapter.getOrPut(opsi.joinToString("\u0000")) {
+            ArrayAdapter(
+                this,
+                R.layout.item_pilihan,
+                opsi,
+            ).also { it.setDropDownViewResource(R.layout.item_pilihan_dropdown) }
+        }
 
     private fun buatPdf(selesai: () -> Unit = {}) {
         val jenis = terpilih ?: run { selesai(); return }
+        // Kartu yang belum sempat dibangun harus selesai dulu: kalau tidak,
+        // isian di kartu terakhir terbaca kosong oleh validasi wajib dan PDF.
+        pastikanSemuaBidangTerbangun()
 
         for (b in jenis.fieldsInput.filter { it.required }) {
             if (b.type == "list") {

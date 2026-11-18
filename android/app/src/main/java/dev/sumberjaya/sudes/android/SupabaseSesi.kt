@@ -32,13 +32,29 @@ data class SupabaseSesi(
         private const val K_PERANGKAT = "perangkat"
         private const val K_TENANT = "tenant"
 
+        /**
+         * Satu obyek SharedPreferences per proses.
+         *
+         * `EncryptedSharedPreferences.create()` membuka kunci Android Keystore
+         * lalu membaca dan mendekripsi seluruh berkas SETIAP kali dipanggil —
+         * terukur 45-230 ms per panggilan pada perangkat uji. Fungsi ini dipakai
+         * dari banyak tempat (tiap layar, tiap operasi antrean, tiap klien), jadi
+         * tanpa cache biaya keystore itu dibayar berulang kali dan terasa sebagai
+         * aplikasi yang lambat. Obyek SharedPreferences dirancang aman dipakai
+         * bersama seumur proses, jadi hasilnya disimpan di sini.
+         */
+        private val cachePrefs = java.util.concurrent.ConcurrentHashMap<Int, SharedPreferences>()
+
         private fun prefs(ctx: Context): SharedPreferences {
-            val masterKey = MasterKey.Builder(ctx).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
-            return EncryptedSharedPreferences.create(
-                ctx, PREFS, masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-            )
+            val akar = ctx.applicationContext
+            return cachePrefs.computeIfAbsent(System.identityHashCode(akar)) {
+                val masterKey = MasterKey.Builder(akar).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
+                EncryptedSharedPreferences.create(
+                    akar, PREFS, masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+                )
+            }
         }
 
         fun ambil(ctx: Context): SupabaseSesi {
