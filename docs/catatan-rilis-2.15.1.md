@@ -188,3 +188,26 @@ yang sudah tercatat tetap terbaca meski gateway pembayaran otomatis dihapus.
 - Di perangkat sungguhan: cold start 495 ms, `Displayed .BuatSuratActivity
   +232 ms`, kartu Kematian (DATA JENAZAH/PEMOHON, DATA PELAPOR, DATA KEMATIAN)
   tampil setelah APK baru dipasang.
+
+## Build ulang — 18 November 2026
+
+Nomor versi tetap 2.15.1; paket dibangun ulang untuk menutup tiga jalur yang
+membuat operator melihat "tombol tidak berfungsi" padahal aplikasinya hidup.
+
+- **Satu tombol Buat QR.** Halaman Sinkron Android hanya punya tombol
+  «Buat QR»; sekali tekan, barcode QR dan kode 4 angka tampil bersamaan, dan
+  baris "Memproses perangkat…" muncul selama perangkaian menunggu server.
+  Lencana di kepala halaman membaca konfigurasi yang SAMA dengan perangkaian,
+  jadi tidak lagi menulis "KONEKSI BELUM SIAP" saat Buat QR justru berhasil.
+- **Kode aktivasi tersimpan di Supabase.** Server lisensi yang dinyalakan
+  aplikasi tidak lagi dipaksa memakai penyimpanan berkas: gudang datanya
+  mengikuti konfigurasi server (Supabase bila kredensialnya diisi). Kode yang
+  dibuat di Pusat Administrasi kini benar-benar ada di Supabase, sehingga bisa
+  dipakai mengaktifkan aplikasi di komputer desa lain — bukan hanya di komputer
+  tempat kode itu dibuat. Bila server tidak diberi kredensial Supabase, mode
+  berkas tetap berlaku dan tetap menetap.
+- **Paket rilis membawa konfigurasi Supabase** untuk sinkron Android dan
+  pemasangan QR, sehingga instalasi baru tidak berhenti di pesan "Supabase
+  belum dikonfigurasi lengkap." Karena itu installer dan zip ini memuat
+  kredensial proyek: perlakukan sebagai berkas rahasia dan rotasi kata sandi
+  basis data setelah paket selesai dibagikan.

@@ -352,6 +352,18 @@
                                     </StackPanel>
                                 </Button>
                             </WrapPanel>
+                            <!-- Umpan balik langsung: perangkaian menunggu pooler Supabase
+                                 bisa beberapa detik, dan tanpa baris ini tombol hanya
+                                 memudar tanpa penjelasan. -->
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                        Visibility="{Binding SedangMemasang, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{x:Static u:IkonMenu.Sinkron}"
+                                           FontFamily="{StaticResource AppIconFont}" FontSize="13"
+                                           Foreground="{DynamicResource AccentTextBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Memproses perangkat…" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
                             <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        Text="Nama perangkat dibuat otomatis — tanpa mengisi apa pun. Tekan Buat QR, lalu pindai dari Android atau ketik kode 4 angka yang tampil."/>
