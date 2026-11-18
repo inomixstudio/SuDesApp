@@ -201,6 +201,7 @@ if ($modeLisensiLokal) {
     $statusLisensi = @(
         '',
         ('Lisensi: MODE LOKAL - paket memakai server lisensi yang dijalankan aplikasi di komputer desa (' + $urlLisensi + '); lisensi TIDAK divalidasi ke server produksi.'),
+        'Server lisensi lokal ikut terpasang di folder "server" di samping aplikasi, beserta kunci penandatangan yang sama dengan Lisensi:KunciPublik.',
         'Saklar -IzinkanLisensiLokal dipakai atas keputusan operator (sama seperti paket 2.15.0 yang beredar).'
     )
 } else {
@@ -443,6 +444,46 @@ if ($IzinkanTanpaKredensial) {
     $statusKredensial = 'Kredensial Google TIDAK tertanam - login Google tidak aktif pada paket ini; bangun ulang di komputer yang memiliki berkas rahasia build.'
 }
 
+# ---------- server lisensi lokal ikut terpasang ----------
+# Mode lisensi lokal hanya bisa bekerja bila aplikasi bisa menjalankan
+# servernya sendiri: ServerLisensiLokal mencari <folder aplikasi>\server\
+# SuDesApp.Server.exe (Core/Services/ServerLisensiLokal.cs, CariTarget).
+# Paket tanpa folder itu membuat aplikasi yang baru dipasang menampilkan
+# "lisensi server tidak terhubung" tanpa sebab yang terlihat — server memang
+# tidak pernah ikut terpasang. Rilis produksi (alamat terkunci) tidak
+# memakainya, jadi server hanya disertakan pada mode lokal.
+$serverDir = Join-Path $publishDir 'server'
+$serverExe = $null
+if ($modeLisensiLokal) {
+    dotnet publish (Join-Path $repoRoot 'SuDesApp.Server/SuDesApp.Server.csproj') `
+        -c Release -r win-x64 --self-contained true `
+        -o $serverDir
+    if ($LASTEXITCODE -ne 0) { throw "dotnet publish SuDesApp.Server gagal (exit $LASTEXITCODE)" }
+
+    $serverExe = Join-Path $serverDir 'SuDesApp.Server.exe'
+    if (-not (Test-Path -LiteralPath $serverExe)) {
+        throw "SuDesApp.Server.exe tidak ditemukan di $serverDir - aplikasi terpasang tidak akan bisa menjalankan server lisensinya."
+    }
+
+    # Kunci penandatangan lisensi WAJIB sama dengan Lisensi:KunciPublik yang
+    # ditanam aplikasi: LisensiManager tidak pernah menimpa kunci tertanam
+    # dengan kunci yang disajikan server, jadi kunci baru yang dibuat server
+    # saat first run membuat setiap token ditolak (gejala: server terhubung
+    # tetapi langganan tidak pernah aktif). Berkas kunci ini khusus mode lokal;
+    # rilis produksi memakai kunci produksi dan tidak mengirim berkas ini.
+    $kunciServer = Join-Path $repoRoot 'SuDesApp.Server/keys/lisensi-signing.key'
+    if (-not (Test-Path -LiteralPath $kunciServer)) {
+        throw ('Publish dibatalkan: SuDesApp.Server/keys/lisensi-signing.key tidak ditemukan. ' +
+               'Mode lisensi lokal mengirim server yang harus memakai kunci yang sama dengan ' +
+               'Lisensi:KunciPublik; tanpa berkas itu setiap token lisensi akan ditolak.')
+    }
+    $folderKunci = Join-Path $serverDir 'keys'
+    New-Item -ItemType Directory -Force -Path $folderKunci | Out-Null
+    Copy-Item -LiteralPath $kunciServer -Destination (Join-Path $folderKunci 'lisensi-signing.key') -Force
+
+    Write-Host ('Server lisensi ikut terpasang: ' + $serverDir) -ForegroundColor Green
+}
+
 # ---------- tanda tangan Authenticode (executable) ----------
 # Tanpa tanda tangan, setiap pengguna baru melihat peringatan SmartScreen dan
 # nama penerbit tidak tampil di properti berkas. Dijalankan SEBELUM zip dan
@@ -459,6 +500,14 @@ if ($sertifikatTersedia) {
     & (Join-Path $PSScriptRoot 'Tanda-Tangani-Rilis.ps1') -Berkas (Join-Path $publishDir 'SuDesApp.exe') @argTandaTangan
     if ($LASTEXITCODE -ne 0) { throw "Publish dibatalkan: tanda tangan SuDesApp.exe gagal (exit $LASTEXITCODE)." }
     $ditandatangani += 'SuDesApp.exe'
+
+    # Server lisensi juga ditandatangani: berkas yang diedarkan installer lalu
+    # dijalankan aplikasi langsung tidak boleh memancing SmartScreen.
+    if ($serverExe) {
+        & (Join-Path $PSScriptRoot 'Tanda-Tangani-Rilis.ps1') -Berkas $serverExe @argTandaTangan
+        if ($LASTEXITCODE -ne 0) { throw "Publish dibatalkan: tanda tangan SuDesApp.Server.exe gagal (exit $LASTEXITCODE)." }
+        $ditandatangani += 'server/SuDesApp.Server.exe'
+    }
 } else {
     Write-Host 'Peringatan: sertifikat tanda tangan tidak tersedia - aset rilis TIDAK ditandatangani.' -ForegroundColor Yellow
     Write-Host 'Tanpa Authenticode, Windows SmartScreen memperingatkan setiap pengguna baru.' -ForegroundColor Yellow

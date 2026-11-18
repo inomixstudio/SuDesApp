@@ -37,6 +37,21 @@ yang sudah tercatat tetap terbaca meski gateway pembayaran otomatis dihapus.
   lokal dan `Lisensi:UrlServer` satu bentuk host `http://127.0.0.1:5110`,
   loopback tidak pernah mengunci alamat, hanya HTTPS non-loopback yang
   mengunci).
+- **Server lisensi lokal benar-benar ikut terpasang.** Perbaikan di atas
+  membuat aplikasi menyalakan servernya sendiri, tetapi paket installer tidak
+  pernah memuat `SuDesApp.Server` — `publish-release.ps1` hanya menerbitkan
+  `SuDesApp.Wpf`. Akibatnya aplikasi yang baru dipasang tetap menampilkan
+  "lisensi server tidak terhubung": `ServerLisensiLokal` mencari
+  `<folder aplikasi>\server\SuDesApp.Server.exe`, dan folder itu tidak ada
+  di paket. Sekarang paket mode lisensi lokal menerbitkan server
+  (self-contained) ke folder `server` di samping aplikasi, beserta
+  `server\keys\lisensi-signing.key` yang sama dengan `Lisensi:KunciPublik` —
+  kunci berbeda membuat setiap token lisensi ditolak, karena `LisensiManager`
+  tidak pernah menimpa kunci tertanam. Rilis produksi (alamat HTTPS terkunci)
+  tidak mengirim server ini karena server lokal sengaja tidak dinyalakan.
+  Penjaganya `PaketServerLisensiTests` (4 uji): skrip publish wajib menerbitkan
+  server, wajib menyalin kunci, dan installer tidak boleh mengecualikan folder
+  `server`.
 - **Tombol Hubungkan tidak lagi membuka peramban.** `CobaBukaPeramban`
   dilepas: dengan pembayaran otomatis dihapus, membuka peramban setelah
   menagih hanya memicu salah baca "sudah bayar" sementara hak akses masih
@@ -159,7 +174,8 @@ yang sudah tercatat tetap terbaca meski gateway pembayaran otomatis dihapus.
 ## Verifikasi
 
 - `dotnet build SuDesApp.slnx -c Release` — 0 galat, 0 peringatan.
-- `dotnet test SuDesApp.Tests` — **552 uji, semuanya lolos**. Termasuk 29 uji
+- `dotnet test SuDesApp.Tests` — **562 uji, semuanya lolos**. Termasuk 4 uji
+  `PaketServerLisensiTests` (server lisensi wajib ada di paket), 29 uji
   `KodePasanganSupabaseTests` (jalur kode pemasangan, sebelumnya tanpa uji),
   8 uji `InstallerSkemaDatabaseTests`, 5 uji `AndroidBiayaFormulirTests`,
   3 uji `KotakCentangMembungkusTests`, 15 uji paritas Buat Surat Android ↔
