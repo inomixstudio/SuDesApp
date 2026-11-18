@@ -1,4 +1,4 @@
-# Sinkronisasi Android → Desktop
+﻿# Sinkronisasi Android → Desktop
 
 Aplikasi Android membuat surat di lapangan: PDF jadi dan tersimpan **di
 perangkat**, sedangkan isian suratnya masuk **antrean Supabase**. Desktop
@@ -24,7 +24,21 @@ Android ──insert──▶ antrean_surat (Supabase, maks 10)
                             └─ ack → baris dihapus
 ```
 
-## Yang disimpan di perangkat Android
+### Kode pemasangan dan QR kosong
+
+Bila tombol **Buat Kode** memunculkan galat `Supabase belum dikonfigurasi
+Lengkap.` sementara QR tetap kosong, penyebabnya koneksi Supabase belum
+terisi di mesin tersebut, bukan kerusakan aplikasi. Lencana di kepala halaman
+Sinkron menunjukkan `KONEKSI BELUM SIAP`. Koneksi dibaca dari preferensi
+operator (DPAPI, kunci `Supabase:*`) lalu dari bagian `Supabase` pada
+`appsettings.json` di folder aplikasi sebagai bawaan instalasi baru. Isi
+`Host`, `Pengguna`, `KataSandi`, dan `Tenant` (wajib), serta `UrlRest` (agar
+isi QR berupa URL project yang valid) dan `KunciPublik`, lalu jalankan ulang
+aplikasi. Jangan menaruh kredensial produksi pada `appsettings.json` yang
+ikut ke dalam repo; yang benar adalah salinan di folder aplikasi hasil
+instalasi.
+
+# Yang disimpan di perangkat Android
 
 | Data | Tempat | Ikut dikirim? |
 |---|---|---|
