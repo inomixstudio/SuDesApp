@@ -97,6 +97,13 @@ namespace SuDesApp.Wpf.ViewModels
                             "Tanggal lahir pada surat Garapan Sawah dan Izin Orang Tua kini dicetak dd-MM-yyyy seperti generator desktop; surat lain tetap memakai bentuk panjang (17 November 1990). Sebelumnya Android menampilkan bentuk 17/11/1990 hasil pemilih tanggal.",
                             "Penjaga baru menolak kolom asing: setiap kolom skema harus terbukti punya isian di form desktop atau memang tercetak di PDF, dan pola tanggal Android diuji terhadap generator aslinya."
                         }),
+                        new CatatanRilisSubSection("Android — Membuka Surat Tidak Lagi Membeku", new List<string>
+                        {
+                            "Formulir Buat Surat dibangun bertahap per bidang, bukan 27 widget Material sekaligus: membuka surat Kematian yang dulu membekukan layar 3,1 detik kini hanya memakai main thread 0,1 detik dan isian sudah bisa langsung diketik sementara kartu berikutnya menyusul.",
+                            "Penyimpanan sesi tidak lagi membuka Android Keystore tiap kali dibaca — satu obyek dipakai bersama seumur proses, dari 45-74 ms per pembacaan menjadi 2-7 ms; adapter dropdown dan warna juga tidak dibuat ulang per bidang.",
+                            "Pratinjau PDF digambar di utas tersendiri dengan kerapatan yang sama, dan PdfRenderer ditutup lewat utas yang sama supaya tidak crash saat render masih berjalan.",
+                            "Hasil cetak tidak berubah: validasi wajib dan PDF memaksa semua bidang selesai dibangun lebih dulu, susunan kartu dan judul tetap sama seperti desktop. Perilaku ini dikunci AndroidBiayaFormulirTests (5 uji)."
+                        }),
                         new CatatanRilisSubSection("Alat Build Android", new List<string>
                         {
                             "Android menaikkan AGP ke 9.3 (built-in Kotlin), Gradle 9.8.2, dan compileSdk 37, lalu okhttp 5.5.1 dan pustaka Android lainnya; build dan uji unit tetap hijau."
