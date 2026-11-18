@@ -1035,6 +1035,19 @@ Cek Status, katalog harga, tagihan, **dan** Pusat Administrasi. Port bisa
 diganti lewat preferensi `serverLisensiLokalPort` (halaman Langganan memakai satu
 alamat yang sama untuk semua itu).
 
+Server hanya bisa menyala bila berkasnya ada di paket. `ServerLisensiLokal`
+mencari `<folder aplikasi>\server\SuDesApp.Server.exe` (lalu `SuDesApp.Server.dll`,
+lalu `SuDesApp.Server.csproj`); tidak ada jalur lain. Oleh karena itu
+`Tools/publish-release.ps1` menerbitkan `SuDesApp.Server` ke
+`artifacts/publish/server` **hanya pada mode lisensi lokal** (`-IzinkanLisensiLokal`),
+beserta `server\keys\lisensi-signing.key`. Kunci itu wajib sama dengan
+`Lisensi:KunciPublik` yang ditanam aplikasi: `LisensiManager` tidak pernah
+menimpa kunci tertanam dengan kunci yang disajikan `/kunci-publik`, jadi kunci
+baru yang dibuat server saat first run membuat setiap token ditolak. Rilis
+produksi (alamat HTTPS terkunci) tidak mengirim server ini karena
+`ServerLisensiLokal` sengaja tidak dinyalakan. Penjaganya:
+`SuDesApp.Tests/Configuration/PaketServerLisensiTests.cs`.
+
 Data langganan server lokal **menetap** di berkas:
 
 ```
