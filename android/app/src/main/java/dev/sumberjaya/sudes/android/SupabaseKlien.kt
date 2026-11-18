@@ -178,18 +178,22 @@ class SupabaseKlien(
 
     /**
      * Muat skema formulir terbitan desktop dalam bentuk JSON mentah
-     * ({"ID_JENIS": {...}}), siap disimpan sebagai salinan lokal oleh
-     * [SkemaLokal]. Null bila perangkat belum dipasang, jaringan gagal, atau
-     * desktop belum pernah menerbitkan skema.
+     * ({"ID_JENIS": {...}}) siap disimpan sebagai salinan lokal oleh
+     * [SkemaLokal], bersama waktu terbitnya. Null bila perangkat belum dipasang,
+     * jaringan gagal, atau desktop belum pernah menerbitkan skema.
+     *
+     * Waktu terbit diambil yang PALING TUA di antara baris: kalau sebagian jenis
+     * masih dari terbitan lama, seluruh kumpulan itu belum boleh menutupi skema
+     * APK yang lebih baru.
      */
-    suspend fun muatSkemaJson(): String? = withContext(Dispatchers.IO) {
+    suspend fun muatSkemaJson(): HasilSkema? = withContext(Dispatchers.IO) {
         pastikanTokenSegar()
         // get() melempar pada non-2xx; tanpa tangkapan, pengecualian keluar dari
         // coroutine dan menjatuhkan aplikasi saat token sudah tidak berlaku.
         // SesiKedaluwarsa dilempar ulang supaya pemanggil bisa meminta
         // pemasangan ulang (bukan mengira skema kosong).
         val hasil = try {
-            get("${sesi.url}/rest/v1/skema_formulir?select=id_jenis,skema")
+            get("${sesi.url}/rest/v1/skema_formulir?select=id_jenis,skema,diperbarui_pada")
         } catch (e: SesiKedaluwarsa) {
             throw e
         } catch (e: Exception) {
@@ -200,15 +204,35 @@ class SupabaseKlien(
         if (array.length() == 0) return@withContext null
 
         val akar = JSONObject()
+        var terbit = Long.MAX_VALUE
         for (i in 0 until array.length()) {
             val item = array.optJSONObject(i) ?: continue
             val id = item.optString("id_jenis")
             val skema = item.optJSONObject("skema") ?: continue
             if (id.isBlank()) continue
             akar.put(id, skema)
+            val millis = waktuRestKeMillis(item.optString("diperbarui_pada"))
+            if (millis > 0L) terbit = minOf(terbit, millis)
         }
 
-        if (akar.length() == 0) null else akar.toString()
+        if (akar.length() == 0) null
+        else HasilSkema(akar.toString(), if (terbit == Long.MAX_VALUE) 0L else terbit)
+    }
+
+    /** Hasil tarikan skema: JSON gabungan + waktu terbit paling tua (0 = tidak diketahui). */
+    data class HasilSkema(val json: String, val terbitMillis: Long)
+
+    /** PostgREST mengirim timestamptz ISO-8601 ber-offset; gagal = 0. */
+    private fun waktuRestKeMillis(teks: String?): Long = try {
+        val bersih = teks?.trim().orEmpty()
+        if (bersih.isEmpty()) 0L
+        else java.time.OffsetDateTime.parse(bersih).toInstant().toEpochMilli()
+    } catch (e: Exception) {
+        try {
+            java.time.Instant.parse(teks?.trim().orEmpty()).toEpochMilli()
+        } catch (e2: Exception) {
+            0L
+        }
     }
 
     /**

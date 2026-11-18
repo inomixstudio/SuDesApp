@@ -1,5 +1,30 @@
-plugins {
+﻿plugins {
     id("com.android.application")
+}
+
+/**
+ * Waktu commit terakhir yang mengubah skema formulir desktop, dalam milidetik.
+ * 0 bila git atau berkasnya tidak tersedia (build bersih/CI tanpa riwayat), dan
+ * dalam keadaan itu aplikasi tidak menganggap APK-nya lebih baru dari server.
+ */
+fun waktuSkemaDibekukan(): Long {
+    val berkas = rootProject.projectDir.parentFile
+        ?.resolve("SuDesApp.Core/Configuration/SkemaFormulir.json") ?: return 0L
+    if (!berkas.exists()) return 0L
+    return try {
+        val proses = ProcessBuilder(
+            "git", "log", "-1", "--format=%ct", "--",
+            berkas.absolutePath.replace(File.separatorChar, '/'),
+        )
+            .directory(rootProject.projectDir)
+            .redirectErrorStream(true)
+            .start()
+        val keluar = proses.inputStream.bufferedReader().readText().trim()
+        proses.waitFor()
+        keluar.lines().firstOrNull()?.trim()?.toLongOrNull()?.times(1000L) ?: 0L
+    } catch (e: Exception) {
+        0L
+    }
 }
 
 android {
@@ -55,6 +80,15 @@ android {
         }
         buildConfigField("String", "SUPABASE_URL", "\"${properti["SUPABASE_URL"] ?: ""}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${properti["SUPABASE_ANON_KEY"] ?: ""}\"")
+
+        // Kapan skema desktop ini dibekukan ke APK, sebagai waktu commit terakhir
+        // berkas skema. Dipakai untuk memutuskan mana yang lebih baru antara
+        // terbitan desktop di server dan salinan di dalam APK: tanpa itu, APK
+        // terbaru kalah oleh terbitan desktop lama dan operator melihat formulir
+        // versi lama walaupun baru memasang APK baru. Build tanpa git (0) tidak
+        // mengambil alih: server tetap yang dipegang.
+        val waktuSkema = waktuSkemaDibekukan()
+        buildConfigField("long", "SKEMA_SNAPSHOT_MILLIS", "${waktuSkema}L")
     }
 }
 

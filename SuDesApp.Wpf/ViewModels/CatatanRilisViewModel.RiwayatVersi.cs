@@ -104,6 +104,12 @@ namespace SuDesApp.Wpf.ViewModels
                             "Pratinjau PDF digambar di utas tersendiri dengan kerapatan yang sama, dan PdfRenderer ditutup lewat utas yang sama supaya tidak crash saat render masih berjalan.",
                             "Hasil cetak tidak berubah: validasi wajib dan PDF memaksa semua bidang selesai dibangun lebih dulu, susunan kartu dan judul tetap sama seperti desktop. Perilaku ini dikunci AndroidBiayaFormulirTests (5 uji)."
                         }),
+                        new CatatanRilisSubSection("Android — Kartu Kembali Meski Skema Cache Lama", new List<string>
+                        {
+                            "Formulir yang kembali jadi satu daftar panjang ternyata bukan APK yang salah pasang: Android membaca skema terbitan desktop dari cache perangkat lebih dulu, dan perangkat yang belum sinkron sejak grup kartu diterbitkan punya cache tanpa informasi kartu itu.",
+                            "Pengelompokan kartu kini disempurnakan dari salinan skema yang dibekukan di APK, hanya bila skema yang dipakai belum punya grup. Label, kolom, opsi, dan isi surat dari server tetap menang dan tidak pernah ditimpa, termasuk saat cache baru saja diperbarui lewat sinkron.",
+                            "Cache yang terbukti milik APK lama, atau terbitan desktop yang lebih tua dari skema dibekukan di APK, tidak lagi menutupi formulir: yang pertama dibuang, yang kedua dilewati. Jadi memasang APK baru benar-benar mengubah isian, tanpa mengunduh ulang cache yang masih setara. Dijaga SkemaCacheStampTest (6 uji) dan uji paritas Android."
+                        }),
                         new CatatanRilisSubSection("Alat Build Android", new List<string>
                         {
                             "Android menaikkan AGP ke 9.3 (built-in Kotlin), Gradle 9.8.2, dan compileSdk 37, lalu okhttp 5.5.1 dan pustaka Android lainnya; build dan uji unit tetap hijau."

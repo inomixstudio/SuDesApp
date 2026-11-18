@@ -80,9 +80,11 @@ object PengaturanSinkron {
         // Skema formulir ikut ditarik: desktop adalah sumbernya, dan tanpa
         // langkah ini tombol "Terbitkan skema" di desktop tidak berpengaruh
         // apa pun ke perangkat. Kegagalannya tidak membatalkan pengaturan.
+        // Waktu terbit ikut dibawa supaya terbitan desktop yang lebih tua dari
+        // skema di dalam APK tidak menutupi APK yang baru dipasang.
         try {
             val skema = klien.muatSkemaJson()
-            if (skema != null) SkemaLokal.simpan(ctx, skema)
+            if (skema != null) SkemaLokal.simpan(ctx, skema.json, skema.terbitMillis)
         } catch (e: Exception) {
             // Skema lama (salinan lokal/aset APK) tetap dipakai.
         }
