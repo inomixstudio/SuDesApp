@@ -37,6 +37,18 @@ lalu jalankan ulang aplikasi. Jangan menaruh kredensial produksi pada
 `appsettings.json` yang ikut ke dalam repo; yang benar adalah salinan di folder
 aplikasi hasil instalasi.
 
+### Arti tiap kunci `Supabase` di appsettings.json
+
+| Kunci | Arti | Contoh / catatan |
+|---|---|---|
+| `Host` | Host **Session pooler** persis dari Dashboard -> Connect, tanpa `https://`, port, atau path | `aws-0-ap-northeast-2.pooler.supabase.com` (indeks host tidak bisa ditebak dari region) |
+| `Port` | Port pooler. **5432** dipakai server dan yang paling aman untuk pairing, karena `PasangAsync` menyatukan RPC `pasang_perangkat_android` + INSERT kode dalam satu transaksi | `5432`; `6543` (transaction pooler) adalah bawaan `appsettings.json` dan berisiko pada transaksi itu |
+| `Pengguna` | Role database yang dipakai desktop. RPC pemasangan di-`REVOKE` dari `anon`/`authenticated`, jadi desktop harus masuk sebagai **owner** (`postgres.<ref>`) seperti di `20261112000000_revoke_pasang_cabut.sql` | `postgres.jotnrhjzyslyaozzawwq` |
+| `KataSandi` | Sandi role di atas (sandi pooler, bukan sandi akun Dashboard) | rahasia — jangan pernah di-commit |
+| `Tenant` | `tenant_id` desa, **sama dengan `pelanggan.id`** pada skema lisensi; kolomnya `text` | bukan project ref bila desa punya kode pelanggan sendiri |
+| `UrlRest` | **URL project** untuk ponsel, bukan basis REST | `https://jotnrhjzyslyaozzawwq.supabase.co` |
+| `KunciPublik` | Anon key (public by design, sama yang dibekukan di APK lewat `android/supabase.properties`) | dipakai ponsel sebagai header `apikey` |
+
 ### Bentuk `UrlRest` yang benar
 
 Meskipun namanya `UrlRest`, nilai yang dipakai aplikasi Android adalah **URL
