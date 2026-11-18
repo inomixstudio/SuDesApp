@@ -337,9 +337,9 @@
 
                         <StackPanel Grid.Column="0" Margin="0,0,18,0">
                             <TextBlock Text="Pasang perangkat baru" Style="{StaticResource FieldLabel}"/>
-                            <!-- Dua jalur pemasangan: QR (pindai kamera) atau kode
-                                 4 angka (diketik) — keduanya dari command yang sudah
-                                 ada di ViewModel; dulu tombol kode hilang dari view. -->
+                            <!-- Satu jalur pemasangan: barcode QR untuk dipindai
+                                 ponsel, dan kode 4 angka tetap tampil untuk
+                                 diketik manual bila kamera tidak bisa dipakai. -->
                             <WrapPanel Orientation="Horizontal" Margin="0,4,0,0">
                                 <Button Command="{Binding BuatQrCommand}"
                                         Style="{StaticResource PrimaryButton}"
@@ -351,20 +351,10 @@
                                         <TextBlock Text="Buat QR" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Command="{Binding BuatKodeCommand}"
-                                        Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
-                                        ToolTip="Buat kode 4 angka saja — diketik manual di aplikasi Android, tanpa memindai QR.">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{x:Static u:IkonMenu.KataSandi}"
-                                                   FontFamily="{StaticResource AppIconFont}" FontSize="13"
-                                                   VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Buat Kode" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
                             </WrapPanel>
                             <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                       Text="Nama perangkat dibuat otomatis — tanpa mengisi apa pun. Tekan Buat QR untuk dipindai, atau Buat Kode untuk diketik di Android."/>
+                                       Text="Nama perangkat dibuat otomatis — tanpa mengisi apa pun. Tekan Buat QR, lalu pindai dari Android atau ketik kode 4 angka yang tampil."/>
 
                             <TextBlock Text="PERANGKAT TERPASANG" Style="{StaticResource FieldLabel}"
                                        Margin="0,14,0,4"/>
@@ -398,15 +388,14 @@
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                             <Grid>
                                 <StackPanel Visibility="{Binding AdaPerangkatBaru, Converter={StaticResource BoolToVis}}">
-                                    <Border Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8"
-                                            Visibility="{Binding TampilkanQr, Converter={StaticResource BoolToVis}}">
+                                    <Border Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="8">
                                         <Image Source="{Binding GambarQr}" Width="188" Height="188"
                                                Stretch="Uniform" SnapsToDevicePixels="True"/>
                                     </Border>
-                                    <TextBlock Text="{Binding PetunjukPasangUtama}" Margin="0,8,0,0"
+                                    <TextBlock Text="Pindai dari aplikasi Android" Margin="0,8,0,0"
                                                HorizontalAlignment="Center" FontSize="11"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="{Binding PetunjukPasangKedua}" Margin="0,10,0,0"
+                                    <TextBlock Text="atau ketik kode ini" Margin="0,10,0,0"
                                                HorizontalAlignment="Center" FontSize="11"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     <TextBlock Text="{Binding KodePerangkat}"
@@ -427,7 +416,7 @@
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     <TextBlock Text="Belum ada kode aktif" Margin="0,8,0,0"
                                                HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Tekan «Buat QR» atau «Buat Kode» — nama dibuat otomatis."
+                                    <TextBlock Text="Tekan «Buat QR» — nama dibuat otomatis."
                                                Margin="0,4,0,0" TextAlignment="Center" TextWrapping="Wrap"
                                                FontSize="11"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>

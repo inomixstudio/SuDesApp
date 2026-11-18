@@ -51,7 +51,6 @@ public class SinkronViewModel : ObservableObject
     private PerangkatTerpasang? _perangkatDipilih;
     private HasilPerangkaian? _perangkatBaru;
     private BitmapSource? _gambarQr;
-    private bool _modeKode;
 
     public SinkronViewModel(
         SinkronSuratService sinkron,
@@ -78,9 +77,9 @@ public class SinkronViewModel : ObservableObject
         MuatUlangCommand = new AsyncRelayCommand(MuatUlangAsync, () => !SedangSinkron);
         ImporUlangCommand = new AsyncRelayCommand(ImporUlangArsipGagalAsync, () => !SedangSinkron);
         SimpanKonfigurasiCommand = new AsyncRelayCommand(SimpanKonfigurasiAsync, () => !SedangSinkron);
-        PasangCommand = new AsyncRelayCommand(() => PasangAsync(modeKode: false), () => !SedangMemasang);
-        BuatQrCommand = new AsyncRelayCommand(() => PasangAsync(modeKode: false), () => !SedangMemasang);
-        BuatKodeCommand = new AsyncRelayCommand(() => PasangAsync(modeKode: true), () => !SedangMemasang);
+        // Satu tombol pemasangan: QR sekaligus kode 4 angka. Ponsel memindai
+        // barcode-nya, dan kode angka tetap tampil sebagai jalur manual.
+        BuatQrCommand = new AsyncRelayCommand(() => PasangAsync(), () => !SedangMemasang);
         CabutCommand = new AsyncRelayCommand(CabutAsync, () => PerangkatDipilih is not null && !SedangMemasang);
         TerbitkanSkemaCommand = new AsyncRelayCommand(TerbitkanSkemaAsync, () => !SedangSinkron);
         TerbitkanPengaturanCommand = new AsyncRelayCommand(TerbitkanPengaturanAsync, () => !SedangSinkron);
@@ -150,31 +149,10 @@ public class SinkronViewModel : ObservableObject
         private set
         {
             SetProperty(ref _sedangMemasang, value);
-            ((AsyncRelayCommand)PasangCommand).RaiseCanExecuteChanged();
             ((AsyncRelayCommand)BuatQrCommand).RaiseCanExecuteChanged();
-            ((AsyncRelayCommand)BuatKodeCommand).RaiseCanExecuteChanged();
             ((AsyncRelayCommand)CabutCommand).RaiseCanExecuteChanged();
         }
     }
-
-    /// <summary>Mode pasang terakhir: true = tombol Kode, false = tombol QR.</summary>
-    public bool ModePasangKode => _modeKode;
-
-    /// <summary>QR ditampilkan hanya bila tombol Buat QR yang ditekan.</summary>
-    public bool TampilkanQr => !_modeKode;
-
-    /// <summary>Blok kode selalu ditampilkan (QR selalu punya kode pendamping).</summary>
-    public bool TampilkanKode => true;
-
-    /// <summary>Petunjuk utama panel kode sesuai tombol yang ditekan.</summary>
-    public string PetunjukPasangUtama => _modeKode
-        ? "Ketik kode ini di aplikasi Android"
-        : "Pindai dari aplikasi Android";
-
-    /// <summary>Petunjuk kedua panel kode (jalur alternatif).</summary>
-    public string PetunjukPasangKedua => _modeKode
-        ? "Kode berlaku 10 menit, sekali pakai"
-        : "atau ketik kode ini";
 
     /// <summary>Batas antrean Supabase per desa (trigger basis data menolak surat ke-11).</summary>
     public const int AntreanMaksimum = 10;
@@ -237,9 +215,7 @@ public class SinkronViewModel : ObservableObject
         set
         {
             SetProperty(ref _namaPerangkat, value);
-            ((AsyncRelayCommand)PasangCommand).RaiseCanExecuteChanged();
             ((AsyncRelayCommand)BuatQrCommand).RaiseCanExecuteChanged();
-            ((AsyncRelayCommand)BuatKodeCommand).RaiseCanExecuteChanged();
         }
     }
 
@@ -311,9 +287,7 @@ public class SinkronViewModel : ObservableObject
     public ICommand MuatUlangCommand { get; }
     public ICommand ImporUlangCommand { get; }
     public ICommand SimpanKonfigurasiCommand { get; }
-    public ICommand PasangCommand { get; }
     public ICommand BuatQrCommand { get; }
-    public ICommand BuatKodeCommand { get; }
     public ICommand CabutCommand { get; }
     public ICommand TerbitkanSkemaCommand { get; }
     public ICommand TerbitkanPengaturanCommand { get; }
@@ -484,7 +458,7 @@ public class SinkronViewModel : ObservableObject
         }
     }
 
-    private async Task PasangAsync(bool modeKode = false)
+    private async Task PasangAsync()
     {
         if (_penjaga is { SinkronTerkunci: true })
         {
@@ -492,13 +466,6 @@ public class SinkronViewModel : ObservableObject
                 SuDesApp.Services.PenjagaLisensi.PesanSinkronTerkunci);
             return;
         }
-
-        _modeKode = modeKode;
-        OnPropertyChanged(nameof(ModePasangKode));
-        OnPropertyChanged(nameof(TampilkanQr));
-        OnPropertyChanged(nameof(TampilkanKode));
-        OnPropertyChanged(nameof(PetunjukPasangUtama));
-        OnPropertyChanged(nameof(PetunjukPasangKedua));
 
         SedangMemasang = true;
         PerangkatBaru = null;
