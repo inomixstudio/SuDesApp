@@ -36,8 +36,8 @@ android {
         applicationId = "dev.sumberjaya.sudes.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 21500
-        versionName = "2.15.0"
+        versionCode = 21501
+        versionName = "2.15.1"
     }
 
     buildTypes {
