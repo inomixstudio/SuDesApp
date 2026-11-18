@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [string]$Version,
@@ -14,6 +14,16 @@ param(
     # tetapi harus disebutkan terus terang di sini — gerbang kredensial Google di
     # bawah akan menolak publish yang tanpa kredensial tertanam.
     [switch]$IzinkanTanpaKredensial,
+
+    # Mode lisensi lokal: paket sengaja menunjuk server lisensi yang dijalankan
+    # aplikasi di komputer desa sendiri (loopback), bukan server produksi.
+    # Ini BUKAN pelewat umum - hanya http(s)://127.0.0.1:<port> atau localhost:<port>
+    # TANPA path/userinfo/query/fragment yang diterima, host .local tetap ditolak,
+    # Lisensi:KunciPublik tetap wajib ada dan tetap divalidasi sebagai SPKI EC P-256,
+    # dan keadaannya ditulis terus terang di RELEASE.md + UNGGAH.txt sehingga ikut ke
+    # badan halaman rilis. Jalur CI tidak memakai saklar ini: release.yml tetap
+    # menuntut server produksi + kecocokan /kunci-publik.
+    [switch]$IzinkanLisensiLokal,
 
     # Tanda tangan Authenticode. Kosong = pakai env SUDESAPP_PFX_PATH /
     # SUDESAPP_PFX_PASSWORD / SUDESAPP_SIGN_THUMBPRINT (jalur CI), atau rilis
@@ -83,28 +93,119 @@ $uriLisensi = $null
 if (-not [Uri]::TryCreate($urlLisensi, [UriKind]::Absolute, [ref]$uriLisensi)) {
     throw 'Publish dibatalkan: Lisensi:UrlServer harus berupa URL absolut server produksi.'
 }
-if ($uriLisensi.Scheme -cne 'https' -or $uriLisensi.IsLoopback -or
-    $uriLisensi.Host.EndsWith('.local', [StringComparison]::OrdinalIgnoreCase) -or
-    $uriLisensi.UserInfo -or $uriLisensi.Query -or $uriLisensi.Fragment -or
-    $uriLisensi.AbsolutePath.TrimEnd('/') -ne '') {
-    throw 'Publish dibatalkan: Lisensi:UrlServer harus HTTPS dan tidak boleh mengarah ke loopback atau host .local.'
-}
-if ([string]::IsNullOrWhiteSpace($kunciPublik)) {
-    throw 'Publish dibatalkan: Lisensi:KunciPublik harus berisi kunci ES256 server produksi.'
+$bentukSama = ($uriLisensi.UserInfo -eq '' -and -not $uriLisensi.Query -and
+    -not $uriLisensi.Fragment -and $uriLisensi.AbsolutePath.TrimEnd('/') -eq '')
+$hostLoopback = $uriLisensi.IsLoopback
+$hostLocalName = $uriLisensi.Host.EndsWith('.local', [StringComparison]::OrdinalIgnoreCase)
+
+if ($uriLisensi.Scheme -cne 'https' -or $hostLoopback -or $hostLocalName -or -not $bentukSama) {
+    if (-not $IzinkanLisensiLokal) {
+        throw ('Publish dibatalkan: Lisensi:UrlServer harus HTTPS dan tidak boleh mengarah ke ' +
+               'loopback atau host .local. Untuk paket mode server lisensi lokal yang memang ' +
+               'disengaja, jalankan ulang dengan -IzinkanLisensiLokal; keadaannya kemudian ' +
+               'ditulis di RELEASE.md dan halaman rilis.')
+    }
+    # Saklar dipakai, tetapi tetap dipersempit ke loopback murni. HTTP ke host
+    # lain atau .local bukan 'mode lokal', itu koneksi yang tidak bisa
+    # diverifikasi, jadi tetap ditolak.
+    if (-not $hostLoopback) {
+        throw ('Publish dibatalkan: -IzinkanLisensiLokal hanya menerima loopback ' +
+               '(127.0.0.1/::1/localhost), tetapi Lisensi:UrlServer menunjuk ' +
+               $uriLisensi.GetLeftPart([UriPartial]::Authority) + '.')
+    }
+    if ($hostLocalName -or -not $bentukSama) {
+        throw ('Publish dibatalkan: -IzinkanLisensiLokal mengharapkan URL loopback ' +
+               'tanpa path, query, fragment, atau userinfo.')
+    }
+    $modeLisensiLokal = $true
+    Write-Host ('Mode lisensi lokal dipakai: ' + $urlLisensi +
+                ' (server lisensi dijalankan aplikasi di komputer desa)') -ForegroundColor Yellow
+} else {
+    $modeLisensiLokal = $false
 }
 
-$urlKunci = $urlLisensi.TrimEnd('/') + '/kunci-publik'
-try {
-    $jawabanKunci = Invoke-RestMethod -Uri $urlKunci -Method Get -TimeoutSec 10 `
-        -MaximumRedirection 0 -ErrorAction Stop
-} catch {
-    throw "Publish dibatalkan: server lisensi tidak dapat diverifikasi di $urlKunci. Pastikan server produksi aktif."
+if ([string]::IsNullOrWhiteSpace($kunciPublik)) {
+    throw 'Publish dibatalkan: Lisensi:KunciPublik harus berisi kunci ES256 (produksi maupun server lokal).'
 }
-if ([string]$jawabanKunci.algoritma -cne 'ES256' -or
-    [string]$jawabanKunci.kunci -cne $kunciPublik.Trim()) {
-    throw 'Publish dibatalkan: Lisensi:KunciPublik tidak cocok dengan kunci ES256 yang disajikan server lisensi.'
+
+if (-not $modeLisensiLokal) {
+    $urlKunci = $urlLisensi.TrimEnd('/') + '/kunci-publik'
+    try {
+        $jawabanKunci = Invoke-RestMethod -Uri $urlKunci -Method Get -TimeoutSec 10 `
+            -MaximumRedirection 0 -ErrorAction Stop
+    } catch {
+        throw "Publish dibatalkan: server lisensi tidak dapat diverifikasi di $urlKunci. Pastikan server produksi aktif."
+    }
+    if ([string]$jawabanKunci.algoritma -cne 'ES256' -or
+        [string]$jawabanKunci.kunci -cne $kunciPublik.Trim()) {
+        throw 'Publish dibatalkan: Lisensi:KunciPublik tidak cocok dengan kunci ES256 yang disajikan server lisensi.'
+    }
+    Write-Host ('Server lisensi produksi terverifikasi: ' + $uriLisensi.GetLeftPart([UriPartial]::Authority)) -ForegroundColor Green
+} else {
+    # Mode lokal: server tidak selalu berjalan saat build, jadi kunci divalidasi
+    # bentuknya (SPKI EC P-256 sungguhan), lalu tetap dibandingkan dengan
+    # /kunci-publik kalau server lokal sedang menjawab.
+    function Test-KunciP256([string]$B64Url) {
+        try {
+            $s = $B64Url.Trim().Replace('-', '+').Replace('_', '/')
+            switch ($s.Length % 4) {
+                2 { $s += '==' }
+                3 { $s += '=' }
+                1 { return $false }
+            }
+            $der = [Convert]::FromBase64String($s)
+            # Windows PowerShell 5.1 (.NET Framework) tidak punya
+            # ImportSubjectPublicKeyInfo, jadi bentuk DER-nya saja yang diperiksa:
+            # SPKI EC P-256 selalu 91 byte dengan kepala tetap - algoritma
+            # id-ecPublicKey (1.2.840.10045.2.1) + kurva prime256v1
+            # (1.2.840.10045.3.1.7) + titik publik uncompressed (04 || X32 || Y32).
+            # Blob acak, kunci RSA, atau base64 pendek tetap ditolak.
+            if ($der.Length -ne 91) { return $false }
+            $kepala = @(0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2A, 0x86, 0x48, 0xCE,
+                        0x3D, 0x02, 0x01, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D,
+                        0x03, 0x01, 0x07, 0x03, 0x42, 0x00, 0x04)
+            for ($i = 0; $i -lt $kepala.Length; $i++) {
+                if ($der[$i] -ne $kepala[$i]) { return $false }
+            }
+            return $true
+        } catch {
+            return $false
+        }
+    }
+    if (-not (Test-KunciP256 $kunciPublik)) {
+        throw 'Publish dibatalkan: Lisensi:KunciPublik bukan kunci ES256 yang sah (SPKI EC P-256, base64url).'
+    }
+    $urlKunciLokal = $urlLisensi.TrimEnd('/') + '/kunci-publik'
+    $cocokLokal = $false
+    try {
+        $jawabanLokal = Invoke-RestMethod -Uri $urlKunciLokal -Method Get -TimeoutSec 3 `
+            -MaximumRedirection 0 -ErrorAction Stop
+        if ([string]$jawabanLokal.algoritma -cne 'ES256' -or
+            [string]$jawabanLokal.kunci -cne $kunciPublik.Trim()) {
+            throw 'Publish dibatalkan: Lisensi:KunciPublik tidak cocok dengan kunci yang disajikan server lisensi lokal.'
+        }
+        $cocokLokal = $true
+        Write-Host ('Server lisensi lokal menjawab dan kuncinya cocok: ' + $urlLisensi) -ForegroundColor Green
+    } catch {
+        if ($_.Exception.Message -like 'Publish dibatalkan*') { throw }
+        Write-Host ('Server lisensi lokal tidak menjawab saat build (' + $urlKunciLokal +
+                    ') - kunci tervalidasi sebagai SPKI P-256, pencocokan online dilewati.') -ForegroundColor Yellow
+    }
 }
-Write-Host ('Server lisensi produksi terverifikasi: ' + $uriLisensi.GetLeftPart([UriPartial]::Authority)) -ForegroundColor Green
+
+# Status lisensi harus sudah terisi SEBELUM daftar baris RELEASE.md disusun.
+# PowerShell 5.1 tidak melempar untuk variabel yang belum didefinisikan, jadi
+# definisi di bawah pemakaian akan menghilangkan barisnya tanpa suara - dan baris
+# inilah yang memberitahu operator bahwa paket ini mode server lokal.
+if ($modeLisensiLokal) {
+    $statusLisensi = @(
+        '',
+        ('Lisensi: MODE LOKAL - paket memakai server lisensi yang dijalankan aplikasi di komputer desa (' + $urlLisensi + '); lisensi TIDAK divalidasi ke server produksi.'),
+        'Saklar -IzinkanLisensiLokal dipakai atas keputusan operator (sama seperti paket 2.15.0 yang beredar).'
+    )
+} else {
+    $statusLisensi = @('', ('Lisensi: SERVER PRODUKSI - ' + $urlLisensi + ', kunci publik dicocokkan dengan /kunci-publik.'))
+}
 
 $Version = $Version.Trim().TrimStart('v', 'V')
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "Versi tidak valid: '$Version' (harus x.y.z, mis. 2.2.0)" }
@@ -438,6 +539,7 @@ if ($setup) {
 }
 $lines += ''
 $lines += $statusKredensial
+$lines += $statusLisensi
 $lines += $statusTandaTangan
 Write-Host ("Portable  : " + $zipPath)
 Write-Host ("Kredensial: " + $statusKredensial)
@@ -587,6 +689,9 @@ foreach ($berkas in $daftarAset) {
     $barisUnggah += ('- {0}  ({1:N0} byte)  sha256: {2}' -f $item.Name, $item.Length, $hash)
 }
 $barisUnggah += ''
+if ($modeLisensiLokal) {
+    $barisUnggah += ('Paket ini MODE LISENSI LOKAL (' + $urlLisensi + ') - bukan server produksi; lihat RELEASE.md.')
+}
 $barisUnggah += 'patch.json wajib ikut diunggah - tanpa berkas itu aplikasi terpasang meminta installer penuh.'
 Set-Content -LiteralPath $unggahTxt -Value $barisUnggah -Encoding UTF8
 Write-Host ("Daftar    : " + $unggahTxt)
