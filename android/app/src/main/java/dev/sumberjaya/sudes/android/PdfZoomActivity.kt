@@ -41,6 +41,20 @@ class PdfZoomActivity : AppCompatActivity() {
     private var jumlahHalaman = 0
     private var halaman = 0
 
+    /**
+     * Render halaman dikerjakan pada satu utas tersendiri. Menggambar satu
+     * halaman A4 ke bitmap butuh ratusan milidetik; dilakukan di main thread itu
+     * membuat ganti halaman patah-patah. PdfRenderer juga tidak aman dipakai
+     * bersama, jadi semuanya (termasuk menutupnya) beruntai di executor ini.
+     */
+    private val renderUtas = java.util.concurrent.Executors.newSingleThreadExecutor()
+    private var generasiRender = 0
+    @Volatile
+    private var tampilanHidup = true
+    @Volatile
+    private var perenderHidup = false
+    private var pernahTampil = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         berkasPath = intent.getStringExtra(EXTRA_BERKAS).orEmpty()
@@ -105,6 +119,7 @@ class PdfZoomActivity : AppCompatActivity() {
             }
             deskriptor = ParcelFileDescriptor.open(berkas, ParcelFileDescriptor.MODE_READ_ONLY)
             perender = PdfRenderer(deskriptor!!)
+            perenderHidup = true
             jumlahHalaman = perender!!.pageCount
             tampilkanHalaman(0)
         } catch (e: Exception) {
@@ -118,25 +133,69 @@ class PdfZoomActivity : AppCompatActivity() {
     }
 
     private fun tampilkanHalaman(halamanBaru: Int) {
-        val renderer = perender ?: return
+        if (!perenderHidup) return
         val tujuan = halamanBaru.coerceIn(0, jumlahHalaman - 1)
-        val page = renderer.openPage(tujuan)
-        try {
-            val skala = 2.0f
-            val bitmap = Bitmap.createBitmap(
-                (page.width * skala).toInt(), (page.height * skala).toInt(),
-                Bitmap.Config.ARGB_8888)
-            // Mode render HARUS konstanta resmi (1 = FOR_DISPLAY, 2 = FOR_PRINT).
-            // Nilai mentah 0 melempar IllegalArgumentException("Unsupported
-            // render mode") — itulah error yang muncul saat membuka/cetak PDF.
-            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-            tampilan.setBitmap(bitmap, page.width.toFloat(), page.height.toFloat())
-            halaman = tujuan
-            labelHalaman.text = getString(R.string.pdf_halaman_dari, halaman + 1, jumlahHalaman)
-            tombolSebelumnya.isEnabled = halaman > 0
-            tombolBerikutnya.isEnabled = halaman < jumlahHalaman - 1
-        } finally {
-            page.close()
+        halaman = tujuan
+        labelHalaman.text = getString(R.string.pdf_halaman_dari, halaman + 1, jumlahHalaman)
+        tombolSebelumnya.isEnabled = halaman > 0
+        tombolBerikutnya.isEnabled = halaman < jumlahHalaman - 1
+
+        // Hanya hasil terakhir yang dipakai: operator yang menekan › berkali-kali
+        // tidak usah menunggu render halaman tengah.
+        val generasi = ++generasiRender
+        renderUtas.execute {
+            val renderer = perender
+            if (renderer == null || !tampilanHidup || generasi != generasiRender) return@execute
+            val bitmap: Bitmap
+            val lebarAsli: Float
+            val tinggiAsli: Float
+            try {
+                val halamanPdf = renderer.openPage(tujuan)
+                try {
+                    lebarAsli = halamanPdf.width.toFloat()
+                    tinggiAsli = halamanPdf.height.toFloat()
+                    bitmap = Bitmap.createBitmap(
+                        (halamanPdf.width * SKALA_RENDER).toInt(),
+                        (halamanPdf.height * SKALA_RENDER).toInt(),
+                        Bitmap.Config.ARGB_8888,
+                    )
+                    // Mode render HARUS konstanta resmi (1 = FOR_DISPLAY, 2 = FOR_PRINT).
+                    // Nilai mentah 0 melempar IllegalArgumentException("Unsupported
+                    // render mode") — itulah error yang muncul saat membuka/cetak PDF.
+                    halamanPdf.render(
+                        bitmap, null, null,
+                        PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY,
+                    )
+                } finally {
+                    halamanPdf.close()
+                }
+            } catch (e: Exception) {
+                if (tampilanHidup && !pernahTampil) {
+                    tampilan.post {
+                        if (!tampilanHidup) return@post
+                        Toast.makeText(
+                            this,
+                            getString(R.string.pdf_gagal, e.message ?: "PdfRenderer"),
+                            Toast.LENGTH_LONG,
+                        ).show()
+                        finish()
+                    }
+                }
+                return@execute
+            }
+            if (!tampilanHidup || generasi != generasiRender) {
+                bitmap.recycle()
+                return@execute
+            }
+            tampilan.post {
+                if (!tampilanHidup || generasi != generasiRender) {
+                    bitmap.recycle()
+                } else {
+                    pernahTampil = true
+                    // setBitmap yang lama mendaur ulang bitmap sebelumnya.
+                    tampilan.setBitmap(bitmap, lebarAsli, tinggiAsli)
+                }
+            }
         }
     }
 
@@ -146,18 +205,35 @@ class PdfZoomActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        try { perender?.close() } catch (e: Exception) {
-            // sudah ditutup
+        tampilanHidup = false
+        generasiRender += 1
+        // Ditutup lewat utas render supaya tidak ada close di tengah render —
+        // PdfRenderer yang ditutup saat dipakai membuat native crash.
+        renderUtas.execute {
+            perenderHidup = false
+            try {
+                perender?.close()
+            } catch (e: Exception) {
+                // sudah ditutup
+            }
+            perender = null
+            try {
+                deskriptor?.close()
+            } catch (e: Exception) {
+                // sudah ditutup
+            }
+            deskriptor = null
         }
-        try { deskriptor?.close() } catch (e: Exception) {
-            // sudah ditutup
-        }
+        renderUtas.shutdown()
         super.onDestroy()
     }
 
     companion object {
         const val EXTRA_BERKAS = "pdf_berkas"
         const val EXTRA_JUDUL = "pdf_judul"
+
+        /** Kerapatan render halaman — sama seperti sebelum render dipindah ke utas. */
+        private const val SKALA_RENDER = 2.0f
 
         fun mulai(ctx: Context, berkas: File, judul: String) {
             ctx.startActivity(Intent(ctx, PdfZoomActivity::class.java).apply {
