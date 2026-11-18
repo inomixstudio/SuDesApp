@@ -312,27 +312,156 @@ data class SkemaJenis(
 object SkemaLokal {
     private const val BERKAS = "skema-formulir.json"
     private const val CACHE = "skema-cache.json"
+    private const val PREFS = "sudes_skema"
+    private const val K_HASH_ASET = "hash_aset"
+    private const val K_HASH_CACHE = "hash_cache"
+    private const val K_VERSI_APK = "versi_apk"
+    private const val K_TERBIT_MILLIS = "terbit_millis"
 
     @Volatile
     private var cache: Map<String, SkemaJenis>? = null
 
+    @Volatile
+    private var asetDiCache: Map<String, SkemaJenis>? = null
+
+    /** Sidik jari skema yang dibekukan di APK ini; null bila aset tidak terbaca. */
+    @Volatile
+    private var hashAset: String? = null
+
+    /**
+     * Skema yang dipakai aplikasi.
+     *
+     * Cache <c>skema-cache.json</c> adalah terbitan desktop, jadi ia dipakai
+     * hanya kalau ditulis oleh APK yang sama (sidik jari aset + versionCode
+     * cocok) DAN diterbitkan tidak sebelum skema di dalam APK ini dibekukan.
+     * Tanpa dua pemeriksaan itu, memasang APK baru tidak ada gunanya: formulir
+     * tetap dibangun dari salinan lama — kolom yang desktop buang masih muncul,
+     * bidang daftar tambahan kehilangan kolom inputnya, dan operator melapor
+     * "APK-nya belum berubah" padahal berkas di dalam APK sudah benar.
+     */
     @Synchronized
     fun muat(ctx: Context): Map<String, SkemaJenis> {
         cache?.let { return it }
 
-        val peta = bacaBerkas(File(ctx.filesDir, CACHE))
-            ?: bacaAset(ctx)
-            ?: emptyMap()
+        val asetPeta = aset(ctx)
+        val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val cocok = cacheBolehDipakai(
+            p.getString(K_HASH_ASET, null),
+            p.getInt(K_VERSI_APK, -1),
+            p.getLong(K_TERBIT_MILLIS, 0L),
+            hashAset,
+            BuildConfig.VERSION_CODE,
+            BuildConfig.SKEMA_SNAPSHOT_MILLIS,
+        )
+        val milikApkIni = hashAset != null &&
+            p.getString(K_HASH_ASET, null) == hashAset &&
+            p.getInt(K_VERSI_APK, -1) == BuildConfig.VERSION_CODE
 
-        cache = peta
-        return peta
+        val pakai = when {
+            cocok -> bacaBerkas(File(ctx.filesDir, CACHE)) ?: asetPeta ?: emptyMap()
+            // APK berbeda dari yang menulis cache (atau cache warisan versi lama
+            // tanpa stamp): salinan APK inilah yang terbaru, berkas lama dibuang.
+            !milikApkIni -> {
+                buangCache(ctx)
+                asetPeta ?: emptyMap()
+            }
+            // Terbitan desktop memang lebih lama dari skema APK ini: berkasnya
+            // dibiarkan (sinkron berikutnya menggantikannya), tapi tidak dipakai.
+            else -> asetPeta ?: emptyMap()
+        }
+
+        cache = lengkapiGrup(pakai, asetPeta)
+        return cache!!
+    }
+
+    /**
+     * Aturan kapan cache terbitan desktop boleh dipakai. Murni supaya bisa
+     * diuji tanpa Android.
+     *
+     * [apkSnapshotMillis] 0 berarti waktu pembekuan skema APK tidak diketahui
+     * (build tanpa riwayat git): dalam keadaan itu server tetap yang dipegang,
+     * supaya penerbitan desktop tidak pernah diam-diam dikalahkan APK buta.
+     */
+    fun cacheBolehDipakai(
+        stampHashAset: String?,
+        stampVersiApk: Int,
+        stampTerbitMillis: Long,
+        hashAsetSekarang: String?,
+        versiApkSekarang: Int,
+        apkSnapshotMillis: Long,
+    ): Boolean {
+        if (hashAsetSekarang == null) return false
+        if (stampHashAset != hashAsetSekarang) return false
+        if (stampVersiApk != versiApkSekarang) return false
+        if (apkSnapshotMillis <= 0L) return true
+        return stampTerbitMillis >= apkSnapshotMillis
+    }
+
+    private fun buangCache(ctx: Context) {
+        try {
+            val lama = File(ctx.filesDir, CACHE)
+            if (lama.isFile) lama.delete()
+            val sementara = File(ctx.filesDir, "$CACHE.tmp")
+            if (sementara.isFile) sementara.delete()
+        } catch (e: Exception) {
+            // Tidak bisa menghapus tidak berbahaya: selama stamp-nya tidak cocok,
+            // berkas itu tetap tidak dipakai.
+        }
+    }
+
+    /**
+     * Isi pengelompokan kartu dari aset APK bila skema yang dipakai tidak
+     * memilikinya.
+     *
+     * Skema di <c>skema-cache.json</c> adalah terbitan desktop. Perangkat yang
+     * terakhir sinkron sebelum grup kartu diterbitkan punya skema tanpa
+     * <grup>/<grupUrutan>, dan formulirnya kembali menjadi satu daftar panjang —
+     * gejala yang terlihat seperti "APK-nya belum berubah" padahal APK-nya sudah
+     * benar. Kartu diturunkan dari XAML desktop dan ikut dibekukan di APK, jadi
+     * judul dan urutannya aman dipakai sebagai penyempurna: yang diisi hanya
+     * pengelompokan, tidak ada label, field, opsi, atau badan surat server yang
+     * diubah, dan skema server yang sudah menyebut grup tidak pernah ditimpa.
+     */
+    fun lengkapiGrup(
+        dipakai: Map<String, SkemaJenis>,
+        aset: Map<String, SkemaJenis>?,
+    ): Map<String, SkemaJenis> {
+        if (aset.isNullOrEmpty() || dipakai.isEmpty()) return dipakai
+        return dipakai.mapValues { (idJenis, jenis) ->
+            val sumber = aset[idJenis] ?: return@mapValues jenis
+            val sudahPunyaGrup = jenis.grupUrutan.isNotEmpty() ||
+                jenis.fields.any { it.grup.isNotBlank() }
+            if (sudahPunyaGrup || sumber.grupUrutan.isEmpty()) return@mapValues jenis
+            val peta = sumber.fields.asSequence()
+                .filter { it.grup.isNotBlank() }
+                .associate { it.key to it.grup }
+            if (peta.isEmpty()) return@mapValues jenis
+            jenis.copy(
+                grupUrutan = sumber.grupUrutan,
+                fields = jenis.fields.map { b -> b.copy(grup = peta[b.key] ?: b.grup) },
+            )
+        }
+    }
+
+    private fun aset(ctx: Context): Map<String, SkemaJenis>? {
+        asetDiCache?.let { return it }
+        val teks = try {
+            ctx.assets.open(BERKAS).bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            null
+        } ?: return null
+        hashAset = sha256(teks)
+        return uraikan(teks)?.also { asetDiCache = it }
     }
 
     /**
      * Simpan skema terbitan desktop sebagai salinan lokal. False bila isinya
      * kosong/rusak — salinan lama (atau aset APK) tetap dipakai.
+     *
+     * [terbitMillis] adalah <c>diperbarui_pada</c> paling tua di antara baris yang
+     * ditarik; 0 bila server tidak menyebutkannya.
      */
-    fun simpan(ctx: Context, json: String): Boolean {
+    fun simpan(ctx: Context, json: String, terbitMillis: Long = 0L): Boolean {
         val peta = try {
             uraikan(json)
         } catch (e: Exception) {
@@ -347,11 +476,39 @@ object SkemaLokal {
                 sementara.copyTo(tujuan, overwrite = true)
                 sementara.delete()
             }
-            cache = peta
+            // Stamp: cache ini sekarang milik APK ini. Setelah APK diganti,
+            // sidik jarinya tidak cocok lagi dan skema APK yang dipakai lebih dulu.
+            ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .putString(K_HASH_ASET, hashAset ?: "")
+                .putString(K_HASH_CACHE, sha256(json) ?: "")
+                .putInt(K_VERSI_APK, BuildConfig.VERSION_CODE)
+                .putLong(K_TERBIT_MILLIS, terbitMillis)
+                .apply()
+            // Terbitan yang lebih tua dari skema APK ini tidak boleh menutupinya
+            // (mis. desktop lama yang belum ikut rilis terbaru), tetapi juga tidak
+            // dibuang: begitu desktop menerbitkan yang baru, sinkron berikutnya
+            // memakainya. Grup kartu tetap disempurnakan dari aset APK.
+            val boleh = cacheBolehDipakai(
+                hashAset, BuildConfig.VERSION_CODE, terbitMillis,
+                hashAset, BuildConfig.VERSION_CODE, BuildConfig.SKEMA_SNAPSHOT_MILLIS,
+            )
+            cache = if (boleh) {
+                lengkapiGrup(peta, aset(ctx))
+            } else {
+                lengkapiGrup(aset(ctx) ?: peta, aset(ctx))
+            }
             true
         } catch (e: Exception) {
             false
         }
+    }
+
+    private fun sha256(teks: String): String? = try {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(teks.toByteArray(Charsets.UTF_8))
+        digest.joinToString("") { "%02x".format(it) }
+    } catch (e: Exception) {
+        null
     }
 
     private fun bacaBerkas(berkas: File): Map<String, SkemaJenis>? {
@@ -361,12 +518,6 @@ object SkemaLokal {
         } catch (e: Exception) {
             null
         }
-    }
-
-    private fun bacaAset(ctx: Context): Map<String, SkemaJenis>? = try {
-        ctx.assets.open(BERKAS).bufferedReader().use { uraikan(it.readText()) }
-    } catch (e: Exception) {
-        null
     }
 
     private fun uraikan(teks: String): Map<String, SkemaJenis>? {

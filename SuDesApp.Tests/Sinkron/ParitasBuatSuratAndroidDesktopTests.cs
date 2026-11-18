@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -384,6 +384,83 @@ public sealed class ParitasBuatSuratAndroidDesktopTests
         var aktivitas = File.ReadAllText(AktivitasAndroid);
         Assert.Contains("kartuGrup", aktivitas, StringComparison.Ordinal);
         Assert.Contains("grupkan(", aktivitas, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Android_SkemaCacheTanpaGrupDisempurnakanDariAsetApk()
+    {
+        // Gejala "APK terpasang tapi formulir tetap satu daftar panjang" bukan
+        // APK-nya: Android membaca skema terbitan desktop dari
+        // filesDir/skema-cache.json lebih dulu, dan perangkat yang belum sinkron
+        // sejak grup kartu diterbitkan punya cache tanpa grup. Kalau pengisian
+        // grup dari aset APK dilepas, formulir perangkat itu kembali datar tanpa
+        // satu pun pesan.
+        var skemaKt = File.ReadAllText(Path.Combine(AkarRepo, "android", "app", "src", "main", "java",
+            "dev", "sumberjaya", "sudes", "android", "SkemaFormulir.kt"));
+
+        Assert.Contains("fun lengkapiGrup", skemaKt, StringComparison.Ordinal);
+        Assert.Contains("bacaBerkas(File(ctx.filesDir, CACHE))", skemaKt, StringComparison.Ordinal);
+
+        // APK baru dipasang harus terbaca baru: cache hanya dipakai kalau sidik
+        // jari aset + versionCode-nya cocok, dan cache lama dibuang saat tidak cocok.
+        Assert.Contains("fun cacheBolehDipakai", skemaKt, StringComparison.Ordinal);
+        Assert.Contains("BuildConfig.VERSION_CODE", skemaKt, StringComparison.Ordinal);
+        Assert.Contains("BuildConfig.SKEMA_SNAPSHOT_MILLIS", skemaKt, StringComparison.Ordinal);
+        var muatAwal = AmbilBlokFungsi(skemaKt, "fun muat(ctx: Context)");
+        Assert.Contains("cacheBolehDipakai(", muatAwal, StringComparison.Ordinal);
+        Assert.Contains("buangCache(ctx)", muatAwal, StringComparison.Ordinal);
+        Assert.Contains("lengkapiGrup(", muatAwal, StringComparison.Ordinal);
+
+        // Waktu terbit ikut dibawa dari server, bukan diabaikan.
+        var klienKt = File.ReadAllText(Path.Combine(AkarRepo, "android", "app", "src", "main", "java",
+            "dev", "sumberjaya", "sudes", "android", "SupabaseKlien.kt"));
+        Assert.Contains("select=id_jenis,skema,diperbarui_pada", klienKt, StringComparison.Ordinal);
+        var sinkronKt = File.ReadAllText(Path.Combine(AkarRepo, "android", "app", "src", "main", "java",
+            "dev", "sumberjaya", "sudes", "android", "PengaturanSinkron.kt"));
+        Assert.Contains("SkemaLokal.simpan(ctx, skema.json, skema.terbitMillis)",
+            sinkronKt, StringComparison.Ordinal);
+
+        // Kedua jalan masuk skema harus menyempurnakan: baca saat start DAN
+        // sesudah satu sinkron menimpa cache dengan terbitan desktop.
+        var simpan = AmbilBlokFungsi(skemaKt, "fun simpan(ctx: Context, json: String, terbitMillis: Long");
+        Assert.Contains("cacheBolehDipakai(", simpan, StringComparison.Ordinal);
+        Assert.Contains("lengkapiGrup(", simpan, StringComparison.Ordinal);
+        Assert.Contains("K_HASH_ASET", simpan, StringComparison.Ordinal);
+        Assert.Contains("K_TERBIT_MILLIS", simpan, StringComparison.Ordinal);
+    }
+
+    /// <summary>Isi fungsi Kotlin, dari kurung buka badan sampai kurung tutup selevel.</summary>
+    private static string AmbilBlokFungsi(string sumber, string signature)
+    {
+        var i = sumber.IndexOf(signature, StringComparison.Ordinal);
+        Assert.True(i >= 0, $"'{signature}' tidak ditemukan");
+        var bukaParam = sumber.IndexOf('(', i);
+        var dalam = 0;
+        var j = bukaParam;
+        for (; j < sumber.Length; j++)
+        {
+            if (sumber[j] == '(') dalam++;
+            else if (sumber[j] == ')')
+            {
+                dalam--;
+                if (dalam == 0) break;
+            }
+        }
+
+        var buka = sumber.IndexOf('{', j + 1);
+        Assert.True(buka >= 0, $"badan '{signature}' tidak ditemukan");
+        dalam = 0;
+        for (var k = buka; k < sumber.Length; k++)
+        {
+            if (sumber[k] == '{') dalam++;
+            else if (sumber[k] == '}')
+            {
+                dalam--;
+                if (dalam == 0) return sumber[buka..(k + 1)];
+            }
+        }
+
+        throw new InvalidOperationException($"kurung tutup '{signature}' tidak seimbang");
     }
 
     // ---------------------------------------------------------------- 5. kolom asing & pola tanggal
