@@ -433,15 +433,21 @@ if (-not (Test-Path (Join-Path $publishDir 'SuDesApp.exe'))) { throw "SuDesApp.e
 # setelah dipasang (versi sebelumnya sempat
 # terbit begitu karena dibangun tanpa berkas rahasia build). Pemeriksaan ini
 # memastikan aset rilis tidak pernah keluar dalam keadaan seperti itu.
-$statusKredensial = 'Kredensial Google tertanam - koneksi akun Google siap dipakai.'
-$cekArg = @{}
-if ($IzinkanTanpaKredensial) { $cekArg['IzinkanTanpaKredensial'] = $true }
-& (Join-Path $PSScriptRoot 'check-kredensial-google.ps1') -Folder $publishDir @cekArg
-if ($LASTEXITCODE -ne 0) {
-    throw "Publish dibatalkan: hasil publish tidak memuat kredensial OAuth Google, sehingga aplikasi terpasang tidak bisa menyambungkan akun Google (Formulir/Sheet/Drive). Bangun aset rilis di komputer yang memiliki berkas rahasia build Utilities/GoogleClientCredentialsBawaan.lokal.cs, atau tambahkan -IzinkanTanpaKredensial bila rilis tanpa kredensial Google memang disengaja."
-}
-if ($IzinkanTanpaKredensial) {
+#
+# Pemeriksaan dijalankan TANPA -IzinkanTanpaKredensial lebih dulu supaya baris
+# status mencerminkan ISI paket, bukan saklar yang dipakai operator. Dulu
+# baris ini ditulis ulang jadi "TIDAK tertanam" begitu
+# -IzinkanTanpaKredensial disetel, sehingga paket yang kredensialnya ada
+# dilaporkan sebaliknya dan operator mengira Login Google mati.
+& (Join-Path $PSScriptRoot 'check-kredensial-google.ps1') -Folder $publishDir
+$kodeCek = $LASTEXITCODE
+if ($kodeCek -ne 0) {
+    if (-not $IzinkanTanpaKredensial) {
+        throw "Publish dibatalkan: hasil publish tidak memuat kredensial OAuth Google, sehingga aplikasi terpasang tidak bisa menyambungkan akun Google (Formulir/Sheet/Drive). Bangun aset rilis di komputer yang memiliki berkas rahasia build Utilities/GoogleClientCredentialsBawaan.lokal.cs, atau tambahkan -IzinkanTanpaKredensial bila rilis tanpa kredensial Google memang disengaja."
+    }
     $statusKredensial = 'Kredensial Google TIDAK tertanam - login Google tidak aktif pada paket ini; bangun ulang di komputer yang memiliki berkas rahasia build.'
+} else {
+    $statusKredensial = 'Kredensial Google tertanam - koneksi akun Google siap dipakai.'
 }
 
 # ---------- server lisensi lokal ikut terpasang ----------
