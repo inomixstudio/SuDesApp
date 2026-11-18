@@ -7,8 +7,8 @@ namespace SuDesApp.Sinkron;
 /// <summary>Hasil perangkaian satu perangkat Android.</summary>
 /// <param name="Berhasil">True bila perangkat benar-benar dibuat di Supabase.</param>
 /// <param name="PerangkatId">Id perangkat (dipakai untuk mencabut).</param>
-/// <param name="Surel">Surel login perangkat — dipakai menyusun QR.</param>
-/// <param name="KataSandi">Kata sandi perangkat — dipakai menyusun QR.</param>
+/// <param name="Surel">Surel login perangkat — hanya untuk log; TIDAK pernah masuk QR.</param>
+/// <param name="KataSandi">Kata sandi perangkat — hanya disimpan di pasangan_sementara; TIDAK pernah masuk QR.</param>
 /// <param name="PesanGalat">Penyebab gagal, bila gagal.</param>
 /// <param name="Kode">Kode verifikasi 4 angka yang ditunjukkan operator Android.</param>
 public sealed record HasilPerangkaian(
@@ -30,11 +30,14 @@ public sealed record PerangkatTerpasang(
 
 /// <summary>
 /// Perangkaian perangkat Android: membuat akun Supabase Auth + klaim tenant,
-/// lalu mencatat perangkatnya. QR berisi URL Supabase, surel, dan kata sandi.
+/// lalu mencatat perangkatnya.
 ///
 /// <para>
-/// Kata sandi dibuat desktop (bukan dipilih pengguna) supaya cukup kuat dan
-/// tetap bisa ditampilkan sekali di QR. QR hanya diperlihatkan di kantor desa.
+/// QR HANYA memuat URL project dan kode verifikasi 4 angka. Surel dan kata sandi
+/// perangkat tidak pernah tampil di layar maupun di dalam QR; ponsel menukar
+/// kodenya lewat RPC <c>public.ambil_pasangan</c> (sekali pakai, dibatasi
+/// percobaan). Kata sandi dibuat desktop supaya cukup kuat dan tidak perlu
+/// diketik siapa pun.
 /// </para>
 /// </summary>
 public sealed class PerangkaianPerangkat
@@ -50,17 +53,21 @@ public sealed class PerangkaianPerangkat
         _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
     }
 
-    /// <summary>Buat kata sandi acak yang aman untuk perangkat baru.</summary>
+    /// <summary>
+    /// Buat kata sandi acak yang aman untuk perangkat baru.
+    ///
+    /// <see cref="System.Security.Cryptography.RandomNumberGenerator.GetInt32(int)"/>
+    /// dipakai alih-alih mereduksi byte acak dengan modulo: 256 tidak habis
+    /// dibagi 56, sehingga sisa byte membuat sebagian karakter lebih mungkin
+    /// muncul daripada yang lain (bias) pada sandi yang persis 20 karakter.
+    /// </summary>
     public static string BuatKataSandi(int panjang = 20)
     {
         const string huruf = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        using var acak = System.Security.Cryptography.RandomNumberGenerator.Create();
         var hasil = new char[panjang];
-        var buffer = new byte[panjang];
-        acak.GetBytes(buffer);
         for (var i = 0; i < panjang; i++)
         {
-            hasil[i] = huruf[buffer[i] % huruf.Length];
+            hasil[i] = huruf[System.Security.Cryptography.RandomNumberGenerator.GetInt32(huruf.Length)];
         }
         return new string(hasil);
     }
@@ -71,15 +78,83 @@ public sealed class PerangkaianPerangkat
     /// </summary>
     public static string BuatKode()
     {
-        using var acak = System.Security.Cryptography.RandomNumberGenerator.Create();
-        var buffer = new byte[4];
-        acak.GetBytes(buffer);
+        // Sama seperti BuatKataSandi: 256 % 10 != 0, jadi byte acak per digit
+        // memberi angka 0-5 sedikit lebih sering daripada 6-9. Ruang kode hanya
+        // 10.000 dan penebakannya dibatasi di server, tetapi tidak ada alasan
+        // meninggalkan bias yang bisa dihindari satu baris.
         var hasil = new System.Text.StringBuilder(4);
         for (var i = 0; i < 4; i++)
         {
-            hasil.Append((char)('0' + (buffer[i] % 10)));
+            hasil.Append(System.Security.Cryptography.RandomNumberGenerator.GetInt32(10));
         }
         return hasil.ToString();
+    }
+
+    /// <summary>Hasil pemeriksaan URL project yang akan masuk baris pertama QR.</summary>
+    /// <param name="Layak">True bila kode boleh diterbitkan untuk URL ini.</param>
+    /// <param name="Url">Bentuk bersih <c>https://&lt;ref&gt;.supabase.co</c>, atau null.</param>
+    /// <param name="PesanGalat">Penjelasan untuk operator bila tidak layak.</param>
+    public sealed record HasilUrlProject(bool Layak, string? Url, string? PesanGalat);
+
+    /// <summary>
+    /// Bersihkan dan periksa nilai <c>Supabase:UrlRest</c> sebelum dipakai sebagai
+    /// baris pertama kode QR.
+    ///
+    /// <para>
+    /// Namanya menyesatkan: ponsel tidak memakai nilai ini sebagai basis REST,
+    /// melainkan menempelkan sendiri <c>/rest/v1</c> dan <c>/auth/v1</c> padanya
+    /// (lihat <c>SupabaseKlien</c>), dan <c>LoginActivity</c> menolak QR yang
+    /// skemanya bukan https atau yang host-nya tidak diakhiri <c>.supabase.co</c>.
+    /// Karena itu nilai <c>https://ref.supabase.co/rest/v1</c> — yang paling
+    /// mungkin ditulis operator — menghasilkan kode yang sudah terlanjur dibuat
+    /// (akun Auth + baris perangkat) tetapi tidak bisa ditebus ponsel.
+    /// </para>
+    /// <para>
+    /// Kesalahan bentuk basis REST/Auth dimaafkan dan dipulihkan ke project root;
+    /// bentuk lain ditolak dengan pesan yang menyebut kunci konfigurasi yang
+    /// harus diisi, dan penolakan terjadi SEBELUM ada kerja ke Supabase.
+    /// </para>
+    /// </summary>
+    public static HasilUrlProject PeriksaUrlProject(string? nilai)
+    {
+        var mentah = nilai?.Trim() ?? string.Empty;
+        if (mentah.Length == 0)
+        {
+            return new HasilUrlProject(false, null,
+                "Supabase:UrlRest belum diisi. Isi URL project Supabase (https://<ref>.supabase.co) pada bagian Supabase di appsettings.json, lalu jalankan ulang aplikasi.");
+        }
+
+        if (!System.Uri.TryCreate(mentah, System.UriKind.Absolute, out var uri)
+            || uri is null
+            || !string.Equals(uri.Scheme, System.Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(uri.Host))
+        {
+            return new HasilUrlProject(false, null,
+                $"Supabase:UrlRest harus URL https lengkap, mis. https://<ref>.supabase.co — yang terisi: \"{mentah}\".");
+        }
+
+        var path = uri.AbsolutePath.TrimEnd('/');
+        if (path.Equals("/rest/v1", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/auth/v1", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/rest", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/auth", StringComparison.OrdinalIgnoreCase))
+        {
+            path = string.Empty;
+        }
+
+        if (path.Length > 0 || uri.Query.Length > 0 || uri.Fragment.Length > 0 || !string.IsNullOrEmpty(uri.UserInfo))
+        {
+            return new HasilUrlProject(false, null,
+                $"Supabase:UrlRest cukup URL project tanpa path, mis. https://{uri.Host} — yang terisi: \"{mentah}\".");
+        }
+
+        if (!uri.Host.EndsWith(".supabase.co", StringComparison.OrdinalIgnoreCase))
+        {
+            return new HasilUrlProject(false, null,
+                $"Host pada Supabase:UrlRest harus project Supabase (*.supabase.co) karena aplikasi Android menolak QR di luar host itu — yang terisi: \"{uri.Host}\".");
+        }
+
+        return new HasilUrlProject(true, $"https://{uri.Host}", null);
     }
 
     /// <summary>
@@ -99,6 +174,15 @@ public sealed class PerangkaianPerangkat
         if (!_pengaturan.Lengkap)
         {
             return new HasilPerangkaian(false, null, null, null, "Supabase belum dikonfigurasi lengkap.", null);
+        }
+
+        // Diperiksa di sini, bukan di halaman: tanpa URL yang layak, kode yang
+        // terbit pasti tidak bisa ditebus ponsel, sementara perangkat dan akun
+        // Auth-nya sudah terlanjur dibuat.
+        var urlQr = PeriksaUrlProject(_pengaturan.UrlRest);
+        if (!urlQr.Layak)
+        {
+            return new HasilPerangkaian(false, null, null, null, urlQr.PesanGalat, null);
         }
 
         var sandi = BuatKataSandi();
@@ -153,6 +237,16 @@ public sealed class PerangkaianPerangkat
                 }
 
                 surel = await AmbilSurelAsync(conn, deviceId, ct, transaksi).ConfigureAwait(false);
+                if (string.IsNullOrWhiteSpace(surel))
+                {
+                    // pasangan_sementara.email ber-NOT-NULL dan ponsel memakai nilai
+                    // itu untuk masuk; menyimpan string kosong berarti menerbitkan
+                    // kode yang pasti gagal. Rollback ikut menghapus akun Auth dan
+                    // baris perangkat yang baru dibuat RPC (transaksi yang sama).
+                    await transaksi.RollbackAsync(ct).ConfigureAwait(false);
+                    return new HasilPerangkaian(false, deviceId, null, null,
+                        "Perangkat dibuat tetapi surel login tidak dikembalikan Supabase; kode tidak diterbitkan.", null);
+                }
 
                 // Bersihkan kadaluwarsa di dalam transaksi yang sama.
                 await using (var bersih = new NpgsqlCommand(

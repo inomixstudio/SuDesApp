@@ -287,12 +287,19 @@ public class SinkronViewModel : ObservableObject
     public bool AdaPerangkatBaru => PerangkatBaru is { Berhasil: true };
 
     /// <summary>
-    /// Isi QR yang discan aplikasi Android. Cukup URL dan kode 4 angka —
+    /// Isi QR yang discan aplikasi Android. Cukup URL project dan kode 4 angka —
     /// surel dan kata sandi tidak pernah tampil di layar, Android menukar
     /// kodenya lewat <c>ambil_pasangan</c>.
+    ///
+    /// <para>
+    /// Baris URL TIDAK memakai nilai mentah <see cref="UrlRest"/>: memakai bentuk
+    /// yang sama dengan gerbang pemasangan (<see cref="PerangkaianPerangkat.PeriksaUrlProject"/>),
+    /// supaya QR yang tampil pasti diterima ponsel — https, host diakhiri
+    /// .supabase.co, dan tanpa basis /rest/v1 yang sering salah tulis.
+    /// </para>
     /// </summary>
     public string QrPayload => PerangkatBaru is { Berhasil: true, Kode: { } kode }
-        ? $"{UrlRest.TrimEnd('/')}\n{kode}"
+        ? $"{PerangkaianPerangkat.PeriksaUrlProject(UrlRest).Url ?? UrlRest.TrimEnd('/')}\n{kode}"
         : string.Empty;
 
     /// <summary>Kode verifikasi 4 angka yang harus dibaca operator Android.</summary>

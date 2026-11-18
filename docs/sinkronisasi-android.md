@@ -32,11 +32,39 @@ terisi di mesin tersebut, bukan kerusakan aplikasi. Lencana di kepala halaman
 Sinkron menunjukkan `KONEKSI BELUM SIAP`. Koneksi dibaca dari preferensi
 operator (DPAPI, kunci `Supabase:*`) lalu dari bagian `Supabase` pada
 `appsettings.json` di folder aplikasi sebagai bawaan instalasi baru. Isi
-`Host`, `Pengguna`, `KataSandi`, dan `Tenant` (wajib), serta `UrlRest` (agar
-isi QR berupa URL project yang valid) dan `KunciPublik`, lalu jalankan ulang
-aplikasi. Jangan menaruh kredensial produksi pada `appsettings.json` yang
-ikut ke dalam repo; yang benar adalah salinan di folder aplikasi hasil
-instalasi.
+`Host`, `Pengguna`, `KataSandi`, dan `Tenant` (wajib), `KunciPublik`, dan `UrlRest`,
+lalu jalankan ulang aplikasi. Jangan menaruh kredensial produksi pada
+`appsettings.json` yang ikut ke dalam repo; yang benar adalah salinan di folder
+aplikasi hasil instalasi.
+
+### Bentuk `UrlRest` yang benar
+
+Meskipun namanya `UrlRest`, nilai yang dipakai aplikasi Android adalah **URL
+project**, bukan basis REST: ponsel menempelkan sendiri `/rest/v1` dan `/auth/v1`
+pada nilai itu. Jadi isi `https://<ref>.supabase.co`, bukan
+`https://<ref>.supabase.co/rest/v1`.
+
+Desktop kini memeriksa bentuk itu SEBELUM menerbitkan kode
+(`PerangkaianPerangkat.PeriksaUrlProject`), karena QR yang bentuknya salah pasti
+ditolak `LoginActivity` (harus `https://` dan host diakhiri `.supabase.co`)
+sedangkan akun Auth perangkat serta baris `perangkat_android` sudah terlanjur
+dibuat:
+
+- `.../rest/v1`, `.../auth/v1`, `.../rest`, `.../auth`, spasi, dan slash akhir
+  dimaafkan lalu dipulihkan ke `https://<ref>.supabase.co`.
+- `http://`, host bukan `*.supabase.co`, path lain, query, atau nilai kosong
+  ditolak dengan pesan yang menyebut kunci `Supabase:UrlRest`.
+- Bila Supabase sudah lengkap tetapi `UrlRest` kosong, galatnya menunjuk kunci
+  yang kurang, bukan lagi QR senyap.
+
+Perangkaian juga berhenti bila Supabase tidak mengembalikan surel login perangkat
+(sebelumnya baris `pasangan_sementara` tersimpan dengan surel kosong sehingga kode
+tidak mungkin tertebus), dan kode 4 angka serta kata sandi perangkat memakai
+`RandomNumberGenerator.GetInt32` supaya tiap digit seragam — reduksi byte acak
+dengan modulo memberi bias karena 256 tidak habis dibagi 10 dan 56. Dijaga
+`KodePasanganSupabaseTests` (29 uji), termasuk dua uji yang membandingkan aturannya
+dengan `LoginActivity.kt` dan satu uji yang memastikan `PasangAsync` menolak tanpa
+menyentuh Supabase.
 
 # Yang disimpan di perangkat Android
 

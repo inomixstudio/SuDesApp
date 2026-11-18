@@ -130,7 +130,7 @@
                     <Border Grid.Column="1" CornerRadius="10" Padding="10,5" VerticalAlignment="Center"
                             Background="{DynamicResource PanelBrush}"
                             Visibility="{Binding KonfigurasiLengkap, Converter={StaticResource InverseBoolToVis}}"
-                            ToolTip="Koneksi Supabase belum terisi, sehingga kode pemasangan dan QR tidak dapat dibuat. Isi bagian Supabase (Host, Pengguna, KataSandi, Tenant, UrlRest, KunciPublik) pada appsettings.json di folder aplikasi, lalu jalankan ulang.">
+                            ToolTip="Koneksi Supabase belum terisi, sehingga kode pemasangan dan QR tidak dapat dibuat. Isi bagian Supabase pada appsettings.json di folder aplikasi: Host, Pengguna, KataSandi, Tenant (wajib), KunciPublik, dan UrlRest berupa URL project (https://ref.supabase.co, tanpa /rest/v1), lalu jalankan ulang.">
                         <TextBlock Text="KONEKSI BELUM SIAP" FontSize="11" FontWeight="SemiBold"
                                    Foreground="{DynamicResource HeaderTextBrush}" VerticalAlignment="Center"/>
                     </Border>
