@@ -211,17 +211,18 @@ namespace SuDesApp.Services
                 // (data langganan menetap) dan memuat appsettings.lokal.json.
                 info.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
                 info.Environment["ASPNETCORE_URLS"] = Alamat;
+                // Penyimpanan: server memutuskan sendiri dari konfigurasinya
+                // (appsettings.lokal.json / env SUPABASE_*). JANGAN dipaksa kosong
+                // di sini. Dulu dua baris SUPABASE_HOST/SUPABASE_DB_PASSWORD kosong
+                // membuat server yang dinyalakan aplikasi selalu memakai berkas,
+                // sedangkan server yang dijalankan manual (dotnet run) memakai
+                // Supabase — dua gudang data untuk satu desa. Akibatnya kode yang
+                // dibuat di Pusat Administrasi tidak ada di Supabase dan ditolak
+                // saat aktivasi karena yang menjawab giliran berikutnya gudang
+                // yang lain. PenyimpananLokal__Path tetap diisi supaya mode berkas
+                // (bila memang tanpa kredensial Supabase) menulis ke folder data
+                // aplikasi ini, bukan folder proyek.
                 info.Environment["PenyimpananLokal__Path"] = _opsi.JalurData;
-
-                // Server lokal SELALU memakai berkas milik aplikasi ini, walau
-                // appsettings.lokal.json di mesin pengembang menyimpan kredensial
-                // Supabase: tanpa ini, "server lokal" diam-diam menulis langganan
-                // ke database produksi, data yang dijanjikan tersimpan di komputer
-                // desa tidak ada di sana, dan uji lokal bisa mengubah data nyata.
-                // Program.cs membaca env ini lebih dulu daripada konfigurasi, jadi
-                // nilai kosong berarti "tanpa database".
-                info.Environment["SUPABASE_HOST"] = string.Empty;
-                info.Environment["SUPABASE_DB_PASSWORD"] = string.Empty;
 
                 var proses = new Process { StartInfo = info, EnableRaisingEvents = true };
                 proses.OutputDataReceived += (_, e) => TulisLog(e.Data);

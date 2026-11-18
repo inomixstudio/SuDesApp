@@ -202,6 +202,7 @@ if ($modeLisensiLokal) {
         '',
         ('Lisensi: MODE LOKAL - paket memakai server lisensi yang dijalankan aplikasi di komputer desa (' + $urlLisensi + '); lisensi TIDAK divalidasi ke server produksi.'),
         'Server lisensi lokal ikut terpasang di folder "server" di samping aplikasi, beserta kunci penandatangan yang sama dengan Lisensi:KunciPublik.',
+        'Data langganan (desa, kode aktivasi, tagihan, pembayaran) tersimpan di Supabase, jadi kode yang dibuat di Pusat Administrasi bisa dipakai di komputer desa mana pun yang memakai proyek Supabase itu.',
         'Saklar -IzinkanLisensiLokal dipakai atas keputusan operator (sama seperti paket 2.15.0 yang beredar).'
     )
 } else {
@@ -428,6 +429,28 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish gagal (exit $LASTEXITCODE)" }
 
 if (-not (Test-Path (Join-Path $publishDir 'SuDesApp.exe'))) { throw "SuDesApp.exe tidak ditemukan di hasil publish" }
 
+# ---------- Supabase aplikasi: sinkron Android + pairing QR ----------
+# Tanpa koneksi Supabase, tombol "Buat QR" hanya memunculkan "Supabase belum
+# dikonfigurasi lengkap." dan tidak ada barcode maupun kode 4 angka. Kredensial
+# tidak pernah di-commit (gitignore: appsettings.*.lokal.json); mesin build yang
+# memilikinya menaruhnya di appsettings.rilis.lokal.json, lalu blok Supabase-nya
+# digabung ke salinan appsettings.json hasil publish.
+$supabaseRilis = Join-Path $repoRoot 'appsettings.rilis.lokal.json'
+if (Test-Path -LiteralPath $supabaseRilis) {
+    $terbitPath = Join-Path $publishDir 'appsettings.json'
+    $terbit = Get-Content -LiteralPath $terbitPath -Raw | ConvertFrom-Json
+    $lokal = Get-Content -LiteralPath $supabaseRilis -Raw | ConvertFrom-Json
+    if ($null -eq $lokal.Supabase) {
+        throw 'appsettings.rilis.lokal.json tidak memuat blok "Supabase".'
+    }
+    $terbit.Supabase = $lokal.Supabase
+    ($terbit | ConvertTo-Json -Depth 12) | Set-Content -LiteralPath $terbitPath -Encoding UTF8
+    Write-Host 'Supabase aplikasi disertakan (sinkron Android + QR pairing siap dipakai).' -ForegroundColor Green
+} else {
+    Write-Host ('Peringatan: appsettings.rilis.lokal.json tidak ada - paket ini TIDAK bisa ' +
+                'membuat QR pemasangan maupun menyinkronkan surat Android tanpa diisi manual.') -ForegroundColor Yellow
+}
+
 # Gerbang kredensial Google: hasil publish yang tidak memuat kredensial OAuth
 # tertanam akan membuat fitur Google (Formulir/Sheet/Drive) tidak bisa menyambung
 # setelah dipasang (versi sebelumnya sempat
@@ -486,6 +509,23 @@ if ($modeLisensiLokal) {
     $folderKunci = Join-Path $serverDir 'keys'
     New-Item -ItemType Directory -Force -Path $folderKunci | Out-Null
     Copy-Item -LiteralPath $kunciServer -Destination (Join-Path $folderKunci 'lisensi-signing.key') -Force
+
+    # Supabase untuk server lisensi lokal. Berkas ini gitignored dan TIDAK ikut
+    # dotnet publish (lihat csproj), jadi harus disalin di sini. Tanpa berkas
+    # ini server terpasang memakai penyimpanan berkas, sehingga kode aktivasi
+    # yang dibuat di Pusat Administrasi hanya ada di komputer pembuatnya dan
+    # ditolak saat desa lain mengaktifkan. Dengan berkas ini, desa/langganan/
+    # tagihan/pembayaran tersimpan di Supabase dan kode itu bisa dipakai di
+    # komputer desa mana pun.
+    $konfigServerLokal = Join-Path $repoRoot 'SuDesApp.Server/appsettings.lokal.json'
+    if (Test-Path -LiteralPath $konfigServerLokal) {
+        Copy-Item -LiteralPath $konfigServerLokal `
+            -Destination (Join-Path $serverDir 'appsettings.lokal.json') -Force
+        Write-Host 'Server lisensi lokal memakai Supabase (appsettings.lokal.json disertakan).' -ForegroundColor Green
+    } else {
+        Write-Host ('Peringatan: SuDesApp.Server/appsettings.lokal.json tidak ada - server lokal ' +
+                    'memakai penyimpanan BERKAS, sehingga kode aktivasi hanya berlaku di komputer ini.') -ForegroundColor Yellow
+    }
 
     Write-Host ('Server lisensi ikut terpasang: ' + $serverDir) -ForegroundColor Green
 }

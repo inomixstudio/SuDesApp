@@ -1058,13 +1058,23 @@ Data langganan server lokal **menetap** di berkas:
 %LOCALAPPDATA%\SuDesApp\server-lisensi\server.pid.json  ← penanda sisa proses
 ```
 
-Server yang dijalankan aplikasi SELALU memakai berkas itu, walau
-`appsettings.lokal.json` di mesin pengembang berisi kredensial Supabase: aplikasi
-menyuntikkan `SUPABASE_HOST`/`SUPABASE_DB_PASSWORD` kosong ke proses server,
-sehingga "server lokal" tidak pernah diam-diam menulis langganan ke database
-produksi. Menulis atomik (berkas sementara lalu dipindahkan) membuat berkas lama
-tetap utuh bila proses mati di tengah penulisan; berkas yang rusak/berversi
-asing dipindahkan ke `langganan.json.rusak-<waktu>` dan server mulai kosong.
+Server yang dijalankan aplikasi memakai gudang data yang ditentukan oleh
+**konfigurasi server itu sendiri** — `SuDesApp.Server/appsettings.lokal.json`
+(atau env `SUPABASE_*`) bila ada, selain itu berkas di atas. Aplikasi TIDAK lagi
+menyuntikkan `SUPABASE_HOST`/`SUPABASE_DB_PASSWORD` kosong ke proses server.
+Dulu nilai kosong itu membuat server yang dinyalakan aplikasi selalu memakai
+berkas, sedangkan `dotnet run` manual memakai Supabase — dua gudang data untuk
+satu desa. Akibatnya kode aktivasi yang dibuat di Pusat Administrasi tidak ada
+di Supabase, lalu ditolak saat aktivasi karena permintaan berikutnya dijawab
+gudang yang lain. Sekarang keduanya membaca gudang yang sama: kode yang terbit
+di Pusat Administrasi langsung ada di Supabase dan bisa dipakai di komputer desa
+mana pun yang memakai proyek Supabase itu.
+
+Mode berkas tetap berlaku (dan tetap menetap) bila server tidak diberi
+kredensial Supabase — mis. paket rilis tanpa `server/appsettings.lokal.json`.
+Menulis atomik (berkas sementara lalu dipindahkan) membuat berkas lama tetap
+utuh bila proses mati di tengah penulisan; berkas yang rusak/berversi asing
+dipindahkan ke `langganan.json.rusak-<waktu>` dan server mulai kosong.
 
 ### Pusat Administrasi terhubung dengan langganan
 

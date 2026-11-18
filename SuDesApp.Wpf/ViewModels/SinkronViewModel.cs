@@ -28,6 +28,7 @@ public class SinkronViewModel : ObservableObject
     private readonly PerangkaianPerangkat _perangkaian;
     private readonly PenerbitSkemaFormulir _penerbitSkema;
     private readonly PenerbitPengaturanDesa _penerbitPengaturan;
+    private readonly SuDesApp.Supabase.SupabasePengaturan _pengaturan;
     private readonly IMessageService _pesan;
     private readonly ILogger<SinkronViewModel> _logger;
     private readonly string _folderBerkas;
@@ -57,6 +58,7 @@ public class SinkronViewModel : ObservableObject
         PerangkaianPerangkat perangkaian,
         PenerbitSkemaFormulir penerbitSkema,
         PenerbitPengaturanDesa penerbitPengaturan,
+        SuDesApp.Supabase.SupabasePengaturan pengaturan,
         IMessageService pesan,
         ILogger<SinkronViewModel>? logger = null,
         SuDesApp.Services.PenjagaLisensi? penjaga = null)
@@ -65,6 +67,12 @@ public class SinkronViewModel : ObservableObject
         _perangkaian = perangkaian ?? throw new System.ArgumentNullException(nameof(perangkaian));
         _penerbitSkema = penerbitSkema ?? throw new System.ArgumentNullException(nameof(penerbitSkema));
         _penerbitPengaturan = penerbitPengaturan ?? throw new System.ArgumentNullException(nameof(penerbitPengaturan));
+        // Halaman memakai instans yang SAMA dengan perangkaian perangkat, bukan
+        // SupabasePengaturan.Muat() tanpa IConfiguration: tanpa itu lencana
+        // "KONEKSI OTOMATIS" dan tombol Sinkron membaca preferensi saja,
+        // sementara PasangAsync memakai nilai appsettings — halaman terlihat
+        // belum tersambung padahal Buat QR berhasil.
+        _pengaturan = pengaturan ?? throw new System.ArgumentNullException(nameof(pengaturan));
         _pesan = pesan ?? throw new System.ArgumentNullException(nameof(pesan));
         _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SinkronViewModel>.Instance;
         _penjaga = penjaga;
@@ -304,7 +312,7 @@ public class SinkronViewModel : ObservableObject
 
     private void MuatKonfigurasi()
     {
-        var p = SupabasePengaturan.Muat();
+        var p = _pengaturan;
         _host = p.Host;
         _port = p.Port;
         _pengguna = p.Pengguna;
