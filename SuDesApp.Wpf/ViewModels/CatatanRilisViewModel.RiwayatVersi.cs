@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Wpf.Mvvm;
@@ -13,6 +13,38 @@ namespace SuDesApp.Wpf.ViewModels
         {
             var daftar = new List<CatatanRilisEntry>
             {
+                                new CatatanRilisEntry(
+                    "Versi 2.15.1 (18 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Installer & Basis Data", new List<string>
+                        {
+                            "Pola pengecualian installer ternyata ikut menelan desa.db.sql, berkas skema yang dibutuhkan saat membuka basis data pertama kali, sehingga instalasi baru gagal dengan no such table: main.Surat dan IjinTinggal. Kini hanya berkas basis data pengguna yang dikecualikan; dua arah itu dijaga InstallerSkemaDatabaseTests (8 uji).",
+                            "Uji pemulihan database tidak lagi bergantung pada ada atau tidaknya aplikasi terpasang di mesin pengujian, sementara jalur pemulihan dari folder instalasi di produksi tetap hidup dan dijaga uji terpisah."
+                        }),
+                        new CatatanRilisSubSection("Langganan & Lisensi", new List<string>
+                        {
+                            "Server lisensi lokal kini wajib menyala ketika alamat yang dipakai menunjuk komputer sendiri, dan tombol Hubungkan menunggu server siap sebelum bertanya; kalau start tetap gagal, pesan galatnya membawa baris log server terakhir, bukan sekadar tidak terhubung.",
+                            "Pembayaran otomatis Midtrans dicabut beserta webhook, rekonsiliasi, dan halaman checkout-nya; tagihan tetap tercatat dan hak akses hanya bertambah lewat pembukuan administrator. Halaman Langganan dan Aktivasi tidak berubah bentuk, dan tidak ada migrasi basis data."
+                        }),
+                        new CatatanRilisSubSection("Android", new List<string>
+                        {
+                            "Membuka surat tidak lagi membekukan layar: sesi dibaca dari cache per proses, formulir dibangun bertahap per bidang dengan kuota waktu, dan render pratinjau PDF pindah ke utas tersendiri. Bangunan main thread surat Kematian turun dari 3135 ms ke sekitar 70-150 ms, hasil cetak tidak berubah.",
+                            "APK baru tidak lagi kalah oleh cache skema desktop: cache diberi stempel milik (sidik jari aset, versionCode, waktu terbit server), cache warisan APK lain dibuang, dan kartu isian dilengkapi dari skema yang dibekukan di APK tanpa menimpa label, kolom, atau opsi terbitan desktop.",
+                            "Isian Garapan Sawah disamakan dengan desktop, termasuk Tambah Bidang yang menambah kolom per bidang, dan pratinjau PDF Android selalu memakai tema terang."
+                        }),
+                        new CatatanRilisSubSection("Sinkron & Pemasangan Perangkat", new List<string>
+                        {
+                            "Kode pemasangan dan QR tidak lagi terbit untuk URL yang pasti ditolak ponsel: bentuk /rest/v1 dipulihkan menjadi URL project, bentuk lain ditolak sebelum ada koneksi ke Supabase dengan pesan yang menyebut kunci yang harus diisi, dan surel login yang hilang tidak lagi menyimpan kode yang tak tertebus.",
+                            "Kode 4 angka dan kata sandi perangkat tidak lagi direduksi dengan modulo, sehingga tiap digit seragam. Jalur pemasangan perangkat yang sebelumnya tidak punya satu pun uji kini dijaga KodePasanganSupabaseTests (29 uji), termasuk dua uji yang membandingkan aturannya dengan LoginActivity.kt.",
+                            "Dokumen sinkron menjabarkan arti tiap kunci Supabase (Port session pooler, Pengguna role pemilik, Tenant = tenant_id desa, UrlRest = URL project) dan lencana KONEKSI BELUM SIAP kini memberi jalan keluar, bukan hanya gejala."
+                        }),
+                        new CatatanRilisSubSection("Antarmuka & Alat Rilis", new List<string>
+                        {
+                            "Checkbox memakai BulletDecorator sehingga label panjang membungkus alih-alih terpotong; dialog Persetujuan Dokumen tidak lagi kehilangan kotak centang maupun isi token yang harus disetujui.",
+                            "Tools/rilis.ps1 kembali bisa dipakai setelah kartu riwayat pindah ke RiwayatVersi.cs, dan batasnya didokumentasikan: skrip tidak menaikkan versi Android dan tidak menulis dokumen catatan rilis, padahal keduanya harus ikut pada commit yang ditag karena sinkron menolak versi berbeda."
+                        })
+                    }),
                 new CatatanRilisEntry(
                     "Versi 2.15.0 (11 November 2026)",
                     new List<CatatanRilisSubSection>
