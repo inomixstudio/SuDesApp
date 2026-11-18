@@ -26,8 +26,8 @@ Android ──insert──▶ antrean_surat (Supabase, maks 10)
 
 ### Kode pemasangan dan QR kosong
 
-Bila tombol **Buat Kode** memunculkan galat `Supabase belum dikonfigurasi
-Lengkap.` sementara QR tetap kosong, penyebabnya koneksi Supabase belum
+Bila tombol **Buat QR** memunculkan galat `Supabase belum dikonfigurasi
+lengkap.` sementara QR tetap kosong, penyebabnya koneksi Supabase belum
 terisi di mesin tersebut, bukan kerusakan aplikasi. Lencana di kepala halaman
 Sinkron menunjukkan `KONEKSI BELUM SIAP`. Koneksi dibaca dari preferensi
 operator (DPAPI, kunci `Supabase:*`) lalu dari bagian `Supabase` pada
