@@ -35,7 +35,7 @@ namespace SuDesApp.Tests.Configuration
             File.WriteAllBytes(aktif, Encoding.ASCII.GetBytes("bukan-database-sqlite"));
 
             var hasil = PemulihanDatabaseOtomatis.Pulihkan(
-                aktif, $"Data Source={aktif}", new[] { lama });
+                aktif, $"Data Source={aktif}", new[] { lama }, sertakanKandidatMesin: false);
 
             Assert.True(hasil.Berhasil);
             Assert.False(hasil.DatabaseBaru);
@@ -53,7 +53,7 @@ namespace SuDesApp.Tests.Configuration
             File.WriteAllBytes(aktif, isiLama);
 
             var hasil = PemulihanDatabaseOtomatis.Pulihkan(
-                aktif, $"Data Source={aktif}");
+                aktif, $"Data Source={aktif}", sertakanKandidatMesin: false);
 
             Assert.True(hasil.Berhasil);
             Assert.True(hasil.DatabaseBaru);
@@ -77,6 +77,28 @@ namespace SuDesApp.Tests.Configuration
             Assert.False(hasil.Berhasil);
             Assert.True(File.Exists(aktif));
             Assert.Contains("dipakai proses lain", hasil.Pesan);
+        }
+
+        [Fact]
+        public void Produksi_tidak_menonaktifkan_kandidat_dari_folder_instalasi()
+        {
+            // Justru database di folder instalasi lama yang harus ditemukan lagi
+            // saat database aktif rusak; kalau produksi ikut menutup kandidat itu,
+            // perbaikan 'instalasi baru kehilangan data lama' diam-diam batal.
+            var jalur = Path.Combine(CariAkarRepo(), "SuDesApp.Wpf", "App.Startup.cs");
+            var sumber = File.ReadAllText(jalur);
+            var i = sumber.IndexOf("PemulihanDatabaseOtomatis.Pulihkan(", StringComparison.Ordinal);
+            Assert.True(i >= 0, "panggilan pemulihan tidak ditemukan di App.Startup.cs");
+            Assert.DoesNotContain("sertakanKandidatMesin: false",
+                sumber.Substring(i, Math.Min(600, sumber.Length - i)));
+        }
+
+        private static string CariAkarRepo()
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "SuDesApp.slnx")))
+                dir = dir.Parent;
+            return dir?.FullName ?? throw new InvalidOperationException("Akar repo tidak ditemukan.");
         }
 
         private string BuatDatabase(string nama, string isi)

@@ -41,11 +41,19 @@ namespace SuDesApp.Configuration
         /// <param name="jalurAktif">Berkas database yang gagal dibuka.</param>
         /// <param name="connectionStringAktif">Connection string yang sedang dipakai; Password-nya dipertahankan.</param>
         /// <param name="kandidatTambahan">Kandidat tambahan (mis. dari pengaturan/pengujian).</param>
+        /// <param name="sertakanKandidatMesin">
+        /// true (bawaan) = ikut mencari database di folder instalasi dan
+        /// %LOCALAPPDATA%, yang memang diinginkan pada pengguna: database lama di
+        /// folder instalasi itulah yang harus dipulihkan. Uji set false supaya
+        /// instalasi sungguhan di mesin pengembang tidak ikut menjadi kandidat dan
+        /// membuat uji bergantung lingkungan.
+        /// </param>
         public static HasilPemulihanDatabase Pulihkan(
             string jalurAktif,
             string connectionStringAktif,
             IEnumerable<string>? kandidatTambahan = null,
-            ILogger? logger = null)
+            ILogger? logger = null,
+            bool sertakanKandidatMesin = true)
         {
             logger ??= NullLogger.Instance;
 
@@ -87,7 +95,7 @@ namespace SuDesApp.Configuration
                     "Tutup aplikasi lain yang memakai berkas itu, lalu buka kembali SuDesApp.");
             }
 
-            foreach (var kandidat in Kandidat(jalur, kandidatTambahan))
+            foreach (var kandidat in Kandidat(jalur, kandidatTambahan, sertakanKandidatMesin))
             {
                 if (string.Equals(kandidat, jalur, StringComparison.OrdinalIgnoreCase))
                     continue;
@@ -242,7 +250,7 @@ namespace SuDesApp.Configuration
         }
 
         private static IEnumerable<string> Kandidat(
-            string jalurAktif, IEnumerable<string>? kandidatTambahan)
+            string jalurAktif, IEnumerable<string>? kandidatTambahan, bool kandidatMesin)
         {
             var kandidat = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -261,12 +269,15 @@ namespace SuDesApp.Configuration
             }
 
             Tambah(jalurAktif);
-            Tambah(Path.Combine(AppContext.BaseDirectory, "desa.db"));
-            Tambah(Path.Combine(AppContext.BaseDirectory, "Database", "desa.db"));
+            if (kandidatMesin)
+            {
+                Tambah(Path.Combine(AppContext.BaseDirectory, "desa.db"));
+                Tambah(Path.Combine(AppContext.BaseDirectory, "Database", "desa.db"));
 
-            var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            Tambah(Path.Combine(local, "Programs", "SuDesApp", "desa.db"));
-            Tambah(Path.Combine(local, "SuDesApp", "desa.db"));
+                var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                Tambah(Path.Combine(local, "Programs", "SuDesApp", "desa.db"));
+                Tambah(Path.Combine(local, "SuDesApp", "desa.db"));
+            }
 
             try
             {
