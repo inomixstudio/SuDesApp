@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Menaikkan versi SuDesApp dan menerbitkan rilis lewat git (alur "Cara C").
 
@@ -12,6 +12,13 @@
          (sumber versi aplikasi) sekaligus menyisipkan entri Catatan Rilis baru
          untuk versi itu - kartu terbaru
          di halaman Catatan Rilis sama persis dengan versi csproj;
+         BATAS: skrip ini tidak menyentuh android/app/build.gradle.kts
+         (versionCode/versionName) dan tidak menulis docs/catatan-rilis-<versi>.md.
+         Keduanya wajib ikut pada commit yang ditag: ponsel membandingkan
+         versionName dengan versi desktop secara PERSIS
+         (PengaturanSinkron.versiCocok), sehingga APK 2.15.0 menolak sinkron dengan
+         desktop 2.15.1; halaman rilis juga menautkan dokumen catatanrilisnya dari
+         tag yang sama.
       3. menjalankan gerbang verifikasi: dotnet build solusi LALU uji E2E trial
          server (Tools/uji-e2e-trial-server.sh) - salah satu gagal berarti
          berhenti tanpa commit dan kedua berkas dikembalikan ke isi semula;
@@ -99,7 +106,12 @@ $ErrorActionPreference = 'Stop'
 
 $script:repoRoot   = Split-Path -Parent $PSScriptRoot
 $script:csprojWpf  = Join-Path $script:repoRoot 'SuDesApp.Wpf/SuDesApp.Wpf.csproj'
-$script:catatanVm  = Join-Path $script:repoRoot 'SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.cs'
+$script:catatanVm  = Join-Path $script:repoRoot 'SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.RiwayatVersi.cs'
+# Kartu riwayat pindah ke berkas sebagian (.RiwayatVersi.cs) ketika riwayat versi
+# dipecah; CatatanRilisViewModel.cs kini hanya berisi kerangkanya. Menunjuk berkas
+# yang salah membuat skrip melempar "Entri catatan rilis teratas ... tidak ditemukan"
+# sebelum mengubah apa pun, dan karena gerbang rilis ini tidak punya uji,
+# perpindahan berkas itu lolos tanpa ada yang tahu.
 $script:sln        = Join-Path $script:repoRoot 'SuDesApp.slnx'
 $script:cabang     = $Cabang.Trim()
 if (-not $script:cabang) { $script:cabang = 'main' }
@@ -457,7 +469,7 @@ if ($UjiCoba) {
     Tahap 'Tahap 5/7..7/7 - dilewati (mode -UjiCoba)'
     KembalikanBerkas
     Info 'Yang akan dijalankan pada rilis sungguhan:'
-    Info 'git add SuDesApp.Wpf/SuDesApp.Wpf.csproj SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.cs'
+    Info 'git add SuDesApp.Wpf/SuDesApp.Wpf.csproj SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.RiwayatVersi.cs'
     Info ('git commit -m "chore(release): naikkan versi aplikasi ke ' + $Versi + '" ...')
     Info ('git tag -a ' + $tagRilis + ' -m "SuDesApp ' + $Versi + '"')
     Info ('git push origin ' + $script:cabang)
@@ -472,7 +484,7 @@ $badan   = 'AssemblyVersion/FileVersion dinaikkan dan entri "Catatan Rilis" vers
            'Keduanya dijaga tetap konsisten satu sama lain.'
 
 Tahap 'Tahap 5/7 - commit rilis'
-JalankanGit -Arg @('add', 'SuDesApp.Wpf/SuDesApp.Wpf.csproj', 'SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.cs')
+JalankanGit -Arg @('add', 'SuDesApp.Wpf/SuDesApp.Wpf.csproj', 'SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.RiwayatVersi.cs')
 JalankanGit -Arg @('commit', '-m', $judul, '-m', $badan)
 Sukses ('Commit dibuat: ' + $judul)
 
