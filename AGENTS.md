@@ -1,6 +1,6 @@
 # AGENTS.md
 
-SuDesApp — Aplikasi pengelolaan surat desa (WPF, .NET 10).
+SuDesApp — Aplikasi pengelolaan surat desa (WPF, .NET 11).
 
 ## Quick Reference
 

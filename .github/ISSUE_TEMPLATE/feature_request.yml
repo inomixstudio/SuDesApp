@@ -1,0 +1,69 @@
+name: Permintaan fitur
+description: Usulkan fitur baru atau peningkatan untuk SuDesApp.
+title: "[Fitur]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Jelaskan masalah yang ingin diselesaikan, bukan hanya solusi yang
+        diusulkan. Untuk perubahan besar, diskusi ini membantu menentukan
+        apakah fitur cocok dengan alur kerja desa dan cakupan aplikasi.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Bagian mana yang akan terpengaruh?
+      options:
+        - Desktop Windows (WPF)
+        - Android
+        - Server lisensi
+        - Backend API / API desa
+        - Dokumentasi atau rilis
+        - Lintas platform
+    validations:
+      required: true
+
+  - type: textarea
+    id: masalah
+    attributes:
+      label: Masalah atau kebutuhan
+      description: Situasi apa yang membuat fitur ini dibutuhkan?
+      placeholder: "Saat mengecek surat masuk, operator harus ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: usulan
+    attributes:
+      label: Usulan solusi
+      description: Bagaimana fitur ini sebaiknya bekerja?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatif
+    attributes:
+      label: Alternatif yang sudah dicoba
+      description: Cara lain atau solusi sementara yang sudah dipakai.
+    validations:
+      required: false
+
+  - type: textarea
+    id: konteks
+    attributes:
+      label: Konteks tambahan
+      description: Contoh surat, tautan regulasi, atau tangkapan layar yang relevan.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: konfirmasi
+    attributes:
+      label: Konfirmasi
+      options:
+        - label: Saya sudah mencari issue dan permintaan fitur yang serupa.
+          required: true
+        - label: Saya tidak menyertakan data warga asli atau rahasia apa pun.
+          required: true

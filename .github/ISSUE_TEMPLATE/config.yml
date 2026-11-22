@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Laporkan kerentanan keamanan (privat)
+    url: https://github.com/inomixstudio/SuDesApp/security/advisories/new
+    about: Jangan buka issue publik untuk kerentanan. Gunakan jalur privat ini.
+  - name: Dokumentasi dan panduan
+    url: https://github.com/inomixstudio/SuDesApp/blob/master/docs/README.md
+    about: Dokumentasi API, lisensi, privasi, sinkron Android, dan catatan rilis.
+  - name: Situs pengembang
+    url: https://sumberjaya.freedev.app
+    about: Informasi produk dan kanal dukungan Sumberjaya Dev.
