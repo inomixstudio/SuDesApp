@@ -158,11 +158,12 @@ terbaca), dan perbandingan memakai `CryptographicOperations.FixedTimeEquals`.
 ### Data desa
 
 Database desa (`desa.db`) berada di komputer desa dan **tidak pernah** dikirim
-ke server. Database yang dibuat versi ini berupa **SQLite biasa tanpa
-enkripsi** — lindungi lewat izin folder dan akun Windows. Database terenkripsi
-SQLCipher dari versi lama tetap dibuka memakai berkas kuncinya
-(`DesaKunciDb.bin`, DPAPI akun Windows); aplikasi tidak membuat database
-terenkripsi baru.
+ke server lisensi. Bila pencadangan Google Drive diaktifkan, salinan database
+diunggah ke Drive milik desa sendiri — bukan ke server aplikasi. Database yang
+dibuat versi ini berupa **SQLite biasa tanpa enkripsi** — lindungi lewat izin
+folder dan akun Windows. Database terenkripsi SQLCipher dari versi lama tetap
+dibuka memakai berkas kuncinya (`DesaKunciDb.bin`, DPAPI akun Windows);
+aplikasi tidak membuat database terenkripsi baru.
 
 Server lisensi hanya menyimpan masa aktif, nama desa, dan kontak — cukup untuk
 menagih langganan. Lihat
