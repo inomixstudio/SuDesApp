@@ -222,7 +222,7 @@ rilis berisi SHA-256 → daftar aset untuk diunggah manual (atau unggah otomatis
 
 **Prasyarat**
 
-- **.NET 10 SDK** di PATH — wajib; skrip berhenti lebih awal bila tidak ada.
+- **.NET 11 SDK** di PATH — wajib; skrip berhenti lebih awal bila tidak ada.
 - **Inno Setup 6** untuk installer: `winget install -e --id JRSoftware.InnoSetup`
   (atau https://jrsoftware.org/isdl.php). Tanpa itu skrip tetap berjalan dan hanya
   memberi peringatan — installer tidak terbentuk, jadi pakai `-SkipInstaller` bila

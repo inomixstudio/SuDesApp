@@ -1,0 +1,108 @@
+name: Laporan bug
+description: Laporkan perilaku yang salah, galat, atau hasil cetak yang tidak sesuai.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Terima kasih sudah melaporkan. **Jangan sertakan data warga asli**
+        (NIK, nomor KK, alamat, isi surat) dan **jangan laporkan kerentanan
+        keamanan di sini** — gunakan
+        [Security Advisories](https://github.com/inomixstudio/SuDesApp/security/advisories/new)
+        sesuai [SECURITY.md](https://github.com/inomixstudio/SuDesApp/blob/master/SECURITY.md).
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Di mana masalah terjadi?
+      options:
+        - Desktop Windows (WPF)
+        - Android
+        - Server lisensi
+        - Backend API / API desa
+        - Build, CI, atau rilis
+        - Lainnya
+    validations:
+      required: true
+
+  - type: input
+    id: versi
+    attributes:
+      label: Versi SuDesApp
+      description: Lihat di halaman Tentang Aplikasi atau nama berkas rilis.
+      placeholder: "2.15.1"
+    validations:
+      required: true
+
+  - type: input
+    id: sistem
+    attributes:
+      label: Versi Windows / Android
+      description: Misalnya Windows 11 24H2 atau Android 14.
+      placeholder: "Windows 11 24H2"
+    validations:
+      required: true
+
+  - type: textarea
+    id: ringkasan
+    attributes:
+      label: Ringkasan masalah
+      description: Satu atau dua kalimat tentang apa yang salah.
+      placeholder: "Pratinjau surat kematian kosong setelah memilih kabupaten ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: langkah
+    attributes:
+      label: Langkah reproduksi
+      description: Tuliskan langkah yang dapat diulang dari keadaan awal.
+      placeholder: |
+        1. Buka menu ...
+        2. Pilih ...
+        3. Tekan ...
+        4. Terjadi ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: harapan
+    attributes:
+      label: Perilaku yang diharapkan
+      description: Apa yang seharusnya terjadi?
+    validations:
+      required: true
+
+  - type: textarea
+    id: aktual
+    attributes:
+      label: Perilaku yang terjadi
+      description: Sertakan pesan galat bila ada.
+    validations:
+      required: true
+
+  - type: textarea
+    id: bukti
+    attributes:
+      label: Log, tangkapan layar, atau berkas pendukung
+      description: |
+        Tempelkan log atau seret tangkapan layar ke sini. Anonimkan data warga
+        terlebih dahulu. Jangan melampirkan `desa.db` atau berkas berisi data
+        pribadi.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: konfirmasi
+    attributes:
+      label: Konfirmasi
+      options:
+        - label: Saya sudah mencari issue yang sama sebelum membuka laporan ini.
+          required: true
+        - label: Saya tidak menyertakan data warga asli atau rahasia apa pun.
+          required: true
+        - label: Laporan ini bukan kerentanan keamanan.
+          required: true

@@ -6,7 +6,7 @@ Render, Fly.io) atau VPS. Prasyarat mutlak: **HTTPS**.
 
 ## Apa yang di-deploy
 
-`SuDesApp.Server` (minimal API .NET 10) + Supabase Postgres.
+`SuDesApp.Server` (minimal API .NET 11) + Supabase Postgres.
 Tidak ada file statis aplikasi desktop di sini; hanya endpoint API + halaman
 admin `/admin`.
 
