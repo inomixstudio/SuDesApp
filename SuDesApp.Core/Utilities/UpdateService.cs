@@ -96,8 +96,13 @@ namespace SuDesApp.Utilities
                 request.Headers.Accept.ParseAdd("application/vnd.github+json");
                 using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    throw new Exception($"Rilis GitHub tidak ditemukan untuk repo '{_githubRepo}'. Pastikan repo publik/benar.");
+                // Status yang SUDAH dibaca server jangan dilaporkan sebagai "tidak bisa
+                // menghubungi GitHub" — itu pesan yang salah arah (pengguna/checker
+                // akan mencari gangguan jaringan, padahal repo privat, rate limit,
+                // atau server GitHub yang sedang bermasalah). Null = biarkan
+                // EnsureSuccessStatusCode berperilaku seperti sebelumnya.
+                var pesanStatus = PesanGalatStatusRilis(response.StatusCode, _githubRepo);
+                if (pesanStatus != null) throw new Exception(pesanStatus);
 
                 response.EnsureSuccessStatusCode();
                 json = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -115,15 +120,49 @@ namespace SuDesApp.Utilities
                 return null!;
             }
 
+            if (string.IsNullOrWhiteSpace(updateInfo.DownloadUrl))
+            {
+                // Rilis tanpa installer .exe: tetap dikabarkan (versinya terbaca),
+                // tapi tambalan kecil masih bisa jalan karena daftar aset utuh.
+                _logger.LogWarning(
+                    "Rilis {Versi} tidak menyediakan aset .exe; hanya pembaruan kecil yang bisa dipakai.",
+                    updateInfo.Version);
+            }
+
             _logger.LogInformation("Versi GitHub ditemukan: {Version} ({Url})", updateInfo.Version, updateInfo.DownloadUrl);
             return updateInfo;
         }
 
         /// <summary>
+        /// Pesan galat yang menyebut sebab sebenarnya untuk status API rilis yang
+        /// sudah terjawab. Mengembalikan null untuk status lain (sukses, 3xx, atau
+        /// status tak dikenal) supaya jalur lama <c>EnsureSuccessStatusCode</c>
+        /// tetap berlaku tanpa perubahan perilaku.
+        /// </summary>
+        internal static string? PesanGalatStatusRilis(System.Net.HttpStatusCode status, string repo) =>
+            status switch
+        {
+            System.Net.HttpStatusCode.NotFound =>
+                $"Rilis GitHub tidak ditemukan untuk repo '{repo}'. Pastikan repo publik/benar.",
+            System.Net.HttpStatusCode.Unauthorized =>
+                "Token GitHub ditolak (HTTP 401). Periksa 'AppConfig.githubPersonalAccessToken' di appsettings.json " +
+                "atau gunakan repo publik tanpa token.",
+            System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.TooManyRequests =>
+                "Pemeriksaan pembaruan dibatasi GitHub (HTTP 403/429): terlalu banyak permintaan dari alamat IP ini " +
+                "tanpa token. Tunggu beberapa menit lalu periksa lagi — data desa tidak terpengaruh.",
+            >= System.Net.HttpStatusCode.InternalServerError =>
+                $"GitHub sedang gangguan (HTTP {(int)status}). Periksa pembaruan beberapa saat lagi.",
+            _ => null
+        };
+
+        /// <summary>
         /// Ubah JSON rilis GitHub (<c>GET /repos/:owner/:repo/releases/latest</c>)
-        /// menjadi <see cref="UpdateInfo"/>. Aset <c>.exe</c> pertama dipilih (atau
-        /// aset pertama bila tidak ada). Tag <c>v2.2.0</c>/<c>2.2.0-rc1</c> dinormalkan
-        /// ke <c>2.2.0</c>; <c>digest</c> <c>sha256:…</c> dipakai sebagai hash verifikasi.
+        /// menjadi <see cref="UpdateInfo"/>. Installer yang dipilih adalah aset
+        /// <c>.exe</c> pertama (berkas <c>.exe.sha256</c>, zip portable, dan APK tidak
+        /// pernah dipilih); rilis tanpa aset <c>.exe</c> tetap terbaca versinya dengan
+        /// <see cref="UpdateInfo.DownloadUrl"/> kosong. Tag <c>v2.2.0</c>/<c>2.2.0-rc1</c>
+        /// dinormalkan ke <c>2.2.0</c>; <c>digest</c> <c>sha256:…</c> dipakai sebagai
+        /// hash verifikasi. Rilis tanpa aset sama sekali menghasilkan null.
         /// </summary>
         public static UpdateInfo? ParseGitHubRelease(string? json)
         {
@@ -142,18 +181,29 @@ namespace SuDesApp.Utilities
             if (release == null) return null;
 
             var assets = release.Assets ?? new List<GitHubAsset>();
-            var asset = assets.FirstOrDefault(a => a.Name?.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) == true)
-                        ?? assets.FirstOrDefault();
-            if (asset == null || string.IsNullOrWhiteSpace(asset.BrowserDownloadUrl)) return null;
+            if (assets.Count == 0) return null;
+
+            // Installer penuh HARUS berkas .exe yang benar-benar bisa dijalankan.
+            // Dulu ada fallback "aset pertama apa pun": rilis yang kebetulan tidak
+            // menyertakan Setup.exe membuat patch.json / zip portable / apk dianggap
+            // installer, lalu ~100 MB berkas salah diunduh dan dijalankan sebagai
+            // program -> pemasangan gagal dengan pesan yang tidak menjelaskan apa pun.
+            // Tanpa fallback itu tetap aman: setiap pemanggil memperlakukan
+            // DownloadUrl kosong sebagai "rilis belum menyediakan tautan unduhan"
+            // (PembaruanLatarService, PembaruanViewModel.BisaInstaller), dan pembaruan
+            // kecil memakai DaftarAset sehingga tidak butuh installer.
+            var asset = assets.FirstOrDefault(a =>
+                a.Name?.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) == true &&
+                !string.IsNullOrWhiteSpace(a.BrowserDownloadUrl));
 
             return new UpdateInfo
             {
                 Version = NormalizeVersion(release.TagName),
-                DownloadUrl = asset.BrowserDownloadUrl!,
+                DownloadUrl = asset?.BrowserDownloadUrl,
                 ReleaseNotes = release.Body ?? string.Empty,
-                Sha256 = ExtractSha256(asset.Digest),
-                GitHubApiAssetUrl = asset.ApiUrl,
-                NamaInstaller = asset.Name,
+                Sha256 = asset is null ? null : ExtractSha256(asset.Digest),
+                GitHubApiAssetUrl = asset?.ApiUrl,
+                NamaInstaller = asset?.Name,
                 // Seluruh aset rilis disimpan agar berkas tambalan (patch.json +
                 // patch-<versi>.zip) bisa dicari tanpa memanggil API GitHub dua kali.
                 DaftarAset = assets
@@ -681,6 +731,11 @@ namespace SuDesApp.Utilities
         [JsonPropertyName("version")]
         public string ?Version { get; set; }
 
+        /// <summary>
+        /// Tautan unduh installer penuh. Kosong bila rilis tidak menyediakan aset
+        /// <c>.exe</c> — pemanggil wajib memperlakukannya sebagai "belum ada unduhan",
+        /// bukan sebagai berkas yang bisa dijalankan.
+        /// </summary>
         [JsonPropertyName("downloadUrl")]
         public string ?DownloadUrl { get; set; }
 
