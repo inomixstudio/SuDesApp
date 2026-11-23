@@ -13,6 +13,20 @@ namespace SuDesApp.Wpf.ViewModels
         {
             var daftar = new List<CatatanRilisEntry>
             {
+                new CatatanRilisEntry(
+                    "Versi 2.15.2 (23 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Antarmuka & Cetak", new List<string>
+                        {
+                            "Tombol Cetak pada pratinjau PDF dulu hanya muncul untuk Surat Kematian dan Daftar Hadir, sehingga desa yang sudah berlisensi tidak melihat tombol itu sama sekali pada surat lain dan membacanya sebagai \"fitur cetak dihapus\". Kini Cetak dan Ekspor selalu tampil dan satu-satunya yang mematikannya adalah keadaan lisensi: hidup selama trial berjalan atau langganan aktif, mati dengan tooltip yang menyebut sebabnya saat trial habis, dan cetak Daftar Hadir tetap dikecualikan seperti aturan produk. Penyetelan IsEnabled di kode-behind juga melepas binding keadaan lisensi, jadi laporan kesiapan PDF dipindahkan ke ViewModel dan halaman yang terbuka ikut segar ketika lisensi berubah. Dijaga TombolCetakEksporPratinjauTests (18 uji) berikut pagar XAML dan kode-behind agar aturan lama tidak balik lewat binding Visibility."
+                        }),
+                        new CatatanRilisSubSection("Pembaruan Aplikasi", new List<string>
+                        {
+                            "Pemilih aset rilis GitHub punya fallback \"aset pertama apa pun\": satu rilis yang lupa menyertakan Setup.exe membuat patch.json, zip portable, atau APK dianggap installer, lalu berkas yang salah diunduh ratusan megabyte dan dijalankan sebagai program — pemasangan gagal tanpa pesan yang menjelaskan apa pun. Rilis tanpa aset .exe kini tetap dikabarkan dengan tautan unduhan kosong (jalur pembaruan kecil tidak terpengaruh karena memakai daftar aset), dan status yang sudah dijawab server — 403/429 rate limit, 401 token ditolak, 5xx gangguan GitHub — tidak lagi dilaporkan sebagai \"tidak bisa menghubungi GitHub\" sehingga pemeriksaan tidak dicari penyebabnya di jaringan desa.",
+                            "Jalur parsing rilis sebelumnya tidak punya satu pun uji; kini dijaga UpdateServiceRilisTests (31 uji) memakai bentuk rilis v2.15.1 yang nyata, termasuk jebakan urutan SuDesApp_2.15.1_Setup.exe.sha256, ekstensi .EXE huruf besar, digest tidak lengkap, normalisasi tag v2.15.1 dan V2.15.1-rc1, serta pemetaan setiap status HTTP."
+                        })
+                    }),
                                 new CatatanRilisEntry(
                     "Versi 2.15.1 (18 November 2026)",
                     new List<CatatanRilisSubSection>
