@@ -51,6 +51,25 @@ param(
     # Jangan berhenti walau working tree masih kotor (hanya untuk uji coba).
     [switch]$LewatiPemeriksaan,
 
+    # APK Android ikut dibangun, ditandatangani, dan dijadikan aset rilis. Ini
+    # BUKAN fitur tambahan: ponsel membandingkan versionName dengan versi desktop
+    # secara PERSIS (PengaturanSinkron.versiCocok), jadi rilis desktop tanpa APK
+    # versi yang sama mengunci sinkron seluruh desa yang memakai aplikasi ponsel.
+    # Sejak 2.15.2 langkah ini bagian dari skrip - sebelumnya dikerjakan tangan
+    # dan sekali terlupa, rilis tetap terbit tanpa APK tanpa ada yang gagal.
+    # -TanpaAndroid hanya dipakai bila APK memang sengaja tidak dirilis (mis.
+    # jalur CI yang tidak punya keystore rilis); ia menulis statusnya terus terang.
+    [switch]$TanpaAndroid,
+
+    # Keystore tempat kunci APK berada. Bawaannya keystore debug milik mesin ini -
+    # sama dengan APK rilis sebelumnya, dan kunci yang BERBEDA membuat pemasangan
+    # tindih ditolak Android ("Application already exists with a different
+    # signature") yang baru terlihat di ponsel pengguna. Skrip ini membandingkan
+    # sidik jari sertifikat terhadap APK rilis terbaru sebelum unggah.
+    [string]$KeystoreAndroid,
+    [string]$SandiKeystore,
+    [string]$AliasKeystore,
+
     # Unggah langsung ke GitHub Releases setelah aset siap: rilis dicari/dibuat
     # sebagai draft, aset bernama sama diganti, lalu rilis diterbitkan
     # (draft=false, make_latest=true). Token diambil dari env GITHUB_TOKEN /
@@ -608,6 +627,258 @@ if (-not $SkipInstaller) {
     }
 }
 
+# ---------- APK Android ----------
+# Rilis lokal selalu membawa APK. Urutannya sama seperti yang dikerjakan tangan
+# pada 2.15.0-2.15.2: gradlew assembleRelease -> zipalign -> apksigner (kunci
+# yang sama dengan APK beredar) -> sidecar sha256 -> ikut daftar aset unggah.
+$apk = $null
+$apkSidik = $null
+$statusAndroid = ''
+if ($TanpaAndroid) {
+    Write-Host 'APK Android dilewati (-TanpaAndroid).' -ForegroundColor Yellow
+    if ($Unggah) {
+        Write-Host ('PERINGATAN: rilis ' + $Version + ' terbit tanpa APK - ponsel dengan versionName ' +
+                    'lama menolak sinkron (PengaturanSinkron.versiCocok) sampai SuDesApp-' +
+                    $Version + '.apk diunggah.') -ForegroundColor Yellow
+    }
+    $statusAndroid = ('Android: APK `SuDesApp-{0}.apk` TIDAK ikut paket ini (-TanpaAndroid). ' +
+                      'Unggahkan APK versi ini sebelum dipakai bila desa memasang dari ponsel.') -f $Version
+} else {
+    Write-Host ''
+    Write-Host '== Aset Android (APK) ==' -ForegroundColor Cyan
+
+    $dirAndroid = Join-Path $repoRoot 'android'
+    $gradleApp  = Join-Path $dirAndroid 'app/build.gradle.kts'
+    $gradlewBat = Join-Path $dirAndroid 'gradlew.bat'
+
+    # Kebijakan dua tingkat: PRASYARAT yang hilang membatalkan rilis yang benar-benar
+    # akan diunggah (-Unggah), tetapi hanya memberi peringatan pada latihan lokal tanpa
+    # unggah - mesin tanpa Android SDK (mis. runner CI) tetap bisa memeriksa jalur
+    # desktop. KEFAILAN build/tanda tangan sendiri selalu membatalkan.
+    $siap = $true
+    $alasan = ''
+
+    if ($siap -and -not (Test-Path -LiteralPath $gradleApp)) {
+        $siap = $false
+        $alasan = 'berkas versi Android tidak ditemukan: ' + $gradleApp
+    }
+
+    $versiAndroid = ''
+    $kodeAndroid = 0
+    if ($siap) {
+        $isiGradle = [IO.File]::ReadAllText($gradleApp)
+        if ($isiGradle -notmatch '(?m)^\s*versionName\s*=\s*"([^"]+)"') {
+            $siap = $false
+            $alasan = 'versionName tidak ditemukan di android/app/build.gradle.kts'
+        } else {
+            $versiAndroid = $Matches[1]
+            if ($isiGradle -notmatch '(?m)^\s*versionCode\s*=\s*(\d+)') {
+                $siap = $false
+                $alasan = 'versionCode tidak ditemukan di android/app/build.gradle.kts'
+            } else {
+                $kodeAndroid = [int]$Matches[1]
+            }
+        }
+    }
+
+    # SATU sumber kebenaran versi. Kalau versionName belum ikut naik, ponsel akan
+    # menolak sinkron dengan paket desktop ini - lebih baik berhenti di sini daripada
+    # menerbitkan pasangan yang tidak cocok.
+    if ($siap -and ($versiAndroid -ne $Version)) {
+        $siap = $false
+        $alasan = ('versionName Android adalah ' + $versiAndroid + ' padahal paket ini ' + $Version +
+                   ' - naikkan keduanya sekaligus lewat Tools/rilis-sekali-jalan.ps1')
+    }
+    if ($siap) {
+        $bagianV = (@(($Version -replace '-.*$', '').Split('.')) + @('0', '0', '0'))[0..2]
+        $kodeHarap = ([int]$bagianV[0] * 10000) + ([int]$bagianV[1] * 100) + [int]$bagianV[2]
+        if ($kodeAndroid -ne $kodeHarap) {
+            Write-Host ('Peringatan: versionCode ' + $kodeAndroid + ' tidak mengikuti pola maj*10000+min*100+patch ' +
+                        '(' + $kodeHarap + ').') -ForegroundColor Yellow
+        }
+    }
+
+    if ($siap -and -not (Test-Path -LiteralPath $gradlewBat)) {
+        $siap = $false
+        $alasan = ('wrapper Gradle tidak ditemukan (' + $gradlewBat + ') - build APK butuh Android SDK + JDK')
+    }
+
+    # SDK + build-tools: sama seperti yang dibaca Android Studio (env, lalu
+    # local.properties), karena jalur ini dipakai dari shell biasa tanpa profil IDE.
+    $sdk = ''
+    if ($siap) {
+        $kandidatSdk = @($env:ANDROID_HOME, $env:ANDROID_SDK_ROOT)
+        $lok = Join-Path $dirAndroid 'local.properties'
+        if (Test-Path -LiteralPath $lok) {
+            foreach ($baris in (Get-Content -LiteralPath $lok -Encoding UTF8)) {
+                if ($baris -match '^\s*sdk\.dir\s*=\s*(.+)$') { $kandidatSdk += (($Matches[1] -replace '\\\\', '\').Trim()) }
+            }
+        }
+        $kandidatSdk += (Join-Path $env:LOCALAPPDATA 'Android\Sdk')
+        foreach ($k in $kandidatSdk) {
+            if ($k -and (Test-Path -LiteralPath $k)) { $sdk = $k; break }
+        }
+        if (-not $sdk) {
+            $siap = $false
+            $alasan = 'Android SDK tidak ditemukan (ANDROID_HOME/ANDROID_SDK_ROOT/local.properties kosong)'
+        }
+    }
+
+    $zipalign = ''
+    $apksigner = ''
+    if ($siap) {
+        $akarBuildTools = Join-Path $sdk 'build-tools'
+        if (Test-Path -LiteralPath $akarBuildTools) {
+            $lurus = @(Get-ChildItem -LiteralPath $akarBuildTools -Directory -ErrorAction SilentlyContinue | Where-Object {
+                (Test-Path -LiteralPath (Join-Path $_.FullName 'zipalign.exe')) -and
+                (Test-Path -LiteralPath (Join-Path $_.FullName 'apksigner.bat'))
+            })
+            if ($lurus.Count -gt 0) {
+                $buildTools = $lurus | Sort-Object {
+                    $v = [Version]::new(0, 0)
+                    if ([Version]::TryParse($_.Name, [ref] $v)) { return $v } else { return [Version]::new(0, 0) }
+                } -Descending | Select-Object -First 1
+                $zipalign  = Join-Path $buildTools.FullName 'zipalign.exe'
+                $apksigner = Join-Path $buildTools.FullName 'apksigner.bat'
+            }
+        }
+        if (-not $zipalign -or -not $apksigner) {
+            $siap = $false
+            $alasan = ('zipalign.exe/apksigner.bat tidak ditemukan di ' + (Join-Path $sdk 'build-tools') +
+                       ' - pasang build-tools lewat Android Studio')
+        }
+    }
+
+    $ks = $KeystoreAndroid
+    if (-not $ks) { $ks = $env:SUDESAPP_APK_KEYSTORE }
+    if (-not $ks) { $ks = Join-Path $env:USERPROFILE '.android\debug.keystore' }
+    $sandiKs = $SandiKeystore
+    if (-not $sandiKs) { $sandiKs = $env:SUDESAPP_APK_KEYPASS }
+    if (-not $sandiKs) { $sandiKs = 'android' }
+    $aliasKs = $AliasKeystore
+    if (-not $aliasKs) { $aliasKs = $env:SUDESAPP_APK_ALIAS }
+    if (-not $aliasKs) { $aliasKs = 'androiddebugkey' }
+    if ($siap -and -not (Test-Path -LiteralPath $ks)) {
+        $siap = $false
+        $alasan = ('keystore APK tidak ditemukan: ' + $ks + ' - isi -KeystoreAndroid/SUDESAPP_APK_KEYSTORE ' +
+                   'dengan kunci yang sama seperti APK rilis sebelumnya')
+    }
+
+    if (-not $siap) {
+        if ($Unggah) {
+            throw ('Publish dibatalkan: ' + $alasan + '. Pasang perlengkapannya, atau terbitkan dengan ' +
+                   '-TanpaAndroid bila APK versi ini memang tidak dirilis.')
+        }
+        Write-Host ('Peringatan: APK dilewati - ' + $alasan) -ForegroundColor Yellow
+        Write-Host ('          (rilis yang akan DIUNGGAH menuntut APK; tambahkan -TanpaAndroid bila ' +
+                    'memang disengaja)') -ForegroundColor Yellow
+        $statusAndroid = ('Android: APK `SuDesApp-{0}.apk` TIDAK ikut paket ini - {1}. ' +
+                         'Sinkron ponsel menuntut versionName yang sama persis, jadi unggahkan APK ini ' +
+                         'sebelum paket dipakai dari ponsel.') -f $Version, $alasan
+    } else {
+        Push-Location $dirAndroid
+        try {
+            # --no-daemon: skrip ini sering dipanggil dari CI/prompt sekali-pakai dan
+            # daemon yang tertinggal menahan berkas build pada giliran berikutnya.
+            & $gradlewBat --no-daemon assembleRelease --console=plain
+            if ($LASTEXITCODE -ne 0) {
+                throw ('Publish dibatalkan: gradlew assembleRelease gagal (exit ' + $LASTEXITCODE + ').')
+            }
+        } finally {
+            Pop-Location
+        }
+
+        $dirOutput = Join-Path $dirAndroid 'app/build/outputs/apk/release'
+        $sumberApk = Join-Path $dirOutput 'app-release-unsigned.apk'
+        if (-not (Test-Path -LiteralPath $sumberApk)) {
+            # Build variant dengan signingConfig sendiri menamakan berkas tanpa "-unsigned".
+            $sumberApk = Join-Path $dirOutput 'app-release.apk'
+        }
+        if (-not (Test-Path -LiteralPath $sumberApk)) {
+            throw ('Publish dibatalkan: APK hasil build tidak ditemukan di ' + $dirOutput)
+        }
+
+        New-Item -ItemType Directory -Force -Path (Join-Path $repoRoot 'artifacts') | Out-Null
+        # Nama aset mengikuti yang sudah beredar (SuDesApp-<versi>.apk memakai TANDA,
+        # berbeda dari installer/zip yang memakai garis bawah) karena pembaruan
+        # Android mencari nama persis itu.
+        $apkJalur   = Join-Path $repoRoot ('artifacts/SuDesApp-' + $Version + '.apk')
+        $tersejajar = Join-Path $repoRoot 'artifacts/apk-tersejajar.apk'
+        if (Test-Path -LiteralPath $apkJalur) { Remove-Item -Force $apkJalur }
+        if (Test-Path -LiteralPath $tersejajar) { Remove-Item -Force $tersejajar }
+
+        & $zipalign -f -p 4 $sumberApk $tersejajar
+        if ($LASTEXITCODE -ne 0) { throw ('Publish dibatalkan: zipalign gagal (exit ' + $LASTEXITCODE + ').') }
+        & $apksigner sign --ks $ks --ks-key-alias $aliasKs --ks-pass ('pass:' + $sandiKs) --key-pass ('pass:' + $sandiKs) --out $apkJalur $tersejajar
+        if ($LASTEXITCODE -ne 0) {
+            throw ('Publish dibatalkan: apksigner gagal (exit ' + $LASTEXITCODE +
+                   '). apksigner membutuhkan JDK di PATH (java) - apksigner.bat tidak memilikinya sendiri.')
+        }
+        Remove-Item -Force $tersejajar -ErrorAction SilentlyContinue
+        $apk = Get-Item -LiteralPath $apkJalur
+
+        $cetakSert = (& $apksigner verify --print-certs $apkJalur 2>&1 | Out-String)
+        if ($cetakSert -notmatch 'certificate SHA-256 digest:\s*([0-9a-fA-F]{64})') {
+            throw ('Publish dibatalkan: sertifikat APK tidak terbaca dari apksigner: ' + $cetakSert.Trim())
+        }
+        $sidikKunci = $Matches[1].ToLowerInvariant()
+
+        # Gerbang pemasangan tindih: kunci harus sama dengan APK rilis terbaru yang
+        # sudah dipegang pengguna. Beda kunci = pemasangan tindih ditolak Android, dan
+        # itu baru terlihat setelah rilis terbit. Rilis acuan = aset APK terbaru selain
+        # versi ini; bila tidak terjangkau, statusnya ditulis apa adanya.
+        $kataAcuan = ', tidak ada APK acuan untuk dibandingkan'
+        try {
+            $kepalaAcuan = @{ Accept = 'application/vnd.github+json'; 'User-Agent' = 'SuDesApp-publish-release' }
+            $tokenAcuan = ''
+            try { $tokenAcuan = AmbilTokenGitHub } catch { $tokenAcuan = '' }
+            if ($tokenAcuan) { $kepalaAcuan['Authorization'] = 'Bearer ' + $tokenAcuan }
+            $rilisAcuan = Invoke-RestMethod -Uri ('https://api.github.com/repos/' + $Repo + '/releases/latest') -Headers $kepalaAcuan -TimeoutSec 30 -ErrorAction Stop
+            $namaAcuan = 'SuDesApp-' + $Version + '.apk'
+            $asetAcuan = @($rilisAcuan.assets) | Where-Object {
+                ($_.name -like 'SuDesApp-*.apk') -and ($_.name -ne $namaAcuan) -and ($_.name -notlike '*.sha256')
+            } | Select-Object -First 1
+            if ($asetAcuan) {
+                $sementara = Join-Path ([IO.Path]::GetTempPath()) ('sudesapp-apk-acuan-' + [IO.Path]::GetRandomFileName())
+                try {
+                    Invoke-WebRequest -Uri $asetAcuan.browser_download_url -OutFile $sementara -TimeoutSec 600 -UseBasicParsing -ErrorAction Stop
+                    $cetakAcuan = (& $apksigner verify --print-certs $sementara 2>&1 | Out-String)
+                    if ($cetakAcuan -match 'certificate SHA-256 digest:\s*([0-9a-fA-F]{64})') {
+                        $sidikAcuan = $Matches[1].ToLowerInvariant()
+                        if ($sidikAcuan -ne $sidikKunci) {
+                            throw ('PUBLISH DIBATALKAN: APK ini ditandatangani kunci ' + $sidikKunci.Substring(0, 12) +
+                                   ' tetapi ' + $asetAcuan.name + ' memakai kunci ' + $sidikAcuan.Substring(0, 12) +
+                                   '. Android menolak pemasangan tindih dengan kunci berbeda, jadi gunakan ' +
+                                   '-KeystoreAndroid/SUDESAPP_APK_KEYSTORE yang sama seperti rilis sebelumnya ' +
+                                   'atau terbitkan dengan -TanpaAndroid.')
+                        }
+                        $kataAcuan = ', identik dengan ' + $asetAcuan.name
+                        Write-Host ('   kunci APK sama dengan rilis sebelumnya (' + $asetAcuan.name + ').') -ForegroundColor Green
+                    } else {
+                        Write-Host 'Peringatan: sertifikat APK acuan tidak terbaca - pencocokan kunci dilewati.' -ForegroundColor Yellow
+                        $kataAcuan = ', kunci sebelumnya tidak dapat dibaca'
+                    }
+                } finally {
+                    Remove-Item -Force $sementara -ErrorAction SilentlyContinue
+                }
+            }
+        } catch {
+            if ($_.Exception.Message -like 'PUBLISH DIBATALKAN*') { throw }
+            Write-Host ('Peringatan: APK rilis sebelumnya tidak dapat diunduh (' + $_.Exception.Message +
+                        ') - pencocokan kunci dilewati.') -ForegroundColor Yellow
+            $kataAcuan = ', kunci sebelumnya tidak dapat dibandingkan'
+        }
+
+        $apkSidik = TulisSidikJari -Berkas $apkJalur
+        Write-Host ('APK       : ' + $apkJalur + (' ({0:N0} byte)' -f $apk.Length))
+        Write-Host ('          : versionName ' + $versiAndroid + ' == desktop; sertifikat ' +
+                    $sidikKunci.Substring(0, 12) + '...' + $kataAcuan) -ForegroundColor Green
+        $statusAndroid = ('Android: APK `SuDesApp-{0}.apk` dibangun dan ditandatangani (sidik jari sertifikat `{1}`{2}); ' +
+                          'versionName `{0}` sama persis dengan versi desktop, jadi sinkron ponsel tidak terkunci.')
+        $statusAndroid = $statusAndroid -f $Version, $sidikKunci, $kataAcuan
+    }
+}
+
 Write-Host ''
 Write-Host '== Ringkasan ==' -ForegroundColor Cyan
 if ($ditandatangani.Count -gt 0) {
@@ -636,6 +907,7 @@ $lines += ''
 $lines += $statusKredensial
 $lines += $statusLisensi
 $lines += $statusTandaTangan
+if ($statusAndroid) { $lines += $statusAndroid }
 Write-Host ("Portable  : " + $zipPath)
 Write-Host ("Kredensial: " + $statusKredensial)
 Write-Host ("Tanda tgn : " + $statusTandaTangan)
@@ -769,6 +1041,10 @@ if ($setup) {
 }
 $daftarAset += $zipPath
 $daftarAset += (TulisSidikJari -Berkas $zipPath)
+if ($apk) {
+    $daftarAset += $apk.FullName
+    $daftarAset += $apkSidik
+}
 $daftarAset += $manifestPatch
 $patchZip = Join-Path $repoRoot ("artifacts/patch-{0}.zip" -f $Version)
 if (Test-Path -LiteralPath $patchZip) { $daftarAset += $patchZip }

@@ -12,13 +12,14 @@
          (sumber versi aplikasi) sekaligus menyisipkan entri Catatan Rilis baru
          untuk versi itu - kartu terbaru
          di halaman Catatan Rilis sama persis dengan versi csproj;
-         BATAS: skrip ini tidak menyentuh android/app/build.gradle.kts
-         (versionCode/versionName) dan tidak menulis docs/catatan-rilis-<versi>.md.
-         Keduanya wajib ikut pada commit yang ditag: ponsel membandingkan
-         versionName dengan versi desktop secara PERSIS
-         (PengaturanSinkron.versiCocok), sehingga APK 2.15.0 menolak sinkron dengan
-         desktop 2.15.1; halaman rilis juga menautkan dokumen catatanrilisnya dari
-         tag yang sama.
+         BATAS lama skrip ini (tidak menyentuh android/app/build.gradle.kts dan
+         tidak menulis docs/catatan-rilis-<versi>.md) SUDAH DIHAPUS untuk bagian
+         Android: sejak 2.15.2 skrip ini ikut menaikkan versionCode/versionName,
+         karena ponsel membandingkan versionName dengan versi desktop secara
+         PERSIS (PengaturanSinkron.versiCocok) sehingga APK 2.15.0 menolak sinkron
+         dengan desktop 2.15.1. docs/catatan-rilis-<versi>.md tetap ditulis tangan
+         (isinya prosa, bukan daftar yang bisa dihasilkan dari parameter) dan
+         halaman rilis hanya menautkannya bila berkas itu ada.
       3. menjalankan gerbang verifikasi: dotnet build solusi LALU uji E2E trial
          server (Tools/uji-e2e-trial-server.sh) - salah satu gagal berarti
          berhenti tanpa commit dan kedua berkas dikembalikan ke isi semula;
@@ -28,7 +29,8 @@
 
     Tag yang didorong memicu .github/workflows/release.yml (publish win-x64 +
     installer). Bila Actions belum bisa berjalan, aset rilis tetap bisa dibuat
-    lokal: Tools/publish-release.ps1 -Version X.Y.Z
+    lokal - termasuk APK Android, yang kini dibangun oleh publish-release.ps1:
+    Tools/publish-release.ps1 -Version X.Y.Z -Unggah -WajibInstaller -IzinkanLisensiLokal
 
 .PARAMETER Versi
     Versi baru format x.y.z (mis. 2.5.5). Awalan "v" boleh ikut ditulis.
@@ -113,6 +115,9 @@ $script:catatanVm  = Join-Path $script:repoRoot 'SuDesApp.Wpf/ViewModels/Catatan
 # sebelum mengubah apa pun, dan karena gerbang rilis ini tidak punya uji,
 # perpindahan berkas itu lolos tanpa ada yang tahu.
 $script:sln        = Join-Path $script:repoRoot 'SuDesApp.slnx'
+# Berkas versi Android. Naiknya hanya versi desktop berarti APK lama menolak
+# sinkron dengan paket baru, jadi keduanya harus lahir di commit yang sama.
+$script:gradleApp   = Join-Path $script:repoRoot 'android/app/build.gradle.kts'
 $script:cabang     = $Cabang.Trim()
 if (-not $script:cabang) { $script:cabang = 'main' }
 
@@ -205,6 +210,9 @@ function KembalikanBerkas {
     if ($script:isiCsproj) {
         TulisBerkas -Jalur $script:csprojWpf -Teks $script:isiCsproj -Bom $script:bomCsproj
         TulisBerkas -Jalur $script:catatanVm -Teks $script:isiCatatan -Bom $script:bomCatatan
+        if ($script:isiGradle) {
+            TulisBerkas -Jalur $script:gradleApp -Teks $script:isiGradle -Bom $script:bomGradle
+        }
         Ingat ('Berkas versi + catatan rilis dikembalikan ke isi semula (' + $script:versiSekarang + ').')
     }
 }
@@ -319,6 +327,41 @@ if (-not $UjiCoba) {
     }
 }
 
+# ---------- berkas versi Android (dibaca dulu, ditulis belakangan) ----------
+$script:isiGradle  = $null
+$script:bomGradle  = $false
+$script:kodeAndroidBaru = 0
+if (Test-Path -LiteralPath $script:gradleApp) {
+    $berkasGradle = BacaBerkas $script:gradleApp
+    $script:bomGradle = $berkasGradle.Bom
+    $script:isiGradle = $berkasGradle.Teks
+
+    if ($script:isiGradle -notmatch '(?m)^\s*versionName\s*=\s*"([^"]+)"') {
+        throw ('versionName tidak ditemukan di ' + $script:gradleApp + '.')
+    }
+    $versiAndroidSekarang = $Matches[1]
+    if ($script:isiGradle -notmatch '(?m)^\s*versionCode\s*=\s*(\d+)') {
+        throw ('versionCode tidak ditemukan di ' + $script:gradleApp + '.')
+    }
+    $kodeAndroidSekarang = [int]$Matches[1]
+
+    # Android dan desktop harus naik bersamaan; kalau selisih, APK yang beredar
+    # menolak sinkron dengan paket desktop baru (versiCocok membandingkan persis).
+    if ($versiAndroidSekarang -ne $versiSekarangSingkat) {
+        throw ('versionName Android adalah ' + $versiAndroidSekarang + ' padahal desktop memakai ' +
+               $versiSekarangSingkat + ' - rapikan keduanya dulu sebelum rilis.')
+    }
+    $bagianBaru = (@($Versi.Split('.')) + @('0', '0', '0'))[0..2]
+    $script:kodeAndroidBaru = ([int]$bagianBaru[0] * 10000) + ([int]$bagianBaru[1] * 100) + [int]$bagianBaru[2]
+    if ($script:kodeAndroidBaru -le $kodeAndroidSekarang) {
+        throw ('versionCode Android baru ' + $script:kodeAndroidBaru + ' harus lebih tinggi dari ' +
+               $kodeAndroidSekarang + '.')
+    }
+    Info ('Android sekarang: versionCode ' + $kodeAndroidSekarang + ', versionName "' + $versiAndroidSekarang + '"')
+} else {
+    Ingat ('Berkas versi Android tidak ditemukan (' + $script:gradleApp + ') - hanya desktop yang naik versi.')
+}
+
 $berkasCatatan = BacaBerkas $script:catatanVm
 $script:bomCatatan = $berkasCatatan.Bom
 $script:isiCatatan = $berkasCatatan.Teks
@@ -419,6 +462,16 @@ Sukses ('AssemblyVersion/FileVersion -> ' + $versiAssembly)
 TulisBerkas -Jalur $script:catatanVm -Teks $isiCatatanBaru -Bom $script:bomCatatan
 Sukses ('Entri catatan rilis "' + $judulEntri + '" disisipkan di atas kartu versi sebelumnya.')
 
+if ($script:isiGradle) {
+    $isiGradleBaru = $script:isiGradle -replace '(?m)^(\s*)versionCode\s*=\s*\d+', ('${1}versionCode = ' + $script:kodeAndroidBaru)
+    $isiGradleBaru = $isiGradleBaru -replace '(?m)^(\s*)versionName\s*=\s*"[^"]*"', ('${1}versionName = "' + $Versi + '"')
+    if ($isiGradleBaru -eq $script:isiGradle) {
+        throw 'Baris versionCode/versionName Android tidak berubah - periksa android/app/build.gradle.kts.'
+    }
+    TulisBerkas -Jalur $script:gradleApp -Teks $isiGradleBaru -Bom $script:bomGradle
+    Sukses ('Android -> versionCode ' + $script:kodeAndroidBaru + ', versionName "' + $Versi + '".')
+}
+
 # ---------- Tahap 3: gerbang build ----------
 
 Tahap 'Tahap 3/7 - gerbang build (dotnet build SuDesApp.slnx)'
@@ -469,7 +522,9 @@ if ($UjiCoba) {
     Tahap 'Tahap 5/7..7/7 - dilewati (mode -UjiCoba)'
     KembalikanBerkas
     Info 'Yang akan dijalankan pada rilis sungguhan:'
-    Info 'git add SuDesApp.Wpf/SuDesApp.Wpf.csproj SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.RiwayatVersi.cs'
+    $berkasKomit = @('SuDesApp.Wpf/SuDesApp.Wpf.csproj', 'SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.RiwayatVersi.cs')
+    if ($script:isiGradle) { $berkasKomit += 'android/app/build.gradle.kts' }
+    Info ('git add ' + ($berkasKomit -join ' '))
     Info ('git commit -m "chore(release): naikkan versi aplikasi ke ' + $Versi + '" ...')
     Info ('git tag -a ' + $tagRilis + ' -m "SuDesApp ' + $Versi + '"')
     Info ('git push origin ' + $script:cabang)
@@ -480,11 +535,14 @@ if ($UjiCoba) {
 }
 
 $judul   = 'chore(release): naikkan versi aplikasi ke ' + $Versi
-$badan   = 'AssemblyVersion/FileVersion dinaikkan dan entri "Catatan Rilis" versi baru disisipkan.' + [Environment]::NewLine +
-           'Keduanya dijaga tetap konsisten satu sama lain.'
+$badan   = 'AssemblyVersion/FileVersion dan versionCode/versionName Android dinaikkan, ' +
+           'entri "Catatan Rilis" versi baru disisipkan. Ketiganya dijaga tetap konsisten ' +
+           'satu sama lain - ponsel membandingkan versionName dengan versi desktop secara persis.'
 
 Tahap 'Tahap 5/7 - commit rilis'
-JalankanGit -Arg @('add', 'SuDesApp.Wpf/SuDesApp.Wpf.csproj', 'SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.RiwayatVersi.cs')
+$berkasRilis = @('SuDesApp.Wpf/SuDesApp.Wpf.csproj', 'SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.RiwayatVersi.cs')
+if ($script:isiGradle) { $berkasRilis += 'android/app/build.gradle.kts' }
+JalankanGit -Arg (@('add') + $berkasRilis)
 JalankanGit -Arg @('commit', '-m', $judul, '-m', $badan)
 Sukses ('Commit dibuat: ' + $judul)
 
@@ -520,4 +578,9 @@ if ($TanpaDorong) {
 
 Tahap 'Selesai'
 Info ('Rilis ' + $Versi + ' terkirim. Pantau workflow di https://github.com/inomixstudio/SudesApp/actions')
-Info ('Bila Actions belum bisa berjalan, buat aset rilis lokal: ./Tools/publish-release.ps1 -Version ' + $Versi)
+# Aset rilis TIDAK dibangun di sini: satu-satunya jalur "sampai selesai" adalah
+# Tools/rilis-sekali-jalan.ps1 (memanggil rilis.ps1 lalu publish-release.ps1).
+# Dua jalur yang sama-sama mengunggah berarti risiko menerbitkan dua kali dari satu
+# kenaikan versi, jadi skrip ini tetap hanya sampai tag terdorong.
+Info ('Bila Actions belum bisa berjalan, bangun + unggah asetnya dari mesin ini (APK ikut dibangun):')
+Info ('  ./Tools/publish-release.ps1 -Version ' + $Versi + ' -Unggah -WajibInstaller -IzinkanLisensiLokal')

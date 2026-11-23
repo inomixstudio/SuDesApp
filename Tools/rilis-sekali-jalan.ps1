@@ -8,11 +8,12 @@
     sudah ada, jadi hasilnya sama dengan menjalankannya berurutan:
 
       1. Tools/rilis.ps1 - prasyarat, naik AssemblyVersion/FileVersion +
-         entri Catatan Rilis, gerbang dotnet build, commit chore(release),
-         tag anotasi vX.Y.Z, push ke origin;
+         versionCode/versionName Android + entri Catatan Rilis, gerbang dotnet
+         build, commit chore(release), tag anotasi vX.Y.Z, push ke origin;
       2. Tools/publish-release.ps1 - publish win-x64 self-contained, installer
-         Inno Setup, pembaruan kecil (tambalan + patch.json), catatan rilis,
-         daftar aset UNGGAH.txt;
+         Inno Setup, APK Android (assembleRelease + zipalign + apksigner dengan
+         kunci yang sama seperti APK yang sudah beredar), pembaruan kecil
+         (tambalan + patch.json), catatan rilis, daftar aset UNGGAH.txt;
       3. (opsional) unggah aset ke GitHub Releases dengan -Unggah.
 
     Bila -VersiLama kosong, skrip ini membaca AssemblyVersion di csproj sebelum
@@ -62,6 +63,19 @@
     Diteruskan ke publish-release.ps1 - izinkan publish tanpa kredensial Google
     tertanam (harus disengaja; lihat check-kredensial-google.ps1).
 
+.PARAMETER IzinkanLisensiLokal
+    Diteruskan ke publish-release.ps1 - paket sengaja menunjuk server lisensi yang
+    dijalankan aplikasi di komputer desa (loopback), BUKAN server produksi. Ini
+    keadaan rilis lokal 2.15.0-2.15.2 yang beredar dan ditulis terus terang ke
+    RELEASE.md + badan halaman rilis; tanpa saklar ini publish menuntut server
+    lisensi produksi yang dapat dihubungi.
+
+.PARAMETER TanpaAndroid
+    Diteruskan ke publish-release.ps1 - APK TIDAK dibangun. Hanya untuk mesin tanpa
+    Android SDK/keystore (mis. jalur CI). Jangan dipakai pada rilis yang dipakai
+    desa: ponsel membandingkan versionName dengan versi desktop secara persis
+    (PengaturanSinkron.versiCocok) sehingga tanpa APK versi baru sinkron terkunci.
+
 .PARAMETER TanpaDorong
     rilis.ps1 membuat commit dan tag lokal, tetapi tidak mendorong ke origin.
     Tidak boleh digabung dengan -Unggah: rilis GitHub menuntut tag sudah ada
@@ -98,6 +112,8 @@ param(
     [switch]$LewatiInstaller,
     [switch]$Besar,
     [switch]$IzinkanTanpaKredensial,
+    [switch]$IzinkanLisensiLokal,
+    [switch]$TanpaAndroid,
     [switch]$TanpaDorong,
     [switch]$UjiCoba
 )
@@ -207,6 +223,11 @@ if ($pakaiPembaruan -and $DariVersi.Count) { $argPublish['DariVersi'] = $DariVer
 if ($LewatiInstaller)           { $argPublish['SkipInstaller'] = $true }
 if ($Besar)                     { $argPublish['Besar'] = $true }
 if ($IzinkanTanpaKredensial)    { $argPublish['IzinkanTanpaKredensial'] = $true }
+if ($IzinkanLisensiLokal)       { $argPublish['IzinkanLisensiLokal'] = $true }
+if ($TanpaAndroid)              { $argPublish['TanpaAndroid'] = $true }
+# Rilis yang diunggah wajib punya installer: tanpa saklar ini ISCC.exe yang hilang
+# hanya memunculkan peringatan dan rilis terbit tanpa installer (perilaku lama).
+if ($Unggah -and -not $LewatiInstaller) { $argPublish['WajibInstaller'] = $true }
 if ($UjiCoba)                   { $argPublish['LewatiPemeriksaan'] = $true }
 if ($Unggah -and -not $UjiCoba) { $argPublish['Unggah'] = $true }
 & (Join-Path $PSScriptRoot 'publish-release.ps1') @argPublish
@@ -220,6 +241,8 @@ if ($UjiCoba) {
     Info 'Jalankan ulang tanpa -UjiCoba untuk menerbitkan rilis sungguhan.'
 } elseif ($Unggah) {
     Sukses ('Rilis v' + $Versi + ' terbit: https://github.com/inomixstudio/SuDesApp/releases/tag/v' + $Versi)
+    Sukses 'Aset terpasang: installer, zip portable, sidik jarinya, patch.json, dan APK Android bertanda tangan.'
+    Info ('Bila APK dilewati (-TanpaAndroid), unggahkan SuDesApp-' + $Versi + '.apk sebelum dipakai - sinkron ponsel menuntut versi yang sama persis.')
 } else {
     Info ('Aset siap diunggah - daftarnya: ' + (Join-Path $repoRoot 'artifacts/UNGGAH.txt'))
     Info ('Halaman unggah: https://github.com/inomixstudio/SuDesApp/releases/new?tag=v' + $Versi)
