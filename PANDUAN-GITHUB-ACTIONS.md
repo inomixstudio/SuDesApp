@@ -217,8 +217,19 @@ lebih dulu.
 Selama Actions belum bisa berjalan, rilis tetap bisa dibuat dan diunggah dari komputer
 ini. Skrip `Tools/publish-release.ps1` mengerjakan urutan yang sama dengan
 `release.yml`: publish self-contained win-x64 → jaring pengaman `docs/` → zip portable →
-installer Inno Setup → tambalan (bila ada rilis sebelumnya) → `patch.json` → catatan
+installer Inno Setup → **APK Android** (`assembleRelease` → `zipalign` → `apksigner`)
+→ tambalan (bila ada rilis sebelumnya) → `patch.json` → catatan
 rilis berisi SHA-256 → daftar aset untuk diunggah manual (atau unggah otomatis).
+
+APK bukan langkah tambahan yang boleh terlupa: `PengaturanSinkron.versiCocok` di ponsel
+membandingkan `versionName` dengan versi desktop **secara persis**, jadi paket desktop
+yang terbit tanpa APK versi yang sama mengunci sinkron seluruh desa yang memakai aplikasi
+ponsel. Karena itu skrip **berhenti** bila prasyarat APK tidak tersedia pada rilis yang
+akan diunggah (`-Unggah`), dan hanya memperingati pada latihan lokal. Kunci tanda tangan
+harus sama dengan APK rilis sebelumnya — beda kunci berarti Android menolak pemasangan
+tindih — sehingga sidik jari sertifikat APK dibandingkan dengan aset APK rilis terbaru
+sebelum unggah. Lewati hanya dengan `-TanpaAndroid` (mis. runner CI yang tidak memegang
+keystore).
 
 **Prasyarat**
 
@@ -226,7 +237,13 @@ rilis berisi SHA-256 → daftar aset untuk diunggah manual (atau unggah otomatis
 - **Inno Setup 6** untuk installer: `winget install -e --id JRSoftware.InnoSetup`
   (atau https://jrsoftware.org/isdl.php). Tanpa itu skrip tetap berjalan dan hanya
   memberi peringatan — installer tidak terbentuk, jadi pakai `-SkipInstaller` bila
-  installer memang belum diperlukan.
+  installer memang belum diperlukan. Pada rilis yang diunggah (`-Unggah`) lewat
+  `rilis-sekali-jalan.ps1`, installer dituntut benar-benar ada (`-WajibInstaller`).
+- **Android SDK + build-tools + JDK** untuk APK: dibaca dari `ANDROID_HOME` /
+  `ANDROID_SDK_ROOT` / `android/local.properties`, build-tools diambil versi terbaru
+  yang punya `zipalign.exe` + `apksigner.bat`. Keystore default `~\.android\debug.keystore`
+  (alias `androiddebugkey`, sandi `android`) — sama seperti APK 2.15.0-2.15.2 yang beredar;
+  ganti dengan `-KeystoreAndroid`/`SUDESAPP_APK_KEYSTORE` bila pakai kunci rilis.
 
 ### 1. Bangun asetnya
 
@@ -276,6 +293,7 @@ build lalu terbitkan ulang.
 |---|---|
 | `SuDesApp_<versi>_win-x64.zip` | aplikasi portable (± 90 MB) |
 | `SuDesApp_<versi>_Setup.exe` | installer Inno Setup — tidak ada bila `-SkipInstaller` |
+| `SuDesApp-<versi>.apk` + `.sha256` | APK Android (tanda pakai TANDA, bukan garis bawah) — nama ini dicari pembaruan Android dan `versionName`-nya harus sama persis dengan desktop |
 | `patch.json` | manifest pembaruan; **wajib diunggah**, aplikasi terpasang membacanya |
 | `patch-<versi>.zip` | hanya berkas yang berubah (bila jenisnya "kecil") |
 | `RELEASE.md` | catatan rilis + SHA-256 installer |
@@ -313,7 +331,20 @@ dengan yang dipakai `git push`.
 
 Keduanya boleh dipakai bergantian: jalur lokal untuk merilis cepat (atau saat Actions
 bermasalah), `release.yml` untuk rilis dari tag. Hasil asetnya sama, jadi
-pengguna tidak merasakan bedanya.
+pengguna tidak merasakan bedanya — kecuali APK: jalur CI sengaja memakai
+`-TanpaAndroid` karena runner tidak memegang keystore, jadi rilis dari Actions harus
+dilengkapi APK-nya secara terpisah sebelum dipakai desa.
+
+Satu perintah untuk seluruh urutan di komputer ini (naik versi desktop + Android, commit,
+tag, push, bangun installer/zip/APK/patch.json, unggah, terbitkan):
+
+```powershell
+./Tools/rilis-sekali-jalan.ps1 2.15.3 -Perbaikan "..." -Unggah -IzinkanLisensiLokal
+```
+
+`-IzinkanLisensiLokal` meneruskan keadaan paket yang beredar sekarang (server lisensi
+loopback di komputer desa, data langganan di Supabase); tanpanya publish menuntut server
+lisensi produksi. Latihan aman tanpa commit/tag/unggah: `... 9.9.9 -UjiCoba`.
 
 ---
 

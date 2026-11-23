@@ -211,12 +211,18 @@ jobs:
           # masuk repo maupun secrets), jadi paket CI selalu tanpa kredensial tertanam.
           # Status itu terbawa ke RELEASE.md; untuk paket yang langsung tersambung
           # Google, rilis dibuat lokal di komputer yang memiliki berkas rahasianya.
+          #
+          # APK juga TIDAK dibangun di CI: runner tidak punya keystore rilis, dan kunci
+          # yang berbeda membuat pemasangan tindih ditolak Android. publish-release.ps1
+          # menolak tanpa saklar ini supaya rilis tanpa APK tidak pernah lolos diam-diam
+          # - ponsel menuntut versionName yang sama persis dengan desktop.
           $arg = @{
             Version                = $env:VERSI
             Repo                   = $env:REPO
             Unggah                 = $true
             WajibInstaller         = $true
             IzinkanTanpaKredensial = $true
+            TanpaAndroid           = $true
           }
           if ($env:VERSI_LAMA) { $arg['VersiLama'] = $env:VERSI_LAMA }
           if ($env:DARI_VERSI) { $arg['DariVersi'] = $env:DARI_VERSI }
