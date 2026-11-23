@@ -19,4 +19,9 @@
   <ItemGroup>
     <ProjectReference Include="..\SudesPdf.Core\SudesPdf.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Tata letak cetak (PdfPrintLayout) internal: ukurannya hanya bisa dijaga
+         lewat uji, dan uji butuh akses. Pola sama seperti SuDesApp.Core. -->
+    <InternalsVisibleTo Include="SuDesApp.Tests" />
+  </ItemGroup>
 </Project>
