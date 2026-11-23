@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
+using SuDesApp.Services;
 using SuDesApp.Utilities;
 using SuDesApp.Wpf.Mvvm;
 using SuDesApp.Wpf.Views;
@@ -20,6 +21,7 @@ namespace SuDesApp.Wpf.ViewModels
         private readonly IPeringatanDataDesaContoh? _peringatan;
         private readonly SuDesApp.Services.PenjagaLisensi? _penjaga;
         private readonly int? _suratId;
+        private bool _dokumenTermuat = true;
         private bool _tampilPeringatanDataContoh;
         private string _pesanPeringatanDataContoh = string.Empty;
 
@@ -27,7 +29,10 @@ namespace SuDesApp.Wpf.ViewModels
         public string? PdfPath { get; private set; }
         public bool IsMissing { get; }
 
-        /// <summary>True bila tombol Ekspor ditampilkan (dokumen ada di disk).</summary>
+        /// <summary>
+        /// True bila dokumen ada di disk. Gerbang tampilan yang sebenarnya adalah
+        /// <see cref="BolehEkspor"/> — properti ini hanya komponen "PDF-nya ada".
+        /// </summary>
         public bool CanExport => !string.IsNullOrEmpty(PdfPath);
 
         /// <summary>
@@ -72,6 +77,11 @@ namespace SuDesApp.Wpf.ViewModels
             EditCommand = new AsyncRelayCommand(EditSuratAsync, () => CanEdit);
             BukaPengaturanSuratCommand = new RelayCommand(
                 () => _navigation.ShowSetelanBagianSurat(0));
+
+            // Tombol Cetak dan Ekspor harus ikut hidup/mati bersama lisensi tanpa
+            // menunggu halaman dibuka ulang: penjaganya singleton, halamannya
+            // transient.
+            if (_penjaga is not null) LanggananLisensiLemah.Daftar(this, _penjaga);
 
             _ = PeriksaPeringatanDataContohAsync();
         }
@@ -121,34 +131,23 @@ namespace SuDesApp.Wpf.ViewModels
         /// Penjaga tombol Cetak: dokumen bersurat tidak boleh tercetak memakai nama
         /// desa/pejabat contoh tanpa persetujuan pengguna. True = boleh mencetak.
         ///
-        /// ATURAN CETAK PRATINJAU (permintaan Pengaturan Surat): hanya pratinjau
-        /// KEMATIAN yang boleh dicetak ke printer langsung dari tombol Pratinjau;
-        /// pratinjau jenis lain hanya boleh disimpan/diekspor — cetak kertasnya
-        /// lewat Simpan lalu Cetak dari Register. V Pembayang: untuk peraturan
-        /// inilah <see cref="BolehCetakPratinjauLangsung"/> ditegakkan; view
-        /// juga menyembunyikan tombol Cetak agar tidak menggantung.
+        /// ATURAN CETAK PRATINJAU: tombol Cetak ada di SEMUA pratinjau dan boleh
+        /// dipakai selama lisensi masih berlaku (trial berjalan atau berlangganan);
+        /// yang menguncinya hanya lisensi yang habis/belum aktif. Cek di sini tetap
+        /// dipasang walaupun tombol sudah mati oleh <see cref="BolehCetak"/> —
+        /// keadaan lisensi bisa berubah di antara penggambaran tombol dan klik
+        /// (detak lisensi, aktivasi dari halaman Langganan), jadi kunci tidak
+        /// pernah diloloskan hanya karena tampilan yang belum sempat segar.
         /// </summary>
         public async Task<bool> BolehCetakAsync()
         {
-            if (!BolehCetakPratinjauLangsung)
-            {
-                if (_messageService != null)
-                {
-                    await _messageService.ShowInfoAsync(
-                        "Hanya pratinjau Surat Kematian yang boleh dicetak langsung dari tombol Pratinjau. " +
-                        "Untuk jenis lain, simpan dulu lalu cetak dari Register Surat.");
-                }
-                return false;
-            }
-
             // Trial habis / langganan berakhir: cetak PDF dikunci, KECUALI
             // Daftar Hadir yang tetap boleh. Pratinjau tetap boleh dibuka.
-            if (_penjaga is not null && !_penjaga.BolehCetakPdf(Title))
+            if (!BolehCetakPdfDokumenIni)
             {
                 if (_messageService != null)
                 {
-                    await _messageService.ShowInfoAsync(
-                        SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                    await _messageService.ShowInfoAsync(PesanCetakDikunci);
                 }
                 return false;
             }
@@ -163,20 +162,86 @@ namespace SuDesApp.Wpf.ViewModels
         }
 
         /// <summary>
-        /// True hanya bila dokumen pratinjau ini berjudul Kematian — yaitu
-        /// satu-satunya pratinjau yang diizinkan dicetak ke printer langsung.
-        /// Judul pratinjau dari alur Buat Surat ("Pratinjau {nama}") maupun
-        /// Judul suraat ("Surat Kematian") dibaca dari <see cref="Title"/>.
-        /// Pengecualian: Daftar Hadir juga boleh dicetak langsung (tetap
-        /// boleh walau trial berakhir).
+        /// Tombol Cetak dapat dipakai? TRUE = tombol tampil dan hidup.
+        ///
+        /// Yang boleh menguncinya HANYA lisensi: selama trial berjalan atau
+        /// langganan aktif, tombol ini ada di semua pratinjau — termasuk jenis
+        /// surat yang bukan Kematian (aturan lama yang menyembunyikan tombol
+        /// kecuali Kematian/Daftar Hadir sudah dicabut karena membuat pengguna
+        /// berlisensi mengira cetak dihapus). Daftar Hadir tetap boleh dicetak
+        /// walau trial habis (pengecualian produk di <see cref="PenjagaLisensi"/>),
+        /// dan PDF yang gagal dimuat tidak bisa dicetak (dilaporkan view lewat
+        /// <see cref="TerapkanKesiapanDokumen"/>).
         /// </summary>
-        public bool BolehCetakPratinjauLangsung => SuDesApp.Data.Models.SuratConstants.KEMATIAN == JudulJenis() || Title?.IndexOf("Kematian", StringComparison.OrdinalIgnoreCase) >= 0 || SuDesApp.Services.PenjagaLisensi.ApakahDaftarHadir(Title);
+        public bool BolehCetak =>
+            _dokumenTermuat && BolehCetakPdfDokumenIni;
 
-        private string JudulJenis()
+        /// <summary>
+        /// Penjelasan di tooltip ketika tombol Cetak mati, supaya "Cetak" yang
+        /// abu-abu tidak terbaca sebagai fitur yang hilang (gejala lama: lenyap).
+        /// </summary>
+        public string TooltipCetak =>
+            BolehCetakPdfDokumenIni
+                ? "Cetak dokumen ini ke printer"
+                : PesanCetakDikunci;
+
+        /// <summary>
+        /// Tombol Ekspor dapat dipakai? Aturannya SAMA dengan <see cref="BolehCetak"/>:
+        /// tombol ada di semua pratinjau selama lisensi berlaku (trial berjalan atau
+        /// berlangganan), mati hanya saat trial habis / langganan berakhir / trial
+        /// belum dimulai, dan PDF-nya harus benar-benar ada.
+        /// </summary>
+        public bool BolehEkspor =>
+            _dokumenTermuat && CanExport && BolehCetakPdfDokumenIni;
+
+        /// <summary>
+        /// Tooltip tombol Ekspor: menjelaskan fungsinya saat hidup, dan sebab
+        /// kuncinya saat tombol mati.
+        /// </summary>
+        public string TooltipEkspor =>
+            BolehCetakPdfDokumenIni
+                ? "Simpan salinan PDF ini ke lokasi pilihan Anda"
+                : PesanCetakDikunci;
+
+        /// <summary>
+        /// Gerbang lisensi untuk dokumen ini, dibaca dari
+        /// <see cref="PenjagaLisensi.BolehCetakPdf"/> supaya Cetak, Ekspor, dan kedua
+        /// tooltip memakai SATU aturan — termasuk pengecualian Daftar Hadir yang
+        /// tetap boleh walau trial habis.
+        /// </summary>
+        private bool BolehCetakPdfDokumenIni =>
+            _penjaga is null || _penjaga.BolehCetakPdf(Title);
+
+        private string PesanCetakDikunci => SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci;
+
+        /// <summary>
+        /// View melaporkan hasil muat PDF. Dulu view menyetel
+        /// <c>PrintBtn.IsEnabled</c>/<c>ExportBtn.IsEnabled</c> langsung; nilai lokal
+        /// itu menimpa binding <see cref="BolehCetak"/> dan <see cref="BolehEkspor"/>.
+        /// Sekarang keduanya digabung di sini.
+        /// </summary>
+        public void TerapkanKesiapanDokumen(bool termuat)
         {
-            // Judul pratinjau "Pratinjau SKD Umum ..." -> SKD_UMUM, dst.
-            // Untuk kematian dipakai SuratConstants.KEMATIAN.
-            return Title ?? string.Empty;
+            if (!SetProperty(ref _dokumenTermuat, termuat)) return;
+            OnPropertyChanged(nameof(BolehCetak));
+            OnPropertyChanged(nameof(BolehEkspor));
+            OnPropertyChanged(nameof(TooltipCetak));
+            OnPropertyChanged(nameof(TooltipEkspor));
+        }
+
+        /// <summary>
+        /// Dipanggil langganan lemah saat keadaan lisensi berubah.
+        /// Tidak didiapkan ke dispatcher: yang naik hanya notifikasi properti
+        /// skalar (Binding WPF sudah merangkai sendiri ke thread UI), sedangkan
+        /// BeginInvoke membuat perubahan tertahan bila dispatcher sedang tidak
+        /// berputar — tombolnya tetap mati tanpa sebab yang terlihat.
+        /// </summary>
+        internal void KeadaanLisensiBerubah()
+        {
+            OnPropertyChanged(nameof(BolehCetak));
+            OnPropertyChanged(nameof(TooltipCetak));
+            OnPropertyChanged(nameof(BolehEkspor));
+            OnPropertyChanged(nameof(TooltipEkspor));
         }
 
         /// <summary>
@@ -187,14 +252,13 @@ namespace SuDesApp.Wpf.ViewModels
         {
             try
             {
-                // Ekspor PDF juga dikunci saat trial habis, kecuali Daftar Hadir.
-                // ExportAs sinkron — pesan ditampilkan fire-and-forget.
-                if (_penjaga is not null && !_penjaga.BolehCetakPdf(Title))
+                // Ekspor PDF dikunci bersama cetak: aturan yang sama dibaca dari
+                // BolehCetakPdfDokumenIni. ExportAs sinkron — pesan fire-and-forget.
+                if (!BolehCetakPdfDokumenIni)
                 {
                     if (_messageService != null)
                     {
-                        _ = _messageService.ShowInfoAsync(
-                            SuDesApp.Services.PenjagaLisensi.PesanCetakTerkunci);
+                        _ = _messageService.ShowInfoAsync(PesanCetakDikunci);
                     }
                     return;
                 }
@@ -255,6 +319,47 @@ namespace SuDesApp.Wpf.ViewModels
             var invalid = System.IO.Path.GetInvalidFileNameChars();
             var clean = new string(raw.Where(c => !invalid.Contains(c)).ToArray()).Trim();
             return string.IsNullOrWhiteSpace(clean) ? "Dokumen.pdf" : clean + ".pdf";
+        }
+    }
+
+    /// <summary>
+    /// Langganan lemah halaman pratinjau ke <see cref="PenjagaLisensi.Berubah"/>.
+    ///
+    /// Kenapa perlu sama sekali: tombol Cetak kini dikendalikan keadaan lisensi.
+    /// Tanpa notifikasi, halaman yang sudah terbuka saat pengguna mengaktifkan
+    /// lisensi (detak lisensi / halaman Langganan) tetap menampilkan tombol mati
+    /// — persis gejala "sudah berlisensi tapi tidak bisa cetak" yang dilaporkan.
+    /// Kenapa langganan LEMAH: PdfPreviewViewModel transient (satu per dokumen
+    /// yang dibuka), penjaganya singleton — langganan kuat menahan setiap
+    /// pratinjau yang pernah dibuka sampai aplikasi ditutup. Pola ini meniru
+    /// LanggananSambunganLemah untuk SambunganServerLisensi.
+    /// </summary>
+    internal sealed class LanggananLisensiLemah
+    {
+        private readonly WeakReference<PdfPreviewViewModel> _halaman;
+        private readonly PenjagaLisensi _sumber;
+
+        private LanggananLisensiLemah(PdfPreviewViewModel halaman, PenjagaLisensi sumber)
+        {
+            _halaman = new WeakReference<PdfPreviewViewModel>(halaman);
+            _sumber = sumber;
+            _sumber.Berubah += Tangani;
+        }
+
+        /// <summary>Daftarkan langganan lemah; umurnya mengikuti halaman.</summary>
+        public static void Daftar(PdfPreviewViewModel halaman, PenjagaLisensi sumber) =>
+            _ = new LanggananLisensiLemah(halaman, sumber);
+
+        private void Tangani()
+        {
+            if (_halaman.TryGetTarget(out var halaman))
+            {
+                halaman.KeadaanLisensiBerubah();
+                return;
+            }
+
+            // Halaman sudah dibuang: jangan biarkan singleton menahan apa pun.
+            _sumber.Berubah -= Tangani;
         }
     }
 }

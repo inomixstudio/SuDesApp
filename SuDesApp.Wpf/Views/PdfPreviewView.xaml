@@ -44,16 +44,26 @@
                             Width="32" Height="30"/>
                     <Button x:Name="FitWidthBtn" Content="⤢" Click="FitWidth_Click" ToolTip="Sesuaikan lebar"
                             Width="32" Height="30" Margin="8,0,8,0"/>
+                    <!-- Mengikuti aturan tombol Cetak di bawah: selalu tampil,
+                         mati hanya karena lisensi yang habis/belum aktif. -->
                     <Button x:Name="ExportBtn" Command="{Binding ExportCommand}"
-                            ToolTip="Simpan salinan PDF ini ke lokasi pilihan Anda"
+                            ToolTip="{Binding TooltipEkspor, FallbackValue='Simpan salinan PDF ini ke lokasi pilihan Anda'}"
+                            ToolTipService.ShowOnDisabled="True"
+                            IsEnabled="{Binding BolehEkspor, FallbackValue=True}"
                             Style="{StaticResource SuccessButton}" Margin="0,0,8,0">
                             <TextBlock>
                             <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Ekspor}"/><Run Text=" Ekspor"/>
                             </TextBlock>
                         </Button>
-                    <Button x:Name="PrintBtn" Content="Cetak" Click="Print_Click" ToolTip="Cetak dokumen ke printer (hanya untuk pratinjau Kematian; jenis lain lewat Simpan/Cetak Register)"
-                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
-                            Visibility="{Binding BolehCetakPratinjauLangsung, Converter={StaticResource BoolToVis}}"/>
+                    <!-- Tombol Cetak TAMPIL di semua pratinjau; yang mematikannya
+                         hanya lisensi (trial habis / belum aktif) lewat BolehCetak,
+                         bukan jenis suratnya. Tooltip ikut berubah supaya tombol
+                         yang abu-abu terbaca sebagai "terkunci", bukan "dihapus". -->
+                    <Button x:Name="PrintBtn" Content="Cetak" Click="Print_Click"
+                            ToolTip="{Binding TooltipCetak, FallbackValue='Cetak dokumen ke printer'}"
+                            ToolTipService.ShowOnDisabled="True"
+                            IsEnabled="{Binding BolehCetak, FallbackValue=True}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                     <Button Content="Batal" Command="{Binding BatalCommand}" ToolTip="Kembali ke tampilan awal"
                             Style="{StaticResource OutlineButton}"/>
                 </StackPanel>
