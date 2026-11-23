@@ -147,7 +147,8 @@ namespace SuDesApp.Wpf.Views
         /// mematikan, tidak pernah menyalakan kembali — padahal PdfPreviewView
         /// dipakai ulang untuk tiap dokumen yang dinavigasi. Tanpa ini, satu PDF
         /// yang gagal dimuat membuat panel "dokumen tidak ditemukan" dan tombol
-        /// Cetak/Ekspor/zoom mati PERMANEN untuk sisa sesi.
+        /// Cetak/Ekspor/zoom mati PERMANEN untuk sisa sesi. Keadaan Cetak dan
+        /// Ekspor sendiri tidak disetel di sini — lihat <see cref="TampilkanDokumen"/>.
         /// </summary>
         private async Task DisposeDocumentAsync()
         {
@@ -160,8 +161,14 @@ namespace SuDesApp.Wpf.Views
         {
             ScrollViewer.Visibility = Visibility.Visible;
             MissingPanel.Visibility = Visibility.Collapsed;
-            PrintBtn.IsEnabled = _document is not null;
-            ExportBtn.IsEnabled = _document is not null;
+            // PrintBtn dan ExportBtn TIDAK disetel IsEnabled-nya di sini: keduanya
+            // terikat pada PdfPreviewViewModel (lisensi + kesiapan dokumen), dan
+            // nilai lokal melepas binding itu sehingga tombol bisa mati walau
+            // lisensi masih berlaku — atau tetap hidup saat trial sudah habis.
+            // Kesiapan PDF dilaporkan lewat ViewModel agar keduanya digabung di
+            // satu tempat.
+            if (DataContext is PdfPreviewViewModel gerbangVm)
+                gerbangVm.TerapkanKesiapanDokumen(_document is not null);
             ZoomInBtn.IsEnabled = _document is not null;
             ZoomOutBtn.IsEnabled = _document is not null;
             FitWidthBtn.IsEnabled = _document is not null;
@@ -171,8 +178,8 @@ namespace SuDesApp.Wpf.Views
         {
             ScrollViewer.Visibility = Visibility.Collapsed;
             MissingPanel.Visibility = Visibility.Visible;
-            PrintBtn.IsEnabled = false;
-            ExportBtn.IsEnabled = false;
+            if (DataContext is PdfPreviewViewModel gerbangVm)
+                gerbangVm.TerapkanKesiapanDokumen(false);
             ZoomInBtn.IsEnabled = false;
             ZoomOutBtn.IsEnabled = false;
             FitWidthBtn.IsEnabled = false;
