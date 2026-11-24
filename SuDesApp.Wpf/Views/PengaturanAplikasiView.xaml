@@ -444,6 +444,49 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <!-- Baris pilihan bernilai teks (saat ini: bahasa tampilan).
+                                 Nilainya disimpan langsung saat pilihan berubah. -->
+                            <ItemsControl ItemsSource="{Binding RowsPilihan}" Margin="0,8,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="6" Padding="9,7" Margin="0,0,0,2">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Judul}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextBrush}"/>
+                                                    <TextBlock Text="{Binding Keterangan}" FontSize="13"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               TextWrapping="Wrap" MaxWidth="560" Margin="0,4,16,0"
+                                                               LineHeight="20"/>
+                                                </StackPanel>
+                                                <ComboBox Grid.Column="1" Style="{StaticResource FormCombo}"
+                                                          ItemsSource="{Binding Pilihan}"
+                                                          SelectedValue="{Binding Nilai}"
+                                                          SelectedValuePath="Kode"
+                                                          MinWidth="150"
+                                                          VerticalAlignment="Center"
+                                                          AutomationProperties.Name="{Binding Judul}"
+                                                          ToolTip="{Binding Keterangan}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -766,6 +809,11 @@
                                 <TextBlock Style="{StaticResource PathText}" Text="{Binding LokasiPreferensi}"
                                            ToolTip="{Binding LokasiPreferensi}"/>
                             </Border>
+
+                            <!-- Versi aplikasi: dibaca dari metadata rilis (csproj), bukan ditulis ulang di sini. -->
+                            <TextBlock Style="{StaticResource SettingDesc}" Margin="0,0,0,12"
+                                       Text="{Binding VersiAplikasi}"/>
+
                             <TextBlock Style="{StaticResource SettingDesc}" Margin="0,0,0,0"
                                        Text="Setiap tombol geser langsung tersimpan. Perubahannya berlaku pada login berikutnya atau saat aplikasi ditutup lalu dibuka kembali, sesuai fungsi masing-masing pilihan."/>
                         </StackPanel>

@@ -209,8 +209,29 @@ namespace SuDesApp.Utilities
         /// </summary>
         public const string KeyKecepatanAnimasi = "kecepatanAnimasi";
 
+        /// <summary>Kode bahasa tampilan aplikasi yang dipilih pengguna.</summary>
+        public const string KeyBahasa = "bahasa";
+        public const string BahasaId = "id";
+        public const string BahasaEnglish = "en";
+
         /// <summary>
-        /// Seberapa sering pemantau latar memeriksa data IDM baru
+        /// Ambil bahasa tampilan pengguna; nilai tidak dikenal / berkas rusak
+        /// tetap jatuh ke bawaan <see cref="BahasaId"/> (perilaku lama).
+        /// </summary>
+        public static string GetBahasa()
+        {
+            var nilai = GetString(KeyBahasa, BahasaId);
+            return nilai is "id" or "en" ? nilai : BahasaId;
+        }
+
+        /// <summary>
+        /// Simpan bahasa tampilan pengguna. Nilai di luar <c>\"id\"</c> / <c>\"en\"</c>
+        /// ditolak dan jatuh ke <see cref="BahasaId"/>.
+        /// </summary>
+        public static void SetBahasa(string nilai) =>
+            SetString(KeyBahasa, nilai is "id" or "en" ? nilai : BahasaId);
+
+        /// <summary>Seberapa sering pemantau latar memeriksa data IDM baru
         /// ("6jam", "24jam", "dibuka"). Dibaca lewat
         /// <c>IntervalPemantauanIdmPrefs</c> supaya nilai tak dikenal tetap
         /// jatuh ke bawaan enam jam. Tidak ada = bawaan (perilaku lama).
