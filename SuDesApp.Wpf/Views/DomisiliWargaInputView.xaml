@@ -162,12 +162,12 @@
                                  AcceptsReturn="True" TextWrapping="Wrap"
                                  VerticalScrollBarVisibility="Auto"
                                  Text="{Binding Keterangan, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="Atur keterangan sesuai keperluan."/>
+                                 ToolTip="Terisi otomatis dengan kalimat baku domisili. Boleh diubah; kosongkan bila paragraf keterangan tidak perlu dicetak."/>
                     </Grid>
 
                     <TextBlock FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"
                                TextWrapping="Wrap"
-                               Text="* Atur keterangan sesuai keperluan."/>
+                               Text="* Terisi otomatis; kosongkan bila paragraf tidak perlu dicetak."/>
                 </StackPanel>
             </Border>
 

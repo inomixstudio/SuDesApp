@@ -83,7 +83,7 @@
                                  AcceptsReturn="True" TextWrapping="Wrap"
                                  VerticalScrollBarVisibility="Auto"
                                  Text="{Binding Keterangan, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="Keterangan tambahan untuk surat"/>
+                                 ToolTip="Terisi otomatis dengan kalimat baku domisili instansi. Boleh diubah; wajib diisi."/>
                     </Grid>
 
                 </StackPanel>

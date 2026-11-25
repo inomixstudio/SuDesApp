@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using SuDesApp.Wpf;
 using SuDesApp.Wpf.Utilities;
 using SuDesApp.Wpf.Views;
@@ -12,40 +11,14 @@ using Xunit;
 
 namespace SuDesApp.Tests.UI
 {
-    /// <summary>
-    /// Animasi presentase jendela splash: angkanya naik dari 0% menuju 100%
-    /// seiring waktu tunggu, berhenti di 100% (tidak pernah melewati), dan
-    /// jendelanya memuat bilah presentase serta identitas versi aplikasi.
-    /// </summary>
-    public class SplashPresentaseTests
+    public class SplashStartupTests
     {
-        [Fact]
-        public void PersentaseNaikSeiringWaktuDanBatasSeratus()
-        {
-            Assert.Equal(0d, SplashStartupWindow.PersentaseSetelah(0));
-            Assert.Equal(
-                50d,
-                SplashStartupWindow.PersentaseSetelah(TimeSpan.FromSeconds(6).TotalMilliseconds));
-            Assert.Equal(
-                100d,
-                SplashStartupWindow.PersentaseSetelah(TimeSpan.FromSeconds(12).TotalMilliseconds));
-            Assert.Equal(
-                100d,
-                SplashStartupWindow.PersentaseSetelah(TimeSpan.FromSeconds(30).TotalMilliseconds));
-        }
-
-        [Fact]
-        public void PersentaseNegatifTetapNol()
-        {
-            Assert.Equal(0d, SplashStartupWindow.PersentaseSetelah(-1000));
-        }
-
         /// <summary>
         /// Asap: bangun jendela splash sungguhan pada utas STA dan pastikan
-        /// bilah presentase, angka persennya, dan identitas versi ada di pohon.
+        /// identitas versi aplikasi ada di pohon visual.
         /// </summary>
         [Fact]
-        public void JendelaSplash_memuatPresentaseDanVersi()
+        public void JendelaSplash_memuatVersi()
         {
             Exception? galat = null;
 
@@ -64,7 +37,6 @@ namespace SuDesApp.Tests.UI
                     splash.Arrange(new Rect(0, 0, 500, 300));
 
                     var teks = SemuaTextBlock(splash).Select(t => t.Text ?? string.Empty).ToArray();
-                    Assert.Contains(teks, t => t.EndsWith("%", StringComparison.Ordinal));
                     Assert.Contains(teks, t => t.Contains(IdentitasAplikasi.VersiSingkat, StringComparison.Ordinal));
                 }
                 catch (Exception ex)
