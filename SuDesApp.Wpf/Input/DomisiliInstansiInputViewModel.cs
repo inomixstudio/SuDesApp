@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Logging;
 using SuDesApp.Configuration;
 using SuDesApp.Data.Models;
+using SuDesApp.GeneratorPdf;
 using SuDesApp.Services;
 using SuDesApp.Utilities;
 
@@ -25,6 +26,30 @@ namespace SuDesApp.Wpf.Input
         }
 
         public string NamaJenis => SuratConstants.INSTANSI;
+
+        protected override async Task InitializeSpecificAsync()
+        {
+            if (string.IsNullOrWhiteSpace(Keterangan))
+            {
+                Keterangan = await GetDefaultKeteranganAsync();
+            }
+        }
+
+        // Kalimat baku ini sama dengan yang dicetak DomisiliInstansiGenerator; isian awal
+        // ini dapat diubah operator sebelum surat disimpan.
+        private async Task<string> GetDefaultKeteranganAsync()
+        {
+            try
+            {
+                var desa = await _unitOfWork.DesaRepository.GetInfoDesaAsync();
+                return $"Adalah benar domisili instansi tersebut diatas berada di wilayah administratif Desa {desa.NamaDesa} Kecamatan {desa.Kecamatan} {KopSurat.KataJenisKabupaten(desa)} {KopSurat.NamaKabupaten(desa)}.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Gagal membuat keterangan default domisili instansi");
+                return string.Empty;
+            }
+        }
 
         public string NamaInstansi
         {

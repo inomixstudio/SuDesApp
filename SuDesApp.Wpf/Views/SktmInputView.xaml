@@ -164,12 +164,12 @@
                                  AcceptsReturn="True" TextWrapping="Wrap"
                                  VerticalScrollBarVisibility="Auto"
                                  Text="{Binding Keterangan, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="Atur keterangan sesuai keperluan."/>
+                                 ToolTip="Terisi otomatis dengan kalimat baku SKTM. Boleh diubah bila ada yang kurang atau kurang tepat."/>
                     </Grid>
 
                     <TextBlock FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"
                                TextWrapping="Wrap"
-                               Text="* Atur keterangan sesuai keperluan."/>
+                               Text="* Terisi otomatis; boleh diubah bila perlu."/>
                 </StackPanel>
             </Border>
 

@@ -46,28 +46,6 @@ namespace SuDesApp.Wpf.Views
         /// teks yang sama diabaikan agar tidak menambah titik tahap palsu.</summary>
         private string? _teksTahapTerakhir;
 
-        // ===== Animasi presentase saat aplikasi dibuka =====
-
-        /// <summary>Bilah progres tentu yang terisi mengikuti presentase.</summary>
-        private ProgressBar? _barPersentase;
-
-        /// <summary>Teks presentase ("0%" ... "100%").</summary>
-        private TextBlock? _teksPersentase;
-
-        /// <summary>Penggerak animasi presentase (disetop saat jendela ditutup).</summary>
-        private System.Windows.Threading.DispatcherTimer? _timerPersentase;
-
-        /// <summary>Momen animasi presentase dimulai.</summary>
-        private DateTimeOffset _mulaiPersentase;
-
-        /// <summary>
-        /// Lamanya presentase berjalan menuju 100%. Presentase ini mengikuti
-        /// waktu tunggu, bukan kemajuan nyata (pekerjaan startup tak punya
-        /// penanda persis), sehingga nilainya dibatasi durasi yang cukup
-        /// longgar supaya aplikasi sudah terbuka sebelum angkanya penuh.
-        /// </summary>
-        private static readonly TimeSpan DurasiPersentase = TimeSpan.FromSeconds(12);
-
         public SplashStartupWindow() : this(null)
         {
         }
@@ -114,9 +92,8 @@ namespace SuDesApp.Wpf.Views
 
             grid.Children.Add(BuatKepala(warna, "SuDesApp", "Sistem Surat Desa"));
             Grid.SetRow(grid.Children[0], 0);
-            var strip = BuatStripProgres(warna);
-            grid.Children.Add(strip);
-            Grid.SetRow(strip, 1);
+            grid.Children.Add(BuatStripProgres(warna));
+            Grid.SetRow(grid.Children[1], 1);
             var (isi, tahap, deretTahap) = BuatIsi(warna);
             _tahap = tahap;
             _deretTahap = deretTahap;
@@ -137,8 +114,6 @@ namespace SuDesApp.Wpf.Views
                     EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
                 };
                 BeginAnimation(OpacityProperty, muncul);
-
-                MulaiAnimasiPersentase();
             };
         }
 
@@ -259,90 +234,18 @@ namespace SuDesApp.Wpf.Views
             }
         }
 
-        private FrameworkElement BuatStripProgres(WarnaTema warna)
+        private static FrameworkElement BuatStripProgres(WarnaTema warna)
         {
-            // Strip tipis penuh lebar di batas kepala–isi: bilah progres yang terisi
-            // mengikuti presentase dan angka persennya di sisi kanan. Warna
-            // mengikuti aksen tema.
-            _barPersentase = new ProgressBar
+            // Strip tipis penuh lebar di batas kepala–isi: progres tak tentu
+            // berjalan pelan, warna mengikuti aksen tema.
+            return new ProgressBar
             {
-                IsIndeterminate = false,
-                Minimum = 0,
-                Maximum = 100,
-                Value = 0,
+                IsIndeterminate = true,
                 Height = 4,
                 BorderThickness = new Thickness(0),
                 Background = warna.PrimerBrush,
                 Foreground = warna.OnPrimer
             };
-
-            _teksPersentase = new TextBlock
-            {
-                Text = "0%",
-                FontSize = 11,
-                FontWeight = FontWeights.Medium,
-                Foreground = warna.Teks,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(8, 0, 0, 0),
-                MinWidth = 34
-            };
-
-            var strip = new DockPanel();
-            DockPanel.SetDock(_teksPersentase, Dock.Right);
-            strip.Children.Add(_teksPersentase);
-            strip.Children.Add(_barPersentase);
-            return strip;
-        }
-
-        /// <summary>
-        /// Mulai animasi presentase 0% → 100% selama jendela splash tampil.
-        /// Angkanya bergerak halus (pembaruan tiap 30 ms) dan berhenti sendiri
-        /// setelah penuh; jendela ini akan ditutup App saat login siap tampil,
-        /// jadi presentase tidak pernah menahan pengguna lebih lama dari yang
-        /// sebenarnya dibutuhkan aplikasi.
-        /// </summary>
-        private void MulaiAnimasiPersentase()
-        {
-            if (_timerPersentase is not null || _barPersentase is null) return;
-
-            _mulaiPersentase = DateTimeOffset.Now;
-            _timerPersentase = new System.Windows.Threading.DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(30)
-            };
-            _timerPersentase.Tick += (_, _) =>
-            {
-                var persen = PersentaseSetelah(
-                    (DateTimeOffset.Now - _mulaiPersentase).TotalMilliseconds);
-
-                _barPersentase!.Value = persen;
-                if (_teksPersentase is not null)
-                {
-                    _teksPersentase.Text = $"{Math.Round(persen)}%";
-                }
-
-                if (persen >= 100 && _timerPersentase is not null)
-                {
-                    _timerPersentase.Stop();
-                }
-            };
-            _timerPersentase.Start();
-        }
-
-        /// <summary>
-        /// Hitung presentase tampilan dari lama jendela sudah terbuka. Dibatasi
-        /// 0–100 supaya angka tidak pernah turun saat jam berbunyi mundur dan
-        /// berhenti di 100% pada <see cref="DurasiPersentase"/>.
-        /// </summary>
-        internal static double PersentaseSetelah(double milidetikBerlalu) =>
-            Math.Clamp(milidetikBerlalu / DurasiPersentase.TotalMilliseconds * 100d, 0d, 100d);
-
-        /// <summary>Hentikan animasi presentase saat jendela splash ditutup.</summary>
-        protected override void OnClosed(EventArgs e)
-        {
-            _timerPersentase?.Stop();
-            _timerPersentase = null;
-            base.OnClosed(e);
         }
 
         /// <summary>
