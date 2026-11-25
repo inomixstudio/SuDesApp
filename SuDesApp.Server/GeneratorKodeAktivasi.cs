@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+
 namespace SuDesApp.Server;
 
 /// <summary>
@@ -40,17 +42,21 @@ public static class GeneratorKodeAktivasi
     public static string PolaTampil => $"{Awalan}-XXXX-XXXX";
 
     /// <summary>
-    /// Buat satu kode acak. <paramref name="acak"/> bisa disuntikkan pada uji;
-    /// bila null, dipakai <see cref="Random.Shared"/>. Hasilnya selalu
+    /// Buat satu kode acak. <paramref name="acak"/> hanya untuk uji yang butuh
+    /// hasil deterministik; bila null, dipakai <see cref="RandomNumberGenerator"/>
+    /// (CSPRNG), karena kode ini adalah kredensial aktivasi dan tidak boleh
+    /// dapat diprediksi dari beberapa kode yang bocor. Hasilnya selalu
     /// <see cref="PolaTampil"/>: huruf besar, dua segmen, satu tanda hubung.
     /// </summary>
     public static string Buat(Random? acak = null)
     {
-        var sumber = acak ?? Random.Shared;
         var badan = new char[PanjangBadan];
         for (int i = 0; i < PanjangBadan; i++)
         {
-            badan[i] = Alfabet[sumber.Next(Alfabet.Length)];
+            int indeks = acak is null
+                ? RandomNumberGenerator.GetInt32(Alfabet.Length)
+                : acak.Next(Alfabet.Length);
+            badan[i] = Alfabet[indeks];
         }
 
         return $"{Awalan}-{new string(badan, 0, 4)}-{new string(badan, 4, 4)}";

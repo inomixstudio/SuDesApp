@@ -28,6 +28,16 @@ namespace SuDesApp.Data.Repositories
             return count > 0;
         }
 
+        public async Task<SuratAntreanInfo?> GetByAntreanAsync(string idAntreanSinkron, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(idAntreanSinkron))
+                return null;
+
+            await EnsureConnectionOpenAsync(cancellationToken);
+            var query = _queryProvider.GetQuery("GetSuratByAntrean");
+            return await _connection.QueryFirstOrDefaultAsync<SuratAntreanInfo>(query, new { IdAntreanSinkron = idAntreanSinkron });
+        }
+
         private async Task<int> GetOrCreateWargaAsync(SuratData suratData, IDbTransaction transaction, CancellationToken cancellationToken)
         {
             if (suratData.Warga == null)

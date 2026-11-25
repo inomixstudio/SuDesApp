@@ -107,11 +107,13 @@ namespace SuDesApp.Data.Queries
                     {
                         var queryText = CleanQuery(currentQuery.ToString().Trim());
                         ValidateQuery(currentQueryName, queryText);
-                        // Definisi ganda: yang TERAKHIR menang (mis. InsertSurat
-                        // didefinisikan dua kali di SuratQueries.sql). Ditolak
-                        // berisik kini diganti penanda log supaya tidak diam-diam.
+                        // Definisi ganda = kegagalan konfigurasi yang harus gagal
+                        // keras saat startup: dulu "yang terakhir menang" membuat
+                        // bug penanda salah tempat (mis. InsertSurat) lolos tanpa
+                        // suara. Menolak di sini menjamin definisi tetap tunggal.
                         if (_queries.ContainsKey(currentQueryName))
-                            _logger?.LogWarning("Query '{QueryName}' didefinisikan dua kali — definisi terakhir dipakai.", currentQueryName);
+                            throw new InvalidOperationException(
+                                $"Query '{currentQueryName}' didefinisikan dua kali di {Path.GetFileName(_filePath)} — hapus salah satu definisi.");
                         _queries[currentQueryName] = queryText;
                         _logger?.LogDebug("Loaded query '{QueryName}': {QueryText}", currentQueryName, queryText);
                         currentQuery.Clear();
@@ -129,7 +131,8 @@ namespace SuDesApp.Data.Queries
                 var queryText = CleanQuery(currentQuery.ToString().Trim());
                 ValidateQuery(currentQueryName, queryText);
                 if (_queries.ContainsKey(currentQueryName))
-                    _logger?.LogWarning("Query '{QueryName}' didefinisikan dua kali — definisi terakhir dipakai.", currentQueryName);
+                    throw new InvalidOperationException(
+                        $"Query '{currentQueryName}' didefinisikan dua kali di {Path.GetFileName(_filePath)} — hapus salah satu definisi.");
                 _queries[currentQueryName] = queryText;
                 _logger?.LogDebug("Loaded query '{QueryName}': {QueryText}", currentQueryName, queryText);
             }
