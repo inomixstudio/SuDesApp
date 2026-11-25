@@ -290,10 +290,7 @@ itu:
 2. Tambahkan semua environment variables di atas.
 3. Pasang volume di `/lisensi` (untuk kunci penandatangan).
 4. Buka domain, pastikan HTTPS aktif (Railway menyediakan `*.up.railway.app`).
-5. Di dashboard Midtrans: Settings → Configuration → set **Payment Notification
-   URL** = `https://<host>/webhook-pembayaran`. Simpan (cek kotak "receive
-   notification after payment made via payment gateway").
-6. Catat `LISENSI_KEY_PATH` yang dibuat server (isi volume `/lisensi/keys`).
+5. Catat `LISENSI_KEY_PATH` yang dibuat server (isi volume `/lisensi/keys`).
 
 ### Opsi B — Render
 
@@ -301,7 +298,6 @@ itu:
 2. Set env vars (di atas) + `LISENSI_KEY_PATH=/lisensi/keys/lisensi-signing.key`.
 3. Add a persisted Disk at `/lisensi` (Render "Disks" feature).
 4. Domain: Render memberi `*.onrender.com` HTTPS.
-5. Set Payment Notification URL Midtrans ke `https://<host>/webhook-pembayaran`.
 
 ### Opsi C — VPS
 
@@ -314,7 +310,6 @@ itu:
      -e ASPNETCORE_ENVIRONMENT=Production \
      -e SUPABASE_HOST=... \
      -e SUPABASE_DB_USER=sudes_server.<project-ref> -e SUPABASE_DB_PASSWORD=... \
-     -e MIDTRANS_SERVER_KEY=... -e MIDTRANS_SANDBOX=false \
      -e SUDES_ADMIN_OPERATORS__0__ID=operator-utama \
      -e SUDES_ADMIN_OPERATORS__0__NAME="Operator Utama" \
      -e SUDES_ADMIN_OPERATORS__0__TOKEN=... \
@@ -340,9 +335,7 @@ itu:
    menerapkan `schema.sql` saat start.
 
 3. Pasang HTTPS: Caddy (`Caddyfile` cepat) atau Nginx + certbot, reverse proxy
-   ke `localhost:8080`. Webhook Midtrans hanya menerima HTTPS dan pelanggan
-   memakai HTTPS juga.
-4. Set Payment Notification URL Midtrans ke `https://domain/webhook-pembayaran`.
+   ke `localhost:8080`. Aplikasi desktop dan pelanggan juga wajib memakai HTTPS.
 
 ## Langkah setelah deploy
 
@@ -376,15 +369,8 @@ itu:
    pembelian tidak dapat dipalsukan.
 5. **Putar kata sandi DB Supabase** — selama pengembangan, kata sandi pernah
    tertulis di chat; ganti via Dashboard → Settings → Database → Reset password.
-6. Halaman checkout: `https://<host>/checkout` — bisa di-link dari menu
-   "Langganan" di aplikasi atau dibuka langsung (lihat catatan bawah).
-7. **   Saat memperbarui server ini**: jalankan ulang `schema.sql` (aman diulang)
+6. **Saat memperbarui server ini**: jalankan ulang `schema.sql` (aman diulang)
    atau set `SUPABASE_MIGRATE_PASSWORD` supaya server menerapkannya sendiri.
-   Rekonsiliasi memakai fungsi `dir_tagihan_belum_dibayar` yang baru ada di
-   versi skema ini; bila fungsinya belum ada, log akan menyebutkannya dan
-   rekonsiliasi dilewati — webhook tetap berjalan seperti biasa.
-8. **Cek rekonsiliasi sekali** setelah deploy: `POST /admin/rekonsiliasi`
-   dengan operator berizin `payments.reconcile` harus membalas hitungan (mis. `diperiksa: 0`).
 
 ## Catatan keamanan
 
@@ -393,18 +379,11 @@ itu:
   istimewa atau RLS belum aktif. Tanpa ini, satu bug query bisa menyentuh data
   desa lain.
 - **HTTPS mutlak.** Tanpa HTTPS, kode aktivasi & token lisensi bisa dicuri
-  dengan menguping jaringan; webhook Midtrans pun butuh HTTPS.
-- Webhook `POST /webhook-pembayaran` wajib HTTPS dan sudah fail-closed
-  (signature SHA512 Midtrans). Jangan nonaktifkan verifikasi.
+  dengan menguping jaringan.
 - API `/admin/*` menolak 503 bila belum ada operator terkonfigurasi, 401 untuk
   identitas/token yang salah, dan 403 bila operator tidak memiliki izin rute.
   Audit terstruktur mencatat ID operator, izin, rute, hasil, dan trace ID per
-  permintaan. Endpoint rekonsiliasi mensyaratkan `payments.reconcile` karena
-  membaca daftar tagihan SEMUA desa.
-- Rekonsiliasi **tidak pernah** memberi hak akses atas dasar dugaan: status yang
-  tidak bisa dipastikan (404 / HTTP gagal / jaringan mati) dihitung `tidakPasti`
-  dan tagihannya dibiarkan. Nominal di luar tagihan dan status pembayaran yang
-  belum berduit juga tidak memperpanjang — aturannya satu tempat dengan webhook.
+  permintaan.
 - Rate limiting ada secara bawaan pada `/aktivasi` (20/menit/IP) dan
   `/buat-tagihan` (5/menit/IP).
 - Server hanya menangani urusan langganan — tidak ada data surat desa yang lewat

@@ -177,6 +177,11 @@ namespace SuDesApp.Configuration
 
                 await CadangkanSebelumHapusN7Async();
 
+                // Semua penghapusan dalam satu transaksi: bila salah satu gagal, tidak
+                // ada yang tertinggal setengah jalan (mis. NTCR hilang, Surat masih ada).
+                // Tanpa Commit, dispose transaksi melakukan rollback.
+                using var transaksi = connection.BeginTransaction();
+
                 if (suratN7 > 0)
                 {
                     if (await TableExistsAsync(connection, "NTCR"))
@@ -186,22 +191,23 @@ namespace SuDesApp.Configuration
                                 SELECT s.ID_Surat FROM Surat s
                                 INNER JOIN JenisSurat j ON j.ID_Jenis = s.ID_Jenis
                                 WHERE j.NamaJenis = @Jenis COLLATE NOCASE)",
-                            new { Jenis = jenisN7 });
+                            new { Jenis = jenisN7 }, transaksi);
                     }
 
                     // Hapus suratnya selagi baris jenis suratnya masih ada (sumber nama jenis).
                     await connection.ExecuteAsync(@"
                         DELETE FROM Surat WHERE ID_Jenis IN (
                             SELECT ID_Jenis FROM JenisSurat WHERE NamaJenis = @Jenis COLLATE NOCASE)",
-                        new { Jenis = jenisN7 });
+                        new { Jenis = jenisN7 }, transaksi);
                 }
 
                 if (jenisN7Tersisa > 0)
                 {
                     await connection.ExecuteAsync(
-                        "DELETE FROM JenisSurat WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 });
+                        "DELETE FROM JenisSurat WHERE NamaJenis = @Jenis COLLATE NOCASE", new { Jenis = jenisN7 }, transaksi);
                 }
 
+                transaksi.Commit();
                 _logger.LogInformation("Migrasi N7 selesai: sisa data Model N7 dihapus.");
             }
             catch (Exception ex)

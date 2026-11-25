@@ -159,6 +159,25 @@ namespace SuDesApp.Wpf.ViewModels
                         $"Installer pembaruan {_updateInfo.Version} tersimpan di:\n{downloadPath}",
                         "hasil-installer");
                 }
+                else if (!VerifikasiTandaTanganInstaller.Valid(downloadPath, out var keteranganTandaTangan))
+                {
+                    // Tanpa tanda tangan Authenticode yang valid, installer tidak dijalankan.
+                    _logger.LogError("Installer ditolak: tanda tangan tidak valid ({Status}) untuk {Berkas}", keteranganTandaTangan, downloadPath);
+                    TampilkanPesan(JenisPesanInline.Galat,
+                        "Installer ditolak demi keamanan",
+                        "Berkas installer tidak memiliki tanda tangan digital yang valid, sehingga tidak dijalankan. " +
+                        "Hubungi pengembang aplikasi. Berkas unduhan dihapus.",
+                        "hasil-installer");
+                    try
+                    {
+                        File.Delete(downloadPath);
+                    }
+                    catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                    {
+                        // Berkas terkunci atau sudah hilang; installer tetap tidak dijalankan.
+                        _logger.LogWarning(ex, "Gagal menghapus installer yang ditolak: {Berkas}", downloadPath);
+                    }
+                }
                 else
                 {
                     // Catat di riwayat: installer dijalankan pengguna. Hasil akhirnya

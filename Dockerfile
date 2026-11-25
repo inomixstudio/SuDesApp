@@ -5,7 +5,7 @@
 #   SUPABASE_DB_USER (role terbatas: sudes_server.<project-ref>) + SUPABASE_DB_PASSWORD
 #   SUPABASE_MIGRATE_USER + SUPABASE_MIGRATE_PASSWORD (opsional — hanya untuk
 #     menerapkan schema.sql saat start; tanpa itu skema tidak diubah)
-#   MIDTRANS_SERVER_KEY, MIDTRANS_SANDBOX, SUDES_ADMIN_OPERATORS__0__TOKEN, LISENSI_KEY_PATH
+#   SUDES_ADMIN_OPERATORS__0__TOKEN, LISENSI_KEY_PATH
 #   ASPNETCORE_ENVIRONMENT=Production, ASPNETCORE_URLS=http://+:8080
 FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
