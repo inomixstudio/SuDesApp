@@ -265,9 +265,13 @@ public sealed class ImporAntreanSurat
             // Kolom nik pada baris antrean adalah salinan yang dipakai Android
             // untuk pencarian; pastikan pihak warga tetap punya NIK bila isian
             // Android belum mengisinya (mis. form yang hanya meminta nama).
-            if (string.IsNullOrWhiteSpace(surat.Warga?.NIK) && !string.IsNullOrWhiteSpace(baris.Nik))
+            // Jenis tanpa objek Warga (mis. INSTANSI) tidak punya warga untuk
+            // diisi NIK pencarian — lewati, bukan NRE.
+            if (surat.Warga is not null
+                && string.IsNullOrWhiteSpace(surat.Warga.NIK)
+                && !string.IsNullOrWhiteSpace(baris.Nik))
             {
-                surat.Warga!.NIK = baris.Nik!.Trim();
+                surat.Warga.NIK = baris.Nik!.Trim();
             }
 
             // Jenis yang form desktopnya tidak punya kolom NIK memakai NIK
@@ -280,7 +284,8 @@ public sealed class ImporAntreanSurat
                 var nikKhusus = NikKhususUntuk(baris.IdJenis);
                 if (nikKhusus is not null)
                 {
-                    surat.Warga!.NIK = nikKhusus;
+                    surat.Warga ??= new WargaData();
+                    surat.Warga.NIK = nikKhusus;
                 }
             }
 
@@ -298,6 +303,23 @@ public sealed class ImporAntreanSurat
             // sinkron_log belum mencatat. Null untuk surat desktop murni.
             surat.IdAntreanSinkron = baris.ClientUuid?.ToString()
                 ?? baris.Id.ToString();
+
+            // Idempotensi: kalau surat dengan IdAntreanSinkron ini sudah pernah
+            // masuk register (crash antara AddSuratAsync dan penghapusan antrean),
+            // jangan insert ulang — laporkan berhasil dengan id dan nomor resmi
+            // yang sudah ada, supaya pemanggil menandai antrean selesai dan Android
+            // menerima nomor yang sama. Tanpa ini surat yang sama terimpor dua
+            // kali dengan dua nomor resmi berbeda.
+            var sudahAda = await _unitOfWork.SuratRepository
+                .GetByAntreanAsync(surat.IdAntreanSinkron, ct)
+                .ConfigureAwait(false);
+            if (sudahAda is not null)
+            {
+                _logger.LogInformation(
+                    "Antrean {AntreanId} (client_uuid {ClientUuid}) sudah pernah diimpor; dilewati.",
+                    baris.Id, baris.ClientUuid);
+                return new HasilImpor(true, sudahAda.IdSurat, sudahAda.NomorSurat, diterapkan, null);
+            }
 
             // Field "otomatis" di skema: Android tidak menampilkannya,
             // jadi desktop yang menghitungnya — sama seperti saat form

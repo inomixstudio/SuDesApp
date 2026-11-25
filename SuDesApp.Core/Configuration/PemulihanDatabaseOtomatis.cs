@@ -286,7 +286,10 @@ namespace SuDesApp.Configuration
                 {
                     // Cadangan yang dibuat sebelum impor/pemulihan adalah kandidat
                     // yang paling mungkin masih sehat setelah database aktif rusak.
+                    // Berkas sementara impor (desa_import_*.db) yang tertinggal dari
+                    // crash bisa tidak lengkap — jangan dijadikan kandidat.
                     foreach (var berkas in Directory.EnumerateFiles(folder, "desa*.db")
+                                 .Where(b => !Path.GetFileName(b).StartsWith("desa_import_", StringComparison.OrdinalIgnoreCase))
                                  .OrderByDescending(File.GetLastWriteTimeUtc))
                     {
                         Tambah(berkas);

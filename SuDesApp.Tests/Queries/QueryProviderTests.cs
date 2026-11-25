@@ -1,4 +1,7 @@
+using Dapper;
+using Microsoft.Data.Sqlite;
 using SuDesApp.Data.Queries;
+using SuDesApp.Data.Repositories;
 using Xunit;
 
 namespace SuDesApp.Tests.Queries;
@@ -55,6 +58,53 @@ public sealed class QueryProviderTests
 
         Assert.False(string.IsNullOrWhiteSpace(query));
         Assert.Contains("GROUP BY", query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void InsertSurat_menyimpan_kolom_sinkron()
+    {
+        // Dulu definisi InsertSurat ganda: versi sederhana yang terakhir terbaca
+        // diam-diam membuang AdditionalData, Status, dan IdAntreanSinkron.
+        var query = Muat().GetQuery("InsertSurat");
+
+        Assert.Contains("IdAntreanSinkron", query, StringComparison.Ordinal);
+        Assert.Contains("AdditionalData", query, StringComparison.Ordinal);
+        Assert.Contains("Status", query, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GetSuratByAntrean_mengembalikan_id_dan_nomor_surat()
+    {
+        // Dipakai impor ulang untuk idempotensi: nomor resmi yang sudah ada harus
+        // ikut dikembalikan, bukan hanya tanda "sudah ada".
+        using var conn = new SqliteConnection("Data Source=:memory:");
+        conn.Open();
+        conn.Execute("CREATE TABLE Surat (ID_Surat INTEGER PRIMARY KEY, NomorSurat TEXT NULL, IdAntreanSinkron TEXT NULL);");
+        conn.Execute("INSERT INTO Surat (NomorSurat, IdAntreanSinkron) VALUES ('470/001/Ds/2026', 'uuid-1');");
+        var query = Muat().GetQuery("GetSuratByAntrean");
+
+        var info = conn.QueryFirstOrDefault<SuratAntreanInfo>(query, new { IdAntreanSinkron = "uuid-1" });
+
+        Assert.NotNull(info);
+        Assert.Equal(1, info.IdSurat);
+        Assert.Equal("470/001/Ds/2026", info.NomorSurat);
+        Assert.Null(conn.QueryFirstOrDefault<SuratAntreanInfo>(query, new { IdAntreanSinkron = "tidak-ada" }));
+    }
+
+    [Fact]
+    public void Definisi_query_ganda_menolak_dimuat()
+    {
+        var jalur = Path.Combine(Path.GetTempPath(), $"query-ganda-{Guid.NewGuid():N}.sql");
+        try
+        {
+            File.WriteAllText(jalur, "-- Dup\nSELECT 1;\n\n-- Dup\nSELECT 2;\n");
+
+            Assert.Throws<InvalidOperationException>(() => new QueryProvider(jalur));
+        }
+        finally
+        {
+            File.Delete(jalur);
+        }
     }
 
     [Fact]

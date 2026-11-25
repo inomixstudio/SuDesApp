@@ -77,6 +77,7 @@ public sealed class CetakContohSuratTests : IDisposable
     private sealed class SuratRepoPalsu : ISuratRepository
     {
         public Task<int> InsertAsync(SuratData entity, IDbTransaction? transaction = null, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public Task<SuratAntreanInfo?> GetByAntreanAsync(string idAntreanSinkron, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<bool> UpdateAsync(SuratData entity, IDbTransaction? transaction = null, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<bool> UpdateStatusAsync(int id, string status, IDbTransaction? transaction = null, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<bool> DeleteAsync(int id, IDbTransaction? transaction = null, CancellationToken cancellationToken = default) => throw new NotImplementedException();

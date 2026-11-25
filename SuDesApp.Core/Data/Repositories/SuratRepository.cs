@@ -52,6 +52,13 @@ namespace SuDesApp.Data.Repositories
         public string Perihal { get; init; } = string.Empty;
     }
 
+    /// <summary>Surat yang sudah berasal dari antrean Android (kunci idempotensi).</summary>
+    public sealed class SuratAntreanInfo
+    {
+        public int IdSurat { get; set; }
+        public string? NomorSurat { get; set; }
+    }
+
     public interface ISuratRepository
     {
         Task<int> InsertAsync(SuratData entity, IDbTransaction? transaction = null, CancellationToken cancellationToken = default);
@@ -83,6 +90,13 @@ namespace SuDesApp.Data.Repositories
         Task<IEnumerable<SuratData>> GetSuratByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
         Task<Dictionary<string, int>> GetSuratStatisticsByStatusAsync(CancellationToken cancellationToken = default);
         Task<bool> CheckNomorSuratExistsAsync(string nomorSurat, int? excludeId = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Surat dengan IdAntreanSinkron tersebut, atau null bila belum ada. Kunci
+        /// idempotensi impor antrean Android: crash antara insert dan hapus baris
+        /// antrean tidak boleh membuat surat yang sama terimpor dua kali.
+        /// </summary>
+        Task<SuratAntreanInfo?> GetByAntreanAsync(string idAntreanSinkron, CancellationToken cancellationToken = default);
         Task<Dictionary<string, object>> GetDatabaseStatsAsync();
         Task<WargaData> GetWargaByIdAsync(int idWarga, CancellationToken cancellationToken = default);
         Task<WargaData> GetWargaByNikAsync(string nik, CancellationToken cancellationToken = default);
@@ -267,6 +281,9 @@ namespace SuDesApp.Data.Repositories
                 "CREATE INDEX IF NOT EXISTS idx_surat_jenis ON Surat(ID_Jenis);",
                 "CREATE INDEX IF NOT EXISTS idx_surat_warga ON Surat(ID_Warga);",
                 "CREATE INDEX IF NOT EXISTS idx_surat_status ON Surat(Status);",
+                // Kueri idempotensi impor antrean (GetSuratByAntrean) mencari
+                // IdAntreanSinkron; tanpa indeks setiap impor memindai seluruh Surat.
+                "CREATE INDEX IF NOT EXISTS idx_surat_antrean_sinkron ON Surat(IdAntreanSinkron);",
 
                 // Komposit (Status, TanggalSurat) untuk tombol cepat status di register
                 // (Draft/Aktif/Dibatalkan). Diuji pada database 100.000 surat: tab Draft
@@ -438,7 +455,8 @@ namespace SuDesApp.Data.Repositories
                             suratData.Keperluan,
                             ID_Warga = idWarga,
                             suratData.AdditionalData,
-                            Status = suratData.Status
+                            Status = suratData.Status,
+                            IdAntreanSinkron = suratData.IdAntreanSinkron
                         }, transaction);
                         break;
                     }

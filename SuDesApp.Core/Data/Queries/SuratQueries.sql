@@ -1,4 +1,4 @@
-﻿
+
 -- InsertGarapan
 INSERT INTO Garapan (ID_Surat, PemilikTanah, Luas, Lokasi, NomorPersil, KeteranganGarapan)
 VALUES (@ID_Surat, @PemilikTanah, @Luas, @Lokasi, @NomorPersil, @KeteranganGarapan);
@@ -237,21 +237,21 @@ SELECT
     w.NIK AS NIKPenjamin, w.Nama AS NamaPenjamin, w.Pekerjaan AS PekerjaanPenjamin
 FROM IjinTinggal ijt
 LEFT JOIN Warga w ON ijt.ID_Penjamin = w.ID_Warga
-WHERE ijt.ID_Surat = @ID_Surat;-- InsertSurat
+WHERE ijt.ID_Surat = @ID_Surat;
+
+-- InsertSurat
 INSERT INTO Surat (
     ID_Jenis, NomorSurat, TanggalSurat, Keterangan, 
-    Keperluan, ID_Warga, AdditionalData, Status
+    Keperluan, ID_Warga, AdditionalData, Status, IdAntreanSinkron
 )
 VALUES (
     @ID_Jenis, @NomorSurat, @TanggalSurat, @Keterangan, 
-    @Keperluan, @ID_Warga, @AdditionalData, COALESCE(@Status, 'Draft')
+    @Keperluan, @ID_Warga, @AdditionalData, COALESCE(@Status, 'Draft'), @IdAntreanSinkron
 );
 SELECT last_insert_rowid();
 
--- InsertSurat
-INSERT INTO Surat (ID_Jenis, NomorSurat, TanggalSurat, Keterangan, Keperluan, ID_Warga)
-VALUES (@ID_Jenis, @NomorSurat, @TanggalSurat, @Keterangan, @Keperluan, @ID_Warga);
-SELECT last_insert_rowid();
+-- GetSuratByAntrean
+SELECT ID_Surat AS IdSurat, NomorSurat FROM Surat WHERE IdAntreanSinkron = @IdAntreanSinkron LIMIT 1;
 
 -- UpdateSurat
 UPDATE Surat

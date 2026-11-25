@@ -197,6 +197,17 @@ namespace SuDesApp.Utilities
                     $"Unduhan terhenti di {Persen}% ({Ringkasan}). Sisa unduhan tetap tersimpan dan bisa dilanjutkan.");
             }
 
+            if (Total == 0 && string.IsNullOrWhiteSpace(_sha256Harapan))
+            {
+                // Server tidak menyebutkan panjang berkas dan tidak ada sidik jari
+                // untuk diverifikasi: kelengkapan unduhan tidak bisa dipastikan.
+                // Body terpotong (koneksi putus pada close-delimited) tidak
+                // terdeteksi, jadi catat supaya tidak gagal diam-diam.
+                _logger.LogWarning(
+                    "Unduhan {Url} tanpa Content-Length maupun SHA-256; kelengkapan berkas tidak dapat diverifikasi.",
+                    _url);
+            }
+
             SelesaikanKeTujuan(progress);
             return true;
         }
