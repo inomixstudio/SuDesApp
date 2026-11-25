@@ -420,17 +420,38 @@ namespace SuDesApp.Data.Repositories
                 int idWarga = await GetOrCreateWargaAsync(suratData, transaction!, cancellationToken);
 
                 var query = _queryProvider.GetQuery("InsertSurat");
-                var suratId = await _connection.ExecuteScalarAsync<int>(query, new
+                // Nomor bisa tertabrak penyimpanan paralel (WPF vs sinkron Android) di
+                // antara pengecekan dan INSERT. UNIQUE menolak baris kedua; galat itu
+                // galat per-statement (transaksi tetap utuh), jadi cukup bangkitkan nomor
+                // segar dan ulangi INSERT, bukan menggagalkan penyimpanan.
+                int suratId = 0;
+                for (int percobaan = 1; ; percobaan++)
                 {
-                    suratData.ID_Jenis,
-                    suratData.NomorSurat,
-                    TanggalSurat = suratData.TanggalSurat.ToString("yyyy-MM-dd"),
-                    suratData.Keterangan,
-                    suratData.Keperluan,
-                    ID_Warga = idWarga,
-                    suratData.AdditionalData,
-                    Status = suratData.Status
-                }, transaction);
+                    try
+                    {
+                        suratId = await _connection.ExecuteScalarAsync<int>(query, new
+                        {
+                            suratData.ID_Jenis,
+                            suratData.NomorSurat,
+                            TanggalSurat = suratData.TanggalSurat.ToString("yyyy-MM-dd"),
+                            suratData.Keterangan,
+                            suratData.Keperluan,
+                            ID_Warga = idWarga,
+                            suratData.AdditionalData,
+                            Status = suratData.Status
+                        }, transaction);
+                        break;
+                    }
+                    catch (SqliteException ex) when (percobaan < 3
+                        && ex.SqliteErrorCode == 19
+                        && ex.Message.Contains("NomorSurat", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning(
+                            "Nomor surat {NomorSurat} bentrok saat INSERT (percobaan {Percobaan}); membangkitkan ulang.",
+                            suratData.NomorSurat, percobaan);
+                        suratData.NomorSurat = await _jenisSuratRepository.GenerateNomorSuratAsync(suratData.KodeJenis!);
+                    }
+                }
 
                 if (suratId <= 0)
                     throw new DataAccessException("Failed to insert surat, invalid ID returned.");

@@ -228,8 +228,8 @@ namespace SuDesApp.Data.Repositories
             // Tidak memakai GetWithCacheAsync: hasil negatif
             // ("nomor belum dipakai") disimpan 10 menit di cache dan tidak pernah
             // divalidasi ulang saat surat disimpan, sehingga nomor yang baru tersimpan
-            // masih dianggap kosong -> deret unik menghasilkan nomor ganda, lalu batu
-            // di InsertAsync (UNIQUE / "Nomor surat sudah digunakan").
+            // masih dianggap kosong. Bila tetap bentrok, UNIQUE di tabel Surat menolak
+            // INSERT dan SuratRepository.InsertAsync membangkitkan ulang nomornya.
             var count = await SqlMapper.ExecuteScalarAsync<int>(
                 _uow.Connection,
                 "SELECT COUNT(*) FROM Surat WHERE NomorSurat = @NomorSurat",

@@ -106,7 +106,7 @@ pengumuman. Data yang diproses:
 | **ID perangkat** | saat aktivasi/cek lisensi | membatasi jumlah PC per langganan. Berupa SHA-256 dari nama komputer + nama pengguna Windows, dipotong ±128 bit — bukan nomor seri perangkat keras, bukan nama komputer mentah |
 | **Nama desa, paket, masa aktif** | dikembalikan server di dalam token lisensi bertanda tangan | menampilkan status langganan dan mengizinkan pemakaian offline |
 | **Tagihan** | saat tagihan dibuat | order id, paket, nominal, dan jumlah hari — dipakai mencocokkan pembayaran |
-| **Pembayaran** | saat pembayaran dikonfirmasi gateway atau dicatat operator | nominal, status, waktu, referensi; pada pembayaran manual dapat ditambah catatan dan **gambar bukti transfer** (JPEG/PNG/WEBP maks. 2 MB) |
+| **Pembayaran** | saat pembayaran dicatat operator | nominal, status, waktu, referensi; pada pembayaran manual dapat ditambah catatan dan **gambar bukti transfer** (JPEG/PNG/WEBP maks. 2 MB) |
 | **Kontak desa** | bila dicatat operator saat pendaftaran | keperluan menagih dan menghubungi desa |
 | **Daftar perangkat** | otomatis saat aktivasi | waktu pertama dan terakhir terlihat tiap perangkat |
 | **Log server** | otomatis | alamat IP, waktu, jalur permintaan, kode jawaban — untuk keamanan dan pembatas laju |
@@ -124,19 +124,15 @@ dalam database desa supaya ikut tercadang bersama data desa.
 
 ## 5. Pembayaran
 
-Pembayaran berbayar diproses oleh **Midtrans** sebagai penyedia gateway.
-Halaman pembayaran Midtrans dapat meminta nama, surel, nomor telepon, dan
-instrumen pembayaran sesuai kebijakan Midtrans. **Kami tidak menerima dan tidak
-menyimpan nomor kartu, kode CVV, atau PIN.** Yang kami terima hanyalah status
-transaksi (mis. lunas/kedaluwarsa), order id, nominal, dan waktu pembayaran.
-
-Untuk pembayaran manual (QRIS statis atau transfer bank), operator kami
-mencatatnya ke sistem pembukuan. Catatan dan gambar bukti transfer dapat
+Pembayaran berbayar dilakukan secara manual melalui QRIS statis atau transfer
+bank, lalu **dicatat oleh operator kami** ke sistem pembukuan. Kami tidak
+menggunakan gateway pembayaran dan **tidak menerima atau menyimpan nomor kartu,
+kode CVV, atau PIN.** Catatan dan gambar bukti transfer dapat
 memuat nama pengirim, nomor rekening, dan nominal — disimpan hanya untuk
 verifikasi dan audit pembayaran, serta hanya dapat dibuka operator yang
 berwenang.
 
-Halaman `checkout` hanya meminta **kode aktivasi** dan pilihan paket. Halaman
+Halaman pemilihan paket hanya meminta **kode aktivasi** dan pilihan paket. Halaman
 itu tidak memasang cookie analitik maupun pelacak iklan.
 
 ---
@@ -233,7 +229,6 @@ Aplikasi Android (`android/`) dipakai operator desa di lapangan. Fitur ini
 
 | Pihak ketiga | Keperluan | Data | Lokasi pemrosesan |
 |---|---|---|---|
-| Midtrans | gateway pembayaran | data transaksi dan instrumen pembayaran sesuai kebijakan Midtrans | Indonesia |
 | Penyedia basis data & hosting server lisensi (mis. Supabase/PostgreSQL) | menyimpan data langganan | tabel pelanggan, langganan, tagihan, pembayaran, perangkat | sesuai wilayah yang dipilih operator; dapat di luar Indonesia |
 | Supabase proyek desa (opsional, sinkronisasi Android) | antrean surat dari perangkat Android | isian surat: nama, NIK, alamat, nomor placeholder, status | sesuai wilayah proyek desa; dapat di luar Indonesia |
 | Google | Drive opsional | berkas cadangan, token OAuth | global |
@@ -329,10 +324,9 @@ sendiri mengaktifkan integrasi opsional dan memasukkan data tersebut.
 
 ## 12. Cookie dan analitik
 
-Aplikasi desktop tidak memakai cookie. Halaman `checkout` dan `admin` di
-server lisensi adalah halaman statis tanpa cookie analitik, tanpa piksel
-pelacak, dan tanpa layanan analitik pihak ketiga. Halaman pembayaran Midtrans
-dapat memakai cookie sesuai kebijakan Midtrans.
+Aplikasi desktop tidak memakai cookie. Halaman `admin` di server
+lisensi adalah halaman statis tanpa cookie analitik, tanpa piksel pelacak, dan
+tanpa layanan analitik pihak ketiga.
 
 ---
 
