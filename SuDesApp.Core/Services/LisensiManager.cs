@@ -264,11 +264,24 @@ namespace SuDesApp.Services
                         }
                         else if ((int)resp.StatusCode == (int)System.Net.HttpStatusCode.NotFound)
                         {
-                            // Kode tidak dikenal → hapus token lama supaya desertase
-                            // tidak dibuat-buat oleh token basi milik kode lain.
-                            hasil = new StatusLisensi();
-                            HapusCache();
-                            await HapusBuktiDariDatabaseAsync(cancellationToken).ConfigureAwait(false);
+                            // Hanya balasan yang eksplisit menyatakan kode tidak
+                            // dikenal yang membuang token lama, supaya desa tidak
+                            // memakai token basi milik kode lain. 404 dari proxy
+                            // atau rute yang hilang tidak boleh menghapus lisensi
+                            // yang masih sah; cache dipertahankan (token kedaluwarsa
+                            // sendiri lewat masa tenggang).
+                            var teksGalat = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                            if (KodeAktivasiTidakDikenal(teksGalat))
+                            {
+                                hasil = new StatusLisensi();
+                                HapusCache();
+                                await HapusBuktiDariDatabaseAsync(cancellationToken).ConfigureAwait(false);
+                            }
+                            else
+                            {
+                                _logger.LogWarning(
+                                    "Server lisensi menjawab 404 tanpa keterangan kode tidak dikenal; cache token dipertahankan.");
+                            }
                         }
                         else
                         {
@@ -592,6 +605,26 @@ namespace SuDesApp.Services
         }
 
         /// <summary>Terjemahkan JSON balasan server <c>/aktivasi</c> menjadi status.</summary>
+        /// <summary>
+        /// True hanya bila balasan 404 berbentuk JSON <c>{"pesan": "..."}</c> dari
+        /// <c>/aktivasi</c> yang menyatakan kode aktivasi tidak terdaftar. Balasan
+        /// lain (HTML, kosong, atau JSON tanpa pesan itu) dianggap bukan vonis kode.
+        /// </summary>
+        internal static bool KodeAktivasiTidakDikenal(string teks)
+        {
+            try
+            {
+                using var dokumen = JsonDocument.Parse(teks);
+                return dokumen.RootElement.TryGetProperty("pesan", out var pesan)
+                    && pesan.ValueKind == JsonValueKind.String
+                    && pesan.GetString()!.Contains("kode aktivasi tidak dikenal", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
+        }
+
         private static StatusLisensi? BacaStatusServer(string json, string kunci, ILogger logger)
         {
             try
