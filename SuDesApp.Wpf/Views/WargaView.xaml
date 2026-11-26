@@ -5,6 +5,13 @@
              xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
              xmlns:local="clr-namespace:SuDesApp.Wpf.Views"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+    <!-- Ctrl+P = aksi Cetak halaman ini, sama seperti tombol Cetak di toolbar.
+         Pintasan dipasang per halaman (bukan global) karena perintah cetaknya
+         berbeda-beda; daftar lengkapnya dijaga PintasanCetakTests. -->
+    <UserControl.InputBindings>
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding CetakPdfCommand}"/>
+    </UserControl.InputBindings>
     <UserControl.Resources>
         <local:InverseBoolToVisibilityConverter x:Key="InvBoolToVis"/>
         <!-- Konverter lokal: halaman ini juga dirender alat uji tanpa App.xaml
@@ -51,7 +58,7 @@
                             ToolTip="Ekspor data warga yang sedang difilter ke Excel, CSV, atau JSON"/>
                     <Button Content="Cetak PDF" Command="{Binding CetakPdfCommand}"
                             Style="{StaticResource HeaderGhostButton}" Margin="0,0,8,4"
-                            ToolTip="Cetak daftar warga yang sedang difilter ke PDF berkop desa, lalu buka di pratinjau"/>
+                            ToolTip="Cetak daftar warga yang sedang difilter ke PDF berkop desa, lalu buka di pratinjau (Ctrl+P)"/>
                     <Button Content="Buat Template" Command="{Binding BuatTemplateCommand}"
                             Style="{StaticResource HeaderGhostButton}" Margin="0,0,8,4"
                             ToolTip="Buat template Excel kosong untuk diisi manual, lalu diimpor sebagai data warga"/>

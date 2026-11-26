@@ -6,6 +6,13 @@
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
 
+    <!-- Ctrl+P = aksi Cetak halaman ini, sama seperti tombol Cetak di toolbar.
+         Pintasan dipasang per halaman (bukan global) karena perintah cetaknya
+         berbeda-beda; daftar lengkapnya dijaga PintasanCetakTests. -->
+    <UserControl.InputBindings>
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding PrintRegisterCommand}"/>
+    </UserControl.InputBindings>
+
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
@@ -398,7 +405,7 @@
                     </Button>
                 <Button Command="{Binding PrintRegisterCommand}"
                         Style="{StaticResource PrimaryButton}" Margin="0,2,0,2"
-                        ToolTip="Buat PDF buku register lalu buka di pratinjau — bisa disimpan (Ekspor PDF) atau dicetak dari sana">
+                        ToolTip="Buat PDF buku register lalu buka di pratinjau — bisa disimpan (Ekspor PDF) atau dicetak dari sana (Ctrl+P)">
                         <TextBlock>
                         <Run FontFamily="{StaticResource AppIconFont}" FontWeight="Normal" Text="{x:Static u:IkonMenu.Cetak}"/><Run Text=" Cetak Register (PDF)"/>
                         </TextBlock>
