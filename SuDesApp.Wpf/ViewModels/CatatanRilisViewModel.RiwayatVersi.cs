@@ -14,6 +14,35 @@ namespace SuDesApp.Wpf.ViewModels
             var daftar = new List<CatatanRilisEntry>
             {
                 new CatatanRilisEntry(
+                    "Versi 2.16.0 (26 November 2026)",
+                    new List<CatatanRilisSubSection>
+                    {
+                        new CatatanRilisSubSection("Fitur Baru", new List<string>
+                        {
+                            "Ctrl+P sekarang mencetak halaman yang sedang dibuka — Register Surat, Register NTCR, Data Warga, Perangkat Desa, Tutup Buku Tahunan, Laporan, Agenda Surat, Daftar Hadir, Keputusan, IDM, dan halaman pratinjau PDF. Pintasan dipasang per halaman karena perintah cetaknya berbeda tiap halaman, dan tooltip tombol cetak kini menyebut (Ctrl+P). Dijaga PintasanCetakTests (5 uji), termasuk uji yang benar-benar menjalankan ikatan P+Control pada halaman pratinjau.",
+                            "Awalan nomor surat mengikuti kelas klasifikasi arsip Karawang (Perbup 28/2019) alih-alih 470 untuk semua jenis: SKTM ke 465.3, pindah dan tinggal sementara ke 471.21/471.23, perkawinan ke 472.2, pengantar SKCK ke 331, surat usaha ke 510/518, garapan sawah ke 521, dan rekening koran ke 580. Surat lama tidak diubah dan pola yang sudah disesuaikan operator di Pengaturan Nomor Surat tetap menang; jenis berawalan sama ditandai satu deret bersama supaya tidak ada dua surat yang sama-sama mulai 001.",
+                            "Saat mencetak, ukuran kertas aplikasi yang dipasang ke printer (formulir kertas kustom), bukan surat yang diperkecil supaya muat kertas bawaan printer. Kalau driver menolak formulir itu, aplikasi memperingatkan dengan ukuran lembar yang sebenarnya terpakai sehingga operator tahu harus menambah formulir kertas.",
+                            "Kartu yang membuka sesuatu dan accordion sidebar kini punya gerak pegas: terangkat saat disorot, membal saat ditekan. Geraknya hanya menyentuh opacity dan transform sehingga tidak memicu perhitungan ulang tata letak, dan ikut mematikan dirinya bila Windows diminta mengurangi animasi atau pengguna memilih animasi lambat/cepat."
+                        }),
+                        new CatatanRilisSubSection("Peningkatan", new List<string>
+                        {
+                            "Tema hijau dibersihkan dari warna mint yang membuat seluruh halaman terasa lembap: latar halaman netral, kartu putih, warna hijau hanya di sidebar, header, dan tombol. Hover tombol tidak lagi memakai opacity tombol keseluruhan sehingga teks tidak ikut memudar, dan palet baru ini disamakan ke Android supaya ponsel dan desktop satu rupa.",
+                            "Tombol lebih bulat dengan satu sumber sudut (RadiusTombol 12, RadiusTombolIkon 10) sehingga tingkat kebundaran bisa diubah sekali di satu tempat. Tiga lapisan tombol wajib mengunci sumber yang sama — kalau tidak, sudut lapisan sorot keluar dari bentuk tombol tanpa memunculkan galat apa pun.",
+                            "Judul kepala halaman naik ke 20 px agar hierarki tipografi terbaca; sebelumnya 15 px hanya satu langkah di atas judul section sehingga halaman tampak seperti satu daftar teks. Subtitle yang selama ini mengambang ±200 px di bawah judulnya (akibat MaxWidth tanpa perataan kiri) kini rata kiri lagi di Dokumentasi, API Desa, Kelola Pengguna, Sinkron, dan Verifikasi Surat.",
+                            "Keterangan Izin Keramaian, Izin Tinggal Sementara, dan Domisili Instansi sudah terisi sejak formulir dibuka, memakai kalimat yang sama dengan yang dicetak PDF — jadi tidak ada lagi kotak kosong yang menahan tombol Simpan, dan suntingan operator tidak lagi tertimpa saat menyimpan.",
+                            "Pembaruan aplikasi memulihkan berkas secara utuh bila penerapan gagal di tengah: berkas lama dicadangkan lebih dulu, dipulihkan dalam urutan terbalik saat ada langkah yang gagal, dan installer pembaruan kini wajib lolos tanda tangan Authenticode sebelum dijalankan karena SHA-256 saja tidak membuktikan asal rilis."
+                        }),
+                        new CatatanRilisSubSection("Perbaikan Bug", new List<string>
+                        {
+                            "Kertas F4 diukur ulang ke ukuran fisik yang dibeli kantor: 215 x 330 mm. Angka lama 607,5 pt adalah 214,3 mm sehingga 0,7 mm tidak terpakai dan berbeda dari ukuran kertas di pustaka PDF; label \"8,5 x 13 inci\" di Pengaturan Cetak diganti \"215 x 330 mm\" karena yang itu Folio Amerika. Android memakai angka yang sama, dan penjaganya membaca PDF asli hasil generator, bukan hanya konstantanya.",
+                            "Cetak F4 sempat gagal total karena nilai DPI dibaca selagi konteks perangkat masih dipinjam — GDI+ menolak setiap pemanggilan dalam keadaan itu. Ukuran lembar sebenarnya kini dibaca dari printer, bukan dari permintaan aplikasi sendiri, dan urutan pinjam/pinjam-kembali itu dijaga uji.",
+                            "Impor surat dari antrean Android tidak lagi bisa menggandakan surat bila aplikasi mati di antara penyimpanan dan penghapusan antrean: surat yang sudah tersimpan dilaporkan berhasil dengan id dan nomor yang sama. Definisi query yang tersambung dua kali di SuratQueries.sql — yang diam-diam membuang kolom AdditionalData, Status, dan IdAntreanSinkron — kini ditolak saat aplikasi dibuka.",
+                            "Cek lisensi yang menerima 404 tanpa keterangan tidak lagi menghapus token lisensi yang masih sah; 404 juga bisa datang dari proxy desa atau rute yang hilang, jadi cache hanya dibuang bila server benar-benar menyatakan kode aktivasi tidak dikenal.",
+                            "Penyimpanan surat yang bentrok pada nomor kembar kini membangkitkan nomor baru dan mencoba lagi, bukan menggagalkan penyimpanan, karena penomoran paralel desktop dan sinkron Android tidak saling mengunci.",
+                            "Pemilih bahasa Indonesia/English di Pengaturan Aplikasi dibuang karena tidak terpakai: hanya baris pemilihnya sendiri dan dua label versi yang benar-benar berpindah bahasa, sisanya teks Indonesia — memilih English justru membuat aplikasi tampak setengah Inggris. Baris versi di halaman pengaturan dan di splash tetap tampil sama."
+                        })
+                    }),
+                new CatatanRilisEntry(
                     "Versi 2.15.2 (23 November 2026)",
                     new List<CatatanRilisSubSection>
                     {
