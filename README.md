@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="Resources/logo.png" width="110" alt="Logo SuDesApp" />
+  <!-- Ikon aplikasi, bukan Resources/logo.png: berkas itu lambang Kabupaten
+       Karawang yang dipakai sebagai kop surat bawaan, bukan merek SuDesApp. -->
+  <img src="Resources/AppIcon-256.png" width="110" alt="Ikon SuDesApp" />
 </p>
 
 <h1 align="center">SuDesApp — Sistem Surat Desa</h1>
