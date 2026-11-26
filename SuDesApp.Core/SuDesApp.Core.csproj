@@ -45,7 +45,7 @@
     <PackageReference Include="Dapper" Version="2.1.89" />
     <!-- Koneksi Supabase (sinkronisasi surat Android). Role yang dipakai sama
          dengan server lisensi; RLS tetap berlaku untuk role non-pemilik. -->
-    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="Npgsql" Version="11.0.0" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.78.0.4327" />
     <!-- Provider SQLite MILIK SENDIRI: Microsoft.Data.Sqlite.Core + bundle
          e_sqlcipher. Database desa baru tetap SQLite biasa (SQLCipher hanya
