@@ -96,6 +96,24 @@ namespace SuDesApp.Wpf
             LayoutGrid.BeginAnimation(OpacityProperty, masuk);
         }
 
+        // KENAPA TIDAK ADA ANIMASI FADE SAAT BERPINDAH HALAMAN (pernah dipasang,
+        // lalu dilepas lagi):
+        //
+        // Navigasi di aplikasi ini membangun view model halaman dan muat datanya di
+        // dalam satu putaran utas UI. Fade dari opacity 0 menuntut satu frame tanpa
+        // konten, dan frame itulah yang terlihat sebagai kedip — terukur pada penembakan
+        // frame 144 ms setelah menu ditekan: kecerahan rata-rata area konten melonjak dari
+        // 188 (halaman penuh) ke 214 (hampir kosong) lalu kembali. Fade yang dimulai
+        // SETELAH halaman tersusun malah lebih buruk: halaman baru muncul penuh, hilang,
+        // baru memudar masuk.
+        //
+        // Yang tetap beranimasi tanpa pernah mengosongkan layar: sorotan & tekanan tombol
+        // (ctrl:TekananHalus), accordion sidebar (Accordion_Expanded/Collapsed), tinggi
+        // kolom sidebar, dan fade-in seluruh jendela di MainWindow_Loaded. Bila suatu saat
+        // halaman memang ingin menyilang (cross-fade), itu butuh dua penampil konten yang
+        // hidup berdampingan — bukan sekadar animasi Opacity, karena scope view model
+        // halaman lama dibuang saat navigasi.
+
         /// <summary>
         /// Halaman pertama yang tampil di area konten. Panduan awal menunggu daftar
         /// data desa selesai diperiksa lebih dulu supaya tidak tertimpa Beranda
@@ -518,12 +536,14 @@ namespace SuDesApp.Wpf
         /// tertahan oleh animasi.
         /// </summary>
         private static void AnimasiSederhana(
-            UIElement target, DependencyProperty properti, double ke, TimeSpan durasi)
-            => JalankanAnimasiSederhana(target, properti, ke, durasi);
+            UIElement target, DependencyProperty properti, double ke, TimeSpan durasi,
+            IEasingFunction? kurva = null)
+            => JalankanAnimasiSederhana(target, properti, ke, durasi, kurva);
 
         private static void AnimasiSederhana(
-            Animatable target, DependencyProperty properti, double ke, TimeSpan durasi)
-            => JalankanAnimasiSederhana(target, properti, ke, durasi);
+            Animatable target, DependencyProperty properti, double ke, TimeSpan durasi,
+            IEasingFunction? kurva = null)
+            => JalankanAnimasiSederhana(target, properti, ke, durasi, kurva);
 
         /// <summary>
         /// Jalankan animasi dari nilai saat ini ke <paramref name="ke"/>. Nilai dasar
@@ -532,13 +552,14 @@ namespace SuDesApp.Wpf
         /// selesai sehingga perpindahan berikutnya berangkat dari keadaan nyata.
         /// </summary>
         private static void JalankanAnimasiSederhana(
-            DependencyObject target, DependencyProperty properti, double ke, TimeSpan durasi)
+            DependencyObject target, DependencyProperty properti, double ke, TimeSpan durasi,
+            IEasingFunction? kurva = null)
         {
             var animasi = new DoubleAnimation
             {
                 To = ke,
                 Duration = durasi,
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut },
+                EasingFunction = kurva ?? new CubicEase { EasingMode = EasingMode.EaseInOut },
                 FillBehavior = FillBehavior.Stop
             };
 
@@ -667,9 +688,12 @@ namespace SuDesApp.Wpf
                     {
                         EasingFunction = ease
                     };
+                    // Gesernya memakai pegas (sedikit lewat lalu mengendap). Tingginya tetap
+                    // kurva lembut: MaxHeight yang memantul menggeser baris di bawahnya
+                    // dua-tiga piksel, dan itu terbaca sebagai goyah, bukan sebagai keren.
                     var animGeser = new DoubleAnimation(-8, 0, durasiIsi)
                     {
-                        EasingFunction = ease
+                        EasingFunction = new PegasEase { EasingMode = EasingMode.EaseOut }
                     };
                     konten.BeginAnimation(OpacityProperty, animFade);
                     geser?.BeginAnimation(TranslateTransform.YProperty, animGeser);
@@ -722,6 +746,11 @@ namespace SuDesApp.Wpf
         /// Putar panah (chevron) header grup agar serentak dengan isi dropdown yang
         /// tumbuh/menyusut — dulu lewat EventTrigger berdurasi tetap di XAML sehingga
         /// tidak ikut kecepatan animasi pilihan pengguna.
+        ///
+        /// Pakai kurva pegas: panahnya melewati sedikit sudut tujuan lalu mengendap
+        /// kembali, sehingga grup yang dibuka terasa "dikunci" dan bukan sekadar
+        /// diputar. Sudut boleh lebih dari tujuan (tidak seperti Opacity/tinggi,
+        /// rotasi tidak menggeser apa pun di sekitarnya).
         /// </summary>
         private static void AnimasikanChevron(FrameworkElement grup, double sudut, TimeSpan durasi)
         {
@@ -731,7 +760,8 @@ namespace SuDesApp.Wpf
             }
 
             var putar = SiapkanTransform<RotateTransform>(chevron);
-            AnimasiSederhana(putar, RotateTransform.AngleProperty, sudut, durasi);
+            AnimasiSederhana(putar, RotateTransform.AngleProperty, sudut, durasi,
+                new PegasEase { EasingMode = EasingMode.EaseOut });
         }
 
         /// <summary>Cari turunan pertama bernama <paramref name="nama"/> di pohon visual.</summary>

@@ -44,6 +44,14 @@
     <Color x:Key="LapisanAktifColor">#3AFFFFFF</Color>
     <SolidColorBrush x:Key="LapisanAktifBrush" Color="{StaticResource LapisanAktifColor}"/>
 
+    <!-- Lapisan TEKAN pada tombol: hitam transparan, bukan putih, karena bekerja
+         di atas dua macam permukaan sekaligus — tombol berisi (gelap, jadi lebih
+         gelap saat ditekan) dan tombol garis/putih (terang, juga jadi lebih gelap).
+         Lapisan putih akan tak terlihat di atas tombol putih. Warna status/tema
+         tidak dipakai di sini supaya satu gaya tekan berlaku di sebelas tema. -->
+    <Color x:Key="LapisanTekanColor">#20000000</Color>
+    <SolidColorBrush x:Key="LapisanTekanBrush" Color="{StaticResource LapisanTekanColor}"/>
+
     <!-- Kilau diagonal (gradien sheen) pada header. -->
     <Color x:Key="KilauAwalColor">#38FFFFFF</Color>
     <Color x:Key="KilauHilangColor">#00FFFFFF</Color>

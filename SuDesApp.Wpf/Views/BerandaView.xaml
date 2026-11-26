@@ -10,7 +10,26 @@
             <Setter Property="Margin" Value="0,0,12,12"/>
         </Style>
 
-        <!-- Tombol pintasan jenis surat: kartu klik-able -->
+        <!-- Chip ikon bulat kartu KPI: 40 px, sama seperti halaman Register, supaya
+             deretan angka tidak tampak setengah jadi. -->
+        <Style x:Key="KpiChipBulat" TargetType="Border">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="10,0,0,0"/>
+        </Style>
+        <Style x:Key="KpiChipIkon" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource AppIconFont}"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Tombol pintasan jenis surat: kartu klik-able. Angkat/tekan/pantul ditangani
+             ctrl:KartuHalus supaya durasinya ikut kecepatan animasi pilihan pengguna —
+             dulu EventTrigger dengan durasi tetap 140/180 ms di XAML, dan nilai itu
+             tidak bisa berubah saat aplikasi berjalan. -->
         <Style x:Key="PintasanCard" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -24,10 +43,9 @@
                         <Border x:Name="bd"
                                 Background="{DynamicResource PanelBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}"
-                                BorderThickness="1" CornerRadius="8" Padding="11,9">
-                            <Border.RenderTransform>
-                                <TranslateTransform/>
-                            </Border.RenderTransform>
+                                BorderThickness="1" CornerRadius="8" Padding="11,9"
+                                c:KartuHalus.Aktif="True"
+                                c:KartuHalus.JarakAngkat="3">
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -38,32 +56,6 @@
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
                             </Trigger>
-                            <EventTrigger RoutedEvent="Button.MouseEnter">
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="bd"
-                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                                         To="-3" Duration="0:0:0.14">
-                                            <DoubleAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                            <EventTrigger RoutedEvent="Button.MouseLeave">
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="bd"
-                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                                         To="0" Duration="0:0:0.18">
-                                            <DoubleAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -106,38 +98,85 @@
                 </StackPanel>
 
                 <!-- ===== Kartu statistik ===== -->
+                <!-- Sama seperti kartu KPI halaman Register: angka di kiri, chip ikon
+                     bulat di kanan. Tanpa chip, kartu 4 kolom hanya berisi dua baris
+                     teks dan menyisakan ruang kosong selebar kartu di tiap kolom. -->
                 <UniformGrid x:Name="StatGrid" Columns="4" Margin="0,0,-12,0">
                     <Border Style="{StaticResource StatCard}">
-                        <StackPanel>
-                            <TextBlock Text="SURAT HARI INI" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock x:Name="NilaiHariIni" Text="{Binding SuratHariIni}" FontSize="24" FontWeight="Bold"
-                                       Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
-                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="SURAT HARI INI" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock x:Name="NilaiHariIni" Text="{Binding SuratHariIni}" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Style="{StaticResource KpiChipBulat}"
+                                    Background="{DynamicResource AccentSubtleBrush}">
+                                <TextBlock Text="{x:Static u:IkonMenu.Dokumen}" Style="{StaticResource KpiChipIkon}"
+                                           Foreground="{DynamicResource AccentBrush}"/>
+                            </Border>
+                        </Grid>
                     </Border>
                     <Border Style="{StaticResource StatCard}">
-                        <StackPanel>
-                            <TextBlock Text="SURAT BULAN INI" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock x:Name="NilaiBulanIni" Text="{Binding SuratBulanIni}" FontSize="24" FontWeight="Bold"
-                                       Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
-                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="SURAT BULAN INI" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock x:Name="NilaiBulanIni" Text="{Binding SuratBulanIni}" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource AccentTextBrush}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Style="{StaticResource KpiChipBulat}"
+                                    Background="{DynamicResource AccentSubtleBrush}">
+                                <TextBlock Text="{x:Static u:IkonMenu.Agenda}" Style="{StaticResource KpiChipIkon}"
+                                           Foreground="{DynamicResource AccentBrush}"/>
+                            </Border>
+                        </Grid>
                     </Border>
                     <Border Style="{StaticResource StatCard}">
-                        <StackPanel>
-                            <TextBlock Text="TOTAL REGISTER" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock x:Name="NilaiTotal" Text="{Binding TotalSurat}" FontSize="24" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextBrush}" Margin="0,4,0,0"/>
-                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="TOTAL REGISTER" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock x:Name="NilaiTotal" Text="{Binding TotalSurat}" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextBrush}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Style="{StaticResource KpiChipBulat}"
+                                    Background="{DynamicResource PanelBrush}">
+                                <TextBlock Text="{x:Static u:IkonMenu.SuratMasuk}" Style="{StaticResource KpiChipIkon}"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Border>
+                        </Grid>
                     </Border>
                     <Border Style="{StaticResource StatCard}">
-                        <StackPanel>
-                            <TextBlock Text="WARGA TERDATA" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock x:Name="NilaiWarga" Text="{Binding TotalWarga}" FontSize="24" FontWeight="Bold"
-                                       Foreground="{DynamicResource SuccessTextBrush}" Margin="0,4,0,0"/>
-                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="WARGA TERDATA" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock x:Name="NilaiWarga" Text="{Binding TotalWarga}" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource SuccessTextBrush}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Style="{StaticResource KpiChipBulat}"
+                                    Background="{DynamicResource SuccessSubtleBrush}">
+                                <TextBlock Text="{x:Static u:IkonMenu.Orang}" Style="{StaticResource KpiChipIkon}"
+                                           Foreground="{DynamicResource SuccessTextBrush}"/>
+                            </Border>
+                        </Grid>
                     </Border>
                 </UniformGrid>
 
@@ -197,30 +236,42 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Aktivitas terbaru -->
+                    <!-- Isi kartu memakai Grid dua baris: judul di atas, badan mengisi
+                     sisa tinggi. Kartu ini berdiri di lajur yang sama dengan kartu
+                     "Aksi Cepat" yang lebih tinggi, jadi tanpa badan yang mengisi,
+                     keadaan kosong menumpuk di sudut kiri atas dan separuh kartu
+                     menjadi ruang kosong. -->
                     <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="18">
-                        <StackPanel>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                 <Border Style="{StaticResource AccentSectionBar}"/>
                                 <TextBlock Text="AKTIVITAS TERBARU" FontWeight="Bold" FontSize="14"
                                            Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <TextBlock Text="Belum ada surat pada register — surat yang Anda buat akan tercatat di sini."
-                                       TextWrapping="Wrap" FontSize="11"
-                                       Foreground="{DynamicResource TextSecondaryBrush}">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Terbaru.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                            <Grid Grid.Row="1">
+                                <c:EmptyStateView Ikon="{x:Static u:IkonMenu.Dokumen}"
+                                                  Judul="Belum ada surat di register"
+                                                  Pesan="Surat yang Anda buat akan tercatat di sini."
+                                                  Petunjuk="Mulai dari menu Buat Surat Baru atau buka Pintasan Cepat di atas."
+                                                  VerticalAlignment="Center">
+                                    <c:EmptyStateView.Style>
+                                        <Style TargetType="c:EmptyStateView">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Terbaru.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </c:EmptyStateView.Style>
+                                </c:EmptyStateView>
 
-                            <ItemsControl ItemsSource="{Binding Terbaru}">
+                                <ItemsControl ItemsSource="{Binding Terbaru}" VerticalAlignment="Top">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderBrush}"
@@ -249,8 +300,9 @@
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
+                                </ItemsControl>
+                            </Grid>
+                        </Grid>
                     </Border>
 
                     <!-- Aksi cepat -->

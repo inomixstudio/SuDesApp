@@ -559,12 +559,14 @@ namespace SuDesApp.Wpf.Views
         {
             var hasil = new WarnaTema();
 
-            // Fallback terjauh: palet hijau bawaan (warna lama splash).
-            Color primer = Color.FromRgb(0x16, 0x65, 0x34);
-            Color sekunder = Color.FromRgb(0x14, 0x53, 0x2D);
+            // Fallback terjauh: palet GreenTheme bawaan, dipakai hanya bila berkas
+            // tema benar-benar tidak terbaca. Nilainya disamakan dengan
+            // Themes/GreenTheme.xaml — kalau palet default berubah, ubah juga di sini.
+            Color primer = Color.FromRgb(0x0F, 0x51, 0x32);
+            Color sekunder = Color.FromRgb(0x09, 0x3A, 0x26);
             Color permukaan = Colors.White;
-            Color teks = Color.FromRgb(0x05, 0x2E, 0x16);
-            Color teksHalus = Color.FromRgb(0x4D, 0x7C, 0x5F);
+            Color teks = Color.FromRgb(0x12, 0x20, 0x1A);
+            Color teksHalus = Color.FromRgb(0x4A, 0x63, 0x55);
 
             // ResourceDictionary aplikasi (GreenTheme sudah dimuat App.xaml) —
             // dipakai bila pembacaan theme.config gagal.
