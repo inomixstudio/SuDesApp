@@ -38,7 +38,9 @@ berlaku untuk **tingkat desa di Kabupaten Karawang**.
    Lingkungan Pemerintah Kabupaten Karawang** — sumber kode awal (kelas
    klasifikasi) nomor surat. Lampiran resminya 94 halaman:
    <https://jdih.karawangkab.go.id/document/download/122/lampiran>
-   (unduhan 26 November 2026, berkas `2019pb32150028.pdf`). Kelas yang dipakai
+   (unduhan 26 November 2026, berkas `2019pb32150028.pdf`). Petikan kelas yang
+   dipakai aplikasi disimpan di `docs/regulasi/perbup28-2019-klasifikasi-terpilih.txt`.
+   Kelas yang dipakai
    aplikasi: `130 Pemerintah Kabupaten`, `300 Keamanan dan Ketertiban Umum` →
    `330 Keamanan` → `331 Kepolisian`, `460 Sosial` → `465 Kesejahteraan Sosial`
    (`465.3 Masyarakat Miskin: Raskin, BLT`), `470 Kependudukan dan Catatan
@@ -130,9 +132,9 @@ aplikasi atas ruang titik-titik pada contoh Perbup 74/2020 — lihat §3 butir 3
 | SKTM | SKTM | `465` | `465.3` Masyarakat Miskin: Raskin, BLT |
 | SK Tidak Punya Rumah | SPR | `465` | `465` Kesejahteraan Sosial (keterangan untuk bantuan sosial) |
 | Keterangan Penghasilan | PENGHASILAN | `465` | **penafsiran** — keterangan penghasilan tidak punya kode sendiri di lampiran |
-| SKU (Surat Ket. Usaha) | SKU | `518` | `518.3` UMKM, `518.31` Pembinaan Usaha Mikro |
+| SKU (Surat Ket. Usaha) | SKU | `518` | `518.3` UMKM → `518.311` Pembinaan Usaha Mikro |
 | Domisili Instansi/Lembaga | DOM_INS | `510` | `510.41` Penerbitan SIUP (domisili badan usaha/instansi) |
-| Ket. Garapan Sawah | GRP_SAW | `521` | `521.21` Sawah, `521.43` Persawahan (di bawah `520` Pertanian) |
+| Ket. Garapan Sawah | GRP_SAW | `521` | `521.21` Padi → `521.211` Sawah, dan `521.431` Persawahan (di bawah `520` Pertanian) |
 | Pengantar SKCK | SKCK | `331` | `331` Kepolisian (di bawah `330` Keamanan) — SKCK diterbitkan Kepolisian, desa mengantar |
 | Izin Keramaian | IKR | `330` | `330` Keamanan (ketertiban kegiatan/keramaian warga) |
 | Permohonan Rekening Koran | REKKOR | `580` | `580` Perbankan Moneter. `130` di Karawang = Pemerintah Kabupaten, bukan keuangan |

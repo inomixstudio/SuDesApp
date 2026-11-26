@@ -35,7 +35,7 @@
     "TemplateName": "SKU",
     "DisplayName": "SKU (Surat Ket. Usaha)",
     "NomorFormat": "518/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Kode klasifikasi 518 — 518.3 Usaha Mikro Kecil dan Menengah, 518.31 Pembinaan Usaha Mikro (Perbup Karawang 28/2019).",
+    "AcuanNomor": "Kode klasifikasi 518 — 518.3 Usaha Mikro Kecil dan Menengah (UMKM), 518.311 Pembinaan Usaha Mikro (Perbup Karawang 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -65,7 +65,7 @@
     "TemplateName": "GARAPAN_SAWAH",
     "DisplayName": "Ket. Garapan Sawah",
     "NomorFormat": "521/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Kode klasifikasi 520 Pertanian — 521 Tanaman Pangan, 521.21 Sawah, 521.43 Persawahan (Perbup Karawang 28/2019).",
+    "AcuanNomor": "Kode klasifikasi 520 Pertanian — 521 Tanaman Pangan, 521.21 Padi, 521.211 Sawah (Perbup Karawang 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },

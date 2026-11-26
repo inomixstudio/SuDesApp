@@ -1,0 +1,89 @@
+PETIKAN TERPILIH — Peraturan Bupati Karawang Nomor 28 Tahun 2019
+tentang Pedoman Klasifikasi Arsip di Lingkungan Pemerintah Kabupaten Karawang
+================================================================================
+Sumber  : lampiran resmi JDIH Kabupaten Karawang
+          https://jdih.karawangkab.go.id/document/download/122/lampiran
+          (berkas unduhan "2019pb32150028.pdf", 94 halaman, diambil 26-11-2026)
+Isi     : hanya kelas yang dipakai bawaan SuDesApp untuk awalan nomor surat.
+          Label diketik ulang apa adanya dari teks PDF; nomor halaman dan
+          baris yang tidak terpakai dibuang. Untuk kelas lengkap, buka PDF-nya.
+Kegunaan: dasar pemetaan di SuDesApp.Core/Configuration/JenisSuratConfig.json.
+          Penjelasan dan batas kesimpulannya ada di docs/referensi-penomoran-surat.md.
+================================================================================
+
+130            PEMERINTAH KABUPATEN
+               (catatan: BUKAN "keuangan" — karena itu Permohonan Rekening Koran
+                dipindah dari 130 ke 580)
+
+300            KEAMANAN DAN KETERTIBAN UMUM
+330            KEAMANAN
+331            Kepolisian
+331.1          Polisi Pamong Praja
+332            Huru-hara/Demonstrasi
+333            Senjata Api/Tajam
+340            PERLINDUNGAN MASYARAKAT (LINMAS)
+
+460            SOSIAL
+463            Kesejahteraan Anak dan Keluarga
+465            Kesejahteraan Sosial
+465.1          Lanjut Usia
+465.2          Korban Kekacauan, Pengungsian, Rehabilitasi
+465.3          Masyarakat Miskin: Raskin, BLT
+466            Sumbangan Sosial
+
+470            KEPENDUDUKAN DAN CATATAN SIPIL
+470.1          Kebijakan dan Program Pemerintah untuk Kependudukan
+471            Pendaftaran Penduduk
+471.1          Identitas Penduduk
+471.11         Biodata Penduduk/Data Pribadi
+471.12         Nomor Induk Kependudukan
+471.13         Kartu Tanda Penduduk
+471.14         Kartu Keluarga
+471.15         Advokasi Identitas Penduduk
+471.2          Perpindahan Penduduk Dalam Wilayah Indonesia
+471.21         Perpindahan Penduduk WNI
+471.22         Perpindahan Penduduk WNA Dalam Wilayah Indonesia
+471.23         Perpindahan Penduduk WNA dan WNI tinggal sementara
+471.3          Perpindahan Penduduk Antar Negara
+472            Pencatatan Sipil
+472.1          Kelahiran, Kematian dan Advokasi
+472.11         Kelahiran
+472.12         Kematian
+472.13         Advokasi
+472.2          Perkawinan, Perceraian dan Advokasi
+472.21         Perkawinan Agama Islam
+472.22         Perkawinan Agama Non Islam
+472.23         Perceraian Agama Islam
+472.24         Perceraian Agama Non Islam
+472.25         Advokasi
+472.3          Pengangkatan, Pengakuan, dan Pengesahan Anak serta Perubahan
+               dan Pembuatan Akta dan Advokasi
+472.34         Perubahan Akta
+473            Informasi Kependudukan
+474            Perkembangan Penduduk
+               (catatan: 474 di Karawang BUKAN blanko nikah; bawaan aplikasi
+                memakai 474.3/474.2 untuk blanko NTCR karena dasar sektoral
+                Lampiran Keputusan Dirjen Bimas Islam No. 473/2020)
+
+510            PERDAGANGAN
+510.41         Penerbitan SIUP (Surat Izin Usaha Perdagangan)
+518            Koperasi
+518.1          Bina Usaha Koperasi
+518.3          Usaha Mikro Kecil dan Menengah (UMKM)
+518.31         Pembinaan Usaha
+518.311        Pembinaan Usaha Mikro
+518.312        Pembinaan Usaha Kecil
+
+520            PERTANIAN
+521            Tanaman Pangan
+521.2          Produksi
+521.21         Padi
+521.211        Sawah
+521.22         Palawija
+521.431        Persawahan
+
+580            PERBANKAN MONETER
+581            Kredit
+582            Investasi
+583            Tabungan
+583.1          Deposito
