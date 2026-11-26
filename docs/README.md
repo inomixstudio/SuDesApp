@@ -55,6 +55,7 @@ SuDesApp. Kembali ke [README utama](../README.md).
 
 | Versi | Dokumen |
 |---|---|
+| 2.16.0 | [catatan-rilis-2.16.0.md](catatan-rilis-2.16.0.md) |
 | 2.15.2 | [catatan-rilis-2.15.2.md](catatan-rilis-2.15.2.md) |
 | 2.15.1 | [catatan-rilis-2.15.1.md](catatan-rilis-2.15.1.md) |
 | 2.15.0 | [catatan-rilis-2.15.0.md](catatan-rilis-2.15.0.md) |
