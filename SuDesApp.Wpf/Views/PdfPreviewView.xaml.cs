@@ -576,7 +576,8 @@ namespace SuDesApp.Wpf.Views
                 if (DataContext is PdfPreviewViewModel vm && !await vm.BolehCetakAsync()) return;
                 if (!ReferenceEquals(document, _document)) return;
                 // Cetak di thread_pool agar UI tidak membeku saat spooling.
-                await Task.Run(() => document.PrintAsync(_title)).ConfigureAwait(true);
+                SudesPdf.HasilCetak hasil = await Task.Run(() => document.PrintAsync(_title)).ConfigureAwait(true);
+                Services.PdfPrintService.TampilkanPeringatanKertas(hasil);
             }
             catch (Exception)
             {

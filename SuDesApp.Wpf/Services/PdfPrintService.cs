@@ -26,7 +26,8 @@ namespace SuDesApp.Wpf.Services
             try
             {
                 await using var document = await load().ConfigureAwait(false);
-                await document.PrintAsync(documentName).ConfigureAwait(false);
+                HasilCetak hasil = await document.PrintAsync(documentName).ConfigureAwait(false);
+                TampilkanPeringatanKertas(hasil);
                 _logger.LogInformation("PDF '{Document}' dikirim ke dialog cetak sistem.", documentName);
                 return true;
             }
@@ -45,6 +46,28 @@ namespace SuDesApp.Wpf.Services
                 }
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Beritahu pengguna bila printer tidak bisa memasang ukuran kertas dokumen
+        /// (mis. F4 215x330mm tidak ada di driver) sehingga surat diperkecil. Tanpa
+        /// ini hasilnya "sedikit lebih kecil dari kertas" dan tidak ada yang tahu
+        /// sebabnya - ukuran aplikasi sudah dikirim ke printer, driver yang menolaknya.
+        /// </summary>
+        public static void TampilkanPeringatanKertas(HasilCetak? hasil)
+        {
+            if (hasil is null || string.IsNullOrWhiteSpace(hasil.Peringatan)) return;
+            if (hasil.Dicetak == false) return;
+
+            void Tampilkan() => SuDesApp.Wpf.Views.MessageDialogWindow.Show(
+                "Ukuran kertas tidak tersedia di printer",
+                hasil.Peringatan!,
+                SuDesApp.Utilities.AppMessageButton.Ok,
+                SuDesApp.Utilities.AppMessageIcon.Warning);
+
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            if (dispatcher is not null && !dispatcher.CheckAccess()) dispatcher.BeginInvoke(Tampilkan);
+            else Tampilkan();
         }
     }
 }

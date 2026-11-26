@@ -50,7 +50,9 @@ internal static class PdfPrintLayout
         int HalamanLebarPx,
         int HalamanTinggiPx,
         int KotakLebarPx,
-        int KotakTinggiPx)
+        int KotakTinggiPx,
+        double LembarLebarIn,
+        double LembarTinggiIn)
     {
         /// <summary>Kotak halaman utuh di koordinat graphics (boleh keluar kotak tinta).</summary>
         public Rectangle Halaman => new(HalamanX, HalamanY, HalamanLebarPx, HalamanTinggiPx);
@@ -91,6 +93,9 @@ internal static class PdfPrintLayout
             tinggiLembarIn = Math.Max(1.0, kotakTinggiIn + Aman(kertas.TepiAtasIn, 0) * 2);
         }
 
+        double tepiKiriIn = Aman(kertas.TepiKiriIn, 0);
+        double tepiAtasIn = Aman(kertas.TepiAtasIn, 0);
+
         double muatLebar = lebarLembarIn / lebarHalamanIn;
         double muatTinggi = tinggiLembarIn / tinggiHalamanIn;
         double skalaFisik = Math.Min(1.0, Math.Min(muatLebar, muatTinggi));
@@ -105,8 +110,8 @@ internal static class PdfPrintLayout
         // kop surat dan tempat tanda tangan jatuh pada jarak yang sama seperti di
         // layar. Margin keras hanya memotong tepi yang toh tidak dipakai surat desa
         // (margin desain halaman surat 45 pt ≈ 16 mm).
-        double tepiKiriPx = Aman(kertas.TepiKiriIn, 0) * dpiX;
-        double tepiAtasPx = Aman(kertas.TepiAtasIn, 0) * dpiY;
+        double tepiKiriPx = tepiKiriIn * dpiX;
+        double tepiAtasPx = tepiAtasIn * dpiY;
         int x = (int)Math.Round((lebarLembarIn * dpiX - lebarPx) / 2.0 - tepiKiriPx);
         int y = (int)Math.Round((tinggiLembarIn * dpiY - tinggiPx) / 2.0 - tepiAtasPx);
 
@@ -120,7 +125,17 @@ internal static class PdfPrintLayout
         double skalaRaster = (double)lebarPx / Aman(halamanLebarPt, 1);
         skalaRaster = Math.Clamp(skalaRaster, SkalaRasterMinimal, SkalaRasterMaksimal);
 
-        return new Hasil(skalaFisik, skalaRaster, x, y, lebarPx, tinggiPx, kotakLebarPx, kotakTinggiPx);
+        return new Hasil(
+            skalaFisik,
+            skalaRaster,
+            x,
+            y,
+            lebarPx,
+            tinggiPx,
+            kotakLebarPx,
+            kotakTinggiPx,
+            lebarLembarIn,
+            tinggiLembarIn);
     }
 
     /// <summary>
@@ -196,6 +211,70 @@ internal static class PdfPrintLayout
         if (ukuran is null) return halamanLebarPt > halamanTinggiPt;
         bool kertasMendatar = ukuran.Width > ukuran.Height;
         return (halamanLebarPt > halamanTinggiPt) ^ kertasMendatar;
+    }
+
+    /// <summary>Sisi terpanjang formulir kustom yang masih layak diminta ke printer
+    /// kantor. Di atas ini driver umumnya menolak dan kertasnya bukan kertas surat.</summary>
+    internal const double BatasKustomInc = 17.0;
+
+    /// <summary>Sisi terpendek yang masih diterima driver (amplop sudah lewat dialog sendiri).</summary>
+    internal const double BatasKustomMinInc = 2.0;
+
+    /// <summary>
+    /// Formulir kertas dengan ukuran HALAMAN PDF, untuk printer yang tidak punya
+    /// padanannya di daftar (mis. "Microsoft Print to PDF" atau driver laser lama
+    /// tanpa F4). Nama formulir dibatasi 31 karakter karena DEVMODE menyimpannya
+    /// sebagai WCHAR[32]; nilai ukuran dalam persepuluh inci.
+    ///
+    /// Arah aturannya: ukuran aplikasi yang dipasang ke printer, bukan surat yang
+    /// dikecilkan supaya muat kertas printer. Kalau nanti driver ternyata mengabaikan
+    /// formulir ini, <see cref="PdfPrinter"/> membandingkan lembar yang dilaporkan
+    /// saat cetak dan memberi tahu pengguna, bukan diam-diam.
+    /// </summary>
+    internal static PaperSize? BuatKertasKustom(double halamanLebarIn, double halamanTinggiIn)
+    {
+        if (!double.IsFinite(halamanLebarIn) || !double.IsFinite(halamanTinggiIn)) return null;
+        double besar = Math.Max(halamanLebarIn, halamanTinggiIn);
+        double kecil = Math.Min(halamanLebarIn, halamanTinggiIn);
+        if (kecil < BatasKustomMinInc || besar > BatasKustomInc) return null;
+
+        int lebar = (int)Math.Round(halamanLebarIn * 100.0);
+        int tinggi = (int)Math.Round(halamanTinggiIn * 100.0);
+        if (lebar < 1 || tinggi < 1) return null;
+        return new PaperSize(NamaKertasKustom(lebar, tinggi), lebar, tinggi);
+    }
+
+    /// <summary>Nama formulir dari ukuran persepuluh inci, mis. "F4 215x330mm".</summary>
+    internal static string NamaKertasKustom(int lebarPersepuluhIn, int tinggiPersepuluhIn)
+    {
+        int mmLebar = (int)Math.Round(lebarPersepuluhIn * 25.4 / 100.0);
+        int mmTinggi = (int)Math.Round(tinggiPersepuluhIn * 25.4 / 100.0);
+        string label = (mmLebar, mmTinggi) switch
+        {
+            (215, 330) => "F4 ",
+            (216, 330) => "Folio ",
+            (210, 297) => "A4 ",
+            (297, 420) => "A3 ",
+            (148, 210) => "A5 ",
+            (216, 279) => "Letter ",
+            (216, 356) => "Legal ",
+            _ => string.Empty,
+        };
+        string nama = $"{label}{mmLebar}x{mmTinggi}mm";
+        return nama.Length <= 31 ? nama : nama[..31];
+    }
+
+    /// <summary>
+    /// Apakah lembar yang dilaporkan driver sama dengan yang diminta, dalam inci.
+    /// Orientasi diabaikan (lembar bisa dilaporkan menyamping).
+    /// </summary>
+    internal static bool LembarSama(PaperSize? lembar, double lebarIn, double tinggiIn, double toleransiIn)
+    {
+        if (lembar is null || lembar.Width <= 0 || lembar.Height <= 0) return false;
+        double besar = Math.Max(lembar.Width, lembar.Height) / 100.0;
+        double kecil = Math.Min(lembar.Width, lembar.Height) / 100.0;
+        return Math.Abs(besar - Math.Max(lebarIn, tinggiIn)) <= toleransiIn
+            && Math.Abs(kecil - Math.Min(lebarIn, tinggiIn)) <= toleransiIn;
     }
 
     private static double Pozitif(double nilai, double cadangan) =>
