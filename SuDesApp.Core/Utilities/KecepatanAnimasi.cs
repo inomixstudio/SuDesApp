@@ -86,6 +86,31 @@ namespace SuDesApp.Utilities
         /// <summary>Durasi transisi saat berpindah halaman (isi jendela memudar masuk).</summary>
         public static readonly TimeSpan DasarTransisiHalaman = TimeSpan.FromMilliseconds(280);
 
+        /// <summary>Durasi sorotan tombol saat kursor mendekat — sengaja lebih pendek
+        /// dari sorotan menu: tombol diklik puluhan kali per sesi, gerakan yang
+        /// melebihi ±150 ms terasa menahan orang yang sedang mengetik cepat.</summary>
+        public static readonly TimeSpan DasarSorotTombol = TimeSpan.FromMilliseconds(110);
+
+        /// <summary>Durasi sorotan tombol saat kursor menjauh (sedikit lebih lama supaya
+        /// hilangnya sorotan tidak tampak seperti kedip).</summary>
+        public static readonly TimeSpan DasarSorotTombolKeluar = TimeSpan.FromMilliseconds(160);
+
+        /// <summary>Durasi lapisan tekan tombol — nyaris seketika karena harus menyertai
+        /// jari yang menekan, bukan mendahuluinya.</summary>
+        public static readonly TimeSpan DasarTekanTombol = TimeSpan.FromMilliseconds(70);
+
+        /// <summary>Durasi kartu mengangkat saat disorot. Lebih panjang dari tombol karena
+        /// jaraknya juga lebih jauh (±3 px) dan gerakan yang lebih cepat pada elemen besar
+        /// terbaca sebagai kedip, bukan sebagai angkat.</summary>
+        public static readonly TimeSpan DasarKartuAngkat = TimeSpan.FromMilliseconds(170);
+
+        /// <summary>Durasi kartu mendarat kembali (dengan pantulan) saat kursor menjauh
+        /// atau setelah dilepas.</summary>
+        public static readonly TimeSpan DasarKartuLepas = TimeSpan.FromMilliseconds(240);
+
+        /// <summary>Durasi kartu mengempis saat ditekan.</summary>
+        public static readonly TimeSpan DasarKartuTekan = TimeSpan.FromMilliseconds(90);
+
         /// <summary>Nama pilihan kecepatan untuk ditampilkan ("Lambat", "Normal", "Cepat").</summary>
         public static string Judul(KecepatanAnimasi kecepatan) => kecepatan switch
         {

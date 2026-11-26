@@ -1,34 +1,56 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Green Theme — Nuansa hijau segar khas pedesaan -->
-    <!-- Palet: hijau hutan, aksen emerald -->
+    <!-- Green Theme — Nuansa hijau pedesaan, versi tenang -->
+    <!--
+        Palet ini dibangun dari tiga keputusan:
+
+          1. KROMAT HANYA DI KULIT. Hijau dipakai pada chrome (sidebar, kepala
+             halaman, tombol, tautan) dan berhenti di sana. Latar halaman,
+             kartu, garis dan teks tidak lagi ikut hijau — sebelumnya halaman
+             terang seluruhnya (#F0FDF4 di atas #FFFFFF dengan garis #C8EED6),
+             sehingga kartu seolah tidak punya tepi dan semuanya tampak "satu
+             warna hijau". Netral dingin (#F4F7F5 / #D5E0D8) membuat kartu
+             terbaca sebagai objek dan warna aksen terasa disengaja.
+
+          2. HIJAU YANG LEBIH DALAM DAN DINGIN. Primary turun dari #166534 ke
+             #0F5132 dan sidebar ke #0C3F2A: dua tingkat lebih gelap, sedikit
+             lebih biru. Header dan sidebar tetap satu bahasa visual, tetapi
+             tidak lagi menyala seperti tombol hijau.
+
+          3. TINTA HAMPIR HITAM. Teks utama #12201A (bukan #052E16) supaya
+             kontras tidak bergantung pada warna tema; teks sekunder #4A6355
+             lolos AA di kartu, panel, latar, baris zebra, dan lencana halus.
+
+        Semua nilai masih diuji berpasangan oleh Tools/check-kontras-wcag.ps1.
+    -->
 
     <!-- Header gradien digelapkan satu tingkat agar subjudul (putih 85%) tetap
          lolos WCAG AA di atasnya — diperiksa alat Tools/check-kontras-wcag.ps1. -->
-    <Color x:Key="PrimaryColor">#166534</Color>
-    <Color x:Key="SecondaryColor">#14532D</Color>
-    <Color x:Key="AccentColor">#15803D</Color>
-    <Color x:Key="BackgroundColor">#F0FDF4</Color>
+    <Color x:Key="PrimaryColor">#0F5132</Color>
+    <Color x:Key="SecondaryColor">#093A26</Color>
+    <Color x:Key="AccentColor">#12805A</Color>
+    <Color x:Key="BackgroundColor">#F4F7F5</Color>
     <Color x:Key="SurfaceColor">#FFFFFF</Color>
-    <Color x:Key="TextColor">#052E16</Color>
-    <Color x:Key="TextSecondaryColor">#3F614E</Color>
-    <Color x:Key="TextSelectedColor">#14532D</Color>
-    <Color x:Key="BorderColor">#C8EED6</Color>
-    <Color x:Key="PanelColor">#E7F9EE</Color>
-    <Color x:Key="SuccessColor">#15803D</Color>
+    <Color x:Key="TextColor">#12201A</Color>
+    <Color x:Key="TextSecondaryColor">#4A6355</Color>
+    <Color x:Key="TextSelectedColor">#0F5132</Color>
+    <Color x:Key="BorderColor">#D5E0D8</Color>
+    <Color x:Key="PanelColor">#E9F0EB</Color>
+    <Color x:Key="SuccessColor">#12805A</Color>
     <Color x:Key="WarningColor">#D97706</Color>
     <Color x:Key="ErrorColor">#DC2626</Color>
-    <Color x:Key="MenuBackgroundColor">#14532D</Color>
+    <Color x:Key="MenuBackgroundColor">#0C3F2A</Color>
     <Color x:Key="MenuTextColor">#FFFFFF</Color>
-    <Color x:Key="AccentLightColor">#4ADE80</Color>
+    <Color x:Key="AccentLightColor">#5BD0A0</Color>
 
-    <!-- Subtle badge colors -->
-    <Color x:Key="SuccessSubtleColor">#DCFCE7</Color>
-    <Color x:Key="WarningSubtleColor">#FEF3C7</Color>
-    <Color x:Key="ErrorSubtleColor">#FEE2E2</Color>
-    <Color x:Key="AccentSubtleColor">#DCFCE7</Color>
-    <Color x:Key="ZebraColor">#F4FBF6</Color>
+    <!-- Subtle badge colors: tint status dinaikkan sedikit kejenuhannya supaya
+         masih terlihat sebagai "berwarna" di atas latar halaman yang kini netral. -->
+    <Color x:Key="SuccessSubtleColor">#E2F3EA</Color>
+    <Color x:Key="WarningSubtleColor">#FBF1DE</Color>
+    <Color x:Key="ErrorSubtleColor">#FBE5E5</Color>
+    <Color x:Key="AccentSubtleColor">#E2F3EA</Color>
+    <Color x:Key="ZebraColor">#F7FAF8</Color>
 
     <!-- Brushes -->
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
@@ -54,9 +76,9 @@
 
     <!-- Warna teks status digelapkan: warna isian (SuccessColor/Warning/Error)
          terlalu terang untuk teks — diperiksa alat Tools/check-kontras-wcag.ps1. -->
-    <SolidColorBrush x:Key="SuccessTextBrush" Color="#117F3A"/>
-    <SolidColorBrush x:Key="WarningTextBrush" Color="#A15904"/>
-    <SolidColorBrush x:Key="ErrorTextBrush" Color="#C92020"/>
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#0B6B4A"/>
+    <SolidColorBrush x:Key="WarningTextBrush" Color="#8A5108"/>
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#B02323"/>
     <SolidColorBrush x:Key="AccentTextBrush" Color="{StaticResource PrimaryColor}"/>
 
     <!-- Sidebar / StatusBar -->

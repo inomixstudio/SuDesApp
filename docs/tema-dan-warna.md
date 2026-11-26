@@ -185,6 +185,40 @@ wadah polos (`ScrollViewer`, `ListBox`, `ListView`, `TabControl`, `DataGrid`,
 Border/penyaji dengan `TemplateBinding`, jadi warna tema tetap tembus dan
 chrome terlihat justru dari bagian yang digayakan.
 
+## Gerak: tombol, kartu, accordion
+
+Animasi antarmuka sengaja dibatasi pada tiga hal — tombol, kartu yang bisa
+dibuka, dan accordion sidebar. Pindah halaman TIDAK dianimasikan: dengan satu
+`ContentHost`, memudar dari opacity 0 selalu menyisakan satu frame kosong
+(konten baru belum sempat render), dan itulah "kedip" yang terlihat saat
+mengklik menu. Cross-fade sejati butuh dua host konten; belum dibuat.
+
+| Kelas | Peran |
+|---|---|
+| `Controls/TekananHalus.cs` | sorot/tekan/angkat tombol. Menyalakan dua lapisan di dalam template tombol (`SorotLapis`, `TekanLapis`) plus `Kulit` untuk angkat & skala, jadi teks tidak ikut memudar seperti pada `Opacity` tombol lama. `KuasSorot` memungkinkan tiap gaya tombol memakai warna sorotnya sendiri tanpa menyalin template. |
+| `Controls/KartuHalus.cs` | angkat–tekan–memantul untuk kartu yang benar-benar membuka sesuatu (`PintasanCard` Beranda, `KartuTemplateItem`, `KartuVersi` catatan rilis, `TautanKartu` About). Tidak dipasang di `CardStyle`/`KpiCardStyle`: kartu panel dan baris daftar yang hanya menampilkan data tidak boleh menjanjikan aksi. |
+| `Controls/PegasEase.cs` | kurva pegas teredam (`1 − e^(−d·t)·cos(2π·f·t)`), puncak ≈1,20 lalu mengendap; ujungnya presisi 0 dan 1 supaya `HoldEnd` tidak meninggalkan tombol 0,5% lebih besar. Dipakai lepas tombol, lepas kartu, chevron & geser isi accordion. |
+| `Controls/TransformAman.cs` | penjaga dua hal, lihat di bawah. |
+
+Semua durasi diambil dari `KecepatanAnimasiPrefs` (`SuDesApp.Core/Utilities/KecepatanAnimasi.cs`)
+sehingga ikut pilihan kecepatan pengguna, dan dilompati bila Windows meminta
+mengurangi animasi (`SystemParameters.ClientAreaAnimation`). Yang dianimasikan
+hanya `Opacity` dan `RenderTransform` — tidak ada `Margin`/`Height`/`Width` —
+jadi tidak pernah memicu layout pass dan tidak menggeser tetangga.
+
+Dua jebakan yang sudah dibayar mahal:
+
+1. **`RenderTransform` default WPF bukan `null`**, melainkan `MatrixTransform`
+   identity. Penjaga "jangan timpa transform milik XAML" yang ditulis
+   `!= null` selalu benar, sehingga lift kartu dan skala tekan tombol mati
+   diam-diam — tanpa galat, tanpa pesan. Gunakan
+   `TransformAman.TanpaTransformSendiri`. Dijaga
+   `AnimasiKartuTombolTests.RenderTransform_awal_bukan_null_jadi_jangan_pakai_cek_null`.
+2. **Mengangkat kartu menyisakan pita kosong setinggi jarak angkat di tepi
+   bawahnya.** Kursor yang berhenti di pita itu keluar-masuk terus dan kartunya
+   bergetar. `MouseLeave` di dalam pita diabaikan
+   (`TransformAman.KursorMasihDiZonaAngkat`).
+
 ## Font antarmuka & skala ukuran huruf
 
 - **Font**: Google Sans — font yang sama dengan yang dipakai antarmuka

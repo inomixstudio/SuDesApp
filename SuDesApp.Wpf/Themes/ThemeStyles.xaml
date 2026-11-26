@@ -119,11 +119,19 @@
     <!-- ========== Default Button ========== -->
     <!-- Background = SecondaryBrush: di semua tema secondary adalah shade lebih
          tua dari primary (memang tidak dipakai view lain), dan di tema Dark
-         secondary sengaja pink gelap agar tombol berwarna pink. -->
+         secondary sengaja pink gelap agar tombol berwarna pink.
+
+         Keadaan hover/tekan TIDAK lagi memakai Opacity pada seluruh tombol:
+         cara itu memudarkan teksnya juga, dan berubahnya seketika (tanpa
+         transisi). Sekarang ada dua lapisan di dalam templat — SorotLapis untuk
+         hover, TekanLapis untuk tekan — yang dipudarkan dari kode lewat
+         ctrl:TekananHalus, jadi durasinya ikut kecepatan animasi pilihan
+         pengguna dan teks tetap tajam. Kulit diangkat 1 px saat disorot: cukup
+         untuk terasa terangkat, cukup kecil untuk tidak pernah terasa menahan. -->
     <Style TargetType="Button">
         <Setter Property="Background" Value="{DynamicResource SecondaryBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource OnPrimaryTextBrush}"/>
-        <Setter Property="Padding" Value="14,7"/>
+        <Setter Property="Padding" Value="16,7"/>
         <Setter Property="Margin" Value="4"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="FontSize" Value="{StaticResource UkuranTeksKontrol}"/>
@@ -133,25 +141,34 @@
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <!-- Umpan balik tekan halus untuk semua tombol (mengecil 0,97 saat ditekan,
-             kembali lembut saat dilepas). Durasi mengikuti kecepatan animasi
-             pilihan pengguna; detail di SuDesApp.Wpf/Controls/TekananHalus.cs. -->
+             kembali lembut saat dilepas) + sorotan dan lapisan tekan beranimasi.
+             Durasi mengikuti kecepatan animasi pilihan pengguna; detail di
+             SuDesApp.Wpf/Controls/TekananHalus.cs. -->
         <Setter Property="ctrl:TekananHalus.Aktif" Value="True"/>
+        <!-- Tombol berisi disorot dengan kilau putih transparan (palet tetap):
+             di atas latar gelap ia terbaca sebagai "lebih terang" di sebelas tema. -->
+        <Setter Property="ctrl:TekananHalus.KuasSorot" Value="{DynamicResource LapisanHoverBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="bd" Background="{TemplateBinding Background}"
-                            CornerRadius="6" Padding="{TemplateBinding Padding}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
+                    <Grid x:Name="Kulit">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <Grid>
+                                <Border x:Name="SorotLapis" CornerRadius="8" Opacity="0"
+                                        Background="{Binding Path=(ctrl:TekananHalus.KuasSorot), RelativeSource={RelativeSource TemplatedParent}}"/>
+                                <Border x:Name="TekanLapis" CornerRadius="8" Opacity="0"
+                                        Background="{DynamicResource LapisanTekanBrush}"/>
+                                <!-- Bantalan dipindah ke presenter: lapisan sorot/tekan harus
+                                     menutup seluruh permukaan tombol, bukan hanya isi teksnya. -->
+                                <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Opacity" Value="0.9"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Opacity" Value="0.75"/>
-                        </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
                         </Trigger>
@@ -168,17 +185,18 @@
     </Style>
 
     <!-- Tombol sekunder & garis: keduanya perlu latar berubah saat hover —
-         template bawaan hanya menurunkan Opacity, sehingga latar Transparan
-         tidak pernah bereaksi. Isian PanelBrush + garis aksen membuat hover
-         terasa hidup tanpa mengubah kontras teks. -->
+         isian PanelBrush + garis aksen membuat hover terasa hidup tanpa mengubah
+         kontras teks. Perubahan latarnya kini lewat lapisan sorot beranimasi
+         (KuasSorot), bukan Setter Background, supaya warnanya memudar dan bukan
+         melompat; BorderBrush aksen tetap seketika karena ia penanda, bukan isi. -->
     <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="ctrl:TekananHalus.KuasSorot" Value="{DynamicResource AccentSubtleBrush}"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
             </Trigger>
         </Style.Triggers>
@@ -189,9 +207,9 @@
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="ctrl:TekananHalus.KuasSorot" Value="{DynamicResource AccentSubtleBrush}"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
             </Trigger>
         </Style.Triggers>
@@ -2151,19 +2169,20 @@
     <!-- Tombol aksi di dalam header halaman, dipakai halaman data seperti Data
          Warga, Laporan Penduduk, API Desa, dan pembaca dokumen. Latar PUTIH +
          teks Primary sejajar dengan chip ikon header yang juga putih, sehingga
-         menonjol di atas gradien Primary → Secondary di semua tema (latar
-         Secondary lama nyaris menyatu dengan sisi kanan gradien). Hover memakai
-         template bawaan (opacity turun → warna gradien merembes tipis). -->
+         menonjol di atas gradien Primary → Secondary di semua tema. Sorotan hover
+         memakai tint aksen (bukan kilau putih bawaan): di atas tombol putih,
+         kilau putih tidak akan terlihat sama sekali. -->
     <Style x:Key="HeaderActionButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
         <Setter Property="Background" Value="{DynamicResource PutihBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+        <Setter Property="ctrl:TekananHalus.KuasSorot" Value="{DynamicResource AccentSubtleBrush}"/>
         <Setter Property="Padding" Value="14,5"/>
         <Setter Property="Margin" Value="0"/>
     </Style>
 
     <!-- Tombol garis di header: transparan agar tidak berebut perhatian dari
-         tombol utama, dengan kilau putih tipis saat hover supaya terasa hidup
-         di atas gradien. -->
+         tombol utama; sorotannya kini lapisan kilau beranimasi dari templat
+         bawaan, jadi tidak perlu lagi menimpa Background saat hover. -->
     <Style x:Key="HeaderGhostButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}"/>
@@ -2172,11 +2191,6 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Padding" Value="14,5"/>
         <Setter Property="Margin" Value="0"/>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource LapisanLembutBrush}"/>
-            </Trigger>
-        </Style.Triggers>
     </Style>
 
     <Style x:Key="AccentSectionBar" TargetType="Border">

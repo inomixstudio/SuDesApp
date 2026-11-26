@@ -45,31 +45,31 @@
       langsung (bukan @color) karena @color ikut berganti di values-night.
     -->
     <style name="Theme.SuDesAndroid.Terang" parent="Theme.Material3.Light.NoActionBar">
-        <item name="colorPrimary">#15803D</item>
+        <item name="colorPrimary">#12805A</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorPrimaryContainer">#DCFCE7</item>
-        <item name="colorOnPrimaryContainer">#14532D</item>
-        <item name="colorSecondary">#14532D</item>
+        <item name="colorPrimaryContainer">#E2F3EA</item>
+        <item name="colorOnPrimaryContainer">#0F5132</item>
+        <item name="colorSecondary">#0F5132</item>
         <item name="colorOnSecondary">#FFFFFF</item>
-        <item name="colorSecondaryContainer">#DCFCE7</item>
-        <item name="colorOnSecondaryContainer">#14532D</item>
+        <item name="colorSecondaryContainer">#E2F3EA</item>
+        <item name="colorOnSecondaryContainer">#0F5132</item>
 
         <item name="android:colorBackground">#FFFFFF</item>
         <item name="colorSurface">#FFFFFF</item>
-        <item name="colorOnSurface">#052E16</item>
-        <item name="colorSurfaceVariant">#E7F9EE</item>
-        <item name="colorOnSurfaceVariant">#3F614E</item>
-        <item name="colorOutline">#C8EED6</item>
-        <item name="colorOutlineVariant">#C8EED6</item>
+        <item name="colorOnSurface">#12201A</item>
+        <item name="colorSurfaceVariant">#E9F0EB</item>
+        <item name="colorOnSurfaceVariant">#4A6355</item>
+        <item name="colorOutline">#D5E0D8</item>
+        <item name="colorOutlineVariant">#D5E0D8</item>
 
         <item name="android:windowBackground">#FFFFFF</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>
-        <item name="android:textColorPrimary">#052E16</item>
-        <item name="android:textColorSecondary">#3F614E</item>
-        <item name="android:textColorHint">#3F614E</item>
+        <item name="android:textColorPrimary">#12201A</item>
+        <item name="android:textColorSecondary">#4A6355</item>
+        <item name="android:textColorHint">#4A6355</item>
         <item name="android:forceDarkAllowed">false</item>
     </style>
 

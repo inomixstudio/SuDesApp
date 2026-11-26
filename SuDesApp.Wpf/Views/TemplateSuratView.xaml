@@ -149,7 +149,9 @@
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Bd" Background="{DynamicResource SurfaceBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                CornerRadius="10" Padding="14,11" SnapsToDevicePixels="True">
+                                CornerRadius="10" Padding="14,11" SnapsToDevicePixels="True"
+                                c:KartuHalus.Aktif="True"
+                                c:KartuHalus.JarakAngkat="2">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>

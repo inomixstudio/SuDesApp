@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Palet disamakan dengan tema default aplikasi desktop (GreenTheme):
-         hijau hutan #166534, aksen emerald #15803D, latar #F0FDF4. -->
+         hijau hutan #0F5132, aksen emerald #12805A, latar netral #F4F7F5.
+         Latar halaman sengaja tidak ikut hijau: desktop sudah lebih dulu
+         berhenti meninting permukaannya supaya kartu terbaca sebagai objek. -->
     <color name="ic_launcher_background">#0DAD78</color>
 
-    <color name="accent">#15803D</color>
-    <color name="accent_dark">#14532D</color>
-    <color name="accent_muda">#DCFCE7</color>
-    <color name="accent_lembut">#F0FDF4</color>
+    <color name="accent">#12805A</color>
+    <color name="accent_dark">#0F5132</color>
+    <color name="accent_muda">#E2F3EA</color>
+    <color name="accent_lembut">#F4F7F5</color>
     <color name="on_accent">#FFFFFF</color>
 
     <!-- Aksen sekunder (kelompok NTCR) = WarningColor desktop. -->
     <color name="emas">#D97706</color>
-    <color name="emas_muda">#FEF3C7</color>
+    <color name="emas_muda">#FBF1DE</color>
 
-    <color name="page">#F0FDF4</color>
+    <color name="page">#F4F7F5</color>
     <color name="surface">#FFFFFF</color>
-    <color name="surface_naik">#E7F9EE</color>
-    <color name="teks">#052E16</color>
-    <color name="teks_redup">#3F614E</color>
-    <color name="garis">#C8EED6</color>
+    <color name="surface_naik">#E9F0EB</color>
+    <color name="teks">#12201A</color>
+    <color name="teks_redup">#4A6355</color>
+    <color name="garis">#D5E0D8</color>
     <color name="bahaya">#DC2626</color>
-    <color name="berhasil">#15803D</color>
+    <color name="berhasil">#12805A</color>
 </resources>
