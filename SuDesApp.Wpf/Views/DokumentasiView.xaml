@@ -10,7 +10,8 @@
         bukti regulasi (PDF Perbup), panduan, kebijakan, dan catatan teknis —
         dengan tombol Baca per dokumen. Dokumen selalu dibaca DI DALAM aplikasi:
         PDF pada pratinjau SudesPdf, berkas .md pada halaman baca dokumen. Tidak ada
-        berkas yang diserahkan ke aplikasi asosiasi Windows.
+        berkas yang diserahkan ke aplikasi asosiasi Windows — termasuk folder dokumennya
+        sendiri, karena tidak ada lagi tombol yang membukanya di File Explorer.
     -->
     <UserControl.Resources>
         <ResourceDictionary>
@@ -125,34 +126,25 @@
                 <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding Title}" Style="{StaticResource HeaderTitle}"/>
                     <TextBlock Text="{Binding Subtitle}" Style="{StaticResource HeaderSubtitle}"
-                               TextWrapping="Wrap" MaxWidth="720"/>
+                               TextWrapping="Wrap" MaxWidth="720" HorizontalAlignment="Left"/>
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <!-- Bilah alat: jumlah dokumen, lokasi foldernya, tombol buka folder -->
+        <!-- Bilah alat: jumlah dokumen dan lokasinya. Tidak ada tombol "Buka Folder
+             Dokumen" di sini: halaman ini berjanji dokumen dibaca DI DALAM aplikasi,
+             dan tombol yang melempar pengguna ke File Explorer mematahkan janji itu
+             tepat dua baris di bawah judul. -->
         <Border Grid.Row="1" Style="{StaticResource ToolbarCard}" Margin="0,14,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding RingkasanText}" FontWeight="SemiBold" FontSize="13"
-                               Foreground="{DynamicResource TextBrush}"/>
-                    <TextBlock Text="{Binding LokasiInfo}" FontSize="11" TextWrapping="Wrap"
-                               Margin="0,3,0,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                    <TextBlock Text="{Binding PesanStatus}" FontSize="11" TextWrapping="Wrap"
-                               Margin="0,4,0,0" Foreground="{DynamicResource AccentTextBrush}"
-                               Visibility="{Binding AdaPesan, Converter={StaticResource BoolToVis}}"/>
-                </StackPanel>
-
-                <Button Grid.Column="1" Content="Buka Folder Dokumen" VerticalAlignment="Center"
-                        Margin="12,0,0,0" Style="{StaticResource SecondaryButton}"
-                        Command="{Binding BukaFolderCommand}"
-                        ToolTip="Buka folder dokumen di File Explorer — untuk menyalin atau memeriksa berkas, bukan untuk membaca"/>
-            </Grid>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{Binding RingkasanText}" FontWeight="SemiBold" FontSize="13"
+                           Foreground="{DynamicResource TextBrush}"/>
+                <TextBlock Text="{Binding LokasiInfo}" FontSize="11" TextWrapping="Wrap"
+                           Margin="0,3,0,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBlock Text="{Binding PesanStatus}" FontSize="11" TextWrapping="Wrap"
+                           Margin="0,4,0,0" Foreground="{DynamicResource AccentTextBrush}"
+                           Visibility="{Binding AdaPesan, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
         </Border>
 
         <!-- Bilah saringan: kata kunci menimbulkan judul/keterangan/jalur berkas -->
