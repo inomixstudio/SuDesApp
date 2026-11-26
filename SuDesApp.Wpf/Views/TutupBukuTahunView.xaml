@@ -4,6 +4,13 @@
              xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
 
+    <!-- Ctrl+P = aksi Cetak halaman ini, sama seperti tombol Cetak di toolbar.
+         Pintasan dipasang per halaman (bukan global) karena perintah cetaknya
+         berbeda-beda; daftar lengkapnya dijaga PintasanCetakTests. -->
+    <UserControl.InputBindings>
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding CetakPdfCommand}"/>
+    </UserControl.InputBindings>
+
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
@@ -70,6 +77,7 @@
                     <Button Content="Cetak Excel" Command="{Binding CetakExcelCommand}"
                             Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                     <Button Content="Cetak PDF" Command="{Binding CetakPdfCommand}"
+                            ToolTip="Cetak buku tutup tahun sebagai PDF (Ctrl+P)"
                             Style="{StaticResource SecondaryButton}"/>
                 </StackPanel>
             </Grid>

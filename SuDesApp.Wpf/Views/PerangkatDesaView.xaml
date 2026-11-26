@@ -5,6 +5,13 @@
              xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
 
+    <!-- Ctrl+P = aksi Cetak halaman ini, sama seperti tombol Cetak di toolbar.
+         Pintasan dipasang per halaman (bukan global) karena perintah cetaknya
+         berbeda-beda; daftar lengkapnya dijaga PintasanCetakTests. -->
+    <UserControl.InputBindings>
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding CetakPdfCommand}"/>
+    </UserControl.InputBindings>
+
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
@@ -227,7 +234,7 @@
                     </Button>
                     <Button Command="{Binding CetakPdfCommand}"
                             Style="{StaticResource OutlineButton}" Margin="0,0,8,4"
-                            ToolTip="Buat PDF daftar bagian yang sedang tampil (kop surat + tabel) lalu tampilkan di pratinjau SudesPdf — tiap bagian dicetak terpisah">
+                            ToolTip="Buat PDF daftar bagian yang sedang tampil (kop surat + tabel) lalu tampilkan di pratinjau SudesPdf — tiap bagian dicetak terpisah (Ctrl+P)">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{x:Static u:IkonMenu.Cetak}" FontFamily="{StaticResource AppIconFont}" FontSize="14"
                                        VerticalAlignment="Center" Margin="0,0,7,0"/>

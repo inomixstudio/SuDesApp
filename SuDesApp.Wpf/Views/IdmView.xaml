@@ -5,6 +5,13 @@
              xmlns:u="clr-namespace:SuDesApp.Wpf.Utilities"
              xmlns:local="clr-namespace:SuDesApp.Wpf.Views"
              FontSize="14" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+    <!-- Ctrl+P = aksi Cetak halaman ini, sama seperti tombol Cetak di toolbar.
+         Pintasan dipasang per halaman (bukan global) karena perintah cetaknya
+         berbeda-beda; daftar lengkapnya dijaga PintasanCetakTests. -->
+    <UserControl.InputBindings>
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding CetakCommand}"/>
+    </UserControl.InputBindings>
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <local:InverseBoolToVisibilityConverter x:Key="InvBoolToVis"/>
@@ -255,7 +262,7 @@
                             <Button Content="Cetak / PDF" Command="{Binding CetakCommand}"
                                     Style="{StaticResource PrimaryButton}" Margin="10,2,0,2"
                                     ToolTipService.ShowOnDisabled="True"
-                                    ToolTip="{Binding TooltipCetak}"/>
+                                    ToolTip="{Binding TooltipCetak, StringFormat={}{0} (Ctrl+P)}"/>
                         </WrapPanel>
 
                         <!-- SATU bilah pesan: galat / cadangan / peringatan sumber / status

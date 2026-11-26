@@ -182,7 +182,7 @@ namespace SuDesApp.Wpf.ViewModels
         /// </summary>
         public string TooltipCetak =>
             BolehCetakPdfDokumenIni
-                ? "Cetak dokumen ini ke printer"
+                ? "Cetak dokumen ini ke printer (Ctrl+P)"
                 : PesanCetakDikunci;
 
         /// <summary>

@@ -147,6 +147,7 @@ namespace SuDesApp.Wpf.ViewModels
             "Nomor surat terisi otomatis saat surat dibuat — cukup pastikan awalannya sesuai tata naskah kantor desa.",
             "Aktifkan pencadangan Google Drive di Pengaturan Aplikasi supaya data dan template aman.",
             "Template surat sendiri bisa dibuat dari berkas Word lewat menu Buat Surat Sendiri.",
+            "Ctrl+P mencetak halaman yang sedang dibuka — di halaman pratinjau PDF, pintasan yang sama langsung mengirim dokumen ke printer.",
         };
 
         /// <summary>Jumlah langkah yang dihitung pada kemajuan (langkah opsional tidak dihitung).</summary>

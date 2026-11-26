@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -66,6 +66,15 @@ namespace SuDesApp.Wpf.Views
         {
             InitializeComponent();
             DataContextChanged += PdfPreviewView_DataContextChanged;
+            // Ctrl+P memanggil aksi yang sama dengan tombol Cetak. Pintasan dipasang
+            // di kode, bukan lewat binding XAML, karena dokumennya hidup di view ini
+            // (halaman lain yang mencetak lewat ViewModel memasang KeyBinding di XAML);
+            // AsyncRelayCommand app sendiri menolak jalan berbarengan sehingga Ctrl+P
+            // dobel tidak mengirim dua job ke printer.
+            InputBindings.Add(new System.Windows.Input.KeyBinding(
+                new Mvvm.AsyncRelayCommand(PrintAsync),
+                System.Windows.Input.Key.P,
+                System.Windows.Input.ModifierKeys.Control));
         }
 
         private void PdfPreviewView_DataContextChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)

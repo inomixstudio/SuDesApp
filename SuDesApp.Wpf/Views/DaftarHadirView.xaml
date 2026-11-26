@@ -6,6 +6,13 @@
              SnapsToDevicePixels="True"
              UseLayoutRounding="True">
 
+    <!-- Ctrl+P = aksi Cetak halaman ini, sama seperti tombol Cetak di toolbar.
+         Pintasan dipasang per halaman (bukan global) karena perintah cetaknya
+         berbeda-beda; daftar lengkapnya dijaga PintasanCetakTests. -->
+    <UserControl.InputBindings>
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding CetakCommand}"/>
+    </UserControl.InputBindings>
+
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
@@ -383,6 +390,7 @@
                             ToolTip="Hapus seluruh isian dan kembali ke tampilan awal"/>
                     <Button Content="Cetak PDF" Width="130" Margin="0,0,8,0"
                             Command="{Binding CetakCommand}"
+                            ToolTip="Susun dan cetak daftar hadir (Ctrl+P)"
                             Style="{StaticResource SuccessButton}"/>
                     <Button Content="Batal" Width="110"
                             Command="{Binding BatalCommand}"
