@@ -282,3 +282,28 @@ naskah Pemerintah Desa beserta pola penomoran yang berlaku. Hasil tentang tata
 naskah dinas Pemerintah Kabupaten tidak dipakai sebagai pengganti. Untuk daerah
 tersebut, dokumentasi aplikasi harus tetap menyatakan file regulasi desa belum
 tersedia sampai sumber dan cakupannya terverifikasi.
+
+## 10. Android: pola nomor diterbitkan desktop
+
+Android tidak punya katalog penomoran sendiri. Saat sinkron, desktop menerbitkan
+`pengaturan_desa.nomor` berisi `format` (peta `NamaJenis` → `NomorFormat` dari
+`JenisSuratConfig.json`, termasuk penyesuaian yang diubah operator di halaman
+Pengaturan Nomor Surat), `urutTerakhir`, dan `tahun`. `PengaturanSinkron.kt`
+menyimpan peta itu sebagai `PengaturanSurat.formatNomor`, lalu
+`nomorBerikutnya(idJenis, ...)` mengambil pola untuk `idJenis` skema formulir —
+kosakata kuncinya sama dengan `NamaJenis` katalog, jadi `SKD_UMUM` di HP adalah
+`SKD_UMUM` di desktop.
+
+Artinya kelas klasifikasi Karawang di §4 berlaku di kedua platform tanpa menyalin
+angka. Kalau sebuah jenis surat tidak ikut diterbitkan (misal jenis baru ditambahkan
+di skema tapi lupa didaftarkan di katalog), Android **jatuh ke awalan global**
+`awalanNomor` bawaan `470` — nomor tetap terbentuk, hanya bentuknya tidak sama
+dengan register desktop. Penjaganya `SuDesApp.Tests/Sinkron/ParitasNomorAndroidDesktopTests.cs`:
+setiap kunci `SkemaFormulir.json` wajib punya pola di katalog, kunci katalog dan
+skema harus satu himpunan, dan kontrak nama `nomor.format` di kedua sisi tidak boleh
+berubah tanpa disadari.
+
+Nomor urut lokal Android yang lebih tinggi selalu menang atas `urutTerakhir` hasil
+sinkron: menarik ulang pengaturan tidak boleh membuat nomor surat mundur. Deret
+resmi tetap milik register desktop; angka di HP dipakai untuk draf/penomoran awal
+sebelum surat disahkan di desktop.
