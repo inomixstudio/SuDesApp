@@ -88,6 +88,90 @@ namespace SuDesApp.Tests.UI
             });
         }
 
+        /// <summary>
+        /// Tombol ikon pernah satu-satunya yang masih melompat: hover-nya Setter
+        /// Background biasa, tanpa efek tekan. Sekarang ia memakai lapisan yang sama
+        /// dengan tombol berisi — dan itu hanya terbukti kalau templatnya benar-benar
+        /// punya SorotLapis/TekanLapis, karena TekananHalus mencari nama bagian itu
+        /// dan diam tanpa galat kalau tidak ada.
+        /// </summary>
+        [Fact]
+        public void IconButton_memakai_lapisan_sorot_dan_tekan()
+        {
+            string xaml = System.IO.File.ReadAllText(System.IO.Path.Combine(
+                CariAkarRepo(), "SuDesApp.Wpf", "Themes", "ThemeStyles.xaml"), System.Text.Encoding.UTF8);
+            int mulai = xaml.IndexOf("<Style x:Key=\"IconButton\" TargetType=\"Button\">", StringComparison.Ordinal);
+            Assert.True(mulai >= 0, "gaya IconButton tidak ditemukan");
+            string isi = xaml.Substring(mulai, xaml.IndexOf("</Style>", mulai, StringComparison.Ordinal) - mulai);
+
+            Assert.Contains("x:Name=\"SorotLapis\"", isi, StringComparison.Ordinal);
+            Assert.Contains("x:Name=\"TekanLapis\"", isi, StringComparison.Ordinal);
+            Assert.Contains("ctrl:TekananHalus.Aktif", isi, StringComparison.Ordinal);
+            Assert.DoesNotContain("TargetName=\"bd\" Property=\"Background\"", isi, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Templat hanya benar kalau sungguh-sungguh dipasang. Uji teks XAML di atas
+        /// tidak menangkap kunci resource yang salah eja atau lapisan yang hilang,
+        /// jadi tombol ikon dibangun, diukur, dan dirender sungguhan di sini.
+        /// </summary>
+        [Fact]
+        public void IconButton_diterapkan_dan_mempunyai_lapisan_sorot_dan_tekan()
+        {
+            // Semua pemeriksaan di dalam STA: objek WPF tidak boleh disentuh dari
+            // thread uji setelah jendela ditutup.
+            JalankanSTA(() =>
+            {
+                if (Application.Current is null)
+                {
+                    var app = new SuDesApp.Wpf.App();
+                    app.InitializeComponent();
+                }
+
+                var gaya = (Style)Application.Current!.FindResource("IconButton");
+                var tombol = new Button { Style = gaya, Content = "x", Width = 30, Height = 30 };
+                var jendela = new Window
+                {
+                    Content = tombol,
+                    Width = 120,
+                    Height = 120,
+                    WindowStyle = WindowStyle.None,
+                    ShowInTaskbar = false,
+                    Visibility = Visibility.Hidden,
+                };
+                jendela.UpdateLayout();
+                tombol.ApplyTemplate();
+
+                FrameworkElement sorot = Cari(tombol, "SorotLapis")!;
+                FrameworkElement tekan = Cari(tombol, "TekanLapis")!;
+                Assert.NotNull(sorot);
+                Assert.NotNull(tekan);
+                Assert.True(((UIElement)sorot).Opacity == 0d, "lapisan sorot harus mulai tidak terlihat");
+                Assert.True(((UIElement)tekan).Opacity == 0d, "lapisan tekan harus mulai tidak terlihat");
+                Assert.Same(gaya, tombol.Style);
+                jendela.Close();
+            });
+        }
+
+        private static FrameworkElement? Cari(DependencyObject akar, string nama)
+        {
+            if (akar is FrameworkElement fe && fe.Name == nama) return fe;
+            for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(akar); i++)
+            {
+                FrameworkElement? ketemu = Cari(System.Windows.Media.VisualTreeHelper.GetChild(akar, i), nama);
+                if (ketemu is not null) return ketemu;
+            }
+            return null;
+        }
+
+        private static string CariAkarRepo()
+        {
+            var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+            while (dir is not null && !System.IO.File.Exists(System.IO.Path.Combine(dir.FullName, "SuDesApp.slnx")))
+                dir = dir.Parent;
+            return dir?.FullName ?? throw new InvalidOperationException("Repo tidak ditemukan.");
+        }
+
         [Fact]
         public void Kurva_pegas_mulai_dan_berhenti_tepat_pada_tujuannya()
         {
