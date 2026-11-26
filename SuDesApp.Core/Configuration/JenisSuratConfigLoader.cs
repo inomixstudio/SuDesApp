@@ -276,7 +276,13 @@ namespace SuDesApp.Configuration
             }
         }
 
-        // Method untuk membuat konfigurasi default yang lebih lengkap
+        /// <summary>
+        /// Berkas konfigurasi bootstrap — hanya dipakai bila JenisSuratConfig.json
+        /// belum ada sama sekali. Formatnya sengaja disamakan dengan berkas asli
+        /// (kode klasifikasi Perbup Karawang 28/2019 + contoh nomor Perbup 74/2020):
+        /// dua entri dengan awalan berbeda di sini pernah membuat database baru
+        /// mulai dengan pola yang tidak sama dengan katalog lengkapnya.
+        /// </summary>
         private async Task CreateDefaultConfigAsync(CancellationToken cancellationToken)
         {
             var defaultConfigs = new List<JenisSuratConfig>
@@ -287,7 +293,7 @@ namespace SuDesApp.Configuration
                     KodeJenis = "SKD",
                     TemplateName = "SKD_UMUM",
                     DisplayName = "SKD Belum Menikah (KUA)",
-                    NomorFormat = "470/{0:D3}/Ds/{2:yyyy}",
+                    NomorFormat = "472/{0:D3}/Ds/{2:yyyy}",
                     IsSharedNumbering = true,
                     IsKeteranganDesa = true
                 },
