@@ -543,7 +543,21 @@ Tahap 'Tahap 5/7 - commit rilis'
 $berkasRilis = @('SuDesApp.Wpf/SuDesApp.Wpf.csproj', 'SuDesApp.Wpf/ViewModels/CatatanRilisViewModel.RiwayatVersi.cs')
 if ($script:isiGradle) { $berkasRilis += 'android/app/build.gradle.kts' }
 JalankanGit -Arg (@('add') + $berkasRilis)
-JalankanGit -Arg @('commit', '-m', $judul, '-m', $badan)
+# Pesan commit lewat berkas, bukan -m. Windows PowerShell 5.1 merusak argumen
+# yang mengandung tanda kutip ganda saat meneruskannya ke program luar: kutip
+# pada entri "Catatan Rilis" memecah badan pesan menjadi beberapa argumen, git
+# menganggap sisanya pathspec, dan commit rilis gagal di mesin lokal (padahal
+# kedua gerbang sudah lolos). -F tidak punya masalah itu di 5.1 maupun pwsh 7.
+$berkasPesan = [System.IO.Path]::GetTempFileName()
+try {
+    [System.IO.File]::WriteAllText(
+        $berkasPesan,
+        ($judul + [Environment]::NewLine + [Environment]::NewLine + $badan + [Environment]::NewLine),
+        (New-Object System.Text.UTF8Encoding($false)))
+    JalankanGit -Arg @('commit', '-F', $berkasPesan)
+} finally {
+    Remove-Item -LiteralPath $berkasPesan -Force -ErrorAction SilentlyContinue
+}
 Sukses ('Commit dibuat: ' + $judul)
 
 Tahap 'Tahap 6/7 - tag rilis'
