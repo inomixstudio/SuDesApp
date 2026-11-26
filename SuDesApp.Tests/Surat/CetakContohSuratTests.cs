@@ -1081,6 +1081,38 @@ public sealed class CetakContohSuratTests : IDisposable
         return jalur;
     }
 
+    /// <summary>
+    /// Ukuran kertas di Pengaturan Cetak harus benar-benar menjadi ukuran halaman PDF,
+    /// karena angka itulah yang dipakai printer memilih formulir kertas. F4 = 215 x 330
+    /// mm (609,45 x 935,43 pt), bukan 8,5 x 13 inci dan bukan pula 210 x 297 mm.
+    /// </summary>
+    [Fact]
+    public async Task PengaturanCetakF4MenjadiUkuranHalamanPdf()
+    {
+        UkuranKertasSurat sebelumnya = PengaturanCetak.GetUkuranKertas();
+        try
+        {
+            PengaturanCetak.SetUkuranKertas(UkuranKertasSurat.F4);
+            var config = BuatConfig();
+            var gen = new SKTMGenerator(config, new FileService(NullLogger<FileService>.Instance),
+                new DesaRepoPalsu(), new SuratRepoPalsu(),
+                new SettingsManager(new DesaRepoPalsu(), config),
+                NullLogger<SKTMGenerator>.Instance, NullLoggerFactory.Instance);
+
+            var pdf = await CetakAsync(gen, SuratContoh(SuratConstants.SKTM));
+            Penyimpanan(pdf, "17-sktm-f4");
+
+            await using var dokumen = await Document.LoadAsync(pdf);
+            var halaman = dokumen.PageSizes[0];
+            Assert.Equal(609.45, halaman.Width, 1);   // 215 mm
+            Assert.Equal(935.43, halaman.Height, 1);  // 330 mm
+        }
+        finally
+        {
+            PengaturanCetak.SetUkuranKertas(sebelumnya);
+        }
+    }
+
     private static string? CariRootRepo()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

@@ -50,9 +50,9 @@ object SuratPdf {
     /** Lebar kertas A4 dalam point (72 pt = 1 inci). */
     const val A4_LEBAR = 595.28f
     const val A4_TINGGI = 841.89f
-    /** F4/Folio — 8,5 x 13 inci. */
-    const val F4_LEBAR = 607.5f
-    const val F4_TINGGI = 935.4f
+    /** F4/Folio — 215 x 330 mm, sama dengan PengaturanCetak desktop dan PageSizes.F4. */
+    const val F4_LEBAR = 609.45f
+    const val F4_TINGGI = 935.43f
 
     /** Rasio kolom tabel isian desktop: 160 : 10 : 340. */
     const val RASIO_LABEL = 160f

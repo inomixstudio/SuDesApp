@@ -9,7 +9,7 @@ namespace SuDesApp.Utilities
         /// <summary>A4 — 210 x 297 mm. Ukuran bawaan aplikasi.</summary>
         A4,
 
-        /// <summary>F4/Folio — 8,5 x 13 inci (215 x 330 mm), ukuran surat kantor desa.</summary>
+        /// <summary>F4/Folio — 215 x 330 mm, ukuran surat kantor desa.</summary>
         F4
     }
 
@@ -45,11 +45,16 @@ namespace SuDesApp.Utilities
             LambangKabupaten = 2,
         }
 
-        // Dimensi halaman dalam point (72 point = 1 inci).
+        // Dimensi halaman dalam point (72 point = 1 inci). Angkanya adalah ukuran
+        // FISIK kertas yang dibeli kantor, bukan pembulatan inci: F4 Indonesia
+        // 215 x 330 mm (= 609,45 x 935,43 pt). Nilai lama 607,5 pt = 214,3 mm
+        // menyisakan 0,7 mm kertas di kiri-kanan dan tidak sama lagi dengan
+        // PageSizes.F4 di SudesPdf.Core, sehingga pemilihan formulir kertas di
+        // driver dan hasil cetak Android bisa berbeda diam-diam.
         private const float A4Lebar = 595.28f;   // 210 mm
         private const float A4Tinggi = 841.89f;  // 297 mm
-        private const float F4Lebar = 607.5f;    // 8,5 inci
-        private const float F4Tinggi = 935.4f;   // 13 inci
+        private const float F4Lebar = 609.45f;   // 215 mm
+        private const float F4Tinggi = 935.43f;  // 330 mm
 
         /// <summary>Ukuran kertas terpilih; bawaan A4.</summary>
         public static UkuranKertasSurat GetUkuranKertas()
@@ -80,7 +85,7 @@ namespace SuDesApp.Utilities
 
         /// <summary>Keterangan ukuran untuk ditampilkan di halaman pengaturan.</summary>
         public static string LabelUkuranKertas(UkuranKertasSurat ukuran)
-            => ukuran == UkuranKertasSurat.F4 ? "F4 / Folio — 8,5 x 13 inci" : "A4 — 210 x 297 mm";
+            => ukuran == UkuranKertasSurat.F4 ? "F4 / Folio — 215 x 330 mm" : "A4 — 210 x 297 mm";
 
         /// <summary>Jalur gambar logo pilihan pengguna; kosong bila belum pernah dipilih.</summary>
         public static string GetJalurLogo()

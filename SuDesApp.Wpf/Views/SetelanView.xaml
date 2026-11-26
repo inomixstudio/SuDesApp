@@ -737,7 +737,7 @@
                                                  IsChecked="{Binding UkuranKertasA4}"
                                                  Foreground="{DynamicResource TextBrush}"
                                                  AutomationProperties.Name="Ukuran kertas A4"/>
-                                    <RadioButton Content="F4 / Folio — 8,5 x 13 inci" GroupName="UkuranKertasSurat"
+                                    <RadioButton Content="F4 / Folio — 215 x 330 mm" GroupName="UkuranKertasSurat"
                                                  IsChecked="{Binding UkuranKertasF4}" Margin="0,6,0,0"
                                                  Foreground="{DynamicResource TextBrush}"
                                                  AutomationProperties.Name="Ukuran kertas F4"/>

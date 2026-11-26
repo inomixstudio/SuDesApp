@@ -164,7 +164,7 @@ public sealed class FormulirPerangkatSatuHalamanTests : IDisposable
     }
 
     private static double LebarYangDiharapkan(UkuranKertasSurat ukuran) =>
-        ukuran == UkuranKertasSurat.F4 ? 607.5 : 595.28;
+        ukuran == UkuranKertasSurat.F4 ? 609.45 : 595.28;
 
     private (byte[] Pdf, PdfDocument Dokumen) Buat(UkuranKertasSurat ukuran, DesaData desa)
     {
