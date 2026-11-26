@@ -42,7 +42,7 @@
     <ProjectReference Include="..\SudesExPlus\SudesExPlus.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.1.89" />
+    <PackageReference Include="Dapper" Version="2.1.100" />
     <!-- Koneksi Supabase (sinkronisasi surat Android). Role yang dipakai sama
          dengan server lisensi; RLS tetap berlaku untuk role non-pemilik. -->
     <PackageReference Include="Npgsql" Version="10.0.3" />
