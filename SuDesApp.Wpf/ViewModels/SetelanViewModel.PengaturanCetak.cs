@@ -33,7 +33,7 @@ namespace SuDesApp.Wpf.ViewModels
             set { if (value) TerapkanUkuranKertas(UkuranKertasSurat.A4); }
         }
 
-        /// <summary>Ukuran kertas F4/Folio (8,5 x 13 inci).</summary>
+        /// <summary>Ukuran kertas F4/Folio (215 x 330 mm — kertas yang dibeli kantor).</summary>
         public bool UkuranKertasF4
         {
             get => _ukuranKertas == UkuranKertasSurat.F4;
