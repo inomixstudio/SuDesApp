@@ -34,6 +34,18 @@ berlaku untuk **tingkat desa di Kabupaten Karawang**.
 1. **PDF resmi (terlampir di repo ini)** — batang tubuh + lampiran 28 format
    naskah dinas, diunduh dari JDIH Kab. Karawang:
    `docs/regulasi/Perbup-74-2020-Lampiran-Tata-Naskah-Dinas-Desa.pdf`
+2. **Perbup Karawang Nomor 28 Tahun 2019 tentang Pedoman Klasifikasi Arsip di
+   Lingkungan Pemerintah Kabupaten Karawang** — sumber kode awal (kelas
+   klasifikasi) nomor surat. Lampiran resminya 94 halaman:
+   <https://jdih.karawangkab.go.id/document/download/122/lampiran>
+   (unduhan 26 November 2026, berkas `2019pb32150028.pdf`). Kelas yang dipakai
+   aplikasi: `130 Pemerintah Kabupaten`, `300 Keamanan dan Ketertiban Umum` →
+   `330 Keamanan` → `331 Kepolisian`, `460 Sosial` → `465 Kesejahteraan Sosial`
+   (`465.3 Masyarakat Miskin: Raskin, BLT`), `470 Kependudukan dan Catatan
+   Sipil` → `471 Pendaftaran Penduduk`, `472 Pencatatan Sipil`, `510 Perdagangan`
+   (`510.41 Penerbitan SIUP`), `518 Koperasi` (`518.3 UMKM`, `518.31 Pembinaan
+   Usaha Mikro`), `520 Pertanian` → `521 Tanaman Pangan` (`521.21 Sawah`,
+   `521.43 Persawahan`), `580 Perbankan Moneter`.
 2. Halaman dokumen JDIH Kab. Karawang (flipbook):
    https://jdih.karawangkab.go.id/document/peraturan-bupati/eyJpdiI6IktUT1Jvbm9sTUw3Z2E0aFkrVytDVXc9PSIsInZhbHVlIjoiWllXcXNtbWxBbS9LWUhKaWMyMFJxZz09IiwibWFjIjoiYTIxZTlhNjdkMjgwYTcyNzUxYjdlZWFkN2FkODZjMGQ5YTMwN2NmYTk3NzExYjQwYzc4NzBiN2JkOGIwZTRhYiIsInRhZyI6IiJ9?view=flipbook
 3. Metadata resmi: https://peraturan.bpk.go.id/Details/289498/perbup-kab-karawang-no-74-tahun-2020
@@ -60,9 +72,12 @@ berlaku untuk **tingkat desa di Kabupaten Karawang**.
 **Batas kesimpulan yang didukung dokumen:**
 
 1. Contoh surat keterangan umum, kelahiran, kematian, dan ahli waris pada
-   lampiran memakai kode awal `470`. Ini mendukung penggunaan `470` pada
-   contoh-contoh tersebut; lampiran tidak menetapkan satu format lengkap yang
-   seragam untuk semua jenis surat pada tabel berikut.
+   lampiran memakai kode awal `470`. Angka itu **bukan** kode "semua surat
+   desa": pada Perbup 28/2019, `470` adalah kelas *Kependudukan dan Catatan
+   Sipil*, dan keempat contoh tersebut memang urusan kelas itu. Kelas lain
+   punya kodenya sendiri, jadi memakai `470` untuk surat usaha, pertanian,
+   kesejahteraan sosial, atau kepolisian membuat nomor surat tidak cocok
+   dengan klasifikasi arsipnya sendiri.
 2. Pasal 8 huruf b menyatakan sekretariat memberi nomor, tanggal, dan stempel
    setelah surat ditandatangani. Pasal ini tidak menetapkan bahwa nomor urut
    semua jenis surat keterangan harus memakai satu deret bersama.
@@ -72,9 +87,10 @@ berlaku untuk **tingkat desa di Kabupaten Karawang**.
    implementasi yang konsisten dengan contoh, tetapi **tidak semuanya
    ditentukan eksplisit** dalam contoh tersebut. Operator tetap perlu memastikan
    format final dengan sekretariat/kecamatan dan ketentuan yang berlaku.
-4. Perbup 74/2020 sendiri tidak cukup untuk menyatakan kode lain (misalnya
-   `474.x`, `510`, `570`, atau `593.2`) dilarang atau berlaku. Kode-kode
-   khusus memerlukan dasar sektoral/daerah tersendiri. **Pengecualian yang
+4. Perbup 74/2020 saja tidak cukup untuk menentukan kode tiap jenis surat;
+   ia hanya menunjukkan contoh. Sejak 26 November 2026 bawaan aplikasi
+   mengambil kelasnya dari **Perbup 28/2019** (lihat §2). Yang masih
+   penafsiran ditandai "penafsiran" pada tabel §4. **Pengecualian yang
    dipakai aplikasi** saat ini:
    - Blanko NTCR **N1–N6** → `474.3/xxx/Ds/tahun` (satu deret bersama) —
      Mengikuti Lampiran Keputusan Dirjen Bimas Islam No. 473/2020; aplikasi
@@ -91,38 +107,46 @@ berlaku untuk **tingkat desa di Kabupaten Karawang**.
 
 ## 4. Pemetaan format aplikasi dan batas dasar hukumnya
 
-Tabel berikut mencatat perubahan konfigurasi aplikasi, bukan daftar format yang
-seluruhnya diperintahkan Perbup. Bukti langsung dalam lampiran mendukung kode
-470 untuk contoh surat keterangan yang disebut pada §3. Untuk jenis lain,
-penggunaan 470 dan penggabungan urutannya di bawah ini adalah kebijakan bawaan
-aplikasi yang perlu ditinjau operator; jangan menyebutnya kewajiban eksplisit
-Perbup 74/2020.
+Tabel berikut adalah bawaan aplikasi. Kolom "Kelas Karawang" diambil dari
+Perbup 28/2019 (kode klasifikasi arsip), kolom "Dasar" menyebut dari mana kelas
+itu ditarik untuk jenis surat tersebut. Yang tidak didukung contoh lampiran
+maupun kelas eksplisit ditandai **penafsiran** dan tetap perlu dikonfirmasi
+sekretariat/kecamatan. Format lengkapnya (`xxx/{0:D3}/Ds/{yyyy}`) tetap tafsir
+aplikasi atas ruang titik-titik pada contoh Perbup 74/2020 — lihat §3 butir 3.
 
-| Jenis Surat | Kode Jenis | Format Lama | Format bawaan aplikasi (perlu peninjauan) |
+| Jenis Surat | Kode Jenis | Kelas Karawang (Perbup 28/2019) | Dasar |
 |---|---|---|---|
-| SKD Belum Menikah (KUA) | SKD | 470 (deret bersama) | 470 (deret bersama) — *tetap* |
-| Domisili Warga | DOM_WRG | 470 (deret bersama) | 470 — *tetap* |
-| Domisili Instansi | DOM_INS | 470 (deret bersama) | 470 — *tetap* |
-| SKU (Surat Ket. Usaha) | SKU | **510** (deret sendiri) | **470 (deret bersama)** |
-| Pengantar SKCK | SKCK | **474** (deret bersama) | **470 (deret bersama)** |
-| Izin Suami/Orang Tua | IZIN | **474.4** (deret sendiri) | **470 (deret bersama)** |
-| Ket. Garapan Sawah | GRP_SAW | **593.2** (deret sendiri) | **470 (deret bersama)** |
-| Surat Kematian | KEM | **570** (deret sendiri) | **470 (deret bersama)** |
-| SKTM | SKTM | 470 (deret bersama) | 470 — *tetap* |
-| Surat Beda Data | BEDANAMA | 470 (deret bersama) | 470 — *tetap* |
-| Surat Kenal Lahir | KENAL_LAHIR | **474.2** (deret bersama) | **470 (deret bersama)** |
-| Ket. Ahli Waris | AHLI_WARIS | **474.2** (deret bersama) | **470 (deret bersama)** |
-| Ijin Tinggal Sementara | IJT | 470 (deret bersama) | 470 — *tetap* |
-| Permohonan Rekening Koran | REKKOR | 130 (deret sendiri) | 130 — *tetap* (di luar skop surat keterangan) |
-| Surat dari Template | TMPL | TMPL (deret sendiri) | TMPL — *tetap* (penanda aplikasi) |
-| NTCR N1–N6 | N1T–N6T | 474.3 (deret bersama) | 474.3 — *tetap* (blanko Kepdirjen 473/2020) |
-| NTCR N8 (Numpang Nikah) | N8T | 474.2 (deret sendiri) | 474.2 — *tetap* |
+| Domisili Warga | DOM_WRG | `470` | Contoh lampiran 8.a Perbup 74/2020 (SK umum) — kelas 470 Kependudukan dan Catatan Sipil |
+| Surat Kematian | KEM | `470` | Contoh lampiran 8.c Perbup 74/2020; rinciannya `472.12` Kematian |
+| Surat Kenal Lahir | KENAL_LAHIR | `470` | Contoh lampiran 8.b Perbup 74/2020; rinciannya `472.11` Kelahiran |
+| Keterangan Ahli Waris | AHLI_WARIS | `470` | Contoh lampiran 8.e Perbup 74/2020 |
+| Ket. Belum Terbit / Sudah Terbit | SD | `470` | Pola SK umum 8.a; surat ini menerangkan arsip keterangan desa |
+| Surat Beda Data | BEDANAMA | `471` | `471.11` Biodata Penduduk/Data Pribadi |
+| Pengantar Adminduk | PDK | `471` | `471.13` KTP, `471.14` Kartu Keluarga |
+| Surat Keterangan Pindah | SK_PINDAH | `471` | `471.21` Perpindahan Penduduk WNI |
+| Ijin Tinggal Sementara | IJT | `471` | `471.23` Perpindahan Penduduk WNA dan WNI tinggal sementara |
+| SKD Belum Menikah (KUA) | SKD | `472` | `472.2` Perkawinan, Perceraian dan Advokasi |
+| Izin Suami/Orang Tua | IZIN | `472` | `472.2` Perkawinan (izin orang tua dipakai pada pencatatan nikah) |
+| SKTM | SKTM | `465` | `465.3` Masyarakat Miskin: Raskin, BLT |
+| SK Tidak Punya Rumah | SPR | `465` | `465` Kesejahteraan Sosial (keterangan untuk bantuan sosial) |
+| Keterangan Penghasilan | PENGHASILAN | `465` | **penafsiran** — keterangan penghasilan tidak punya kode sendiri di lampiran |
+| SKU (Surat Ket. Usaha) | SKU | `518` | `518.3` UMKM, `518.31` Pembinaan Usaha Mikro |
+| Domisili Instansi/Lembaga | DOM_INS | `510` | `510.41` Penerbitan SIUP (domisili badan usaha/instansi) |
+| Ket. Garapan Sawah | GRP_SAW | `521` | `521.21` Sawah, `521.43` Persawahan (di bawah `520` Pertanian) |
+| Pengantar SKCK | SKCK | `331` | `331` Kepolisian (di bawah `330` Keamanan) — SKCK diterbitkan Kepolisian, desa mengantar |
+| Izin Keramaian | IKR | `330` | `330` Keamanan (ketertiban kegiatan/keramaian warga) |
+| Permohonan Rekening Koran | REKKOR | `580` | `580` Perbankan Moneter. `130` di Karawang = Pemerintah Kabupaten, bukan keuangan |
+| Blanko NTCR N1–N6 | N1T–N6T | `474.3` | Pengecualian: mengikuti blanko Kepdirjen Bimas Islam No. 473/2020, bukan kelas Karawang (`474` di Karawang = Perkembangan Penduduk) |
+| NTCR N8 (Numpang Nikah) | N8T | `474.2` | Pengecualian: blanko Kepdirjen Bimas Islam No. 473/2020 |
+| Surat dari Template | TMPL | `TMPL` | Penanda internal aplikasi; awalan bebas diubah per template |
 
-**Contoh hasil penerbitan setelah perubahan:**
+**Contoh hasil penerbitan dengan bawaan baru:**
 
-- Surat Keterangan Domisili: `470/015/Ds/2026`
-- Surat Kematian (setelah SKD 014 pada hari yang sama): `470/015/Ds/2026`
-  — satu deret, tidak lagi `570/003/Ds/2026`
+- Surat Keterangan Domisili: `470/015/Ds/2026` (tetap, satu deret dengan surat
+  keterangan kependudukan lain)
+- SKTM setelah domisili pada hari yang sama: `465/001/Ds/2026` — kelasnya sendiri,
+  urutannya sendiri
+- Izin Keramaian: `330/001/Ds/2026`; Pengantar SKCK: `331/001/Ds/2026`
 - Blanko NTCR N1: `474.3/006/Ds/2026` (tetap)
 
 ---
@@ -131,20 +155,26 @@ Perbup 74/2020.
 
 1. **`SuDesApp.Core/Configuration/JenisSuratConfig.json`** adalah sumber
    format (`NomorFormat`) dan flag pengelompokan (`IsSharedNumbering`,
-   `IsKeteranganDesa`). Tiga belas jenis saat ini memakai pola 470 dan deret
-   bersama. Contoh lampiran Perbup mendukung 470 untuk beberapa surat keterangan,
-   tetapi tidak membuktikan semua tiga belas jenis harus memakai kode dan deret
-   yang sama; operator Karawang perlu mengonfirmasi cakupan ini. Setiap entri
+   `IsKeteranganDesa`). Lima jenis kependudukan/capil memakai `470` (yang
+   memang dicontohkan Perbup 74/2020); sisanya mengikuti kelas Perbup 28/2019
+   (§4). Operator Karawang tetap perlu mengonfirmasi pemetaan yang ditandai
+   penafsiran. Setiap entri
    juga memuat teks `AcuanNomor` — ringkasan acuan nyata (regulasi daerah atau
    blanko resmi) yang ditampilkan langsung pada kartu jenis surat di halaman
    Pengaturan Nomor Surat, diambil dari dokumen ini.
-2. **Deret bersama adalah kebijakan aplikasi**, dihitung otomatis dari flag `IsSharedNumbering`
-   (`JenisSuratRepository.GetSharedNumberingGroupAsync` → `GetNextDocumentNumberAsync`),
-   tanpa melihat awalan — jadi perpindahan kode tidak memutus urutan deret baru.
-3. **Deret per-awalan** untuk jenis non-bersama (NTCR, Rekening Koran, Template)
-   dihitung per kode awalan (`PenomoranSuratService.AmbilAwalan`).
-4. **Filter register** "Surat Keterangan Desa" (`GROUP_KETERANGAN_DESA`) kini
-   mengikutkan 13 jenis tersebut secara konsisten.
+2. **Satu deret per kelas.** Cabang `IsSharedNumbering=true`
+   (`JenisSuratRepository.GetSharedNumberingGroupAsync` → `GetNextDocumentNumberAsync`)
+   menghitung nomor tertinggi dengan awalan yang sama di antara jenis-jenis dalam
+   grup, jadi `470`, `471`, `472`, `465` masing-masing punya register sendiri.
+   **Wajib `true` untuk jenis yang berbagi awalan**: cabang `false` menghitung per
+   `KodeJenis`, sehingga dua jenis berawalan sama sama-sama mulai 001 dan nomornya
+   bentrok — bug yang dulu menimpa blanko N1–N6. Dijaga
+   `PenomoranKodeKarawangTests.Jenis_seawalan_ikut_deret_bersama_supaya_nomor_tidak_ganda`.
+3. **Deret per-awalan** dipakai jenis yang berdiri sendiri (Template Surat) dan
+   dihitung dari kode awalan (`PenomoranSuratService.AmbilAwalan`).
+4. **Filter register** "Surat Keterangan Desa" (`GROUP_KETERANGAN_DESA`) tidak
+   berubah: ia dikelompokkan oleh `IsKeteranganDesa`, bukan oleh kode awalan, jadi
+   surat berkode `465`/`521`/`330` tetap masuk daftar yang sama.
 5. **Kustomisasi pengguna tetap dihormati**: Pengaturan Nomor Surat menerima pola
    nomor lengkap, bukan hanya awalan. Setelah kode Kemendagri kabupaten/kota
    tersimpan pada Pengaturan Surat, pola lokal dipisahkan menurut kode daerah;
@@ -168,9 +198,12 @@ Perbup 74/2020.
 ## 6. Verifikasi Ulang (bila regulasi berubah)
 
 1. Cek versi terbaru di JDIH: https://jdih.karawangkab.go.id (cari "tata naskah
-   dinas pemerintah desa").
-2. Bandingkan contoh `NOMOR : …` pada lampiran format (bagian 3 di atas).
-3. Perbarui `NomorFormat`/flag di `JenisSuratConfig.json` — cukup satu berkas.
+   dinas pemerintah desa" **dan** "klasifikasi arsip" — Perbup 28/2019 adalah
+   sumber kode awal, Perbup 74/2020 sumber format naskah).
+2. Bandingkan contoh `NOMOR : …` pada lampiran format (bagian 3 di atas) dan nama
+   kelas pada lampiran Perbup 28/2019.
+3. Perbarui `NomorFormat`/flag di `JenisSuratConfig.json` — cukup satu berkas,
+   lalu jalankan `dotnet test --filter PenomoranKodeKarawangTests`.
 
 ---
 

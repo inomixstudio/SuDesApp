@@ -4,8 +4,8 @@
     "KodeJenis": "SKD",
     "TemplateName": "SKD_UMUM",
     "DisplayName": "SKD Belum Menikah (KUA)",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Acuan nyata: 470 — contoh lampiran 8.a Perbup Karawang 74/2020 & Perbup Bekasi 215/2022 (SK umum).",
+    "NomorFormat": "472/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 472 Pencatatan Sipil — 472.2 Perkawinan (Perbup Karawang 28/2019); surat ini dipakai KUA mencatat perkawinan.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -15,7 +15,7 @@
     "TemplateName": "DOMISILI_WARGA",
     "DisplayName": "Domisili Warga",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
+    "AcuanNomor": "Acuan nyata: 470 — contoh lampiran 8.a Perbup Karawang 74/2020 (SK umum); kelas 470 Kependudukan dan Catatan Sipil (Perbup 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -24,8 +24,8 @@
     "KodeJenis": "DOM_INS",
     "TemplateName": "INSTANSI",
     "DisplayName": "Domisili Instansi/Lembaga",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
+    "NomorFormat": "510/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 510 Perdagangan — 510.41 Penerbitan SIUP (Perbup Karawang 28/2019); domisili badan usaha/instansi.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -34,8 +34,8 @@
     "KodeJenis": "SKU",
     "TemplateName": "SKU",
     "DisplayName": "SKU (Surat Ket. Usaha)",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Nyata di sebagian daerah: 510 (SK usaha); lampiran Perbup tidak menetapkannya.",
+    "NomorFormat": "518/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 518 — 518.3 Usaha Mikro Kecil dan Menengah, 518.31 Pembinaan Usaha Mikro (Perbup Karawang 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -44,8 +44,8 @@
     "KodeJenis": "SKCK",
     "TemplateName": "PENGANTAR_SKCK",
     "DisplayName": "Pengantar SKCK",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Nyata di sebagian daerah: 474 (pengantar SKCK); tidak diatur lampiran Perbup.",
+    "NomorFormat": "331/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 330 Keamanan — 331 Kepolisian (Perbup Karawang 28/2019); SKCK diterbitkan Kepolisian, desa hanya mengantar.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -54,8 +54,8 @@
     "KodeJenis": "IZIN",
     "TemplateName": "IZIN_ORTU",
     "DisplayName": "Izin Suami/Orang Tua",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Nyata di sebagian daerah: 474.4 (izin suami/orang tua).",
+    "NomorFormat": "472/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 472 Pencatatan Sipil — 472.2 Perkawinan (Perbup Karawang 28/2019); izin orang tua dipakai pada pencatatan nikah.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -64,8 +64,8 @@
     "KodeJenis": "GRP_SAW",
     "TemplateName": "GARAPAN_SAWAH",
     "DisplayName": "Ket. Garapan Sawah",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Nyata di sebagian daerah: 593.2 (ket. garapan sawah).",
+    "NomorFormat": "521/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 520 Pertanian — 521 Tanaman Pangan, 521.21 Sawah, 521.43 Persawahan (Perbup Karawang 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -75,7 +75,7 @@
     "TemplateName": "KEMATIAN",
     "DisplayName": "Surat Kematian",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Acuan nyata: 470 — lampiran 8.c Perbup Karawang 74/2020 & Bekasi 215/2022 (SK kematian); sebagian daerah memakai 570.",
+    "AcuanNomor": "Acuan nyata: 470 — contoh lampiran 8.c Perbup Karawang 74/2020 (SK kematian); rinciannya 472.12 Kematian (Perbup 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -84,18 +84,19 @@
     "KodeJenis": "SKTM",
     "TemplateName": "SKTM",
     "DisplayName": "SKTM (Surat Ket. Tidak Mampu)",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
+    "NomorFormat": "465/{0:D3}/Ds/{2:yyyy}",
     "IsSharedNumbering": true,
-    "IsKeteranganDesa": true
+    "IsKeteranganDesa": true,
+    "AcuanNomor": "Kode klasifikasi 460 Sosial — 465 Kesejahteraan Sosial, 465.3 Masyarakat Miskin: Raskin, BLT (Perbup Karawang 28/2019)."
   },
   {
     "NamaJenis": "PENGHASILAN",
     "KodeJenis": "472",
     "TemplateName": "PENGHASILAN",
     "DisplayName": "Keterangan Penghasilan",
-    "NomorFormat": "472/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; contoh bawaan memakai 472 — tidak diatur khusus dalam lampiran Perbup.",
-    "IsSharedNumbering": false,
+    "NomorFormat": "465/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 465 Kesejahteraan Sosial (Perbup Karawang 28/2019) — penafsiran: keterangan penghasilan tidak punya kode sendiri.",
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {
@@ -104,7 +105,7 @@
     "TemplateName": "SK_BELUM_TERBIT",
     "DisplayName": "Ket. Belum Terbit / Sudah Terbit",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
+    "AcuanNomor": "Pola SK umum 470 — lampiran 8.a Perbup Karawang 74/2020; surat ini menerangkan keadaan arsip keterangan desa.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -113,8 +114,8 @@
     "KodeJenis": "BEDANAMA",
     "TemplateName": "BEDANAMA",
     "DisplayName": "Surat Beda Data",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
+    "NomorFormat": "471/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 471 Pendaftaran Penduduk — 471.11 Biodata Penduduk/Data Pribadi (Perbup Karawang 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -124,7 +125,7 @@
     "TemplateName": "KENAL_LAHIR",
     "DisplayName": "Surat Kenal Lahir",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Acuan nyata: 470 — lampiran 8.b Perbup Karawang 74/2020 (SK kelahiran); sebagian daerah memakai 474.2.",
+    "AcuanNomor": "Acuan nyata: 470 — contoh lampiran 8.b Perbup Karawang 74/2020 (SK kelahiran); rinciannya 472.11 Kelahiran (Perbup 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -134,7 +135,7 @@
     "TemplateName": "AHLI_WARIS",
     "DisplayName": "Keterangan Ahli Waris",
     "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Acuan nyata: 470 — lampiran 8.e Perbup Karawang 74/2020 (SK ahli waris); sebagian daerah memakai 474.2.",
+    "AcuanNomor": "Acuan nyata: 470 — contoh lampiran 8.e Perbup Karawang 74/2020 (SK ahli waris).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -143,8 +144,8 @@
     "KodeJenis": "IJT",
     "TemplateName": "IJIN_TINGGAL",
     "DisplayName": "Surat Ijin Tinggal Sementara",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
+    "NomorFormat": "471/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 471 Pendaftaran Penduduk — 471.23 Perpindahan Penduduk WNA dan WNI tinggal sementara (Perbup Karawang 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -153,9 +154,9 @@
     "KodeJenis": "REKKOR",
     "TemplateName": "REKENING_KORAN",
     "DisplayName": "Permohonan Rekening Koran",
-    "NomorFormat": "130/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Acuan nyata: 130 — surat keluar desa ke bank; di luar skop surat keterangan.",
-    "IsSharedNumbering": false,
+    "NomorFormat": "580/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 580 Perbankan Moneter (Perbup Karawang 28/2019). 130 di Karawang = Pemerintah Kabupaten, bukan keuangan.",
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": false
   },
   {
@@ -234,8 +235,8 @@
     "TemplateName": "NTCR_N8",
     "DisplayName": "Surat Keterangan Numpang Nikah (N8)",
     "NomorFormat": "474.2/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Acuan nyata: 474.2 — blanko SK Numpang Nikah (N8); deret tersendiri.",
-    "IsSharedNumbering": false,
+    "AcuanNomor": "Acuan nyata: 474.2 — blanko SK Numpang Nikah (N8), Kepdirjen Bimas Islam No. 473/2020; deret tersendiri.",
+    "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
   {
@@ -243,8 +244,8 @@
     "KodeJenis": "PAM",
     "TemplateName": "PENGANTAR_ADMINDUK",
     "DisplayName": "Pengantar Adminduk",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
+    "NomorFormat": "471/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 471 Pendaftaran Penduduk — 471.13 KTP, 471.14 Kartu Keluarga (Perbup Karawang 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -253,8 +254,8 @@
     "KodeJenis": "PND",
     "TemplateName": "SK_PINDAH",
     "DisplayName": "Surat Keterangan Pindah",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
+    "NomorFormat": "471/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 471 Pendaftaran Penduduk — 471.21 Perpindahan Penduduk WNI (Perbup Karawang 28/2019).",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -263,8 +264,8 @@
     "KodeJenis": "TPR",
     "TemplateName": "SK_TIDAK_PUNYA_RUMAH",
     "DisplayName": "SK Tidak Punya Rumah",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
+    "NomorFormat": "465/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 465 Kesejahteraan Sosial (Perbup Karawang 28/2019); keterangan untuk program bantuan sosial.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   },
@@ -273,8 +274,8 @@
     "KodeJenis": "IKR",
     "TemplateName": "IZIN_KERAMAIAN",
     "DisplayName": "Izin Keramaian",
-    "NomorFormat": "470/{0:D3}/Ds/{2:yyyy}",
-    "AcuanNomor": "Mengikuti pola SK umum 470; tidak diatur khusus dalam lampiran Perbup.",
+    "NomorFormat": "330/{0:D3}/Ds/{2:yyyy}",
+    "AcuanNomor": "Kode klasifikasi 300 Keamanan dan Ketertiban Umum — 330 Keamanan (Perbup Karawang 28/2019); izin kegiatan/keramaian warga.",
     "IsSharedNumbering": true,
     "IsKeteranganDesa": true
   }
