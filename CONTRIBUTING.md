@@ -71,13 +71,9 @@ alasan di dalam bloknya, misalnya
   `chore:`.
 - Badan commit berupa **satu paragraf** yang menjelaskan alasan perubahan,
   bukan daftar ulang berkas yang disentuh.
-- **Jangan menambahkan atribusi agen** seperti `Co-Authored-By` bernama
-  Codebuff, teks `Generated with ...`, atau alamat `noreply@...`. Periksa
-  sebelum membuka PR:
-
-  ```bash
-  bash Tools/check-atribusi-commit.sh "origin/master..HEAD"
-  ```
+- **Jangan menambahkan baris atribusi agen** (`Co-Authored-By`, `Generated with ...`)
+  pada pesan commit. Periksa sendiri lewat `git log --format=%B origin/master..HEAD`
+  sebelum membuka PR.
 
 ### Rahasia dan berkas lokal
 
