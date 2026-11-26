@@ -240,23 +240,31 @@
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="6"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <!-- Tombol ikon kini ikut pola tombol berisi: sorotan dan tekanan lewat
+             lapisan beranimasi, bukan Setter Background yang melompat. Warna akhirnya
+             sama dengan hover lama (PanelBrush), hanya sekarang memudar; TekananHalus
+             juga memberi efek tekan mengecil yang sebelumnya tidak ada di sini. -->
+        <Setter Property="ctrl:TekananHalus.Aktif" Value="True"/>
+        <Setter Property="ctrl:TekananHalus.KuasSorot" Value="{DynamicResource PanelBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="bd" Background="{TemplateBinding Background}"
                             CornerRadius="{StaticResource RadiusTombolIkon}" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Grid>
+                            <Border x:Name="SorotLapis" CornerRadius="{StaticResource RadiusTombolIkon}" Opacity="0"
+                                    Background="{Binding Path=(ctrl:TekananHalus.KuasSorot), RelativeSource={RelativeSource TemplatedParent}}"/>
+                            <Border x:Name="TekanLapis" CornerRadius="{StaticResource RadiusTombolIkon}" Opacity="0"
+                                    Background="{DynamicResource LapisanTekanBrush}"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource PanelBrush}"/>
                             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                         </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Opacity" Value="0.75"/>
-                        </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.4"/>
+                            <Setter TargetName="bd" Property="Opacity" Value="0.4"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
