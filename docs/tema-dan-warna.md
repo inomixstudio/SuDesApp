@@ -257,6 +257,7 @@ Gaya yang dipakai lebih dari satu halaman tinggal di
 | `KpiLabel` / `KpiValue` | Daftar Hadir, Langganan | label 11 bold + membungkus; angka 15 semibold + membungkus |
 | `KpiCard` / `KpiTile` | Daftar Hadir / Langganan | kartu berbayang di atas latar halaman; petak datar di dalam kartu |
 | `KpiIconChip` | KPI & kepala section kedua halaman | chip 36×36, sudut 8, latar aksen lembut |
+| `RadiusTombol` (12) / `RadiusTombolIkon` (10) | template `Button`, `IconButton`, `CalendarNavButton`, tombol tutup LoginWindow, tombol aksi MainWindow | satu sumber untuk "seberapa bulat" tombol. Tiga Border di template Button (luar, lapisan sorot, lapisan tekan) WAJIB memakai nilai yang sama — kalau tidak, saat hover sudut lapisan keluar dari bentuk tombol dan itu cuma kelihatan di mata, bukan di galat. `RadiusKontrol` (8) untuk kotak isian/combobox supaya aksi lebih bulat daripada kolom isian. Dijaga `RadiusTombolTests` |
 | `SectionTitle` | halaman data, Tentang Aplikasi, Panduan Awal | 14 bold, membungkus, sejajar tengah |
 | `SectionTitleLarge` | Langganan | turunan `SectionTitle` dengan 15 |
 | `HeaderTitle` / `HeaderSubtitle` | seluruh kepala halaman | judul 20 SemiBold (baris 26) supaya jelas di atas `SectionTitle` 13; subtitle 13. `MaxWidth` pada subtitle WAJIB disertai `HorizontalAlignment="Left"` — tanpa itu WPF mengiset teks ke tengah header. Dijaga `HeaderHalamanTests` |

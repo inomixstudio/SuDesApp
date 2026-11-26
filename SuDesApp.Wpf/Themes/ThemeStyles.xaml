@@ -32,7 +32,14 @@
     <conv:NotNullConverter x:Key="TampilanAda"/>
     <SolidColorBrush x:Key="ToggleHoverBrush" Color="{StaticResource PutihColor}" Opacity="0.2"/>
     <!-- Token radius modern: Kontrol 6 (button/input). -->
-    <CornerRadius x:Key="RadiusKontrol">6</CornerRadius>
+    <CornerRadius x:Key="RadiusKontrol">8</CornerRadius>
+
+    <!-- Sudut tombol diatur dari dua sumber ini supaya "seberapa bulat" cukup
+         diubah satu kali. RadiusTombol dipakai tombol berisi teks (lebih bulat dari
+         kartu di sekitarnya, jadi tetap terbaca sebagai aksi), RadiusTombolIkon untuk
+         tombol ikon/persegi kecil yang tingginya cuma ~26-30 px. -->
+    <CornerRadius x:Key="RadiusTombol">12</CornerRadius>
+    <CornerRadius x:Key="RadiusTombolIkon">10</CornerRadius>
     <!-- Skeleton loading: satu tinggi (6) untuk semua halaman, bukan 3/4/8/10 px -->
     <Style x:Key="SkeletonBar" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
@@ -153,13 +160,13 @@
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="Kulit">
                         <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                CornerRadius="8"
+                                CornerRadius="{StaticResource RadiusTombol}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}">
                             <Grid>
-                                <Border x:Name="SorotLapis" CornerRadius="8" Opacity="0"
+                                <Border x:Name="SorotLapis" CornerRadius="{StaticResource RadiusTombol}" Opacity="0"
                                         Background="{Binding Path=(ctrl:TekananHalus.KuasSorot), RelativeSource={RelativeSource TemplatedParent}}"/>
-                                <Border x:Name="TekanLapis" CornerRadius="8" Opacity="0"
+                                <Border x:Name="TekanLapis" CornerRadius="{StaticResource RadiusTombol}" Opacity="0"
                                         Background="{DynamicResource LapisanTekanBrush}"/>
                                 <!-- Bantalan dipindah ke presenter: lapisan sorot/tekan harus
                                      menutup seluruh permukaan tombol, bukan hanya isi teksnya. -->
@@ -237,7 +244,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="bd" Background="{TemplateBinding Background}"
-                            CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            CornerRadius="{StaticResource RadiusTombolIkon}" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -1703,7 +1710,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                            CornerRadius="{StaticResource RadiusTombolIkon}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>

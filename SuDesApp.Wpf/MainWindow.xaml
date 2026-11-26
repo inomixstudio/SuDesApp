@@ -716,7 +716,7 @@
                                              <Setter.Value>
                                                  <ControlTemplate TargetType="Button">
                                                      <Border x:Name="bd" Background="Transparent"
-                                                             CornerRadius="11" Padding="9,5">
+                                                             CornerRadius="{StaticResource RadiusTombol}" Padding="9,5">
                                                          <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                      </Border>
                                                      <ControlTemplate.Triggers>
