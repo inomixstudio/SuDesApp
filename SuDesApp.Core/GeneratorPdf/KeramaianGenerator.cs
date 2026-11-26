@@ -24,6 +24,27 @@ namespace SuDesApp.GeneratorPdf
         protected override string JudulSurat => "SURAT IZIN KERAMAIAN";
         protected override bool ShowPemohonInFooter => true;
 
+        /// <summary>
+        /// Kalimat keterangan baku — WORDING yang sama dipakai form (isian otomatis
+        /// kotak Keterangan) dan generator (cadangan bila keterangan kosong), sehingga
+        /// apa yang dibaca operator di layar persis dengan yang tercetak. Bentuk
+        /// "Kabupaten/Kota" diambil dari <see cref="KopSurat.KataJenisKabupaten"/>,
+        /// bukan ditulis tetap "Kabupaten": kota akan tercetak salah bila keduanya
+        /// disalin terpisah.
+        /// </summary>
+        public static string KeteranganTeks(DesaData? desa)
+        {
+            string namaKabupaten = KopSurat.NamaKabupaten(desa);
+            if (namaKabupaten.Length == 0) namaKabupaten = "[Kabupaten]";
+
+            return string.Format(
+                "Benar nama tersebut diatas adalah warga Desa {0} Kecamatan {1} {2} {3}, dan kegiatan tersebut di atas adalah kegiatan warga desa kami yang tidak bertentangan dengan peraturan perundang-undangan yang berlaku.",
+                desa?.NamaDesa ?? "[Nama Desa]",
+                desa?.Kecamatan ?? "[Kecamatan]",
+                KopSurat.KataJenisKabupaten(desa),
+                namaKabupaten);
+        }
+
         protected override void ComposeBody(BadanSurat badan, SuratData suratData, string? keteranganTextBox = null)
         {
             try
@@ -67,15 +88,7 @@ namespace SuDesApp.GeneratorPdf
 
                 if (string.IsNullOrWhiteSpace(keteranganFinal))
                 {
-                    string namaKabupaten = KopSurat.NamaKabupaten(desa);
-                    if (namaKabupaten.Length == 0) namaKabupaten = "[Kabupaten]";
-
-                    keteranganFinal = string.Format(
-                        "Benar nama tersebut diatas adalah warga Desa {0} Kecamatan {1} {2} {3}, dan kegiatan tersebut di atas adalah kegiatan warga desa kami yang tidak bertentangan dengan peraturan perundang-undangan yang berlaku.",
-                        desa.NamaDesa ?? "[Nama Desa]",
-                        desa.Kecamatan ?? "[Kecamatan]",
-                        KopSurat.KataJenisKabupaten(desa),
-                        namaKabupaten);
+                    keteranganFinal = KeteranganTeks(desa);
                 }
 
                 // Alinea pembuka: baris pertama indentasi 50pt, baris lanjutan rata kiri.

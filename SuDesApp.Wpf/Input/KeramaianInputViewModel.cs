@@ -55,6 +55,18 @@ namespace SuDesApp.Wpf.Input
             await InitializeSpecificAsync();
         }
 
+        protected override async Task InitializeSpecificAsync()
+        {
+            // Form baru pernah tampil dengan kotak Keterangan kosong sementara
+            // surat lain (SKTM, domisili, keterangan terbit) langsung menyajikan
+            // kalimat bakunya. Keterangan tetap bisa disunting; isian ini hanya
+            // memulai dari teks yang sama dengan yang dicetak PDF.
+            if (string.IsNullOrWhiteSpace(Keterangan))
+            {
+                Keterangan = await GenerateKeteranganAsync();
+            }
+        }
+
         protected override void ClearControls()
         {
             base.ClearControls();
@@ -70,7 +82,7 @@ namespace SuDesApp.Wpf.Input
             JenisKegiatan = suratData.JenisKegiatan ?? string.Empty;
             TanggalKegiatan = suratData.TanggalKegiatan ?? string.Empty;
             LokasiKegiatan = suratData.LokasiKegiatan ?? string.Empty;
-            Keterangan = suratData.Keterangan ?? string.Empty;
+            Keterangan = suratData.Keterangan ?? await GenerateKeteranganAsync();
 
             if (string.Equals(suratData.PejabatPenandatangan, "Sekretaris Desa", StringComparison.OrdinalIgnoreCase))
             {
@@ -160,14 +172,20 @@ namespace SuDesApp.Wpf.Input
             try
             {
                 var desaData = await _unitOfWork.DesaRepository.GetInfoDesaAsync();
-                var desa = desaData?.NamaDesa ?? (string.IsNullOrWhiteSpace(Desa) ? "-" : Desa.Trim());
-                var kec = desaData?.Kecamatan ?? (string.IsNullOrWhiteSpace(Kecamatan) ? "-" : Kecamatan.Trim());
-                var kab = desaData?.Kabupaten ?? (string.IsNullOrWhiteSpace(Kabupaten) ? "-" : Kabupaten.Trim());
+                if (desaData != null)
+                {
+                    return GeneratorPdf.KeramaianGenerator.KeteranganTeks(desaData);
+                }
 
-                return $"Benar nama tersebut diatas adalah warga Desa {desa} " +
-                       $"Kecamatan {kec} Kabupaten {kab}, dan kegiatan tersebut di atas " +
-                       "adalah kegiatan warga desa kami yang tidak bertentangan dengan " +
-                       "peraturan perundang-undangan yang berlaku.";
+                // Data desa belum ada (database baru): pakai alamat yang tampil di
+                // form, tetapi tetap lewat pembangun yang sama supaya kalimatnya tidak
+                // menyimpang dari yang akan dicetak.
+                return GeneratorPdf.KeramaianGenerator.KeteranganTeks(new DesaData
+                {
+                    NamaDesa = Desa.Trim(),
+                    Kecamatan = Kecamatan.Trim(),
+                    Kabupaten = Kabupaten.Trim()
+                });
             }
             catch (Exception ex)
             {

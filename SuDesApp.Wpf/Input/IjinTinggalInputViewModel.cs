@@ -56,6 +56,13 @@ namespace SuDesApp.Wpf.Input
         protected override async Task InitializeSpecificAsync()
         {
             await FillAlamatTujuanWithDefaultAsync();
+
+            // Alamat tujuan sudah terisi default desa, jadi kalimat keterangan bisa
+            // disusun sejak form dibuka — sama seperti surat lain, bukan kotak kosong.
+            if (string.IsNullOrWhiteSpace(Keterangan))
+            {
+                Keterangan = await GenerateKeteranganAsync();
+            }
         }
 
         public override async Task FillDataAsync(SuratData? suratData)
@@ -101,7 +108,11 @@ namespace SuDesApp.Wpf.Input
         {
             if (suratData == null) return;
 
-            Keterangan = await GenerateKeteranganAsync(suratData);
+            // Keterangan tersimpan menang: operator pernah menyuntingnya, dan
+            // kalimat baru akan menimpanya diam-diam bila tidak dicek dulu.
+            Keterangan = string.IsNullOrWhiteSpace(suratData.Keterangan)
+                ? await GenerateKeteranganAsync(suratData)
+                : suratData.Keterangan!;
 
             DusunTujuan = suratData.DusunTujuan ?? string.Empty;
             DesaTujuan = suratData.DesaTujuan ?? string.Empty;
@@ -163,7 +174,12 @@ namespace SuDesApp.Wpf.Input
                 suratData.Warga.IsForKematian = false;
             }
 
-            Keterangan = await GenerateKeteranganAsync(suratData);
+            // Hanya diisi otomatis bila kosong (sama seperti Izin Keramaian):
+            // suntingan operator harus yang tersimpan dan yang tercetak.
+            if (string.IsNullOrWhiteSpace(Keterangan))
+            {
+                Keterangan = await GenerateKeteranganAsync(suratData);
+            }
             suratData.Keterangan = Keterangan.Trim();
         }
 
@@ -230,6 +246,21 @@ namespace SuDesApp.Wpf.Input
                     desaAsal = Desa ?? string.Empty;
                     kecAsal = Kecamatan ?? string.Empty;
                     kabAsal = Kabupaten ?? string.Empty;
+
+                    // Form baru: pemohon belum dipilih, jadi alamat asal masih kosong
+                    // dan kalimatnya berbunyi "... adalah warga ." Ambil dari data desa
+                    // aplikasi — desa pemohon memang desa ini.
+                    if (string.IsNullOrWhiteSpace(desaAsal) || string.IsNullOrWhiteSpace(kecAsal)
+                        || string.IsNullOrWhiteSpace(kabAsal))
+                    {
+                        var infoDesa = await _unitOfWork.DesaRepository.GetInfoDesaAsync();
+                        if (infoDesa != null)
+                        {
+                            if (string.IsNullOrWhiteSpace(desaAsal)) desaAsal = infoDesa.NamaDesa ?? string.Empty;
+                            if (string.IsNullOrWhiteSpace(kecAsal)) kecAsal = infoDesa.Kecamatan ?? string.Empty;
+                            if (string.IsNullOrWhiteSpace(kabAsal)) kabAsal = infoDesa.Kabupaten ?? string.Empty;
+                        }
+                    }
 
                     dusunTujuan = DusunTujuan ?? string.Empty;
                     desaTujuan = DesaTujuan ?? string.Empty;
