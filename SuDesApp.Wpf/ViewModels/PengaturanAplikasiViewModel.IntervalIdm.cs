@@ -128,7 +128,6 @@ namespace SuDesApp.Wpf.ViewModels
             _intervalIdmTerpilih = PilihanIntervalIdm
                 .First(p => p.Nilai == IntervalPemantauanIdmPrefs.SaatIni);
 
-            SiapkanBahasa();
             SiapkanBagian();
 
             TambahBaris(new SettingRowVM(

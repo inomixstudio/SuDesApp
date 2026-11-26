@@ -290,11 +290,10 @@ namespace SuDesApp.Wpf.Views
                 TextWrapping = TextWrapping.Wrap
             });
 
-            // Versi aplikasi dibaca dari metadata rilis (csproj); teks labelnya
-            // mengikuti bahasa yang dipilih pengguna.
+            // Versi aplikasi dibaca dari metadata rilis (csproj).
             isi.Children.Add(new TextBlock
             {
-                Text = $"{Lokalisasi.Get("Settings.Versi.Judul")} {IdentitasAplikasi.VersiSingkat}",
+                Text = $"Versi Aplikasi {IdentitasAplikasi.VersiSingkat}",
                 FontSize = 10,
                 Foreground = warna.TeksHalus,
                 Margin = new Thickness(0, 8, 0, 0)
