@@ -312,6 +312,11 @@ namespace SuDesApp.Wpf.ViewModels
         /// <summary>Baris pengaturan bernilai angka (mis. batas ukuran MB).</summary>
         public ObservableCollection<SettingRowAngkaVM> RowsAngka { get; } = new();
 
+        /// <summary>Versi aplikasi untuk baris "Informasi" halaman ini. Angkanya dibaca
+        /// dari metadata rilis (csproj), bukan ditulis ulang di XAML.</summary>
+        public string VersiAplikasi =>
+            $"Versi Aplikasi: {IdentitasAplikasi.VersiSingkat}";
+
 
     }
 }
