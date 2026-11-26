@@ -1,8 +1,10 @@
 <p align="center">
   <!-- Tangkapan layar Beranda, bukan ikon aplikasi (dan bukan Resources/logo.png:
        berkas itu lambang Kabupaten Karawang untuk kop surat, bukan merek SuDesApp).
-       Sumber: build Debug dengan `desa.db` kosong sehingga tidak ada data warga nyata. -->
-  <img src="docs/aset/beranda.png" width="100%" alt="Halaman Beranda SuDesApp: sidebar menu utama (Buat Surat, Register, Formulir, Data Desa), kartu statistik surat hari ini/bulan ini/total register/warga, dan pintasan cepat jenis surat" />
+       Sumber: build Debug dengan `desa.db` kosong sehingga tidak ada data warga nyata.
+       Gambar README sengaja di `.github/assets`, bukan `docs/`: seluruh isi `docs/`
+       ikut disalin csproj ke folder aplikasi dan ke paket installer. -->
+  <img src=".github/assets/beranda.png" width="100%" alt="Halaman Beranda SuDesApp: sidebar menu utama (Buat Surat, Register, Formulir, Data Desa), kartu statistik surat hari ini/bulan ini/total register/warga, dan pintasan cepat jenis surat" />
 </p>
 
 <p align="center">
