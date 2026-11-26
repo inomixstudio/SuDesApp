@@ -259,7 +259,7 @@ Gaya yang dipakai lebih dari satu halaman tinggal di
 | `KpiIconChip` | KPI & kepala section kedua halaman | chip 36×36, sudut 8, latar aksen lembut |
 | `SectionTitle` | halaman data, Tentang Aplikasi, Panduan Awal | 14 bold, membungkus, sejajar tengah |
 | `SectionTitleLarge` | Langganan | turunan `SectionTitle` dengan 15 |
-| `HeaderTitle` / `HeaderSubtitle` | seluruh kepala halaman | sudah lama terpusat; tidak berubah |
+| `HeaderTitle` / `HeaderSubtitle` | seluruh kepala halaman | judul 20 SemiBold (baris 26) supaya jelas di atas `SectionTitle` 13; subtitle 13. `MaxWidth` pada subtitle WAJIB disertai `HorizontalAlignment="Left"` — tanpa itu WPF mengiset teks ke tengah header. Dijaga `HeaderHalamanTests` |
 
 Alasannya nyata: sebelum penyatuan, Daftar Hadir memakai angka **Bold** tanpa
 membungkus sementara Langganan memakai **SemiBold** dengan margin, dan

@@ -259,7 +259,6 @@ namespace SuDesApp.Wpf.ViewModels
                 : "Dokumen tersimpan di " + folder;
 
             BukaCommand = new RelayCommand<DokumentasiItem>(Buka);
-            BukaFolderCommand = new RelayCommand(BukaFolder);
             BukaTautanCommand = new RelayCommand<DokumentasiItem>(BukaTautan);
             BersihkanSaringanCommand = new RelayCommand(BersihkanSaringan);
             PerbaruiKelompokTampil();
@@ -552,13 +551,6 @@ namespace SuDesApp.Wpf.ViewModels
         public RelayCommand<DokumentasiItem> BukaTautanCommand { get; }
 
         /// <summary>
-        /// Buka folder dokumen di File Explorer. Bukan cara membaca dokumen —
-        /// dokumen selalu dibaca di dalam aplikasi — melainkan untuk keperluan
-        /// teknisi: menyalin berkas atau memastikan dokumen ikut terpasang.
-        /// </summary>
-        public RelayCommand BukaFolderCommand { get; }
-
-        /// <summary>
         /// Tampilkan dokumen di dalam aplikasi: PDF pada pratinjau SudesPdf, berkas
         /// <c>.md</c> pada halaman baca. Halaman Dokumentasi ditinggalkan lebih dulu,
         /// jadi pesan status di sini terbaca lagi saat pengguna kembali.
@@ -592,16 +584,6 @@ namespace SuDesApp.Wpf.ViewModels
             }
 
             PesanStatus = $"Dokumen ditampilkan di dalam aplikasi: {dokumen.Judul}.";
-        }
-
-        private void BukaFolder()
-        {
-            var folder = BerkasDokumentasi.CariFolder();
-            var galat = BerkasDokumentasi.Buka(folder);
-
-            PesanStatus = galat is null
-                ? "Folder dokumen dibuka."
-                : "Folder dokumen tidak bisa dibuka: " + galat;
         }
 
         /// <summary>

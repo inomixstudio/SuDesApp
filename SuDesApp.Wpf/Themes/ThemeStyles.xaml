@@ -2150,11 +2150,16 @@
         <Setter Property="Effect" Value="{StaticResource BayanganLembut}"/>
     </Style>
 
+    <!-- Judul kepala halaman. 20 (bukan 15) supaya jelas berdiri di atas
+         SectionTitle 13 Bold: selama keduanya beda satu langkah kecil, halaman
+         terlihat seperti satu daftar teks tanpa hierarki. Nilai 20 adalah anak
+         tangga "judul" pada skala baku 10/11/13/14/15/20/24/28 yang dijaga
+         UkuranHurufStandarTests — 18 atau 19 akan ditolak penjaga itu. -->
     <Style x:Key="HeaderTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}"/>
-        <Setter Property="LineHeight" Value="22"/>
+        <Setter Property="LineHeight" Value="26"/>
     </Style>
 
     <Style x:Key="HeaderSubtitle" TargetType="TextBlock">

@@ -1,19 +1,20 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace SuDesApp.Wpf.Utilities
 {
     /// <summary>
     /// Akses berkas dokumentasi bawaan aplikasi — folder <c>docs</c> yang ikut
-    /// installer dan paket portable. Dipakai halaman Dokumentasi dan tombol
-    /// "Buka PDF Perbup" di Pengaturan; cara menemukan berkasnya sengaja ada di
-    /// satu tempat supaya kedua halaman tidak menyimpang satu sama lain.
+    /// installer dan paket portable. Cara menemukan berkasnya sengaja ada di satu
+    /// tempat supaya halaman Dokumentasi, pembaca dokumen, cetak laporan IDM, dan
+    /// layanan persetujuan tidak menyimpang satu sama lain.
     ///
-    /// Dokumennya sendiri <b>tidak</b> dibuka dari sini: halaman Dokumentasi membaca
-    /// berkas di dalam aplikasi (lihat DokumentasiViewModel). Yang tersisa di sini
-    /// hanyalah pencarian berkas dan <see cref="Buka"/> untuk membuka <i>folder</i>
-    /// dokumen — keperluan teknisi, bukan cara membaca.
+    /// Kelas ini HANYA mencari berkas dan menghitung ukuran. Tidak ada lagi jalur
+    /// keluar ke aplikasi Windows di sini: dulu ada <c>Buka()</c> untuk membuka
+    /// folder dokumen dari tombol "Buka Folder Dokumen" di halaman Dokumentasi,
+    /// tetapi tombol itu sendiri yang dihapus — halaman tersebut berjanji dokumen
+    /// dibaca di dalam aplikasi, dan satu tombol yang melempar pengguna ke File
+    /// Explorer membuat janji itu terdengar opsional.
     /// </summary>
     public static class BerkasDokumentasi
     {
@@ -81,31 +82,6 @@ namespace SuDesApp.Wpf.Utilities
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Buka berkas atau folder dengan aplikasi bawaan Windows — <b>hanya</b>
-        /// untuk folder (atau berkas bukan dokumen); dokumen aplikasi dibaca di
-        /// dalam aplikasi. Mengembalikan pesan galat yang siap ditampilkan, atau
-        /// null bila pembukaan berhasil.
-        /// </summary>
-        public static string? Buka(string? jalur)
-        {
-            if (string.IsNullOrWhiteSpace(jalur)
-                || (!File.Exists(jalur) && !Directory.Exists(jalur)))
-            {
-                return "Berkas tidak ditemukan.";
-            }
-
-            try
-            {
-                Process.Start(new ProcessStartInfo(jalur) { UseShellExecute = true });
-                return null;
-            }
-            catch (Exception ex)
-            {
-                return ex.Message;
-            }
         }
 
         /// <summary>Ukuran berkas dalam satuan yang mudah dibaca (KB/MB).</summary>

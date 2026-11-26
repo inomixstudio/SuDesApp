@@ -24,7 +24,7 @@
                     </Border>
                     <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource HeaderTitle}"/>
-                        <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}" TextWrapping="Wrap" MaxWidth="620"/>
+                        <TextBlock Text="{Binding HeaderSubtitle}" Style="{StaticResource HeaderSubtitle}" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"/>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
