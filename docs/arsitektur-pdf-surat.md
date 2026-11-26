@@ -100,6 +100,18 @@ Aplikasi tidak lagi memakai pustaka PDF pihak ketiga. Susunannya dua proyek:
   tata letak pratinjau, dan `PdfPrinter`/`PdfPrintPaginator` yang meraster halaman
   satu per satu saat printer memintanya.
 
+  Rantai kertas saat mencetak (`PdfPrinter` → `PdfPrintLayout` → `PrintDc`): ukuran
+  halaman PDF dipakai sebagai ukuran KERTAS. Pertama dicari padanannya di daftar
+  driver (`CariUkuranKertas`, toleransi 0,1 inci, orientasi diabaikan — jadi "Folio
+  8,5x13" dipilih untuk halaman 215x330 mm); bila tidak ada, `BuatKertasKustom`
+  mengirim formulir `DMPAPER_USER` dengan lebar/tinggi halaman persis sehingga
+  pengaturan aplikasi yang dipasang ke printer, bukan surat yang dikecilkan. Nilai
+  yang benar-benar dipakai untuk menata halaman diambil dari DC printer
+  (`GetDeviceCaps PHYSICALWIDTH/HEIGHT/OFFSET`), karena `PageSettings.PaperSize`
+  hanya menggemakan permintaan aplikasi dan driver boleh menolaknya. Hasilnya
+  dilaporkan sebagai `HasilCetak` (skala fisik terendah + ukuran lembar sebenarnya)
+  dan lapisan WPF menyampaikannya bila hasil cetak tidak 1:1.
+
   Pratinjau merender halaman **tepat satu piksel bitmap per piksel layar**
   (`RenderAsync(..., dpi = 96 × skala tampilan Windows)`) lalu menampilkannya tanpa
   penskalaan. Menggambar lebih rapat lalu membiarkan WPF memperkecilnya justru

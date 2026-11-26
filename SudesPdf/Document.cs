@@ -116,24 +116,24 @@ public sealed class Document : IAsyncDisposable
     /// <summary>
     /// Tampilkan dialog cetak Windows (printer, rentang halaman, salinan) lalu
     /// kirim dokumen. Harus dipanggil dari thread UI; panggilan dari thread lain
-    /// dipindahkan ke dispatcher aplikasi.
+    /// dipindahkan ke dispatcher aplikasi. Hasilnya melaporkan apakah kertas
+    /// aplikasi bisa dipasang ke printer atau surat terpaksa diperkecil.
     /// </summary>
-    public async Task PrintAsync(string title, CancellationToken cancellationToken = default)
+    public async Task<HasilCetak> PrintAsync(string title, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         var dispatcher = System.Windows.Application.Current?.Dispatcher;
         if (dispatcher is not null && !dispatcher.CheckAccess())
         {
-            await dispatcher.InvokeAsync(
-                    () => PrintOnCurrentThread(title),
+            return await dispatcher.InvokeAsync(
+                    new Func<HasilCetak>(() => PrintOnCurrentThread(title)),
                     DispatcherPriority.Normal,
                     cancellationToken)
                 .Task.ConfigureAwait(false);
-            return;
         }
 
-        PrintOnCurrentThread(title);
+        return PrintOnCurrentThread(title);
     }
 
     public ValueTask DisposeAsync()
@@ -174,7 +174,7 @@ public sealed class Document : IAsyncDisposable
         return bitmap;
     }
 
-    private void PrintOnCurrentThread(string title) => PdfPrinter.ShowDialogAndPrint(this, title);
+    private HasilCetak PrintOnCurrentThread(string title) => PdfPrinter.ShowDialogAndPrint(this, title);
 
     private void ValidatePage(int index)
     {
